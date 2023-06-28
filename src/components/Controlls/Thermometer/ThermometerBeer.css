@@ -1,0 +1,19 @@
+.my-thermometer {
+    position: relative;
+    display: inline-block;
+}
+
+.target-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-bottom: 2px dashed red;
+}
+.red-mercury  {
+    background-color: red;
+}
+
+.green-mercury  {
+    background-color: green;
+}
+

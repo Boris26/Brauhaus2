@@ -1,0 +1,36 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+    background: #333333;
+}
+
+.container {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.Header {
+    height: 80px;
+    background: darkorange;
+}
+
+.content {
+    flex: 1; /* Füllt den verfügbaren Platz im Container */
+    display: flex;
+}
+
+.CustomTable {
+    flex: 70%; /* Nimmt 70% des verfügbaren Platzes im Content-Bereich ein */
+    margin: 10px;
+}
+
+.Details {
+    flex: 30%; /* Nimmt 30% des verfügbaren Platzes im Content-Bereich ein */
+    display: flex;
+    flex-direction: column;
+    background-color: #404040;
+    margin: 10px;
+}

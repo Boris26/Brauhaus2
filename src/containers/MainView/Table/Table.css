@@ -1,0 +1,31 @@
+.Table {
+  background-color: #404040;
+  border-top-left-radius: 5px;
+  border-top-right-radius: 5px;
+}
+
+.Table .table-row {
+  height: auto;
+}
+
+.Table .table-cell {
+  height: 1rem;
+  font-size: 0.75rem;
+  color: white;
+}
+
+.Table .table-header {
+  height: 1rem;
+  background-color: darkorange;
+}
+
+.Table .table-header-cell {
+  height: 1rem;
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.selected {
+  background-color: darkorange;
+  color: white;
+}

@@ -1,0 +1,44 @@
+@keyframes flame{
+    0%{
+        border-bottom-right-radius:10px;
+        bottom:20px;
+        height:60%;
+        transform:rotate(43deg);
+    }
+    100%{
+        border-bottom-right-radius:20px;
+        bottom:15px;
+        height:58%;
+        transform:rotate(45deg);
+    }
+}
+.container{
+    margin:40px 0 0 40px;
+    position:relative;
+    width:80px;
+    height:50px;
+    display:inline-block;
+}
+.outer{
+    width:30px;
+    height:20px;
+    background-color:lightblue;
+    transform:rotate(45deg);
+    box-shadow:0 0 8px lightblue;
+}
+.inner{
+    width:10px;
+    height:10px !important;
+    background-color:orange;
+    bottom:5px !important;
+    right:4px !important;
+
+    transform:rotate(0deg) !important;
+    box-shadow: 0 0 8px orange;
+}
+.flame{
+    position:absolute;
+    border-radius:0 110px 20px 110px;
+    animation:flame .5s alternate ease-in-out infinite;
+    right:15px;
+}

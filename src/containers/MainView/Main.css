@@ -1,0 +1,48 @@
+
+.CustomTable {
+    flex: 1;
+    overflow: auto;
+    padding: 10px;
+    height: 100%;
+}
+
+.DetailsContainer {
+    flex: 1;
+    height: 100%;
+    overflow: auto;
+    padding: 10px;
+
+}
+
+/* Stilregeln für SimpleBar */
+.simplebar-content-wrapper {
+    height: 100%;
+}
+
+.simplebar-content {
+    height: 100%;
+}
+
+.simplebar-scrollbar::before {
+    background-color: #888;
+}
+
+.simplebar-scrollbar.simplebar-visible::before {
+    opacity: 0.6;
+}
+
+.simplebar-track.simplebar-vertical {
+    background-color: #eee;
+}
+
+.simplebar-scrollbar.simplebar-visible.simplebar-vertical {
+    opacity: 0.6;
+}
+
+.simplebar-track.simplebar-horizontal {
+    background-color: #eee;
+}
+
+.simplebar-scrollbar.simplebar-visible.simplebar-horizontal {
+    opacity: 0.6;
+}

@@ -1,0 +1,39 @@
+.detailsContainer
+{
+    margin: 10px;
+    overflow: auto;
+}
+
+
+
+.header {
+    background-color: darkorange;
+    height: 57px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+.header-text {
+    font-size: 20px;
+    color: black;
+}
+
+
+
+
+.table-divider {
+    border-bottom: 2px solid grey; /* Dickerer Trennstrich mit 2 Pixel Breite */
+
+}
+
+
+
+.input-container {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+}
+
