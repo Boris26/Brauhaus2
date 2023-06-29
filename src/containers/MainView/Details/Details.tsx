@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import './Details.css';
-import {Beer, FermentationSteps} from "../../../model/Beer";
+import {Beer} from "../../../model/Beer";
 import {
     Accordion, AccordionDetails, AccordionSummary,
     Paper,
@@ -35,67 +35,77 @@ class Details extends React.Component<DetailsProps> {
 renderFermentation()
 {
     const {selectedBeer}=this.props;
-return(
-    <div>
+    console.log(selectedBeer);
+    if(selectedBeer?.fermentationSteps != undefined)
+    {
+        return(
+            <div>
 
-        <div className="table">
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Type</TableCell>
-                            <TableCell>Zeit</TableCell>
-                            <TableCell>Temp</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {selectedBeer?.fermentationSteps.map((item, index) => (
-                            <TableRow key={index}>
-                                <TableCell>{item.type}</TableCell>
-                                <TableCell>{item.time}</TableCell>
-                                <TableCell>{item.temperature}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </div>
+                <div className="table">
+                    <TableContainer component={Paper}>
+                        <Table>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell>Type</TableCell>
+                                    <TableCell>Zeit</TableCell>
+                                    <TableCell>Temp</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {selectedBeer?.fermentationSteps.map((item, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>{item.type}</TableCell>
+                                        <TableCell>{item.time}</TableCell>
+                                        <TableCell>{item.temperature}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </div>
 
-    </div>
-);
+            </div>
+        );
+    }
+
 }
 renderFilling()
 {
     const {selectedBeer}=this.props;
-    return(
-        <div>
+    if (selectedBeer?.malts != undefined)
+    {
+        return(
+            <div>
 
-            <div className='table'>
-                <TableContainer component={Paper}>
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Name</TableCell>
-                                <TableCell>Menge / g</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {selectedBeer?.malts.map((item, index) => (
-                                <TableRow key={index}>
-                                    <TableCell>{item.name}</TableCell>
-                                    <TableCell>{item.quantity}</TableCell>
+                <div className='table'>
+                    <TableContainer component={Paper}>
+                        <Table>
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell>Name</TableCell>
+                                    <TableCell>Menge / g</TableCell>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                            </TableHead>
+                            <TableBody>
+                                {selectedBeer?.malts.map((item, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell>{item.name}</TableCell>
+                                        <TableCell>{item.quantity}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </div>
             </div>
-        </div>
-    );
+        );
+    }
+
 }
     renderBrewingWater()
     {
         const {selectedBeer}=this.props;
+
         return(  <div>
 
             <TableContainer component={Paper}>
@@ -119,57 +129,65 @@ renderFilling()
     renderFermentationMaturation()
     {
         const {selectedBeer}=this.props;
-        return(
-            <div>
+        if (selectedBeer?.fermentationMaturation != undefined)
+        {
+            return(
+                <div>
 
-                <div className='label'>
-                    <label htmlFor="temp">Temperatur:</label>
-                </div>
-                <span id="temp" className="inputTextGeneral">
+                    <div className='label'>
+                        <label htmlFor="temp">Temperatur:</label>
+                    </div>
+                    <span id="temp" className="inputTextGeneral">
                             {selectedBeer?.fermentationMaturation.fermentationTemperature}
                 </span>
-                <div className='label'>
-                    <label htmlFor="carbonation">Karbonisierung:</label>
-                </div>
-                <span id="carbonation" className="inputTextGeneral">
+                    <div className='label'>
+                        <label htmlFor="carbonation">Karbonisierung:</label>
+                    </div>
+                    <span id="carbonation" className="inputTextGeneral">
                             {selectedBeer?.fermentationMaturation.carbonation}
                 </span>
-                <div className='label'>
-                    <label htmlFor="yeast">Hefe:</label>
-                </div>
-                <span id="yeast" className="inputTextGeneral">
+                    <div className='label'>
+                        <label htmlFor="yeast">Hefe:</label>
+                    </div>
+                    <span id="yeast" className="inputTextGeneral">
                             {selectedBeer?.fermentationMaturation.yeast[0].name}
                 </span>
-        </div>
-        );
+                </div>
+            );
+        }
+
     }
     renderWortBoiling()
         {
             const {selectedBeer}=this.props;
-            return(
-                <div>
-                    {selectedBeer?.wortBoiling.totalTime}
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow sx={{ '&:not(:last-child)': { '& td, & th': { paddingBottom: 0.2 } } }}>
-                            <TableCell>Name</TableCell>
-                            <TableCell>Zeit</TableCell>
-                            <TableCell>Menge</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {selectedBeer?.wortBoiling.hops.map((item, index) => (
-                            <TableRow key={index}>
-                                <TableCell>{item.name}</TableCell>
-                                <TableCell>{item.time}</TableCell>
-                                <TableCell>{item.quantity}</TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </div>);
+            if (selectedBeer?.wortBoiling != undefined)
+            {
+                return(
+                    <div>
+                        {selectedBeer?.wortBoiling.totalTime}
+                        <TableContainer component={Paper}>
+                            <Table>
+                                <TableHead>
+                                    <TableRow sx={{ '&:not(:last-child)': { '& td, & th': { paddingBottom: 0.2 } } }}>
+                                        <TableCell>Name</TableCell>
+                                        <TableCell>Zeit</TableCell>
+                                        <TableCell>Menge</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {selectedBeer?.wortBoiling.hops.map((item, index) => (
+                                        <TableRow key={index}>
+                                            <TableCell>{item.name}</TableCell>
+                                            <TableCell>{item.time}</TableCell>
+                                            <TableCell>{item.quantity}</TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </div>);
+            }
+
         }
         renderGeneralDate()
         {
@@ -213,8 +231,6 @@ renderFilling()
 
 
     render() {
-const {selectedBeer}=this.props;
-
         return (
             <div className="input-container">
                 <div className="header" style={{ position: 'sticky', top: 0 }}>
@@ -289,4 +305,4 @@ const mapStateToProps = (state: any) => ({
 
 
 
-export default connect(mapStateToProps)(Details);
+export default connect(mapStateToProps,null)(Details);

@@ -2,20 +2,19 @@ import React from 'react';
 import {Table, TableHead, TableRow, TableCell, TableBody, TableContainer, TableSortLabel, Paper} from '@mui/material';
 import './Table.css';
 import {Beer} from "../../../model/Beer";
-import {setSelectedBeer, updateCurrentTime} from "../../../actions/actions";
 import {connect} from "react-redux";
+import {BeerActions} from "../../../actions/actions";
+import setSelectedBeer = BeerActions.setSelectedBeer;
 
-interface TableProps {
+export interface BeerTableProps {
     beers: Beer[];
     setSelectedBeer: (beer: Beer) => void;
 }
 
 
 
-interface Props {
-    beers: Beer[];
-}
-interface TableState {
+
+interface BeerTableState {
     sortConfig: SortConfig;
     selectedBeerId: number | null;
 }
@@ -26,8 +25,8 @@ interface SortConfig {
     direction: 'asc' | 'desc';
 }
 
-class CustomizedTable extends React.Component<TableProps,TableState > {
-    constructor(props: TableProps) {
+export class BeerTableComponent extends React.Component<BeerTableProps,BeerTableState > {
+    constructor(props: BeerTableProps) {
         super(props);
 
         this.state = {
@@ -139,13 +138,10 @@ class CustomizedTable extends React.Component<TableProps,TableState > {
     }
 }
 
-const mapStateToProps = (state: any) => ({
-    currentTime: state.currentTime,
-});
 
 const mapDispatchToProps = (dispatch: any) => ({
-    setSelectedBeer: (beer:Beer) => dispatch(setSelectedBeer(beer)),
+    setSelectedBeer: (beer:Beer) => dispatch({type: 'SET_SELECTED_BEER', payload: beer})
 });
 
-export default connect(mapStateToProps, mapDispatchToProps)(CustomizedTable);
+export default connect(null, mapDispatchToProps)(BeerTableComponent);
 

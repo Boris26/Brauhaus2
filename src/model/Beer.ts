@@ -6,6 +6,7 @@ export interface FermentationSteps {
 }
 
 export interface Malt {
+    id: string;
     name: string;
     description: string;
     EBC: number;
@@ -13,6 +14,7 @@ export interface Malt {
 }
 
 export interface Hop {
+    id: string;
     name: string;
     description: string;
     alpha: number;
@@ -26,11 +28,13 @@ export interface WortBoiling {
 }
 
 export interface Yeast {
+    id: string;
     name: string;
     description: string;
     EVG: string;
     temperature: string;
     type: string;
+    quantity: number;
 }
 
 export interface FermentationMaturation {

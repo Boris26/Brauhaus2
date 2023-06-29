@@ -1,9 +1,12 @@
 import React, { ChangeEvent, FormEvent } from 'react';
 import {Beer, FermentationSteps, Hop, Malt, Yeast} from "../../model/Beer";
 import {json} from "stream/consumers";
+import {BeerDTO, YeastDTO} from "../../model/BeerDTO";
+import {BeerActions} from "../../actions/actions";
+import {connect} from "react-redux";
 
 interface BeerFormProps {
-    onSubmit: (beer: Beer) => void;
+    onSubmit: (beer: BeerDTO) => void;
     malts: Malt[];
     hops: Hop[];
     yeast: Yeast[];
@@ -92,11 +95,22 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             selectedYeasts,
         } = this.state;
 
-        const malts = selectedMalts.map((maltName) => this.props.malts.find((malt) => malt.name === maltName)!);
-        const hops = selectedHops.map((hopName) => this.props.hops.find((hop) => hop.name === hopName)!);
-        const yeasts = selectedYeasts.map((yeastName) => this.props.yeast.find((yeast) => yeast.name === yeastName)!);
+        const malts = selectedMalts.map((maltName) => {
+            const malt = this.props.malts.find((malt) => malt.name === maltName)!;
+            return { id: malt.id, quantity: malt.quantity };
+        });
 
-        const beer: Beer = {
+        const hops = selectedHops.map((hopName) => {
+            const hop = this.props.hops.find((hop) => hop.name === hopName)!;
+            return { id: hop.id, quantity: hop.quantity, time: hop.time };
+        });
+
+        const yeasts = selectedYeasts.map((yeastName) => {
+            const yeast = this.props.yeast.find((yeast) => yeast.name === yeastName)!;
+            return { id: yeast.id, quantity: yeast.quantity};
+        });
+
+        const beer: BeerDTO = {
             id: 0,
             name,
             type,
@@ -111,10 +125,8 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             fermentationSteps,
             malts,
             wortBoiling: { totalTime: 0, hops: hops },
-            fermentationMaturation: { fermentationTemperature: 0, carbonation: 0, yeast: yeasts },
+            fermentationMaturation: {  fermentationTemperature: 0,   carbonation: 0,   yeast: yeasts },
         };
-      const b =JSON.stringify(beer);
-      console.log(b);
         this.props.onSubmit(beer);
         this.resetForm();
     };
@@ -269,4 +281,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
     }
 }
 
-export default BeerForm;
+const mapDispatchToProps = (dispatch: any) => ({
+    onSubmit: (beer: BeerDTO) => dispatch({type: 'SUBMIT_BEER', payload: beer}),});
+export default connect(null,mapDispatchToProps)(BeerForm);
+

@@ -1,8 +1,6 @@
 import React from 'react';
 import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
 import Header from './MainView/Header/Header';
-import CustomTable from './MainView/Table/Table';
-import Details from "./MainView/Details/Details";
 
 
 import './App.css';

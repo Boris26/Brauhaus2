@@ -1,13 +1,10 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import {updateCurrentTime} from "../../../actions/actions";
 import './Header.css';
 import {Views} from "../../../enums/eViews";
 
 
 interface HeaderProps {
-    currentTime: Date;
-    updateCurrentTime: () => void;
     setViewState: (viewState: Views) => void;
 }
 
@@ -23,8 +20,6 @@ class Header extends React.Component<HeaderProps> {
 
 
     render() {
-        const { currentTime } = this.props;
-        const formattedTime = currentTime.toLocaleTimeString();
 
         return (
             <div className="header-container">
@@ -60,7 +55,6 @@ const mapStateToProps = (state: any) => ({
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
-    updateCurrentTime: () => dispatch(updateCurrentTime()),
     setViewState: (viewState: Views) => dispatch({type: 'SET_VIEW_STATE', payload: viewState}),
 });
 
