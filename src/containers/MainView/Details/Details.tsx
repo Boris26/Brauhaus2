@@ -20,12 +20,21 @@ interface DetailsProps {
     selectedBeer: Beer;
 }
 
-class Details extends React.Component<DetailsProps> {
+interface DetailsState {
+    selectedBeer: Beer | undefined;
+
+}
+
+class Details extends React.Component<DetailsProps, DetailsState> {
     constructor(props: DetailsProps | Readonly<DetailsProps>) {
         super(props);
         this.state = {
-            fermentation: [],
+
+            selectedBeer: undefined
         };
+    }
+    componentDidUpdate(prevProps: Readonly<DetailsProps>, prevState: Readonly<DetailsState>, snapshot?: any) {
+
     }
 
     handleDeleteFermentation = (index: number) => {
@@ -36,7 +45,7 @@ renderFermentation()
 {
     const {selectedBeer}=this.props;
     console.log(selectedBeer);
-    if(selectedBeer?.fermentationSteps != undefined)
+    if(selectedBeer?.fermentation != undefined)
     {
         return(
             <div>
@@ -52,7 +61,7 @@ renderFermentation()
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {selectedBeer?.fermentationSteps.map((item, index) => (
+                                {selectedBeer?.fermentation.map((item, index) => (
                                     <TableRow key={index}>
                                         <TableCell>{item.type}</TableCell>
                                         <TableCell>{item.time}</TableCell>
@@ -284,24 +293,13 @@ renderFilling()
 
                 </Accordion>
                 </div>
-
-
-
-
-
-
-
             </div>
         );
-
-
     }
 }
 
 
-const mapStateToProps = (state: any) => ({
-    selectedBeer : state.selectedBeer,
-});
+const mapStateToProps = (state: any) => ({selectedBeer : state.beerDataReducer.selectedBeer});
 
 
 

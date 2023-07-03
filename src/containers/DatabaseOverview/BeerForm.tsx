@@ -1,15 +1,22 @@
 import React, { ChangeEvent, FormEvent } from 'react';
 import {Beer, FermentationSteps, Hop, Malt, Yeast} from "../../model/Beer";
-import {json} from "stream/consumers";
-import {BeerDTO, YeastDTO} from "../../model/BeerDTO";
+import {BeerDTO, HopDTO, MaltDTO, YeastDTO} from "../../model/BeerDTO";
 import {BeerActions} from "../../actions/actions";
 import {connect} from "react-redux";
+import {isEqual} from "lodash";
+import {Accordion, AccordionDetails, AccordionSummary, bottomNavigationActionClasses, Typography} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import {MashingType} from "../../enums/eMashingType";
 
 interface BeerFormProps {
     onSubmit: (beer: BeerDTO) => void;
+    getMalt: (isFetching: boolean) => void;
+    getHop: (isFetching: boolean) => void;
+    getYeast: (isFetching: boolean) => void;
     malts: Malt[];
     hops: Hop[];
-    yeast: Yeast[];
+    yeasts: Yeast[];
+    isSuccessful: boolean;
 }
 
 interface BeerFormState {
@@ -24,9 +31,10 @@ interface BeerFormState {
     mashVolume: number;
     spargeVolume: number;
     fermentationSteps: FermentationSteps[];
-    selectedMalts: string[];
-    selectedHops: string[];
-    selectedYeasts: string[];
+    maltsDTO: MaltDTO[];
+    hopsDTO: HopDTO[];
+    yeastsDTO: YeastDTO[];
+    isSuccessful: boolean;
 }
 
 class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
@@ -44,9 +52,10 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             mashVolume: 0,
             spargeVolume: 0,
             fermentationSteps: [],
-            selectedMalts: [],
-            selectedHops: [],
-            selectedYeasts: [],
+            maltsDTO: [],
+            hopsDTO: [],
+            yeastsDTO: [],
+            isSuccessful: false,
         };
     }
 
@@ -55,9 +64,25 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         this.setState({[name]: value} as unknown as Pick<BeerFormState, keyof BeerFormState>);
     };
+    componentDidMount() {
+        const {getMalt,getHop,getYeast} = this.props;
+        getMalt(true);
+        getHop(true);
+        getYeast(true);
+    }
+    componentDidUpdate(prevProps: Readonly<BeerFormProps>, prevState: Readonly<BeerFormState>, snapshot?: any) {
+        const {isSuccessful,malts,hops,yeasts} = this.props;
+        if (!isEqual(isSuccessful,prevState.isSuccessful) )
+        {
+            this.setState({isSuccessful:isSuccessful});
+        }
 
-    handleFermentationStepChange = (e: ChangeEvent<HTMLInputElement>, index: number) => {
-        const { name, value } = e.target;
+    }
+
+    handleFermentationStepChange = (value: string,name: string, index: number) => {
+       if (value === 'Rast') {
+                value = value + index;
+        }
         this.setState((prevState) => {
             const fermentationSteps = [...prevState.fermentationSteps];
             const step = fermentationSteps[index];
@@ -66,6 +91,35 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             return { fermentationSteps };
         });
     };
+
+    handleMaltChange = (value: string, name: string, index: number) => {
+        this.setState((prevState) => {
+            const maltsDTO = [...prevState.maltsDTO];
+            const step = maltsDTO[index];
+            // @ts-ignore
+            step[name] = value;
+            return { maltsDTO };
+        });
+    }
+
+    handleHopChange = (value: string, name: string, index: number) => {
+        this.setState((prevState) => {
+            const hopsDTO = [...prevState.hopsDTO];
+            const step = hopsDTO[index];
+            // @ts-ignore
+            step[name] = value;
+            return { hopsDTO };
+        });
+    }
+    handleYeastChange = (value: string, name: string, index: number) => {
+        this.setState((prevState) => {
+            const yeastsDTO = [...prevState.yeastsDTO];
+            const step = yeastsDTO[index];
+            // @ts-ignore
+            step[name] = value;
+            return { yeastsDTO };
+        });
+    }
 
     handleSelectChange = (e: ChangeEvent<HTMLSelectElement>) => {
         const { name, options } = e.target;
@@ -77,6 +131,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
 
     handleSubmit = (e: FormEvent) => {
+        const {malts,hops,yeasts} = this.props;
         e.preventDefault();
         const {
             name,
@@ -90,25 +145,34 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             mashVolume,
             spargeVolume,
             fermentationSteps,
-            selectedMalts,
-            selectedHops,
-            selectedYeasts,
+            maltsDTO,
+            hopsDTO,
+            yeastsDTO,
         } = this.state;
 
-        const malts = selectedMalts.map((maltName) => {
-            const malt = this.props.malts.find((malt) => malt.name === maltName)!;
-            return { id: malt.id, quantity: malt.quantity };
+        const malts_DTO = maltsDTO.map((aMalt) => {
+            // @ts-ignore
+            const malt = malts.find((aMalt) => aMalt.name === aMalt.name)!;
+            const quantity = aMalt.quantity;
+            return {name: malt.name, id: malt.id, quantity: quantity};
         });
 
-        const hops = selectedHops.map((hopName) => {
-            const hop = this.props.hops.find((hop) => hop.name === hopName)!;
-            return { id: hop.id, quantity: hop.quantity, time: hop.time };
+
+        const hops_DTO = hopsDTO.map((aHop) => {
+            // @ts-ignore
+            const hop = this.props.hops.find((hop) => hop.name === aHop.name)!;
+            const quantity = aHop.quantity;
+            const time = aHop.time;
+            return { id: hop.id,name: hop.name ,quantity: quantity, time: time };
         });
 
-        const yeasts = selectedYeasts.map((yeastName) => {
-            const yeast = this.props.yeast.find((yeast) => yeast.name === yeastName)!;
-            return { id: yeast.id, quantity: yeast.quantity};
+        const yeasts_DTO = yeastsDTO.map((aYeast) => {
+            // @ts-ignore
+            const yeast = this.props.yeasts.find((yeast) => yeast.name === aYeast.name)!;
+            const quantity = aYeast.quantity;
+            return {name: yeast.name, id: yeast.id, quantity: quantity};
         });
+
 
         const beer: BeerDTO = {
             id: 0,
@@ -123,12 +187,12 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             mashVolume,
             spargeVolume,
             fermentationSteps,
-            malts,
-            wortBoiling: { totalTime: 0, hops: hops },
-            fermentationMaturation: {  fermentationTemperature: 0,   carbonation: 0,   yeast: yeasts },
-        };
+            malts: malts_DTO,
+            wortBoiling: { totalTime: 0, hops: hops_DTO },
+            fermentationMaturation: {  fermentationTemperature: 0,   carbonation: 0,   yeast: yeasts_DTO}};
+        console.log(beer);
         this.props.onSubmit(beer);
-        this.resetForm();
+       // this.resetForm();
     };
 
     resetForm = () => {
@@ -144,9 +208,9 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             mashVolume: 0,
             spargeVolume: 0,
             fermentationSteps: [],
-            selectedMalts: [],
-            selectedHops: [],
-            selectedYeasts: [],
+            maltsDTO: [],
+            hopsDTO: [],
+            yeastsDTO: [],
         });
     };
 
@@ -155,6 +219,24 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             fermentationSteps: [...prevState.fermentationSteps, { type: '', temperature: 0, time: 0 }],
         }));
     };
+    addMalts = () => {
+        this.setState((prevState) => ({
+            maltsDTO: [...prevState.maltsDTO, { id: '',name: '', quantity: 0 }],
+        }));
+    }
+
+    addHops = () => {
+        this.setState((prevState) => ({
+            hopsDTO: [...prevState.hopsDTO, { id: '',name: '', quantity: 0, time: 0 }],
+        }));
+    }
+
+    addYeast = () => {
+        this.setState((prevState) => ({
+            yeastsDTO: [...prevState.yeastsDTO, {id: '', name: '', quantity: 0}],
+        }));
+    }
+
 
     removeFermentationStep = (index: number) => {
         this.setState((prevState) => {
@@ -164,22 +246,54 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         });
     };
 
-    render() {
-        const { name, type, color, alcohol, originalwort, bitterness, description, rating, mashVolume, spargeVolume, fermentationSteps, selectedMalts, selectedHops, selectedYeasts } = this.state;
-        const { malts, hops, yeast } = this.props;
+    removeMalts = (index: number) => {
+        this.setState((prevState) => {
+            const maltsDTO = [...prevState.maltsDTO];
+            maltsDTO.splice(index, 1);
+            return { maltsDTO };
+        });
 
+    }
+    removeHops = (index: number) => {
+        this.setState((prevState) => {
+            const hopsDTO = [...prevState.hopsDTO];
+            hopsDTO.splice(index, 1);
+            return { hopsDTO };
+        });
+    }
+    removeYeast = (index: number) => {
+        this.setState((prevState) => {
+            const yeastsDTO = [...prevState.yeastsDTO];
+            yeastsDTO.splice(index, 1);
+            return { yeastsDTO };
+        });
+    }
+
+    renderCreateBeerForm() {
+        const {maltsDTO,hopsDTO,yeastsDTO,isSuccessful, name, type, color, alcohol, originalwort, bitterness, description, rating, mashVolume, spargeVolume, fermentationSteps } = this.state;
+        const { malts, hops, yeasts } = this.props;
+        console.log(malts);
+        let info:string = "";
+        if (isEqual(isSuccessful,true))
+        {
+            info = "Beer created successfully";
+        }
+        else if (isSuccessful === false)
+        {
+            info = "Beer creation failed";
+        }
         return (
             <form className="beer-form" onSubmit={this.handleSubmit}>
                 <h2>Create a Beer</h2>
 
                 <label>
                     Name:
-                    <input type="text" name="name" value={name} onChange={this.handleChange}  />
+                    <input type="text" name="name" value={name} onChange={this.handleChange} required={true}  />
                 </label>
 
                 <label>
                     Type:
-                    <input type="text" name="type" value={type} onChange={this.handleChange}  />
+                    <input type="text" name="type" value={type} onChange={this.handleChange} required={true}  />
                 </label>
 
                 <label>
@@ -189,17 +303,17 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
                 <label>
                     Alcohol:
-                    <input type="number" name="alcohol" value={alcohol} onChange={this.handleChange}  />
+                    <input type="number" name="alcohol" value={alcohol} min={0} onChange={this.handleChange} required={true}  />
                 </label>
 
                 <label>
                     Original Wort:
-                    <input type="number" name="originalwort" value={originalwort} onChange={this.handleChange}  />
+                    <input type="number" name="originalwort" value={originalwort} min={0} onChange={this.handleChange} required={true}  />
                 </label>
 
                 <label>
                     Bitterness:
-                    <input type="number" name="bitterness" value={bitterness} onChange={this.handleChange}  />
+                    <input type="number" name="bitterness" value={bitterness} min={0} onChange={this.handleChange} required={true}  />
                 </label>
 
                 <label>
@@ -209,79 +323,215 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
                 <label>
                     Rating:
-                    <input type="number" name="rating" value={rating} onChange={this.handleChange}  />
+                    <input type="number" name="rating" value={rating} min={0} max={5} onChange={this.handleChange}  />
                 </label>
 
                 <label>
                     Mash Volume:
-                    <input type="number" name="mashVolume" value={mashVolume} onChange={this.handleChange}  />
+                    <input type="number" name="mashVolume" min={0} value={mashVolume} onChange={this.handleChange} required={true}  />
                 </label>
 
                 <label>
                     Sparge Volume:
-                    <input type="number" name="spargeVolume" value={spargeVolume} onChange={this.handleChange}  />
+                    <input type="number" name="spargeVolume" min={0} value={spargeVolume} onChange={this.handleChange} required={true}  />
                 </label>
 
                 <div className="fermentation-steps-container">
-                    <h3>Fermentation Steps:</h3>
-                    {fermentationSteps.map((step, index) => (
+                    <h3>Maischeplan:</h3>
+                    {fermentationSteps?.map((step, index) => (
                         <div key={index} className="fermentation-step-container">
                             <label>
                                 Type:
-                                <input type="text" name="type" value={step.type} onChange={(e) => this.handleFermentationStepChange(e, index)}  />
+                                <select name="type" value={step.type} onChange={(e) => this.handleFermentationStepChange(e.target.value,e.target.name, index)} required={true} >
+                                    <option value="">Select Type</option>
+                                    {Object.values(MashingType).map((mashingType) => (
+                                        <option key={mashingType} value={mashingType}>
+                                            {mashingType}
+                                        </option>
+                                    ))}
+
+                                </select>
+                                <input type="text" name="type" value={step.type} onChange={(e) => this.handleFermentationStepChange(e.target.value,e.target.name, index)} required={true}  />
                             </label>
 
                             <label>
                                 Temperature:
-                                <input type="number" name="temperature" value={step.temperature} onChange={(e) => this.handleFermentationStepChange(e, index)}  />
+                                <input type="number" name="temperature" value={step.temperature} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name,index)} required={true}  />
                             </label>
 
                             <label>
                                 Time:
-                                <input type="number" name="time" value={step.time} onChange={(e) => this.handleFermentationStepChange(e, index)}  />
+                                <input type="number" name="time" value={step.time} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name,index)} required={true}  />
                             </label>
 
                             {index > 0 && <button type="button" onClick={() => this.removeFermentationStep(index)}>Remove</button>}
                         </div>
                     ))}
 
-                    <button type="button" onClick={this.addFermentationStep}>Add Fermentation Step</button>
+                    <button type="button" onClick={this.addFermentationStep}>Rasten zufügen</button>
                 </div>
 
-                <label>
-                    Malts:
-                    <select multiple name="selectedMalts" value={selectedMalts} onChange={this.handleSelectChange}>
-                        {malts.map((malt) => (
-                            <option key={malt.name} value={malt.name}>{malt.name}</option>
-                        ))}
-                    </select>
-                </label>
+                <div className="fermentation-steps-container">
+                    <h3>Malze</h3>
+                    {maltsDTO?.map((step, index) => (
+                        <div key={index} className="fermentation-step-container">
+                            <label>
+                                Name:
+                                <select name="name" value={step.name} onChange={(e) => this.handleMaltChange(e.target.value,e.target.name, index)} required={true} >
+                                    <option value="">Select Type</option>
+                                    {malts.map((malt) => (
+                                        <option key={malt.id} value={malt.name}>
+                                            {malt.name}
+                                        </option>
+                                    ))}
 
-                <label>
-                    Hops:
-                    <select multiple name="selectedHops" value={selectedHops} onChange={this.handleSelectChange}>
-                        {hops.map((hop) => (
-                            <option key={hop.name} value={hop.name}>{hop.name}</option>
-                        ))}
-                    </select>
-                </label>
+                                </select>
+                                <input type="text" name="type" value={step.name} onChange={(e) => this.handleMaltChange(e.target.value,e.target.name, index)} required={true}  />
+                            </label>
+                            <label>
+                                Menge:
+                                <input type="number" name="quantity" min={0} value={step.quantity} onChange={(e) => this.handleMaltChange(e.target.value, e.target.name,index)} required={true}  />
+                            </label>
 
-                <label>
-                    Yeasts:
-                    <select multiple name="selectedYeasts" value={selectedYeasts} onChange={this.handleSelectChange}>
-                        {yeast.map((yeast) => (
-                            <option key={yeast.name} value={yeast.name}>{yeast.name}</option>
-                        ))}
-                    </select>
-                </label>
 
-                <button type="submit">Create Beer</button>
-            </form>
+                            {index > 0 && <button type="button" onClick={() => this.removeMalts(index)}>Remove</button>}
+                        </div>
+                    ))}
+
+                    <button type="button" onClick={this.addMalts}>Malz zufügen</button>
+                </div>
+
+                <div className="fermentation-steps-container">
+                    <h3>Hopfen</h3>
+                    {hopsDTO?.map((step, index) => (
+                        <div key={index} className="fermentation-step-container">
+                            <label>
+                                Name:
+                                <select name="name" value={step.name} onChange={(e) => this.handleHopChange(e.target.value,e.target.name, index)} required={true} >
+                                    <option value="">Select Type</option>
+                                    {hops.map((hop) => (
+                                        <option key={hop.id} value={hop.name}>
+                                            {hop.name}
+                                        </option>
+                                    ))}
+
+                                </select>
+                                <input type="text" name="type" value={step.name} onChange={(e) => this.handleHopChange(e.target.value,e.target.name, index)} required={true}  />
+                            </label>
+                            <label>
+                                Menge:
+                                <input type="number" name="quantity" min={0} value={step.quantity} onChange={(e) => this.handleHopChange(e.target.value, e.target.name,index)} required={true}  />
+                            </label>
+                            <label>
+                                Menge:
+                                <input type="number" name="time" min={0} value={step.time} onChange={(e) => this.handleHopChange(e.target.value, e.target.name,index)} required={true}  />
+                            </label>
+
+
+                            {index > 0 && <button type="button" onClick={() => this.removeHops(index)}>Remove</button>}
+                        </div>
+                    ))}
+
+                    <button type="button" onClick={this.addHops}>Hopfen zufügen</button>
+                </div>
+
+                <div className="fermentation-steps-container">
+                    <h3>Hefe</h3>
+                    {yeastsDTO?.map((step, index) => (
+                        <div key={index} className="fermentation-step-container">
+                            <label>
+                                Name:
+                                <select name="name" value={step.name} onChange={(e) => this.handleYeastChange(e.target.value,e.target.name, index)} required={true} >
+                                    <option value="">Select Type</option>
+                                    {yeasts.map((yeast) => (
+                                        <option key={yeast.id} value={yeast.name}>
+                                            {yeast.name}
+                                        </option>
+                                    ))}
+
+                                </select>
+                                <input type="text" name="type" value={step.name} onChange={(e) => this.handleYeastChange(e.target.value,e.target.name, index)} required={true}  />
+                            </label>
+                            <label>
+                                Menge:
+                                <input type="number" name="quantity" min={0} value={step.quantity} onChange={(e) => this.handleYeastChange(e.target.value, e.target.name,index)} required={true}  />
+                            </label>
+
+
+                            {index > 0 && <button type="button" onClick={() => this.removeYeast(index)}>Remove</button>}
+                        </div>
+                    ))}
+
+                    <button type="button" onClick={this.addYeast}>Hefe zufügen</button>
+                </div>
+                <button type="submit">Erstellen</button>
+                <h3>{info}</h3>
+            </form>)
+    }
+    renderCreateMaltForm() {
+        return (  <h1>Malt</h1>  );
+    }
+    renderCreateHopForm() {
+        return (  <h1>Hop</h1>  );
+    }
+    renderCreateYeastForm() {
+        return (  <h1>Yeast</h1>  );
+
+    }
+
+    render() {
+        return (
+        <div>
+            <div >
+                <Accordion defaultExpanded>
+                    <AccordionSummary sx={{ backgroundColor: 'darkorange',  }} expandIcon={<ExpandMoreIcon />} aria-controls="panel1a-content" id="panel1a-header">
+                        <Typography>Bier</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails sx={{ backgroundColor: '#404040' }}> {this.renderCreateBeerForm()}</AccordionDetails>
+                </Accordion>
+                <Accordion>
+                    <AccordionSummary sx={{ backgroundColor: 'darkorange'}} expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
+                        <Typography>Malz</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails sx={{ backgroundColor: '#404040' }}>  {this.renderCreateMaltForm()}</AccordionDetails>
+
+                </Accordion>
+
+                <Accordion>
+                    <AccordionSummary sx={{ backgroundColor: 'darkorange' }} expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
+                        <Typography>Hopfen</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails sx={{ backgroundColor: '#404040' }}> {this.renderCreateHopForm()}</AccordionDetails>
+
+                </Accordion>
+                <Accordion>
+                    <AccordionSummary sx={{ backgroundColor: 'darkorange' }} expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
+                        <Typography>Hefe</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails sx={{ backgroundColor: '#404040' }}>
+                        {this.renderCreateYeastForm()}
+                    </AccordionDetails>
+
+                </Accordion>
+
+            </div>
+        </div>
+
         );
     }
 }
 
+const mapStateToProps = (state: any) => ({isSuccessful: state.beerDataReducer.isSuccessful,
+    malts: state.beerDataReducer.malts,
+    hops: state.beerDataReducer.hops,
+    yeasts: state.beerDataReducer.yeasts,
+});
+
 const mapDispatchToProps = (dispatch: any) => ({
-    onSubmit: (beer: BeerDTO) => dispatch({type: 'SUBMIT_BEER', payload: beer}),});
-export default connect(null,mapDispatchToProps)(BeerForm);
+    onSubmit: (beer: BeerDTO) => dispatch(BeerActions.submitBeer(beer)),
+    getMalt: (isFetching: boolean) => dispatch(BeerActions.getMalts(isFetching)),
+    getHop: (isFetching: boolean) => dispatch(BeerActions.getHops(isFetching)),
+    getYeast: (isFetching: boolean) => dispatch(BeerActions.getYeasts(isFetching)),
+});
+export default connect(mapStateToProps,mapDispatchToProps)(BeerForm);
 

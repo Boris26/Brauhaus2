@@ -12,13 +12,8 @@ import Index from "./index";
 
 
 const App: React.FC = () => {
-
-
-
-
     return (
         <div className="container">
-
             <div className="Header">
                   <Header></Header>
             </div>

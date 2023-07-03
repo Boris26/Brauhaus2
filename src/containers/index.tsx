@@ -15,23 +15,19 @@ class Index extends React.Component<indexMainProps> {
     constructor(props: indexMainProps) {
         super(props);
     }
-onSubmit(beer: BeerDTO)
-{
-   const jesonBeer = JSON.stringify(beer);
-console.log(jesonBeer);
-}
+
     render() {
             const { viewState } = this.props;
         return (
             <div>
-                {viewState === Views.MAIN && <Main />}
+                {viewState === Views.MAIN && <Main/>}
                 {viewState === Views.PRODUCTION && <Production />}
-                {viewState === Views.DATABASE && <DatabaseOverview  hops={testBeers[0].wortBoiling.hops} yeast={testBeers[0].fermentationMaturation.yeast} malts={testBeers[0].malts}  ></DatabaseOverview>}
+                {viewState === Views.DATABASE && <DatabaseOverview></DatabaseOverview>}
             </div>
         );
     }
 }
-const mapStateToProps = (state: any) => ({viewState: state.viewState});
+const mapStateToProps = (state: any) => ({viewState: state.applicationReducer.view as Views});
 
 
 

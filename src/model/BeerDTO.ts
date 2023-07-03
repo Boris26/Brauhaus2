@@ -6,11 +6,13 @@ export interface FermentationStepsDTO {
 }
 
 export interface MaltDTO {
+    name: string;
     id: string;
     quantity: number;
 }
 
 export interface HopDTO {
+    name: string;
     id: string;
     quantity: number;
     time: number;
@@ -22,6 +24,7 @@ export interface WortBoilingDTO {
 }
 
 export interface YeastDTO {
+    name: string;
     id: string;
     quantity: number;
 }
@@ -46,6 +49,6 @@ export interface BeerDTO {
     spargeVolume: number;
     fermentationSteps: FermentationStepsDTO[];
     malts: MaltDTO[];
-    wortBoiling: WortBoilingDTO;
-    fermentationMaturation: FermentationMaturationDTO;
+    wortBoiling: WortBoilingDTO | null
+    fermentationMaturation: FermentationMaturationDTO | null;
 }

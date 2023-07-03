@@ -2,6 +2,8 @@ import React from 'react';
 import { connect } from 'react-redux';
 import './Header.css';
 import {Views} from "../../../enums/eViews";
+import {BeerActions} from "../../../actions/actions";
+import setViewState = BeerActions.setViewState;
 
 
 interface HeaderProps {
@@ -55,7 +57,7 @@ const mapStateToProps = (state: any) => ({
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
-    setViewState: (viewState: Views) => dispatch({type: 'SET_VIEW_STATE', payload: viewState}),
+    setViewState: (viewState: Views) => dispatch(setViewState(viewState)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Header);
