@@ -4,12 +4,25 @@ import {BeerDTO, HopDTO, MaltDTO, YeastDTO} from "../../model/BeerDTO";
 import {BeerActions} from "../../actions/actions";
 import {connect} from "react-redux";
 import {isEqual} from "lodash";
-import {Accordion, AccordionDetails, AccordionSummary, bottomNavigationActionClasses, Typography} from "@mui/material";
+import {
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
+    bottomNavigationActionClasses, css,
+    styled,
+    Typography
+} from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {MashingType} from "../../enums/eMashingType";
+import MaltForm from './content/CreateMaltForm';
+import YeastForm from './content/CreateYeastForm';
+import {Yeasts} from "../../model/Yeast";
+import HopForm from "./content/CreateHopForm";
+import './BeerForm.css'
+import SimpleBar from 'simplebar-react';
 
 interface BeerFormProps {
-    onSubmit: (beer: BeerDTO) => void;
+    onSubmitBeer: (beer: BeerDTO) => void;
     getMalt: (isFetching: boolean) => void;
     getHop: (isFetching: boolean) => void;
     getYeast: (isFetching: boolean) => void;
@@ -17,6 +30,9 @@ interface BeerFormProps {
     hops: Hop[];
     yeasts: Yeast[];
     isSuccessful: boolean;
+    isSubmitSuccessful: boolean;
+    messageType: string;
+    message: string;
 }
 
 interface BeerFormState {
@@ -36,6 +52,8 @@ interface BeerFormState {
     yeastsDTO: YeastDTO[];
     isSuccessful: boolean;
 }
+
+
 
 class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
     constructor(props: BeerFormProps) {
@@ -173,7 +191,6 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             return {name: yeast.name, id: yeast.id, quantity: quantity};
         });
 
-
         const beer: BeerDTO = {
             id: 0,
             name,
@@ -191,7 +208,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             wortBoiling: { totalTime: 0, hops: hops_DTO },
             fermentationMaturation: {  fermentationTemperature: 0,   carbonation: 0,   yeast: yeasts_DTO}};
         console.log(beer);
-        this.props.onSubmit(beer);
+        this.props.onSubmitBeer(beer);
        // this.resetForm();
     };
 
@@ -271,8 +288,10 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
     renderCreateBeerForm() {
         const {maltsDTO,hopsDTO,yeastsDTO,isSuccessful, name, type, color, alcohol, originalwort, bitterness, description, rating, mashVolume, spargeVolume, fermentationSteps } = this.state;
-        const { malts, hops, yeasts } = this.props;
-        console.log(malts);
+        const { malts, hops, yeasts,isSubmitSuccessful,messageType,message } = this.props;
+        console.log(isSubmitSuccessful);
+        console.log(message);
+        console.log(type);
         let info:string = "";
         if (isEqual(isSuccessful,true))
         {
@@ -284,8 +303,6 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         }
         return (
             <form className="beer-form" onSubmit={this.handleSubmit}>
-                <h2>Create a Beer</h2>
-
                 <label>
                     Name:
                     <input type="text" name="name" value={name} onChange={this.handleChange} required={true}  />
@@ -464,36 +481,34 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
                     <button type="button" onClick={this.addYeast}>Hefe zufügen</button>
                 </div>
-                <button type="submit">Erstellen</button>
-                <h3>{info}</h3>
+                <button className="submit-button" type="submit">Erstellen</button>
+
             </form>)
     }
-    renderCreateMaltForm() {
-        return (  <h1>Malt</h1>  );
+    test() {
+        console.log("test");
     }
-    renderCreateHopForm() {
-        return (  <h1>Hop</h1>  );
-    }
-    renderCreateYeastForm() {
-        return (  <h1>Yeast</h1>  );
 
-    }
+
+
 
     render() {
         return (
-        <div>
+        <div className='containerBeerForm'>
             <div >
-                <Accordion defaultExpanded>
-                    <AccordionSummary sx={{ backgroundColor: 'darkorange',  }} expandIcon={<ExpandMoreIcon />} aria-controls="panel1a-content" id="panel1a-header">
+                <Accordion defaultExpanded sx={{backgroundColor: '#404040'}}>
+                    <AccordionSummary sx={{ backgroundColor: 'darkorange', borderRadius: '10px 10px 0 0' }} expandIcon={<ExpandMoreIcon />} aria-controls="panel1a-content" id="panel1a-header">
                         <Typography>Bier</Typography>
                     </AccordionSummary>
+                    <SimpleBar style={{ maxHeight: '716px' }}>
                     <AccordionDetails sx={{ backgroundColor: '#404040' }}> {this.renderCreateBeerForm()}</AccordionDetails>
+                    </SimpleBar>
                 </Accordion>
                 <Accordion>
                     <AccordionSummary sx={{ backgroundColor: 'darkorange'}} expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
                         <Typography>Malz</Typography>
                     </AccordionSummary>
-                    <AccordionDetails sx={{ backgroundColor: '#404040' }}>  {this.renderCreateMaltForm()}</AccordionDetails>
+                    <AccordionDetails sx={{ backgroundColor: '#404040' }}>  <MaltForm></MaltForm></AccordionDetails>
 
                 </Accordion>
 
@@ -501,19 +516,17 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                     <AccordionSummary sx={{ backgroundColor: 'darkorange' }} expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
                         <Typography>Hopfen</Typography>
                     </AccordionSummary>
-                    <AccordionDetails sx={{ backgroundColor: '#404040' }}> {this.renderCreateHopForm()}</AccordionDetails>
+                    <AccordionDetails sx={{ backgroundColor: '#404040' }}> <HopForm></HopForm></AccordionDetails>
 
                 </Accordion>
-                <Accordion>
-                    <AccordionSummary sx={{ backgroundColor: 'darkorange' }} expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
+                <Accordion sx={{backgroundColor: '#404040'}}>
+                    <AccordionSummary sx={{ backgroundColor: 'darkorange',borderRadius: '0px 0px 10px 10px' }} expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
                         <Typography>Hefe</Typography>
                     </AccordionSummary>
                     <AccordionDetails sx={{ backgroundColor: '#404040' }}>
-                        {this.renderCreateYeastForm()}
+                        <YeastForm></YeastForm>
                     </AccordionDetails>
-
                 </Accordion>
-
             </div>
         </div>
 
@@ -521,14 +534,19 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
     }
 }
 
-const mapStateToProps = (state: any) => ({isSuccessful: state.beerDataReducer.isSuccessful,
+const mapStateToProps = (state: any) => ({
+    isSuccessful: state.beerDataReducer.isSuccessful,
     malts: state.beerDataReducer.malts,
     hops: state.beerDataReducer.hops,
     yeasts: state.beerDataReducer.yeasts,
+    isSubmitSuccessful: state.beerDataReducer.isSubmitSuccessful,
+    message: state.beerDataReducer.message,
+    messageType: state.beerDataReducer.type,
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
-    onSubmit: (beer: BeerDTO) => dispatch(BeerActions.submitBeer(beer)),
+    onSubmitBeer: (beer: BeerDTO) => dispatch(BeerActions.submitBeer(beer)),
+    onSubmitYeast: (yeast: Yeasts) => dispatch(BeerActions.submitNewYeast(yeast)),
     getMalt: (isFetching: boolean) => dispatch(BeerActions.getMalts(isFetching)),
     getHop: (isFetching: boolean) => dispatch(BeerActions.getHops(isFetching)),
     getYeast: (isFetching: boolean) => dispatch(BeerActions.getYeasts(isFetching)),

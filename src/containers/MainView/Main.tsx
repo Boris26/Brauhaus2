@@ -14,35 +14,61 @@ interface MainProps {
 beers: Beer[]
 getBeers: (isFetching:boolean) => void;
 }
-class Main extends React.Component<MainProps> {
+
+interface MainState
+{
+    maxHeight:number;
+}
+class Main extends React.Component<MainProps,MainState> {
     constructor(props: MainProps) {
         super(props);
+        this.state={
+            maxHeight:0,
+        };
     }
 
     componentDidMount() {
         const {getBeers } = this.props;
         getBeers(true);
+        this.calculateMaxHeight();
+        window.addEventListener('resize', this.calculateMaxHeight)
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener('resize', this.calculateMaxHeight);
     }
 
     componentDidUpdate(prevProps: Readonly<MainProps>, prevState: Readonly<{}>, snapshot?: any) {
-        const {beers} = this.props
 
+    }
+
+    calculateMaxHeight = ()=>
+    {
+        const windowHeight = window.innerHeight;
+        const maxHeightPercentage = 0.89;
+        const calculatedMaxHeight = windowHeight * maxHeightPercentage;
+        this.setState({ maxHeight: calculatedMaxHeight });
     }
 
 
     render() {
         const {beers} = this.props
+        const { maxHeight } = this.state;
+
         console.log(beers?.length);
         console.log(beers);
         return (
             <div className="content">
                 <div className="CustomTable">
-                    {beers && <BeerTable beers={beers}/>}
+                    <SimpleBar style={{ maxHeight: maxHeight+'px' }}>
+                        {beers && <BeerTable beers={beers} />}
+                    </SimpleBar>
                 </div>
                 <div className="Details">
-                    <SimpleBar style={{ maxHeight: '100%', overflowY: 'auto' }}>
+                    <SimpleBar style={{ maxHeight: maxHeight+'px' }}>
                         <Details />
                     </SimpleBar>
+
                 </div>
             </div>
         );

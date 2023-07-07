@@ -1,5 +1,4 @@
 import React from 'react';
-import { makeStyles, createStyles, Theme } from '@material-ui/core/styles';
 import Header from './MainView/Header/Header';
 
 
@@ -17,7 +16,7 @@ const App: React.FC = () => {
             <div className="Header">
                   <Header></Header>
             </div>
-           <div>
+           <div className="Index" >
                <Index></Index>
           </div>
         </div>

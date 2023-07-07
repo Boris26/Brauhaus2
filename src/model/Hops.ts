@@ -1,8 +1,8 @@
 export interface Hops
 {
-    id: string;
+    id: number;
     name: string;
     description: string;
-    alpha: number;
+    alpha: string;
     type: string;
 }

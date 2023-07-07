@@ -259,9 +259,7 @@ renderFilling()
                             <Typography>Maischplan</Typography>
                         </AccordionSummary>
                         <AccordionDetails sx={{ backgroundColor: '#404040' }}>  {this.renderFermentation()}</AccordionDetails>
-
                     </Accordion>
-
                     <Accordion>
                         <AccordionSummary sx={{ backgroundColor: 'darkorange' }} expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
                             <Typography>Schüttung</Typography>

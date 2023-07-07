@@ -13,8 +13,12 @@ body {
 }
 
 .Header {
+    position: fixed;
+    top: 0;
     height: 80px;
+    width: 100%;
     background: darkorange;
+    z-index: 999;
 }
 
 .content {
@@ -33,4 +37,7 @@ body {
     flex-direction: column;
     background-color: #404040;
     margin: 10px;
+}
+.Index {
+    margin-top: 80px;
 }

@@ -2,8 +2,9 @@ import React from 'react';
 import { connect } from 'react-redux';
 import './Header.css';
 import {Views} from "../../../enums/eViews";
-import {BeerActions} from "../../../actions/actions";
-import setViewState = BeerActions.setViewState;
+import {ApplicationActions, BeerActions} from "../../../actions/actions";
+import setViewState = ApplicationActions.setViewState;
+
 
 
 interface HeaderProps {
