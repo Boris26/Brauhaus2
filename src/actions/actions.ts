@@ -4,6 +4,7 @@ import {BeerDTO} from "../model/BeerDTO";
 import {Malts} from "../model/Malt";
 import {Hops} from "../model/Hops";
 import {Yeasts} from "../model/Yeast";
+import {ToggleState} from "../enums/eToggleState";
 
 export namespace BeerActions {
 
@@ -16,7 +17,6 @@ export namespace BeerActions {
         SUBMIT_NEW_MALT_SUCCESS = 'BeerActions.SUBMIT_NEW_MALT_SUCCESS',
         SUBMIT_NEW_HOP_SUCCESS = 'BeerActions.SUBMIT_NEW_HOP_SUCCESS',
         SUBMIT_NEW_YEAST_SUCCESS = 'BeerActions.SUBMIT_NEW_YEAST_SUCCESS',
-        SET_VIEW = 'BeerActions.SET_VIEW',
         GET_BEERS = 'BeerActions.GET_BEERS',
         GET_BEERS_SUCCESS = 'BeerActions.GET_BEERS_SUCCESS',
         SET_SELECTED_BEER = 'BeerActions.SET_SELECTED_BEER',
@@ -330,6 +330,66 @@ export namespace ApplicationActions {
         return {
             type: ActionTypes.OPEN_ERROR_DIALOG,
             payload: {open: aOpen, header: aHeader, content: aContent}
+        }
+    }
+}
+
+export namespace ProductionActions {
+    export enum ActionTypes {
+        GET_TEMPERATURES = 'ProductionActions.GET_TEMPERATURES',
+        SET_TEMPERATURE = 'ProductionActions.SET_TEMPERATURES',
+        SET_AGITATOR_SPEED = 'ProductionActions.SET_AGITATOR_SPEED',
+        TOGGLE_AGITATOR = 'ProductionActions.TOGGLE_AGITATOR',
+    }
+
+    export interface ToggleAgitator {
+        readonly type: ActionTypes.TOGGLE_AGITATOR
+        payload: {agitatorState: ToggleState}
+    }
+
+    export interface SetAgitatorSpeed {
+        readonly type: ActionTypes.SET_AGITATOR_SPEED
+        payload: {agitatorSpeed: number}
+    }
+
+
+    export interface SetTemperatures {
+        readonly type: ActionTypes.SET_TEMPERATURE
+        payload: {temperature: number}
+    }
+
+    export interface GetTemperatures {
+        readonly type: ActionTypes.GET_TEMPERATURES
+    }
+
+    export type AllProductionActions =
+        GetTemperatures |
+        SetTemperatures |
+        SetAgitatorSpeed |
+        ToggleAgitator;
+
+    export function toggleAgitator(aAgitatorState: ToggleState): ToggleAgitator {
+        return {
+            type: ActionTypes.TOGGLE_AGITATOR,
+            payload: {agitatorState: aAgitatorState}
+        }
+    }
+    export function setAgitatorSpeed(aAgitatorSpeed: number): SetAgitatorSpeed {
+        return {
+            type: ActionTypes.SET_AGITATOR_SPEED,
+            payload: {agitatorSpeed: aAgitatorSpeed}
+        }
+    }
+    export function getTemperatures(): GetTemperatures {
+        return {
+            type: ActionTypes.GET_TEMPERATURES,
+        }
+    }
+
+    export function setTemperature(aTemperature: number): SetTemperatures {
+        return {
+            type: ActionTypes.SET_TEMPERATURE,
+            payload: {temperature: aTemperature}
         }
     }
 }

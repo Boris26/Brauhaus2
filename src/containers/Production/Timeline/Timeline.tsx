@@ -7,7 +7,7 @@ interface TimelineProps {
 
 class Timeline extends Component<TimelineProps> {
     timelineHeight = 100;
-    rectangleHeight = 80;
+    rectangleHeight = 50;
     heatUpColor = 'lightblue';
     pauseColors = 'red'; // Hier können Sie die Farben für jede Raste anpassen
 
@@ -53,7 +53,7 @@ class Timeline extends Component<TimelineProps> {
         }
 
         return (
-            <Stage width={currentPosition} height={this.timelineHeight}>
+            <Stage width={currentPosition} height={this.timelineHeight} backgroundColor="black">
                 <Layer>{elements}</Layer>
             </Stage>
         );

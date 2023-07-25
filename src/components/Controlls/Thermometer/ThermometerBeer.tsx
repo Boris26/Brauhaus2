@@ -32,7 +32,7 @@ class ThermometerBeer extends React.Component<ThermometerProps> {
                 <Thermometer
                     minValue={0}
                     maxValue={temperatureRange}
-                    value={60}
+                    value={temperature}
                     size="small"
                     height={thermometerHeight}
                     mercuryClass='red-mercury'

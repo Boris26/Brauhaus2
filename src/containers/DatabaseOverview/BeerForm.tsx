@@ -29,7 +29,6 @@ interface BeerFormProps {
     malts: Malt[];
     hops: Hop[];
     yeasts: Yeast[];
-    isSuccessful: boolean;
     isSubmitSuccessful: boolean;
     messageType: string;
     message: string;
@@ -50,7 +49,7 @@ interface BeerFormState {
     maltsDTO: MaltDTO[];
     hopsDTO: HopDTO[];
     yeastsDTO: YeastDTO[];
-    isSuccessful: boolean;
+    isSubmitSuccessful: boolean;
 }
 
 
@@ -73,7 +72,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             maltsDTO: [],
             hopsDTO: [],
             yeastsDTO: [],
-            isSuccessful: false,
+            isSubmitSuccessful: false,
         };
     }
 
@@ -89,10 +88,10 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         getYeast(true);
     }
     componentDidUpdate(prevProps: Readonly<BeerFormProps>, prevState: Readonly<BeerFormState>, snapshot?: any) {
-        const {isSuccessful,malts,hops,yeasts} = this.props;
-        if (!isEqual(isSuccessful,prevState.isSuccessful) )
+        const {isSubmitSuccessful,malts,hops,yeasts} = this.props;
+        if (!isEqual(this.state.isSubmitSuccessful,prevState.isSubmitSuccessful) )
         {
-            this.setState({isSuccessful:isSuccessful});
+            this.setState({isSubmitSuccessful:isSubmitSuccessful});
         }
 
     }
@@ -287,17 +286,17 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
     }
 
     renderCreateBeerForm() {
-        const {maltsDTO,hopsDTO,yeastsDTO,isSuccessful, name, type, color, alcohol, originalwort, bitterness, description, rating, mashVolume, spargeVolume, fermentationSteps } = this.state;
-        const { malts, hops, yeasts,isSubmitSuccessful,messageType,message } = this.props;
+        const {maltsDTO,hopsDTO,yeastsDTO,isSubmitSuccessful, name, type, color, alcohol, originalwort, bitterness, description, rating, mashVolume, spargeVolume, fermentationSteps } = this.state;
+        const { malts, hops, yeasts,messageType,message } = this.props;
         console.log(isSubmitSuccessful);
         console.log(message);
         console.log(type);
         let info:string = "";
-        if (isEqual(isSuccessful,true))
+        if (isEqual(isSubmitSuccessful,true))
         {
             info = "Beer created successfully";
         }
-        else if (isSuccessful === false)
+        else if (isSubmitSuccessful === false)
         {
             info = "Beer creation failed";
         }
@@ -535,7 +534,6 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 }
 
 const mapStateToProps = (state: any) => ({
-    isSuccessful: state.beerDataReducer.isSuccessful,
     malts: state.beerDataReducer.malts,
     hops: state.beerDataReducer.hops,
     yeasts: state.beerDataReducer.yeasts,
@@ -546,7 +544,6 @@ const mapStateToProps = (state: any) => ({
 
 const mapDispatchToProps = (dispatch: any) => ({
     onSubmitBeer: (beer: BeerDTO) => dispatch(BeerActions.submitBeer(beer)),
-    onSubmitYeast: (yeast: Yeasts) => dispatch(BeerActions.submitNewYeast(yeast)),
     getMalt: (isFetching: boolean) => dispatch(BeerActions.getMalts(isFetching)),
     getHop: (isFetching: boolean) => dispatch(BeerActions.getHops(isFetching)),
     getYeast: (isFetching: boolean) => dispatch(BeerActions.getYeasts(isFetching)),

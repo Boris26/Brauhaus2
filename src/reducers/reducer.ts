@@ -2,13 +2,16 @@ import { combineReducers } from 'redux';
 import { Views } from "../enums/eViews";
 import {Beer, Yeast} from "../model/Beer";
 import { BeerRepository } from "../repositorys/BeerRepository";
-import {ApplicationActions, BeerActions} from "../actions/actions";
+import {ProductionRepository} from "../repositorys/ProductionRepository";
+import {ApplicationActions, BeerActions, ProductionActions} from "../actions/actions";
 import AllBeerActions = BeerActions.AllBeerActions;
 import {BeerDTO} from "../model/BeerDTO";
 import {json} from "stream/consumers";
 import {Malts} from "../model/Malt";
 import {Hops} from "../model/Hops";
 import AllApplicationActions = ApplicationActions.AllApplicationActions;
+import AllProductionActions = ProductionActions.AllProductionActions;
+import {ToggleState} from "../enums/eToggleState";
 
 export interface ApplicationReducerState {
     view: Views;
@@ -34,9 +37,18 @@ export interface BeerDataReducerState {
 }
 
 export interface ProductionReducerState {
-
+    temperature: number,
+    agitatorSpeed: number,
+    agitatorState: ToggleState,
 }
 
+export const initialProductionState: ProductionReducerState =
+    {
+        temperature: 0,
+        agitatorSpeed: 5,
+        agitatorState: ToggleState.OFF,
+
+    }
 
 export const initialApplicationState: ApplicationReducerState =
 {
@@ -164,22 +176,36 @@ const beerDataReducer = (aState: BeerDataReducerState = initialBeerState, aActio
         }
 
         case BeerActions.ActionTypes.SET_IS_SUBMIT_SUCCESSFUL: {
-            return {...aState, isSubmitHopSuccessful: aAction.payload.isSubmitSuccessful, isSubmitMaltSuccessful: aAction.payload.isSubmitSuccessful};
+            return {...aState, isSubmitSuccessful: aAction.payload.isSubmitSuccessful};
         }
-
-
-
-
-
         default:
             return aState;
     }
 };
 
-//const productionReducer = (aState: BeerDataReducerState = initialBeerState, aAction: AllBeerActions) => {};
+const productionReducer = (aState: ProductionReducerState = initialProductionState, aAction: AllProductionActions) => {
+    switch (aAction.type) {
+        case ProductionActions.ActionTypes.GET_TEMPERATURES: {
+            ProductionRepository.getTemperature();
+            return {...aState};
+        }
+        case ProductionActions.ActionTypes.SET_TEMPERATURE: {
+            return {...aState, temperature: aAction.payload.temperature};
+        }
+        case ProductionActions.ActionTypes.SET_AGITATOR_SPEED: {
+            return {...aState, agitatorSpeed: aAction.payload.agitatorSpeed};
+        }
+        case ProductionActions.ActionTypes.TOGGLE_AGITATOR: {
+            return {...aState, agitatorState: aAction.payload.agitatorState};
+        }
+        default:
+            return aState;
+    }
+
+};
 
 export const rootReducer = combineReducers({
     applicationReducer: applicationReducer,
     beerDataReducer: beerDataReducer,
-   // productionReducer: productionReducer
+    productionReducer: productionReducer
 });

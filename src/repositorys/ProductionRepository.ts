@@ -1,6 +1,8 @@
 import {CommandsURL, ConfirmURL, DatabaseURL} from "../global";
 import axios, {AxiosResponse} from "axios";
 import {ToggleState} from "../enums/eToggleState";
+import {ProductionActions} from "../actions/actions";
+import store from "../store";
 
 export class ProductionRepository {
 
@@ -49,8 +51,10 @@ export class ProductionRepository {
 
     private static async _doGetTemperature() {
         try {
-            const response = await axios.get(CommandsURL + 'Temperature'+" ");
+            const tempURL= 'temperatur';
+            const response = await axios.get(DatabaseURL + tempURL);
             if (response.status == 200) {
+                store.dispatch(ProductionActions.setTemperature(response.data));
                 console.log(response.data);
             }
             else {

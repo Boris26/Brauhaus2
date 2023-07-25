@@ -1,42 +1,71 @@
-.parent {
+.angry-grid {
+    margin-top: -200px;
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    grid-template-rows: repeat(5, 1fr);
-    grid-column-gap: 0px;
-    grid-row-gap: 0px;
+    grid-template-rows: 1fr 1fr 1fr 1fr 0.2fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
+    gap: 0px;
+    height: 100%;
+}
+
+#item-0 {
+    display: flex;
+    grid-row-start: 2;
+    grid-column-start: 1;
+    grid-row-end: 5;
+    grid-column-end: 3;
+    align-items: center;
+    justify-content: center; /* Horizontale Zentrierung hinzugefügt */
     height: auto;
 }
 
-.div1 {
-    grid-area: 1 / 1 / 2 / 3;
-    background-color: #404040;
-    padding: 10px;
-    color: white;
-    border: black solid 1px;
+
+
+#item-2 {
+    align-items: center;
+    grid-row-start: 2;
+    grid-column-start: 3;
+    display: flex;
+    grid-row-end: 3;
+    grid-column-end: 6;
+    justify-content: left; /* Horizontale Zentrierung hinzugefügt */
 }
 
-.div2 {
-    grid-area: 2 / 1 / 5 / 2;
-    background-color: #404040;
+#item-3 {
     display: flex;
     align-items: center;
-    justify-content: center;
-    border: black solid 1px;
+    grid-row-start: 3;
+    grid-column-start: 3;
+    grid-row-end: 4;
+    grid-column-end: 6;
+    justify-content: left; /* Horizontale Zentrierung hinzugefügt */
 }
 
-.div3 {
-    grid-area: 5 / 1 / 6 / 3;
-    background-color: #404040;
-    padding: 10px;
-    color: white;
-    border: black solid 1px;
+#item-4 {
+    grid-row-start: 4;
+    grid-column-start: 3;
+    grid-row-end: 5;
+    grid-column-end: 6;
+    justify-content: center; /* Horizontale Zentrierung hinzugefügt */
 }
 
-.div4 {
-    grid-area: 2 / 2 / 5 / 3;
-    background-color: #404040;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: black solid 1px;
+#item-5 {
+    background-color: #5f7d8d;
+    grid-row-start: 5;
+    grid-column-start: 1;
+    grid-row-end: 6;
+    grid-column-end: 3; /* Änderung von 3 auf 6 */
+
+    display: flex; /* Flexbox hinzugefügt */
+    justify-content: center; /* Horizontale Zentrierung hinzugefügt */
+    align-items: center; /* Vertikale Zentrierung hinzugefügt */
+}
+
+#item-6 {
+    background-color: #875D69;
+    grid-row-start: 6;
+    grid-column-start: 1;
+    grid-row-end: 7;
+    grid-column-end: 7;
+    justify-content: center; /* Horizontale Zentrierung hinzugefügt */
+    align-items: center; /* Vertikale Zentrierung hinzugefügt */
 }

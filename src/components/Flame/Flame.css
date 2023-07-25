@@ -2,25 +2,24 @@
     0%{
         border-bottom-right-radius:10px;
         bottom:20px;
-        height:60%;
+        height:80%;
         transform:rotate(43deg);
     }
     100%{
         border-bottom-right-radius:20px;
         bottom:15px;
-        height:58%;
+        height:68%;
         transform:rotate(45deg);
     }
 }
-.container{
-    margin:40px 0 0 40px;
+.flameContainer{
     position:relative;
     width:80px;
     height:50px;
     display:inline-block;
 }
 .outer{
-    width:30px;
+    width:37px;
     height:20px;
     background-color:lightblue;
     transform:rotate(45deg);

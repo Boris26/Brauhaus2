@@ -6,10 +6,9 @@ class Flame extends React.Component {
 
         return (
             <div>
-                <div className="container">
+                <div className="flameContainer">
                     <div className="outer flame">
                         <div className="inner flame">
-
                         </div>
                     </div>
                 </div>

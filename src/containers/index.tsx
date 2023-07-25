@@ -28,7 +28,7 @@ class Index extends React.Component<indexMainProps> {
                     {viewState === Views.MAIN && <Main/>}
                 </SimpleBar>
 
-                {viewState === Views.PRODUCTION && <Production />}
+                {viewState === Views.PRODUCTION && <Production/>}
                 {viewState === Views.DATABASE && <DatabaseOverview></DatabaseOverview>}
             </div>
         );
