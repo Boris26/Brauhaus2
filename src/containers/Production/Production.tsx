@@ -3,103 +3,280 @@ import {Beer} from "../../model/Beer";
 import {connect} from "react-redux";
 
 import './Production.css'
-import Timeline from "./Timeline/Timeline";
+import Timeline, {TimelineData} from "./Timeline/Timeline";
 import WaterControl from "../../components/Controlls/WaterControll/WaterControl";
 import Flame from "../../components/Flame/Flame";
 import {ProductionActions} from "../../actions/actions";
 import Gauge from "../../components/Controlls/Gauge/Gauge";
 import MyKnob from "../../components/Controlls/Knob/Knob";
 import {ToggleState} from "../../enums/eToggleState";
+import {FormControl, FormControlLabel, FormGroup, FormLabel, Switch} from '@mui/material';
+import {MashAgitatorStates} from "../../model/MashAgitator";
+import QuantityPicker from '../../components/Controlls/QuantityPicker/QuantityPicker';
 
 interface ProductionProps {
     selectedBeer: Beer;
     temperature: number;
-    agiatorState: ToggleState;
-    agiatorSpeed: number;
+    setedAgitatorState: ToggleState;
+    setedAgitatorSpeed: number;
+    agitatorSpeed: number;
+    agitatorIsRunning: ToggleState;
     getTemperatures: () => void;
-    toggleAgiator: (agiatorState: ToggleState) => void;
-    setAgiatorSpeed: (agiatorSpeed: number) => void;
+    toggleAgitator: (agitatorState: MashAgitatorStates) => void;
+    setAgitatorSpeed: (agitatorSpeed: number) => void;
+    startWaterFilling:(liters:number)=>void;
+    isWaterFillingSuccessful:boolean;
+    isToggleAgitatorSuccess:boolean;
 }
 
 interface ProductionState {
     temperature: number;
-    agiatorState: ToggleState;
+    agitatorState: ToggleState;
+    agitatorSpeed: number;
+    heatingAndStirringSwitchState: boolean
+    intervalSwitchState: boolean
+    mainSwitchState: boolean
+    waterSwitchState: boolean
+    runningTime: number
+    breakTime: number
+    liters: number
+    waterFillingError: boolean
+    mainAgitatorError: boolean
+    isWaterSwitchBlinking: boolean
+    isMainSwitchBlinking: boolean
 }
 class Production extends React.Component<ProductionProps, ProductionState> {
+    private blinkIntervalMainSwitch: NodeJS.Timeout | null = null;
+    private blinkIntervalWaterSwitch: NodeJS.Timeout | null = null;
     constructor(props: ProductionProps) {
         super(props);
         this.state = {
             temperature: 0,
-            agiatorState: ToggleState.OFF
+            agitatorState: ToggleState.OFF,
+            agitatorSpeed: 5,
+            heatingAndStirringSwitchState: false,
+            intervalSwitchState: false,
+            mainSwitchState: false,
+            waterSwitchState: false,
+            runningTime: 0,
+            breakTime: 0,
+            liters: 0,
+            waterFillingError: false,
+            mainAgitatorError: false,
+            isWaterSwitchBlinking: false,
+            isMainSwitchBlinking: false
         }
-
     }
 
     componentDidMount() {
-        this.props.getTemperatures();
+        const {getTemperatures,agitatorSpeed,agitatorIsRunning} = this.props;
+        getTemperatures();
     }
 
-    componentDidUpdate(prevProps: Readonly<ProductionProps>, prevState: Readonly<{}>, snapshot?: any) {
+    componentDidUpdate(prevProps: Readonly<ProductionProps>, prevState: Readonly<ProductionState>, snapshot?: any) {
+        const {toggleAgitator,getTemperatures,agitatorSpeed,agitatorIsRunning} = this.props;
+        const {intervalSwitchState, mainSwitchState,waterSwitchState} = this.state;
+        console.log(this.props.isToggleAgitatorSuccess)
         if (prevProps.temperature !== this.props.temperature) {
             this.setState({temperature: this.props.temperature})
         }
-        if (prevProps.agiatorState !== this.props.agiatorState) {
-            this.setState({agiatorState: this.props.agiatorState})
+        if(this.props.isToggleAgitatorSuccess === false && mainSwitchState)
+        {
+            const delay = 300;
+            setTimeout(() => {
+                this.setState({ mainSwitchState: false ,mainAgitatorError:true});
+            }, delay);
+        }
+        if(prevState.intervalSwitchState ==! this.state.intervalSwitchState && mainSwitchState) {
+            toggleAgitator(this.setAgitatorStates(mainSwitchState));
+        }
+        if(prevState.heatingAndStirringSwitchState ==! this.state.heatingAndStirringSwitchState && mainSwitchState)
+        {
+            toggleAgitator(this.setAgitatorStates(mainSwitchState));
         }
 
+        if(this.props.isWaterFillingSuccessful===false && waterSwitchState)
+        {
+            const delay = 300;
+            setTimeout(() => {
+                this.setState({ waterSwitchState: false ,waterFillingError:true});
+            }, delay);
+        }
+    }
+    setAgitatorStates(mainSwitchState:boolean)
+    {
+        const {agitatorSpeed,runningTime,breakTime,intervalSwitchState,heatingAndStirringSwitchState} = this.state;
+        const mashAgitatorStates: MashAgitatorStates = {
+            isTurnOn: mainSwitchState,
+            rotationsPerMinute: agitatorSpeed,
+            runningTime: runningTime,
+            breakTime: breakTime,
+            isIntervalTurnOn: intervalSwitchState,
+            isHeatingAndStirringTurnOn: heatingAndStirringSwitchState,
+        };
+        return mashAgitatorStates;
     }
 
     toggleAgitator = () => {
-        {
-            if (this.props.agiatorState === ToggleState.ON)
-                this.props.toggleAgiator(ToggleState.OFF);
-            else
-                this.props.toggleAgiator(ToggleState.ON);
+        const {toggleAgitator} = this.props;
+        const {mainSwitchState} = this.state;
+        if (mainSwitchState === false) {
+
+            toggleAgitator(this.setAgitatorStates(true));
+            this.setState({mainSwitchState: true});
+        }
+        else {
+            toggleAgitator(this.setAgitatorStates(false));
+            this.setState({mainSwitchState: false});
+        }
+
+
+    }
+    toggleInterval = () => {
+        const {intervalSwitchState,mainSwitchState,agitatorSpeed} = this.state;
+
+        if (intervalSwitchState === false) {
+                this.setState({intervalSwitchState: true});
+
+        } else {
+            this.setState({intervalSwitchState: false});
+        }
+    }
+    toggleHeatingAndStirring = () => {
+        const {heatingAndStirringSwitchState} = this.state;
+        if (heatingAndStirringSwitchState === false) {
+            this.setState({heatingAndStirringSwitchState: true});
+        } else {
+            this.setState({heatingAndStirringSwitchState: false});
+        }
+    }
+    onAgitatorSpeedChange = (value: number) => {
+       const {setAgitatorSpeed}= this.props
+        this.setState({agitatorSpeed: value});
+        setAgitatorSpeed(value);
+    }
+
+    onIntervalChangeBreakTime = (value: number) => {
+        console.log(value);
+        this.setState({breakTime: value});
+    }
+
+    onIntervalChangeRunningTime = (value: number) => {
+        this.setState({runningTime: value});
+    }
+
+    onSetWaterChangeQuantity = (value: number) => {
+        this.setState({liters: value});
+    }
+
+    toggleWaterSwitchState=()=>
+    {
+        const {waterSwitchState,liters,} = this.state;
+        const {startWaterFilling} = this.props;
+        if (waterSwitchState === false) {
+            this.setState({waterSwitchState: true});
+            startWaterFilling(liters);
+        } else {
+            this.setState({waterSwitchState: false});
         }
     }
 
-    onAgiatorSpeedChange = (value: number) => {
-        this.props.setAgiatorSpeed(value);
-    }
-
-    onIntervalChancge = (value: number) => {
-        console.log(value);
-    }
-
-    onClickInterval = () => {
-        console.log('click');
-    }
 
 
     render() {
-        const { selectedBeer, temperature,agiatorSpeed,agiatorState} = this.props;
+        const timelineData:TimelineData = {
+            type: 'heating', elapsed: 12
+        }
+        const timelineData2:TimelineData = {
+            type: 'rest', elapsed: 21
+        }
+        const timelineData3:TimelineData = {
+            type: 'heating', elapsed: 12
+        }
+        const timelineData4:TimelineData = {
+            type: 'rest', elapsed: 21
+        }
+
+
+        const { selectedBeer, temperature,setedAgitatorSpeed,setedAgitatorState,agitatorSpeed,agitatorIsRunning} = this.props;
+        const { intervalSwitchState, mainSwitchState,heatingAndStirringSwitchState,waterSwitchState,waterFillingError,isWaterSwitchBlinking,mainAgitatorError } = this.state;
         const infinitySymbol = '\u221E';
-        console.log(agiatorState);
         return (
             <div className="angry-grid">
                 <div id="item-0">
-                    <WaterControl liters={20} agitatorSpeed={agiatorSpeed} agitatorState={agiatorState}></WaterControl>
+                    <WaterControl liters={10} agitatorSpeed={setedAgitatorSpeed} agitatorState={agitatorIsRunning}></WaterControl>
                 </div>
                 <div id="item-2" style={{ display: 'flex', alignItems: 'center'}}>
-                    <div>
-                        <MyKnob label={"Geschindigkeit"} max={25} min={5} currentValue={agiatorSpeed} isAktive={agiatorState} onClick={this.toggleAgitator} onValueChange={this.onAgiatorSpeedChange} />
+                    <div style={{position: 'relative',marginTop:'50px'}}>
+                        <MyKnob label={"Geschwindigkeit"} max={20} min={0} currentValue={setedAgitatorSpeed} isAktive={agitatorIsRunning} onClick={this.toggleAgitator} onValueChange={this.onAgitatorSpeedChange} />
                     </div>
-                    <div style={{marginTop:'-30px' ,marginLeft:'20px'}}>
-                        <Gauge value={60} targetValue={60} offset={2} minValue={10} maxValue={100} label={infinitySymbol} />
+                    <div style={{marginTop:'20px' ,marginLeft:'20px'}}>
+                        <Gauge value={agitatorSpeed} targetValue={setedAgitatorSpeed} offset={1} minValue={0} maxValue={20} label={infinitySymbol} />
+                    </div>
+                    <div style={{ width: '2px', height: '180px', backgroundColor: 'black', margin: '0 50px 0px 100px ' }}></div> {/* Vertikaler Trennstrich */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',marginTop:'-50px'  }}>
+                        <h3>Settings</h3>
+                        <QuantityPicker initialValue={1} min={1} max={30} onChange={this.onIntervalChangeBreakTime} isDisabled={false} label="Pausenzeit" labelPosition="above" />
+                        <QuantityPicker initialValue={1} min={1} max={30} onChange={this.onIntervalChangeRunningTime}  isDisabled={false} label="Laufzeit" labelPosition="above"/>
+                    </div>
+                    <div style={{marginLeft: '80px', marginTop:'35px'}}>
+                        <FormControl component="fieldset" variant="standard">
+                            <FormGroup>
+                                <FormControlLabel
+                                    control={
+                                        <Switch className={mainAgitatorError ? 'blinking-button' : ''} checked={mainSwitchState} onChange={this.toggleAgitator} name="MainSwitch" />
+                                    }
+                                    label="Hauptschaler"
+                                />
+                                <FormControlLabel
+                                    control={
+                                        <Switch  checked={intervalSwitchState} onChange={this.toggleInterval} name="IntervalSwitch" />
+                                    }
+                                    label="Interval"
+                                />
+                                <FormControlLabel
+                                    control={
+                                        <Switch  checked={heatingAndStirringSwitchState} onChange={this.toggleHeatingAndStirring} name="HeatingAndStirringSwitch" />
+                                    }
+                                    label="Heizphase"
+                                />
+                            </FormGroup>
+
+                        </FormControl>
                     </div>
 
-
-                    <div style={{ width: '2px', height: '180px', backgroundColor: 'black', margin: '0 50px' }}></div> {/* Vertikaler Trennstrich */}
-                    <MyKnob label={"Pause"} min={0} max={10} onClick={this.onClickInterval} onValueChange={this.onIntervalChancge} isAktive={ToggleState.OFF} currentValue={0}></MyKnob>
-                    <div style={{ width: '30px' }}></div> {/* Leerer Raum mit 20px Breite */}
-                    <MyKnob label={"Laufzeit"} min={0} max={10} onClick={this.onClickInterval} onValueChange={this.onIntervalChancge} isAktive={ToggleState.OFF} currentValue={0}></MyKnob>
                 </div>
                 <div id="item-3">
-                    <Gauge value={60} targetValue={60} offset={2} minValue={10} maxValue={100} label={'°C'} />
-                    <Gauge value={60} targetValue={50} offset={2} minValue={0} maxValue={70} label={'Liter'} />
+                    <Gauge value={20} targetValue={60} offset={1} minValue={0} maxValue={100} label={"°C"} />
+                    <div className="timeContainer">
+                        <div className="frame">
+                            <span className="label">Laufzeit</span>
+                            <span className="time">09:10</span>
+                        </div>
+                    </div>
+                    <div className="timeContainer">
+                        <div className="frame">
+                            <span className="label">Zielzeit</span>
+                            <span className="time">10:00</span>
+                        </div>
+                    </div>
+
+                    <div style={{ width: '2px', height: '180px', backgroundColor: 'black', margin: '0 50px 0px 45px' }}></div> {/* Vertikaler Trennstrich */}
+                    <QuantityPicker initialValue={3} min={5} max={30} onChange={this.onSetWaterChangeQuantity} isDisabled={waterSwitchState} label="Liter" labelPosition="above" />
+                    <div style={{marginLeft: '80px', marginTop:'35px'}}>
+                        <FormControl component="fieldset" variant="standard">
+                            <FormGroup>
+                                <FormControlLabel
+                                    control={
+                                        <Switch className={waterFillingError ? 'blinking-button' : ''} checked={waterSwitchState} onChange={this.toggleWaterSwitchState} name="MainSwitch" />
+                                    }
+                                    label="Automatik"
+                                />
+                           </FormGroup>
+                        </FormControl>
+                    </div>
 
                 </div>
-                <div id="item-4">4</div>
                 <div id="item-5">
                     <Flame></Flame>
                     <Flame></Flame>
@@ -107,24 +284,31 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                     <Flame></Flame>
                 </div>
                 <div id="item-6">
-                    <Timeline pauses={5} ></Timeline>
+                    <div className="timeline">
+                        <Timeline timeLineData={[timelineData,timelineData2,timelineData3,timelineData4]}></Timeline>
+                    </div>
+
                 </div>
             </div>
-        );
-    }
+        )}
 
 }
 
 const mapDispatchToProps = (dispatch: any) => ({
     getTemperatures: () => { dispatch(ProductionActions.getTemperatures()) },
-    toggleAgiator: (agiatorState: ToggleState) => { dispatch(ProductionActions.toggleAgitator(agiatorState)) },
-    setAgiatorSpeed: (agiatorSpeed: number) => { dispatch(ProductionActions.setAgitatorSpeed(agiatorSpeed)) }
+    toggleAgitator: (agitatorState: MashAgitatorStates) => { dispatch(ProductionActions.toggleAgitator(agitatorState)) },
+    startWaterFilling:(liters:number)=>{dispatch(ProductionActions.startWaterFilling(liters))},
+    setAgitatorSpeed: (agitatorSpeed: number) => { dispatch(ProductionActions.setAgitatorSpeed(agitatorSpeed)) },
 });
 const mapStateToProps = (state: any) => (
     {
         selectedBeer: state.selectedBeer,
         temperature: state.productionReducer.temperature,
-        agiatorState: state.productionReducer.agitatorState,
-        agiatorSpeed: state.productionReducer.agitatorSpeed
+        setedAgitatorState: state.productionReducer.setedAgitatorState,
+        setedAgitatorSpeed: state.productionReducer.setedAgitatorSpeed,
+        agitatorIsRunning:state.productionReducer.agitatorIsRunning,
+        agitatorSpeed:state.productionReducer.agitatorSpeed,
+        isWaterFillingSuccessful: state.productionReducer.isWaterFillingSuccessful,
+        isToggleAgitatorSuccess: state.productionReducer.isToggleAgitatorSuccess
     });
 export default connect(mapStateToProps,mapDispatchToProps)(Production);

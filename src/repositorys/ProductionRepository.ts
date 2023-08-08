@@ -3,16 +3,19 @@ import axios, {AxiosResponse} from "axios";
 import {ToggleState} from "../enums/eToggleState";
 import {ProductionActions} from "../actions/actions";
 import store from "../store";
+import {MashAgitatorStates} from "../model/MashAgitator";
 
 export class ProductionRepository {
 
-    static async setMixerSpeed(speed: number) {
-        return await ProductionRepository._doSetMixerSpeed(speed);
+    static async setAgitatorSpeed(speed: number) {
+        return await ProductionRepository._doSetAgitatorSpeed(speed);
     }
 
-    static async toggleMixer(aIsTurnOn: ToggleState,aSpeed: number){
-        return await ProductionRepository._doToggleMixer(aIsTurnOn,aSpeed);
+    static async toggleAgitator(aMashAgitatorStates: MashAgitatorStates) {
+        return await ProductionRepository._doToggleAgitator(aMashAgitatorStates);
     }
+
+
 
     static async toggleHeater(aIsTurnOn: ToggleState) {
         return await ProductionRepository._doToggleHeater(aIsTurnOn);
@@ -51,8 +54,8 @@ export class ProductionRepository {
 
     private static async _doGetTemperature() {
         try {
-            const tempURL= 'temperatur';
-            const response = await axios.get(DatabaseURL + tempURL);
+            const tempURL= 'temperatur:\"\"';
+            const response = await axios.get(CommandsURL + tempURL);
             if (response.status == 200) {
                 store.dispatch(ProductionActions.setTemperature(response.data));
                 console.log(response.data);
@@ -161,14 +164,15 @@ export class ProductionRepository {
         try {
             const response = await axios.get(CommandsURL + 'FillWaterAutomatic:' + aLiters.toString());
             if (response.status == 200) {
-                console.log(response.data);
+                store.dispatch(ProductionActions.startWaterFillingSuccess(true));
             }
             else {
-                console.log(response.data);
+                store.dispatch(ProductionActions.startWaterFillingSuccess(false));
             }
         }
         catch (error) {
-            console.error('Fehler beim API-Aufruf', error);
+            store.dispatch(ProductionActions.startWaterFillingSuccess(false));
+
         }
     }
 
@@ -181,17 +185,22 @@ export class ProductionRepository {
                      response = await axios.get(CommandsURL + 'TurnOff');
                 }
                 if (response.status == 200) {
-                     console.log(response.data);
+                    store.dispatch(ProductionActions.toggleAgitatorSuccess(false));
+                }
+                else
+                {
+                    store.dispatch(ProductionActions.toggleAgitatorSuccess(false));
                 }
            }
              catch (error) {
+                 store.dispatch(ProductionActions.toggleAgitatorSuccess(false));
                 console.error('Fehler beim API-Aufruf', error);
              }
     }
 
-    private static async _doSetMixerSpeed(speed: number) {
+    private static async _doSetAgitatorSpeed(speed: number) {
         try {
-            const response = await axios.get(CommandsURL+ speed.toString());
+            const response = await axios.get(CommandsURL+'Speed:'+  speed.toString());
             if (response.status == 200) {
                 console.log(response.data);
             }
@@ -205,23 +214,30 @@ export class ProductionRepository {
         }
     }
 
-    private static async _doToggleMixer(aIsTurnOn:ToggleState, aSpeed: number) {
+    private static async _doToggleAgitator(aMashAgitatorStates: MashAgitatorStates) {
+        console.log(aMashAgitatorStates);
         try {
-            let response: AxiosResponse<any,any>;
-            if (aIsTurnOn === ToggleState.ON) {
-                 response = await axios.get(CommandsURL+'Start:'+ aSpeed.toString());
-            } else {
-                 response = await axios.get(CommandsURL+'Stop:'+ aSpeed.toString());
+            let response: AxiosResponse<any, any>;
+
+
+                response = await axios.post(CommandsURL + 'AgitatorInterval:\"\"', aMashAgitatorStates);
+                if (response.status === 200) {
+                    store.dispatch(ProductionActions.toggleAgitatorSuccess(true));
+                    console.log(response.data);
+                }
+                else
+                {
+                    store.dispatch(ProductionActions.toggleAgitatorSuccess(false));
+                }
+
             }
-            if (response.status == 200) {
-                console.log(response.data);
-            }
-        }
-        catch (error)
-        {
+
+        catch (error) {
+            store.dispatch(ProductionActions.toggleAgitatorSuccess(false));
             console.error('Fehler beim API-Aufruf', error);
         }
-        }
 
 
-}
+
+
+}}

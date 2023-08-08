@@ -39,15 +39,25 @@ export interface BeerDataReducerState {
 export interface ProductionReducerState {
     temperature: number,
     agitatorSpeed: number,
-    agitatorState: ToggleState,
+    setedAgitatorSpeed: number,
+    setedAgitatorState: ToggleState,
+    agitatorIsRunning: ToggleState,
+    liters: number,
+    isWaterFillingSuccessful: boolean,
+    isToggleAgitatorSuccess: boolean
+
 }
 
 export const initialProductionState: ProductionReducerState =
     {
         temperature: 0,
-        agitatorSpeed: 5,
-        agitatorState: ToggleState.OFF,
-
+        setedAgitatorSpeed: 5,
+        setedAgitatorState: ToggleState.OFF,
+        agitatorSpeed: 0,
+        agitatorIsRunning: ToggleState.OFF,
+        liters:0,
+        isWaterFillingSuccessful: true,
+        isToggleAgitatorSuccess: true
     }
 
 export const initialApplicationState: ApplicationReducerState =
@@ -93,7 +103,6 @@ const applicationReducer = (aState: ApplicationReducerState = initialApplication
                 return aState;
     }
 
-    return aState;
 };
 
 const beerDataReducer = (aState: BeerDataReducerState = initialBeerState, aAction: AllBeerActions) => {
@@ -192,16 +201,36 @@ const productionReducer = (aState: ProductionReducerState = initialProductionSta
         case ProductionActions.ActionTypes.SET_TEMPERATURE: {
             return {...aState, temperature: aAction.payload.temperature};
         }
-        case ProductionActions.ActionTypes.SET_AGITATOR_SPEED: {
-            return {...aState, agitatorSpeed: aAction.payload.agitatorSpeed};
-        }
+
         case ProductionActions.ActionTypes.TOGGLE_AGITATOR: {
-            return {...aState, agitatorState: aAction.payload.agitatorState};
+            ProductionRepository.toggleAgitator(aAction.payload.agitatorState);
+            return {...aState, setedAgitatorState: aAction.payload.agitatorState};
         }
+
+        case ProductionActions.ActionTypes.SET_AGITATOR_SPEED: {
+            ProductionRepository.setAgitatorSpeed(aAction.payload.agitatorSpeed);
+            return {...aState, setedAgitatorSpeed: aAction.payload.agitatorSpeed};
+        }
+        case ProductionActions.ActionTypes.SET_AGITATOR_IS_RUNNING: {
+            return {...aState, agitatorIsRunning: aAction.payload.agitatorIsRunning};
+        }
+
+        case ProductionActions.ActionTypes.START_WATER_FILLING: {
+            ProductionRepository.fillWaterAutomatic(aAction.payload.liters);
+            return {...aState, liters: aAction.payload.liters};
+        }
+
+        case ProductionActions.ActionTypes.START_WATER_FILLING_SUCCESS: {
+            return {...aState, isWaterFillingSuccessful: aAction.payload.isWaterFillingSuccessful};
+        }
+
+        case ProductionActions.ActionTypes.TOGGLE_AGITATOR_SUCCESS: {
+            return {...aState, isToggleAgitatorSuccess: aAction.payload.isToggleAgitatorSuccess}
+        }
+
         default:
             return aState;
     }
-
 };
 
 export const rootReducer = combineReducers({

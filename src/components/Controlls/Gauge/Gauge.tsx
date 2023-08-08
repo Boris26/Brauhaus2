@@ -37,17 +37,43 @@ class Gauge extends React.Component<GaugeProps,GaugeState> {
      this.calculateAreas();
     }
 
-    calculateAreas()
-    {
-        const {value,targetValue} = this.props;
-        const redFrom = 10;
-        const redTo = targetValue - 2;
-        const yellowFrom = targetValue + 2;
-        const yellowTo = 100;
-        const greenFrom = targetValue - 2;
-        const greenTo = targetValue + 2;
+    componentDidUpdate(prevProps: Readonly<GaugeProps>, prevState: Readonly<GaugeState>, snapshot?: any) {
+        if (prevProps.value !== this.props.value) {
+            this.setState({value: this.props.value})
+        }
+        if (prevProps.targetValue !== this.props.targetValue) {
+            this.calculateAreas();
+        }
+    }
 
-        this.setState({redFrom: redFrom,redTo: redTo,yellowFrom: yellowFrom,yellowTo: yellowTo,greenFrom: greenFrom,greenTo: greenTo});
+
+    calculateAreas() {
+        const { value, targetValue, offset, minValue, maxValue } = this.props;
+
+        let greenFrom = Math.max(targetValue - 1, 0);
+        let greenTo = Math.min(targetValue + 1, maxValue);
+
+        let redFrom = minValue;
+        let redTo = targetValue - offset;
+
+        let yellowFrom = targetValue + offset;
+        let yellowTo = maxValue;
+
+        if (targetValue === 0) {
+            greenFrom = greenTo = yellowFrom = yellowTo = redTo = redFrom = 0;
+        } else if (targetValue + 1 > maxValue) {
+            greenTo = maxValue;
+            yellowFrom = yellowTo = 0;
+        }
+
+        this.setState({
+            redFrom: redFrom,
+            redTo: redTo,
+            yellowFrom: yellowFrom,
+            yellowTo: yellowTo,
+            greenFrom: greenFrom,
+            greenTo: greenTo,
+        });
     }
 
 
@@ -69,10 +95,9 @@ class Gauge extends React.Component<GaugeProps,GaugeState> {
                         greenTo: greenTo,
                         redFrom: redFrom,
                         redTo: redTo,
-                        yellowColor: '#DC3912',
                         yellowFrom:yellowFrom,
                         yellowTo: yellowTo,
-                        minorTicks: 5,
+                        minorTicks: 10,
                         min: minValue,
                         max: maxValue,
                     }}

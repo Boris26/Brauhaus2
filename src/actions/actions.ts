@@ -5,6 +5,7 @@ import {Malts} from "../model/Malt";
 import {Hops} from "../model/Hops";
 import {Yeasts} from "../model/Yeast";
 import {ToggleState} from "../enums/eToggleState";
+import {MashAgitatorStates} from "../model/MashAgitator";
 
 export namespace BeerActions {
 
@@ -339,12 +340,36 @@ export namespace ProductionActions {
         GET_TEMPERATURES = 'ProductionActions.GET_TEMPERATURES',
         SET_TEMPERATURE = 'ProductionActions.SET_TEMPERATURES',
         SET_AGITATOR_SPEED = 'ProductionActions.SET_AGITATOR_SPEED',
+        SET_AGITATOR_IS_RUNNING = 'ProductionActions.SET_AGITATOR_IS_RUNNING',
         TOGGLE_AGITATOR = 'ProductionActions.TOGGLE_AGITATOR',
+        TOGGLE_AGITATOR_SUCCESS = 'ProductionActions.TOGGLE_AGITATOR_SUCCESS',
+        START_WATER_FILLING = 'ProductionActions.START_WATER_FILLING',
+        START_WATER_FILLING_SUCCESS = 'ProductionActions.START_WATER_FILLING_SUCCESS',
+    }
+
+    export interface ToggleAgitatorSuccess {
+        readonly type: ActionTypes.TOGGLE_AGITATOR_SUCCESS
+        payload: {isToggleAgitatorSuccess: boolean}
+    }
+    export interface StartWaterFillingSuccess {
+        readonly type: ActionTypes.START_WATER_FILLING_SUCCESS
+        payload: {isWaterFillingSuccessful: boolean}
+    }
+    export interface StartWaterFilling {
+        readonly type: ActionTypes.START_WATER_FILLING
+        payload: {liters: number}
+    }
+
+    export interface SetAgitatorIsRunning {
+        readonly type: ActionTypes.SET_AGITATOR_IS_RUNNING
+        payload: {agitatorIsRunning: ToggleState}
     }
 
     export interface ToggleAgitator {
         readonly type: ActionTypes.TOGGLE_AGITATOR
-        payload: {agitatorState: ToggleState}
+        payload: {
+            agitatorState: MashAgitatorStates
+        }
     }
 
     export interface SetAgitatorSpeed {
@@ -366,12 +391,44 @@ export namespace ProductionActions {
         GetTemperatures |
         SetTemperatures |
         SetAgitatorSpeed |
+        SetAgitatorIsRunning |
+        StartWaterFillingSuccess |
+        StartWaterFilling |
+        ToggleAgitatorSuccess |
         ToggleAgitator;
 
-    export function toggleAgitator(aAgitatorState: ToggleState): ToggleAgitator {
+    export function toggleAgitatorSuccess(aIsSuccess: boolean): ToggleAgitatorSuccess {
+        return {
+            type: ActionTypes.TOGGLE_AGITATOR_SUCCESS,
+            payload: {isToggleAgitatorSuccess: aIsSuccess}
+        }
+    }
+
+    export function startWaterFilling(aLiters: number): StartWaterFilling {
+        return {
+            type: ActionTypes.START_WATER_FILLING,
+            payload: {liters: aLiters}
+        }
+    }
+    export function startWaterFillingSuccess(aIsSuccessful: boolean): StartWaterFillingSuccess {
+        return {
+            type: ActionTypes.START_WATER_FILLING_SUCCESS,
+            payload: {isWaterFillingSuccessful: aIsSuccessful}
+        }
+    }
+    export function setAgitatorIsRunning(aAgitatorIsRunning: ToggleState): SetAgitatorIsRunning {
+        return {
+            type: ActionTypes.SET_AGITATOR_IS_RUNNING,
+            payload: {agitatorIsRunning: aAgitatorIsRunning}
+        }
+    }
+
+    export function toggleAgitator(aAgitatorState: MashAgitatorStates): ToggleAgitator {
         return {
             type: ActionTypes.TOGGLE_AGITATOR,
-            payload: {agitatorState: aAgitatorState}
+            payload: {
+                agitatorState: aAgitatorState
+            }
         }
     }
     export function setAgitatorSpeed(aAgitatorSpeed: number): SetAgitatorSpeed {

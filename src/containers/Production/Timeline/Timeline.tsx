@@ -1,60 +1,40 @@
 import React, { Component } from 'react';
 import { Stage, Layer, Rect } from 'react-konva';
 
-interface TimelineProps {
-    pauses: number;
+export interface TimelineData {
+    type: 'heating' | 'rest';
+    elapsed: number;
+}
+export interface TimelineProps {
+    timeLineData: TimelineData[];
 }
 
 class Timeline extends Component<TimelineProps> {
-    timelineHeight = 100;
-    rectangleHeight = 50;
-    heatUpColor = 'lightblue';
-    pauseColors = 'red'; // Hier können Sie die Farben für jede Raste anpassen
-
-
-
 
     render() {
-        const { pauses } = this.props;
+        let totalX = 0;
 
-        let currentPosition = 0;
-        const elements: JSX.Element[] = [];
-
-        for (let i = 0; i < pauses; i++) {
-            // Aufheizungsphase
-            const heatUpRect = (
-                <Rect
-                    key={`heatup-${i}`}
-                    x={currentPosition}
-                    y={(this.timelineHeight - this.rectangleHeight) / 2}
-                    width={this.rectangleHeight}
-                    height={this.rectangleHeight}
-                    fill={this.heatUpColor}
-                />
-            );
-
-            currentPosition += this.rectangleHeight;
-
-            // Raste
-            const pauseRect = (
-                <Rect
-                    key={`pause-${i}`}
-                    x={currentPosition}
-                    y={(this.timelineHeight - this.rectangleHeight) / 2}
-                    width={this.rectangleHeight}
-                    height={this.rectangleHeight}
-                    fill={this.pauseColors}
-                />
-            );
-
-            currentPosition += this.rectangleHeight;
-
-            elements.push(heatUpRect, pauseRect);
-        }
+        const { timeLineData } = this.props;
 
         return (
-            <Stage width={currentPosition} height={this.timelineHeight} backgroundColor="black">
-                <Layer>{elements}</Layer>
+            <Stage width={800} height={200}>
+                <Layer>
+                    {timeLineData.map((entry, index) => {
+                        const x = totalX;
+                        totalX += entry.elapsed * 10; // Anpassung der Skala
+
+                        return (
+                            <Rect
+                                key={index}
+                                x={x}
+                                y={10}
+                                width={entry.elapsed * 10} // Breite entsprechend der Zeit
+                                height={50}
+                                fill={entry.type === 'heating' ? 'blue' : 'red'}
+                            />
+                        );
+                    })}
+                </Layer>
             </Stage>
         );
     }

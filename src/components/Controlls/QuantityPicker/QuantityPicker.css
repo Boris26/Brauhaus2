@@ -1,0 +1,88 @@
+/* quantityPicker.css */
+.quantity-picker-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.quantity-picker-label {
+    padding: 0.2rem 0.2rem;
+    color: #eeeeee;
+}
+
+.quantity-picker-content {
+    display: flex;
+    align-items: center;
+}
+.decrement-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px 0 0 8px;
+    background-color: #ffffff; /* Weißer Hintergrund für den Bereich mit der Zahl */
+    color: #404040;
+    border-right: #404040 1px solid;
+    &:disabled {
+        background-color: #f0f0f0;
+        cursor: not-allowed;
+    }
+}
+.increment-btn {
+    width: 40px;
+    border-radius: 0 8px 8px 0;
+    height: 40px;
+    background-color: #ffffff; /* Weißer Hintergrund für den Bereich mit der Zahl */
+    color: #404040;
+    border-left: #404040 1px solid;
+}
+.increment-btn:hover {
+    background-color: #ccc6c6;
+    cursor: pointer;
+}
+.decrement-btn:hover {
+    background-color: #ccc6c6;
+    cursor: pointer;
+}
+.increment-btn:disabled
+{
+    background-color: #f0f0f0;
+    cursor: not-allowed;
+}
+
+.decrement-btn:disabled {
+    background-color: #f0f0f0;
+    cursor: not-allowed;
+    /* Weitere Styles für den deaktivierten Button... */
+}
+
+
+.quantity-picker-input{
+    width: 50px;
+    flex-grow: 1;
+    flex: 1; /* Nimmt den verfügbaren Platz ein, um den Raum zwischen Buttons und der Zahl zu füllen */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 40px;
+    background-color: #ffffff; /* Weißer Hintergrund für den Bereich mit der Zahl */
+
+}
+.quantity-picker-input-disabled {
+    background-color: #f0f0f0;
+    cursor: not-allowed;
+}
+/* Positionierung des Labels */
+.label-above {
+    flex-direction: column;
+}
+
+.label-left {
+    flex-direction: row;
+}
+
+.label-right {
+    flex-direction: row-reverse;
+}
+
+.label-below {
+    flex-direction: column-reverse;
+}
