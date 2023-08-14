@@ -202,24 +202,29 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         const { intervalSwitchState, mainSwitchState,heatingAndStirringSwitchState,waterSwitchState,waterFillingError,isWaterSwitchBlinking,mainAgitatorError } = this.state;
         const infinitySymbol = '\u221E';
         return (
-            <div className="angry-grid">
-                <div id="item-0">
+            <div className="containerProduction ">
+                <div className="HeaderProduction">
+                    <div className='HeaderText'>
+                        {selectedBeer?.name}
+                    </div>
+                </div>
+                <div className="Water">
                     <WaterControl liters={10} agitatorSpeed={setedAgitatorSpeed} agitatorState={agitatorIsRunning}></WaterControl>
                 </div>
-                <div id="item-2" style={{ display: 'flex', alignItems: 'center'}}>
+                <div className="Agitator" >
                     <div style={{position: 'relative',marginTop:'50px'}}>
                         <MyKnob label={"Geschwindigkeit"} max={20} min={0} currentValue={setedAgitatorSpeed} isAktive={agitatorIsRunning} onClick={this.toggleAgitator} onValueChange={this.onAgitatorSpeedChange} />
                     </div>
                     <div style={{marginTop:'20px' ,marginLeft:'20px'}}>
                         <Gauge value={agitatorSpeed} targetValue={setedAgitatorSpeed} offset={1} minValue={0} maxValue={20} label={infinitySymbol} />
                     </div>
-                    <div style={{ width: '2px', height: '180px', backgroundColor: 'black', margin: '0 50px 0px 100px ' }}></div> {/* Vertikaler Trennstrich */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',marginTop:'-50px'  }}>
+                </div>
+                    <div className="Settings" >
                         <h3>Settings</h3>
                         <QuantityPicker initialValue={1} min={1} max={30} onChange={this.onIntervalChangeBreakTime} isDisabled={false} label="Pausenzeit" labelPosition="above" />
                         <QuantityPicker initialValue={1} min={1} max={30} onChange={this.onIntervalChangeRunningTime}  isDisabled={false} label="Laufzeit" labelPosition="above"/>
-                    </div>
-                    <div style={{marginLeft: '80px', marginTop:'35px'}}>
+
+                    <div >
                         <FormControl component="fieldset" variant="standard">
                             <FormGroup>
                                 <FormControlLabel
@@ -244,10 +249,24 @@ class Production extends React.Component<ProductionProps, ProductionState> {
 
                         </FormControl>
                     </div>
-
-                </div>
-                <div id="item-3">
+                        <QuantityPicker initialValue={3} min={5} max={30} onChange={this.onSetWaterChangeQuantity} isDisabled={waterSwitchState} label="Liter" labelPosition="above" />
+                        <div >
+                            <FormControl component="fieldset" variant="standard">
+                                <FormGroup>
+                                    <FormControlLabel
+                                        control={
+                                            <Switch className={waterFillingError ? 'blinking-button' : ''} checked={waterSwitchState} onChange={this.toggleWaterSwitchState} name="MainSwitch" />
+                                        }
+                                        label="Automatik"
+                                    />
+                                </FormGroup>
+                            </FormControl>
+                        </div>
+                    </div>
+                <div className="Temp">
                     <Gauge value={20} targetValue={60} offset={1} minValue={0} maxValue={100} label={"°C"} />
+                 </div>
+                <div className="Info">
                     <div className="timeContainer">
                         <div className="frame">
                             <span className="label">Laufzeit</span>
@@ -261,29 +280,18 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                         </div>
                     </div>
 
-                    <div style={{ width: '2px', height: '180px', backgroundColor: 'black', margin: '0 50px 0px 45px' }}></div> {/* Vertikaler Trennstrich */}
-                    <QuantityPicker initialValue={3} min={5} max={30} onChange={this.onSetWaterChangeQuantity} isDisabled={waterSwitchState} label="Liter" labelPosition="above" />
-                    <div style={{marginLeft: '80px', marginTop:'35px'}}>
-                        <FormControl component="fieldset" variant="standard">
-                            <FormGroup>
-                                <FormControlLabel
-                                    control={
-                                        <Switch className={waterFillingError ? 'blinking-button' : ''} checked={waterSwitchState} onChange={this.toggleWaterSwitchState} name="MainSwitch" />
-                                    }
-                                    label="Automatik"
-                                />
-                           </FormGroup>
-                        </FormControl>
-                    </div>
+                </div>
 
-                </div>
-                <div id="item-5">
+
+
+
+                <div className='Flame'>
                     <Flame></Flame>
                     <Flame></Flame>
                     <Flame></Flame>
                     <Flame></Flame>
                 </div>
-                <div id="item-6">
+                <div className='Timeline'>
                     <div className="timeline">
                         <Timeline timeLineData={[timelineData,timelineData2,timelineData3,timelineData4]}></Timeline>
                     </div>
@@ -302,7 +310,7 @@ const mapDispatchToProps = (dispatch: any) => ({
 });
 const mapStateToProps = (state: any) => (
     {
-        selectedBeer: state.selectedBeer,
+        selectedBeer: state.beerDataReducer.selectedBeer,
         temperature: state.productionReducer.temperature,
         setedAgitatorState: state.productionReducer.setedAgitatorState,
         setedAgitatorSpeed: state.productionReducer.setedAgitatorSpeed,

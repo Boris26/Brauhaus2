@@ -9,80 +9,70 @@
     color: red;
 }
 
-.angry-grid {
-    height: 80vh;
-    margin-top: 60px;
+.containerProduction {
     display: grid;
-    grid-template-rows: 1fr 1fr 1fr 1fr 0.2fr 1fr 1fr;
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr;
-    gap: 0px;
+    grid-template-columns: 1fr 1fr 1fr 0.5fr 1.5fr;
+    grid-template-rows: 0.15fr 1fr 1fr 0.1fr 0.2fr 0.5fr;
+    gap: 2px 2px;
+    grid-auto-flow: row;
+    justify-content: space-between;
+    justify-items: stretch;
+    align-items: stretch;
+    grid-template-areas:
+    "Header Header Header Header Header"
+    "Water Water Agitator Agitator Settings"
+    "Water Water Temp Temp Settings"
+    "Water Water Info Info Info"
+    "Flame Flame Info Info Info"
+    "Timeline Timeline Timeline Timeline Timeline";
 }
 
-
-#item-0 {
+.HeaderProduction {
+    margin: 2px;
+    grid-area: Header;
     display: flex;
-    grid-row-start: 2;
-    grid-column-start: 1;
-    grid-row-end: 5;
-    grid-column-end: 3;
+    justify-content: left;
     align-items: center;
-    justify-content: center; /* Horizontale Zentrierung hinzugefügt */
-    height: auto;
 }
-#item-1{
-
-}
-
-
-#item-2 {
-    align-items: center;
-    grid-row-start: 2;
-    grid-column-start: 3;
+.HeaderText{
+    margin-left: 2rem;
+    color: #eeeeee;
+    font-size: 20px;
+    font-weight: bold;
     display: flex;
-    grid-row-end: 3;
-    grid-column-end: 6;
-    justify-content: left; /* Horizontale Zentrierung hinzugefügt */
-}
-
-#item-3 {
-    display: flex;
+    justify-content: left;
     align-items: center;
-    grid-row-start: 3;
-    grid-column-start: 3;
-    grid-row-end: 4;
-    grid-column-end: 6;
-    justify-content: left; /* Horizontale Zentrierung hinzugefügt */
-}
 
-#item-4 {
-    grid-row-start: 4;
-    grid-column-start: 3;
-    grid-row-end: 5;
-    grid-column-end: 6;
-    justify-content: center; /* Horizontale Zentrierung hinzugefügt */
-}
+    }
 
-#item-5 {
-    margin-top: 60px;
-    background-color: #5f7d8d;
-    grid-row-start: 5;
-    grid-column-start: 1;
-    grid-row-end: 6;
-    grid-column-end: 3; /* Änderung von 3 auf 6 */
-
-    display: flex; /* Flexbox hinzugefügt */
-    justify-content: center; /* Horizontale Zentrierung hinzugefügt */
+.Water {
+    grid-area: Water;
+    border: #eeeeee solid 1px;
+    display: flex; justify-content: center; /* Horizontale Zentrierung hinzugefügt */
     align-items: center; /* Vertikale Zentrierung hinzugefügt */
 }
-#item-6{
-    grid-row-start: 6;
-    grid-column-start: 1;
-    grid-row-end: 7;
-    grid-column-end: 7;
-    justify-content: center; /* Horizontale Zentrierung hinzugefügt */
+
+.Flame { grid-area: Flame; border: #eeeeee solid 1px;  display: flex; justify-content: center; /* Horizontale Zentrierung hinzugefügt */
+    align-items: center; /* Vertikale Zentrierung hinzugefügt */}
+
+.Agitator { grid-area: Agitator; border: #eeeeee solid 1px; display: flex;}
+
+.Temp { grid-area: Temp;  border: #eeeeee solid 1px;display: flex;}
+
+.Settings { grid-area: Settings;border: #eeeeee solid 1px;display:block; }
+
+.Timeline { grid-area: Timeline; border: #eeeeee solid 1px; }
+
+.Info { grid-area: Info; border: #eeeeee solid 1px; display: flex; justify-content: left;}
+
+
+html, body , .container {
+    height: 100%;
+    margin: 0;
 }
+
+
 .timeContainer {
-    margin-left: 20px;
     justify-content: center;
     align-items: center;
     background-color: #c9c9c9; /* Hintergrundfarbe ändern */
