@@ -55,6 +55,8 @@ export interface Beer {
     rating: number;
     mashVolume: number;
     spargeVolume: number;
+    cookingTime: number;
+    cookingTemperatur: number;
     fermentation: FermentationSteps[];
     malts: Malt[];
     wortBoiling: WortBoiling;

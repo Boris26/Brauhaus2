@@ -14,6 +14,8 @@ export const testBeers: Beer[] = [
         rating: 4.5,
         mashVolume: 16,
         spargeVolume: 4,
+        cookingTime: 60,
+        cookingTemperatur: 100,
         fermentation: [
             {
                 type: "Einmaischen",
@@ -94,6 +96,8 @@ export const testBeers: Beer[] = [
         rating: 4.5,
         mashVolume: 16,
         spargeVolume: 4,
+        cookingTemperatur: 100,
+        cookingTime: 60,
         fermentation: [
             {
                 type: "Einmaischen",

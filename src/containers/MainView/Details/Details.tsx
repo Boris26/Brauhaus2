@@ -44,7 +44,7 @@ class Details extends React.Component<DetailsProps, DetailsState> {
 renderFermentation()
 {
     const {selectedBeer}=this.props;
-    console.log(selectedBeer);
+
     if(selectedBeer?.fermentation != undefined)
     {
         return(
@@ -169,32 +169,41 @@ renderFilling()
     renderWortBoiling()
         {
             const {selectedBeer}=this.props;
+
             if (selectedBeer?.wortBoiling != undefined)
             {
+
                 return(
                     <div>
-                        {selectedBeer?.wortBoiling.totalTime}
-                        <TableContainer component={Paper}>
-                            <Table>
-                                <TableHead>
-                                    <TableRow sx={{ '&:not(:last-child)': { '& td, & th': { paddingBottom: 0.2 } } }}>
-                                        <TableCell>Name</TableCell>
-                                        <TableCell>Zeit</TableCell>
-                                        <TableCell>Menge</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {selectedBeer?.wortBoiling.hops.map((item, index) => (
-                                        <TableRow key={index}>
-                                            <TableCell>{item.name}</TableCell>
-                                            <TableCell>{item.time}</TableCell>
-                                            <TableCell>{item.quantity}</TableCell>
+
+                        <div className="wortBoiling-header ">
+                            <label className="wortBoiling-header-text">Zeit: {selectedBeer.cookingTime} Min.</label>
+                            <label className="wortBoiling-header-text">Temperatur: {selectedBeer.cookingTemperatur}°C </label>
+                        </div>
+                        <div>
+                            <TableContainer component={Paper}>
+                                <Table>
+                                    <TableHead>
+                                        <TableRow sx={{ '&:not(:last-child)': { '& td, & th': { paddingBottom: 0.2 } } }}>
+                                            <TableCell>Name</TableCell>
+                                            <TableCell>Zeit</TableCell>
+                                            <TableCell>Menge</TableCell>
                                         </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    </div>);
+                                    </TableHead>
+                                    <TableBody>
+                                        {selectedBeer?.wortBoiling.hops.map((item, index) => (
+                                            <TableRow key={index}>
+                                                <TableCell>{item.name}</TableCell>
+                                                <TableCell>{item.time}</TableCell>
+                                                <TableCell>{item.quantity}</TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </div>
+                    </div>
+                  );
             }
 
         }

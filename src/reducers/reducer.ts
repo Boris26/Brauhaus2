@@ -12,6 +12,7 @@ import {Hops} from "../model/Hops";
 import AllApplicationActions = ApplicationActions.AllApplicationActions;
 import AllProductionActions = ProductionActions.AllProductionActions;
 import {ToggleState} from "../enums/eToggleState";
+import {BrewingStatus} from "../model/BrewingStatus";
 
 export interface ApplicationReducerState {
     view: Views;
@@ -44,8 +45,8 @@ export interface ProductionReducerState {
     agitatorIsRunning: ToggleState,
     liters: number,
     isWaterFillingSuccessful: boolean,
-    isToggleAgitatorSuccess: boolean
-
+    isToggleAgitatorSuccess: boolean,
+    brewingStatus: BrewingStatus | undefined
 }
 
 export const initialProductionState: ProductionReducerState =
@@ -57,7 +58,8 @@ export const initialProductionState: ProductionReducerState =
         agitatorIsRunning: ToggleState.OFF,
         liters:0,
         isWaterFillingSuccessful: true,
-        isToggleAgitatorSuccess: true
+        isToggleAgitatorSuccess: true,
+        brewingStatus: undefined
     }
 
 export const initialApplicationState: ApplicationReducerState =
@@ -226,6 +228,17 @@ const productionReducer = (aState: ProductionReducerState = initialProductionSta
 
         case ProductionActions.ActionTypes.TOGGLE_AGITATOR_SUCCESS: {
             return {...aState, isToggleAgitatorSuccess: aAction.payload.isToggleAgitatorSuccess}
+        }
+        case ProductionActions.ActionTypes.SEND_BREWING_DATA: {
+            ProductionRepository.sendBrewingData(aAction.payload.brewingData);
+            return {...aState};
+        }
+        case ProductionActions.ActionTypes.SET_BREWING_STATUS: {
+            return {...aState, brewingStatus: aAction.payload.brewingStatus};
+        }
+        case ProductionActions.ActionTypes.START_POLLING: {
+            ProductionRepository.startBrewingStatusPolling();
+            return {...aState};
         }
 
         default:

@@ -1,11 +1,14 @@
-import {CommandsURL, ConfirmURL, DatabaseURL} from "../global";
+import {BaseURL, CommandsURL, ConfirmURL, DatabaseURL} from "../global";
 import axios, {AxiosResponse} from "axios";
 import {ToggleState} from "../enums/eToggleState";
 import {ProductionActions} from "../actions/actions";
 import store from "../store";
 import {MashAgitatorStates} from "../model/MashAgitator";
+import {BrewingData} from "../model/BrewingData";
+import {BrewingStatus} from "../model/BrewingStatus";
 
 export class ProductionRepository {
+    private static pollingIntervalId: NodeJS.Timeout | null = null;
 
     static async setAgitatorSpeed(speed: number) {
         return await ProductionRepository._doSetAgitatorSpeed(speed);
@@ -13,6 +16,22 @@ export class ProductionRepository {
 
     static async toggleAgitator(aMashAgitatorStates: MashAgitatorStates) {
         return await ProductionRepository._doToggleAgitator(aMashAgitatorStates);
+    }
+
+    static async sendBrewingData(aBrewingData: BrewingData) {
+        return await ProductionRepository._doSendBrewingData(aBrewingData);
+    }
+
+    static async startBrewingStatusPolling() {
+        if (this.pollingIntervalId === null) {
+            this.pollingIntervalId = setInterval(async () => {
+                try {
+                    await this._doGetBrewingStatus();
+                } catch (error) {
+                    console.error('Fehler beim Abfragen des Braustatus:', error);
+                }
+            }, 1000); // Alle 10 Sekunden abfragen (10000 Millisekunden)
+        }
     }
 
 
@@ -24,6 +43,8 @@ export class ProductionRepository {
     static async startBrewing() {
         return await ProductionRepository._doStartBrewing();
     }
+
+
 
     static async startCooking() {
         return await ProductionRepository._doStartCooking();
@@ -147,8 +168,43 @@ export class ProductionRepository {
 
     private static async _doStartBrewing() {
         try {
-            const response = await axios.get(CommandsURL + 'StartBrewing:'+  '');
+            const response = await axios.get(CommandsURL + 'StartBrewing:\"\"');
             if (response.status == 200) {
+                console.log(response.data);
+                this.startBrewingStatusPolling();
+            }
+            else {
+                console.log(response.data);
+            }
+        }
+        catch (error) {
+            console.error('Fehler beim API-Aufruf', error);
+        }
+    }
+
+    private static async _doGetBrewingStatus() {
+        try {
+            const response = await axios.get(BaseURL + 'Status/');
+            if (response.status == 200) {
+                console.log(response.data);
+                const parsedBrewingStatus: BrewingStatus = JSON.parse(JSON.stringify(response.data));
+                console.log(parsedBrewingStatus);
+                store.dispatch(ProductionActions.setBrewingStatus(parsedBrewingStatus));
+            }
+            else {
+                console.log(response.status);
+            }
+        }
+        catch (error) {
+            console.error('Fehler beim API-Aufruf', error);
+        }
+    }
+    private static async _doSendBrewingData(aBrewingData: BrewingData) {
+        try {
+          const  response = await axios.post(BaseURL+'Recipe/' ,aBrewingData);
+
+            if (response.status == 201) {
+                await this.startBrewing()
                 console.log(response.data);
             }
             else {
@@ -158,6 +214,7 @@ export class ProductionRepository {
         catch (error) {
             console.error('Fehler beim API-Aufruf', error);
         }
+
     }
 
     private static async _doFillWaterAutomatic(aLiters: number) {
@@ -215,15 +272,12 @@ export class ProductionRepository {
     }
 
     private static async _doToggleAgitator(aMashAgitatorStates: MashAgitatorStates) {
-        console.log(aMashAgitatorStates);
         try {
             let response: AxiosResponse<any, any>;
-
 
                 response = await axios.post(CommandsURL + 'AgitatorInterval:\"\"', aMashAgitatorStates);
                 if (response.status === 200) {
                     store.dispatch(ProductionActions.toggleAgitatorSuccess(true));
-                    console.log(response.data);
                 }
                 else
                 {

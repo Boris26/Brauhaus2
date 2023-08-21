@@ -4,7 +4,6 @@ import {Views} from '../enums/eViews';
 import Main from "./MainView/Main";
 import Production from "./Production/Production";
 import DatabaseOverview from "./DatabaseOverview/BeerForm";
-import {testBeers} from "../model/beerTestData";
 import {Beer} from "../model/Beer";
 import {BeerDTO} from "../model/BeerDTO";
 import SimpleBar from "simplebar-react";

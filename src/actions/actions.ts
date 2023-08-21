@@ -6,6 +6,8 @@ import {Hops} from "../model/Hops";
 import {Yeasts} from "../model/Yeast";
 import {ToggleState} from "../enums/eToggleState";
 import {MashAgitatorStates} from "../model/MashAgitator";
+import {BrewingData} from "../model/BrewingData";
+import { BrewingStatus } from "../model/BrewingStatus";
 
 export namespace BeerActions {
 
@@ -345,6 +347,23 @@ export namespace ProductionActions {
         TOGGLE_AGITATOR_SUCCESS = 'ProductionActions.TOGGLE_AGITATOR_SUCCESS',
         START_WATER_FILLING = 'ProductionActions.START_WATER_FILLING',
         START_WATER_FILLING_SUCCESS = 'ProductionActions.START_WATER_FILLING_SUCCESS',
+        SEND_BREWING_DATA= 'ProductionActions.SEND_BREWING_DATA',
+        SET_BREWING_STATUS = 'ProductionActions.SET_BREWING_STATUS',
+        START_POLLING = 'ProductionActions.START_POLLING',
+    }
+
+    export interface StartPolling {
+        readonly type: ActionTypes.START_POLLING
+    }
+
+    export interface SetBrewingStatus {
+        readonly type: ActionTypes.SET_BREWING_STATUS
+        payload: {brewingStatus: BrewingStatus}
+    }
+
+    export interface SendBrewingData {
+        readonly type: ActionTypes.SEND_BREWING_DATA
+        payload: {brewingData: BrewingData}
     }
 
     export interface ToggleAgitatorSuccess {
@@ -395,8 +414,28 @@ export namespace ProductionActions {
         StartWaterFillingSuccess |
         StartWaterFilling |
         ToggleAgitatorSuccess |
-        ToggleAgitator;
+        ToggleAgitator |
+        SetBrewingStatus |
+        StartPolling |
+        SendBrewingData;
 
+    export function startPolling(): StartPolling {
+        return {
+            type: ActionTypes.START_POLLING,
+        }
+    }
+    export function setBrewingStatus(aBrewingStatus: BrewingStatus): SetBrewingStatus {
+        return {
+            type: ActionTypes.SET_BREWING_STATUS,
+            payload: {brewingStatus: aBrewingStatus}
+        }
+    }
+    export function sendBrewingData(aBrewingData: BrewingData): SendBrewingData {
+        return {
+            type: ActionTypes.SEND_BREWING_DATA,
+            payload: {brewingData: aBrewingData}
+        }
+    }
     export function toggleAgitatorSuccess(aIsSuccess: boolean): ToggleAgitatorSuccess {
         return {
             type: ActionTypes.TOGGLE_AGITATOR_SUCCESS,

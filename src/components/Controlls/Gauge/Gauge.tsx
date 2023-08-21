@@ -8,6 +8,7 @@ interface GaugeProps {
     maxValue: number;
     offset: number;
     label: string;
+    height:number;
 }
 
 
@@ -79,11 +80,11 @@ class Gauge extends React.Component<GaugeProps,GaugeState> {
 
     render() {
         const { redFrom,redTo,yellowFrom,yellowTo,greenFrom,greenTo } = this.state
-        const {value,targetValue,label,minValue,maxValue} = this.props;
+        const {value,targetValue,label,minValue,maxValue,height} = this.props;
 
             return (<div>
                 <Chart
-                    height={190}
+                    height={height}
                     chartType="Gauge"
                     loader={<div></div>}
                     data={[

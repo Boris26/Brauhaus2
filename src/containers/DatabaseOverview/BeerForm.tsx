@@ -45,6 +45,8 @@ interface BeerFormState {
     rating: number;
     mashVolume: number;
     spargeVolume: number;
+    cookingTime: number;
+    cookingTemperatur: number;
     fermentationSteps: FermentationSteps[];
     maltsDTO: MaltDTO[];
     hopsDTO: HopDTO[];
@@ -68,6 +70,8 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             rating: 0,
             mashVolume: 0,
             spargeVolume: 0,
+            cookingTime: 0,
+            cookingTemperatur: 0,
             fermentationSteps: [],
             maltsDTO: [],
             hopsDTO: [],
@@ -161,6 +165,8 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             rating,
             mashVolume,
             spargeVolume,
+            cookingTime,
+            cookingTemperatur,
             fermentationSteps,
             maltsDTO,
             hopsDTO,
@@ -203,6 +209,8 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             mashVolume,
             spargeVolume,
             fermentationSteps,
+            cookingTime,
+            cookingTemperatur,
             malts: malts_DTO,
             wortBoiling: { totalTime: 0, hops: hops_DTO },
             fermentationMaturation: {  fermentationTemperature: 0,   carbonation: 0,   yeast: yeasts_DTO}};
@@ -223,6 +231,8 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             rating: 0,
             mashVolume: 0,
             spargeVolume: 0,
+            cookingTime: 0,
+            cookingTemperatur: 0,
             fermentationSteps: [],
             maltsDTO: [],
             hopsDTO: [],
@@ -286,7 +296,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
     }
 
     renderCreateBeerForm() {
-        const {maltsDTO,hopsDTO,yeastsDTO,isSubmitSuccessful, name, type, color, alcohol, originalwort, bitterness, description, rating, mashVolume, spargeVolume, fermentationSteps } = this.state;
+        const {maltsDTO,hopsDTO,yeastsDTO,isSubmitSuccessful, name, type, color, alcohol, originalwort, bitterness, description, rating, mashVolume, spargeVolume, fermentationSteps ,cookingTime,cookingTemperatur} = this.state;
         const { malts, hops, yeasts,messageType,message } = this.props;
         console.log(isSubmitSuccessful);
         console.log(message);
@@ -351,6 +361,14 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                     Sparge Volume:
                     <input type="number" name="spargeVolume" min={0} value={spargeVolume} onChange={this.handleChange} required={true}  />
                 </label>
+                <label>
+                    Kochzeit:
+                    <input type="number" name="cookingTime" min={0} value={cookingTime} onChange={this.handleChange} required={true}  />
+                </label>
+                <label>
+                    Kochtemperatur:
+                    <input type="number" name="cookingTemperatur" min={0} value={cookingTemperatur} onChange={this.handleChange} required={true}  />
+                </label>
 
                 <div className="fermentation-steps-container">
                     <h3>Maischeplan:</h3>
@@ -358,7 +376,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                         <div key={index} className="fermentation-step-container">
                             <label>
                                 Type:
-                                <select name="type" value={step.type} onChange={(e) => this.handleFermentationStepChange(e.target.value,e.target.name, index)} required={true} >
+                                <select name="type" value={step.type} onChange={(e) => this.handleFermentationStepChange(e.target.value,e.target.name, index)} required={false} >
                                     <option value="">Select Type</option>
                                     {Object.values(MashingType).map((mashingType) => (
                                         <option key={mashingType} value={mashingType}>

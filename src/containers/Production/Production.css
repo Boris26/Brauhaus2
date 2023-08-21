@@ -57,7 +57,8 @@
 
 .Agitator { grid-area: Agitator; border: #eeeeee solid 1px; display: flex;}
 
-.Temp { grid-area: Temp;  border: #eeeeee solid 1px;display: flex;}
+.Temp { grid-area: Temp;  border: #eeeeee solid 1px;display: flex; justify-content: center; /* Horizontale Zentrierung hinzugefügt */
+    align-items: center; /* Vertikale Zentrierung hinzugefügt */}
 
 .Settings { grid-area: Settings;border: #eeeeee solid 1px;display:block; }
 

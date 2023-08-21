@@ -1,7 +1,6 @@
 import React from 'react';
 
 import Details from "./Details/Details";
-import {testBeers} from "../../model/beerTestData";
 import {connect} from "react-redux";
 import SimpleBar from 'simplebar-react';
 import 'simplebar/dist/simplebar.min.css';
