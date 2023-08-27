@@ -11,9 +11,9 @@
 
 .containerProduction {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 0.5fr 1.5fr;
-    grid-template-rows: 0.15fr 1fr 1fr 0.1fr 0.2fr 0.5fr;
-    gap: 2px 2px;
+    grid-template-columns: 1fr 1fr 1fr 0.5fr 1.7fr;
+    grid-template-rows: 0.15fr 1fr 1fr 0.6fr 0.1fr 0.4fr;
+    gap: 5px 5px;
     grid-auto-flow: row;
     justify-content: space-between;
     justify-items: stretch;
@@ -47,24 +47,25 @@
 
 .Water {
     grid-area: Water;
-    border: #eeeeee solid 1px;
+
     display: flex; justify-content: center; /* Horizontale Zentrierung hinzugefügt */
     align-items: center; /* Vertikale Zentrierung hinzugefügt */
+    background: #404040;
 }
 
-.Flame { grid-area: Flame; border: #eeeeee solid 1px;  display: flex; justify-content: center; /* Horizontale Zentrierung hinzugefügt */
+.Flame { grid-area: Flame;   display: flex; justify-content: center; /* Horizontale Zentrierung hinzugefügt */
     align-items: center; /* Vertikale Zentrierung hinzugefügt */}
 
-.Agitator { grid-area: Agitator; border: #eeeeee solid 1px; display: flex;}
+.Agitator { grid-area: Agitator;  display: flex;background: #404040;}
 
-.Temp { grid-area: Temp;  border: #eeeeee solid 1px;display: flex; justify-content: center; /* Horizontale Zentrierung hinzugefügt */
-    align-items: center; /* Vertikale Zentrierung hinzugefügt */}
+.Temp { grid-area: Temp; display: flex; justify-content: center; /* Horizontale Zentrierung hinzugefügt */
+    align-items: center;background: #404040;; /* Vertikale Zentrierung hinzugefügt */}
 
-.Settings { grid-area: Settings;border: #eeeeee solid 1px;display:block; }
+.Settings { grid-area: Settings;display:block; background: #404040;}
 
-.Timeline { grid-area: Timeline; border: #eeeeee solid 1px; }
+.Timeline { grid-area: Timeline;  background: #404040;}
 
-.Info { grid-area: Info; border: #eeeeee solid 1px; display: flex; justify-content: left;}
+.Info { grid-area: Info;  display: flex; justify-content: left;background: #404040;}
 
 
 html, body , .container {

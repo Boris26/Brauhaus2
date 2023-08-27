@@ -1,6 +1,6 @@
 import React from 'react';
-import _ from 'lodash';
-import {Beer, FermentationSteps} from "../../model/Beer";
+import _, {isUndefined} from 'lodash';
+import {Beer} from "../../model/Beer";
 import {connect} from "react-redux";
 
 import './Production.css'
@@ -11,12 +11,14 @@ import {ProductionActions} from "../../actions/actions";
 import Gauge from "../../components/Controlls/Gauge/Gauge";
 import MyKnob from "../../components/Controlls/Knob/Knob";
 import {ToggleState} from "../../enums/eToggleState";
-import {FormControl, FormControlLabel, FormGroup, FormLabel, Switch} from '@mui/material';
+import {FormControl, FormControlLabel, FormGroup, Switch} from '@mui/material';
 import {MashAgitatorStates} from "../../model/MashAgitator";
 import QuantityPicker from '../../components/Controlls/QuantityPicker/QuantityPicker';
 import {BrewingData} from "../../model/BrewingData";
 import {BrewingStatus} from "../../model/BrewingStatus";
 import {TimeFormatter} from "../../utils/TimeFormatter";
+import ModalDialog, {DialogType} from "../../components/ModalDialog/ModalDialog";
+import {BackendAvailable} from "../../reducers/reducer";
 
 interface ProductionProps {
     selectedBeer: Beer;
@@ -34,6 +36,8 @@ interface ProductionProps {
     sendBrewingData: (brewingData: BrewingData) => void;
     brewingStatus: BrewingStatus;
     startPolling: () => void;
+    checkIsBackenAvailable: () => void;
+    isBackenAvailable:BackendAvailable;
 }
 
 interface ProductionState {
@@ -51,6 +55,9 @@ interface ProductionState {
     mainAgitatorError: boolean
     isWaterSwitchBlinking: boolean
     isMainSwitchBlinking: boolean
+    hopsTimes: Record<number, string>
+    showHopsDialog: boolean,
+    showErrorDialog: boolean
 }
 
 class Production extends React.Component<ProductionProps, ProductionState> {
@@ -74,19 +81,37 @@ class Production extends React.Component<ProductionProps, ProductionState> {
             waterFillingError: false,
             mainAgitatorError: false,
             isWaterSwitchBlinking: false,
-            isMainSwitchBlinking: false
+            isMainSwitchBlinking: false,
+            hopsTimes: {},
+            showHopsDialog: false,
+            showErrorDialog: false
         }
     }
 
     componentDidMount() {
-        const {getTemperatures, agitatorSpeed, agitatorIsRunning} = this.props;
+        const {getTemperatures, agitatorSpeed, agitatorIsRunning, selectedBeer, checkIsBackenAvailable} = this.props;
+        checkIsBackenAvailable();
+        if (!isUndefined(selectedBeer)) {
+            this.calculateTheHopTimes();
+        }
         getTemperatures();
     }
+
 
     componentDidUpdate(prevProps: Readonly<ProductionProps>, prevState: Readonly<ProductionState>, snapshot?: any) {
         const {toggleAgitator, getTemperatures, agitatorSpeed, agitatorIsRunning} = this.props;
         const {intervalSwitchState, mainSwitchState, waterSwitchState} = this.state;
-        console.log(this.props.isToggleAgitatorSuccess)
+        if(prevProps.isBackenAvailable !== this.props.isBackenAvailable)
+        {
+            if(this.props.isBackenAvailable.isBackenAvailable===false)
+            {
+                this.setState({showErrorDialog:true})
+            }
+            else
+            {
+                this.setState({showErrorDialog:false})
+            }
+        }
         if (prevProps.temperature !== this.props.temperature) {
             this.setState({temperature: this.props.temperature})
         }
@@ -125,6 +150,32 @@ class Production extends React.Component<ProductionProps, ProductionState> {
             }
 
         }
+        this.checkForHopAddition()
+    }
+
+    checkForHopAddition() {
+        const {hopsTimes} = this.state;
+        const {brewingStatus} = this.props;
+        if (brewingStatus?.Type === "Kochen") {
+            const roundedelapsedTime = Math.floor(brewingStatus.elapsedTime)
+            if (hopsTimes.hasOwnProperty(roundedelapsedTime)) {
+                const value = hopsTimes[roundedelapsedTime];
+                console.log(value);
+            }
+        }
+    }
+
+    calculateTheHopTimes() {
+        let hopsDict: Record<number, string> = {};
+        const {selectedBeer} = this.props
+        const totalCookingTime = selectedBeer.cookingTime
+        selectedBeer.wortBoiling.hops.forEach((item) => {
+            const time = totalCookingTime - item.time;
+            const secTime = time * 60;
+            hopsDict[secTime] = item.name;
+
+        })
+        this.setState({hopsTimes: hopsDict});
     }
 
     setAgitatorStates(mainSwitchState: boolean) {
@@ -151,9 +202,9 @@ class Production extends React.Component<ProductionProps, ProductionState> {
             toggleAgitator(this.setAgitatorStates(false));
             this.setState({mainSwitchState: false});
         }
-
-
     }
+
+
     toggleInterval = () => {
         const {intervalSwitchState, mainSwitchState, agitatorSpeed} = this.state;
 
@@ -255,6 +306,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
             </div>
         );
     }
+
 
     renderTimeline() {
         return (<div className='Timeline'>
@@ -360,7 +412,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         </div>);
     }
 
-    rednerAgitator() {
+    renderAgitator() {
         const infinitySymbol = '\u221E';
         const {setedAgitatorSpeed, agitatorIsRunning, agitatorSpeed} = this.props;
         return (<div className="Agitator">
@@ -377,11 +429,13 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     }
 
     renderWater() {
-        const {setedAgitatorSpeed, agitatorIsRunning} = this.props;
+        const {setedAgitatorSpeed, agitatorIsRunning, brewingStatus} = this.props;
+
+
         return (
             <div className="Water">
                 <WaterControl liters={10} agitatorSpeed={setedAgitatorSpeed}
-                              agitatorState={agitatorIsRunning}></WaterControl>
+                              agitatorState={brewingStatus?.AgitatorStatus}></WaterControl>
             </div>);
     }
 
@@ -395,20 +449,55 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         </div>);
     }
 
+    confirmDialog() {
+        this.setState({showHopsDialog: false});
+    }
+
+    renderHopDialog() {
+        const {hopsTimes, showHopsDialog} = this.state;
+        const {brewingStatus} = this.props;
+        let hopName = '';
+
+        if (brewingStatus?.Type === "Kochen") {
+            const roundedelapsedTime = Math.floor(brewingStatus.elapsedTime)
+            if (hopsTimes.hasOwnProperty(roundedelapsedTime)) {
+                hopName = hopsTimes[roundedelapsedTime];
+                this.setState({showHopsDialog: true})
+            }
+        }
+        return (<div>
+            <ModalDialog onConfirm={this.confirmDialog} type={DialogType.CONFIRM} open={showHopsDialog}
+                         content={'Bitte den ' + hopName + ' Hopfen zufügen!'} header={"Hopfen Zufügen"}></ModalDialog>
+        </div>);
+
+    }
+
+    renderErrorDialog() {
+        const {showErrorDialog} = this.state
+        const {isBackenAvailable} = this.props
+        const contentText = 'Die Brau-Steuerung ist nicht erreichbar\n\n'+ isBackenAvailable.statusText
+        console.log(contentText);
+        return (<div>
+            <ModalDialog onConfirm={this.confirmDialog} type={DialogType.ERROR} open={showErrorDialog}
+                         content={contentText} header={"Fehler!"}></ModalDialog>
+        </div>);
+    }
 
     render() {
         this.createTimelineData();
+
         return (
             <div className="containerProduction ">
+                {this.renderErrorDialog()}
+                {this.renderHopDialog()}
                 {this.renderHeader()}
                 {this.renderWater()}
-                {this.rednerAgitator()}
+                {this.renderAgitator()}
                 {this.renderSettings()}
                 {this.renderTemperature()}
                 {this.renderFlames()}
                 {this.renderTimeline()}
                 {this.renderInfo()}
-
             </div>
         )
     }
@@ -434,6 +523,9 @@ const mapDispatchToProps = (dispatch: any) => ({
     startPolling: () => {
         dispatch(ProductionActions.startPolling())
     },
+    checkIsBackenAvailable: () => {
+        dispatch(ProductionActions.checkIsBackenAvailable())
+    }
 });
 const mapStateToProps = (state: any) => (
     {
@@ -446,5 +538,7 @@ const mapStateToProps = (state: any) => (
         isWaterFillingSuccessful: state.productionReducer.isWaterFillingSuccessful,
         isToggleAgitatorSuccess: state.productionReducer.isToggleAgitatorSuccess,
         brewingStatus: state.productionReducer.brewingStatus,
+        isBackenAvailable: state.productionReducer.isBackenAvailable
+
     });
 export default connect(mapStateToProps, mapDispatchToProps)(Production);

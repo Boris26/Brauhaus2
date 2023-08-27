@@ -1,13 +1,13 @@
 import * as React from 'react';
-import {ChangeEvent, FormEvent} from "react";
+import {ChangeEvent, FormEvent} from 'react';
 import {BeerActions} from "../../../actions/actions";
 import {connect} from "react-redux";
-import {Malts} from "../../../model/Malt";
 import {isEqual} from "lodash";
 import {Yeasts} from "../../../model/Yeast";
-import {YeastType, YeastEVG} from "../../../enums/eYeastType";
+import {YeastEVG, YeastType} from "../../../enums/eYeastType";
 import '../BeerForm.css'
-import ModalDialog from "../../../components/ModalDialog";
+import ModalDialog, {DialogType} from "../../../components/ModalDialog/ModalDialog";
+
 interface MaltFormState {
     id: string;
     name: string;
@@ -91,7 +91,7 @@ class YeastForm extends React.Component<MaltFormProps,MaltFormState> {
 
         return (
             <div>
-                <ModalDialog open= {openDialog} content={'Beer creation failed'} header={'Error'} onConfirm={this.onConfirmDialog}></ModalDialog>
+                <ModalDialog type={DialogType.ERROR} open= {openDialog} content={'Beer creation failed'} header={'Error'} onConfirm={this.onConfirmDialog}></ModalDialog>
                 <form className="beer-form" onSubmit={this.handleSubmitYeast}>
                     <label>
                         Name:

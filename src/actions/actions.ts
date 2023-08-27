@@ -7,7 +7,9 @@ import {Yeasts} from "../model/Yeast";
 import {ToggleState} from "../enums/eToggleState";
 import {MashAgitatorStates} from "../model/MashAgitator";
 import {BrewingData} from "../model/BrewingData";
-import { BrewingStatus } from "../model/BrewingStatus";
+import {BrewingStatus} from "../model/BrewingStatus";
+import {ConfirmStates} from "../enums/eConfirmStates";
+import {BackendAvailable} from "../reducers/reducer";
 
 export namespace BeerActions {
 
@@ -47,18 +49,21 @@ export namespace BeerActions {
             malt: Malts
         }
     }
+
     export interface SubmitNewYeast {
         readonly type: ActionTypes.SUBMIT_NEW_YEAST
         payload: {
             yeast: Yeasts
         }
     }
+
     export interface SubmitNewHop {
         readonly type: ActionTypes.SUBMIT_NEW_HOP
         payload: {
             hop: Hops
         }
     }
+
     export interface SubmitNewMaltSuccess {
         readonly type: ActionTypes.SUBMIT_NEW_MALT_SUCCESS
         payload: {
@@ -86,12 +91,14 @@ export namespace BeerActions {
             beer: BeerDTO
         }
     }
+
     export interface SubmitBeerSuccess {
         readonly type: ActionTypes.SUBMIT_BEER_SUCCESS
         payload: {
             isSubmitBeerSuccessful: boolean
         }
     }
+
     export interface GetBeers {
         readonly type: ActionTypes.GET_BEERS
         payload: {
@@ -128,6 +135,7 @@ export namespace BeerActions {
             isSuccessful: boolean
         }
     }
+
     export interface GetYeasts {
         readonly type: ActionTypes.GET_YEASTS
         payload: {
@@ -166,10 +174,10 @@ export namespace BeerActions {
         SubmitNewYeast |
         SubmitNewYeastSuccess |
         GetBeers |
-        GetBeersSuccess|
+        GetBeersSuccess |
         GetMalts |
         GetHops |
-        GetYeasts|
+        GetYeasts |
         GetMaltsSuccess |
         GetHopsSuccess |
         GetYeastsSuccess |
@@ -183,6 +191,7 @@ export namespace BeerActions {
             payload: {isSubmitSuccessful: aIsSuccessful, message: aMessage, type: aType}
         }
     }
+
     export function submitMaltSuccess(aIsSuccessful: boolean): SubmitNewMaltSuccess {
         return {
             type: ActionTypes.SUBMIT_NEW_MALT_SUCCESS,
@@ -203,6 +212,7 @@ export namespace BeerActions {
             payload: {isSubmitYeastSuccessful: aIsSuccessful}
         }
     }
+
     export function submitNewMalt(aMalt: Malts): SubmitNewMalt {
         return {
             type: ActionTypes.SUBMIT_NEW_MALT,
@@ -224,31 +234,35 @@ export namespace BeerActions {
         }
     }
 
-    export function getYeasts(aIsFetching:boolean): GetYeasts {
+    export function getYeasts(aIsFetching: boolean): GetYeasts {
         return {
             type: ActionTypes.GET_YEASTS,
             payload: {isFetching: aIsFetching}
         }
     }
-    export function getHops(aIsFetching:boolean): GetHops {
+
+    export function getHops(aIsFetching: boolean): GetHops {
         return {
             type: ActionTypes.GET_HOPS,
             payload: {isFetching: aIsFetching}
         }
     }
-    export function getHopsSuccess(aHops: Hops[]| null, aIsSuccessful: boolean): GetHopsSuccess {
+
+    export function getHopsSuccess(aHops: Hops[] | null, aIsSuccessful: boolean): GetHopsSuccess {
         return {
             type: ActionTypes.GET_HOPS_SUCCESS,
-            payload: {hops: aHops,isSuccessful: aIsSuccessful}
+            payload: {hops: aHops, isSuccessful: aIsSuccessful}
         }
     }
+
     export function getYeastsSuccess(aYeasts: Yeast[] | null, aIsSuccessful: boolean): GetYeastsSuccess {
         return {
             type: ActionTypes.GET_YEASTS_SUCCESS,
             payload: {yeasts: aYeasts, isSuccessful: aIsSuccessful}
         }
     }
-    export function getMalts(aIsFetching:boolean): GetMalts {
+
+    export function getMalts(aIsFetching: boolean): GetMalts {
         return {
             type: ActionTypes.GET_MALTS,
             payload: {isFetching: aIsFetching}
@@ -258,7 +272,7 @@ export namespace BeerActions {
     export function getMaltsSuccess(aMalts: Malts[] | null, aIsSuccessful: boolean): BeerActions.GetMaltsSuccess {
         return {
             type: ActionTypes.GET_MALTS_SUCCESS,
-            payload: {malts: aMalts,isSuccessful: aIsSuccessful}
+            payload: {malts: aMalts, isSuccessful: aIsSuccessful}
         }
     }
 
@@ -283,16 +297,17 @@ export namespace BeerActions {
         }
     }
 
-    export function setSelectedBeer(aBeer:Beer): SetSelectedBeer {
+    export function setSelectedBeer(aBeer: Beer): SetSelectedBeer {
         return {
             type: ActionTypes.SET_SELECTED_BEER,
             payload: {beer: aBeer}
         }
     }
-    export function getBeers(aIsFetching:boolean): GetBeers {
+
+    export function getBeers(aIsFetching: boolean): GetBeers {
         return {
             type: ActionTypes.GET_BEERS,
-            payload: {isFetching: aIsFetching }
+            payload: {isFetching: aIsFetching}
         }
     }
 }
@@ -303,6 +318,7 @@ export namespace ApplicationActions {
         SET_VIEW = 'ApplicationActions.SET_VIEW',
         OPEN_ERROR_DIALOG = 'ApplicationActions.OPEN_ERROR_DIALOG',
     }
+
     export interface SetView {
         readonly type: ActionTypes.SET_VIEW
         payload: { view: Views }
@@ -310,7 +326,7 @@ export namespace ApplicationActions {
 
     export interface OpenDialog {
         readonly type: ActionTypes.OPEN_ERROR_DIALOG
-        payload:{
+        payload: {
             open: boolean,
             header: string,
             content: string
@@ -319,9 +335,10 @@ export namespace ApplicationActions {
 
     export type AllApplicationActions =
 
-        SetView|
+        SetView |
         OpenDialog
         ;
+
     export function setViewState(aView: Views): SetView {
         return {
             type: ActionTypes.SET_VIEW,
@@ -347,9 +364,27 @@ export namespace ProductionActions {
         TOGGLE_AGITATOR_SUCCESS = 'ProductionActions.TOGGLE_AGITATOR_SUCCESS',
         START_WATER_FILLING = 'ProductionActions.START_WATER_FILLING',
         START_WATER_FILLING_SUCCESS = 'ProductionActions.START_WATER_FILLING_SUCCESS',
-        SEND_BREWING_DATA= 'ProductionActions.SEND_BREWING_DATA',
+        SEND_BREWING_DATA = 'ProductionActions.SEND_BREWING_DATA',
         SET_BREWING_STATUS = 'ProductionActions.SET_BREWING_STATUS',
         START_POLLING = 'ProductionActions.START_POLLING',
+        CONFIRM = 'ProductionActions.CONFIRM',
+        CHECK_IS_BACKEND_AVAILABLE = 'ProductionActions.CHECK_IS_BACKEND_AVAILABLE',
+        IS_BACKEND_AVAILABLE = 'ProductionActions.IS_BACKEND_AVAILABLE'
+    }
+
+    export interface IsBackendAvailable {
+        readonly type: ActionTypes.IS_BACKEND_AVAILABLE
+        payload: { isBackenAvailable: BackendAvailable }
+    }
+
+    export interface CheckIsBackendAvailable {
+        readonly type: ActionTypes.CHECK_IS_BACKEND_AVAILABLE
+
+    }
+
+    export interface Confirm {
+        readonly type: ActionTypes.CONFIRM
+        payload: { confirmState: ConfirmStates }
     }
 
     export interface StartPolling {
@@ -358,30 +393,32 @@ export namespace ProductionActions {
 
     export interface SetBrewingStatus {
         readonly type: ActionTypes.SET_BREWING_STATUS
-        payload: {brewingStatus: BrewingStatus}
+        payload: { brewingStatus: BrewingStatus }
     }
 
     export interface SendBrewingData {
         readonly type: ActionTypes.SEND_BREWING_DATA
-        payload: {brewingData: BrewingData}
+        payload: { brewingData: BrewingData }
     }
 
     export interface ToggleAgitatorSuccess {
         readonly type: ActionTypes.TOGGLE_AGITATOR_SUCCESS
-        payload: {isToggleAgitatorSuccess: boolean}
+        payload: { isToggleAgitatorSuccess: boolean }
     }
+
     export interface StartWaterFillingSuccess {
         readonly type: ActionTypes.START_WATER_FILLING_SUCCESS
-        payload: {isWaterFillingSuccessful: boolean}
+        payload: { isWaterFillingSuccessful: boolean }
     }
+
     export interface StartWaterFilling {
         readonly type: ActionTypes.START_WATER_FILLING
-        payload: {liters: number}
+        payload: { liters: number }
     }
 
     export interface SetAgitatorIsRunning {
         readonly type: ActionTypes.SET_AGITATOR_IS_RUNNING
-        payload: {agitatorIsRunning: ToggleState}
+        payload: { agitatorIsRunning: ToggleState }
     }
 
     export interface ToggleAgitator {
@@ -393,13 +430,13 @@ export namespace ProductionActions {
 
     export interface SetAgitatorSpeed {
         readonly type: ActionTypes.SET_AGITATOR_SPEED
-        payload: {agitatorSpeed: number}
+        payload: { agitatorSpeed: number }
     }
 
 
     export interface SetTemperatures {
         readonly type: ActionTypes.SET_TEMPERATURE
-        payload: {temperature: number}
+        payload: { temperature: number }
     }
 
     export interface GetTemperatures {
@@ -417,25 +454,53 @@ export namespace ProductionActions {
         ToggleAgitator |
         SetBrewingStatus |
         StartPolling |
-        SendBrewingData;
+        Confirm |
+        SendBrewingData |
+        CheckIsBackendAvailable |
+        IsBackendAvailable;
+
+    export function isBackenAvailable(aBackenAvailable: BackendAvailable): ProductionActions.IsBackendAvailable {
+        return {
+            type: ActionTypes.IS_BACKEND_AVAILABLE,
+            payload: {isBackenAvailable: aBackenAvailable}
+        }
+    }
+
+    export function checkIsBackenAvailable(): ProductionActions.CheckIsBackendAvailable {
+        return {
+            type: ActionTypes.CHECK_IS_BACKEND_AVAILABLE,
+
+
+        }
+    }
+
+    export function confirm(aConfirmState: ConfirmStates): ProductionActions.Confirm {
+        return {
+            type: ActionTypes.CONFIRM,
+            payload: {confirmState: aConfirmState}
+        }
+    }
 
     export function startPolling(): StartPolling {
         return {
             type: ActionTypes.START_POLLING,
         }
     }
+
     export function setBrewingStatus(aBrewingStatus: BrewingStatus): SetBrewingStatus {
         return {
             type: ActionTypes.SET_BREWING_STATUS,
             payload: {brewingStatus: aBrewingStatus}
         }
     }
+
     export function sendBrewingData(aBrewingData: BrewingData): SendBrewingData {
         return {
             type: ActionTypes.SEND_BREWING_DATA,
             payload: {brewingData: aBrewingData}
         }
     }
+
     export function toggleAgitatorSuccess(aIsSuccess: boolean): ToggleAgitatorSuccess {
         return {
             type: ActionTypes.TOGGLE_AGITATOR_SUCCESS,
@@ -449,12 +514,14 @@ export namespace ProductionActions {
             payload: {liters: aLiters}
         }
     }
+
     export function startWaterFillingSuccess(aIsSuccessful: boolean): StartWaterFillingSuccess {
         return {
             type: ActionTypes.START_WATER_FILLING_SUCCESS,
             payload: {isWaterFillingSuccessful: aIsSuccessful}
         }
     }
+
     export function setAgitatorIsRunning(aAgitatorIsRunning: ToggleState): SetAgitatorIsRunning {
         return {
             type: ActionTypes.SET_AGITATOR_IS_RUNNING,
@@ -470,12 +537,14 @@ export namespace ProductionActions {
             }
         }
     }
+
     export function setAgitatorSpeed(aAgitatorSpeed: number): SetAgitatorSpeed {
         return {
             type: ActionTypes.SET_AGITATOR_SPEED,
             payload: {agitatorSpeed: aAgitatorSpeed}
         }
     }
+
     export function getTemperatures(): GetTemperatures {
         return {
             type: ActionTypes.GET_TEMPERATURES,

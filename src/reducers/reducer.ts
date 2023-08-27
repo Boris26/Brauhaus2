@@ -1,7 +1,7 @@
-import { combineReducers } from 'redux';
-import { Views } from "../enums/eViews";
+import {combineReducers} from 'redux';
+import {Views} from "../enums/eViews";
 import {Beer, Yeast} from "../model/Beer";
-import { BeerRepository } from "../repositorys/BeerRepository";
+import {BeerRepository} from "../repositorys/BeerRepository";
 import {ProductionRepository} from "../repositorys/ProductionRepository";
 import {ApplicationActions, BeerActions, ProductionActions} from "../actions/actions";
 import AllBeerActions = BeerActions.AllBeerActions;
@@ -13,12 +13,18 @@ import AllApplicationActions = ApplicationActions.AllApplicationActions;
 import AllProductionActions = ProductionActions.AllProductionActions;
 import {ToggleState} from "../enums/eToggleState";
 import {BrewingStatus} from "../model/BrewingStatus";
+import {ConfirmStates} from "../enums/eConfirmStates";
 
 export interface ApplicationReducerState {
     view: Views;
-    errorDialogHeader:string,
-    errorDialogMessage:string,
-    errorDialogOpen:boolean
+    errorDialogHeader: string,
+    errorDialogMessage: string,
+    errorDialogOpen: boolean
+}
+
+export interface BackendAvailable {
+    isBackenAvailable: boolean,
+    statusText: string
 }
 
 export interface BeerDataReducerState {
@@ -29,12 +35,12 @@ export interface BeerDataReducerState {
     yeasts: Yeast[] | undefined
     isSuccessful: boolean,
     isFetching: boolean,
-    isSubmitMaltSuccessful: boolean|undefined,
-    isSubmitHopSuccessful: boolean|undefined,
-    isSubmitYeastSuccessful: boolean|undefined,
-    isSubmitSuccessful: boolean|undefined,
-    message: string|undefined
-    type: string|undefined
+    isSubmitMaltSuccessful: boolean | undefined,
+    isSubmitHopSuccessful: boolean | undefined,
+    isSubmitYeastSuccessful: boolean | undefined,
+    isSubmitSuccessful: boolean | undefined,
+    message: string | undefined
+    type: string | undefined
 }
 
 export interface ProductionReducerState {
@@ -46,7 +52,9 @@ export interface ProductionReducerState {
     liters: number,
     isWaterFillingSuccessful: boolean,
     isToggleAgitatorSuccess: boolean,
-    brewingStatus: BrewingStatus | undefined
+    brewingStatus: BrewingStatus | undefined,
+    confirmState: ConfirmStates | undefined,
+    isBackenAvailable: BackendAvailable
 }
 
 export const initialProductionState: ProductionReducerState =
@@ -56,19 +64,21 @@ export const initialProductionState: ProductionReducerState =
         setedAgitatorState: ToggleState.OFF,
         agitatorSpeed: 0,
         agitatorIsRunning: ToggleState.OFF,
-        liters:0,
+        liters: 0,
         isWaterFillingSuccessful: true,
         isToggleAgitatorSuccess: true,
-        brewingStatus: undefined
+        brewingStatus: undefined,
+        confirmState: undefined,
+        isBackenAvailable: {isBackenAvailable: true, statusText: ""},
     }
 
 export const initialApplicationState: ApplicationReducerState =
-{
-    view: Views.MAIN,
-    errorDialogHeader:"",
-    errorDialogMessage:"",
-    errorDialogOpen:false
-}
+    {
+        view: Views.MAIN,
+        errorDialogHeader: "",
+        errorDialogMessage: "",
+        errorDialogOpen: false
+    }
 
 export const initialBeerState: BeerDataReducerState =
     {
@@ -88,9 +98,6 @@ export const initialBeerState: BeerDataReducerState =
     }
 
 
-
-
-
 const applicationReducer = (aState: ApplicationReducerState = initialApplicationState, aAction: AllApplicationActions) => {
     switch (aAction.type) {
         case ApplicationActions.ActionTypes.SET_VIEW: {
@@ -99,10 +106,15 @@ const applicationReducer = (aState: ApplicationReducerState = initialApplication
         }
 
         case ApplicationActions.ActionTypes.OPEN_ERROR_DIALOG: {
-            return {...aState, errorDialogHeader: aAction.payload.header, errorDialogMessage: aAction.payload.content, errorDialogOpen: aAction.payload.open};
+            return {
+                ...aState,
+                errorDialogHeader: aAction.payload.header,
+                errorDialogMessage: aAction.payload.content,
+                errorDialogOpen: aAction.payload.open
+            };
         }
-            default:
-                return aState;
+        default:
+            return aState;
     }
 
 };
@@ -171,7 +183,7 @@ const beerDataReducer = (aState: BeerDataReducerState = initialBeerState, aActio
         }
 
         case BeerActions.ActionTypes.SUBMIT_NEW_YEAST: {
-           BeerRepository.submitYeast(aAction.payload.yeast);
+            BeerRepository.submitYeast(aAction.payload.yeast);
             return {...aState};
         }
 
@@ -239,6 +251,20 @@ const productionReducer = (aState: ProductionReducerState = initialProductionSta
         case ProductionActions.ActionTypes.START_POLLING: {
             ProductionRepository.startBrewingStatusPolling();
             return {...aState};
+        }
+
+        case ProductionActions.ActionTypes.CONFIRM: {
+            ProductionRepository.confirm(aAction.payload.confirmState);
+            return {...aState,};
+        }
+
+        case ProductionActions.ActionTypes.CHECK_IS_BACKEND_AVAILABLE: {
+            ProductionRepository.checkIsBackendAvailable()
+            return {...aState};
+        }
+
+        case ProductionActions.ActionTypes.IS_BACKEND_AVAILABLE : {
+            return {...aState, isBackenAvailable: aAction.payload.isBackenAvailable}
         }
 
         default:

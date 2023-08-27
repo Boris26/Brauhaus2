@@ -1,0 +1,21 @@
+/* DialogStyles.css */
+.dialogHeader {
+    height: 20px;
+    align-items: center;
+    justify-content: center;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+}
+
+/* Farben basierend auf dem Typ */
+.confirm {
+    background-color: green;
+}
+
+.error {
+    background-color: red;
+}
+
+.info {
+    background-color: darkorange;
+}

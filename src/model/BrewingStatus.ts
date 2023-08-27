@@ -1,3 +1,5 @@
+import {ToggleState} from "../enums/eToggleState";
+
 export enum HeatingStates {
     ON = "HeatingStates.ON",
     OFF = "HeatingStates.OFF"
@@ -12,5 +14,6 @@ export interface BrewingStatus {
     Name: string,
     Type: string,
     WaitingStatus: boolean,
-    HeatUpStatus: boolean
+    HeatUpStatus: boolean,
+    AgitatorStatus: boolean,
 }

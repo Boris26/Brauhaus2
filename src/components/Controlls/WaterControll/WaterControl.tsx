@@ -5,7 +5,7 @@ import { ToggleState } from "../../../enums/eToggleState";
 
 interface WaterControllProps {
     liters: number;
-    agitatorState: ToggleState;
+    agitatorState: boolean;
     agitatorSpeed: number;
 }
 
@@ -20,13 +20,13 @@ class WaterControl extends React.Component<WaterControllProps, WaterControllStat
         super(props);
         this.agitatorRef = React.createRef();
         this.state = {
-            isAnimating: props.agitatorState === ToggleState.ON,
+            isAnimating: props.agitatorState === true,
         };
     }
 
     componentDidUpdate(prevProps: WaterControllProps) {
         if (prevProps.agitatorState !== this.props.agitatorState) {
-            this.setState({ isAnimating: this.props.agitatorState === ToggleState.ON }, () => {
+            this.setState({ isAnimating: this.props.agitatorState === true }, () => {
                 // Setze die Position des Bildes nach der Änderung der Animationszustands neu
                 if (!this.state.isAnimating && this.agitatorRef.current) {
                     this.agitatorRef.current.style.animation = 'none'; // Animation stoppen
