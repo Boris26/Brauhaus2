@@ -14,6 +14,7 @@ import AllProductionActions = ProductionActions.AllProductionActions;
 import {ToggleState} from "../enums/eToggleState";
 import {BrewingStatus} from "../model/BrewingStatus";
 import {ConfirmStates} from "../enums/eConfirmStates";
+import {WaterStatus} from "../components/Controlls/WaterControll/WaterControl";
 
 export interface ApplicationReducerState {
     view: Views;
@@ -54,7 +55,8 @@ export interface ProductionReducerState {
     isToggleAgitatorSuccess: boolean,
     brewingStatus: BrewingStatus | undefined,
     confirmState: ConfirmStates | undefined,
-    isBackenAvailable: BackendAvailable
+    isBackenAvailable: BackendAvailable,
+    waterStatus: WaterStatus
 }
 
 export const initialProductionState: ProductionReducerState =
@@ -70,6 +72,7 @@ export const initialProductionState: ProductionReducerState =
         brewingStatus: undefined,
         confirmState: undefined,
         isBackenAvailable: {isBackenAvailable: true, statusText: ""},
+        waterStatus: {liters: 0, openClose: false}
     }
 
 export const initialApplicationState: ApplicationReducerState =
@@ -265,6 +268,10 @@ const productionReducer = (aState: ProductionReducerState = initialProductionSta
 
         case ProductionActions.ActionTypes.IS_BACKEND_AVAILABLE : {
             return {...aState, isBackenAvailable: aAction.payload.isBackenAvailable}
+        }
+
+        case ProductionActions.ActionTypes.SET_WATER_STATUS : {
+            return {...aState, waterStatus: aAction.payload.waterStatus}
         }
 
         default:

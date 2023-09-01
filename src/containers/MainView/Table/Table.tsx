@@ -1,17 +1,17 @@
 import React from 'react';
-import {Table, TableHead, TableRow, TableCell, TableBody, TableContainer, TableSortLabel, Paper} from '@mui/material';
+import {Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel} from '@mui/material';
 import './Table.css';
 import {Beer} from "../../../model/Beer";
 import {connect} from "react-redux";
 import {BeerActions} from "../../../actions/actions";
+import {WaterHeatingTimeCalculator, cookingTimeOptions} from "../../../utils/WaterHeatingTimeCalculator";
+import {MashingType} from "../../../enums/eMashingType";
 import setSelectedBeer = BeerActions.setSelectedBeer;
 
 export interface BeerTableProps {
     beers: Beer[];
     setSelectedBeer: (beer: Beer) => void;
 }
-
-
 
 
 interface BeerTableState {
@@ -25,44 +25,53 @@ interface SortConfig {
     direction: 'asc' | 'desc';
 }
 
-export class BeerTableComponent extends React.Component<BeerTableProps,BeerTableState > {
+export class BeerTableComponent extends React.Component<BeerTableProps, BeerTableState> {
     constructor(props: BeerTableProps) {
         super(props);
 
         this.state = {
-            sortConfig: { key: 'name', direction: 'asc' },selectedBeerId:null
+            sortConfig: {key: 'name', direction: 'asc'}, selectedBeerId: null
         };
     }
 
     componentDidMount() {
-        const { beers } = this.props;
+        const {beers} = this.props;
         console.log(beers);
         if (beers.length > 0) {
             const firstBeer = beers[0];
             this.props.setSelectedBeer(firstBeer);
-            this.setState({ selectedBeerId: firstBeer.id });
+            this.setState({selectedBeerId: firstBeer.id});
         }
     }
 
     onSort = (key: keyof Beer) => {
-        const { sortConfig } = this.state;
+        const {sortConfig} = this.state;
         let direction: 'asc' | 'desc' = 'asc';
         if (sortConfig.key === key && sortConfig.direction === 'asc') {
             direction = 'desc';
         }
-        this.setState({ sortConfig: { key, direction } });
+        this.setState({sortConfig: {key, direction}});
     };
-    onSele= (aBeer: Beer) =>
-    {
-        const { setSelectedBeer } = this.props;
+    onSele = (aBeer: Beer) => {
+        const b = new WaterHeatingTimeCalculator();
+        const opt: cookingTimeOptions = {
+            currentTemperature: 20,
+            targetTemperature: 60,
+            liters: 30,
+            type: MashingType.IN,
+            malzIn_g: 10000
+        }
+        b.setOptions(opt);
+        b.getTime();
+        const {setSelectedBeer} = this.props;
         setSelectedBeer(aBeer);
-        this.setState({selectedBeerId:aBeer.id});
+        this.setState({selectedBeerId: aBeer.id});
     }
 
     render() {
-        const { beers } = this.props;
-        const { sortConfig,selectedBeerId } = this.state;
-        if (beers.length>0) {
+        const {beers} = this.props;
+        const {sortConfig, selectedBeerId} = this.state;
+        if (beers.length > 0) {
             const sortedData = [...beers].sort((a, b) => {
                 const {key, direction} = sortConfig;
                 if (a[key] < b[key]) {
@@ -154,7 +163,7 @@ export class BeerTableComponent extends React.Component<BeerTableProps,BeerTable
 
 
 const mapDispatchToProps = (dispatch: any) => ({
-    setSelectedBeer: (beer:Beer) => dispatch(setSelectedBeer(beer)),
+    setSelectedBeer: (beer: Beer) => dispatch(setSelectedBeer(beer)),
 });
 
 export default connect(null, mapDispatchToProps)(BeerTableComponent);

@@ -8,6 +8,7 @@ import {BrewingData} from "../model/BrewingData";
 import {BrewingStatus} from "../model/BrewingStatus";
 import {ConfirmStates} from "../enums/eConfirmStates";
 import {BackendAvailable} from "../reducers/reducer";
+import {WaterStatus} from "../components/Controlls/WaterControll/WaterControl";
 
 export class ProductionRepository {
     private static pollingIntervalId: NodeJS.Timeout | null = null;
@@ -95,9 +96,16 @@ export class ProductionRepository {
 
     private static async _doGetWaterFillStatus() {
         try {
-            const response = await axios.get(DatabaseURL + 'WaterStatus');
+            const response = await axios.get(BaseURL + 'WaterStatus');
             if (response.status == 200) {
-                console.log(response.data);
+                const parsedWaterStatus: WaterStatus = JSON.parse((JSON.stringify(response.data)))
+                store.dispatch(ProductionActions.setWaterStatus(parsedWaterStatus))
+                if (parsedWaterStatus.openClose === true) {
+                    setTimeout(() => {
+                        this._doGetWaterFillStatus();
+                    }, 1000);
+                }
+
             } else {
                 console.log(response.data);
             }
@@ -228,6 +236,7 @@ export class ProductionRepository {
             const response = await axios.get(CommandsURL + 'FillWaterAutomatic:' + aLiters.toString());
             if (response.status == 200) {
                 store.dispatch(ProductionActions.startWaterFillingSuccess(true));
+                this._doGetWaterFillStatus();
             } else {
                 store.dispatch(ProductionActions.startWaterFillingSuccess(false));
             }

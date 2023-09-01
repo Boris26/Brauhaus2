@@ -10,6 +10,7 @@ import {BrewingData} from "../model/BrewingData";
 import {BrewingStatus} from "../model/BrewingStatus";
 import {ConfirmStates} from "../enums/eConfirmStates";
 import {BackendAvailable} from "../reducers/reducer";
+import {WaterStatus} from "../components/Controlls/WaterControll/WaterControl";
 
 export namespace BeerActions {
 
@@ -369,7 +370,13 @@ export namespace ProductionActions {
         START_POLLING = 'ProductionActions.START_POLLING',
         CONFIRM = 'ProductionActions.CONFIRM',
         CHECK_IS_BACKEND_AVAILABLE = 'ProductionActions.CHECK_IS_BACKEND_AVAILABLE',
-        IS_BACKEND_AVAILABLE = 'ProductionActions.IS_BACKEND_AVAILABLE'
+        IS_BACKEND_AVAILABLE = 'ProductionActions.IS_BACKEND_AVAILABLE',
+        SET_WATER_STATUS = 'ProductionActions.'
+    }
+
+    export interface SetWaterStatus {
+        readonly type: ActionTypes.SET_WATER_STATUS
+        payload: { waterStatus: WaterStatus }
     }
 
     export interface IsBackendAvailable {
@@ -457,7 +464,15 @@ export namespace ProductionActions {
         Confirm |
         SendBrewingData |
         CheckIsBackendAvailable |
-        IsBackendAvailable;
+        IsBackendAvailable |
+        SetWaterStatus;
+
+    export function setWaterStatus(aWaterStatus: WaterStatus): ProductionActions.SetWaterStatus {
+        return {
+            type: ActionTypes.SET_WATER_STATUS,
+            payload: {waterStatus: aWaterStatus}
+        }
+    }
 
     export function isBackenAvailable(aBackenAvailable: BackendAvailable): ProductionActions.IsBackendAvailable {
         return {

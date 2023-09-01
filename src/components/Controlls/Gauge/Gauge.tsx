@@ -9,6 +9,7 @@ interface GaugeProps {
     offset: number;
     label: string;
     height:number;
+    showAreas: boolean;
 }
 
 
@@ -80,8 +81,29 @@ class Gauge extends React.Component<GaugeProps,GaugeState> {
 
     render() {
         const { redFrom,redTo,yellowFrom,yellowTo,greenFrom,greenTo } = this.state
-        const {value,targetValue,label,minValue,maxValue,height} = this.props;
+        const {value,targetValue,label,minValue,maxValue,height,showAreas} = this.props;
 
+        let gaugeOptions: Gauge;
+        const optionsWithArea ={
+            greenFrom: greenFrom,
+            greenTo: greenTo,
+            redFrom: redFrom,
+            redTo: redTo,
+            yellowFrom:yellowFrom,
+            yellowTo: yellowTo,
+            minorTicks: 10,
+            min: minValue,
+            max: maxValue,
+        }
+        const optionsWithoutArea={
+            greenFrom: greenFrom,
+            greenTo: greenTo,
+            redFrom: redFrom,
+            minorTicks: 10,
+            min: minValue,
+            max: maxValue,
+        }
+        const chartOptions = showAreas ? optionsWithArea : optionsWithoutArea;
             return (<div>
                 <Chart
                     height={height}
@@ -91,17 +113,7 @@ class Gauge extends React.Component<GaugeProps,GaugeState> {
                         ["Label", "Value"],
                         [label, Number(value)]
                     ]}
-                    options={{
-                        greenFrom: greenFrom,
-                        greenTo: greenTo,
-                        redFrom: redFrom,
-                        redTo: redTo,
-                        yellowFrom:yellowFrom,
-                        yellowTo: yellowTo,
-                        minorTicks: 10,
-                        min: minValue,
-                        max: maxValue,
-                    }}
+                    options={chartOptions}
                 />
             </div>
 

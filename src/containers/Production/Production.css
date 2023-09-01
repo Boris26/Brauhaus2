@@ -11,7 +11,7 @@
 
 .containerProduction {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 0.5fr 1.7fr;
+    grid-template-columns: 1fr 1fr 1fr 0.8fr 1.7fr;
     grid-template-rows: 0.15fr 1fr 1fr 0.6fr 0.1fr 0.4fr;
     gap: 5px 5px;
     grid-auto-flow: row;
@@ -56,7 +56,10 @@
 .Flame { grid-area: Flame;   display: flex; justify-content: center; /* Horizontale Zentrierung hinzugefügt */
     align-items: center; /* Vertikale Zentrierung hinzugefügt */}
 
-.Agitator { grid-area: Agitator;  display: flex;background: #404040;}
+.Agitator { grid-area: Agitator;    align-items: center; justify-content: center;display: flex;background: #404040;}
+.GaugeContainer {
+    padding: 20px; /* Abstand zwischen den Gauge-Komponenten */
+}
 
 .Temp { grid-area: Temp; display: flex; justify-content: center; /* Horizontale Zentrierung hinzugefügt */
     align-items: center;background: #404040;; /* Vertikale Zentrierung hinzugefügt */}
@@ -105,6 +108,43 @@ html, body , .container {
 .time {
     color: #eeeeee;
     font-size: 24px;
+}
+
+.settingsRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: 10px;
+}
+
+.settingsRowWater {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-top: 3rem;
+}
+
+.rightAligned {
+    margin-right: 5rem;
+}
+
+.quantityPickerItem {
+    margin-top: 10px;
+}
+
+.leftAligned {
+    margin-left: 5rem;
+    margin-top: 1.75rem;
+}
+
+.formControlGroup {
+    display: flex;
+    flex-direction: column;
+    margin-left: 10px;
+}
+
+.formControlLabelItem {
+    margin-bottom: 2.3rem;
 }
 
 

@@ -3,6 +3,10 @@ import './WaterControll.css';
 import rührwerk from '../../../assets/rührwerk.png';
 import { ToggleState } from "../../../enums/eToggleState";
 
+export interface WaterStatus {
+    liters: number
+    openClose: boolean
+}
 interface WaterControllProps {
     liters: number;
     agitatorState: boolean;

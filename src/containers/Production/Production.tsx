@@ -5,7 +5,7 @@ import {connect} from "react-redux";
 
 import './Production.css'
 import Timeline, {TimelineData} from "./Timeline/Timeline";
-import WaterControl from "../../components/Controlls/WaterControll/WaterControl";
+import WaterControl, {WaterStatus} from "../../components/Controlls/WaterControll/WaterControl";
 import Flame from "../../components/Flame/Flame";
 import {ProductionActions} from "../../actions/actions";
 import Gauge from "../../components/Controlls/Gauge/Gauge";
@@ -37,7 +37,8 @@ interface ProductionProps {
     brewingStatus: BrewingStatus;
     startPolling: () => void;
     checkIsBackenAvailable: () => void;
-    isBackenAvailable:BackendAvailable;
+    isBackenAvailable: BackendAvailable;
+    waterStatus: WaterStatus;
 }
 
 interface ProductionState {
@@ -101,21 +102,17 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     componentDidUpdate(prevProps: Readonly<ProductionProps>, prevState: Readonly<ProductionState>, snapshot?: any) {
         const {toggleAgitator, getTemperatures, agitatorSpeed, agitatorIsRunning} = this.props;
         const {intervalSwitchState, mainSwitchState, waterSwitchState} = this.state;
-        if(prevProps.isBackenAvailable !== this.props.isBackenAvailable)
-        {
-            if(this.props.isBackenAvailable.isBackenAvailable===false)
-            {
-                this.setState({showErrorDialog:true})
-            }
-            else
-            {
-                this.setState({showErrorDialog:false})
+        if (prevProps.isBackenAvailable !== this.props.isBackenAvailable) {
+            if (!this.props.isBackenAvailable.isBackenAvailable) {
+                this.setState({showErrorDialog: true})
+            } else {
+                this.setState({showErrorDialog: false})
             }
         }
         if (prevProps.temperature !== this.props.temperature) {
             this.setState({temperature: this.props.temperature})
         }
-        if (this.props.isToggleAgitatorSuccess === false && mainSwitchState) {
+        if (!this.props.isToggleAgitatorSuccess && mainSwitchState) {
             const delay = 300;
             setTimeout(() => {
                 this.setState({mainSwitchState: false, mainAgitatorError: true});
@@ -128,7 +125,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
             toggleAgitator(this.setAgitatorStates(mainSwitchState));
         }
 
-        if (this.props.isWaterFillingSuccessful === false && waterSwitchState) {
+        if (!this.props.isWaterFillingSuccessful && waterSwitchState) {
             const delay = 300;
             setTimeout(() => {
                 this.setState({waterSwitchState: false, waterFillingError: true});
@@ -194,8 +191,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     toggleAgitator = () => {
         const {toggleAgitator} = this.props;
         const {mainSwitchState} = this.state;
-        if (mainSwitchState === false) {
-
+        if (!mainSwitchState) {
             toggleAgitator(this.setAgitatorStates(true));
             this.setState({mainSwitchState: true});
         } else {
@@ -204,11 +200,10 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         }
     }
 
-
     toggleInterval = () => {
         const {intervalSwitchState, mainSwitchState, agitatorSpeed} = this.state;
 
-        if (intervalSwitchState === false) {
+        if (!intervalSwitchState) {
             this.setState({intervalSwitchState: true});
 
         } else {
@@ -217,7 +212,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     }
     toggleHeatingAndStirring = () => {
         const {heatingAndStirringSwitchState} = this.state;
-        if (heatingAndStirringSwitchState === false) {
+        if (!heatingAndStirringSwitchState) {
             this.setState({heatingAndStirringSwitchState: true});
         } else {
             this.setState({heatingAndStirringSwitchState: false});
@@ -245,7 +240,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     toggleWaterSwitchState = () => {
         const {waterSwitchState, liters,} = this.state;
         const {startWaterFilling} = this.props;
-        if (waterSwitchState === false) {
+        if (!waterSwitchState) {
             this.setState({waterSwitchState: true});
             startWaterFilling(liters);
         } else {
@@ -340,9 +335,9 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     }
 
     renderTemperature() {
-        const {brewingStatus} = this.props;
+        const {brewingStatus, waterStatus} = this.props;
         return (<div className="Temp">
-            <Gauge value={brewingStatus?.Temperature} targetValue={brewingStatus?.TargetTemperature} height={300}
+            <Gauge showAreas={true} value={brewingStatus?.Temperature} targetValue={brewingStatus?.TargetTemperature} height={300}
                    offset={1} minValue={0} maxValue={100} label={"°C"}/>
         </div>);
     }
@@ -357,85 +352,115 @@ class Production extends React.Component<ProductionProps, ProductionState> {
             waterFillingError,
             mainAgitatorError
         } = this.state;
-        return (<div className="Settings">
-            <h3>Settings</h3>
-            <QuantityPicker initialValue={1} min={1} max={30} onChange={this.onIntervalChangeBreakTime}
-                            isDisabled={false} label="Pausenzeit" labelPosition="above"/>
-            <QuantityPicker initialValue={1} min={1} max={30} onChange={this.onIntervalChangeRunningTime}
-                            isDisabled={false} label="Laufzeit" labelPosition="above"/>
-            <div>
-                <FormControl component="fieldset" variant="standard">
-                    <FormGroup>
-                        <FormControlLabel
-                            control={
-                                <Switch className={mainAgitatorError ? 'blinking-button' : ''} checked={mainSwitchState}
-                                        onChange={this.toggleAgitator} name="MainSwitch"/>
-                            }
-                            label="Hauptschaler"
-                        />
-                        <FormControlLabel
-                            control={
-                                <Switch checked={intervalSwitchState} onChange={this.toggleInterval}
-                                        name="IntervalSwitch"/>
-                            }
-                            label="Interval"
-                        />
-                        <FormControlLabel
-                            control={
-                                <Switch checked={heatingAndStirringSwitchState} onChange={this.toggleHeatingAndStirring}
-                                        name="HeatingAndStirringSwitch"/>
-                            }
-                            label="Heizphase"
-                        />
-                    </FormGroup>
+        const {setedAgitatorSpeed, agitatorIsRunning, agitatorSpeed, waterStatus} = this.props;
+        return (
+            <div className="Settings">
+                <h3>Settings</h3>
+                <div className="settingsRow">
+                    <div className="leftAligned" id="formControl">
+                        <FormControl component="fieldset" variant="standard">
+                            <FormGroup className="formControlGroup">
+                                <div className="formControlLabelItem">
+                                    <FormControlLabel
+                                        control={
+                                            <Switch className={mainAgitatorError ? 'blinking-button' : ''}
+                                                    checked={mainSwitchState}
+                                                    onChange={this.toggleAgitator} name="MainSwitch"/>
+                                        }
+                                        label="Hauptschaler"
+                                    />
+                                </div>
+                                <div className="formControlLabelItem">
 
-                </FormControl>
-                <button className="startButton" onClick={this.startBrewing}>Start</button>
-                <button className="startButton" onClick={this.startPolling}>Start</button>
-            </div>
-            <QuantityPicker initialValue={3} min={5} max={30} onChange={this.onSetWaterChangeQuantity}
-                            isDisabled={waterSwitchState} label="Liter" labelPosition="above"/>
-            <div>
-                <FormControl component="fieldset" variant="standard">
-                    <FormGroup>
-                        <FormControlLabel
-                            control={
-                                <Switch className={waterFillingError ? 'blinking-button' : ''}
-                                        checked={waterSwitchState} onChange={this.toggleWaterSwitchState}
-                                        name="MainSwitch"/>
-                            }
-                            label="Automatik"
-                        />
-                    </FormGroup>
-                </FormControl>
-            </div>
-        </div>);
+                                    <FormControlLabel
+                                        control={
+                                            <Switch checked={intervalSwitchState} onChange={this.toggleInterval}
+                                                    name="IntervalSwitch"/>
+                                        }
+                                        label="Interval"
+                                    />
+                                </div>
+                                <div className="formControlLabelItem">
+                                    <FormControlLabel
+                                        control={
+                                            <Switch checked={heatingAndStirringSwitchState}
+                                                    onChange={this.toggleHeatingAndStirring}
+                                                    name="HeatingAndStirringSwitch"/>
+                                        }
+                                        label="Heizphase"
+                                    />
+                                </div>
+                            </FormGroup>
+                        </FormControl>
+                    </div>
+                    <div className="rightAligned" id="quantityPicker">
+                        <QuantityPicker initialValue={1} min={1} max={30} onChange={this.onAgitatorSpeedChange}
+                                        isDisabled={false} label="Geschwindigkeit" labelPosition="above"/>
+                        <div className="quantityPickerItem">
+
+                        </div>
+                        <QuantityPicker initialValue={1} min={1} max={30} onChange={this.onIntervalChangeBreakTime}
+                                        isDisabled={false} label="Pausenzeit" labelPosition="above"/>
+                        <div className="quantityPickerItem">
+
+                        </div>
+                        <QuantityPicker initialValue={1} min={1} max={30} onChange={this.onIntervalChangeRunningTime}
+                                        isDisabled={false} label="Laufzeit" labelPosition="above"/>
+                    </div>
+                </div>
+
+                <div className="settingsRowWater">
+                    <div className="leftAligned">
+                        <FormControl component="fieldset" variant="standard">
+                            <FormGroup>
+                                <FormControlLabel
+                                    control={
+                                        <Switch className={waterFillingError ? 'blinking-button' : ''}
+                                                checked={waterSwitchState} onChange={this.toggleWaterSwitchState}
+                                                name="MainSwitch"/>
+                                    }
+                                    label="Automatik"
+                                />
+                            </FormGroup>
+                        </FormControl>
+                    </div>
+                    <div className="rightAligned">
+                        <QuantityPicker initialValue={1} min={1} max={100} onChange={this.onSetWaterChangeQuantity}
+                                        isDisabled={waterSwitchState} label="Liter" labelPosition="above"/>
+                    </div>
+
+
+                </div>
+            </div>);
     }
 
     renderAgitator() {
         const infinitySymbol = '\u221E';
-        const {setedAgitatorSpeed, agitatorIsRunning, agitatorSpeed} = this.props;
+        const {liters} = this.state;
+        const {setedAgitatorSpeed, agitatorIsRunning, agitatorSpeed, waterStatus} = this.props;
         return (<div className="Agitator">
-            <div style={{position: 'relative', marginTop: '50px'}}>
-                <MyKnob label={"Geschwindigkeit"} max={20} min={0} currentValue={setedAgitatorSpeed}
-                        isAktive={agitatorIsRunning} onClick={this.toggleAgitator}
-                        onValueChange={this.onAgitatorSpeedChange}/>
-            </div>
-            <div style={{marginTop: '20px', marginLeft: '20px'}}>
-                <Gauge value={agitatorSpeed} targetValue={setedAgitatorSpeed} height={190} offset={1} minValue={0}
+
+            <div className="GaugeContainer">
+                <Gauge showAreas={true} value={agitatorSpeed} targetValue={setedAgitatorSpeed} height={220} offset={1} minValue={0}
                        maxValue={20} label={infinitySymbol}/>
+            </div>
+            <div className="GaugeContainer">
+                <Gauge  showAreas={false} value={waterStatus?.liters} targetValue={liters} height={220}
+                       offset={0.5} minValue={0} maxValue={100} label={"Liter"}/>
             </div>
         </div>);
     }
 
     renderWater() {
-        const {setedAgitatorSpeed, agitatorIsRunning, brewingStatus} = this.props;
+        const {setedAgitatorSpeed, agitatorIsRunning, brewingStatus, waterStatus} = this.props;
+        console.log(waterStatus);
 
 
         return (
             <div className="Water">
-                <WaterControl liters={10} agitatorSpeed={setedAgitatorSpeed}
+                <WaterControl liters={waterStatus.liters} agitatorSpeed={setedAgitatorSpeed}
                               agitatorState={brewingStatus?.AgitatorStatus}></WaterControl>
+
             </div>);
     }
 
@@ -449,8 +474,12 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         </div>);
     }
 
-    confirmDialog() {
+    confirmHopDialog() {
         this.setState({showHopsDialog: false});
+    }
+
+    confirmErrorDialog() {
+
     }
 
     renderHopDialog() {
@@ -466,7 +495,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
             }
         }
         return (<div>
-            <ModalDialog onConfirm={this.confirmDialog} type={DialogType.CONFIRM} open={showHopsDialog}
+            <ModalDialog onConfirm={this.confirmHopDialog} type={DialogType.CONFIRM} open={showHopsDialog}
                          content={'Bitte den ' + hopName + ' Hopfen zufügen!'} header={"Hopfen Zufügen"}></ModalDialog>
         </div>);
 
@@ -475,10 +504,10 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     renderErrorDialog() {
         const {showErrorDialog} = this.state
         const {isBackenAvailable} = this.props
-        const contentText = 'Die Brau-Steuerung ist nicht erreichbar\n\n'+ isBackenAvailable.statusText
+        const contentText = 'Die Brau-Steuerung ist nicht erreichbar\n\n' + isBackenAvailable.statusText
         console.log(contentText);
         return (<div>
-            <ModalDialog onConfirm={this.confirmDialog} type={DialogType.ERROR} open={showErrorDialog}
+            <ModalDialog onConfirm={this.confirmErrorDialog} type={DialogType.ERROR} open={showErrorDialog}
                          content={contentText} header={"Fehler!"}></ModalDialog>
         </div>);
     }
@@ -488,7 +517,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
 
         return (
             <div className="containerProduction ">
-                {this.renderErrorDialog()}
+
                 {this.renderHopDialog()}
                 {this.renderHeader()}
                 {this.renderWater()}
@@ -538,7 +567,8 @@ const mapStateToProps = (state: any) => (
         isWaterFillingSuccessful: state.productionReducer.isWaterFillingSuccessful,
         isToggleAgitatorSuccess: state.productionReducer.isToggleAgitatorSuccess,
         brewingStatus: state.productionReducer.brewingStatus,
-        isBackenAvailable: state.productionReducer.isBackenAvailable
+        isBackenAvailable: state.productionReducer.isBackenAvailable,
+        waterStatus: state.productionReducer.waterStatus
 
     });
 export default connect(mapStateToProps, mapDispatchToProps)(Production);
