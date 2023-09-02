@@ -2,6 +2,7 @@ import React from 'react';
 import _, {isUndefined} from 'lodash';
 import {Beer} from "../../model/Beer";
 import {connect} from "react-redux";
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 import './Production.css'
 import Timeline, {TimelineData} from "./Timeline/Timeline";
@@ -11,7 +12,8 @@ import {ProductionActions} from "../../actions/actions";
 import Gauge from "../../components/Controlls/Gauge/Gauge";
 import MyKnob from "../../components/Controlls/Knob/Knob";
 import {ToggleState} from "../../enums/eToggleState";
-import {FormControl, FormControlLabel, FormGroup, Switch} from '@mui/material';
+import {FormControl, FormControlLabel, FormGroup, Switch,LinearProgress} from '@mui/material';
+import Box from '@mui/material/Box';
 import {MashAgitatorStates} from "../../model/MashAgitator";
 import QuantityPicker from '../../components/Controlls/QuantityPicker/QuantityPicker';
 import {BrewingData} from "../../model/BrewingData";
@@ -19,6 +21,8 @@ import {BrewingStatus} from "../../model/BrewingStatus";
 import {TimeFormatter} from "../../utils/TimeFormatter";
 import ModalDialog, {DialogType} from "../../components/ModalDialog/ModalDialog";
 import {BackendAvailable} from "../../reducers/reducer";
+import {ProgressBar} from "react-bootstrap";
+import {MashingType} from "../../enums/eMashingType";
 
 interface ProductionProps {
     selectedBeer: Beer;
@@ -329,7 +333,10 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                     </div>
                 </div>
                 <div>
-                    <span>{brewingStatus?.StatusText}</span>
+                    {this.renderProgressBar()}
+                </div>
+                <div>
+
                 </div>
             </div>);
     }
@@ -337,7 +344,8 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     renderTemperature() {
         const {brewingStatus, waterStatus} = this.props;
         return (<div className="Temp">
-            <Gauge showAreas={true} value={brewingStatus?.Temperature} targetValue={brewingStatus?.TargetTemperature} height={300}
+            <Gauge showAreas={true} value={brewingStatus?.Temperature} targetValue={brewingStatus?.TargetTemperature}
+                   height={300}
                    offset={1} minValue={0} maxValue={100} label={"°C"}/>
         </div>);
     }
@@ -407,6 +415,9 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                         <QuantityPicker initialValue={1} min={1} max={30} onChange={this.onIntervalChangeRunningTime}
                                         isDisabled={false} label="Laufzeit" labelPosition="above"/>
                     </div>
+                    <div>
+                        <button onClick={this.startBrewing}></button>
+                    </div>
                 </div>
 
                 <div className="settingsRowWater">
@@ -441,11 +452,12 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         return (<div className="Agitator">
 
             <div className="GaugeContainer">
-                <Gauge showAreas={true} value={agitatorSpeed} targetValue={setedAgitatorSpeed} height={220} offset={1} minValue={0}
+                <Gauge showAreas={true} value={agitatorSpeed} targetValue={setedAgitatorSpeed} height={220} offset={1}
+                       minValue={0}
                        maxValue={20} label={infinitySymbol}/>
             </div>
             <div className="GaugeContainer">
-                <Gauge  showAreas={false} value={waterStatus?.liters} targetValue={liters} height={220}
+                <Gauge showAreas={false} value={waterStatus?.liters} targetValue={liters} height={220}
                        offset={0.5} minValue={0} maxValue={100} label={"Liter"}/>
             </div>
         </div>);
@@ -462,6 +474,26 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                               agitatorState={brewingStatus?.AgitatorStatus}></WaterControl>
 
             </div>);
+    }
+
+    renderProgressBar() {
+        const {brewingStatus} = this.props;
+        const now = 10;
+        const progressBarStyle = {
+            width: '50rem',    // Width of the progress bar
+            height: '4rem',    // Height of the progress bar
+            marginLeft: '1rem'
+        };
+
+
+        return (
+                <div className="container mt-4">
+                    <h3 className='progressLabel'>Rast 1</h3>
+                    <ProgressBar animated striped now={now} label={`${now}%`}  style={progressBarStyle}/>
+                </div>
+            );
+
+
     }
 
     renderHeader() {
@@ -517,7 +549,6 @@ class Production extends React.Component<ProductionProps, ProductionState> {
 
         return (
             <div className="containerProduction ">
-
                 {this.renderHopDialog()}
                 {this.renderHeader()}
                 {this.renderWater()}

@@ -6,8 +6,8 @@ import Index from "./index";
 
 const App: React.FC = () => {
     return (
-        <div className="container">
-            <div className="Header">
+        <div className="AppContainer">
+            <div className="AppHeader">
                 <Header></Header>
             </div>
             <div className="Index">

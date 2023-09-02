@@ -78,11 +78,14 @@ html, body , .container {
 
 
 .timeContainer {
+    margin-top: 2rem;
+    margin-left: 0.5rem;
     justify-content: center;
     align-items: center;
     background-color: #c9c9c9; /* Hintergrundfarbe ändern */
     border-style: ridge;
     border-radius: 5px;
+    height: 6.3rem;
 }
 .timeline{
     margin-left: 20px;
@@ -145,6 +148,9 @@ html, body , .container {
 
 .formControlLabelItem {
     margin-bottom: 2.3rem;
+}
+.progressLabel {
+    margin-left: 1rem ;
 }
 
 
