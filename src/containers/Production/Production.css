@@ -152,5 +152,15 @@ html, body , .container {
 .progressLabel {
     margin-left: 1rem ;
 }
+.startBtn {
+    height: 4rem;
+    width: 15rem;
+}
+.startBtnDiv
+{
+    margin-top: 6rem;
+    display: flex;
+    justify-content: center;
+}
 
 

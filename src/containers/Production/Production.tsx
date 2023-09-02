@@ -415,9 +415,6 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                         <QuantityPicker initialValue={1} min={1} max={30} onChange={this.onIntervalChangeRunningTime}
                                         isDisabled={false} label="Laufzeit" labelPosition="above"/>
                     </div>
-                    <div>
-                        <button onClick={this.startBrewing}></button>
-                    </div>
                 </div>
 
                 <div className="settingsRowWater">
@@ -441,6 +438,9 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                     </div>
 
 
+                </div>
+                <div className="startBtnDiv">
+                    <button className="startBtn" onClick={this.startBrewing} >Start</button>
                 </div>
             </div>);
     }
@@ -484,8 +484,6 @@ class Production extends React.Component<ProductionProps, ProductionState> {
             height: '4rem',    // Height of the progress bar
             marginLeft: '1rem'
         };
-
-
         return (
                 <div className="container mt-4">
                     <h3 className='progressLabel'>Rast 1</h3>
