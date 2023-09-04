@@ -10,10 +10,8 @@ import WaterControl, {WaterStatus} from "../../components/Controlls/WaterControl
 import Flame from "../../components/Flame/Flame";
 import {ProductionActions} from "../../actions/actions";
 import Gauge from "../../components/Controlls/Gauge/Gauge";
-import MyKnob from "../../components/Controlls/Knob/Knob";
 import {ToggleState} from "../../enums/eToggleState";
-import {FormControl, FormControlLabel, FormGroup, Switch,LinearProgress} from '@mui/material';
-import Box from '@mui/material/Box';
+import {FormControl, FormControlLabel, FormGroup, Switch} from '@mui/material';
 import {MashAgitatorStates} from "../../model/MashAgitator";
 import QuantityPicker from '../../components/Controlls/QuantityPicker/QuantityPicker';
 import {BrewingData} from "../../model/BrewingData";
@@ -440,7 +438,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
 
                 </div>
                 <div className="startBtnDiv">
-                    <button className="startBtn" onClick={this.startBrewing} >Start</button>
+                    <button className="startBtn" onClick={this.startBrewing}>Start</button>
                 </div>
             </div>);
     }
@@ -478,20 +476,24 @@ class Production extends React.Component<ProductionProps, ProductionState> {
 
     renderProgressBar() {
         const {brewingStatus} = this.props;
-        const now = 10;
-        const progressBarStyle = {
-            width: '50rem',    // Width of the progress bar
-            height: '4rem',    // Height of the progress bar
-            marginLeft: '1rem'
-        };
-        return (
-                <div className="container mt-4">
-                    <h3 className='progressLabel'>Rast 1</h3>
-                    <ProgressBar animated striped now={now} label={`${now}%`}  style={progressBarStyle}/>
-                </div>
-            );
+        if (!isUndefined(brewingStatus)) {
+            if ((brewingStatus.Type === MashingType.RAST && brewingStatus.HeatUpStatus === false) || brewingStatus.Type === MashingType.COOKING && brewingStatus.WaitingStatus === false) {
+                const finishedInPercent = Math.round(brewingStatus?.elapsedTime * 100 / brewingStatus?.currentTime);
 
-
+                const progressBarStyle = {
+                    width: '50rem',    // Width of the progress bar
+                    height: '4rem',    // Height of the progress bar
+                    marginLeft: '1rem'
+                };
+                return (
+                    <div className="container mt-4">
+                        <h3 className='progressLabel'>Rast 1</h3>
+                        <ProgressBar animated striped now={finishedInPercent} label={`${finishedInPercent}%`}
+                                     style={progressBarStyle}/>
+                    </div>
+                );
+            }
+        }
     }
 
     renderHeader() {
@@ -504,7 +506,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         </div>);
     }
 
-    confirmHopDialog() {
+    confirmHopDialog = () => {
         this.setState({showHopsDialog: false});
     }
 

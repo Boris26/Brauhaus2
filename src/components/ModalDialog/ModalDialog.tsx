@@ -37,7 +37,7 @@ class ModalDialog extends React.Component<ModalDialogProps, ModalDialogState> {
         }
 
     }
-    handleClose() {
+    handleClose = ()=> {
         const {onConfirm, content} = this.props;
 
         onConfirm(content);
@@ -53,6 +53,11 @@ class ModalDialog extends React.Component<ModalDialogProps, ModalDialogState> {
                 <DialogContent style={{ width: '300px', minHeight: '80px' }}>
                     <p>{this.contentWithLineBreaks(content)}</p>
                 </DialogContent>
+                <DialogActions>
+                    <Button onClick={this.handleClose} color="primary">
+                        Schließen
+                    </Button>
+                </DialogActions>
 
             </Dialog>
         );
