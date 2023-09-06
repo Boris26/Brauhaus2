@@ -9,6 +9,7 @@ import ModalDialog, {DialogType} from "../components/ModalDialog/ModalDialog";
 import {BrewingStatus} from "../model/BrewingStatus";
 import {ProductionActions} from "../actions/actions";
 import {ConfirmStates} from "../enums/eConfirmStates";
+import {TextMapper} from "../utils/TextMapper";
 
 interface indexMainProps {
     viewState: Views;
@@ -55,13 +56,13 @@ class Index extends React.Component<indexMainProps> {
 
     showDialog() {
         const {brewingStatus} = this.props;
-
+        const message = TextMapper.mapToText(brewingStatus?.StatusText);
         return (
             <div>
                 <ModalDialog
                     type={DialogType.CONFIRM}
                     open={brewingStatus?.WaitingStatus}
-                    content={brewingStatus?.StatusText}
+                    content={message}
                     header={"Confirm"}
                     onConfirm={this.confirmDialog}
                 />

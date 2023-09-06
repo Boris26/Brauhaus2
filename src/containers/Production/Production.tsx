@@ -546,7 +546,6 @@ class Production extends React.Component<ProductionProps, ProductionState> {
 
     render() {
         this.createTimelineData();
-
         return (
             <div className="containerProduction ">
                 {this.renderHopDialog()}
