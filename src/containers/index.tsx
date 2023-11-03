@@ -34,19 +34,19 @@ class Index extends React.Component<indexMainProps> {
         const {confirm} = this.props
         console.log(content);
         switch (content) {
-            case 'wartenEinmaischen' : {
+            case 'Einmaischen, bitte abschliessen' : {
                 confirm(ConfirmStates.MASHUP);
                 break;
             }
-            case 'wartenIodineTest' : {
+            case 'Bitte Jod Test durchführen!' : {
                 confirm(ConfirmStates.IODINE);
                 break;
             }
-            case 'wartenStart Kochen' : {
+            case 'Kann der Koch Prozess gestartet werden?' : {
                 confirm(ConfirmStates.COOKING);
                 break;
             }
-            case 'wartenauf Wasser Kocht' : {
+            case 'Bitte Bestätigen wenn Wasser Kocht!' : {
                 confirm(ConfirmStates.BOILING);
                 break;
             }

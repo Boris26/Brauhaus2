@@ -190,7 +190,6 @@ export class ProductionRepository {
                     }
 
                 const parsedBrewingStatus: BrewingStatus = JSON.parse(JSON.stringify(response.data));
-                console.log(parsedBrewingStatus);
                 store.dispatch(ProductionActions.isBackenAvailable(available));
                 store.dispatch(ProductionActions.setBrewingStatus(parsedBrewingStatus));
             } else {

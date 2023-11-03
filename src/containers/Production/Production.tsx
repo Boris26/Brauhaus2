@@ -4,6 +4,8 @@ import {Beer} from "../../model/Beer";
 import {connect} from "react-redux";
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+import '@fortawesome/fontawesome-free/css/all.css'; // Stile
+
 import './Production.css'
 import Timeline, {TimelineData} from "./Timeline/Timeline";
 import WaterControl, {WaterStatus} from "../../components/Controlls/WaterControll/WaterControl";
@@ -11,7 +13,7 @@ import Flame from "../../components/Flame/Flame";
 import {ProductionActions} from "../../actions/actions";
 import Gauge from "../../components/Controlls/Gauge/Gauge";
 import {ToggleState} from "../../enums/eToggleState";
-import {FormControl, FormControlLabel, FormGroup, Switch} from '@mui/material';
+import {FormControl, FormControlLabel, FormGroup} from '@mui/material';
 import {MashAgitatorStates} from "../../model/MashAgitator";
 import QuantityPicker from '../../components/Controlls/QuantityPicker/QuantityPicker';
 import {BrewingData} from "../../model/BrewingData";
@@ -21,6 +23,9 @@ import ModalDialog, {DialogType} from "../../components/ModalDialog/ModalDialog"
 import {BackendAvailable} from "../../reducers/reducer";
 import {ProgressBar} from "react-bootstrap";
 import {MashingType} from "../../enums/eMashingType";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faRotateRight, faRepeat} from '@fortawesome/free-solid-svg-icons';
+import Switch from "react-switch";
 
 interface ProductionProps {
     selectedBeer: Beer;
@@ -67,6 +72,12 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     private blinkIntervalMainSwitch: NodeJS.Timeout | null = null;
     private blinkIntervalWaterSwitch: NodeJS.Timeout | null = null;
     private timelineData: TimelineData[] = [];
+    private readonly MAX_AGITATOR_SPEED = 40;
+    private readonly MAX_WATER_LEVEL = 70;
+    private readonly MAX_INTERVAL_TIME = 10;
+    private readonly MIN_INTERVAL_TIME = 10;
+    private readonly MAX_BREAK_TIME = 10;
+    private readonly MAX_RUNNING_TIME = 10;
 
     constructor(props: ProductionProps) {
         super(props);
@@ -227,7 +238,6 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     }
 
     onIntervalChangeBreakTime = (value: number) => {
-        console.log(value);
         this.setState({breakTime: value});
     }
 
@@ -272,7 +282,6 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     }
 
     formatTime = (time: number) => {
-        console.log(TimeFormatter.seconds(time))
         return TimeFormatter.seconds(time);
     }
 
@@ -292,14 +301,14 @@ class Production extends React.Component<ProductionProps, ProductionState> {
 
         return (
             <div className='Flame'>
-                {brewingStatus?.HeatUpStatus === true && (
+              {brewingStatus?.HeatUpStatus === true && (
                     <>
                         <Flame/>
                         <Flame/>
                         <Flame/>
                         <Flame/>
                     </>
-                )}
+              )}
             </div>
         );
     }
@@ -343,7 +352,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         const {brewingStatus, waterStatus} = this.props;
         return (<div className="Temp">
             <Gauge showAreas={true} value={brewingStatus?.Temperature} targetValue={brewingStatus?.TargetTemperature}
-                   height={300}
+                   height={220}
                    offset={1} minValue={0} maxValue={100} label={"°C"}/>
         </div>);
     }
@@ -358,87 +367,62 @@ class Production extends React.Component<ProductionProps, ProductionState> {
             waterFillingError,
             mainAgitatorError
         } = this.state;
-        const {setedAgitatorSpeed, agitatorIsRunning, agitatorSpeed, waterStatus} = this.props;
+        const {setedAgitatorSpeed, agitatorIsRunning, agitatorSpeed, waterStatus,selectedBeer} = this.props;
         return (
             <div className="Settings">
                 <h3>Settings</h3>
                 <div className="settingsRow">
                     <div className="leftAligned" id="formControl">
-                        <FormControl component="fieldset" variant="standard">
-                            <FormGroup className="formControlGroup">
-                                <div className="formControlLabelItem">
-                                    <FormControlLabel
-                                        control={
-                                            <Switch className={mainAgitatorError ? 'blinking-button' : ''}
-                                                    checked={mainSwitchState}
-                                                    onChange={this.toggleAgitator} name="MainSwitch"/>
-                                        }
-                                        label="Hauptschaler"
-                                    />
-                                </div>
-                                <div className="formControlLabelItem">
-
-                                    <FormControlLabel
-                                        control={
-                                            <Switch checked={intervalSwitchState} onChange={this.toggleInterval}
-                                                    name="IntervalSwitch"/>
-                                        }
-                                        label="Interval"
-                                    />
-                                </div>
-                                <div className="formControlLabelItem">
-                                    <FormControlLabel
-                                        control={
-                                            <Switch checked={heatingAndStirringSwitchState}
-                                                    onChange={this.toggleHeatingAndStirring}
-                                                    name="HeatingAndStirringSwitch"/>
-                                        }
-                                        label="Heizphase"
-                                    />
-                                </div>
-                            </FormGroup>
-                        </FormControl>
+                      <label>
+                        <span>Hauptschalter Rührwerk</span>                           
+                        </label>  
+                        <Switch onChange={this.toggleAgitator} checked={mainSwitchState} height={40} width={100} /> 
+                        <label>
+                        <span>Interval</span>                           
+                        </label>   
+                        <Switch onChange={this.toggleInterval} checked={intervalSwitchState} height={40} width={100}/>              
+                        <label>
+                        <span>Heizphase</span>                           
+                        </label>
+                        <Switch onChange={this.toggleHeatingAndStirring} checked={heatingAndStirringSwitchState} height={40} width={100} />                        
                     </div>
                     <div className="rightAligned" id="quantityPicker">
-                        <QuantityPicker initialValue={1} min={1} max={30} onChange={this.onAgitatorSpeedChange}
+                        <QuantityPicker initialValue={1} min={1} max={this.MAX_AGITATOR_SPEED} onChange={this.onAgitatorSpeedChange}
                                         isDisabled={false} label="Geschwindigkeit" labelPosition="above"/>
                         <div className="quantityPickerItem">
 
                         </div>
-                        <QuantityPicker initialValue={1} min={1} max={30} onChange={this.onIntervalChangeBreakTime}
+                        <QuantityPicker initialValue={1} min={1} max={this.MAX_BREAK_TIME} onChange={this.onIntervalChangeBreakTime}
                                         isDisabled={false} label="Pausenzeit" labelPosition="above"/>
                         <div className="quantityPickerItem">
 
                         </div>
-                        <QuantityPicker initialValue={1} min={1} max={30} onChange={this.onIntervalChangeRunningTime}
+                        <QuantityPicker initialValue={1} min={1} max={this.MAX_RUNNING_TIME} onChange={this.onIntervalChangeRunningTime}
                                         isDisabled={false} label="Laufzeit" labelPosition="above"/>
                     </div>
                 </div>
 
                 <div className="settingsRowWater">
                     <div className="leftAligned">
-                        <FormControl component="fieldset" variant="standard">
-                            <FormGroup>
-                                <FormControlLabel
-                                    control={
-                                        <Switch className={waterFillingError ? 'blinking-button' : ''}
-                                                checked={waterSwitchState} onChange={this.toggleWaterSwitchState}
-                                                name="MainSwitch"/>
-                                    }
-                                    label="Automatik"
-                                />
-                            </FormGroup>
-                        </FormControl>
+                    <label>
+                        <span>Wasser</span>                     
+                    </label>
+                    <Switch onChange={this.toggleWaterSwitchState} checked={waterSwitchState} height={40} width={100} />                    
                     </div>
                     <div className="rightAligned">
-                        <QuantityPicker initialValue={1} min={1} max={100} onChange={this.onSetWaterChangeQuantity}
+                        <QuantityPicker initialValue={1} min={1} max={this.MAX_WATER_LEVEL} onChange={this.onSetWaterChangeQuantity}
                                         isDisabled={waterSwitchState} label="Liter" labelPosition="above"/>
                     </div>
 
 
                 </div>
                 <div className="startBtnDiv">
-                    <button className="startBtn" onClick={this.startBrewing}>Start</button>
+                    <button className="startBtn" disabled={isUndefined(selectedBeer)} onClick={this.startBrewing}>Start</button>
+                </div>
+                <div className="startPollingBtnDiv">
+                    <button className="startPollingBtn" onClick={this.startPolling}>
+                        <FontAwesomeIcon icon={faRepeat}/>
+                    </button>
                 </div>
             </div>);
     }
@@ -450,23 +434,22 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         return (<div className="Agitator">
 
             <div className="GaugeContainer">
-                <Gauge showAreas={true} value={agitatorSpeed} targetValue={setedAgitatorSpeed} height={220} offset={1}
+                <Gauge showAreas={true} value={agitatorSpeed} targetValue={setedAgitatorSpeed} height={200} offset={1}
                        minValue={0}
-                       maxValue={20} label={infinitySymbol}/>
+                       maxValue={this.MAX_AGITATOR_SPEED} label={infinitySymbol}/>
             </div>
             <div className="GaugeContainer">
-                <Gauge showAreas={false} value={waterStatus?.liters} targetValue={liters} height={220}
-                       offset={0.5} minValue={0} maxValue={100} label={"Liter"}/>
+                <Gauge showAreas={false} value={waterStatus?.liters} targetValue={liters} height={200}
+                       offset={0.5} minValue={0} maxValue={this.MAX_WATER_LEVEL} label={"Liter"}/>
             </div>
         </div>);
     }
 
     renderWater() {
         const {setedAgitatorSpeed, agitatorIsRunning, brewingStatus, waterStatus} = this.props;
-        console.log(waterStatus);
-
 
         return (
+        
             <div className="Water">
                 <WaterControl liters={waterStatus.liters} agitatorSpeed={setedAgitatorSpeed}
                               agitatorState={brewingStatus?.AgitatorStatus}></WaterControl>
@@ -481,13 +464,13 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                 const finishedInPercent = Math.round(brewingStatus?.elapsedTime * 100 / brewingStatus?.currentTime);
 
                 const progressBarStyle = {
-                    width: '50rem',    // Width of the progress bar
-                    height: '4rem',    // Height of the progress bar
+                    width: '43rem',    // Width of the progress bar
+                    height: '3rem',    // Height of the progress bar
                     marginLeft: '1rem'
                 };
                 return (
                     <div className="container mt-4">
-                        <h3 className='progressLabel'>Rast 1</h3>
+                        <h3 className='progressLabel'>{brewingStatus.Name}</h3>
                         <ProgressBar animated striped now={finishedInPercent} label={`${finishedInPercent}%`}
                                      style={progressBarStyle}/>
                     </div>
@@ -495,6 +478,25 @@ class Production extends React.Component<ProductionProps, ProductionState> {
             }
         }
     }
+
+    renderProgressBar1() {
+
+                const progressBarStyle = {
+                    width: '43rem',    // Width of the progress bar
+                    height: '3rem',    // Height of the progress bar
+                    marginLeft: '1rem'
+                };
+                return (
+                    <div className="container mt-4">
+                        <h3 className='progressLabel'>Rast 1</h3>
+                        <ProgressBar animated striped now={10} label={20}
+                                     style={progressBarStyle}/>
+                    </div>
+                );
+            }
+        
+    
+        
 
     renderHeader() {
         const {selectedBeer} = this.props;
@@ -555,7 +557,6 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                 {this.renderSettings()}
                 {this.renderTemperature()}
                 {this.renderFlames()}
-                {this.renderTimeline()}
                 {this.renderInfo()}
             </div>
         )

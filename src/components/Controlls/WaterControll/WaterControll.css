@@ -1,8 +1,6 @@
 .watercontainer {
     width: 80%;
-    height: 40rem;
-
-    margin-top: 80px;
+    height: 90%;
     position: relative;
     background: white;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);

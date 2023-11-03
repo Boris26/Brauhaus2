@@ -4,163 +4,218 @@
     100% { opacity: 1; }
 }
 
-.blinking-button {
-    animation: blink 1s infinite;
-    color: red;
+/* Container für die gesamte Anwendung */
+html, body, .container {
+    height: 80%;
+    margin: 0;
 }
 
+/* Raster-Layout für den Hauptcontainer */
 .containerProduction {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 0.8fr 1.7fr;
-    grid-template-rows: 0.15fr 1fr 1fr 0.6fr 0.1fr 0.4fr;
-    gap: 5px 5px;
+    grid-template-columns: repeat(4, 1fr); /* Verteilt die Spalten gleichmäßig */
+    grid-template-rows: 0.2fr 0.1fr 1fr;
+    gap: 0.5rem; /* Verwendung von rem für Abstand */
     grid-auto-flow: row;
     justify-content: space-between;
     justify-items: stretch;
     align-items: stretch;
     grid-template-areas:
-    "Header Header Header Header Header"
-    "Water Water Agitator Agitator Settings"
-    "Water Water Temp Temp Settings"
-    "Water Water Info Info Info"
-    "Flame Flame Info Info Info"
-    "Timeline Timeline Timeline Timeline Timeline";
+        "Header Header Header Header Header"
+        "Water Water Agitator Agitator Settings"
+        "Water Water Temp Temp Settings"
+        "Water Water Info Info Info"
+        "Flame Flame Info Info Info"        
 }
 
+/* Header-Stil */
 .HeaderProduction {
-    margin: 2px;
+    margin: 0.3rem;
     grid-area: Header;
     display: flex;
     justify-content: left;
     align-items: center;
 }
-.HeaderText{
-    margin-left: 2rem;
+
+.HeaderText {
+    margin-left: 1rem;
+    margin-top: 0.5rem;
     color: #eeeeee;
-    font-size: 20px;
+    font-size: 2rem; /* Verwendung von rem für Schriftgröße */
     font-weight: bold;
     display: flex;
     justify-content: left;
     align-items: center;
+}
 
-    }
-
+/* Stil für Water-Elemente */
 .Water {
+    max-height: 620px;
+    width: 22rem;
+    margin-left: 1rem;
     grid-area: Water;
-
-    display: flex; justify-content: center; /* Horizontale Zentrierung hinzugefügt */
-    align-items: center; /* Vertikale Zentrierung hinzugefügt */
+    display: flex;
+    justify-content: center;
+    align-items: center;
     background: #404040;
 }
 
-.Flame { grid-area: Flame;   display: flex; justify-content: center; /* Horizontale Zentrierung hinzugefügt */
-    align-items: center; /* Vertikale Zentrierung hinzugefügt */}
+/* Stil für Flame-Elemente */
+.Flame {
+    width: 22rem;
+    margin-left: 1rem;
+    grid-area: Flame;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #e23030;
+}
 
-.Agitator { grid-area: Agitator;    align-items: center; justify-content: center;display: flex;background: #404040;}
+/* Stil für Agitator-Elemente */
+.Agitator {   
+    width: 33rem;
+    grid-area: Agitator;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    background: #404040;
+}
+
+/* Container für die Messanzeige */
 .GaugeContainer {
-    padding: 20px; /* Abstand zwischen den Gauge-Komponenten */
+    padding: 1rem; /* Verwendung von rem für Abstand */    
 }
 
-.Temp { grid-area: Temp; display: flex; justify-content: center; /* Horizontale Zentrierung hinzugefügt */
-    align-items: center;background: #404040;; /* Vertikale Zentrierung hinzugefügt */}
-
-.Settings { grid-area: Settings;display:block; background: #404040;}
-
-.Timeline { grid-area: Timeline;  background: #404040;}
-
-.Info { grid-area: Info;  display: flex; justify-content: left;background: #404040;}
-
-
-html, body , .container {
-    height: 100%;
-    margin: 0;
+/* Stil für Temp-Elemente */
+.Temp {       
+    width:33rem;
+    grid-area: Temp;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #404040;
 }
 
+/* Stil für Settings-Elemente */
+.Settings {
+    margin-right: 1rem;
+    width: 31.6rem;
+    grid-area: Settings;
+    background: #404040;
+}
 
+/* Stil für Info-Elemente */
+.Info {   
+    height: 7.8rem;
+    width: 65rem;
+    grid-area: Info;
+    display: flex;
+    justify-content: left;
+    background: #404040;
+}
+
+/* Stil für den Container der Zeitleiste */
 .timeContainer {
-    margin-top: 2rem;
+    margin-top: 0.6rem;
     margin-left: 0.5rem;
     justify-content: center;
     align-items: center;
-    background-color: #c9c9c9; /* Hintergrundfarbe ändern */
-    border-style: ridge;
-    border-radius: 5px;
-    height: 6.3rem;
-}
-.timeline{
-    margin-left: 20px;
+    background-color: #c9c9c9;  
+    height: 1rem;
 }
 
+/* Stil für den Rahmen */
 .frame {
     border: 2px solid #333;
-    padding: 10px;
+    padding: 1rem; /* Verwendung von rem für Abstand */
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #333333; /* Hintergrundfarbe des Rahmens ändern */
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Schatten hinzufügen */
+    background-color: #333333;
+    box-shadow: 0px 0.25rem 0.375rem rgba(0, 0, 0, 0.1); /* Verwendung von rem für Schatten */
 }
 
+/* Stil für Beschriftungen */
 .label {
     color: #eeeeee;
-    font-size: 18px;
+    font-size: 1rem; /* Verwendung von rem für Schriftgröße */
     font-weight: bold;
-    margin-bottom: 8px;
+    margin-bottom: 0.5rem; /* Verwendung von rem für Abstand */
 }
 
+/* Stil für Zeitanzeigen */
 .time {
     color: #eeeeee;
-    font-size: 24px;
+    font-size: 1.5rem; /* Verwendung von rem für Schriftgröße */
 }
 
+/* Stil für Zeilen mit Einstellungen */
 .settingsRow {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-top: 10px;
+    margin-top: 1rem; /* Verwendung von rem für Abstand */
 }
 
 .settingsRowWater {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-top: 3rem;
 }
 
+/* Rechts ausgerichtete Elemente */
 .rightAligned {
-    margin-right: 5rem;
+    margin-right: 2.5rem; /* Verwendung von rem für Abstand */
 }
 
+/* Stil für Elemente mit Mengenauswahl */
 .quantityPickerItem {
-    margin-top: 10px;
+    margin-top: 1rem; /* Verwendung von rem für Abstand */
 }
 
+/* Links ausgerichtete Elemente */
 .leftAligned {
-    margin-left: 5rem;
+    margin-left: 2.5rem; /* Verwendung von rem für Abstand */
     margin-top: 1.75rem;
 }
 
+/* Stil für Formularsteuerelemente */
 .formControlGroup {
     display: flex;
     flex-direction: column;
-    margin-left: 10px;
+    margin-left: 0.625rem; /* Verwendung von rem für Abstand */
 }
 
 .formControlLabelItem {
-    margin-bottom: 2.3rem;
+    margin-bottom: 1.15rem; /* Verwendung von rem für Abstand */
 }
+
 .progressLabel {
-    margin-left: 1rem ;
+    margin-top: -1rem;
+    margin-left: 0.625rem; /* Verwendung von rem für Abstand */
+    color: #eeeeee;
 }
+
+/* Stil für Starttaste */
 .startBtn {
     height: 4rem;
     width: 15rem;
+    font-size: 1rem; /* Verwendung von rem für Schriftgröße */
 }
-.startBtnDiv
-{
-    margin-top: 6rem;
+
+/* Stil für den Start-Button Container */
+.startBtnDiv {
+    margin-top: 3rem; /* Verwendung von rem für Abstand */
     display: flex;
     justify-content: center;
+}
+.startBtnDiv button:disabled {
+    opacity: 0.5; 
+    cursor: not-allowed;    
+}
+/* Stil für die Start-Polling-Taste */
+.startPollingBtn {
+    background-color: Transparent;
 }
 
 
