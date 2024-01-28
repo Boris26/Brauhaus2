@@ -64,7 +64,8 @@ interface ProductionState {
     isWaterSwitchBlinking: boolean
     isMainSwitchBlinking: boolean
     hopsTimes: Record<number, string>
-    showHopsDialog: boolean,
+    hopName: string
+    showHopsDialog: boolean
     showErrorDialog: boolean
 }
 
@@ -97,6 +98,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
             isWaterSwitchBlinking: false,
             isMainSwitchBlinking: false,
             hopsTimes: {},
+            hopName: '',
             showHopsDialog: false,
             showErrorDialog: false
         }
@@ -113,46 +115,51 @@ class Production extends React.Component<ProductionProps, ProductionState> {
 
 
     componentDidUpdate(prevProps: Readonly<ProductionProps>, prevState: Readonly<ProductionState>, snapshot?: any) {
-        const {toggleAgitator, getTemperatures, agitatorSpeed, agitatorIsRunning} = this.props;
-        const {intervalSwitchState, mainSwitchState, waterSwitchState} = this.state;
-        if (prevProps.isBackenAvailable !== this.props.isBackenAvailable) {
-            if (!this.props.isBackenAvailable.isBackenAvailable) {
+        const {toggleAgitator, brewingStatus,isBackenAvailable,temperature,isToggleAgitatorSuccess,isWaterFillingSuccessful} = this.props;
+        const {intervalSwitchState, mainSwitchState, waterSwitchState,heatingAndStirringSwitchState} = this.state;
+
+        if (prevProps.isBackenAvailable !== isBackenAvailable) {
+            if (!isBackenAvailable.isBackenAvailable) {
                 this.setState({showErrorDialog: true})
             } else {
                 this.setState({showErrorDialog: false})
             }
         }
-        if (prevProps.temperature !== this.props.temperature) {
-            this.setState({temperature: this.props.temperature})
+
+        if (prevProps.temperature !== temperature) {
+            this.setState({temperature: temperature})
         }
-        if (!this.props.isToggleAgitatorSuccess && mainSwitchState) {
+
+        if (!isToggleAgitatorSuccess && mainSwitchState) {
             const delay = 300;
             setTimeout(() => {
                 this.setState({mainSwitchState: false, mainAgitatorError: true});
             }, delay);
         }
-        if (prevState.intervalSwitchState == !this.state.intervalSwitchState && mainSwitchState) {
-            toggleAgitator(this.setAgitatorStates(mainSwitchState));
-        }
-        if (prevState.heatingAndStirringSwitchState == !this.state.heatingAndStirringSwitchState && mainSwitchState) {
+
+        if (prevState.intervalSwitchState == !intervalSwitchState && mainSwitchState) {
             toggleAgitator(this.setAgitatorStates(mainSwitchState));
         }
 
-        if (!this.props.isWaterFillingSuccessful && waterSwitchState) {
+        if (prevState.heatingAndStirringSwitchState == !heatingAndStirringSwitchState && mainSwitchState) {
+            toggleAgitator(this.setAgitatorStates(mainSwitchState));
+        }
+
+        if (!isWaterFillingSuccessful && waterSwitchState) {
             const delay = 300;
             setTimeout(() => {
                 this.setState({waterSwitchState: false, waterFillingError: true});
             }, delay);
         }
-        if (this.props?.brewingStatus?.HeatingStates !== prevProps?.brewingStatus?.HeatingStates) {
+        if (brewingStatus?.HeatingStates !== prevProps?.brewingStatus?.HeatingStates) {
             let timelineData: TimelineData | undefined;
-            if (this.props.brewingStatus.HeatUpStatus) {
+            if (brewingStatus.HeatUpStatus) {
                 timelineData = {
-                    type: 'heating', elapsed: this.props.brewingStatus?.elapsedTime
+                    type: 'heating', elapsed: brewingStatus?.elapsedTime
                 }
             } else {
                 timelineData = {
-                    type: 'rast', elapsed: this.props.brewingStatus?.elapsedTime
+                    type: 'rast', elapsed: brewingStatus?.elapsedTime
                 }
             }
             if (timelineData !== undefined) {
@@ -167,10 +174,10 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         const {hopsTimes} = this.state;
         const {brewingStatus} = this.props;
         if (brewingStatus?.Type === "Kochen") {
-            const roundedelapsedTime = Math.floor(brewingStatus.elapsedTime)
-            if (hopsTimes.hasOwnProperty(roundedelapsedTime)) {
-                const value = hopsTimes[roundedelapsedTime];
-                console.log(value);
+            const roundedElapsedTime = Math.floor(brewingStatus.elapsedTime)
+            if (hopsTimes.hasOwnProperty(roundedElapsedTime)) {
+                const value = hopsTimes[roundedElapsedTime];
+                this.setState({showHopsDialog: true, hopName: value});
             }
         }
     }
@@ -374,17 +381,17 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                 <div className="settingsRow">
                     <div className="leftAligned" id="formControl">
                       <label>
-                        <span>Hauptschalter Rührwerk</span>                           
-                        </label>  
-                        <Switch onChange={this.toggleAgitator} checked={mainSwitchState} height={40} width={100} /> 
-                        <label>
-                        <span>Interval</span>                           
-                        </label>   
-                        <Switch onChange={this.toggleInterval} checked={intervalSwitchState} height={40} width={100}/>              
-                        <label>
-                        <span>Heizphase</span>                           
+                        <span>Hauptschalter Rührwerk</span>
                         </label>
-                        <Switch onChange={this.toggleHeatingAndStirring} checked={heatingAndStirringSwitchState} height={40} width={100} />                        
+                        <Switch onChange={this.toggleAgitator} checked={mainSwitchState} height={40} width={100} />
+                        <label>
+                        <span>Interval</span>
+                        </label>
+                        <Switch onChange={this.toggleInterval} checked={intervalSwitchState} height={40} width={100}/>
+                        <label>
+                        <span>Heizphase</span>
+                        </label>
+                        <Switch onChange={this.toggleHeatingAndStirring} checked={heatingAndStirringSwitchState} height={40} width={100} />
                     </div>
                     <div className="rightAligned" id="quantityPicker">
                         <QuantityPicker initialValue={1} min={1} max={this.MAX_AGITATOR_SPEED} onChange={this.onAgitatorSpeedChange}
@@ -405,9 +412,9 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                 <div className="settingsRowWater">
                     <div className="leftAligned">
                     <label>
-                        <span>Wasser</span>                     
+                        <span>Wasser</span>
                     </label>
-                    <Switch onChange={this.toggleWaterSwitchState} checked={waterSwitchState} height={40} width={100} />                    
+                    <Switch onChange={this.toggleWaterSwitchState} checked={waterSwitchState} height={40} width={100} />
                     </div>
                     <div className="rightAligned">
                         <QuantityPicker initialValue={1} min={1} max={this.MAX_WATER_LEVEL} onChange={this.onSetWaterChangeQuantity}
@@ -449,7 +456,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         const {setedAgitatorSpeed, agitatorIsRunning, brewingStatus, waterStatus} = this.props;
 
         return (
-        
+
             <div className="Water">
                 <WaterControl liters={waterStatus.liters} agitatorSpeed={setedAgitatorSpeed}
                               agitatorState={brewingStatus?.AgitatorStatus}></WaterControl>
@@ -494,9 +501,9 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                     </div>
                 );
             }
-        
-    
-        
+
+
+
 
     renderHeader() {
         const {selectedBeer} = this.props;
@@ -515,19 +522,9 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     confirmErrorDialog() {
 
     }
-
+//ToDo überprüfen und setzen von this.setState({showHopsDialog: true}) muss in die DidiUpdate Methode
     renderHopDialog() {
-        const {hopsTimes, showHopsDialog} = this.state;
-        const {brewingStatus} = this.props;
-        let hopName = '';
-
-        if (brewingStatus?.Type === "Kochen") {
-            const roundedelapsedTime = Math.floor(brewingStatus.elapsedTime)
-            if (hopsTimes.hasOwnProperty(roundedelapsedTime)) {
-                hopName = hopsTimes[roundedelapsedTime];
-                this.setState({showHopsDialog: true})
-            }
-        }
+        const {showHopsDialog,hopName} = this.state;
         return (<div>
             <ModalDialog onConfirm={this.confirmHopDialog} type={DialogType.CONFIRM} open={showHopsDialog}
                          content={'Bitte den ' + hopName + ' Hopfen zufügen!'} header={"Hopfen Zufügen"}></ModalDialog>
@@ -539,7 +536,6 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         const {showErrorDialog} = this.state
         const {isBackenAvailable} = this.props
         const contentText = 'Die Brau-Steuerung ist nicht erreichbar\n\n' + isBackenAvailable.statusText
-        console.log(contentText);
         return (<div>
             <ModalDialog onConfirm={this.confirmErrorDialog} type={DialogType.ERROR} open={showErrorDialog}
                          content={contentText} header={"Fehler!"}></ModalDialog>
@@ -547,10 +543,19 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     }
 
     render() {
+        const {isBackenAvailable} = this.props;
+        const {showHopsDialog} = this.state;
         this.createTimelineData();
         return (
             <div className="containerProduction ">
-                {this.renderHopDialog()}
+                {
+                    showHopsDialog &&
+                    (this.renderHopDialog())
+                }
+                {
+                    isBackenAvailable &&
+                    (this.renderErrorDialog())
+                }
                 {this.renderHeader()}
                 {this.renderWater()}
                 {this.renderAgitator()}
