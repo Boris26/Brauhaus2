@@ -51,10 +51,13 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "build-deploy": "npm run build && scp -r build/* boris@192.168.178.72:/srv/sites/braumeister",
+    "deploy": "scp -r build/* boris@192.168.178.72:/srv/sites/braumeister",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "storybook": "start-storybook -p 6006",
     "build-storybook": "build-storybook"
+
   },
   "eslintConfig": {
     "extends": [

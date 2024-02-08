@@ -6,7 +6,7 @@ import {connect} from 'react-redux';
 export enum DialogType {
     CONFIRM = "confirm",
     ERROR = "error",
-    INFO = "info",
+    INFO = "info"
 }
 
 interface ModalDialogProps {
@@ -55,7 +55,7 @@ class ModalDialog extends React.Component<ModalDialogProps, ModalDialogState> {
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={this.handleClose} color="primary">
-                        Schließen
+                        Ok
                     </Button>
                 </DialogActions>
 

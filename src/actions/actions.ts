@@ -368,6 +368,7 @@ export namespace ProductionActions {
         SEND_BREWING_DATA = 'ProductionActions.SEND_BREWING_DATA',
         SET_BREWING_STATUS = 'ProductionActions.SET_BREWING_STATUS',
         START_POLLING = 'ProductionActions.START_POLLING',
+        STOP_POLLING = 'ProductionActions.STOP_POLLING',
         CONFIRM = 'ProductionActions.CONFIRM',
         CHECK_IS_BACKEND_AVAILABLE = 'ProductionActions.CHECK_IS_BACKEND_AVAILABLE',
         IS_BACKEND_AVAILABLE = 'ProductionActions.IS_BACKEND_AVAILABLE',
@@ -396,6 +397,10 @@ export namespace ProductionActions {
 
     export interface StartPolling {
         readonly type: ActionTypes.START_POLLING
+    }
+
+    export interface StopPolling {
+        readonly type: ActionTypes.STOP_POLLING
     }
 
     export interface SetBrewingStatus {
@@ -461,6 +466,7 @@ export namespace ProductionActions {
         ToggleAgitator |
         SetBrewingStatus |
         StartPolling |
+        StopPolling |
         Confirm |
         SendBrewingData |
         CheckIsBackendAvailable |
@@ -499,6 +505,12 @@ export namespace ProductionActions {
     export function startPolling(): StartPolling {
         return {
             type: ActionTypes.START_POLLING,
+        }
+    }
+
+    export function stopPolling(): StopPolling {
+        return {
+            type: ActionTypes.STOP_POLLING,
         }
     }
 

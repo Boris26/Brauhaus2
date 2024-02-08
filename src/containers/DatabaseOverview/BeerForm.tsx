@@ -323,46 +323,46 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 </label>
 
                 <label>
-                    Color:
+                    Farbe:
                     <input type="text" name="color" value={color} onChange={this.handleChange}  />
                 </label>
 
                 <label>
-                    Alcohol:
+                    Alkoholgehalt:
                     <input type="number" name="alcohol" value={alcohol} min={0} onChange={this.handleChange} required={true}  />
                 </label>
 
                 <label>
-                    Original Wort:
+                    Stammwürze:
                     <input type="number" name="originalwort" value={originalwort} min={0} onChange={this.handleChange} required={true}  />
                 </label>
 
                 <label>
-                    Bitterness:
+                    Bitterkeit:
                     <input type="number" name="bitterness" value={bitterness} min={0} onChange={this.handleChange} required={true}  />
                 </label>
 
                 <label>
-                    Description:
+                    Beschreibung:
                     <textarea name="description" value={description} onChange={this.handleChange}  />
                 </label>
 
                 <label>
-                    Rating:
+                    Bewertung:
                     <input type="number" name="rating" value={rating} min={0} max={5} onChange={this.handleChange}  />
                 </label>
 
                 <label>
-                    Mash Volume:
+                    Hauptguss Volumen (liter) :
                     <input type="number" name="mashVolume" min={0} value={mashVolume} onChange={this.handleChange} required={true}  />
                 </label>
 
                 <label>
-                    Sparge Volume:
+                    Nachguss Volumen (liter) :
                     <input type="number" name="spargeVolume" min={0} value={spargeVolume} onChange={this.handleChange} required={true}  />
                 </label>
                 <label>
-                    Kochzeit:
+                    Kochzeit minuten:
                     <input type="number" name="cookingTime" min={0} value={cookingTime} onChange={this.handleChange} required={true}  />
                 </label>
                 <label>
@@ -394,7 +394,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                             </label>
 
                             <label>
-                                Time:
+                                Zeit:
                                 <input type="number" name="time" value={step.time} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name,index)} required={true}  />
                             </label>
 
@@ -412,7 +412,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                             <label>
                                 Name:
                                 <select name="name" value={step.name} onChange={(e) => this.handleMaltChange(e.target.value,e.target.name, index)} required={true} >
-                                    <option value="">Select Type</option>
+                                    <option value="">Type</option>
                                     {malts.map((malt) => (
                                         <option key={malt.id} value={malt.name}>
                                             {malt.name}
@@ -442,7 +442,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                             <label>
                                 Name:
                                 <select name="name" value={step.name} onChange={(e) => this.handleHopChange(e.target.value,e.target.name, index)} required={true} >
-                                    <option value="">Select Type</option>
+                                    <option value="">Type</option>
                                     {hops.map((hop) => (
                                         <option key={hop.id} value={hop.name}>
                                             {hop.name}
@@ -457,7 +457,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                 <input type="number" name="quantity" min={0} value={step.quantity} onChange={(e) => this.handleHopChange(e.target.value, e.target.name,index)} required={true}  />
                             </label>
                             <label>
-                                Menge:
+                                Zeit:
                                 <input type="number" name="time" min={0} value={step.time} onChange={(e) => this.handleHopChange(e.target.value, e.target.name,index)} required={true}  />
                             </label>
 
@@ -476,7 +476,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                             <label>
                                 Name:
                                 <select name="name" value={step.name} onChange={(e) => this.handleYeastChange(e.target.value,e.target.name, index)} required={true} >
-                                    <option value="">Select Type</option>
+                                    <option value="">Type</option>
                                     {yeasts.map((yeast) => (
                                         <option key={yeast.id} value={yeast.name}>
                                             {yeast.name}

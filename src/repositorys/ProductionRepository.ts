@@ -42,6 +42,13 @@ export class ProductionRepository {
         }
     }
 
+    static async stopBrewingStatusPolling() {
+        if (this.pollingIntervalId !== null) {
+            clearInterval(this.pollingIntervalId);
+            this.pollingIntervalId = null;
+        }
+    }
+
 
     static async toggleHeater(aIsTurnOn: ToggleState) {
         return await ProductionRepository._doToggleHeater(aIsTurnOn);

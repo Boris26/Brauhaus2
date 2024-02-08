@@ -6,7 +6,6 @@ import {ProductionRepository} from "../repositorys/ProductionRepository";
 import {ApplicationActions, BeerActions, ProductionActions} from "../actions/actions";
 import AllBeerActions = BeerActions.AllBeerActions;
 import {BeerDTO} from "../model/BeerDTO";
-import {json} from "stream/consumers";
 import {Malts} from "../model/Malt";
 import {Hops} from "../model/Hops";
 import AllApplicationActions = ApplicationActions.AllApplicationActions;
@@ -47,8 +46,8 @@ export interface BeerDataReducerState {
 export interface ProductionReducerState {
     temperature: number,
     agitatorSpeed: number,
-    setedAgitatorSpeed: number,
-    setedAgitatorState: ToggleState,
+    currentAgitatorSpeed: number,
+    currentAgitatorState: ToggleState,
     agitatorIsRunning: ToggleState,
     liters: number,
     isWaterFillingSuccessful: boolean,
@@ -62,8 +61,8 @@ export interface ProductionReducerState {
 export const initialProductionState: ProductionReducerState =
     {
         temperature: 0,
-        setedAgitatorSpeed: 5,
-        setedAgitatorState: ToggleState.OFF,
+        currentAgitatorSpeed: 5,
+        currentAgitatorState: ToggleState.OFF,
         agitatorSpeed: 0,
         agitatorIsRunning: ToggleState.OFF,
         liters: 0,
@@ -104,7 +103,6 @@ export const initialBeerState: BeerDataReducerState =
 const applicationReducer = (aState: ApplicationReducerState = initialApplicationState, aAction: AllApplicationActions) => {
     switch (aAction.type) {
         case ApplicationActions.ActionTypes.SET_VIEW: {
-            console.log(aAction.payload.view);
             return {...aState, view: aAction.payload.view};
         }
 
@@ -125,8 +123,10 @@ const applicationReducer = (aState: ApplicationReducerState = initialApplication
 const beerDataReducer = (aState: BeerDataReducerState = initialBeerState, aAction: AllBeerActions) => {
     switch (aAction.type) {
         case BeerActions.ActionTypes.SUBMIT_BEER: {
-            BeerRepository.submitBeer(aAction.payload.beer);
-            return {...aState};
+            BeerRepository.submitBeer(aAction.payload.beer).then(r => {
+                return {...aState};
+            });
+           return {...aState};
         }
 
 
@@ -136,8 +136,10 @@ const beerDataReducer = (aState: BeerDataReducerState = initialBeerState, aActio
 
 
         case BeerActions.ActionTypes.GET_BEERS: {
-            BeerRepository.getBeers();
-            return {...aState, isFetching: aAction.payload.isFetching};
+            BeerRepository.getBeers().then(r => {
+                return {...aState, isFetching: aAction.payload.isFetching};
+            });
+           return {...aState, isFetching: aAction.payload.isFetching};
         }
 
         case BeerActions.ActionTypes.SET_SELECTED_BEER: {
@@ -221,12 +223,12 @@ const productionReducer = (aState: ProductionReducerState = initialProductionSta
 
         case ProductionActions.ActionTypes.TOGGLE_AGITATOR: {
             ProductionRepository.toggleAgitator(aAction.payload.agitatorState);
-            return {...aState, setedAgitatorState: aAction.payload.agitatorState};
+            return {...aState, currentAgitatorState: aAction.payload.agitatorState};
         }
 
         case ProductionActions.ActionTypes.SET_AGITATOR_SPEED: {
             ProductionRepository.setAgitatorSpeed(aAction.payload.agitatorSpeed);
-            return {...aState, setedAgitatorSpeed: aAction.payload.agitatorSpeed};
+            return {...aState, currentAgitatorSpeed: aAction.payload.agitatorSpeed};
         }
         case ProductionActions.ActionTypes.SET_AGITATOR_IS_RUNNING: {
             return {...aState, agitatorIsRunning: aAction.payload.agitatorIsRunning};
@@ -253,6 +255,10 @@ const productionReducer = (aState: ProductionReducerState = initialProductionSta
         }
         case ProductionActions.ActionTypes.START_POLLING: {
             ProductionRepository.startBrewingStatusPolling();
+            return {...aState};
+        }
+        case ProductionActions.ActionTypes.STOP_POLLING: {
+            ProductionRepository.stopBrewingStatusPolling();
             return {...aState};
         }
 
