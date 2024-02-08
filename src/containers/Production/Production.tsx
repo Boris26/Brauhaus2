@@ -343,18 +343,30 @@ class Production extends React.Component<ProductionProps, ProductionState> {
 
     renderInfo() {
         const {brewingStatus} = this.props;
+        let elapsedTime = '----';
+        let currentTime = '----';
+       if(!isNaN(brewingStatus?.elapsedTime))
+       {
+           elapsedTime = this.formatTime(brewingStatus?.elapsedTime);
+       }
+       if(!isNaN(brewingStatus?.currentTime))
+       {
+           currentTime = this.formatTime(brewingStatus?.currentTime);
+       }
+
+        if(currentTime )
         return (
             <div className="Info">
                 <div className="timeContainer">
                     <div className="frame">
                         <span className="label">Laufzeit</span>
-                        <span className="time">{this.formatTime(brewingStatus?.elapsedTime)}</span>
+                        <span className="time">{elapsedTime}</span>
                     </div>
                 </div>
                 <div className="timeContainer">
                     <div className="frame">
                         <span className="label">Zielzeit</span>
-                        <span className="time">{this.formatTime(brewingStatus?.currentTime)}</span>
+                        <span className="time">{currentTime}</span>
                     </div>
                 </div>
                 <div>
