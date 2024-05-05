@@ -329,17 +329,17 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
                 <label>
                     Alkoholgehalt:
-                    <input type="number" name="alcohol" value={alcohol} min={0} onChange={this.handleChange} required={true}  />
+                    <input type="number" name="alcohol" value={alcohol} min={0} step={0.1} onChange={this.handleChange} required={true}  />
                 </label>
 
                 <label>
                     Stammwürze:
-                    <input type="number" name="originalwort" value={originalwort} min={0} onChange={this.handleChange} required={true}  />
+                    <input type="number" name="originalwort" value={originalwort} min={0} step={0.1} onChange={this.handleChange} required={true}  />
                 </label>
 
                 <label>
                     Bitterkeit:
-                    <input type="number" name="bitterness" value={bitterness} min={0} onChange={this.handleChange} required={true}  />
+                    <input type="number" name="bitterness" value={bitterness} min={0} step={0.1} onChange={this.handleChange} required={true}  />
                 </label>
 
                 <label>
@@ -354,12 +354,12 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
                 <label>
                     Hauptguss Volumen (liter) :
-                    <input type="number" name="mashVolume" min={0} value={mashVolume} onChange={this.handleChange} required={true}  />
+                    <input type="number" name="mashVolume" min={0} value={mashVolume} step={0.1} onChange={this.handleChange} required={true}  />
                 </label>
 
                 <label>
                     Nachguss Volumen (liter) :
-                    <input type="number" name="spargeVolume" min={0} value={spargeVolume} onChange={this.handleChange} required={true}  />
+                    <input type="number" name="spargeVolume" min={0} step={0.1} value={spargeVolume} onChange={this.handleChange} required={true}  />
                 </label>
                 <label>
                     Kochzeit minuten:
@@ -367,7 +367,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 </label>
                 <label>
                     Kochtemperatur:
-                    <input type="number" name="cookingTemperatur" min={0} value={cookingTemperatur} onChange={this.handleChange} required={true}  />
+                    <input type="number" name="cookingTemperatur" min={70} value={cookingTemperatur} onChange={this.handleChange} required={true}  />
                 </label>
 
                 <div className="fermentation-steps-container">
