@@ -1,9 +1,13 @@
-export  class TimeFormatter {
-  static seconds(aSeconds: number): string {
-      const minutes = Math.floor(aSeconds / 60);
-      const remainingSeconds = aSeconds % 60;
-      const roundedSeconds = Math.floor(remainingSeconds);
-      const formattedTime = `${minutes}:${roundedSeconds.toString().padStart(2, '0')}`;
-      return formattedTime;
-  }
+export class TimeFormatter {
+    static formatSecondsToHMS(seconds: number): string {
+        return this.format(seconds);
+    }
+
+   private static format(seconds: number): string {
+        if (isNaN(seconds) || seconds < 0) return '-';
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = Math.floor(seconds % 60);
+        return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
 }

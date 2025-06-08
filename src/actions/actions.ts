@@ -33,6 +33,7 @@ export namespace BeerActions {
         GET_HOPS_SUCCESS = 'BeerActions.GET_HOPS_SUCCESS',
         GET_YEASTS_SUCCESS = 'BeerActions.GET_YEASTS_SUCCESS',
         SET_IS_SUBMIT_SUCCESSFUL = 'BeerActions.SET_IS_SUBMIT_SUCCESSFUL',
+        SET_BEER_TO_BREW = 'BeerActions.SET_BEER_TO_BREW',
     }
 
     export interface SetIsSubmitSuccessful {
@@ -165,6 +166,11 @@ export namespace BeerActions {
         payload: { beer: Beer }
     }
 
+    export interface SetBeerToBrew {
+        readonly type: ActionTypes.SET_BEER_TO_BREW
+        payload: { beer: Beer | undefined }
+    }
+
     export type AllBeerActions =
         SubmitBeer |
         SubmitBeerSuccess |
@@ -183,7 +189,8 @@ export namespace BeerActions {
         GetHopsSuccess |
         GetYeastsSuccess |
         SetIsSubmitSuccessful |
-        SetSelectedBeer;
+        SetSelectedBeer|
+        SetBeerToBrew;
 
 
     export function isSubmitSuccessful(aIsSuccessful: boolean, aMessage: string, aType: string): SetIsSubmitSuccessful {
@@ -309,6 +316,13 @@ export namespace BeerActions {
         return {
             type: ActionTypes.GET_BEERS,
             payload: {isFetching: aIsFetching}
+        }
+    }
+
+    export function setBeerToBrew(aBeer: Beer | undefined): SetBeerToBrew {
+        return {
+            type: ActionTypes.SET_BEER_TO_BREW,
+            payload: {beer: aBeer}
         }
     }
 }

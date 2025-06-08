@@ -130,9 +130,10 @@ export class BeerRepository
         try {
             const response = await axios.get(DatabaseURL+'hops');
             if (response.status === 200) {
-                console.log(response.data);
-                const object = JSON.parse(response.data)
-                store.dispatch(BeerActions.getHopsSuccess(object, true));
+
+             //   const object = JSON.parse(response.data)
+              //  console.log(object);
+                store.dispatch(BeerActions.getHopsSuccess(response.data, true));
             }
             else {
                 store.dispatch(BeerActions.getHopsSuccess(null, false));

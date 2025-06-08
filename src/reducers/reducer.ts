@@ -39,8 +39,10 @@ export interface BeerDataReducerState {
     isSubmitHopSuccessful: boolean | undefined,
     isSubmitYeastSuccessful: boolean | undefined,
     isSubmitSuccessful: boolean | undefined,
-    message: string | undefined
-    type: string | undefined
+    message: string | undefined,
+    type: string | undefined,
+    selectedBeer?: Beer,
+    beerToBrew?: Beer | undefined
 }
 
 export interface ProductionReducerState {
@@ -55,7 +57,8 @@ export interface ProductionReducerState {
     brewingStatus: BrewingStatus | undefined,
     confirmState: ConfirmStates | undefined,
     isBackenAvailable: BackendAvailable,
-    waterStatus: WaterStatus
+    waterStatus: WaterStatus,
+    isPollingRunning: boolean
 }
 
 export const initialProductionState: ProductionReducerState =
@@ -71,7 +74,8 @@ export const initialProductionState: ProductionReducerState =
         brewingStatus: undefined,
         confirmState: undefined,
         isBackenAvailable: {isBackenAvailable: true, statusText: ""},
-        waterStatus: {liters: 0, openClose: false}
+        waterStatus: {liters: 0, openClose: false},
+        isPollingRunning: false
     }
 
 export const initialApplicationState: ApplicationReducerState =
@@ -170,6 +174,7 @@ const beerDataReducer = (aState: BeerDataReducerState = initialBeerState, aActio
         }
 
         case BeerActions.ActionTypes.GET_HOPS_SUCCESS: {
+            console.log(aAction.payload.hops);
             return {...aState, hops: aAction.payload.hops, isSuccessful: aAction.payload.isSuccessful};
         }
 
@@ -206,6 +211,11 @@ const beerDataReducer = (aState: BeerDataReducerState = initialBeerState, aActio
         case BeerActions.ActionTypes.SET_IS_SUBMIT_SUCCESSFUL: {
             return {...aState, isSubmitSuccessful: aAction.payload.isSubmitSuccessful};
         }
+
+        case BeerActions.ActionTypes.SET_BEER_TO_BREW: {
+            return {...aState, beerToBrew: aAction.payload.beer};
+        }
+
         default:
             return aState;
     }
@@ -248,14 +258,14 @@ const productionReducer = (aState: ProductionReducerState = initialProductionSta
         }
         case ProductionActions.ActionTypes.SEND_BREWING_DATA: {
             ProductionRepository.sendBrewingData(aAction.payload.brewingData);
-            return {...aState};
+            return {...aState, isPollingRunning: true};
         }
         case ProductionActions.ActionTypes.SET_BREWING_STATUS: {
             return {...aState, brewingStatus: aAction.payload.brewingStatus};
         }
         case ProductionActions.ActionTypes.START_POLLING: {
             ProductionRepository.startBrewingStatusPolling();
-            return {...aState};
+            return {...aState, isPollingRunning: true};
         }
         case ProductionActions.ActionTypes.STOP_POLLING: {
             ProductionRepository.stopBrewingStatusPolling();

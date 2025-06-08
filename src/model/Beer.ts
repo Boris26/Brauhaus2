@@ -15,11 +15,11 @@ export interface Malt {
 
 export interface Hop {
     id: string;
-    name: string;
-    description: string;
-    alpha: number;
-    quantity: number;
-    time: number;
+    Name: string;
+    Description: string;
+    Alpha: number;
+    Quantity: number;
+    Time: number;
 }
 
 export interface WortBoiling {

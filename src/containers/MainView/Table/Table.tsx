@@ -11,6 +11,9 @@ import setSelectedBeer = BeerActions.setSelectedBeer;
 export interface BeerTableProps {
     beers: Beer[];
     setSelectedBeer: (beer: Beer) => void;
+    setBeerToBrew: (beer: Beer | undefined) => void;
+    beerToBrew?: Beer;
+    isPollingRunning?: boolean;
 }
 
 
@@ -52,7 +55,7 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
         }
         this.setState({sortConfig: {key, direction}});
     };
-    onSele = (aBeer: Beer) => {
+    onSelectBeer = (aBeer: Beer) => {
         const b = new WaterHeatingTimeCalculator();
         const opt: cookingTimeOptions = {
             currentTemperature: 20,
@@ -68,8 +71,18 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
         this.setState({selectedBeerId: aBeer.id});
     }
 
+    onBrewBeer = (beer: Beer) => {
+        const {setBeerToBrew} = this.props;
+        setBeerToBrew(beer);
+    }
+
+    onCancelBrew = () => {
+        const {setBeerToBrew} = this.props;
+        setBeerToBrew(undefined);
+    }
+
     render() {
-        const {beers} = this.props;
+        const {beers, beerToBrew, isPollingRunning} = this.props;
         const {sortConfig, selectedBeerId} = this.state;
         if (beers.length > 0) {
             const sortedData = [...beers].sort((a, b) => {
@@ -138,11 +151,14 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                                         Alkohol
                                     </TableSortLabel>
                                 </TableCell>
+                                <TableCell>
+                                    Aktion
+                                </TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {sortedData.map((item, index) => (
-                                <TableRow key={item.id} onClick={() => this.onSele(item)}
+                                <TableRow key={item.id} onClick={() => this.onSelectBeer(item)}
                                           className={`table-row ${selectedBeerId !== null && item.id === selectedBeerId ? 'selected' : ''}`}
                                 >
                                     <TableCell className="table-cell">{item.id}</TableCell>
@@ -150,6 +166,27 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                                     <TableCell className="table-cell">{item.type}</TableCell>
                                     <TableCell className="table-cell">{item.color}</TableCell>
                                     <TableCell className="table-cell">{item.alcohol}</TableCell>
+                                    <TableCell className="table-cell">
+                                        <button
+                                            className="select-btn"
+                                            onClick={e => {
+                                                e.stopPropagation();
+                                                if (beerToBrew && beerToBrew.id === item.id) {
+                                                    if (!this.props.isPollingRunning) {
+                                                        this.onCancelBrew();
+                                                    }
+                                                } else {
+                                                    this.onBrewBeer(item);
+                                                }
+                                            }}
+                                            disabled={
+                                                (!!beerToBrew && beerToBrew.id !== item.id) ||
+                                                (beerToBrew && beerToBrew.id === item.id && isPollingRunning)
+                                            }
+                                        >
+                                            {beerToBrew && beerToBrew.id === item.id ? 'Abbrechen' : 'Brauen'}
+                                        </button>
+                                    </TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -162,9 +199,14 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
 }
 
 
-const mapDispatchToProps = (dispatch: any) => ({
-    setSelectedBeer: (beer: Beer) => dispatch(setSelectedBeer(beer)),
+const mapStateToProps = (state: any) => ({
+    beerToBrew: state.beerDataReducer.beerToBrew,
+    isPollingRunning: state.productionReducer.isPollingRunning,
 });
 
-export default connect(null, mapDispatchToProps)(BeerTableComponent);
+const mapDispatchToProps = (dispatch: any) => ({
+    setSelectedBeer: (beer: Beer) => dispatch(setSelectedBeer(beer)),
+    setBeerToBrew: (beer: Beer | undefined ) => dispatch(BeerActions.setBeerToBrew(beer)),
+});
 
+export default connect(mapStateToProps, mapDispatchToProps)(BeerTableComponent);
