@@ -21,3 +21,7 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+/identifier.sqlite
+/.idea/dataSources.xml
+/.idea/dataSources/
+/.idea/dataSources.local.xml
