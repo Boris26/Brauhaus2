@@ -3,16 +3,8 @@ import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow
 import SimpleBar from 'simplebar-react';
 import 'simplebar/dist/simplebar.min.css';
 import './FinishedBrewsTable.css';
+import {FinishedBrew} from "../../../model/FinishedBrew";
 
-export interface FinishedBrew {
-    id: number;
-    name: string;
-    date: string;
-    liters: number;
-    wort1: number;
-    wort2: number;
-    description: string;
-}
 
 interface FinishedBrewsTableProps {
     brews: FinishedBrew[];
@@ -40,7 +32,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                 ...prevState.editRows,
                 [id]: {
                     ...prevState.editRows[id],
-                    [field]: field === 'liters' || field === 'wort1' || field === 'wort2' ? Number(value) : value
+                    [field]: field === 'liters' || field === 'originalwort' || field === 'residualExtract' ? Number(value) : value
                 }
             }
         }));
@@ -68,7 +60,8 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                         <TableHead className="table-header">
                             <TableRow>
                                 <TableCell className="table-header-cell">Name</TableCell>
-                                <TableCell className="table-header-cell">Datum</TableCell>
+                                <TableCell className="table-header-cell">Start-Datum</TableCell>
+                                <TableCell className="table-header-cell">End-Datum</TableCell>
                                 <TableCell className="table-header-cell">Liter</TableCell>
                                 <TableCell className="table-header-cell">Stammwürze 1</TableCell>
                                 <TableCell className="table-header-cell">Restextrakt</TableCell>
@@ -81,10 +74,36 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                             {brews.map(brew => {
                                 const isEdited = !!editRows[brew.id];
                                 const row = { ...brew, ...editRows[brew.id] };
+                                const isActive = brew.aktiv;
                                 return (
-                                    <TableRow key={brew.id} className="table-row">
+                                    <TableRow key={brew.id} className={`table-row${isActive ? ' active-row' : ''}`}>
                                         <TableCell className="table-cell">{brew.name}</TableCell>
-                                        <TableCell className="table-cell">{brew.date}</TableCell>
+                                        <TableCell className="table-cell">
+                                            <TextField
+                                                variant="standard"
+                                                value={row.startDate instanceof Date ? row.startDate.toISOString().slice(0, 10) : row.startDate}
+                                                type="date"
+                                                onChange={e => {
+                                                    const target = e.target as HTMLInputElement;
+                                                    this.handleChange(brew.id, 'startDate',  target.value);
+                                                }}
+                                                className="table-edit-field"
+                                                InputProps={{ style: { color: 'white' }, disableUnderline: true, readOnly: !isActive }}
+                                            />
+                                        </TableCell>
+                                        <TableCell className="table-cell">
+                                            <TextField
+                                                variant="standard"
+                                                value={row.endDate ? (row.endDate instanceof Date ? row.endDate.toISOString().slice(0, 10) : row.endDate) : ''}
+                                                type="date"
+                                                onChange={e => {
+                                                    const target = e.target as HTMLInputElement;
+                                                    this.handleChange(brew.id, 'endDate', target.value);
+                                                }}
+                                                className="table-edit-field"
+                                                InputProps={{ style: { color: 'white' }, disableUnderline: true, readOnly: !isActive }}
+                                            />
+                                        </TableCell>
                                         <TableCell className="table-cell">
                                             <TextField
                                                 variant="standard"
@@ -92,41 +111,68 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                                                 type="number"
                                                 onChange={e => this.handleChange(brew.id, 'liters', e.target.value)}
                                                 className="table-edit-field"
-                                                InputProps={{ style: { color: 'white' }, disableUnderline: true }}
+                                                InputProps={{
+                                                    style: { color: 'white' },
+                                                    disableUnderline: true,
+                                                    readOnly: !isActive,
+                                                    inputProps: {
+                                                        readOnly: !isActive,
+                                                        ...(isActive ? {} : { inputMode: 'none', style: { MozAppearance: 'textfield' } })
+                                                    },
+                                                    ...(isActive ? {} : { sx: { '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 }, '& input[type=number]': { MozAppearance: 'textfield' } } })
+                                                }}
                                             />
                                         </TableCell>
                                         <TableCell className="table-cell">
                                             <TextField
                                                 variant="standard"
-                                                value={row.wort1}
+                                                value={row.originalwort}
                                                 type="number"
-                                                onChange={e => this.handleChange(brew.id, 'wort1', e.target.value)}
+                                                onChange={e => this.handleChange(brew.id, 'originalwort', e.target.value)}
                                                 className="table-edit-field"
-                                                InputProps={{ style: { color: 'white' }, disableUnderline: true }}
+                                                InputProps={{
+                                                    style: { color: 'white' },
+                                                    disableUnderline: true,
+                                                    readOnly: !isActive,
+                                                    inputProps: {
+                                                        readOnly: !isActive,
+                                                        ...(isActive ? {} : { inputMode: 'none', style: { MozAppearance: 'textfield' } })
+                                                    },
+                                                    ...(isActive ? {} : { sx: { '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 }, '& input[type=number]': { MozAppearance: 'textfield' } } })
+                                                }}
                                             />
                                         </TableCell>
                                         <TableCell className="table-cell">
                                             <TextField
                                                 variant="standard"
-                                                value={row.wort2}
+                                                value={row.residualExtract}
                                                 type="number"
-                                                onChange={e => this.handleChange(brew.id, 'wort2', e.target.value)}
+                                                onChange={e => this.handleChange(brew.id, 'residualExtract', e.target.value)}
                                                 className="table-edit-field"
-                                                InputProps={{ style: { color: 'white' }, disableUnderline: true }}
+                                                InputProps={{
+                                                    style: { color: 'white' },
+                                                    disableUnderline: true,
+                                                    readOnly: !isActive,
+                                                    inputProps: {
+                                                        readOnly: !isActive,
+                                                        ...(isActive ? {} : { inputMode: 'none', style: { MozAppearance: 'textfield' } })
+                                                    },
+                                                    ...(isActive ? {} : { sx: { '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 }, '& input[type=number]': { MozAppearance: 'textfield' } } })
+                                                }}
                                             />
                                         </TableCell>
-                                        <TableCell className="table-cell">{calcAlcohol(row.wort1, row.wort2)}</TableCell>
+                                        <TableCell className="table-cell">{calcAlcohol(row.originalwort, row.residualExtract)}</TableCell>
                                         <TableCell className="table-cell">
                                             <TextField
                                                 variant="standard"
                                                 value={row.description}
                                                 onChange={e => this.handleChange(brew.id, 'description', e.target.value)}
                                                 className="table-edit-field"
-                                                InputProps={{ style: { color: 'white' }, disableUnderline: true }}
+                                                InputProps={{ style: { color: 'white' }, disableUnderline: true, readOnly: !isActive }}
                                             />
                                         </TableCell>
                                         <TableCell className="table-cell">
-                                            {isEdited && (
+                                            {isEdited && isActive && (
                                                 <button
                                                     className="select-btn"
                                                     onClick={() => this.handleSave(brew.id)}

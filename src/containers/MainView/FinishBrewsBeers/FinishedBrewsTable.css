@@ -1,4 +1,4 @@
-./* Entferne Hintergrundfarbe und Border-Radius von der allgemeinen Klasse */
+/* Entferne Hintergrundfarbe und Border-Radius von der allgemeinen Klasse */
 .FinishedBrewsTable {
   width: 80%;
 
@@ -92,6 +92,13 @@
 .FinishedBrewsTable .cancel-btn:hover {
   background-color: #d32f2f;
   color: #fff;
+}
+
+.FinishedBrewsTable .active-row {
+  background-color: #2e7d32 !important; /* Grüner Hintergrund für aktive Zeile */
+  color: #fff;
+  font-weight: bold;
+  transition: background 0.3s;
 }
 
 /* SimpleBar Anpassung */
