@@ -10,6 +10,8 @@ import {BrewingStatus} from "../model/BrewingStatus";
 import {ProductionActions} from "../actions/actions";
 import {ConfirmStates} from "../enums/eConfirmStates";
 import {TextMapper} from "../utils/TextMapper";
+import {FinishedBrewsTable} from "./MainView/FinishBrewsBeers/FinishedBrewsTable";
+import {finishedBrewsTestData} from "../model/finishedBrewsTestData";
 
 interface indexMainProps {
     viewState: Views;
@@ -32,7 +34,6 @@ class Index extends React.Component<indexMainProps> {
 
     confirmDialog = (content: string) => {
         const {confirm} = this.props
-        console.log(content);
         switch (content) {
             case 'Einmaischen, bitte abschliessen' : {
                 confirm(ConfirmStates.MASHUP);
@@ -83,6 +84,7 @@ class Index extends React.Component<indexMainProps> {
                 </SimpleBar>
                 {viewState === Views.PRODUCTION && <Production/>}
                 {viewState === Views.DATABASE && <DatabaseOverview></DatabaseOverview>}
+                {viewState === Views.FINISHED_BREWS &&  <FinishedBrewsTable brews={finishedBrewsTestData} onSave={() => {}} />}
             </div>
 
         );

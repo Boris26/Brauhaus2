@@ -16,7 +16,6 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {MashingType} from "../../enums/eMashingType";
 import MaltForm from './content/CreateMaltForm';
 import YeastForm from './content/CreateYeastForm';
-import {Yeasts} from "../../model/Yeast";
 import HopForm from "./content/CreateHopForm";
 import './BeerForm.css'
 import SimpleBar from 'simplebar-react';
@@ -176,7 +175,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         const malts_DTO = maltsDTO.map((aMalt) => {
             // @ts-ignore
-            const malt = malts.find((aMalt) => aMalt.name === aMalt.name)!;
+            const malt =  malts.find((malt) => malt.name === aMalt.name)!;
             const quantity = aMalt.quantity;
             return {name: malt.name, id: malt.id, quantity: quantity};
         });
@@ -184,15 +183,15 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         const hops_DTO = hopsDTO.map((aHop) => {
             // @ts-ignore
-            const hop = this.props.hops.find((hop) => hop.Name === aHop.Name)!;
-            const quantity = aHop.Quantity;
-            const time = aHop.Time;
-            return { id: hop.id,Name: hop.Name ,Quantity: quantity, Time: time };
+            const hop = hops.find((hop) => hop.name === aHop.name)!;
+            const quantity = aHop.quantity;
+            const time = aHop.time;
+            return { id: hop.id,name: hop.name ,quantity: quantity, time: time };
         });
 
         const yeasts_DTO = yeastsDTO.map((aYeast) => {
             // @ts-ignore
-            const yeast = this.props.yeasts.find((yeast) => yeast.name === aYeast.name)!;
+            const yeast = yeasts.find((yeast) => yeast.name === aYeast.name)!;
             const quantity = aYeast.quantity;
             return {name: yeast.name, id: yeast.id, quantity: quantity};
         });
@@ -254,7 +253,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
     addHops = () => {
         this.setState((prevState) => ({
-            hopsDTO: [...prevState.hopsDTO, { id: '',Name: '', Quantity: 0, Time: 0 }],
+            hopsDTO: [...prevState.hopsDTO, { id: '',name: '', quantity: 0, time: 0 }],
         }));
     }
 
@@ -298,10 +297,10 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
     renderCreateBeerForm() {
         const {maltsDTO,hopsDTO,yeastsDTO,isSubmitSuccessful, name, type, color, alcohol, originalwort, bitterness, description, rating, mashVolume, spargeVolume, fermentationSteps ,cookingTime,cookingTemperatur} = this.state;
-        const { malts, hops, yeasts,messageType,message } = this.props;
-        console.log(isSubmitSuccessful);
-        console.log(message);
-        console.log(type);
+        // Standardwerte setzen, falls Daten noch nicht geladen sind
+        const { malts = [], hops = [], yeasts = [], messageType, message } = this.props;
+        console.log(hops);
+
         let info:string = "";
         if (isEqual(isSubmitSuccessful,true))
         {
@@ -442,31 +441,52 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                         <div key={index} className="fermentation-step-container">
                             <label>
                                 Name:
-                                <select name="Name" value={step.Name} onChange={(e) => this.handleHopChange(e.target.value,e.target.value, index)} required={true} >
+                                <select
+                                    name="name"
+                                    value={step.name}
+                                    onChange={(e) => this.handleHopChange(e.target.value, "name", index)}
+                                    required={true}
+                                >
                                     <option value="">Name</option>
                                     {hops.map((hop) => (
-                                        <option key={hop.id} value={hop.Name}>
-                                            {hop.Name}
+                                        <option key={hop.id} value={hop.name}>
+                                            {hop.name}
                                         </option>
                                     ))}
-
                                 </select>
-                                <input type="text" name="Name" value={step.Name} onChange={(e) => this.handleHopChange(e.target.value,e.target.name, index)} required={true}  />
+                                <input
+                                    type="text"
+                                    name="Name"
+                                    value={step.name}
+                                    onChange={(e) => this.handleHopChange(e.target.value, "Name", index)}
+                                    required={true}
+                                />
                             </label>
                             <label>
                                 Menge:
-                                <input type="number" name="quantity" min={0} value={step.Quantity} onChange={(e) => this.handleHopChange(e.target.value, e.target.name,index)} required={true}  />
+                                <input
+                                    type="number"
+                                    name="Quantity"
+                                    min={0}
+                                    value={step.quantity}
+                                    onChange={(e) => this.handleHopChange(e.target.value, "Quantity", index)}
+                                    required={true}
+                                />
                             </label>
                             <label>
                                 Zeit:
-                                <input type="number" name="time" min={0} value={step.Time} onChange={(e) => this.handleHopChange(e.target.value, e.target.name,index)} required={true}  />
+                                <input
+                                    type="number"
+                                    name="Time"
+                                    min={0}
+                                    value={step.time}
+                                    onChange={(e) => this.handleHopChange(e.target.value, "Time", index)}
+                                    required={true}
+                                />
                             </label>
-
-
                             {index > 0 && <button type="button" onClick={() => this.removeHops(index)}>Remove</button>}
                         </div>
                     ))}
-
                     <button type="button" onClick={this.addHops}>Hopfen zufügen</button>
                 </div>
 

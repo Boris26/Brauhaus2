@@ -52,19 +52,19 @@ export const testBeers: Beer[] = [
             hops: [
                 {
                     id: "1",
-                    Name: "Cascade",
-                    Description: "Citrusy and floral hop variety",
-                    Alpha: 7,
-                    Quantity: 30,
-                    Time: 10
+                    name: "Cascade",
+                    description: "Citrusy and floral hop variety",
+                    alpha: 7,
+                    quantity: 30,
+                    time: 10
                 },
                 {
                     id: "2",
-                    Name: "Centennial",
-                    Description: "Classic American hop with a strong aroma",
-                    Alpha: 10,
-                    Quantity: 50,
-                    Time: 10
+                    name: "Centennial",
+                    description: "Classic American hop with a strong aroma",
+                    alpha: 10,
+                    quantity: 50,
+                    time: 10
                 },
             ],
         },
@@ -134,19 +134,19 @@ export const testBeers: Beer[] = [
             hops: [
                 {
                     id: "1",
-                    Name: "Cascade",
-                    Description: "Citrusy and floral hop variety",
-                    Alpha: 7,
-                    Quantity: 30,
-                    Time: 10
+                    name: "Cascade",
+                    description: "Citrusy and floral hop variety",
+                    alpha: 7,
+                    quantity: 30,
+                    time: 10
                 },
                 {
                     id: "2",
-                    Name: "Centennial",
-                    Description: "Classic American hop with a strong aroma",
-                    Alpha: 10,
-                    Quantity: 50,
-                    Time: 10
+                    name: "Centennial",
+                    description: "Classic American hop with a strong aroma",
+                    alpha: 10,
+                    quantity: 50,
+                    time: 10
                 },
             ],
         },

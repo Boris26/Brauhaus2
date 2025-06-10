@@ -12,10 +12,10 @@ export interface MaltDTO {
 }
 
 export interface HopDTO {
-    Name: string;
+    name: string;
     id: string;
-    Quantity: number;
-    Time: number;
+    quantity: number;
+    time: number;
 }
 
 export interface WortBoilingDTO {

@@ -198,9 +198,9 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         const {selectedBeer} = this.props
         const totalCookingTime = selectedBeer.cookingTime
         selectedBeer.wortBoiling.hops.forEach((item) => {
-            const time = totalCookingTime - item.Time;
+            const time = totalCookingTime - item.time;
             const secTime = time * 60;
-            hopsDict[secTime] = item.Name;
+            hopsDict[secTime] = item.name;
 
         })
         this.setState({hopsTimes: hopsDict});

@@ -4,10 +4,12 @@ import Details from "./Details/Details";
 import {connect} from "react-redux";
 import SimpleBar from 'simplebar-react';
 import 'simplebar/dist/simplebar.min.css';
-import BeerTable from "./Table/Table";
+import BeerTable from "./BeerRecipes/Table";
 import {Beer} from "../../model/Beer";
 import {BeerActions} from "../../actions/actions";
 import getBeers = BeerActions.getBeers;
+import { FinishedBrewsTable } from "./FinishBrewsBeers/FinishedBrewsTable";
+import { finishedBrewsTestData } from "../../model/finishedBrewsTestData";
 
 interface MainProps {
 beers: Beer[]
@@ -54,8 +56,6 @@ class Main extends React.Component<MainProps,MainState> {
         const {beers} = this.props
         const { maxHeight } = this.state;
 
-        console.log(beers?.length);
-        console.log(beers);
         return (
             <div className="content">
                 <div className="CustomTable">
@@ -80,4 +80,3 @@ const mapDispatchToProps = (dispatch: any) => ({
 
 
 export default connect(mapStateToProps,mapDispatchToProps)(Main);
-

@@ -4,10 +4,10 @@ import {Hops} from "../../../model/Hops";
 import {BeerActions} from "../../../actions/actions";
 import {connect} from "react-redux";
 interface HopFormState {
-  Name: string;
-  Type: string;
-  Description: string;
-  Alpha: string;
+  name: string;
+  type: string;
+  description: string;
+  alpha: string;
 }
 
 interface HopFormProps {
@@ -18,24 +18,24 @@ class HopForm extends React.Component<HopFormProps,HopFormState>
 constructor(props: HopFormProps) {
     super(props);
     this.state = {
-        Name: '',
-        Type: '',
-        Description: '',
-        Alpha: ''
+        name: '',
+        type: '',
+        description: '',
+        alpha: ''
     };
 
     }
 
     handleSubmit = (e:  FormEvent) => {
             e.preventDefault();
-            const { Name, Type, Description, Alpha } = this.state;
+            const { name, type, description, alpha } = this.state;
 
             const hop = {
                 id: 0,
-                Name: Name,
-                Type: Type,
-                Description: Description,
-                Alpha: Alpha
+                name: name,
+                type: type,
+                description: description,
+                alpha: alpha
             }
             this.props.onSubmitHop(hop);
     }
@@ -46,25 +46,25 @@ constructor(props: HopFormProps) {
             this.setState({[name]: value} as unknown as Pick<HopForm, keyof HopForm>);
     }
 render() {
-  const { Name, Type, Description, Alpha } = this.state;
+  const { name, type, description, alpha } = this.state;
     return(
         <div>
             <form className="beer-form" onSubmit={this.handleSubmit}>
                 <label>
                     Name:
-                    <input type="text" name="Name" value={Name} onChange={this.handleChange}  />
+                    <input type="text" name="name" value={name} onChange={this.handleChange}  />
                 </label>
                 <label>
                     Beschreibung:
-                    <input type="text" name="Description" value={Description} onChange={this.handleChange}  />
+                    <input type="text" name="description" value={description} onChange={this.handleChange}  />
                 </label>
                 <label>
                     Alpha:
-                    <input type="text" name="Alpha" value={Alpha} onChange={this.handleChange}  />
+                    <input type="text" name="alpha" value={alpha} onChange={this.handleChange}  />
                 </label>
                 <label>
                     Type:
-                    <input type="text" name="Type" value={Type} onChange={this.handleChange}  />
+                    <input type="text" name="type" value={type} onChange={this.handleChange}  />
                 </label>
                 <button className="submit-button" type="submit">Erstellen</button>
             </form>

@@ -193,9 +193,9 @@ renderFilling()
                                     <TableBody>
                                         {selectedBeer?.wortBoiling.hops.map((item, index) => (
                                             <TableRow key={index}>
-                                                <TableCell>{item.Name}</TableCell>
-                                                <TableCell>{item.Time}</TableCell>
-                                                <TableCell>{item.Quantity}</TableCell>
+                                                <TableCell>{item.name}</TableCell>
+                                                <TableCell>{item.time}</TableCell>
+                                                <TableCell>{item.quantity}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>

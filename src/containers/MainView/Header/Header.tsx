@@ -46,6 +46,12 @@ class Header extends React.Component<HeaderProps> {
                         className="icon"
                         onClick={() => this.handleIconClick(Views.DATABASE)}
                     />
+                    <img
+                        src="beer-55.gif"
+                        alt="Fertige Sude"
+                        className="icon"
+                        onClick={() => this.handleIconClick(Views.FINISHED_BREWS)}
+                    />
                 </div>
             </div>
 
