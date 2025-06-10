@@ -8,8 +8,6 @@ import BeerTable from "./BeerRecipes/Table";
 import {Beer} from "../../model/Beer";
 import {BeerActions} from "../../actions/actions";
 import getBeers = BeerActions.getBeers;
-import { FinishedBrewsTable } from "./FinishBrewsBeers/FinishedBrewsTable";
-import { finishedBrewsTestData } from "../../model/finishedBrewsTestData";
 
 interface MainProps {
 beers: Beer[]

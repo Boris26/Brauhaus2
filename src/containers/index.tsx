@@ -84,7 +84,9 @@ class Index extends React.Component<indexMainProps> {
                 </SimpleBar>
                 {viewState === Views.PRODUCTION && <Production/>}
                 {viewState === Views.DATABASE && <DatabaseOverview></DatabaseOverview>}
-                {viewState === Views.FINISHED_BREWS &&  <FinishedBrewsTable brews={finishedBrewsTestData} onSave={() => {}} />}
+                <SimpleBar style={{maxHeight: '100%', overflowY: 'auto'}}>
+                    {viewState === Views.FINISHED_BREWS && <FinishedBrewsTable brews={finishedBrewsTestData} onSave={() => {}} />}
+                </SimpleBar>
             </div>
 
         );

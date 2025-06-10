@@ -1,6 +1,8 @@
 import React from 'react';
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@mui/material';
-import '../BeerRecipes/Table.css';
+import SimpleBar from 'simplebar-react';
+import 'simplebar/dist/simplebar.min.css';
+import './FinishedBrewsTable.css';
 
 export interface FinishedBrew {
     id: number;
@@ -60,84 +62,86 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
         const { brews } = this.props;
         const { editRows } = this.state;
         return (
-            <TableContainer component={Paper} className="Table">
-                <Table className="Table">
-                    <TableHead className="table-header">
-                        <TableRow>
-                            <TableCell className="table-header-cell">Name</TableCell>
-                            <TableCell className="table-header-cell">Datum</TableCell>
-                            <TableCell className="table-header-cell">Liter</TableCell>
-                            <TableCell className="table-header-cell">Stammwürze 1</TableCell>
-                            <TableCell className="table-header-cell">Restextrakt</TableCell>
-                            <TableCell className="table-header-cell">Alkohol</TableCell>
-                            <TableCell className="table-header-cell">Beschreibung</TableCell>
-                            <TableCell className="table-header-cell">Aktion</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {brews.map(brew => {
-                            const isEdited = !!editRows[brew.id];
-                            const row = { ...brew, ...editRows[brew.id] };
-                            return (
-                                <TableRow key={brew.id} className="table-row">
-                                    <TableCell className="table-cell">{brew.name}</TableCell>
-                                    <TableCell className="table-cell">{brew.date}</TableCell>
-                                    <TableCell className="table-cell">
-                                        <TextField
-                                            variant="standard"
-                                            value={row.liters}
-                                            type="number"
-                                            onChange={e => this.handleChange(brew.id, 'liters', e.target.value)}
-                                            className="table-edit-field"
-                                            InputProps={{ disableUnderline: true }}
-                                        />
-                                    </TableCell>
-                                    <TableCell className="table-cell">
-                                        <TextField
-                                            variant="standard"
-                                            value={row.wort1}
-                                            type="number"
-                                            onChange={e => this.handleChange(brew.id, 'wort1', e.target.value)}
-                                            className="table-edit-field"
-                                            InputProps={{ disableUnderline: true }}
-                                        />
-                                    </TableCell>
-                                    <TableCell className="table-cell">
-                                        <TextField
-                                            variant="standard"
-                                            value={row.wort2}
-                                            type="number"
-                                            onChange={e => this.handleChange(brew.id, 'wort2', e.target.value)}
-                                            className="table-edit-field"
-                                            InputProps={{ disableUnderline: true }}
-                                        />
-                                    </TableCell>
-                                    <TableCell className="table-cell">{calcAlcohol(row.wort1, row.wort2)}</TableCell>
-                                    <TableCell className="table-cell">
-                                        <TextField
-                                            variant="standard"
-                                            value={row.description}
-                                            onChange={e => this.handleChange(brew.id, 'description', e.target.value)}
-                                            className="table-edit-field"
-                                            InputProps={{ disableUnderline: true }}
-                                        />
-                                    </TableCell>
-                                    <TableCell className="table-cell">
-                                        {isEdited && (
-                                            <button
-                                                className="select-btn"
-                                                onClick={() => this.handleSave(brew.id)}
-                                            >
-                                                Speichern
-                                            </button>
-                                        )}
-                                    </TableCell>
-                                </TableRow>
-                            );
-                        })}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+            <SimpleBar style={{ maxHeight: 600 }}>
+                <TableContainer component={Paper} className="FinishedBrewsTable">
+                    <Table className="FinishedBrewsTable">
+                        <TableHead className="table-header">
+                            <TableRow>
+                                <TableCell className="table-header-cell">Name</TableCell>
+                                <TableCell className="table-header-cell">Datum</TableCell>
+                                <TableCell className="table-header-cell">Liter</TableCell>
+                                <TableCell className="table-header-cell">Stammwürze 1</TableCell>
+                                <TableCell className="table-header-cell">Restextrakt</TableCell>
+                                <TableCell className="table-header-cell">Alkohol</TableCell>
+                                <TableCell className="table-header-cell">Beschreibung</TableCell>
+                                <TableCell className="table-header-cell">Aktion</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {brews.map(brew => {
+                                const isEdited = !!editRows[brew.id];
+                                const row = { ...brew, ...editRows[brew.id] };
+                                return (
+                                    <TableRow key={brew.id} className="table-row">
+                                        <TableCell className="table-cell">{brew.name}</TableCell>
+                                        <TableCell className="table-cell">{brew.date}</TableCell>
+                                        <TableCell className="table-cell">
+                                            <TextField
+                                                variant="standard"
+                                                value={row.liters}
+                                                type="number"
+                                                onChange={e => this.handleChange(brew.id, 'liters', e.target.value)}
+                                                className="table-edit-field"
+                                                InputProps={{ style: { color: 'white' }, disableUnderline: true }}
+                                            />
+                                        </TableCell>
+                                        <TableCell className="table-cell">
+                                            <TextField
+                                                variant="standard"
+                                                value={row.wort1}
+                                                type="number"
+                                                onChange={e => this.handleChange(brew.id, 'wort1', e.target.value)}
+                                                className="table-edit-field"
+                                                InputProps={{ style: { color: 'white' }, disableUnderline: true }}
+                                            />
+                                        </TableCell>
+                                        <TableCell className="table-cell">
+                                            <TextField
+                                                variant="standard"
+                                                value={row.wort2}
+                                                type="number"
+                                                onChange={e => this.handleChange(brew.id, 'wort2', e.target.value)}
+                                                className="table-edit-field"
+                                                InputProps={{ style: { color: 'white' }, disableUnderline: true }}
+                                            />
+                                        </TableCell>
+                                        <TableCell className="table-cell">{calcAlcohol(row.wort1, row.wort2)}</TableCell>
+                                        <TableCell className="table-cell">
+                                            <TextField
+                                                variant="standard"
+                                                value={row.description}
+                                                onChange={e => this.handleChange(brew.id, 'description', e.target.value)}
+                                                className="table-edit-field"
+                                                InputProps={{ style: { color: 'white' }, disableUnderline: true }}
+                                            />
+                                        </TableCell>
+                                        <TableCell className="table-cell">
+                                            {isEdited && (
+                                                <button
+                                                    className="select-btn"
+                                                    onClick={() => this.handleSave(brew.id)}
+                                                >
+                                                    Speichern
+                                                </button>
+                                            )}
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </SimpleBar>
         );
     }
 }
