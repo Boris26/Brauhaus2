@@ -18,6 +18,14 @@
   background-color: darkorange;
 }
 
+.FinishedBrewsTable .table-header-cell,
+.FinishedBrewsTable .table-cell,
+.FinishedBrewsTable .table-cell input,
+.FinishedBrewsTable .table-cell select,
+.FinishedBrewsTable .table-cell textarea {
+  text-align: left;
+}
+
 .FinishedBrewsTable .table-header-cell {
   height: 1rem;
   font-size: 1rem;
@@ -39,6 +47,12 @@
   background: transparent;
   border: none;
   outline: none;
+}
+
+.FinishedBrewsTable td,
+.FinishedBrewsTable th {
+  width: auto;
+  max-width: none;
 }
 
 .FinishedBrewsTable .select-btn {
@@ -191,4 +205,44 @@
   box-shadow: none;
   opacity: 0.7;
   border: 1px solid #cccccc;
+}
+
+.FinishedBrewsTable .table-cell.originalwort {
+  width: 50px;
+  text-align: left;
+}
+.FinishedBrewsTable .table-cell.liters
+{
+  width: 100px;
+  text-align: left;
+}
+
+.FinishedBrewsTable .table-cell.residualExtract {
+  width: 50px;
+  text-align: left;
+}
+.FinishedBrewsTable .table-cell.beschreibung {
+  min-width: 50px;
+  width: 30%;
+}
+
+.FinishedBrewsTable .table-edit-field:focus {
+  border: 1.5px solid darkorange !important;
+  border-radius: 4px;
+  background: #333333;
+}
+
+.FinishedBrewsTable .table-edit-field input:focus:not([readonly]) {
+  border: 1.5px solid darkorange !important;
+  border-radius: 4px;
+  background: #333333;
+}
+
+.FinishedBrewsTable .table-edit-field input[type=number]::-webkit-outer-spin-button,
+.FinishedBrewsTable .table-edit-field input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.FinishedBrewsTable .table-edit-field input[type=number] {
+  -moz-appearance: textfield;
 }
