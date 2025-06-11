@@ -47,6 +47,7 @@ class MobileProductionView extends React.Component<MobileProductionViewProps, Mo
                     <button className={activeTab === 'status' ? 'active' : ''} onClick={() => this.handleTabChange('status')}>Status</button>
                     <button className={activeTab === 'finishedBrew' ? 'active' : ''} onClick={() => this.handleTabChange('finishedBrew')}>Aktiver Sud</button>
                 </div>
+                <hr className="mobile-tabs-separator" />
                 {activeTab === 'status' && (
                     <>
                         <h2>Brauhaus Mobile</h2>

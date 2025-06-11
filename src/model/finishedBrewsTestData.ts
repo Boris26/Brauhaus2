@@ -20,8 +20,8 @@ export const finishedBrewsTestData: FinishedBrew[] = [
     endDate: "27.05.2025",
     liters: 20,
     originalwort: 18.2,
-    residualExtract: 4.1,
-    aktiv: false,
+    residualExtract: null,
+    aktiv: true,
     description: "Kräftig malzig, mit feiner Karamellnote."
   },
   {

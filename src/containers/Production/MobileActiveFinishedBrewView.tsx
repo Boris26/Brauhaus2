@@ -5,11 +5,12 @@ import './MobileProductionView.css';
 import { finishedBrewsTestData } from '../../model/finishedBrewsTestData';
 
 interface Props {
-    finishedBrew?: FinishedBrew;
+    finishedBrews?: FinishedBrew[];
 }
 
 interface State {
     editMode: boolean;
+    currentIndex: number;
     editedBrew: FinishedBrew | undefined;
 }
 
@@ -18,14 +19,22 @@ class MobileActiveFinishedBrewView extends React.Component<Props, State> {
         super(props);
         this.state = {
             editMode: false,
-            editedBrew: props.finishedBrew ? { ...props.finishedBrew } : undefined
+            currentIndex: 0,
+            editedBrew: props.finishedBrews && props.finishedBrews.length > 0 ? { ...props.finishedBrews[0] } : undefined
         };
     }
 
-    componentDidUpdate(prevProps: Props) {
-        if (prevProps.finishedBrew?.id !== this.props.finishedBrew?.id) {
+    componentDidUpdate(prevProps: Props, prevState: State) {
+        if (prevProps.finishedBrews !== this.props.finishedBrews) {
             this.setState({
-                editedBrew: this.props.finishedBrew ? { ...this.props.finishedBrew } : undefined,
+                currentIndex: 0,
+                editedBrew: this.props.finishedBrews && this.props.finishedBrews.length > 0 ? { ...this.props.finishedBrews[0] } : undefined,
+                editMode: false
+            });
+        }
+        if (prevState.currentIndex !== this.state.currentIndex && this.props.finishedBrews) {
+            this.setState({
+                editedBrew: { ...this.props.finishedBrews[this.state.currentIndex] },
                 editMode: false
             });
         }
@@ -36,7 +45,8 @@ class MobileActiveFinishedBrewView extends React.Component<Props, State> {
     };
 
     handleSave = () => {
-        // TODO: Dispatch Save-Action für editedBrew
+        const {editedBrew} = this.state;  // Hier könnte eine API-Call oder Redux-Action zum Speichern des Suds erfolgen
+        alert(`Sud "${editedBrew?.description}" gespeichert!`);
         this.setState({ editMode: false });
     };
 
@@ -49,10 +59,25 @@ class MobileActiveFinishedBrewView extends React.Component<Props, State> {
         }));
     };
 
+    handlePrev = () => {
+        this.setState(prevState => ({
+            currentIndex: Math.max(0, prevState.currentIndex - 1),
+            editMode: false
+        }));
+    };
+
+    handleNext = () => {
+        if (!this.props.finishedBrews) return;
+        this.setState(prevState => ({
+            currentIndex: Math.min(this.props.finishedBrews!.length - 1, prevState.currentIndex + 1),
+            editMode: false
+        }));
+    };
+
     render() {
-        const { finishedBrew } = this.props;
-        const { editMode, editedBrew } = this.state;
-        if (!finishedBrew || !editedBrew) {
+        const { finishedBrews } = this.props;
+        const { editMode, editedBrew, currentIndex } = this.state;
+        if (!finishedBrews || finishedBrews.length === 0 || !editedBrew) {
             return <div className="mobile-production-container"><p>Kein aktiver Sud gefunden.</p></div>;
         }
         return (
@@ -72,17 +97,15 @@ class MobileActiveFinishedBrewView extends React.Component<Props, State> {
                 }}
             >
                 <h2>
-                    {editMode ? (
-                        <input
-                            name="name"
-                            value={editedBrew.name}
-                            onChange={this.handleChange}
-                            className="mobile-edit-input"
-                        />
-                    ) : (
-                        editedBrew.name
-                    )}
+                    {editedBrew.name}
                 </h2>
+                {finishedBrews.length > 1 && (
+                    <div style={{ marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <button className="mobile-pagination-btn" onClick={this.handlePrev} disabled={currentIndex === 0}>Zurück</button>
+                        <span className="mobile-pagination-numbers">{currentIndex + 1} / {finishedBrews.length}</span>
+                        <button className="mobile-pagination-btn" onClick={this.handleNext} disabled={currentIndex === finishedBrews.length - 1}>Weiter</button>
+                    </div>
+                )}
                 <div className="mobile-info-list">
                     <div className="mobile-info-block">
                         <span className="mobile-label">Start-Datum:</span>
@@ -152,7 +175,7 @@ class MobileActiveFinishedBrewView extends React.Component<Props, State> {
                             <input
                                 name="residualExtract"
                                 type="number"
-                                value={editedBrew.residualExtract}
+                                value={editedBrew.residualExtract ?? 0}
                                 onChange={this.handleChange}
                                 className="mobile-edit-input"
                             />
@@ -198,7 +221,7 @@ class MobileActiveFinishedBrewView extends React.Component<Props, State> {
 }
 
 const mapStateToProps = (state: any) => ({
-    finishedBrew: (finishedBrewsTestData && finishedBrewsTestData.length > 0) ? finishedBrewsTestData[0] : undefined
+    finishedBrews: finishedBrewsTestData.filter((brew: FinishedBrew) => brew.aktiv)
 });
 
 export default connect(mapStateToProps)(MobileActiveFinishedBrewView);

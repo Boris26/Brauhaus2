@@ -7,6 +7,7 @@ import {FinishedBrew} from "../../../model/FinishedBrew";
 import {connect} from "react-redux";
 import {finishedBrewsTestData} from "../../../model/finishedBrewsTestData";
 import {BeerActions} from "../../../actions/actions";
+import {isNil} from "lodash";
 
 
 interface FinishedBrewsTableProps {
@@ -19,26 +20,38 @@ interface FinishedBrewsTableState {
     editRows: { [id: number]: Partial<FinishedBrew> };
     filterYear: string;
     showOnlyActive: boolean;
+    filterOutActive: boolean;
+    clickedFinishBtn: { [id: number]: boolean };
 }
 
-const calcAlcohol = (w1: number, w2: number) => {
-    if (isNaN(w1) || isNaN(w2)) return '-';
+const calcAlcohol = (w1: number, w2: number | null) => {
+    if (w2 === null) return '-';
+    if (typeof w2 !== 'number' || isNaN(w1) || isNaN(w2)) return '-';
     return (((w1 - w2) * 0.5).toFixed(2) + ' %');
 };
 
 class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, FinishedBrewsTableState> {
     constructor(props: FinishedBrewsTableProps) {
         super(props);
-        this.state = { editRows: {}, filterYear: '', showOnlyActive: false };
+        this.state = { editRows: {}, filterYear: '', showOnlyActive: false, filterOutActive: false, clickedFinishBtn: {} };
     }
 
     handleChange = (id: number, field: keyof FinishedBrew, value: string) => {
+        let parsedValue: any = value;
+        if (field === 'liters' || field === 'originalwort') {
+            parsedValue = value === '' ? '' : Math.max(0, Number(value));
+        } else if (field === 'residualExtract') {
+            parsedValue = value === '' ? null : Math.max(0, Number(value));
+        }
         this.setState(prevState => ({
             editRows: {
                 ...prevState.editRows,
                 [id]: {
                     ...prevState.editRows[id],
-                    [field]: field === 'liters' || field === 'originalwort' || field === 'residualExtract' ? Number(value) : value
+                    [field]:
+                        field === 'liters' || field === 'originalwort' || field === 'residualExtract'
+                            ? parsedValue
+                            : value
                 }
             }
         }));
@@ -61,7 +74,19 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
     };
 
     handleActiveFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        // Wenn "Aktive ausfiltern" aktiv ist, verhindere das Aktivieren von "Nur aktive anzeigen"
+        if (this.state.filterOutActive && e.target.checked) {
+            return;
+        }
         this.setState({ showOnlyActive: e.target.checked });
+    };
+
+    handleFilterOutActiveChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const checked = e.target.checked;
+        this.setState(prevState => ({
+            filterOutActive: checked,
+            showOnlyActive: checked ? false : prevState.showOnlyActive
+        }));
     };
 
     getYearsFromBrews = () => {
@@ -81,7 +106,7 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
     handleExportPdf = () => {
         // Filter brews wie in render()
         const { brews, exportPdf } = this.props;
-        const { filterYear, showOnlyActive } = this.state;
+        const { filterYear, showOnlyActive, filterOutActive } = this.state;
         const filteredBrews = brews.filter(brew => {
             let year = '';
             if (brew.startDate instanceof Date) {
@@ -91,14 +116,30 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
             }
             const yearMatch = filterYear ? year === filterYear : true;
             const activeMatch = showOnlyActive ? brew.aktiv : true;
-            return yearMatch && activeMatch;
+            const outActiveMatch = filterOutActive ? !brew.aktiv : true;
+            return yearMatch && activeMatch && outActiveMatch;
         });
         exportPdf(filteredBrews);
     };
 
+    handleFinishClick = (brew: FinishedBrew) => {
+        console.log("Handling finish click for brew:", brew);
+        this.setState(prev => ({
+            clickedFinishBtn: { ...prev.clickedFinishBtn, [brew.id]: true }
+        }), () => {
+            setTimeout(() => {
+                this.setState(prev => ({
+                    clickedFinishBtn: { ...prev.clickedFinishBtn, [brew.id]: false }
+                }));
+                const updated = { ...brew, aktiv: false };
+                this.props.onSave(updated);
+            }, 150);
+        });
+    };
+
     render() {
         const { brews } = this.props;
-        const { editRows, filterYear, showOnlyActive } = this.state;
+        const { editRows, filterYear, showOnlyActive, filterOutActive } = this.state;
         const years = this.getYearsFromBrews();
 
         // Filter brews nach Jahr und Aktiv-Status
@@ -111,7 +152,8 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
             }
             const yearMatch = filterYear ? year === filterYear : true;
             const activeMatch = showOnlyActive ? brew.aktiv : true;
-            return yearMatch && activeMatch;
+            const outActiveMatch = filterOutActive ? !brew.aktiv : true;
+            return yearMatch && activeMatch && outActiveMatch;
         });
 
         return (
@@ -137,14 +179,26 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
                             checked={showOnlyActive}
                             onChange={this.handleActiveFilterChange}
                             className="active-filter-checkbox"
+                            disabled={this.state.filterOutActive}
                         />
                         <span>Nur aktive anzeigen</span>
                     </label>
+                    <label className="active-filter-label">
+                        <input
+                            type="checkbox"
+                            checked={this.state.filterOutActive}
+                            onChange={this.handleFilterOutActiveChange}
+                            className="active-filter-checkbox"
+                        />
+                        <span>Aktive ausfiltern</span>
+                    </label>
                     <button
-                        className="select-btn"
-                        style={{ marginLeft: '2rem', height: '2.2rem' }}
+                        className="finish-btn"
+                        style={{ marginLeft: '2rem', height: '2.2rem', display: 'flex', alignItems: 'center' }}
                         onClick={this.handleExportPdf}
+                        title="PDF exportieren"
                     >
+                        <span role="img" aria-label="PDF" style={{ fontSize: 22, verticalAlign: 'middle', marginRight: 4 }}>📄</span>
                         PDF exportieren
                     </button>
                 </div>
@@ -237,23 +291,27 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
                                                 />
                                             </TableCell>
                                             <TableCell className="table-cell">
-                                                <TextField
-                                                    variant="standard"
-                                                    value={row.residualExtract}
-                                                    type="number"
-                                                    onChange={e => this.handleChange(brew.id, 'residualExtract', e.target.value)}
-                                                    className="table-edit-field"
-                                                    InputProps={{
-                                                        style: { color: 'white' },
-                                                        disableUnderline: true,
-                                                        readOnly: !isActive,
-                                                        inputProps: {
+                                                {isActive ? (
+                                                    <TextField
+                                                        variant="standard"
+                                                        value={row.residualExtract === undefined || row.residualExtract === null ? '' : row.residualExtract}
+                                                        type="number"
+                                                        onChange={e => this.handleChange(brew.id, 'residualExtract', e.target.value)}
+                                                        className="table-edit-field"
+                                                        InputProps={{
+                                                            style: { color: 'white' },
+                                                            disableUnderline: true,
                                                             readOnly: !isActive,
-                                                            ...(isActive ? {} : { inputMode: 'none', style: { MozAppearance: 'textfield' } })
-                                                        },
-                                                        ...(isActive ? {} : { sx: { '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 }, '& input[type=number]': { MozAppearance: 'textfield' } } })
-                                                    }}
-                                                />
+                                                            inputProps: {
+                                                                readOnly: !isActive,
+                                                                ...(isActive ? {} : { inputMode: 'none', style: { MozAppearance: 'textfield' } })
+                                                            },
+                                                            ...(isActive ? {} : { sx: { '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 }, '& input[type=number]': { MozAppearance: 'textfield' } } })
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    row.residualExtract === undefined || row.residualExtract === null ? '-' : row.residualExtract
+                                                )}
                                             </TableCell>
                                             <TableCell className="table-cell">{calcAlcohol(row.originalwort, row.residualExtract)}</TableCell>
                                             <TableCell className="table-cell">
@@ -266,14 +324,29 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
                                                 />
                                             </TableCell>
                                             <TableCell className="table-cell">
-                                                {isEdited && isActive && (
-                                                    <button
-                                                        className="select-btn"
-                                                        onClick={() => this.handleSave(brew.id)}
-                                                    >
-                                                        Speichern
-                                                    </button>
-                                                )}
+                                                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                    {isEdited && isActive && (
+                                                        <button
+                                                            className="finish-btn"
+                                                            onClick={() => this.handleSave(brew.id)}
+                                                            title="Speichern"
+                                                        >
+                                                            <span role="img" aria-label="Speichern" style={{ fontSize: 22, verticalAlign: 'middle', marginRight: 4 }}>💾</span>
+                                                            Speichern
+                                                        </button>
+                                                    )}
+                                                    {isActive && (
+                                                        <button
+                                                            className={`finish-btn${this.state.clickedFinishBtn[brew.id] ? ' clicked' : ''}`}
+                                                            title="Endgültig fertigstellen"
+                                                            onClick={() => this.handleFinishClick(brew)}
+                                                            disabled={row.residualExtract === null || row.residualExtract === undefined}
+                                                        >
+                                                            <span role="img" aria-label="Fertig" style={{ fontSize: 22, verticalAlign: 'middle', marginRight: 4 }}>✅</span>
+                                                            Fertig
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     );
