@@ -7,11 +7,11 @@ import DatabaseOverview from "./DatabaseOverview/BeerForm";
 import SimpleBar from "simplebar-react";
 import ModalDialog, {DialogType} from "../components/ModalDialog/ModalDialog";
 import {BrewingStatus} from "../model/BrewingStatus";
-import {ProductionActions} from "../actions/actions";
+import {BeerActions, ProductionActions} from "../actions/actions";
 import {ConfirmStates} from "../enums/eConfirmStates";
 import {TextMapper} from "../utils/TextMapper";
-import {FinishedBrewsTable} from "./MainView/FinishBrewsBeers/FinishedBrewsTable";
-import {finishedBrewsTestData} from "../model/finishedBrewsTestData";
+import {FinishedBrew} from "../model/FinishedBrew";
+import FinishedBrewsTable from "./MainView/FinishBrewsBeers/FinishedBrewsTable";
 
 interface indexMainProps {
     viewState: Views;
@@ -85,7 +85,7 @@ class Index extends React.Component<indexMainProps> {
                 {viewState === Views.PRODUCTION && <Production/>}
                 {viewState === Views.DATABASE && <DatabaseOverview></DatabaseOverview>}
                 <SimpleBar style={{maxHeight: '100%', overflowY: 'auto'}}>
-                    {viewState === Views.FINISHED_BREWS && <FinishedBrewsTable brews={finishedBrewsTestData} onSave={() => {}} />}
+                    {viewState === Views.FINISHED_BREWS && <FinishedBrewsTable></FinishedBrewsTable>}
                 </SimpleBar>
             </div>
 
@@ -101,7 +101,7 @@ const mapStateToProps = (state: any) => ({
 const mapDispatchToProps = (dispatch: any) => ({
     confirm: (confirmState: ConfirmStates) => {
         dispatch(ProductionActions.confirm(confirmState))
-    },
+    }
 
 })
 

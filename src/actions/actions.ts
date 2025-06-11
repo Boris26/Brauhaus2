@@ -11,6 +11,7 @@ import {BrewingStatus} from "../model/BrewingStatus";
 import {ConfirmStates} from "../enums/eConfirmStates";
 import {BackendAvailable} from "../reducers/reducer";
 import {WaterStatus} from "../components/Controlls/WaterControll/WaterControl";
+import {FinishedBrew} from "../model/FinishedBrew";
 
 export namespace BeerActions {
 
@@ -34,6 +35,8 @@ export namespace BeerActions {
         GET_YEASTS_SUCCESS = 'BeerActions.GET_YEASTS_SUCCESS',
         SET_IS_SUBMIT_SUCCESSFUL = 'BeerActions.SET_IS_SUBMIT_SUCCESSFUL',
         SET_BEER_TO_BREW = 'BeerActions.SET_BEER_TO_BREW',
+        EXPORT_FINISHED_BREWS = 'BeerActions.EXPORT_FINISHED_BREWS',
+        UPDATE_ACTIVE_BEER = 'BeerActions.UPDATE_ACTIVE_BEER',
     }
 
     export interface SetIsSubmitSuccessful {
@@ -171,6 +174,20 @@ export namespace BeerActions {
         payload: { beer: Beer | undefined }
     }
 
+    export interface ExportFinishedBrews {
+        readonly type: ActionTypes.EXPORT_FINISHED_BREWS
+        payload: {
+            brews: FinishedBrew[]
+        }
+    }
+    export interface UpdateActiveBeer {
+        readonly type: ActionTypes.UPDATE_ACTIVE_BEER
+        payload: {
+            beer: FinishedBrew
+        }
+    }
+
+
     export type AllBeerActions =
         SubmitBeer |
         SubmitBeerSuccess |
@@ -190,7 +207,9 @@ export namespace BeerActions {
         GetYeastsSuccess |
         SetIsSubmitSuccessful |
         SetSelectedBeer|
-        SetBeerToBrew;
+        SetBeerToBrew|
+        ExportFinishedBrews |
+        UpdateActiveBeer;
 
 
     export function isSubmitSuccessful(aIsSuccessful: boolean, aMessage: string, aType: string): SetIsSubmitSuccessful {
@@ -325,11 +344,23 @@ export namespace BeerActions {
             payload: {beer: aBeer}
         }
     }
+    export function exportFinishedBrewsToPdf(aFinishedBrews: FinishedBrew[]): BeerActions.ExportFinishedBrews {
+        return {
+            type: BeerActions.ActionTypes.EXPORT_FINISHED_BREWS,
+            payload: {brews: aFinishedBrews}
+        }
+    }
+
+    export function updateActiveBeer(aFinishedBrew: FinishedBrew): BeerActions.UpdateActiveBeer {
+        return {
+            type: BeerActions.ActionTypes.UPDATE_ACTIVE_BEER,
+            payload: {beer: aFinishedBrew}
+        }
+    }
 }
 
 export namespace ApplicationActions {
     export enum ActionTypes {
-
         SET_VIEW = 'ApplicationActions.SET_VIEW',
         OPEN_ERROR_DIALOG = 'ApplicationActions.OPEN_ERROR_DIALOG',
     }

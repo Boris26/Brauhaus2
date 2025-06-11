@@ -12,7 +12,20 @@ interface MobileProductionViewProps {
     isPollingRunning: boolean;
 }
 
-class MobileProductionView extends React.Component<MobileProductionViewProps> {
+interface MobileProductionViewState {
+    activeTab: 'status' | 'finishedBrew';
+}
+
+class MobileProductionView extends React.Component<MobileProductionViewProps, MobileProductionViewState> {
+    constructor(props: MobileProductionViewProps) {
+        super(props);
+        this.state = { activeTab: 'status' };
+    }
+
+    handleTabChange = (tab: 'status' | 'finishedBrew') => {
+        this.setState({ activeTab: tab });
+    };
+
     componentDidUpdate(prevProps: MobileProductionViewProps) {
         const prevStatus = prevProps.brewingStatus?.StatusText;
         const currStatus = this.props.brewingStatus?.StatusText;
@@ -26,55 +39,71 @@ class MobileProductionView extends React.Component<MobileProductionViewProps> {
 
     render() {
         const { brewingStatus, startPolling, isPollingRunning } = this.props;
+        const { activeTab } = this.state;
         const statusText = brewingStatus?.Name;
         return (
             <div className="mobile-production-container">
-                <h2>Brauhaus Mobile</h2>
-                <div className="mobile-info-list">
-                    <div className="mobile-info-block">
-                        <span className="mobile-label">Temperatur:</span>
-                        <span className="mobile-value">{brewingStatus?.Temperature ?? '-'} °C</span>
-                    </div>
-                    <div className="mobile-info-block">
-                        <span className="mobile-label">Zieltemperatur:</span>
-                        <span className="mobile-value">{brewingStatus?.TargetTemperature ?? '-'} °C</span>
-                    </div>
-                    <div className="mobile-info-block">
-                        <span className="mobile-label">Typ:</span>
-                        <span className="mobile-value">{brewingStatus?.Type || '-'}</span>
-                    </div>
-                    <div className="mobile-info-block">
-                        <span className="mobile-label">Warten:</span>
-                        <span className="mobile-value">{brewingStatus?.WaitingStatus ? 'Ja' : 'Nein'}</span>
-                    </div>
-                    <div className="mobile-info-block">
-                        <span className="mobile-label">Heizt auf:</span>
-                        <span className="mobile-value">{brewingStatus?.HeatUpStatus ? 'Ja' : 'Nein'}</span>
-                    </div>
-                    <div className="mobile-info-block">
-                        <span className="mobile-label">Rührwerk:</span>
-                        <span className="mobile-value">{brewingStatus?.AgitatorStatus ? 'An' : 'Aus'}</span>
-                    </div>
-                    <div className="mobile-info-block">
-                        <span className="mobile-label">Laufzeit:</span>
-                        <span className="mobile-value">{brewingStatus?.elapsedTime != null ? TimeFormatter.formatSecondsToHMS(brewingStatus.elapsedTime) : '-'}</span>
-                    </div>
-                    <div className="mobile-info-block">
-                        <span className="mobile-label">Zielzeit:</span>
-                        <span className="mobile-value">{brewingStatus?.currentTime != null ? TimeFormatter.formatSecondsToHMS(brewingStatus.currentTime) : '-'}</span>
-                    </div>
+                <div className="mobile-tabs">
+                    <button className={activeTab === 'status' ? 'active' : ''} onClick={() => this.handleTabChange('status')}>Status</button>
+                    <button className={activeTab === 'finishedBrew' ? 'active' : ''} onClick={() => this.handleTabChange('finishedBrew')}>Aktiver Sud</button>
                 </div>
-                <div className="mobile-status-block">
-                    <span className="mobile-label">Status:</span>
-                    <div className="mobile-status-value">{statusText || '-'}</div>
-                </div>
-                <button className="mobile-polling-btn" onClick={startPolling} disabled={isPollingRunning}>
-                    {isPollingRunning ? 'Aktualisierung läuft...' : 'Aktualisieren'}
-                </button>
+                {activeTab === 'status' && (
+                    <>
+                        <h2>Brauhaus Mobile</h2>
+                        <div className="mobile-info-list">
+                            <div className="mobile-info-block">
+                                <span className="mobile-label">Temperatur:</span>
+                                <span className="mobile-value">{brewingStatus?.Temperature ?? '-'} °C</span>
+                            </div>
+                            <div className="mobile-info-block">
+                                <span className="mobile-label">Zieltemperatur:</span>
+                                <span className="mobile-value">{brewingStatus?.TargetTemperature ?? '-'} °C</span>
+                            </div>
+                            <div className="mobile-info-block">
+                                <span className="mobile-label">Typ:</span>
+                                <span className="mobile-value">{brewingStatus?.Type || '-'}</span>
+                            </div>
+                            <div className="mobile-info-block">
+                                <span className="mobile-label">Warten:</span>
+                                <span className="mobile-value">{brewingStatus?.WaitingStatus ? 'Ja' : 'Nein'}</span>
+                            </div>
+                            <div className="mobile-info-block">
+                                <span className="mobile-label">Heizt auf:</span>
+                                <span className="mobile-value">{brewingStatus?.HeatUpStatus ? 'Ja' : 'Nein'}</span>
+                            </div>
+                            <div className="mobile-info-block">
+                                <span className="mobile-label">Rührwerk:</span>
+                                <span className="mobile-value">{brewingStatus?.AgitatorStatus ? 'An' : 'Aus'}</span>
+                            </div>
+                            <div className="mobile-info-block">
+                                <span className="mobile-label">Laufzeit:</span>
+                                <span className="mobile-value">{brewingStatus?.elapsedTime != null ? TimeFormatter.formatSecondsToHMS(brewingStatus.elapsedTime) : '-'}</span>
+                            </div>
+                            <div className="mobile-info-block">
+                                <span className="mobile-label">Zielzeit:</span>
+                                <span className="mobile-value">{brewingStatus?.currentTime != null ? TimeFormatter.formatSecondsToHMS(brewingStatus.currentTime) : '-'}</span>
+                            </div>
+                        </div>
+                        <div className="mobile-status-block">
+                            <span className="mobile-label">Status:</span>
+                            <div className="mobile-status-value">{statusText || '-'}</div>
+                        </div>
+                        <button className="mobile-polling-btn" onClick={startPolling} disabled={isPollingRunning}>
+                            {isPollingRunning ? 'Aktualisierung läuft...' : 'Aktualisieren'}
+                        </button>
+                    </>
+                )}
+                {activeTab === 'finishedBrew' && (
+                    <React.Suspense fallback={<div>Lade...</div>}>
+                        <MobileActiveFinishedBrewViewLazy />
+                    </React.Suspense>
+                )}
             </div>
         );
     }
 }
+
+const MobileActiveFinishedBrewViewLazy = React.lazy(() => import('./MobileActiveFinishedBrewView'));
 
 const mapStateToProps = (state: any) => ({
     temperature: state.productionReducer.temperature,

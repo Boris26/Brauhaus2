@@ -5,8 +5,8 @@ export const finishedBrewsTestData: FinishedBrew[] = [
   {
     id: 1,
     name: "Helles Sommerbier",
-    startDate: "2025-05-20",
-    endDate: "2025-06-01",
+    startDate: new Date(),
+    endDate: "27.05.2025",
     liters: 25,
     originalwort: 12.5,
     residualExtract: 2.8,
@@ -16,8 +16,8 @@ export const finishedBrewsTestData: FinishedBrew[] = [
   {
     id: 2,
     name: "Dunkles Bockbier",
-    startDate: "2025-05-20",
-    endDate: "2025-06-01",
+    startDate: "20.05.2025",
+    endDate: "27.05.2025",
     liters: 20,
     originalwort: 18.2,
     residualExtract: 4.1,
@@ -27,8 +27,8 @@ export const finishedBrewsTestData: FinishedBrew[] = [
   {
     id: 3,
     name: "Weizenbier",
-    startDate: "2024-05-20",
-    endDate: "2024-06-01",
+    startDate: "20.05.2024",
+    endDate: "27.05.2024",
     liters: 30,
     originalwort: 13.0,
     residualExtract: 3.2,

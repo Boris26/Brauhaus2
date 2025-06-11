@@ -26,6 +26,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faRepeat} from '@fortawesome/free-solid-svg-icons';
 import Switch from "react-switch";
 import {TextMapper} from "../../utils/TextMapper";
+import {IconProp} from "@fortawesome/fontawesome-svg-core";
 
 interface ProductionProps {
     selectedBeer: Beer;
@@ -119,7 +120,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     }
 
 
-    componentDidUpdate(prevProps: Readonly<ProductionProps>, prevState: Readonly<ProductionState>, snapshot?: any) {
+    componentDidUpdate(prevProps: Readonly<ProductionProps>, prevState: Readonly<ProductionState>) {
         const {toggleAgitator, brewingStatus,isBackenAvailable,temperature,isToggleAgitatorSuccess,isWaterFillingSuccessful} = this.props;
         const {intervalSwitchState, mainSwitchState, waterSwitchState,heatingAndStirringSwitchState,showHopsDialog,showFinishDialog} = this.state;
 
@@ -451,7 +452,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                 </div>
                 <div className="startPollingBtnDiv">
                     <button className="startPollingBtn" onClick={this.startPolling}>
-                        <FontAwesomeIcon icon={faRepeat}/>
+                        <FontAwesomeIcon icon={faRepeat as IconProp} />
                     </button>
                 </div>
             </div>);

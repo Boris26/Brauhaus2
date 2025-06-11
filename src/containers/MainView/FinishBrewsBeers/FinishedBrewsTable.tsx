@@ -4,11 +4,15 @@ import SimpleBar from 'simplebar-react';
 import 'simplebar/dist/simplebar.min.css';
 import './FinishedBrewsTable.css';
 import {FinishedBrew} from "../../../model/FinishedBrew";
+import {connect} from "react-redux";
+import {finishedBrewsTestData} from "../../../model/finishedBrewsTestData";
+import {BeerActions} from "../../../actions/actions";
 
 
 interface FinishedBrewsTableProps {
     brews: FinishedBrew[];
     onSave: (brew: FinishedBrew) => void;
+    exportPdf: (brews: FinishedBrew[]) => void;
 }
 
 interface FinishedBrewsTableState {
@@ -22,7 +26,7 @@ const calcAlcohol = (w1: number, w2: number) => {
     return (((w1 - w2) * 0.5).toFixed(2) + ' %');
 };
 
-export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, FinishedBrewsTableState> {
+class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, FinishedBrewsTableState> {
     constructor(props: FinishedBrewsTableProps) {
         super(props);
         this.state = { editRows: {}, filterYear: '', showOnlyActive: false };
@@ -74,6 +78,24 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
         return Array.from(years).sort((a, b) => b.localeCompare(a));
     };
 
+    handleExportPdf = () => {
+        // Filter brews wie in render()
+        const { brews, exportPdf } = this.props;
+        const { filterYear, showOnlyActive } = this.state;
+        const filteredBrews = brews.filter(brew => {
+            let year = '';
+            if (brew.startDate instanceof Date) {
+                year = brew.startDate.getFullYear().toString();
+            } else if (typeof brew.startDate === 'string' && brew.startDate.length >= 4) {
+                year = brew.startDate.slice(0, 4);
+            }
+            const yearMatch = filterYear ? year === filterYear : true;
+            const activeMatch = showOnlyActive ? brew.aktiv : true;
+            return yearMatch && activeMatch;
+        });
+        exportPdf(filteredBrews);
+    };
+
     render() {
         const { brews } = this.props;
         const { editRows, filterYear, showOnlyActive } = this.state;
@@ -118,6 +140,13 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                         />
                         <span>Nur aktive anzeigen</span>
                     </label>
+                    <button
+                        className="select-btn"
+                        style={{ marginLeft: '2rem', height: '2.2rem' }}
+                        onClick={this.handleExportPdf}
+                    >
+                        PDF exportieren
+                    </button>
                 </div>
                 <SimpleBar style={{ maxHeight: 600 }}>
                     <TableContainer component={Paper} className="FinishedBrewsTable">
@@ -150,7 +179,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                                                     type="date"
                                                     onChange={e => {
                                                         const target = e.target as HTMLInputElement;
-                                                        this.handleChange(brew.id, 'startDate',  target.value);
+                                                        this.handleChange(brew.id, 'startDate', target.value);
                                                     }}
                                                     className="table-edit-field"
                                                     InputProps={{ style: { color: 'white' }, disableUnderline: true, readOnly: !isActive }}
@@ -257,3 +286,18 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
         );
     }
 }
+
+const mapStateToProps = (state: any) => ({
+    brews: finishedBrewsTestData  as FinishedBrew[],
+});
+
+const mapDispatchToProps = (dispatch: any) => ({
+    onSave: (brew: FinishedBrew) => {
+        dispatch(BeerActions.updateActiveBeer(brew));
+    },
+    exportPdf: (brews: FinishedBrew[]) => {
+        dispatch(BeerActions.exportFinishedBrewsToPdf(brews));
+    }
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(FinishedBrewsTable);

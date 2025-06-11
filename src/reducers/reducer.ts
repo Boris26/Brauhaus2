@@ -14,6 +14,9 @@ import {ToggleState} from "../enums/eToggleState";
 import {BrewingStatus} from "../model/BrewingStatus";
 import {ConfirmStates} from "../enums/eConfirmStates";
 import {WaterStatus} from "../components/Controlls/WaterControll/WaterControl";
+import {GenericPdfGenerator} from "../utils/pdf/GenericPdfGenerator";
+import {finishedBrewStrategy} from "../utils/pdf/finishedBrewStrategy";
+import {FinishedBrew} from "../model/FinishedBrew";
 
 export interface ApplicationReducerState {
     view: Views;
@@ -215,6 +218,19 @@ const beerDataReducer = (aState: BeerDataReducerState = initialBeerState, aActio
         case BeerActions.ActionTypes.SET_BEER_TO_BREW: {
             return {...aState, beerToBrew: aAction.payload.beer};
         }
+        case BeerActions.ActionTypes.EXPORT_FINISHED_BREWS: {
+            const pdfGenerator = new GenericPdfGenerator<FinishedBrew>();
+            pdfGenerator.generate(aAction.payload.brews, finishedBrewStrategy, "finished_brews.pdf")
+                .then(() => {
+                    console.log("PDF export successful");
+                })
+                .catch((error) => {
+                    console.error("Error generating PDF:", error);
+                });
+            return {...aState};
+        }
+
+
 
         default:
             return aState;
@@ -289,6 +305,7 @@ const productionReducer = (aState: ProductionReducerState = initialProductionSta
         case ProductionActions.ActionTypes.SET_WATER_STATUS : {
             return {...aState, waterStatus: aAction.payload.waterStatus}
         }
+
 
         default:
             return aState;
