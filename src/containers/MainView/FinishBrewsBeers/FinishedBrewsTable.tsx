@@ -13,6 +13,8 @@ interface FinishedBrewsTableProps {
 
 interface FinishedBrewsTableState {
     editRows: { [id: number]: Partial<FinishedBrew> };
+    filterYear: string;
+    showOnlyActive: boolean;
 }
 
 const calcAlcohol = (w1: number, w2: number) => {
@@ -23,7 +25,7 @@ const calcAlcohol = (w1: number, w2: number) => {
 export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, FinishedBrewsTableState> {
     constructor(props: FinishedBrewsTableProps) {
         super(props);
-        this.state = { editRows: {} };
+        this.state = { editRows: {}, filterYear: '', showOnlyActive: false };
     }
 
     handleChange = (id: number, field: keyof FinishedBrew, value: string) => {
@@ -50,144 +52,208 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
         });
     };
 
+    handleFilterYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        this.setState({ filterYear: e.target.value });
+    };
+
+    handleActiveFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        this.setState({ showOnlyActive: e.target.checked });
+    };
+
+    getYearsFromBrews = () => {
+        const years = new Set<string>();
+        this.props.brews.forEach(brew => {
+            let dateStr = '';
+            if (brew.startDate instanceof Date) {
+                dateStr = brew.startDate.getFullYear().toString();
+            } else if (typeof brew.startDate === 'string' && brew.startDate.length >= 4) {
+                dateStr = brew.startDate.slice(0, 4);
+            }
+            if (dateStr) years.add(dateStr);
+        });
+        return Array.from(years).sort((a, b) => b.localeCompare(a));
+    };
+
     render() {
         const { brews } = this.props;
-        const { editRows } = this.state;
+        const { editRows, filterYear, showOnlyActive } = this.state;
+        const years = this.getYearsFromBrews();
+
+        // Filter brews nach Jahr und Aktiv-Status
+        const filteredBrews = brews.filter(brew => {
+            let year = '';
+            if (brew.startDate instanceof Date) {
+                year = brew.startDate.getFullYear().toString();
+            } else if (typeof brew.startDate === 'string' && brew.startDate.length >= 4) {
+                year = brew.startDate.slice(0, 4);
+            }
+            const yearMatch = filterYear ? year === filterYear : true;
+            const activeMatch = showOnlyActive ? brew.aktiv : true;
+            return yearMatch && activeMatch;
+        });
+
         return (
-            <SimpleBar style={{ maxHeight: 600 }}>
-                <TableContainer component={Paper} className="FinishedBrewsTable">
-                    <Table className="FinishedBrewsTable">
-                        <TableHead className="table-header">
-                            <TableRow>
-                                <TableCell className="table-header-cell">Name</TableCell>
-                                <TableCell className="table-header-cell">Start-Datum</TableCell>
-                                <TableCell className="table-header-cell">End-Datum</TableCell>
-                                <TableCell className="table-header-cell">Liter</TableCell>
-                                <TableCell className="table-header-cell">Stammwürze 1</TableCell>
-                                <TableCell className="table-header-cell">Restextrakt</TableCell>
-                                <TableCell className="table-header-cell">Alkohol</TableCell>
-                                <TableCell className="table-header-cell">Beschreibung</TableCell>
-                                <TableCell className="table-header-cell">Aktion</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {brews.map(brew => {
-                                const isEdited = !!editRows[brew.id];
-                                const row = { ...brew, ...editRows[brew.id] };
-                                const isActive = brew.aktiv;
-                                return (
-                                    <TableRow key={brew.id} className={`table-row${isActive ? ' active-row' : ''}`}>
-                                        <TableCell className="table-cell">{brew.name}</TableCell>
-                                        <TableCell className="table-cell">
-                                            <TextField
-                                                variant="standard"
-                                                value={row.startDate instanceof Date ? row.startDate.toISOString().slice(0, 10) : row.startDate}
-                                                type="date"
-                                                onChange={e => {
-                                                    const target = e.target as HTMLInputElement;
-                                                    this.handleChange(brew.id, 'startDate',  target.value);
-                                                }}
-                                                className="table-edit-field"
-                                                InputProps={{ style: { color: 'white' }, disableUnderline: true, readOnly: !isActive }}
-                                            />
-                                        </TableCell>
-                                        <TableCell className="table-cell">
-                                            <TextField
-                                                variant="standard"
-                                                value={row.endDate ? (row.endDate instanceof Date ? row.endDate.toISOString().slice(0, 10) : row.endDate) : ''}
-                                                type="date"
-                                                onChange={e => {
-                                                    const target = e.target as HTMLInputElement;
-                                                    this.handleChange(brew.id, 'endDate', target.value);
-                                                }}
-                                                className="table-edit-field"
-                                                InputProps={{ style: { color: 'white' }, disableUnderline: true, readOnly: !isActive }}
-                                            />
-                                        </TableCell>
-                                        <TableCell className="table-cell">
-                                            <TextField
-                                                variant="standard"
-                                                value={row.liters}
-                                                type="number"
-                                                onChange={e => this.handleChange(brew.id, 'liters', e.target.value)}
-                                                className="table-edit-field"
-                                                InputProps={{
-                                                    style: { color: 'white' },
-                                                    disableUnderline: true,
-                                                    readOnly: !isActive,
-                                                    inputProps: {
+            <>
+                <div className="filter-container">
+                    <label htmlFor="year-filter" className="filter-label">
+                        Jahr filtern:
+                    </label>
+                    <select
+                        id="year-filter"
+                        value={filterYear}
+                        onChange={this.handleFilterYearChange}
+                        className="FinishedBrewsTable-year-filter"
+                    >
+                        <option value="">Alle</option>
+                        {years.map(year => (
+                            <option key={year} value={year}>{year}</option>
+                        ))}
+                    </select>
+                    <label className="active-filter-label">
+                        <input
+                            type="checkbox"
+                            checked={showOnlyActive}
+                            onChange={this.handleActiveFilterChange}
+                            className="active-filter-checkbox"
+                        />
+                        <span>Nur aktive anzeigen</span>
+                    </label>
+                </div>
+                <SimpleBar style={{ maxHeight: 600 }}>
+                    <TableContainer component={Paper} className="FinishedBrewsTable">
+                        <Table className="FinishedBrewsTable">
+                            <TableHead className="table-header">
+                                <TableRow>
+                                    <TableCell className="table-header-cell">Name</TableCell>
+                                    <TableCell className="table-header-cell">Start-Datum</TableCell>
+                                    <TableCell className="table-header-cell">End-Datum</TableCell>
+                                    <TableCell className="table-header-cell">Liter</TableCell>
+                                    <TableCell className="table-header-cell">Stammwürze 1</TableCell>
+                                    <TableCell className="table-header-cell">Restextrakt</TableCell>
+                                    <TableCell className="table-header-cell">Alkohol</TableCell>
+                                    <TableCell className="table-header-cell">Beschreibung</TableCell>
+                                    <TableCell className="table-header-cell">Aktion</TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {filteredBrews.map(brew => {
+                                    const isEdited = !!editRows[brew.id];
+                                    const row = { ...brew, ...editRows[brew.id] };
+                                    const isActive = brew.aktiv;
+                                    return (
+                                        <TableRow key={brew.id} className={`table-row${isActive ? ' active-row' : ''}`}>
+                                            <TableCell className="table-cell">{brew.name}</TableCell>
+                                            <TableCell className="table-cell">
+                                                <TextField
+                                                    variant="standard"
+                                                    value={row.startDate instanceof Date ? row.startDate.toISOString().slice(0, 10) : row.startDate}
+                                                    type="date"
+                                                    onChange={e => {
+                                                        const target = e.target as HTMLInputElement;
+                                                        this.handleChange(brew.id, 'startDate',  target.value);
+                                                    }}
+                                                    className="table-edit-field"
+                                                    InputProps={{ style: { color: 'white' }, disableUnderline: true, readOnly: !isActive }}
+                                                />
+                                            </TableCell>
+                                            <TableCell className="table-cell">
+                                                <TextField
+                                                    variant="standard"
+                                                    value={row.endDate ? (row.endDate instanceof Date ? row.endDate.toISOString().slice(0, 10) : row.endDate) : ''}
+                                                    type="date"
+                                                    onChange={e => {
+                                                        const target = e.target as HTMLInputElement;
+                                                        this.handleChange(brew.id, 'endDate', target.value);
+                                                    }}
+                                                    className="table-edit-field"
+                                                    InputProps={{ style: { color: 'white' }, disableUnderline: true, readOnly: !isActive }}
+                                                />
+                                            </TableCell>
+                                            <TableCell className="table-cell">
+                                                <TextField
+                                                    variant="standard"
+                                                    value={row.liters}
+                                                    type="number"
+                                                    onChange={e => this.handleChange(brew.id, 'liters', e.target.value)}
+                                                    className="table-edit-field"
+                                                    InputProps={{
+                                                        style: { color: 'white' },
+                                                        disableUnderline: true,
                                                         readOnly: !isActive,
-                                                        ...(isActive ? {} : { inputMode: 'none', style: { MozAppearance: 'textfield' } })
-                                                    },
-                                                    ...(isActive ? {} : { sx: { '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 }, '& input[type=number]': { MozAppearance: 'textfield' } } })
-                                                }}
-                                            />
-                                        </TableCell>
-                                        <TableCell className="table-cell">
-                                            <TextField
-                                                variant="standard"
-                                                value={row.originalwort}
-                                                type="number"
-                                                onChange={e => this.handleChange(brew.id, 'originalwort', e.target.value)}
-                                                className="table-edit-field"
-                                                InputProps={{
-                                                    style: { color: 'white' },
-                                                    disableUnderline: true,
-                                                    readOnly: !isActive,
-                                                    inputProps: {
+                                                        inputProps: {
+                                                            readOnly: !isActive,
+                                                            ...(isActive ? {} : { inputMode: 'none', style: { MozAppearance: 'textfield' } })
+                                                        },
+                                                        ...(isActive ? {} : { sx: { '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 }, '& input[type=number]': { MozAppearance: 'textfield' } } })
+                                                    }}
+                                                />
+                                            </TableCell>
+                                            <TableCell className="table-cell">
+                                                <TextField
+                                                    variant="standard"
+                                                    value={row.originalwort}
+                                                    type="number"
+                                                    onChange={e => this.handleChange(brew.id, 'originalwort', e.target.value)}
+                                                    className="table-edit-field"
+                                                    InputProps={{
+                                                        style: { color: 'white' },
+                                                        disableUnderline: true,
                                                         readOnly: !isActive,
-                                                        ...(isActive ? {} : { inputMode: 'none', style: { MozAppearance: 'textfield' } })
-                                                    },
-                                                    ...(isActive ? {} : { sx: { '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 }, '& input[type=number]': { MozAppearance: 'textfield' } } })
-                                                }}
-                                            />
-                                        </TableCell>
-                                        <TableCell className="table-cell">
-                                            <TextField
-                                                variant="standard"
-                                                value={row.residualExtract}
-                                                type="number"
-                                                onChange={e => this.handleChange(brew.id, 'residualExtract', e.target.value)}
-                                                className="table-edit-field"
-                                                InputProps={{
-                                                    style: { color: 'white' },
-                                                    disableUnderline: true,
-                                                    readOnly: !isActive,
-                                                    inputProps: {
+                                                        inputProps: {
+                                                            readOnly: !isActive,
+                                                            ...(isActive ? {} : { inputMode: 'none', style: { MozAppearance: 'textfield' } })
+                                                        },
+                                                        ...(isActive ? {} : { sx: { '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 }, '& input[type=number]': { MozAppearance: 'textfield' } } })
+                                                    }}
+                                                />
+                                            </TableCell>
+                                            <TableCell className="table-cell">
+                                                <TextField
+                                                    variant="standard"
+                                                    value={row.residualExtract}
+                                                    type="number"
+                                                    onChange={e => this.handleChange(brew.id, 'residualExtract', e.target.value)}
+                                                    className="table-edit-field"
+                                                    InputProps={{
+                                                        style: { color: 'white' },
+                                                        disableUnderline: true,
                                                         readOnly: !isActive,
-                                                        ...(isActive ? {} : { inputMode: 'none', style: { MozAppearance: 'textfield' } })
-                                                    },
-                                                    ...(isActive ? {} : { sx: { '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 }, '& input[type=number]': { MozAppearance: 'textfield' } } })
-                                                }}
-                                            />
-                                        </TableCell>
-                                        <TableCell className="table-cell">{calcAlcohol(row.originalwort, row.residualExtract)}</TableCell>
-                                        <TableCell className="table-cell">
-                                            <TextField
-                                                variant="standard"
-                                                value={row.description}
-                                                onChange={e => this.handleChange(brew.id, 'description', e.target.value)}
-                                                className="table-edit-field"
-                                                InputProps={{ style: { color: 'white' }, disableUnderline: true, readOnly: !isActive }}
-                                            />
-                                        </TableCell>
-                                        <TableCell className="table-cell">
-                                            {isEdited && isActive && (
-                                                <button
-                                                    className="select-btn"
-                                                    onClick={() => this.handleSave(brew.id)}
-                                                >
-                                                    Speichern
-                                                </button>
-                                            )}
-                                        </TableCell>
-                                    </TableRow>
-                                );
-                            })}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
-            </SimpleBar>
+                                                        inputProps: {
+                                                            readOnly: !isActive,
+                                                            ...(isActive ? {} : { inputMode: 'none', style: { MozAppearance: 'textfield' } })
+                                                        },
+                                                        ...(isActive ? {} : { sx: { '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': { WebkitAppearance: 'none', margin: 0 }, '& input[type=number]': { MozAppearance: 'textfield' } } })
+                                                    }}
+                                                />
+                                            </TableCell>
+                                            <TableCell className="table-cell">{calcAlcohol(row.originalwort, row.residualExtract)}</TableCell>
+                                            <TableCell className="table-cell">
+                                                <TextField
+                                                    variant="standard"
+                                                    value={row.description}
+                                                    onChange={e => this.handleChange(brew.id, 'description', e.target.value)}
+                                                    className="table-edit-field"
+                                                    InputProps={{ style: { color: 'white' }, disableUnderline: true, readOnly: !isActive }}
+                                                />
+                                            </TableCell>
+                                            <TableCell className="table-cell">
+                                                {isEdited && isActive && (
+                                                    <button
+                                                        className="select-btn"
+                                                        onClick={() => this.handleSave(brew.id)}
+                                                    >
+                                                        Speichern
+                                                    </button>
+                                                )}
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </SimpleBar>
+            </>
         );
     }
 }

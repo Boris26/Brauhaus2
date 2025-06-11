@@ -27,8 +27,8 @@ export const finishedBrewsTestData: FinishedBrew[] = [
   {
     id: 3,
     name: "Weizenbier",
-    startDate: "2025-05-20",
-    endDate: "2025-06-01",
+    startDate: "2024-05-20",
+    endDate: "2024-06-01",
     liters: 30,
     originalwort: 13.0,
     residualExtract: 3.2,
