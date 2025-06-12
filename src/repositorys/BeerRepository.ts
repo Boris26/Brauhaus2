@@ -6,6 +6,7 @@ import {DatabaseURL} from "../global";
 import {Malts} from "../model/Malt";
 import {Hops} from "../model/Hops";
 import {Yeasts} from "../model/Yeast";
+import {FinishedBrew} from "../model/FinishedBrew";
 
 export class BeerRepository
 {
@@ -48,6 +49,20 @@ export class BeerRepository
     {
         return await BeerRepository._doGetYeasts();
     }
+
+    static async getFinishedBeers()
+    {
+        return await BeerRepository._doGetFinishedBeers();
+    }
+
+    static async updateFinishedBeer(beer: FinishedBrew ){
+        return await BeerRepository._doSendFinishedBeer(beer);
+    }
+
+    static async sendNewFinishedBeer(beer: FinishedBrew ){
+        return await BeerRepository._doSendFinishedBeer(beer);
+    }
+
 
     private static async _doSubmitMalt(malt: Malts){
         try {
@@ -197,6 +212,40 @@ export class BeerRepository
             console.error('Fehler beim API-Aufruf', error);
         }
 
+    }
+
+    private static async _doGetFinishedBeers()
+    {
+        try {
+            const response = await axios.get(DatabaseURL + 'finishedbeers');
+            if(response.status === 200)
+            {
+                console.log(response.data);
+               store.dispatch(BeerActions.getFinishedBeersSuccess(response.data));
+            }
+        } catch (error) {
+            console.error('Fehler beim API-Aufruf', error);
+        }
+
+    }
+
+    private static async _doSendFinishedBeer(beer: FinishedBrew)
+    {
+        try {
+            const jsonstring = JSON.stringify(beer);
+            const header = {headers: {'Content-Type': 'application/json'}};
+            const response = await axios.post(DatabaseURL + 'finishedbeer',  jsonstring, header);
+            if(response.status === 200)
+            {
+                console.log("Finished beer updated successfully");
+            }
+            else
+            {
+                console.error("Failed to update finished beer");
+            }
+        } catch (error) {
+            console.error('Fehler beim API-Aufruf', error);
+        }
     }
 }
 

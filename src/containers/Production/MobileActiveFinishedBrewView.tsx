@@ -46,7 +46,7 @@ class MobileActiveFinishedBrewView extends React.Component<Props, State> {
 
     handleSave = () => {
         const {editedBrew} = this.state;  // Hier könnte eine API-Call oder Redux-Action zum Speichern des Suds erfolgen
-        alert(`Sud "${editedBrew?.description}" gespeichert!`);
+        alert(`Sud "${editedBrew?.note}" gespeichert!`);
         this.setState({ editMode: false });
     };
 
@@ -203,13 +203,13 @@ class MobileActiveFinishedBrewView extends React.Component<Props, State> {
                     {editMode ? (
                         <textarea
                             name="description"
-                            value={editedBrew.description}
+                            value={editedBrew.note}
                             onChange={this.handleChange}
                             rows={4}
                             style={{ width: '100%' }}
                         />
                     ) : (
-                        <div className="mobile-value">{editedBrew.description || '-'}</div>
+                        <div className="mobile-value">{editedBrew.note || '-'}</div>
                     )}
                 </div>
                 <button className="mobile-polling-btn" onClick={editMode ? this.handleSave : this.handleEdit}>
@@ -221,7 +221,7 @@ class MobileActiveFinishedBrewView extends React.Component<Props, State> {
 }
 
 const mapStateToProps = (state: any) => ({
-    finishedBrews: finishedBrewsTestData.filter((brew: FinishedBrew) => brew.aktiv)
+    finishedBrews: finishedBrewsTestData.filter((brew: FinishedBrew) => brew.active)
 });
 
 export default connect(mapStateToProps)(MobileActiveFinishedBrewView);

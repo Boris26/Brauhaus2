@@ -451,7 +451,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                     <button className="startBtn" disabled={isUndefined(selectedBeer)} onClick={this.startBrewing}>Start</button>
                 </div>
                 <div className="startPollingBtnDiv">
-                    <button className="startPollingBtn" onClick={this.startPolling}>
+                    <button className="startPollingBtn" onClick={this.ab}>
                         <FontAwesomeIcon icon={faRepeat as IconProp} />
                     </button>
                 </div>
@@ -561,12 +561,50 @@ class Production extends React.Component<ProductionProps, ProductionState> {
 
     }
 
-    confirmFinishDialog=() => {
-        const {stopPolling} = this.props;
-        this.setState({showFinishDialog: false,
-        brewingFinished: true});
-        stopPolling();
+    ab= async ()=> {
+        const { stopPolling, selectedBeer } = this.props;
+      stopPolling();
+        // FinishedBrew erzeugen und speichern
+        if (selectedBeer) {
+            const finishedBrew = {
+                id: 0, // Default or dynamically generated ID
+                name: selectedBeer.name || 'Unknown Beer',
+                liters: 0,
+                originalwort:  0,
+                residualExtract:  0, // Standardwert hinzugefügt
+                note: '', // Standardwert hinzugefügt
+                startDate: new Date().toISOString().slice(0, 10),
+                beer_id: selectedBeer.id,
+                active: true
+            };
+            // Dynamisch importieren, um zirkuläre Abhängigkeiten zu vermeiden
+            const repo = await import('../../repositorys/BeerRepository');
+            repo.BeerRepository.sendNewFinishedBeer(finishedBrew);
+        }
     }
+
+    confirmFinishDialog = async () => {
+        const { stopPolling, selectedBeer } = this.props;
+        this.setState({ showFinishDialog: false, brewingFinished: true });
+        stopPolling();
+        // FinishedBrew erzeugen und speichern
+        if (selectedBeer) {
+            const finishedBrew = {
+                id: 0, // Default or dynamically generated ID
+                name: selectedBeer.name || 'Unknown Beer',
+                liters: 0,
+                originalwort:  0,
+                residualExtract:  0, // Standardwert hinzugefügt
+                note: '', // Standardwert hinzugefügt
+                startDate: new Date().toISOString().slice(0, 10),
+                beer_id: selectedBeer.id,
+                active: true
+            };
+            // Dynamisch importieren, um zirkuläre Abhängigkeiten zu vermeiden
+            const repo = await import('../../repositorys/BeerRepository');
+            repo.BeerRepository.sendNewFinishedBeer(finishedBrew);
+        }
+    };
     renderHopDialog() {
         const {showHopsDialog,hopName} = this.state;
         return (<div>

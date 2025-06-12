@@ -23,7 +23,7 @@ export const finishedBrewStrategy: PdfRenderStrategy<FinishedBrew> & { tableHead
         `${brew.liters} L`,
         `${brew.originalwort} °P`,
         `${brew.residualExtract} °P`,
-        brew.description,
+        brew.note,
     ],
 };
 

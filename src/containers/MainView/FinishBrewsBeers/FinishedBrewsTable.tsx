@@ -14,6 +14,7 @@ interface FinishedBrewsTableProps {
     brews: FinishedBrew[];
     onSave: (brew: FinishedBrew) => void;
     exportPdf: (brews: FinishedBrew[]) => void;
+    getFinishedBrews: (isFetching: boolean) => void;
 }
 
 interface FinishedBrewsTableState {
@@ -34,6 +35,11 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
     constructor(props: FinishedBrewsTableProps) {
         super(props);
         this.state = { editRows: {}, filterYear: '', showOnlyActive: false, filterOutActive: false, clickedFinishBtn: {} };
+    }
+
+    componentDidMount() {
+        const { getFinishedBrews } = this.props;
+        getFinishedBrews(true);
     }
 
     handleChange = (id: number, field: keyof FinishedBrew, value: string) => {
@@ -120,7 +126,8 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
                 this.setState(prev => ({
                     clickedFinishBtn: { ...prev.clickedFinishBtn, [brew.id]: false }
                 }));
-                const updated = { ...brew, aktiv: false };
+                // Hier active statt aktiv setzen
+                const updated = { ...brew, active: false };
                 this.props.onSave(updated);
             }, 150);
         });
@@ -136,8 +143,8 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
                 year = brew.startDate.slice(0, 4);
             }
             const yearMatch = aFilterYear ? year === aFilterYear : true;
-            const activeMatch = aShowOnlyActive ? brew.aktiv : true;
-            const outActiveMatch = aFilterOutActive ? !brew.aktiv : true;
+            const activeMatch = aShowOnlyActive ? brew.active : true;
+            const outActiveMatch = aFilterOutActive ? !brew.active : true;
             return yearMatch && activeMatch && outActiveMatch;
         });
     }
@@ -219,7 +226,7 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
                                 {filteredBrews.map(brew => {
                                     const isEdited = !!editRows[brew.id];
                                     const row = { ...brew, ...editRows[brew.id] };
-                                    const isActive = brew.aktiv;
+                                    const isActive = brew.active;
                                     return (
                                         <TableRow key={brew.id} className={`table-row${isActive ? ' active-row' : ''}`}>
                                             <TableCell className="table-cell">{brew.name}</TableCell>
@@ -334,8 +341,8 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
                                             <TableCell className="table-cell beschreibung">
                                                 <TextField
                                                     variant="standard"
-                                                    value={row.description}
-                                                    onChange={e => this.handleChange(brew.id, 'description', e.target.value)}
+                                                    value={row.note || ''}
+                                                    onChange={e => this.handleChange(brew.id, 'note', e.target.value)}
                                                     className="table-edit-field"
                                                     InputProps={{ style: { color: 'white' }, disableUnderline: true, readOnly: !isActive }}
                                                 />
@@ -377,8 +384,8 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
     }
 }
 
-const mapStateToProps = () => ({
-    brews: finishedBrewsTestData  as FinishedBrew[],
+const mapStateToProps = (state: any) => ({
+    brews: state.beerDataReducer.finishedBrews || finishedBrewsTestData // Fallback to test data if no brews are available
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
@@ -387,6 +394,9 @@ const mapDispatchToProps = (dispatch: any) => ({
     },
     exportPdf: (brews: FinishedBrew[]) => {
         dispatch(BeerActions.exportFinishedBrewsToPdf(brews));
+    },
+    getFinishedBrews: (isFetching: boolean) => {
+        dispatch(BeerActions.getFinishedBeers(isFetching));
     }
 });
 

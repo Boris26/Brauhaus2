@@ -6,6 +6,7 @@ export interface FinishedBrew {
     liters: number;
     originalwort: number;
     residualExtract: number | null; // Residual extract can be null if not applicable
-    description: string;
-    aktiv: boolean;
+    note: string;
+    active: boolean;
+    beer_id?: number; // Optional beer ID, can be used to link to a specific beer
 }

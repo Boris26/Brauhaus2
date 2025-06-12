@@ -10,8 +10,8 @@ export const finishedBrewsTestData: FinishedBrew[] = [
     liters: 25,
     originalwort: 12.5,
     residualExtract: 2.8,
-    aktiv: true,
-    description: "Leichtes, süffiges Bier für warme Tage."
+    active: true,
+    note: "Leichtes, süffiges Bier für warme Tage."
   },
   {
     id: 2,
@@ -21,8 +21,8 @@ export const finishedBrewsTestData: FinishedBrew[] = [
     liters: 20,
     originalwort: 18.2,
     residualExtract: null,
-    aktiv: true,
-    description: "Kräftig malzig, mit feiner Karamellnote."
+    active: true,
+    note: "Kräftig malzig, mit feiner Karamellnote."
   },
   {
     id: 3,
@@ -32,7 +32,7 @@ export const finishedBrewsTestData: FinishedBrew[] = [
     liters: 30,
     originalwort: 13.0,
     residualExtract: 3.2,
-    aktiv: false,
-    description: "Fruchtig, spritzig, typisch bayerisch."
+    active: false,
+    note: "Fruchtig, spritzig, typisch bayerisch."
   }
 ];

@@ -45,7 +45,8 @@ export interface BeerDataReducerState {
     message: string | undefined,
     type: string | undefined,
     selectedBeer?: Beer,
-    beerToBrew?: Beer | undefined
+    beerToBrew?: Beer | undefined,
+    finishedBrews?: FinishedBrew[] | undefined
 }
 
 export interface ProductionReducerState {
@@ -218,6 +219,7 @@ const beerDataReducer = (aState: BeerDataReducerState = initialBeerState, aActio
         case BeerActions.ActionTypes.SET_BEER_TO_BREW: {
             return {...aState, beerToBrew: aAction.payload.beer};
         }
+
         case BeerActions.ActionTypes.EXPORT_FINISHED_BREWS: {
             const pdfGenerator = new GenericPdfGenerator<FinishedBrew>();
             pdfGenerator.generate(aAction.payload.brews, finishedBrewStrategy, "finished_brews.pdf")
@@ -230,7 +232,32 @@ const beerDataReducer = (aState: BeerDataReducerState = initialBeerState, aActio
             return {...aState};
         }
 
+        case BeerActions.ActionTypes.GET_FINISHED_BEERS: {
+            BeerRepository.getFinishedBeers().then(r => {
+                return {...aState, isFetching: aAction.payload.isFetching};
+            });
+            return {...aState, isFetching: aAction.payload.isFetching};
+        }
 
+        case BeerActions.ActionTypes.GET_FINISHED_BEERS_SUCCESS: {
+            return {...aState, finishedBrews: aAction.payload.finishedBeers};
+        }
+
+        case BeerActions.ActionTypes.UPDATE_ACTIVE_BEER: {
+            const updatedBrew = aAction.payload.beer;
+            BeerRepository.updateFinishedBeer(updatedBrew).then((value) => {
+                console.log("Updated brew:", value);
+                return { ...aState };
+            });
+            let finishedBrews = aState.finishedBrews ? [...aState.finishedBrews] : [];
+            const idx = finishedBrews.findIndex(b => b.id === updatedBrew.id);
+            if (idx !== -1) {
+                finishedBrews[idx] = updatedBrew;
+            } else {
+                finishedBrews.push(updatedBrew);
+            }
+            return { ...aState, finishedBrews };
+        }
 
         default:
             return aState;

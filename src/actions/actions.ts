@@ -37,6 +37,8 @@ export namespace BeerActions {
         SET_BEER_TO_BREW = 'BeerActions.SET_BEER_TO_BREW',
         EXPORT_FINISHED_BREWS = 'BeerActions.EXPORT_FINISHED_BREWS',
         UPDATE_ACTIVE_BEER = 'BeerActions.UPDATE_ACTIVE_BEER',
+        GET_FINISHED_BEERS = 'BeerActions.GET_FINISHED_BEERS',
+        GET_FINISHED_BEERS_SUCCESS = 'BeerActions.GET_FINISHED_BEERS_SUCCESS',
     }
 
     export interface SetIsSubmitSuccessful {
@@ -187,6 +189,19 @@ export namespace BeerActions {
         }
     }
 
+    export interface GetFinishedBeers {
+        readonly type: ActionTypes.GET_FINISHED_BEERS
+        payload: {
+            isFetching: boolean
+        }
+    }
+    export interface GetFinishedBeersSuccess {
+        readonly type: ActionTypes.GET_FINISHED_BEERS_SUCCESS
+        payload: {
+            finishedBeers: FinishedBrew[] | null
+        }
+    }
+
 
     export type AllBeerActions =
         SubmitBeer |
@@ -209,7 +224,9 @@ export namespace BeerActions {
         SetSelectedBeer|
         SetBeerToBrew|
         ExportFinishedBrews |
-        UpdateActiveBeer;
+        UpdateActiveBeer |
+        GetFinishedBeers |
+        GetFinishedBeersSuccess;
 
 
     export function isSubmitSuccessful(aIsSuccessful: boolean, aMessage: string, aType: string): SetIsSubmitSuccessful {
@@ -344,17 +361,30 @@ export namespace BeerActions {
             payload: {beer: aBeer}
         }
     }
-    export function exportFinishedBrewsToPdf(aFinishedBrews: FinishedBrew[]): BeerActions.ExportFinishedBrews {
+    export function exportFinishedBrewsToPdf(aFinishedBrews: FinishedBrew[]): ExportFinishedBrews {
         return {
             type: BeerActions.ActionTypes.EXPORT_FINISHED_BREWS,
             payload: {brews: aFinishedBrews}
         }
     }
 
-    export function updateActiveBeer(aFinishedBrew: FinishedBrew): BeerActions.UpdateActiveBeer {
+    export function updateActiveBeer(aFinishedBrew: FinishedBrew): UpdateActiveBeer {
         return {
             type: BeerActions.ActionTypes.UPDATE_ACTIVE_BEER,
             payload: {beer: aFinishedBrew}
+        }
+    }
+
+    export function getFinishedBeers(aIsFetching: boolean): GetFinishedBeers {
+        return {
+            type: BeerActions.ActionTypes.GET_FINISHED_BEERS,
+            payload: {isFetching: aIsFetching}
+        }
+    }
+    export function getFinishedBeersSuccess(aFinishedBeers: FinishedBrew[] | null): GetFinishedBeersSuccess {
+        return {
+            type: BeerActions.ActionTypes.GET_FINISHED_BEERS_SUCCESS,
+            payload: {finishedBeers: aFinishedBeers}
         }
     }
 }
