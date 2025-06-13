@@ -27,6 +27,7 @@ import {faRepeat} from '@fortawesome/free-solid-svg-icons';
 import Switch from "react-switch";
 import {TextMapper} from "../../utils/TextMapper";
 import {IconProp} from "@fortawesome/fontawesome-svg-core";
+import {FinishedBrew} from "../../model/FinishedBrew";
 
 interface ProductionProps {
     selectedBeer: Beer;
@@ -566,12 +567,12 @@ class Production extends React.Component<ProductionProps, ProductionState> {
       stopPolling();
         // FinishedBrew erzeugen und speichern
         if (selectedBeer) {
-            const finishedBrew = {
+            const finishedBrew : FinishedBrew = {
                 id: 0, // Default or dynamically generated ID
                 name: selectedBeer.name || 'Unknown Beer',
                 liters: 0,
                 originalwort:  0,
-                residualExtract:  0, // Standardwert hinzugefügt
+                residual_extract:  0, // Standardwert hinzugefügt
                 note: '', // Standardwert hinzugefügt
                 startDate: new Date().toISOString().slice(0, 10),
                 beer_id: selectedBeer.id,
@@ -589,12 +590,12 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         stopPolling();
         // FinishedBrew erzeugen und speichern
         if (selectedBeer) {
-            const finishedBrew = {
+            const finishedBrew : FinishedBrew = {
                 id: 0, // Default or dynamically generated ID
                 name: selectedBeer.name || 'Unknown Beer',
                 liters: 0,
                 originalwort:  0,
-                residualExtract:  0, // Standardwert hinzugefügt
+                residual_extract:  0, // Standardwert hinzugefügt
                 note: '', // Standardwert hinzugefügt
                 startDate: new Date().toISOString().slice(0, 10),
                 beer_id: selectedBeer.id,

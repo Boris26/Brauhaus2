@@ -5,7 +5,7 @@ export interface FinishedBrew {
     endDate?: Date | string; // Optional end date, can also be a Date object or a string in ISO format
     liters: number;
     originalwort: number;
-    residualExtract: number | null; // Residual extract can be null if not applicable
+    residual_extract: number | null; // Residual extract can be null if not applicable
     note: string;
     active: boolean;
     beer_id?: number; // Optional beer ID, can be used to link to a specific beer

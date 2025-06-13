@@ -3,9 +3,13 @@ import { connect } from 'react-redux';
 import { FinishedBrew } from '../../model/FinishedBrew';
 import './MobileProductionView.css';
 import { finishedBrewsTestData } from '../../model/finishedBrewsTestData';
+import { BeerActions } from '../../actions/actions';
+import {stringify} from "node:querystring";
 
 interface Props {
     finishedBrews?: FinishedBrew[];
+    getFinishedBrews?: (isFetching: boolean) => void;
+    saveFinishedBrew?: (brew: FinishedBrew) => void;
 }
 
 interface State {
@@ -22,6 +26,12 @@ class MobileActiveFinishedBrewView extends React.Component<Props, State> {
             currentIndex: 0,
             editedBrew: props.finishedBrews && props.finishedBrews.length > 0 ? { ...props.finishedBrews[0] } : undefined
         };
+    }
+
+    componentDidMount() {
+        if (this.props.getFinishedBrews) {
+            this.props.getFinishedBrews(true);
+        }
     }
 
     componentDidUpdate(prevProps: Props, prevState: State) {
@@ -45,8 +55,14 @@ class MobileActiveFinishedBrewView extends React.Component<Props, State> {
     };
 
     handleSave = () => {
-        const {editedBrew} = this.state;  // Hier könnte eine API-Call oder Redux-Action zum Speichern des Suds erfolgen
-        alert(`Sud "${editedBrew?.note}" gespeichert!`);
+        const { editedBrew } = this.state;
+        if (editedBrew) {
+            // Redux-Action zum Speichern des Suds
+            if (this.props.saveFinishedBrew) {
+                this.props.saveFinishedBrew(editedBrew);
+            }
+            console.log('Sud gespeichert:', editedBrew);
+        }
         this.setState({ editMode: false });
     };
 
@@ -173,14 +189,14 @@ class MobileActiveFinishedBrewView extends React.Component<Props, State> {
                         <span className="mobile-label">Restextrakt:</span>
                         {editMode ? (
                             <input
-                                name="residualExtract"
+                                name="residual_extract"
                                 type="number"
-                                value={editedBrew.residualExtract ?? 0}
+                                value={editedBrew.residual_extract ?? 0}
                                 onChange={this.handleChange}
                                 className="mobile-edit-input"
                             />
                         ) : (
-                            <span className="mobile-value">{editedBrew.residualExtract}</span>
+                            <span className="mobile-value">{editedBrew.residual_extract}</span>
                         )}
                     </div>
                     <div className="mobile-info-block">
@@ -202,7 +218,7 @@ class MobileActiveFinishedBrewView extends React.Component<Props, State> {
                     <span className="mobile-label">Notizen:</span>
                     {editMode ? (
                         <textarea
-                            name="description"
+                            name="note"
                             value={editedBrew.note}
                             onChange={this.handleChange}
                             rows={4}
@@ -221,7 +237,16 @@ class MobileActiveFinishedBrewView extends React.Component<Props, State> {
 }
 
 const mapStateToProps = (state: any) => ({
-    finishedBrews: finishedBrewsTestData.filter((brew: FinishedBrew) => brew.active)
+    finishedBrews: state.beerDataReducer?.finishedBrews?.filter((brew: FinishedBrew) => brew.active) || finishedBrewsTestData.filter((brew: FinishedBrew) => brew.active)
 });
 
-export default connect(mapStateToProps)(MobileActiveFinishedBrewView);
+const mapDispatchToProps = (dispatch: any) => ({
+    getFinishedBrews: (isFetching: boolean) => {
+        dispatch(BeerActions.getFinishedBeers(isFetching));
+    },
+    saveFinishedBrew: (brew: FinishedBrew) => {
+        dispatch(BeerActions.updateActiveBeer(brew));
+    }
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(MobileActiveFinishedBrewView);

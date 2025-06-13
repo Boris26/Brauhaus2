@@ -9,7 +9,7 @@ export const finishedBrewsTestData: FinishedBrew[] = [
     endDate: "27.05.2025",
     liters: 25,
     originalwort: 12.5,
-    residualExtract: 2.8,
+    residual_extract: 2.8,
     active: true,
     note: "Leichtes, süffiges Bier für warme Tage."
   },
@@ -20,7 +20,7 @@ export const finishedBrewsTestData: FinishedBrew[] = [
     endDate: "27.05.2025",
     liters: 20,
     originalwort: 18.2,
-    residualExtract: null,
+    residual_extract: null,
     active: true,
     note: "Kräftig malzig, mit feiner Karamellnote."
   },
@@ -31,7 +31,7 @@ export const finishedBrewsTestData: FinishedBrew[] = [
     endDate: "27.05.2024",
     liters: 30,
     originalwort: 13.0,
-    residualExtract: 3.2,
+    residual_extract: 3.2,
     active: false,
     note: "Fruchtig, spritzig, typisch bayerisch."
   }

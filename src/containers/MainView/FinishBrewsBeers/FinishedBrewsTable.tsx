@@ -49,7 +49,7 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
         let parsedValue: any = value;
         if (field === 'liters' || field === 'originalwort') {
             parsedValue = value === '' ? '' : Math.max(0, Number(value));
-        } else if (field === 'residualExtract') {
+        } else if (field === 'residual_extract') {
             parsedValue = value === '' ? null : Math.max(0, Number(value));
         }
         this.setState(prevState => ({
@@ -58,7 +58,7 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
                 [id]: {
                     ...prevState.editRows[id],
                     [field]:
-                        field === 'liters' || field === 'originalwort' || field === 'residualExtract'
+                        field === 'liters' || field === 'originalwort' || field === 'residual_extract'
                             ? parsedValue
                             : value
                 }
@@ -100,11 +100,11 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
 
     getYearsFromBrews = () => {
         const years = new Set<string>();
-        this.props.brews.forEach(brew => {
+        (this.props.brews || []).forEach(brew => {
             let dateStr = '';
             if (brew.startDate instanceof Date) {
                 dateStr = brew.startDate.getFullYear().toString();
-            } else if (brew.startDate.length >= 4) {
+            } else if (typeof brew.startDate === 'string' && brew.startDate.length >= 4) {
                 dateStr = brew.startDate.slice(0, 4);
             }
             if (dateStr) years.add(dateStr);
@@ -136,13 +136,17 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
         });
     };
 
+    handleDelete = (id: number) => {
+        // Platzhalterfunktion: Hier kann später die Löschlogik implementiert werden
+        console.log('Löschen:', id);
+    };
 
-    private filterBrewsByYearAndActive(aBrews: FinishedBrew[], aFilterYear: string, aShowOnlyActive: boolean, aFilterOutActive: boolean) {
-        return  aBrews.filter(brew => {
+    private filterBrewsByYearAndActive(aBrews: FinishedBrew[] = [], aFilterYear: string, aShowOnlyActive: boolean, aFilterOutActive: boolean) {
+        return (aBrews || []).filter(brew => {
             let year = '';
             if (brew.startDate instanceof Date) {
                 year = brew.startDate.getFullYear().toString();
-            } else if (brew.startDate.length >= 4) {
+            } else if (typeof brew.startDate === 'string' && brew.startDate.length >= 4) {
                 year = brew.startDate.slice(0, 4);
             }
             const yearMatch = aFilterYear ? year === aFilterYear : true;
@@ -210,7 +214,7 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
                     </button>
                     <button
                         className="finish-btn"
-                        style={{ marginLeft: '2rem', height: '2.2rem', display: 'flex', alignItems: 'center', background: '#4caf50' }}
+                        style={{ marginLeft: '2rem', height: '2.2rem', display: 'flex', alignItems: 'center' }}
                         onClick={() => this.setState({ newRowActive: true, newRowData: {} })}
                         title="Neuen Eintrag hinzufügen"
                     >
@@ -245,7 +249,8 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
                                                     this.setState(prev => ({
                                                         newRowData: {
                                                             ...prev.newRowData,
-                                                            name: selectedBeer ? selectedBeer.name : ''
+                                                            name: selectedBeer ? selectedBeer.name : '',
+                                                            beer_id: selectedBeer ? selectedBeer.id : undefined
                                                         }
                                                     }));
                                                 }}
@@ -304,8 +309,8 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
                                         <TableCell className="table-cell residualExtract">
                                             <input
                                                 type="number"
-                                                value={newRowData?.residualExtract || ''}
-                                                onChange={e => this.setState(prev => ({ newRowData: { ...prev.newRowData, residualExtract: Number(e.target.value) } }))}
+                                                value={newRowData?.residual_extract || ''}
+                                                onChange={e => this.setState(prev => ({ newRowData: { ...prev.newRowData, residual_extract: Number(e.target.value) } }))}
                                                 className="table-edit-field"
                                             />
                                         </TableCell>
@@ -430,9 +435,9 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
                                               {isActive ? (
                                                   <TextField
                                                       variant="standard"
-                                                      value={row.residualExtract === undefined || row.residualExtract === null ? '' : row.residualExtract}
+                                                      value={row.residual_extract === undefined || row.residual_extract === null ? '' : row.residual_extract}
                                                       type="number"
-                                                      onChange={e => this.handleChange(brew.id, 'residualExtract', e.target.value)}
+                                                      onChange={e => this.handleChange(brew.id, 'residual_extract', e.target.value)}
                                                       className="table-edit-field"
                                                       InputProps={{
                                                           style: { color: 'white' },
@@ -452,14 +457,14 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
                                                         if (e.deltaY < 0) value += 0.1;
                                                         else value -= 0.1;
                                                         value = Math.round(value * 100) / 100;
-                                                        this.handleChange(brew.id, 'residualExtract', value.toString());
+                                                        this.handleChange(brew.id, 'residual_extract', value.toString());
                                                       }}
                                                   />
                                               ) : (
-                                                  row.residualExtract === undefined || row.residualExtract === null ? '-' : row.residualExtract
+                                                  row.residual_extract === undefined || row.residual_extract === null ? '-' : row.residual_extract
                                               )}
                                             </TableCell>
-                                            <TableCell className="table-cell">{calcAlcohol(row.originalwort, row.residualExtract)}</TableCell>
+                                            <TableCell className="table-cell">{calcAlcohol(row.originalwort, row.residual_extract)}</TableCell>
                                             <TableCell className="table-cell beschreibung">
                                                 <TextField
                                                     variant="standard"
@@ -486,12 +491,20 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
                                                             className={`finish-btn${this.state.clickedFinishBtn[brew.id] ? ' clicked' : ''}`}
                                                             title="Endgültig fertigstellen"
                                                             onClick={() => this.handleFinishClick(brew)}
-                                                            disabled={row.residualExtract === null || row.residualExtract === undefined}
+                                                            disabled={row.residual_extract === null || row.residual_extract === undefined}
                                                         >
                                                             <span role="img" aria-label="Fertig" style={{ fontSize: 22, verticalAlign: 'middle', marginRight: 4 }}>✅</span>
                                                             Fertig
                                                         </button>
                                                     )}
+                                                    <button
+                                                        className="cancel-btn"
+                                                        onClick={() => this.handleDelete(brew.id)}
+                                                        title="Löschen"
+                                                    >
+                                                        <span role="img" aria-label="Löschen" style={{ fontSize: 22, verticalAlign: 'middle', marginRight: 4 }}>🗑️</span>
+                                                        Löschen
+                                                    </button>
                                                 </div>
                                             </TableCell>
                                         </TableRow>
