@@ -1,0 +1,52 @@
+.mobile-brewing-calc-container {
+  padding: 18px 8px 32px 8px;
+  background: #fffbe6;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+  max-width: 600px;
+  margin: 24px auto;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100vw;
+}
+
+.mobile-calc-block {
+  width: 100%;
+  max-width: 340px;
+  margin-bottom: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  padding: 18px 20px;
+  font-size: 1.1em;
+}
+
+.mobile-calc-block label {
+  font-weight: 600;
+  color: #b8860b;
+  margin-bottom: 6px;
+  font-size: 1.08em;
+}
+
+.mobile-calc-block input {
+  margin-bottom: 8px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #bdbdbd;
+  font-size: 1.1em;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mobile-calc-block span {
+  color: #00796b;
+  font-size: 1.15em;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+

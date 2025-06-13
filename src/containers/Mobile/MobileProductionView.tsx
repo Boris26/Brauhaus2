@@ -4,6 +4,7 @@ import './MobileProductionView.css';
 import { BrewingStatus } from '../../model/BrewingStatus';
 import { ProductionActions } from '../../actions/actions';
 import { TimeFormatter } from "../../utils/TimeFormatter";
+import MobileBrewingCalculationsView from './MobileBrewingCalculationsView';
 
 interface MobileProductionViewProps {
     temperature: number;
@@ -13,7 +14,7 @@ interface MobileProductionViewProps {
 }
 
 interface MobileProductionViewState {
-    activeTab: 'status' | 'finishedBrew';
+    activeTab: 'status' | 'finishedBrew' | 'calculations';
 }
 
 class MobileProductionView extends React.Component<MobileProductionViewProps, MobileProductionViewState> {
@@ -22,7 +23,7 @@ class MobileProductionView extends React.Component<MobileProductionViewProps, Mo
         this.state = { activeTab: 'status' };
     }
 
-    handleTabChange = (tab: 'status' | 'finishedBrew') => {
+    handleTabChange = (tab: 'status' | 'finishedBrew' | 'calculations') => {
         this.setState({ activeTab: tab });
     };
 
@@ -46,6 +47,7 @@ class MobileProductionView extends React.Component<MobileProductionViewProps, Mo
                 <div className="mobile-tabs">
                     <button className={activeTab === 'status' ? 'active' : ''} onClick={() => this.handleTabChange('status')}>Status</button>
                     <button className={activeTab === 'finishedBrew' ? 'active' : ''} onClick={() => this.handleTabChange('finishedBrew')}>Aktiver Sud</button>
+                    <button className={activeTab === 'calculations' ? 'active' : ''} onClick={() => this.handleTabChange('calculations')}>Berechnungen</button>
                 </div>
                 <hr className="mobile-tabs-separator" />
                 {activeTab === 'status' && (
@@ -98,6 +100,9 @@ class MobileProductionView extends React.Component<MobileProductionViewProps, Mo
                     <React.Suspense fallback={<div>Lade...</div>}>
                         <MobileActiveFinishedBrewViewLazy />
                     </React.Suspense>
+                )}
+                {activeTab === 'calculations' && (
+                    <MobileBrewingCalculationsView />
                 )}
             </div>
         );
