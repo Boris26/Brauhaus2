@@ -2,7 +2,7 @@ import React from 'react';
 import Header from './MainView/Header/Header';
 import './App.css';
 import Index from "./index";
-import MobileProductionView from './Production/MobileProductionView';
+import MobileProductionView from './Mobile/MobileProductionView';
 import { useSelector } from 'react-redux';
 
 const App: React.FC = () => {

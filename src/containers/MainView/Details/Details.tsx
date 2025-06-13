@@ -51,8 +51,8 @@ renderFermentation()
             <div>
 
                 <div className="table">
-                    <TableContainer component={Paper}>
-                        <Table>
+                    <TableContainer component={Paper} style={{ backgroundColor: '#404040' }}>
+                        <Table className="wortBoiling-table">
                             <TableHead>
                                 <TableRow>
                                     <TableCell>Type</TableCell>
@@ -87,8 +87,8 @@ renderFilling()
             <div>
 
                 <div className='table'>
-                    <TableContainer component={Paper}>
-                        <Table>
+                    <TableContainer component={Paper} style={{ backgroundColor: '#404040' }}>
+                        <Table className="wortBoiling-table">
                             <TableHead>
                                 <TableRow>
                                     <TableCell>Name</TableCell>
@@ -117,8 +117,8 @@ renderFilling()
 
         return(  <div>
 
-            <TableContainer component={Paper}>
-                <Table>
+            <TableContainer component={Paper} style={{ backgroundColor: '#404040' }}>
+                <Table className="wortBoiling-table">
                     <TableHead>
                         <TableRow>
                             <TableCell>Hauptguss</TableCell>
@@ -126,10 +126,10 @@ renderFilling()
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                                <TableRow>
-                                <TableCell>{selectedBeer?.mashVolume}</TableCell>
-                                <TableCell>{selectedBeer?.spargeVolume}</TableCell>
-                            </TableRow>
+                        <TableRow>
+                            <TableCell>{selectedBeer?.mashVolume}</TableCell>
+                            <TableCell>{selectedBeer?.spargeVolume}</TableCell>
+                        </TableRow>
                     </TableBody>
                 </Table>
             </TableContainer>
@@ -182,9 +182,9 @@ renderFilling()
                         </div>
                         <div>
                             <TableContainer component={Paper}>
-                                <Table>
+                                <Table className="wortBoiling-table">
                                     <TableHead>
-                                        <TableRow sx={{ '&:not(:last-child)': { '& td, & th': { paddingBottom: 0.2 } } }}>
+                                        <TableRow>
                                             <TableCell>Name</TableCell>
                                             <TableCell>Zeit</TableCell>
                                             <TableCell>Menge</TableCell>
@@ -212,36 +212,36 @@ renderFilling()
             const {selectedBeer}=this.props;
             return(
                 <div>
-                    <TableContainer component={Paper}>
-                        <Table>
-                            <TableBody>
-                                <TableRow sx={{ '&:not(:last-of-type)': { '& td, & th': { paddingBottom: 0.2 } } }}>
-                                    <TableCell>Name</TableCell>
-                                    <TableCell>{selectedBeer?.name}</TableCell>
-                                </TableRow>
-                                <TableRow sx={{ '&:not(:last-of-type)': { '& td, & th': { paddingBottom: 0.2 } } }}>
-                                    <TableCell>Type</TableCell>
-                                    <TableCell>{selectedBeer?.type}</TableCell>
-                                </TableRow>
-                                <TableRow sx={{ '&:not(:last-of-type)': { '& td, & th': { paddingBottom: 0.2 } } }}>
-                                    <TableCell>Bitterheit</TableCell>
-                                    <TableCell>{selectedBeer?.bitterness}</TableCell>
-                                </TableRow>
-                                <TableRow sx={{ '&:not(:last-of-type)': { '& td, & th': { paddingBottom: 0.2 } } }}>
-                                    <TableCell>Farbe</TableCell>
-                                    <TableCell>{selectedBeer?.color}</TableCell>
-                                </TableRow>
-                                <TableRow sx={{ '&:not(:last-of-type)': { '& td, & th': { paddingBottom: 0.2 } } }}>
-                                    <TableCell>Alkohol Gehalt</TableCell>
-                                    <TableCell>{selectedBeer?.alcohol}</TableCell>
-                                </TableRow>
-                                <TableRow sx={{ '&:not(:last-of-type)': { '& td, & th': { paddingBottom: 0.2 } } }}>
-                                    <TableCell>Stammwürze</TableCell>
-                                    <TableCell>{selectedBeer?.originalwort}</TableCell>
-                                </TableRow>
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
+                    <TableContainer component={Paper} style={{ backgroundColor: '#404040' }}>
+    <Table className="wortBoiling-table">
+        <TableBody>
+            <TableRow sx={{ '&:not(:last-of-type)': { '& td, & th': { paddingBottom: 0.2 } } }}>
+                <TableCell>Name</TableCell>
+                <TableCell>{selectedBeer?.name}</TableCell>
+            </TableRow>
+            <TableRow sx={{ '&:not(:last-of-type)': { '& td, & th': { paddingBottom: 0.2 } } }}>
+                <TableCell>Type</TableCell>
+                <TableCell>{selectedBeer?.type}</TableCell>
+            </TableRow>
+            <TableRow sx={{ '&:not(:last-of-type)': { '& td, & th': { paddingBottom: 0.2 } } }}>
+                <TableCell>Bitterheit</TableCell>
+                <TableCell>{selectedBeer?.bitterness}</TableCell>
+            </TableRow>
+            <TableRow sx={{ '&:not(:last-of-type)': { '& td, & th': { paddingBottom: 0.2 } } }}>
+                <TableCell>Farbe</TableCell>
+                <TableCell>{selectedBeer?.color}</TableCell>
+            </TableRow>
+            <TableRow sx={{ '&:not(:last-of-type)': { '& td, & th': { paddingBottom: 0.2 } } }}>
+                <TableCell>Alkohol Gehalt</TableCell>
+                <TableCell>{selectedBeer?.alcohol}</TableCell>
+            </TableRow>
+            <TableRow sx={{ '&:not(:last-of-type)': { '& td, & th': { paddingBottom: 0.2 } } }}>
+                <TableCell>Stammwürze</TableCell>
+                <TableCell>{selectedBeer?.originalwort}</TableCell>
+            </TableRow>
+        </TableBody>
+    </Table>
+</TableContainer>
 
                 </div>
               );

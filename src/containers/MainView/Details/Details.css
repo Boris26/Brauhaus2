@@ -49,4 +49,15 @@
     flex-direction: column;
     margin-bottom: 10px;
 }
+.wortBoiling-table .MuiTableCell-root,
+.wortBoiling-table .MuiTableCell-head,
+.wortBoiling-table .MuiTableCell-body {
+    color: white !important;
+}
 
+.wortBoiling-table,
+.wortBoiling-table .MuiTableCell-root,
+.wortBoiling-table .MuiTableCell-head,
+.wortBoiling-table .MuiTableCell-body {
+    background-color: #404040 !important;
+}
