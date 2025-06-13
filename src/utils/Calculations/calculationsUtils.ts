@@ -45,6 +45,10 @@ export function platoToBrix(aPlato: number): number {
     return interpolate(brixToPlatoLookup, aPlato, 'plato', 'brix');
 }
 
+const TEMP_CORRECTION_QUADRATIC = 0.00257; // empirischer Faktor für (T-Ref)^2
+const TEMP_CORRECTION_LINEAR = 0.048;      // empirischer Faktor für (T-Ref)
+const TEMP_CORRECTION_REFERENCE = 20;      // Referenztemperatur in °C
+
 /**
  * Applies a temperature correction to a given Brix or Plato scale value.
  * @param aBx_P_scale - The original Brix or Plato scale value.
@@ -52,7 +56,7 @@ export function platoToBrix(aPlato: number): number {
  * @param refTemp - The reference temperature in degrees Celsius (default is 20°C).
  * @returns The corrected Brix or Plato scale value.
  */
-export function temperatureCorrection(aBx_P_scale: number, aTemperature: number, refTemp = 20): number {
-    const correction = 0.00257 * Math.pow(aTemperature - refTemp, 2) + 0.048 * (aTemperature - refTemp);
+export function temperatureCorrection(aBx_P_scale: number, aTemperature: number, refTemp = TEMP_CORRECTION_REFERENCE): number {
+    const correction = TEMP_CORRECTION_QUADRATIC * Math.pow(aTemperature - refTemp, 2) + TEMP_CORRECTION_LINEAR * (aTemperature - refTemp);
     return aBx_P_scale + correction;
 }
