@@ -12,6 +12,7 @@ import {ConfirmStates} from "../enums/eConfirmStates";
 import {TextMapper} from "../utils/TextMapper";
 import {FinishedBrew} from "../model/FinishedBrew";
 import FinishedBrewsTable from "./MainView/FinishBrewsBeers/FinishedBrewsTable";
+import BrewingCalculations from "./BrewingCalculations/BrewingCalculations";
 
 interface indexMainProps {
     viewState: Views;
@@ -87,6 +88,7 @@ class Index extends React.Component<indexMainProps> {
                 <SimpleBar style={{maxHeight: '100%', overflowY: 'auto'}}>
                     {viewState === Views.FINISHED_BREWS && <FinishedBrewsTable></FinishedBrewsTable>}
                 </SimpleBar>
+                {viewState === Views.BREWING_CALCULATIONS && <BrewingCalculations />}
             </div>
 
         );
@@ -107,4 +109,3 @@ const mapDispatchToProps = (dispatch: any) => ({
 
 
 export default connect(mapStateToProps, mapDispatchToProps)(Index);
-

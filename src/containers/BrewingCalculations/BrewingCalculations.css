@@ -1,0 +1,93 @@
+/* Stil für die Seite Bierbrau-Berechnungen */
+
+/* Farben und Kontraste für Dark Mode */
+.Paper-root, .MuiPaper-root {
+    background-color: #404040 !important; /* Dunkler Hintergrund */
+    color: #fff !important;
+}
+
+.MuiTypography-root, .MuiInputBase-root, .MuiFormLabel-root {
+    color: #fff !important;
+}
+
+.MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+    border-color: darkorange !important;
+}
+
+.MuiTextField-root {
+    margin-bottom: 1.2rem;
+}
+
+.header-container h1 {
+    color: darkorange;
+}
+
+.icon {
+    /* filter: brightness(0) invert(1); */
+    /* Entfernt, damit Icons wieder originalfarbig sind */
+}
+
+/* Beispiel: Abstand zwischen Boxen */
+.MuiBox-root {
+    background: #404040;
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+
+}
+
+/* Buttons, falls benötigt */
+.MuiButton-root {
+    background: darkorange;
+
+}
+
+/* Orange für Labels und Akzente */
+.MuiTypography-subtitle2 {
+    color: darkorange !important;
+}
+
+/* Wrapper-Klassen für die Komponente und den SimpleBar-Container */
+.BrewingCalculations-outer {
+    margin-top: 80px;
+    height: 150vh;
+    min-height: 100vh;
+    width: 100vw;
+    box-sizing: border-box;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    /* Verhindert Browser-Scrollbars */
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.BrewingCalculations-scroll {
+    flex: 1 1 auto;
+    height: 100vh;
+    min-height: 0;
+    /* Verhindert Browser-Scrollbars */
+    overflow: hidden;
+}
+
+body, html, #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+/* Spin-Buttons bei number-Inputs entfernen */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+/* Weitere Styles können nach Bedarf ergänzt werden */
