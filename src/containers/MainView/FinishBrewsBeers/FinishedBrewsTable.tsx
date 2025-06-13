@@ -15,6 +15,7 @@ interface FinishedBrewsTableProps {
     onSave: (brew: FinishedBrew) => void;
     exportPdf: (brews: FinishedBrew[]) => void;
     getFinishedBrews: (isFetching: boolean) => void;
+    beers: { id: number; name: string }[]; // Hinzugefügt: Liste aller Biere
 }
 
 interface FinishedBrewsTableState {
@@ -23,6 +24,8 @@ interface FinishedBrewsTableState {
     showOnlyActive: boolean;
     filterOutActive: boolean;
     clickedFinishBtn: { [id: number]: boolean };
+    newRowActive?: boolean; // Für neue Zeile
+    newRowData?: Partial<FinishedBrew>; // Für neue Zeile
 }
 
 const calcAlcohol = (w1: number, w2: number | null) => {
@@ -153,8 +156,8 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
 
 
     render() {
-        const { brews } = this.props;
-        const { editRows, filterYear, showOnlyActive, filterOutActive } = this.state;
+        const { brews, beers } = this.props;
+        const { editRows, filterYear, showOnlyActive, filterOutActive, newRowActive, newRowData } = this.state;
         const years = this.getYearsFromBrews();
 
         // Filter brews nach Jahr und Aktiv-Status
@@ -205,6 +208,15 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
                         <span role="img" aria-label="PDF" style={{ fontSize: 22, verticalAlign: 'middle', marginRight: 4 }}>📄</span>
                         PDF exportieren
                     </button>
+                    <button
+                        className="finish-btn"
+                        style={{ marginLeft: '2rem', height: '2.2rem', display: 'flex', alignItems: 'center', background: '#4caf50' }}
+                        onClick={() => this.setState({ newRowActive: true, newRowData: {} })}
+                        title="Neuen Eintrag hinzufügen"
+                    >
+                        <span role="img" aria-label="Plus" style={{ fontSize: 22, verticalAlign: 'middle', marginRight: 4 }}>➕</span>
+                        Neuer Eintrag
+                    </button>
                 </div>
                 <SimpleBar style={{ maxHeight: 600 }}>
                     <TableContainer component={Paper} className="FinishedBrewsTable">
@@ -223,6 +235,116 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
                                 </TableRow>
                             </TableHead>
                             <TableBody>
+                                {newRowActive && (
+                                    <TableRow className="table-row">
+                                        <TableCell className="table-cell">
+                                            <select
+                                                value={newRowData?.name || ''}
+                                                onChange={e => {
+                                                    const selectedBeer = beers.find(b => b.name === e.target.value);
+                                                    this.setState(prev => ({
+                                                        newRowData: {
+                                                            ...prev.newRowData,
+                                                            name: selectedBeer ? selectedBeer.name : ''
+                                                        }
+                                                    }));
+                                                }}
+                                                className="table-edit-field"
+                                            >
+                                                <option value="">Bier wählen</option>
+                                                {beers.map(beer => (
+                                                    <option key={beer.id} value={beer.name}>{beer.name}</option>
+                                                ))}
+                                            </select>
+                                        </TableCell>
+                                        <TableCell className="table-cell">
+                                            <input
+                                                type="date"
+                                                value={
+                                                    newRowData?.startDate
+                                                        ? (newRowData.startDate instanceof Date
+                                                            ? newRowData.startDate.toISOString().slice(0, 10)
+                                                            : newRowData.startDate)
+                                                        : ''
+                                                }
+                                                onChange={e => this.setState(prev => ({ newRowData: { ...prev.newRowData, startDate: e.target.value } }))}
+                                                className="table-edit-field"
+                                            />
+                                        </TableCell>
+                                        <TableCell className="table-cell">
+                                            <input
+                                                type="date"
+                                                value={
+                                                    newRowData?.endDate
+                                                        ? (newRowData.endDate instanceof Date
+                                                            ? newRowData.endDate.toISOString().slice(0, 10)
+                                                            : newRowData.endDate)
+                                                        : ''
+                                                }
+                                                onChange={e => this.setState(prev => ({ newRowData: { ...prev.newRowData, endDate: e.target.value } }))}
+                                                className="table-edit-field"
+                                            />
+                                        </TableCell>
+                                        <TableCell className="table-cell liters">
+                                            <input
+                                                type="number"
+                                                value={newRowData?.liters || ''}
+                                                onChange={e => this.setState(prev => ({ newRowData: { ...prev.newRowData, liters: Number(e.target.value) } }))}
+                                                className="table-edit-field"
+                                            />
+                                        </TableCell>
+                                        <TableCell className="table-cell originalwort">
+                                            <input
+                                                type="number"
+                                                value={newRowData?.originalwort || ''}
+                                                onChange={e => this.setState(prev => ({ newRowData: { ...prev.newRowData, originalwort: Number(e.target.value) } }))}
+                                                className="table-edit-field"
+                                            />
+                                        </TableCell>
+                                        <TableCell className="table-cell residualExtract">
+                                            <input
+                                                type="number"
+                                                value={newRowData?.residualExtract || ''}
+                                                onChange={e => this.setState(prev => ({ newRowData: { ...prev.newRowData, residualExtract: Number(e.target.value) } }))}
+                                                className="table-edit-field"
+                                            />
+                                        </TableCell>
+                                        <TableCell className="table-cell">-</TableCell>
+                                        <TableCell className="table-cell beschreibung">
+                                            <input
+                                                type="text"
+                                                value={newRowData?.note || ''}
+                                                onChange={e => this.setState(prev => ({ newRowData: { ...prev.newRowData, note: e.target.value } }))}
+                                                className="table-edit-field"
+                                            />
+                                        </TableCell>
+                                        <TableCell className="table-cell">
+                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                <button
+                                                    className="finish-btn"
+                                                    onClick={() => {
+                                                        const newId = Math.max(0, ...brews.map(b => b.id)) + 1;
+                                                        const newBrew: FinishedBrew = { id: newId, active: true, ...newRowData } as FinishedBrew;
+                                                        this.props.onSave(newBrew);
+                                                        this.setState({ newRowActive: false, newRowData: {} });
+                                                    }}
+                                                    title="Speichern"
+                                                >
+                                                    <span role="img" aria-label="Speichern" style={{ fontSize: 22, verticalAlign: 'middle', marginRight: 4 }}>💾</span>
+                                                    Speichern
+                                                </button>
+                                                <button
+                                                    className="cancel-btn"
+                                                    onClick={() => this.setState({ newRowActive: false, newRowData: {} })}
+                                                    title="Abbrechen"
+                                                >
+                                                    <span role="img" aria-label="Abbrechen" style={{ fontSize: 22, verticalAlign: 'middle', marginRight: 4 }}>✖️</span>
+                                                    Abbrechen
+                                                </button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                )}
                                 {filteredBrews.map(brew => {
                                     const isEdited = !!editRows[brew.id];
                                     const row = { ...brew, ...editRows[brew.id] };
@@ -385,7 +507,8 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
 }
 
 const mapStateToProps = (state: any) => ({
-    brews: state.beerDataReducer.finishedBrews || finishedBrewsTestData // Fallback to test data if no brews are available
+    brews: state.beerDataReducer.finishedBrews || finishedBrewsTestData, // Fallback to test data if no brews are available
+    beers: (state.beerDataReducer.beers || []).map((b: any) => ({ id: b.id, name: b.name })) // Biere für Dropdown
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
