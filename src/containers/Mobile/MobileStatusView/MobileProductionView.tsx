@@ -1,10 +1,10 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import './MobileProductionView.css';
-import { BrewingStatus } from '../../model/BrewingStatus';
-import { ProductionActions } from '../../actions/actions';
-import { TimeFormatter } from "../../utils/TimeFormatter";
-import MobileBrewingCalculationsView from './MobileBrewingCalculationsView';
+import { BrewingStatus } from '../../../model/BrewingStatus';
+import { ProductionActions } from '../../../actions/actions';
+import { TimeFormatter } from "../../../utils/TimeFormatter";
+import MobileBrewingCalculationsView from '../MobileBrewingCalculationsView/MobileBrewingCalculationsView';
 
 interface MobileProductionViewProps {
     temperature: number;
@@ -109,7 +109,7 @@ class MobileProductionView extends React.Component<MobileProductionViewProps, Mo
     }
 }
 
-const MobileActiveFinishedBrewViewLazy = React.lazy(() => import('./MobileActiveFinishedBrewView'));
+const MobileActiveFinishedBrewViewLazy = React.lazy(() => import('../MobileActiveFinishedBrewView/MobileActiveFinishedBrewView'));
 
 const mapStateToProps = (state: any) => ({
     temperature: state.productionReducer.temperature,

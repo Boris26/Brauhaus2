@@ -1,10 +1,9 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { FinishedBrew } from '../../model/FinishedBrew';
-import './MobileProductionView.css';
-import { finishedBrewsTestData } from '../../model/finishedBrewsTestData';
-import { BeerActions } from '../../actions/actions';
-import {stringify} from "node:querystring";
+import { FinishedBrew } from '../../../model/FinishedBrew';
+import '../MobileStatusView/MobileProductionView.css';
+import { finishedBrewsTestData } from '../../../model/finishedBrewsTestData';
+import { BeerActions } from '../../../actions/actions';
 
 interface Props {
     finishedBrews?: FinishedBrew[];

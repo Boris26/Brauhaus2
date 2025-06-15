@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import './MobileBrewingCalculationsView.css';
-import { brixToPlato, platoToBrix, temperatureCorrection } from '../../utils/Calculations/calculationsUtils';
-import { eSugarTypes } from '../../enums/eSugerTypes';
+import { brixToPlato, platoToBrix, temperatureCorrection } from '../../../utils/Calculations/calculationsUtils';
+import { eSugarTypes } from '../../../enums/eSugerTypes';
 
 const ML_TO_L_CONVERSION = 1000;
 const SUCROSE_YIELD_FACTOR = 0.512;
