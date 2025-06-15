@@ -3,9 +3,8 @@ import _, {isUndefined} from 'lodash';
 import {Beer} from "../../model/Beer";
 import {connect} from "react-redux";
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { v4 as uuidv4 } from 'uuid';
+import {v4 as uuidv4} from 'uuid';
 import '@fortawesome/fontawesome-free/css/all.css'; // Stile
-
 import './Production.css'
 import Timeline, {TimelineData} from "./Timeline/Timeline";
 import WaterControl, {WaterStatus} from "../../components/Controlls/WaterControll/WaterControl";
@@ -28,6 +27,7 @@ import Switch from "react-switch";
 import {TextMapper} from "../../utils/TextMapper";
 import {IconProp} from "@fortawesome/fontawesome-svg-core";
 import {FinishedBrew} from "../../model/FinishedBrew";
+import {eBrewState} from "../../enums/eBrewState";
 
 interface ProductionProps {
     selectedBeer: Beer;
@@ -577,7 +577,8 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                 note: '', // Standardwert hinzugefügt
                 startDate: new Date().toISOString().slice(0, 10),
                 beer_id: selectedBeer.id.toString(), // Assuming beer_id is a string
-                active: true
+                active: true,
+                state: eBrewState.Fermentation
             };
             addFinishedBrew(finishedBrew);
         }
@@ -598,7 +599,8 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                 note: '', // Standardwert hinzugefügt
                 startDate: new Date().toISOString().slice(0, 10),
                 beer_id: selectedBeer.id.toString(), // Assuming beer_id is a string
-                active: true
+                active: true,
+                state: eBrewState.Fermentation
             };
             addFinishedBrew(finishedBrew);
         }

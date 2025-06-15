@@ -9,6 +9,7 @@ import {finishedBrewsTestData} from "../../../model/finishedBrewsTestData";
 import {BeerActions} from "../../../actions/actions";
 import {isNil} from "lodash";
 import { v4 as uuidv4 } from 'uuid';
+import { eBrewState, BrewStateGerman } from '../../../enums/eBrewState';
 
 
 interface FinishedBrewsTableProps {
@@ -289,7 +290,21 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
                         className="table-edit-field"
                     />
                 </TableCell>
-                <TableCell className="table-cell">-</TableCell>
+                <TableCell className="table-cell">
+                    {/* Alkoholspalte bleibt leer in der neuen Zeile */}
+                    -
+                </TableCell>
+                <TableCell className="table-cell">
+                    <select
+                        value={newRowData?.state || eBrewState.Fermentation}
+                        onChange={e => this.setState(prev => ({ newRowData: { ...prev.newRowData, state: e.target.value as eBrewState } }))}
+                        className="table-edit-field"
+                    >
+                        {Object.values(eBrewState).map(state => (
+                            <option key={state} value={state}>{BrewStateGerman[state]}</option>
+                        ))}
+                    </select>
+                </TableCell>
                 <TableCell className="table-cell beschreibung">
                     <input
                         type="text"
@@ -400,6 +415,18 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
                     />
                 </TableCell>
                 <TableCell className="table-cell alcohol">{calcAlcohol(row.originalwort, row.residual_extract)}</TableCell>
+                <TableCell className="table-cell">
+                    <select
+                        value={row.state}
+                        onChange={e => this.handleChange(brewId, 'state', e.target.value as eBrewState)}
+                        className="table-edit-field"
+                        disabled={!isActive}
+                    >
+                        {Object.values(eBrewState).map(state => (
+                            <option key={state} value={state}>{BrewStateGerman[state]}</option>
+                        ))}
+                    </select>
+                </TableCell>
                 <TableCell className="table-cell beschreibung">
                     <TextField
                         variant="standard"
@@ -458,6 +485,7 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
                                 <TableCell className="table-header-cell">Stammwürze</TableCell>
                                 <TableCell className="table-header-cell">Restextrakt</TableCell>
                                 <TableCell className="table-header-cell">Alkohol</TableCell>
+                                <TableCell className="table-header-cell">Status</TableCell>
                                 <TableCell className="table-header-cell">Beschreibung</TableCell>
                                 <TableCell className="table-header-cell">Aktion</TableCell>
                             </TableRow>

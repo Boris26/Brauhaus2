@@ -1,3 +1,5 @@
+import { eBrewState } from '../enums/eBrewState';
+
 export interface FinishedBrew {
     id: string;
     name: string;
@@ -9,4 +11,5 @@ export interface FinishedBrew {
     note: string;
     active: boolean;
     beer_id?: string; // Optional beer ID, kann jetzt eine UUID (string) sein
+    state: eBrewState;
 }
