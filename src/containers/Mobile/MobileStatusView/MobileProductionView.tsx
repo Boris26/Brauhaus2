@@ -38,12 +38,45 @@ class MobileProductionView extends React.Component<MobileProductionViewProps, Mo
         }
     }
 
+    touchStartX: number | null = null;
+    touchEndX: number | null = null;
+
+    handleTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+        this.touchStartX = e.touches[0].clientX;
+    };
+
+    handleTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
+        this.touchEndX = e.touches[0].clientX;
+    };
+
+    handleTouchEnd = () => {
+        if (this.touchStartX === null || this.touchEndX === null) return;
+        const deltaX = this.touchEndX - this.touchStartX;
+        if (Math.abs(deltaX) > 50) {
+            // Swipe nach links: nächste Seite, nach rechts: vorherige Seite
+            const tabOrder: ('status' | 'finishedBrew' | 'calculations')[] = ['status', 'finishedBrew', 'calculations'];
+            const currentIdx = tabOrder.indexOf(this.state.activeTab);
+            if (deltaX < 0 && currentIdx < tabOrder.length - 1) {
+                this.setState({ activeTab: tabOrder[currentIdx + 1] });
+            } else if (deltaX > 0 && currentIdx > 0) {
+                this.setState({ activeTab: tabOrder[currentIdx - 1] });
+            }
+        }
+        this.touchStartX = null;
+        this.touchEndX = null;
+    };
+
     render() {
         const { brewingStatus, startPolling, isPollingRunning } = this.props;
         const { activeTab } = this.state;
         const statusText = brewingStatus?.Name;
         return (
-            <div className="mobile-production-container">
+            <div
+                className="mobile-production-container"
+                onTouchStart={this.handleTouchStart}
+                onTouchMove={this.handleTouchMove}
+                onTouchEnd={this.handleTouchEnd}
+            >
                 <div className="mobile-tabs">
                     <button className={activeTab === 'status' ? 'active' : ''} onClick={() => this.handleTabChange('status')}>Status</button>
                     <button className={activeTab === 'finishedBrew' ? 'active' : ''} onClick={() => this.handleTabChange('finishedBrew')}>Aktiver Sud</button>
