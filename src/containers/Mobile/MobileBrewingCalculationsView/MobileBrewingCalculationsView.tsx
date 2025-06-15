@@ -81,7 +81,7 @@ class MobileBrewingCalculationsView extends Component<{}, State> {
         const sucroseSugar = this.calculateSugarAmount(eSugarTypes.Sucrose);
         const glucoseSugar = this.calculateSugarAmount(eSugarTypes.Glucose);
         return (
-            <div className="mobile-brewing-calc-container">
+            <div className="mobile-brewing-calc-container" style={{overflowY: 'auto', maxHeight: '100vh'}}>
                 <h2>Bierbrau-Berechnungen</h2>
                 <div className="mobile-calc-block">
                     <div className="calc-title" style={{fontSize: '1.35em', display: 'flex', alignItems: 'center', gap: 12}}>
@@ -180,4 +180,3 @@ class MobileBrewingCalculationsView extends Component<{}, State> {
 }
 
 export default MobileBrewingCalculationsView;
-
