@@ -39,6 +39,10 @@ export namespace BeerActions {
         UPDATE_ACTIVE_BEER = 'BeerActions.UPDATE_ACTIVE_BEER',
         GET_FINISHED_BEERS = 'BeerActions.GET_FINISHED_BEERS',
         GET_FINISHED_BEERS_SUCCESS = 'BeerActions.GET_FINISHED_BEERS_SUCCESS',
+        DELETE_FINISHED_BEER = 'BeerActions.DELETE_FINISHED_BEER',
+        DELETE_FINISHED_BEER_SUCCESS = 'BeerActions.DELETE_FINISHED_BEER_SUCCESS',
+        ADD_FINISHED_BREW = 'BeerActions.ADD_FINISHED_BREW',
+        UPDATE_FINISHED_BREW_SUCCESS = 'BeerActions.UPDATE_FINISHED_BREW_SUCCESS',
     }
 
     export interface SetIsSubmitSuccessful {
@@ -202,6 +206,33 @@ export namespace BeerActions {
         }
     }
 
+    export interface DeleteFinishedBeer {
+        readonly type: ActionTypes.DELETE_FINISHED_BEER
+        payload: {
+            finishedBrewId: string
+        }
+    }
+
+    export interface DeleteFinishedBeerSuccess {
+        readonly type: ActionTypes.DELETE_FINISHED_BEER_SUCCESS
+        payload: {
+            isDeleteFinishedBeerSuccessful: boolean,
+            deletedFinishedBrewId: string
+        }
+    }
+
+    export interface AddFinishedBrew {
+        readonly type: ActionTypes.ADD_FINISHED_BREW;
+        payload: {
+            finishedBrew: FinishedBrew;
+        };
+    }
+
+    export interface UpdateFinishedBrewSuccess {
+        readonly type: ActionTypes.UPDATE_FINISHED_BREW_SUCCESS;
+        payload: { beer: FinishedBrew };
+    }
+
 
     export type AllBeerActions =
         SubmitBeer |
@@ -226,7 +257,11 @@ export namespace BeerActions {
         ExportFinishedBrews |
         UpdateActiveBeer |
         GetFinishedBeers |
-        GetFinishedBeersSuccess;
+        GetFinishedBeersSuccess |
+        DeleteFinishedBeer|
+        DeleteFinishedBeerSuccess |
+        AddFinishedBrew |
+        UpdateFinishedBrewSuccess;
 
 
     export function isSubmitSuccessful(aIsSuccessful: boolean, aMessage: string, aType: string): SetIsSubmitSuccessful {
@@ -386,6 +421,34 @@ export namespace BeerActions {
             type: BeerActions.ActionTypes.GET_FINISHED_BEERS_SUCCESS,
             payload: {finishedBeers: aFinishedBeers}
         }
+    }
+
+    export function deleteFinishedBeer(aFinishedBrewId: string): DeleteFinishedBeer {
+        return {
+            type: BeerActions.ActionTypes.DELETE_FINISHED_BEER,
+            payload: {finishedBrewId: aFinishedBrewId}
+        }
+    }
+
+    export function deleteFinishedBeerSuccess(aIsSuccessful: boolean, aDeletedFinishedBrewId: string): DeleteFinishedBeerSuccess {
+        return {
+            type: BeerActions.ActionTypes.DELETE_FINISHED_BEER_SUCCESS,
+            payload: {isDeleteFinishedBeerSuccessful: aIsSuccessful, deletedFinishedBrewId: aDeletedFinishedBrewId}
+        }
+    }
+
+    export function addFinishedBrew(finishedBrew: FinishedBrew): AddFinishedBrew {
+        return {
+            type: ActionTypes.ADD_FINISHED_BREW,
+            payload: { finishedBrew }
+        };
+    }
+
+    export function updateFinishedBrewSuccess(beer: FinishedBrew): UpdateFinishedBrewSuccess {
+        return {
+            type: ActionTypes.UPDATE_FINISHED_BREW_SUCCESS,
+            payload: { beer }
+        };
     }
 }
 

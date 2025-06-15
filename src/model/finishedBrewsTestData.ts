@@ -3,7 +3,7 @@ import {FinishedBrew} from "./FinishedBrew";
 
 export const finishedBrewsTestData: FinishedBrew[] = [
   {
-    id: 1,
+    id: '1',
     name: "Helles Sommerbier",
     startDate: new Date(),
     endDate: "27.05.2025",
@@ -14,7 +14,7 @@ export const finishedBrewsTestData: FinishedBrew[] = [
     note: "Leichtes, süffiges Bier für warme Tage."
   },
   {
-    id: 2,
+    id: '2',
     name: "Dunkles Bockbier",
     startDate: "20.05.2025",
     endDate: "27.05.2025",
@@ -25,7 +25,7 @@ export const finishedBrewsTestData: FinishedBrew[] = [
     note: "Kräftig malzig, mit feiner Karamellnote."
   },
   {
-    id: 3,
+    id: '3',
     name: "Weizenbier",
     startDate: "20.05.2024",
     endDate: "27.05.2024",

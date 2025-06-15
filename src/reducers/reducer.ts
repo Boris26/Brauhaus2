@@ -233,9 +233,7 @@ const beerDataReducer = (aState: BeerDataReducerState = initialBeerState, aActio
         }
 
         case BeerActions.ActionTypes.GET_FINISHED_BEERS: {
-            BeerRepository.getFinishedBeers().then(r => {
-                return {...aState, isFetching: aAction.payload.isFetching};
-            });
+            BeerRepository.getFinishedBeers();
             return {...aState, isFetching: aAction.payload.isFetching};
         }
 
@@ -245,10 +243,30 @@ const beerDataReducer = (aState: BeerDataReducerState = initialBeerState, aActio
 
         case BeerActions.ActionTypes.UPDATE_ACTIVE_BEER: {
             const updatedBrew = aAction.payload.beer;
-            BeerRepository.updateFinishedBeer(updatedBrew).then((value) => {
-                console.log("Updated brew:", value);
-                return { ...aState };
-            });
+            BeerRepository.updateFinishedBeer(updatedBrew);
+            return { ...aState};
+        }
+
+        case BeerActions.ActionTypes.DELETE_FINISHED_BEER: {
+            const brewId = parseInt(aAction.payload.finishedBrewId);
+            BeerRepository.deleteFinishedBeer(aAction.payload.finishedBrewId);
+            return {...aState };
+        }
+        case BeerActions.ActionTypes.DELETE_FINISHED_BEER_SUCCESS: {
+            let finishedBrews = aState.finishedBrews ? [...aState.finishedBrews] : [];
+            finishedBrews = finishedBrews.filter(b => b.id !== aAction.payload.deletedFinishedBrewId);
+            return {...aState, finishedBrews};
+        }
+
+        case BeerActions.ActionTypes.ADD_FINISHED_BREW: {
+            const finishedBrew = aAction.payload.finishedBrew;
+            BeerRepository.sendNewFinishedBeer(finishedBrew);
+
+            return { ...aState };
+        }
+
+        case BeerActions.ActionTypes.UPDATE_FINISHED_BREW_SUCCESS: {
+            const updatedBrew = aAction.payload.beer;
             let finishedBrews = aState.finishedBrews ? [...aState.finishedBrews] : [];
             const idx = finishedBrews.findIndex(b => b.id === updatedBrew.id);
             if (idx !== -1) {

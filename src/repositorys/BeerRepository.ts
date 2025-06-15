@@ -63,6 +63,10 @@ export class BeerRepository
         return await BeerRepository._doSendFinishedBeer(beer);
     }
 
+    static async deleteFinishedBeer(beerId: string) {
+        return await BeerRepository._doDeleteFinishedBeer(beerId);
+    }
+
 
     private static async _doSubmitMalt(malt: Malts){
         try {
@@ -220,7 +224,6 @@ export class BeerRepository
             const response = await axios.get(DatabaseURL + 'finishedbeers');
             if(response.status === 200)
             {
-                console.log(response.data);
                store.dispatch(BeerActions.getFinishedBeersSuccess(response.data));
             }
         } catch (error) {
@@ -237,16 +240,33 @@ export class BeerRepository
             const response = await axios.post(DatabaseURL + 'finishedbeer',  jsonstring, header);
             if(response.status === 200)
             {
-                console.log("Finished beer updated successfully");
+                store.dispatch(BeerActions.updateFinishedBrewSuccess(response.data));
             }
             else
             {
                 console.error("Failed to update finished beer");
+                return null;
             }
         } catch (error) {
+            console.error('Fehler beim API-Aufruf', error);
+            return null;
+        }
+    }
+
+    private static async _doDeleteFinishedBeer(beerId: string){
+        try {
+            const response = await axios.delete(`${DatabaseURL}finishedbeer/${beerId}`);
+            if (response.status === 200) {
+                store.dispatch(BeerActions.deleteFinishedBeerSuccess(true, beerId));
+
+
+            } else {
+                return false; // Deletion failed
+                console.error("Failed to delete finished beer");
+            }
+        } catch (error) {
+            return false; // Error occurred during deletion
             console.error('Fehler beim API-Aufruf', error);
         }
     }
 }
-
-

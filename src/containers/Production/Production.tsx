@@ -3,14 +3,14 @@ import _, {isUndefined} from 'lodash';
 import {Beer} from "../../model/Beer";
 import {connect} from "react-redux";
 import 'bootstrap/dist/css/bootstrap.min.css';
-
+import { v4 as uuidv4 } from 'uuid';
 import '@fortawesome/fontawesome-free/css/all.css'; // Stile
 
 import './Production.css'
 import Timeline, {TimelineData} from "./Timeline/Timeline";
 import WaterControl, {WaterStatus} from "../../components/Controlls/WaterControll/WaterControl";
 import Flame from "../../components/Flame/Flame";
-import {ProductionActions} from "../../actions/actions";
+import {BeerActions, ProductionActions} from "../../actions/actions";
 import Gauge from "../../components/Controlls/Gauge/Gauge";
 import {ToggleState} from "../../enums/eToggleState";
 import {MashAgitatorStates} from "../../model/MashAgitator";
@@ -49,6 +49,7 @@ interface ProductionProps {
     checkIsBackenAvailable: () => void;
     isBackenAvailable: BackendAvailable;
     waterStatus: WaterStatus;
+    addFinishedBrew: (finishedBrew: FinishedBrew) => void;
 }
 
 interface ProductionState {
@@ -563,47 +564,43 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     }
 
     ab= async ()=> {
-        const { stopPolling, selectedBeer } = this.props;
-      stopPolling();
+        const { stopPolling, selectedBeer, addFinishedBrew } = this.props;
+        stopPolling();
         // FinishedBrew erzeugen und speichern
         if (selectedBeer) {
             const finishedBrew : FinishedBrew = {
-                id: 0, // Default or dynamically generated ID
+                id: uuidv4(), // Default or dynamically generated ID
                 name: selectedBeer.name || 'Unknown Beer',
                 liters: 0,
                 originalwort:  0,
                 residual_extract:  0, // Standardwert hinzugefügt
                 note: '', // Standardwert hinzugefügt
                 startDate: new Date().toISOString().slice(0, 10),
-                beer_id: selectedBeer.id,
+                beer_id: selectedBeer.id.toString(), // Assuming beer_id is a string
                 active: true
             };
-            // Dynamisch importieren, um zirkuläre Abhängigkeiten zu vermeiden
-            const repo = await import('../../repositorys/BeerRepository');
-            repo.BeerRepository.sendNewFinishedBeer(finishedBrew);
+            addFinishedBrew(finishedBrew);
         }
     }
 
     confirmFinishDialog = async () => {
-        const { stopPolling, selectedBeer } = this.props;
+        const { stopPolling, selectedBeer, addFinishedBrew } = this.props;
         this.setState({ showFinishDialog: false, brewingFinished: true });
         stopPolling();
         // FinishedBrew erzeugen und speichern
         if (selectedBeer) {
             const finishedBrew : FinishedBrew = {
-                id: 0, // Default or dynamically generated ID
+                id: uuidv4(),
                 name: selectedBeer.name || 'Unknown Beer',
                 liters: 0,
                 originalwort:  0,
                 residual_extract:  0, // Standardwert hinzugefügt
                 note: '', // Standardwert hinzugefügt
                 startDate: new Date().toISOString().slice(0, 10),
-                beer_id: selectedBeer.id,
+                beer_id: selectedBeer.id.toString(), // Assuming beer_id is a string
                 active: true
             };
-            // Dynamisch importieren, um zirkuläre Abhängigkeiten zu vermeiden
-            const repo = await import('../../repositorys/BeerRepository');
-            repo.BeerRepository.sendNewFinishedBeer(finishedBrew);
+            addFinishedBrew(finishedBrew);
         }
     };
     renderHopDialog() {
@@ -688,6 +685,9 @@ const mapDispatchToProps = (dispatch: any) => ({
     },
     checkIsBackenAvailable: () => {
         dispatch(ProductionActions.checkIsBackenAvailable())
+    },
+    addFinishedBrew: (finishedBrew: FinishedBrew) => {
+        dispatch(BeerActions.addFinishedBrew(finishedBrew))
     }
 });
 const mapStateToProps = (state: any) => (
