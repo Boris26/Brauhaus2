@@ -1,12 +1,12 @@
 export enum eBrewState {
-    Fermentation = 'Fermentation',
-    Maturation = 'Maturation',
-    Finished = 'Finished',
+    FERMENTATION = 'FERMENTATION',
+    MATURATION = 'MATURATION',
+    FINISHED = 'FINISHED',
 }
 
 export const BrewStateGerman: Record<eBrewState, string> = {
-    [eBrewState.Fermentation]: 'Hauptgärung',
-    [eBrewState.Maturation]: 'Reifung',
-    [eBrewState.Finished]: 'Fertig',
+    [eBrewState.FERMENTATION]: 'Hauptgärung',
+    [eBrewState.MATURATION]: 'Reifung',
+    [eBrewState.FINISHED]: 'Fertig',
 };
 

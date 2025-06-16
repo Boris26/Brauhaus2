@@ -13,7 +13,7 @@ export const finishedBrewsTestData: FinishedBrew[] = [
     residual_extract: 2.8,
     active: true,
     note: "Leichtes, süffiges Bier für warme Tage.",
-    state: eBrewState.Finished
+    state: eBrewState.FINISHED
   },
   {
     id: '2',
@@ -25,7 +25,7 @@ export const finishedBrewsTestData: FinishedBrew[] = [
     residual_extract: null,
     active: true,
     note: "Kräftig malzig, mit feiner Karamellnote.",
-    state: eBrewState.Maturation
+    state: eBrewState.MATURATION
   },
   {
     id: '3',
@@ -37,6 +37,6 @@ export const finishedBrewsTestData: FinishedBrew[] = [
     residual_extract: 3.2,
     active: false,
     note: "Fruchtig, spritzig, typisch bayerisch.",
-    state: eBrewState.Fermentation
+    state: eBrewState.FERMENTATION
   }
 ];

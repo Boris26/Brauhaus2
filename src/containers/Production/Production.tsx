@@ -578,7 +578,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                 startDate: new Date().toISOString().slice(0, 10),
                 beer_id: selectedBeer.id.toString(), // Assuming beer_id is a string
                 active: true,
-                state: eBrewState.Fermentation
+                state: eBrewState.FERMENTATION
             };
             addFinishedBrew(finishedBrew);
         }
@@ -600,7 +600,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                 startDate: new Date().toISOString().slice(0, 10),
                 beer_id: selectedBeer.id.toString(), // Assuming beer_id is a string
                 active: true,
-                state: eBrewState.Fermentation
+                state: eBrewState.FERMENTATION
             };
             addFinishedBrew(finishedBrew);
         }

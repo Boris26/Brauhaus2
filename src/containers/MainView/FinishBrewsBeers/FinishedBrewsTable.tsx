@@ -72,7 +72,7 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
     handleSave = (id: string) => {
         const brew = this.props.brews.find(b => b.id === id);
         if (!brew) return;
-        const updated = { ...brew, beer_id: brew.beer_id, ...this.state.editRows[id] } as FinishedBrew;
+        const updated = { ...brew, beer_id: brew.beer_id,state : brew.state ,...this.state.editRows[id] } as FinishedBrew;
         this.props.onSave(updated);
         this.setState(prevState => {
             const editRows = { ...prevState.editRows };
@@ -296,7 +296,7 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
                 </TableCell>
                 <TableCell className="table-cell">
                     <select
-                        value={newRowData?.state || eBrewState.Fermentation}
+                        value={newRowData?.state || eBrewState.FERMENTATION}
                         onChange={e => this.setState(prev => ({ newRowData: { ...prev.newRowData, state: e.target.value as eBrewState } }))}
                         className="table-edit-field"
                     >
