@@ -3,7 +3,13 @@ import SimpleBar from 'simplebar-react';
 import 'simplebar/dist/simplebar.min.css';
 import { Paper, TextField, Typography, Box, Grid } from '@mui/material';
 import './BrewingCalculations.css';
-import { brixToPlato, platoToBrix, temperatureCorrection } from '../../utils/Calculations/calculationsUtils';
+import {
+    brixToPlato,
+    platoToBrix,
+    temperatureCorrection,
+    correctedBrixTerrill,
+    correctedBrixNovotny
+} from '../../utils/Calculations/calculationsUtils';
 import { eSugarTypes } from '../../enums/eSugerTypes';
 
 
@@ -20,6 +26,8 @@ interface BrewingCalculationsState {
     carbTarget: string;
     carbLiters: string;
     waterForSolutionML: string;
+    ogBrix?: string; // Stammwürze in Brix
+    fgBrix?: string; // Restextrakt in Brix
 }
 
 class BrewingCalculations extends React.Component<{}, BrewingCalculationsState> {
@@ -33,6 +41,8 @@ class BrewingCalculations extends React.Component<{}, BrewingCalculationsState> 
             carbTarget: '',
             carbLiters: '',
             waterForSolutionML: '1000',
+            ogBrix: '',
+            fgBrix: '',
         };
     }
 
@@ -60,8 +70,12 @@ class BrewingCalculations extends React.Component<{}, BrewingCalculationsState> 
     handleKlarwasserChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         this.setState({ waterForSolutionML: e.target.value });
     };
-
-
+    handleOgBrixChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        this.setState({ ogBrix: e.target.value });
+    };
+    handleFgBrixChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        this.setState({ fgBrix: e.target.value });
+    };
 
      calculateSugarAmount(
          aSugarType: eSugarTypes,
@@ -85,12 +99,18 @@ class BrewingCalculations extends React.Component<{}, BrewingCalculationsState> 
 
 
     render() {
-        const { brix, plato, temp, carbTemp, carbTarget, carbLiters } = this.state;
+        const { brix, plato, temp, carbTemp, carbTarget, carbLiters, ogBrix, fgBrix } = this.state;
         const brixNum = parseFloat(brix);
         const platoNum = parseFloat(plato);
         const tempNum = parseFloat(temp);
         const sucroseSugar = this.calculateSugarAmount(eSugarTypes.Sucrose);
         const glucoseSugar = this.calculateSugarAmount(eSugarTypes.Glucose);
+        const ogBrixNum = parseFloat(ogBrix || '');
+        const fgBrixNum = parseFloat(fgBrix || '');
+        const terrillResult =
+            ogBrix !== '' && fgBrix !== '' && !isNaN(ogBrixNum) && !isNaN(fgBrixNum)
+                ? correctedBrixNovotny(ogBrixNum, fgBrixNum).toFixed(2)
+                : '';
         return (
             <div className="BrewingCalculations-outer">
                 <SimpleBar style={{ maxHeight: '100%' }}>
@@ -273,6 +293,42 @@ class BrewingCalculations extends React.Component<{}, BrewingCalculationsState> 
                                         fullWidth
                                         variant="outlined"
                                         style={{marginBottom:8}}
+                                    />
+                                </Grid>
+                            </Grid>
+                        </Box>
+                        <Box mb={3}>
+                            <Typography variant="h6">Scheinbarer Restextrakt (Terrill-Korrektur)</Typography>
+                            <Grid container spacing={2} alignItems="center">
+                                <Grid item xs={12} sm={4}>
+                                    <TextField
+                                        label="Stammwürze (Brix)"
+                                        value={ogBrix}
+                                        onChange={this.handleOgBrixChange}
+                                        type="number"
+                                        inputProps={{ min: 0 }}
+                                        fullWidth
+                                        variant="outlined"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={4}>
+                                    <TextField
+                                        label="Restextrakt (Brix)"
+                                        value={fgBrix}
+                                        onChange={this.handleFgBrixChange}
+                                        type="number"
+                                        inputProps={{ min: 0 }}
+                                        fullWidth
+                                        variant="outlined"
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={4}>
+                                    <TextField
+                                        label="Scheinbarer Restextrakt (Brix, Terrill)"
+                                        value={terrillResult}
+                                        InputProps={{ readOnly: true }}
+                                        fullWidth
+                                        variant="outlined"
                                     />
                                 </Grid>
                             </Grid>

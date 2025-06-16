@@ -60,3 +60,28 @@ export function temperatureCorrection(aBx_P_scale: number, aTemperature: number,
     const correction = TEMP_CORRECTION_QUADRATIC * Math.pow(aTemperature - refTemp, 2) + TEMP_CORRECTION_LINEAR * (aTemperature - refTemp);
     return aBx_P_scale + correction;
 }
+
+/**
+ * Berechnet den scheinbaren Restextrakt nach Terrill-Korrektur (Brix).
+ * @param ogBrix Stammwürze in Brix
+ * @param fgBrix Restextrakt in Brix
+ * @returns scheinbarer Restextrakt (Brix)
+ */
+export function correctedBrixTerrill(ogBrix: number, fgBrix: number): number {
+  return (
+    1.0000 -
+    0.00085683 * ogBrix +
+    0.0034941 * fgBrix +
+    0.0000138 * fgBrix * fgBrix
+  );
+}
+
+export function correctedBrixNovotny(ogBrix: number, fgBrix: number): number {
+    return (
+        1.0000 -
+        0.0044993 * ogBrix +
+        0.011774 * fgBrix +
+        0.00027581 * fgBrix * fgBrix -
+        0.0000012717 * fgBrix * fgBrix * fgBrix
+    );
+}
