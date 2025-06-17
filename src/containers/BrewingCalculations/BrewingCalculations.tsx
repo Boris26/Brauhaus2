@@ -96,15 +96,219 @@ class BrewingCalculations extends React.Component<{}, BrewingCalculationsState> 
          return Math.round(sugarGrams);
     }
 
+    // Methoden für einzelne UI-Blöcke
+    renderBrixPlatoBlock = () => {
+        const { brix, plato } = this.state;
+        return (
+            <Box mb={3}>
+                <Typography variant="h6">Brix &lt;-&gt; Plato</Typography>
+                <Paper elevation={2} style={{ padding: 16, marginBottom: 16 }}>
+                    <Grid container spacing={2} alignItems="center">
+                        <Grid item xs={12} sm={4}>
+                            <TextField
+                                label="Brix"
+                                value={brix}
+                                onChange={e => {
+                                    const val = (e.target as HTMLInputElement).value;
+                                    if (val === '' || parseFloat(val) >= 0) this.handleBrixChange(e as React.ChangeEvent<HTMLInputElement>);
+                                }}
+                                type="number"
+                                inputProps={{ min: 0 }}
+                                fullWidth
+                                variant="outlined"
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={2}>
+                            <Typography align="center">→</Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={4}>
+                            <TextField
+                                label="Plato"
+                                value={brix !== '' ? brixToPlato(parseFloat(brix)).toFixed(2) : ''}
+                                InputProps={{ readOnly: true }}
+                                fullWidth
+                                variant="outlined"
+                            />
+                        </Grid>
+                    </Grid>
+                    <Grid container spacing={2} alignItems="center" style={{ marginTop: 16 }}>
+                        <Grid item xs={12} sm={4}>
+                            <TextField
+                                label="Plato"
+                                value={plato}
+                                onChange={e => {
+                                    const val = (e.target as HTMLInputElement).value;
+                                    if (val === '' || parseFloat(val) >= 0) this.handlePlatoChange(e as React.ChangeEvent<HTMLInputElement>);
+                                }}
+                                type="number"
+                                inputProps={{ min: 0 }}
+                                fullWidth
+                                variant="outlined"
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={2}>
+                            <Typography align="center">→</Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={4}>
+                            <TextField
+                                label="Brix"
+                                value={plato !== '' ? platoToBrix(parseFloat(plato)).toFixed(2) : ''}
+                                InputProps={{ readOnly: true }}
+                                fullWidth
+                                variant="outlined"
+                            />
+                        </Grid>
+                    </Grid>
+                </Paper>
+            </Box>
+        );
+    };
 
-
-    render() {
-        const { brix, plato, temp, carbTemp, carbTarget, carbLiters, ogBrix, fgBrix } = this.state;
+    renderTemperatureCorrectionBlock = () => {
+        const { brix, plato, temp } = this.state;
         const brixNum = parseFloat(brix);
         const platoNum = parseFloat(plato);
         const tempNum = parseFloat(temp);
+        return (
+            <Box mb={3}>
+                <Typography variant="h6">Temperaturkorrektur</Typography>
+                <Paper elevation={2} style={{ padding: 16, marginBottom: 16 }}>
+                    <Grid container spacing={2} alignItems="center">
+                        <Grid item xs={12} sm={4}>
+                            <TextField
+                                label="Gemessene Temperatur (°C)"
+                                value={temp}
+                                onChange={e => {
+                                    const val = (e.target as HTMLInputElement).value;
+                                    if (val === '' || parseFloat(val) >= 0) this.handleTempChange(e as React.ChangeEvent<HTMLInputElement>);
+                                }}
+                                type="number"
+                                inputProps={{ min: 0 }}
+                                fullWidth
+                                variant="outlined"
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={4}>
+                            <TextField
+                                label="Brix (korrigiert)"
+                                value={brix !== '' && temp !== '' ? temperatureCorrection(brixNum, tempNum).toFixed(2) : ''}
+                                InputProps={{ readOnly: true }}
+                                fullWidth
+                                variant="outlined"
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={4}>
+                            <TextField
+                                label="Plato (korrigiert)"
+                                value={plato !== '' && temp !== '' ? temperatureCorrection(platoNum, tempNum).toFixed(2) : ''}
+                                InputProps={{ readOnly: true }}
+                                fullWidth
+                                variant="outlined"
+                            />
+                        </Grid>
+                    </Grid>
+                </Paper>
+            </Box>
+        );
+    };
+
+    renderCarbonationBlock = () => {
+        const { carbTemp, carbTarget, carbLiters, waterForSolutionML } = this.state;
         const sucroseSugar = this.calculateSugarAmount(eSugarTypes.Sucrose);
         const glucoseSugar = this.calculateSugarAmount(eSugarTypes.Glucose);
+        return (
+            <Box mb={3}>
+                <Typography variant="h6">Zucker-/Traubenzucker-Zugabe für Karbonisierung</Typography>
+                <Paper elevation={2} style={{ padding: 16, marginBottom: 16 }}>
+                    <Grid container spacing={2} alignItems="center">
+                        <Grid item xs={12} sm={3}>
+                            <TextField
+                                label="Jungbiertemperatur (°C)"
+                                value={carbTemp}
+                                onChange={e => {
+                                    const val = (e.target as HTMLInputElement).value;
+                                    if (val === '' || parseFloat(val) >= 0) this.handleCarbTempChange(e as React.ChangeEvent<HTMLInputElement>);
+                                }}
+                                type="number"
+                                inputProps={{ min: 0 }}
+                                fullWidth
+                                variant="outlined"
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={3}>
+                            <TextField
+                                label="Gewünschter CO₂-Gehalt (g/L)"
+                                value={carbTarget}
+                                onChange={e => {
+                                    const val = (e.target as HTMLInputElement).value;
+                                    if (val === '' || parseFloat(val) >= 0) this.handleCarbTargetChange(e as React.ChangeEvent<HTMLInputElement>);
+                                }}
+                                type="number"
+                                inputProps={{ min: 0 }}
+                                fullWidth
+                                variant="outlined"
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={3}>
+                            <TextField
+                                label="Liter insgesamt"
+                                value={carbLiters}
+                                onChange={e => {
+                                    const val = (e.target as HTMLInputElement).value;
+                                    if (val === '' || parseFloat(val) >= 0) this.handleCarbLitersChange(e as React.ChangeEvent<HTMLInputElement>);
+                                }}
+                                type="number"
+                                inputProps={{ min: 0 }}
+                                fullWidth
+                                variant="outlined"
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={3}>
+                            <TextField
+                                label="Water for solution (ml)"
+                                value={waterForSolutionML}
+                                onChange={e => {
+                                    const val = (e.target as HTMLInputElement).value;
+                                    if (val === '' || parseFloat(val) >= 0) this.handleKlarwasserChange(e as React.ChangeEvent<HTMLInputElement>);
+                                }}
+                                type="number"
+                                inputProps={{ min: 0, step: 100 }}
+                                fullWidth
+                                variant="outlined"
+                            />
+                        </Grid>
+                    </Grid>
+                    <Grid container spacing={2} alignItems="center" style={{ marginTop: 16 }}>
+                        <Grid item xs={12} sm={6}>
+                            <Typography variant="subtitle2" style={{color:'#90caf9',marginBottom:4}}>Haushaltszucker (Saccharose)</Typography>
+                            <TextField
+                                label="Zucker gesamt (g)"
+                                value={sucroseSugar ? sucroseSugar.toFixed(2) : ''}
+                                InputProps={{ readOnly: true }}
+                                fullWidth
+                                variant="outlined"
+                                style={{marginBottom:8}}
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <Typography variant="subtitle2" style={{color:'#90caf9',marginBottom:4}}>Traubenzucker (Glucose/Dextrose)</Typography>
+                            <TextField
+                                label="Traubenzucker gesamt (g)"
+                                value={glucoseSugar ? glucoseSugar.toFixed(2) : ''}
+                                InputProps={{ readOnly: true }}
+                                fullWidth
+                                variant="outlined"
+                                style={{marginBottom:8}}
+                            />
+                        </Grid>
+                    </Grid>
+                </Paper>
+            </Box>
+        );
+    };
+
+    renderTerrillBlock = () => {
+        const { ogBrix, fgBrix } = this.state;
         const ogBrixNum = parseFloat(ogBrix || '');
         const fgBrixNum = parseFloat(fgBrix || '');
         const terrillResult =
@@ -112,227 +316,58 @@ class BrewingCalculations extends React.Component<{}, BrewingCalculationsState> 
                 ? correctedBrixNovotny(ogBrixNum, fgBrixNum).toFixed(2)
                 : '';
         return (
+            <Box mb={3}>
+                <Typography variant="h6">Scheinbarer Restextrakt (Terrill-Korrektur)</Typography>
+                <Paper elevation={2} style={{ padding: 16, marginBottom: 16 }}>
+                    <Grid container spacing={2} alignItems="center">
+                        <Grid item xs={12} sm={4}>
+                            <TextField
+                                label="Stammwürze (Brix)"
+                                value={ogBrix}
+                                onChange={this.handleOgBrixChange}
+                                type="number"
+                                inputProps={{ min: 0 }}
+                                fullWidth
+                                variant="outlined"
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={4}>
+                            <TextField
+                                label="Restextrakt (Brix)"
+                                value={fgBrix}
+                                onChange={this.handleFgBrixChange}
+                                type="number"
+                                inputProps={{ min: 0 }}
+                                fullWidth
+                                variant="outlined"
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={4}>
+                            <TextField
+                                label="Scheinbarer Restextrakt (Brix, Terrill)"
+                                value={terrillResult}
+                                InputProps={{ readOnly: true }}
+                                fullWidth
+                                variant="outlined"
+                            />
+                        </Grid>
+                    </Grid>
+                </Paper>
+            </Box>
+        );
+    };
+
+    render() {
+        return (
             <div className="BrewingCalculations-outer">
-                <SimpleBar style={{ maxHeight: '100%' }}>
+                <SimpleBar style={{ maxHeight: '60%' }}>
                     <Paper elevation={3} style={{  margin: 24, padding: 24 }}>
                         <Typography variant="h5" gutterBottom>Bierbrau-Berechnungen</Typography>
-                        <Box mb={3}>
-                            <Typography variant="h6">Brix &lt;-&gt; Plato</Typography>
-                            <Grid container spacing={2} alignItems="center">
-                                <Grid item xs={12} sm={4}>
-                                    <TextField
-                                        label="Brix"
-                                        value={brix}
-                                        onChange={e => {
-                                            const val = (e.target as HTMLInputElement).value;
-                                            if (val === '' || parseFloat(val) >= 0) this.handleBrixChange(e as React.ChangeEvent<HTMLInputElement>);
-                                        }}
-                                        type="number"
-                                        inputProps={{ min: 0 }}
-                                        fullWidth
-                                        variant="outlined"
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sm={2}>
-                                    <Typography align="center">→</Typography>
-                                </Grid>
-                                <Grid item xs={12} sm={4}>
-                                    <TextField
-                                        label="Plato"
-                                        value={brix !== '' ? brixToPlato(brixNum).toFixed(2) : ''}
-                                        InputProps={{ readOnly: true }}
-                                        fullWidth
-                                        variant="outlined"
-                                    />
-                                </Grid>
-                            </Grid>
-                            <Grid container spacing={2} alignItems="center" style={{ marginTop: 16 }}>
-                                <Grid item xs={12} sm={4}>
-                                    <TextField
-                                        label="Plato"
-                                        value={plato}
-                                        onChange={e => {
-                                            const val = (e.target as HTMLInputElement).value;
-                                            if (val === '' || parseFloat(val) >= 0) this.handlePlatoChange(e as React.ChangeEvent<HTMLInputElement>);
-                                        }}
-                                        type="number"
-                                        inputProps={{ min: 0 }}
-                                        fullWidth
-                                        variant="outlined"
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sm={2}>
-                                    <Typography align="center">→</Typography>
-                                </Grid>
-                                <Grid item xs={12} sm={4}>
-                                    <TextField
-                                        label="Brix"
-                                        value={plato !== '' ? platoToBrix(platoNum).toFixed(2) : ''}
-                                        InputProps={{ readOnly: true }}
-                                        fullWidth
-                                        variant="outlined"
-                                    />
-                                </Grid>
-                            </Grid>
-                        </Box>
-                        <Box mb={3}>
-                            <Typography variant="h6">Temperaturkorrektur</Typography>
-                            <Grid container spacing={2} alignItems="center">
-                                <Grid item xs={12} sm={4}>
-                                    <TextField
-                                        label="Gemessene Temperatur (°C)"
-                                        value={temp}
-                                        onChange={e => {
-                                            const val = (e.target as HTMLInputElement).value;
-                                            if (val === '' || parseFloat(val) >= 0) this.handleTempChange(e as React.ChangeEvent<HTMLInputElement>);
-                                        }}
-                                        type="number"
-                                        inputProps={{ min: 0 }}
-                                        fullWidth
-                                        variant="outlined"
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sm={4}>
-                                    <TextField
-                                        label="Brix (korrigiert)"
-                                        value={brix !== '' && temp !== '' ? temperatureCorrection(brixNum, tempNum).toFixed(2) : ''}
-                                        InputProps={{ readOnly: true }}
-                                        fullWidth
-                                        variant="outlined"
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sm={4}>
-                                    <TextField
-                                        label="Plato (korrigiert)"
-                                        value={plato !== '' && temp !== '' ? temperatureCorrection(platoNum, tempNum).toFixed(2) : ''}
-                                        InputProps={{ readOnly: true }}
-                                        fullWidth
-                                        variant="outlined"
-                                    />
-                                </Grid>
-                            </Grid>
-                        </Box>
-                        <Box mb={3}>
-                            <Typography variant="h6">Zucker-/Traubenzucker-Zugabe für Karbonisierung</Typography>
-                            <Grid container spacing={2} alignItems="center">
-                                <Grid item xs={12} sm={3}>
-                                    <TextField
-                                        label="Jungbiertemperatur (°C)"
-                                        value={carbTemp}
-                                        onChange={e => {
-                                            const val = (e.target as HTMLInputElement).value;
-                                            if (val === '' || parseFloat(val) >= 0) this.handleCarbTempChange(e as React.ChangeEvent<HTMLInputElement>);
-                                        }}
-                                        type="number"
-                                        inputProps={{ min: 0 }}
-                                        fullWidth
-                                        variant="outlined"
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sm={3}>
-                                    <TextField
-                                        label="Gewünschter CO₂-Gehalt (g/L)"
-                                        value={carbTarget}
-                                        onChange={e => {
-                                            const val = (e.target as HTMLInputElement).value;
-                                            if (val === '' || parseFloat(val) >= 0) this.handleCarbTargetChange(e as React.ChangeEvent<HTMLInputElement>);
-                                        }}
-                                        type="number"
-                                        inputProps={{ min: 0 }}
-                                        fullWidth
-                                        variant="outlined"
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sm={3}>
-                                    <TextField
-                                        label="Liter insgesamt"
-                                        value={carbLiters}
-                                        onChange={e => {
-                                            const val = (e.target as HTMLInputElement).value;
-                                            if (val === '' || parseFloat(val) >= 0) this.handleCarbLitersChange(e as React.ChangeEvent<HTMLInputElement>);
-                                        }}
-                                        type="number"
-                                        inputProps={{ min: 0 }}
-                                        fullWidth
-                                        variant="outlined"
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sm={3}>
-                                    <TextField
-                                        label="Water for solution (ml)"
-                                        value={this.state.waterForSolutionML}
-                                        onChange={e => {
-                                            const val = (e.target as HTMLInputElement).value;
-                                            if (val === '' || parseFloat(val) >= 0) this.handleKlarwasserChange(e as React.ChangeEvent<HTMLInputElement>);
-                                        }}
-                                        type="number"
-                                        inputProps={{ min: 0, step: 100 }}
-                                        fullWidth
-                                        variant="outlined"
-                                    />
-                                </Grid>
-                            </Grid>
-                            <Grid container spacing={2} alignItems="center" style={{ marginTop: 16 }}>
-                                <Grid item xs={12} sm={6}>
-                                    <Typography variant="subtitle2" style={{color:'#90caf9',marginBottom:4}}>Haushaltszucker (Saccharose)</Typography>
-                                    <TextField
-                                        label="Zucker gesamt (g)"
-                                        value={sucroseSugar ? sucroseSugar.toFixed(2) : ''}
-                                        InputProps={{ readOnly: true }}
-                                        fullWidth
-                                        variant="outlined"
-                                        style={{marginBottom:8}}
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sm={6}>
-                                    <Typography variant="subtitle2" style={{color:'#90caf9',marginBottom:4}}>Traubenzucker (Glucose/Dextrose)</Typography>
-                                    <TextField
-                                        label="Traubenzucker gesamt (g)"
-                                        value={glucoseSugar ? glucoseSugar.toFixed(2) : ''}
-                                        InputProps={{ readOnly: true }}
-                                        fullWidth
-                                        variant="outlined"
-                                        style={{marginBottom:8}}
-                                    />
-                                </Grid>
-                            </Grid>
-                        </Box>
-                        <Box mb={3}>
-                            <Typography variant="h6">Scheinbarer Restextrakt (Terrill-Korrektur)</Typography>
-                            <Grid container spacing={2} alignItems="center">
-                                <Grid item xs={12} sm={4}>
-                                    <TextField
-                                        label="Stammwürze (Brix)"
-                                        value={ogBrix}
-                                        onChange={this.handleOgBrixChange}
-                                        type="number"
-                                        inputProps={{ min: 0 }}
-                                        fullWidth
-                                        variant="outlined"
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sm={4}>
-                                    <TextField
-                                        label="Restextrakt (Brix)"
-                                        value={fgBrix}
-                                        onChange={this.handleFgBrixChange}
-                                        type="number"
-                                        inputProps={{ min: 0 }}
-                                        fullWidth
-                                        variant="outlined"
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sm={4}>
-                                    <TextField
-                                        label="Scheinbarer Restextrakt (Brix, Terrill)"
-                                        value={terrillResult}
-                                        InputProps={{ readOnly: true }}
-                                        fullWidth
-                                        variant="outlined"
-                                    />
-                                </Grid>
-                            </Grid>
-                        </Box>
+                        {this.renderBrixPlatoBlock()}
+                        {this.renderTemperatureCorrectionBlock()}
+                        {this.renderTerrillBlock()}
+                        {this.renderCarbonationBlock()}
+
                     </Paper>
                 </SimpleBar>
             </div>
