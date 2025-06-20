@@ -8,8 +8,6 @@ import {
     Accordion,
     AccordionDetails,
     AccordionSummary,
-    bottomNavigationActionClasses, css,
-    styled,
     Typography
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -53,8 +51,6 @@ interface BeerFormState {
     isSubmitSuccessful: boolean;
 }
 
-
-
 class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
     constructor(props: BeerFormProps) {
         super(props);
@@ -81,35 +77,34 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
     handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-
         this.setState({[name]: value} as unknown as Pick<BeerFormState, keyof BeerFormState>);
     };
+
     componentDidMount() {
         const {getMalt,getHop,getYeast} = this.props;
         getMalt(true);
         getHop(true);
         getYeast(true);
     }
+
     componentDidUpdate(prevProps: Readonly<BeerFormProps>, prevState: Readonly<BeerFormState>, snapshot?: any) {
-        const {isSubmitSuccessful,malts,hops,yeasts} = this.props;
-        if (!isEqual(this.state.isSubmitSuccessful,prevState.isSubmitSuccessful) )
-        {
+        const {isSubmitSuccessful} = this.props;
+        if (!isEqual(this.state.isSubmitSuccessful,prevState.isSubmitSuccessful)) {
             this.setState({isSubmitSuccessful:isSubmitSuccessful});
         }
-
     }
 
-    handleFermentationStepChange = (value: string,name: string, index: number) => {
+    handleFermentationStepChange = (value: string, name: string, index: number) => {
        if (value === 'Rast') {
-                value = value + index;
-        }
-        this.setState((prevState) => {
-            const fermentationSteps = [...prevState.fermentationSteps];
-            const step = fermentationSteps[index];
-            // @ts-ignore
-            step[name] = value;
-            return { fermentationSteps };
-        });
+            value = value + index;
+       }
+       this.setState((prevState) => {
+          const fermentationSteps = [...prevState.fermentationSteps];
+          const step = fermentationSteps[index];
+          // @ts-ignore
+          step[name] = value;
+          return { fermentationSteps };
+       });
     };
 
     handleMaltChange = (value: string, name: string, index: number) => {
@@ -123,7 +118,6 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
     }
 
     handleHopChange = (value: string, name: string, index: number) => {
-
         this.setState((prevState) => {
             const hopsDTO = [...prevState.hopsDTO];
             const step = hopsDTO[index];
@@ -132,6 +126,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             return { hopsDTO };
         });
     }
+
     handleYeastChange = (value: string, name: string, index: number) => {
         this.setState((prevState) => {
             const yeastsDTO = [...prevState.yeastsDTO];
@@ -149,7 +144,6 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             .map((option) => option.value);
         this.setState({[name]: selectedValues} as unknown as Pick<BeerFormState, keyof BeerFormState>);
     };
-
 
     handleSubmit = (e: FormEvent) => {
         const {malts,hops,yeasts} = this.props;
@@ -175,18 +169,17 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         const malts_DTO = maltsDTO.map((aMalt) => {
             // @ts-ignore
-            const malt =  malts.find((malt) => malt.name === aMalt.name)!;
+            const malt = malts.find((malt) => malt.name === aMalt.name)!;
             const quantity = aMalt.quantity;
             return {name: malt.name, id: malt.id, quantity: quantity};
         });
-
 
         const hops_DTO = hopsDTO.map((aHop) => {
             // @ts-ignore
             const hop = hops.find((hop) => hop.name === aHop.name)!;
             const quantity = aHop.quantity;
             const time = aHop.time;
-            return { id: hop.id,name: hop.name ,quantity: quantity, time: time };
+            return { id: hop.id, name: hop.name, quantity: quantity, time: time };
         });
 
         const yeasts_DTO = yeastsDTO.map((aYeast) => {
@@ -213,10 +206,11 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             cookingTemperatur,
             malts: malts_DTO,
             wortBoiling: { totalTime: 0, hops: hops_DTO },
-            fermentationMaturation: {  fermentationTemperature: 0,   carbonation: 0,   yeast: yeasts_DTO}};
+            fermentationMaturation: { fermentationTemperature: 0, carbonation: 0, yeast: yeasts_DTO}
+        };
+
         console.log(beer);
         this.props.onSubmitBeer(beer);
-       // this.resetForm();
     };
 
     resetForm = () => {
@@ -245,15 +239,16 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             fermentationSteps: [...prevState.fermentationSteps, { type: '', temperature: 0, time: 0 }],
         }));
     };
+
     addMalts = () => {
         this.setState((prevState) => ({
-            maltsDTO: [...prevState.maltsDTO, { id: '',name: '', quantity: 0 }],
+            maltsDTO: [...prevState.maltsDTO, { id: '', name: '', quantity: 0 }],
         }));
     }
 
     addHops = () => {
         this.setState((prevState) => ({
-            hopsDTO: [...prevState.hopsDTO, { id: '',name: '', quantity: 0, time: 0 }],
+            hopsDTO: [...prevState.hopsDTO, { id: '', name: '', quantity: 0, time: 0 }],
         }));
     }
 
@@ -262,7 +257,6 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             yeastsDTO: [...prevState.yeastsDTO, {id: '', name: '', quantity: 0}],
         }));
     }
-
 
     removeFermentationStep = (index: number) => {
         this.setState((prevState) => {
@@ -278,8 +272,8 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             maltsDTO.splice(index, 1);
             return { maltsDTO };
         });
-
     }
+
     removeHops = (index: number) => {
         this.setState((prevState) => {
             const hopsDTO = [...prevState.hopsDTO];
@@ -287,6 +281,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             return { hopsDTO };
         });
     }
+
     removeYeast = (index: number) => {
         this.setState((prevState) => {
             const yeastsDTO = [...prevState.yeastsDTO];
@@ -296,278 +291,315 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
     }
 
     renderCreateBeerForm() {
-        const {maltsDTO,hopsDTO,yeastsDTO,isSubmitSuccessful, name, type, color, alcohol, originalwort, bitterness, description, rating, mashVolume, spargeVolume, fermentationSteps ,cookingTime,cookingTemperatur} = this.state;
+        const {maltsDTO, hopsDTO, yeastsDTO, isSubmitSuccessful, name, type, color, alcohol, originalwort, bitterness, description, rating, mashVolume, spargeVolume, fermentationSteps, cookingTime, cookingTemperatur} = this.state;
         // Standardwerte setzen, falls Daten noch nicht geladen sind
         const { malts = [], hops = [], yeasts = [], messageType, message } = this.props;
-        console.log(hops);
 
-        let info:string = "";
-        if (isEqual(isSubmitSuccessful,true))
-        {
+        let info: string = "";
+        if (isEqual(isSubmitSuccessful, true)) {
             info = "Beer created successfully";
-        }
-        else if (isSubmitSuccessful === false)
-        {
+        } else if (isSubmitSuccessful === false) {
             info = "Beer creation failed";
         }
+
         return (
             <form className="beer-form" onSubmit={this.handleSubmit}>
                 <label>
                     Name:
-                    <input type="text" name="name" value={name} onChange={this.handleChange} required={true}  />
+                    <input type="text" name="name" className="field-name" value={name} onChange={this.handleChange} required={true} maxLength={15} />
                 </label>
 
                 <label>
                     Type:
-                    <input type="text" name="type" value={type} onChange={this.handleChange} required={true}  />
+                    <input type="text" name="type" className="field-type" value={type} onChange={this.handleChange} required={true} maxLength={10} />
                 </label>
 
                 <label>
                     Farbe:
-                    <input type="text" name="color" value={color} onChange={this.handleChange}  />
+                    <input type="text" name="color" className="field-color" value={color} onChange={this.handleChange} maxLength={4} />
                 </label>
 
                 <label>
                     Alkoholgehalt:
-                    <input type="number" name="alcohol" value={alcohol} min={0} step={0.1} onChange={this.handleChange} required={true}  />
+                    <input type="number" name="alcohol" className="field-number-small" value={alcohol} min={0} step={0.1} onChange={this.handleChange} required={true} max={99} />
                 </label>
 
                 <label>
                     Stammwürze:
-                    <input type="number" name="originalwort" value={originalwort} min={0} step={0.1} onChange={this.handleChange} required={true}  />
+                    <input type="number" name="originalwort" className="field-number-small" value={originalwort} min={0} step={0.1} onChange={this.handleChange} required={true} max={99} />
                 </label>
 
                 <label>
                     Bitterkeit:
-                    <input type="number" name="bitterness" value={bitterness} min={0} step={0.1} onChange={this.handleChange} required={true}  />
+                    <input type="number" name="bitterness" className="field-number-small" value={bitterness} min={0} step={0.1} onChange={this.handleChange} required={true} max={99} />
                 </label>
 
-                <label>
+                <label className="full-width">
                     Beschreibung:
-                    <textarea name="description" value={description} onChange={this.handleChange}  />
+                    <textarea name="description" value={description} onChange={this.handleChange} />
                 </label>
 
                 <label>
                     Bewertung:
-                    <input type="number" name="rating" value={rating} min={0} max={5} onChange={this.handleChange}  />
+                    <input type="number" name="rating" className="field-number-small" value={rating} min={0} max={5} onChange={this.handleChange} />
                 </label>
 
                 <label>
-                    Hauptguss Volumen (liter) :
-                    <input type="number" name="mashVolume" min={0} value={mashVolume} step={0.1} onChange={this.handleChange} required={true}  />
+                    Hauptguss (l):
+                    <input type="number" name="mashVolume" className="field-number-small" min={0} value={mashVolume} step={0.1} onChange={this.handleChange} required={true} max={99} />
                 </label>
 
                 <label>
-                    Nachguss Volumen (liter) :
-                    <input type="number" name="spargeVolume" min={0} step={0.1} value={spargeVolume} onChange={this.handleChange} required={true}  />
+                    Nachguss (l):
+                    <input type="number" name="spargeVolume" className="field-number-small" min={0} step={0.1} value={spargeVolume} onChange={this.handleChange} required={true} max={99} />
                 </label>
+
                 <label>
-                    Kochzeit minuten:
-                    <input type="number" name="cookingTime" min={0} value={cookingTime} onChange={this.handleChange} required={true}  />
+                    Kochzeit (min):
+                    <input type="number" name="cookingTime" className="field-number-medium" min={0} value={cookingTime} onChange={this.handleChange} required={true} max={999} />
                 </label>
+
                 <label>
-                    Kochtemperatur:
-                    <input type="number" name="cookingTemperatur" min={70} value={cookingTemperatur} onChange={this.handleChange} required={true}  />
+                    Kochtemp.:
+                    <input type="number" name="cookingTemperatur" className="field-number-small" min={70} value={cookingTemperatur} onChange={this.handleChange} required={true} max={99} />
                 </label>
 
-                <div className="fermentation-steps-container">
-                    <h3>Maischeplan:</h3>
-                    {fermentationSteps?.map((step, index) => (
-                        <div key={index} className="fermentation-step-container">
-                            <label>
-                                Type:
-                                <select name="type" value={step.type} onChange={(e) => this.handleFermentationStepChange(e.target.value,e.target.name, index)} required={false} >
-                                    <option value="">Select Type</option>
-                                    {Object.values(MashingType).map((mashingType) => (
-                                        <option key={mashingType} value={mashingType}>
-                                            {mashingType}
-                                        </option>
-                                    ))}
+                <div className="full-width tables-container">
+                    <div className="table-section">
+                        <h3>Maischeplan:</h3>
+                        <table className="ingredient-table">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Temp (°C)</th>
+                                    <th>Zeit (min)</th>
+                                    <th className="action-column">Aktion</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {fermentationSteps?.map((step, index) => (
+                                    <tr key={index}>
+                                        <td>
+                                            <select name="type" value={step.type} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={false}>
+                                                <option value="">Typ</option>
+                                                {Object.values(MashingType).map((mashingType) => (
+                                                    <option key={mashingType} value={mashingType}>
+                                                        {mashingType}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="number" name="temperature" value={step.temperature} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />
+                                        </td>
+                                        <td>
+                                            <input type="number" name="time" value={step.time} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />
+                                        </td>
+                                        <td className="action-column">
+                                            {index > 0 && <button type="button" onClick={() => this.removeFermentationStep(index)}>Löschen</button>}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        <button type="button" className="add-button" onClick={this.addFermentationStep}>Rast zufügen</button>
+                    </div>
 
-                                </select>
-                                <input type="text" name="type" value={step.type} onChange={(e) => this.handleFermentationStepChange(e.target.value,e.target.name, index)} required={true}  />
-                            </label>
+                    <div className="table-section">
+                        <h3>Malze</h3>
+                        <table className="ingredient-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Menge (g)</th>
+                                    <th className="action-column">Aktion</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {maltsDTO?.map((step, index) => (
+                                    <tr key={index}>
+                                        <td>
+                                            <select
+                                                name="name"
+                                                value={step.name}
+                                                onChange={(e) => this.handleMaltChange(e.target.value, e.target.name, index)}
+                                                required={true}
+                                            >
+                                                <option value="">Malz</option>
+                                                {malts.map((malt) => (
+                                                    <option key={malt.id} value={malt.name}>
+                                                        {malt.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input
+                                                type="number"
+                                                name="quantity"
+                                                min={0}
+                                                value={step.quantity}
+                                                onChange={(e) => this.handleMaltChange(e.target.value, e.target.name, index)}
+                                                required={true}
+                                            />
+                                        </td>
+                                        <td className="action-column">
+                                            <button type="button" onClick={() => this.removeMalts(index)}>Löschen</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        <button type="button" className="add-button" onClick={this.addMalts}>Malz zufügen</button>
+                    </div>
 
-                            <label>
-                                Temperature:
-                                <input type="number" name="temperature" value={step.temperature} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name,index)} required={true}  />
-                            </label>
+                    <div className="table-section">
+                        <h3>Hopfen</h3>
+                        <table className="ingredient-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Menge (g)</th>
+                                    <th>Zeit (min)</th>
+                                    <th className="action-column">Aktion</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {hopsDTO?.map((step, index) => (
+                                    <tr key={index}>
+                                        <td>
+                                            <select
+                                                name="name"
+                                                value={step.name}
+                                                onChange={(e) => this.handleHopChange(e.target.value, "name", index)}
+                                                required={true}
+                                            >
+                                                <option value="">Hopfen</option>
+                                                {hops.map((hop) => (
+                                                    <option key={hop.id} value={hop.name}>
+                                                        {hop.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input
+                                                type="number"
+                                                name="quantity"
+                                                min={0}
+                                                value={step.quantity}
+                                                onChange={(e) => this.handleHopChange(e.target.value, "quantity", index)}
+                                                required={true}
+                                            />
+                                        </td>
+                                        <td>
+                                            <input
+                                                type="number"
+                                                name="time"
+                                                min={0}
+                                                value={step.time}
+                                                onChange={(e) => this.handleHopChange(e.target.value, "time", index)}
+                                                required={true}
+                                            />
+                                        </td>
+                                        <td className="action-column">
+                                            <button type="button" onClick={() => this.removeHops(index)}>Löschen</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        <button type="button" className="add-button" onClick={this.addHops}>Hopfen zufügen</button>
+                    </div>
 
-                            <label>
-                                Zeit:
-                                <input type="number" name="time" value={step.time} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name,index)} required={true}  />
-                            </label>
-
-                            {index > 0 && <button type="button" onClick={() => this.removeFermentationStep(index)}>Remove</button>}
-                        </div>
-                    ))}
-
-                    <button type="button" onClick={this.addFermentationStep}>Rasten zufügen</button>
+                    <div className="table-section">
+                        <h3>Hefe</h3>
+                        <table className="ingredient-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Menge (g)</th>
+                                    <th className="action-column">Aktion</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {yeastsDTO?.map((step, index) => (
+                                    <tr key={index}>
+                                        <td>
+                                            <select
+                                                name="name"
+                                                value={step.name}
+                                                onChange={(e) => this.handleYeastChange(e.target.value, e.target.name, index)}
+                                                required={true}
+                                            >
+                                                <option value="">Hefe</option>
+                                                {yeasts.map((yeast) => (
+                                                    <option key={yeast.id} value={yeast.name}>
+                                                        {yeast.name}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input
+                                                type="number"
+                                                name="quantity"
+                                                min={0}
+                                                value={step.quantity}
+                                                onChange={(e) => this.handleYeastChange(e.target.value, e.target.name, index)}
+                                                required={true}
+                                            />
+                                        </td>
+                                        <td className="action-column">
+                                            <button type="button" onClick={() => this.removeYeast(index)}>Löschen</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        <button type="button" className="add-button" onClick={this.addYeast}>Hefe zufügen</button>
+                    </div>
                 </div>
 
-                <div className="fermentation-steps-container">
-                    <h3>Malze</h3>
-                    {maltsDTO?.map((step, index) => (
-                        <div key={index} className="fermentation-step-container">
-                            <label>
-                                Name:
-                                <select name="name" value={step.name} onChange={(e) => this.handleMaltChange(e.target.value,e.target.name, index)} required={true} >
-                                    <option value="">Type</option>
-                                    {malts.map((malt) => (
-                                        <option key={malt.id} value={malt.name}>
-                                            {malt.name}
-                                        </option>
-                                    ))}
-
-                                </select>
-                                <input type="text" name="type" value={step.name} onChange={(e) => this.handleMaltChange(e.target.value,e.target.name, index)} required={true}  />
-                            </label>
-                            <label>
-                                Menge:
-                                <input type="number" name="quantity" min={0} value={step.quantity} onChange={(e) => this.handleMaltChange(e.target.value, e.target.name,index)} required={true}  />
-                            </label>
-
-
-                            {index > 0 && <button type="button" onClick={() => this.removeMalts(index)}>Remove</button>}
-                        </div>
-                    ))}
-
-                    <button type="button" onClick={this.addMalts}>Malz zufügen</button>
-                </div>
-
-                <div className="fermentation-steps-container">
-                    <h3>Hopfen</h3>
-                    {hopsDTO?.map((step, index) => (
-                        <div key={index} className="fermentation-step-container">
-                            <label>
-                                Name:
-                                <select
-                                    name="name"
-                                    value={step.name}
-                                    onChange={(e) => this.handleHopChange(e.target.value, "name", index)}
-                                    required={true}
-                                >
-                                    <option value="">Name</option>
-                                    {hops.map((hop) => (
-                                        <option key={hop.id} value={hop.name}>
-                                            {hop.name}
-                                        </option>
-                                    ))}
-                                </select>
-                                <input
-                                    type="text"
-                                    name="Name"
-                                    value={step.name}
-                                    onChange={(e) => this.handleHopChange(e.target.value, "Name", index)}
-                                    required={true}
-                                />
-                            </label>
-                            <label>
-                                Menge:
-                                <input
-                                    type="number"
-                                    name="Quantity"
-                                    min={0}
-                                    value={step.quantity}
-                                    onChange={(e) => this.handleHopChange(e.target.value, "Quantity", index)}
-                                    required={true}
-                                />
-                            </label>
-                            <label>
-                                Zeit:
-                                <input
-                                    type="number"
-                                    name="Time"
-                                    min={0}
-                                    value={step.time}
-                                    onChange={(e) => this.handleHopChange(e.target.value, "Time", index)}
-                                    required={true}
-                                />
-                            </label>
-                            {index > 0 && <button type="button" onClick={() => this.removeHops(index)}>Remove</button>}
-                        </div>
-                    ))}
-                    <button type="button" onClick={this.addHops}>Hopfen zufügen</button>
-                </div>
-
-                <div className="fermentation-steps-container">
-                    <h3>Hefe</h3>
-                    {yeastsDTO?.map((step, index) => (
-                        <div key={index} className="fermentation-step-container">
-                            <label>
-                                Name:
-                                <select name="name" value={step.name} onChange={(e) => this.handleYeastChange(e.target.value,e.target.name, index)} required={true} >
-                                    <option value="">Type</option>
-                                    {yeasts.map((yeast) => (
-                                        <option key={yeast.id} value={yeast.name}>
-                                            {yeast.name}
-                                        </option>
-                                    ))}
-
-                                </select>
-                                <input type="text" name="type" value={step.name} onChange={(e) => this.handleYeastChange(e.target.value,e.target.name, index)} required={true}  />
-                            </label>
-                            <label>
-                                Menge:
-                                <input type="number" name="quantity" min={0} value={step.quantity} onChange={(e) => this.handleYeastChange(e.target.value, e.target.name,index)} required={true}  />
-                            </label>
-
-
-                            {index > 0 && <button type="button" onClick={() => this.removeYeast(index)}>Remove</button>}
-                        </div>
-                    ))}
-
-                    <button type="button" onClick={this.addYeast}>Hefe zufügen</button>
-                </div>
                 <button className="submit-button" type="submit">Erstellen</button>
-
-            </form>)
+            </form>
+        );
     }
-    test() {
-        console.log("test");
-    }
-
-
-
 
     render() {
         return (
-        <div className='containerBeerForm'>
-            <div >
-                <Accordion defaultExpanded sx={{backgroundColor: '#404040'}}>
-                    <AccordionSummary sx={{ backgroundColor: 'darkorange', borderRadius: '10px 10px 0 0' }} expandIcon={<ExpandMoreIcon />} aria-controls="panel1a-content" id="panel1a-header">
-                        <Typography>Bier</Typography>
-                    </AccordionSummary>
-                    <SimpleBar style={{ maxHeight: '716px' }}>
-                    <AccordionDetails sx={{ backgroundColor: '#404040' }}> {this.renderCreateBeerForm()}</AccordionDetails>
-                    </SimpleBar>
-                </Accordion>
-                <Accordion>
-                    <AccordionSummary sx={{ backgroundColor: 'darkorange'}} expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
-                        <Typography>Malz</Typography>
-                    </AccordionSummary>
-                    <AccordionDetails sx={{ backgroundColor: '#404040' }}>  <MaltForm></MaltForm></AccordionDetails>
-
-                </Accordion>
-
-                <Accordion>
-                    <AccordionSummary sx={{ backgroundColor: 'darkorange' }} expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
-                        <Typography>Hopfen</Typography>
-                    </AccordionSummary>
-                    <AccordionDetails sx={{ backgroundColor: '#404040' }}> <HopForm></HopForm></AccordionDetails>
-
-                </Accordion>
-                <Accordion sx={{backgroundColor: '#404040'}}>
-                    <AccordionSummary sx={{ backgroundColor: 'darkorange',borderRadius: '0px 0px 10px 10px' }} expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
-                        <Typography>Hefe</Typography>
-                    </AccordionSummary>
-                    <AccordionDetails sx={{ backgroundColor: '#404040' }}>
-                        <YeastForm></YeastForm>
-                    </AccordionDetails>
-                </Accordion>
+            <div className='containerBeerForm'>
+                <div>
+                    <Accordion defaultExpanded sx={{backgroundColor: '#404040'}}>
+                        <AccordionSummary sx={{ backgroundColor: 'darkorange', borderRadius: '10px 10px 0 0' }} expandIcon={<ExpandMoreIcon />} aria-controls="panel1a-content" id="panel1a-header">
+                            <Typography>Bier</Typography>
+                        </AccordionSummary>
+                        <SimpleBar style={{ maxHeight: '716px' }}>
+                            <AccordionDetails sx={{ backgroundColor: '#404040' }}>{this.renderCreateBeerForm()}</AccordionDetails>
+                        </SimpleBar>
+                    </Accordion>
+                    <Accordion>
+                        <AccordionSummary sx={{ backgroundColor: 'darkorange'}} expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
+                            <Typography>Malz</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails sx={{ backgroundColor: '#404040' }}><MaltForm></MaltForm></AccordionDetails>
+                    </Accordion>
+                    <Accordion>
+                        <AccordionSummary sx={{ backgroundColor: 'darkorange' }} expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
+                            <Typography>Hopfen</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails sx={{ backgroundColor: '#404040' }}><HopForm></HopForm></AccordionDetails>
+                    </Accordion>
+                    <Accordion sx={{backgroundColor: '#404040'}}>
+                        <AccordionSummary sx={{ backgroundColor: 'darkorange',borderRadius: '0px 0px 10px 10px' }} expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
+                            <Typography>Hefe</Typography>
+                        </AccordionSummary>
+                        <AccordionDetails sx={{ backgroundColor: '#404040' }}>
+                            <YeastForm></YeastForm>
+                        </AccordionDetails>
+                    </Accordion>
+                </div>
             </div>
-        </div>
-
         );
     }
 }
@@ -587,5 +619,5 @@ const mapDispatchToProps = (dispatch: any) => ({
     getHop: (isFetching: boolean) => dispatch(BeerActions.getHops(isFetching)),
     getYeast: (isFetching: boolean) => dispatch(BeerActions.getYeasts(isFetching)),
 });
-export default connect(mapStateToProps,mapDispatchToProps)(BeerForm);
 
+export default connect(mapStateToProps, mapDispatchToProps)(BeerForm);
