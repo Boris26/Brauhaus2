@@ -407,7 +407,16 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                                 <input type="number" name="time" value={step.time} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />
                                             </td>
                                             <td className="action-column">
-                                                {index > 0 && <button type="button" onClick={() => this.removeFermentationStep(index)}>Löschen</button>}
+                                                {index > 0 && (
+                                                    <button
+                                                        type="button"
+                                                        className="cancel-btn"
+                                                        onClick={() => this.removeFermentationStep(index)}
+                                                        title="Löschen"
+                                                    >
+                                                        <span role="img" aria-label="Löschen" style={{ fontSize: 22, verticalAlign: 'middle', display: 'inline-block', position: 'relative', top: '3px' }}>🗑️</span>
+                                                    </button>
+                                                )}
                                             </td>
                                         </tr>
                                     ))}
@@ -457,7 +466,14 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                                 />
                                             </td>
                                             <td className="action-column">
-                                                <button type="button" onClick={() => this.removeMalts(index)}>Löschen</button>
+                                                <button
+                                                    type="button"
+                                                    className="cancel-btn"
+                                                    onClick={() => this.removeMalts(index)}
+                                                    title="Löschen"
+                                                >
+                                                    <span role="img" aria-label="Löschen" style={{ fontSize: 22, verticalAlign: 'middle', display: 'inline-block', position: 'relative', top: '3px' }}>🗑️</span>
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}
@@ -518,7 +534,14 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                                 />
                                             </td>
                                             <td className="action-column">
-                                                <button type="button" onClick={() => this.removeHops(index)}>Löschen</button>
+                                                <button
+                                                    type="button"
+                                                    className="cancel-btn"
+                                                    onClick={() => this.removeHops(index)}
+                                                    title="Löschen"
+                                                >
+                                                    <span role="img" aria-label="Löschen" style={{ fontSize: 22, verticalAlign: 'middle', display: 'inline-block', position: 'relative', top: '3px' }}>🗑️</span>
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}
@@ -568,7 +591,14 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                                 />
                                             </td>
                                             <td className="action-column">
-                                                <button type="button" onClick={() => this.removeYeast(index)}>Löschen</button>
+                                                <button
+                                                    type="button"
+                                                    className="cancel-btn"
+                                                    onClick={() => this.removeYeast(index)}
+                                                    title="Löschen"
+                                                >
+                                                    <span role="img" aria-label="Löschen" style={{ fontSize: 22, verticalAlign: 'middle', display: 'inline-block', position: 'relative', top: '3px' }}>🗑️</span>
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}
@@ -579,7 +609,9 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                     </div>
                 </div>
 
-                <button className="submit-button" type="submit">Erstellen</button>
+                <button className="finish-btn submit-button" type="submit">
+                    <span role="img" aria-label="Erstellen" style={{ fontSize: 22, verticalAlign: 'middle', display: 'inline-block', position: 'relative', top: '3px', marginRight: '8px' }}>💾</span>
+                </button>
             </form>
         );
     }

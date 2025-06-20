@@ -39,10 +39,10 @@ textarea {
 
 button {
     padding: 4px 8px;
-    background-color: #007bff;
+    background-color: darkorange; /* Geändert von #007bff zu darkorange für Konsistenz */
     color: #fff;
     border: none;
-    border-radius: 3px;
+    border-radius: 4px; /* Gerundete Ecken wie bei FinishedBrewsTable */
     cursor: pointer;
     bottom: 10px;
     right: 10px;
@@ -64,7 +64,7 @@ button {
 }
 
 button:hover {
-    background-color: #0056b3;
+    background-color: #c96a00; /* Dunklere Version der darkorange Farbe */
 }
 
 select {
@@ -240,4 +240,51 @@ select {
 .beer-form label {
     display: flex;
     flex-direction: column;
+}
+
+/* Button-Stile aus FinishedBrewsTable übernommen */
+.finish-btn {
+    background-color: darkorange;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 0.25rem 0.75rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.finish-btn:hover {
+    background-color: #c96a00;
+    color: #fff;
+}
+
+.finish-btn.clicked {
+    transform: scale(0.92);
+    box-shadow: 0 0 8px 2px rgba(255,140,0,0.4);
+}
+
+.finish-btn:disabled {
+    background-color: #e0e0e0;
+    color: #bdbdbd;
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: 0.7;
+    border: 1px solid #cccccc;
+}
+
+.cancel-btn {
+    background-color: darkorange;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    padding: 0.25rem 0.75rem;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.cancel-btn:hover {
+    background-color: #d32f2f;
+    color: #fff;
 }
