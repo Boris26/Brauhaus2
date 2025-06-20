@@ -67,10 +67,14 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             spargeVolume: 0,
             cookingTime: 0,
             cookingTemperatur: 0,
-            fermentationSteps: [],
-            maltsDTO: [],
-            hopsDTO: [],
-            yeastsDTO: [],
+            fermentationSteps: [
+                { type: 'Einmaischen', temperature: 0, time: 0 },
+                { type: 'Abmaischen', temperature: 0, time: 0 },
+                { type: 'Kochen', temperature: 0, time: 0 }
+            ],
+            maltsDTO: [{ id: '', name: '', quantity: 0 }],
+            hopsDTO: [{ id: '', name: '', quantity: 0, time: 0 }],
+            yeastsDTO: [{ id: '', name: '', quantity: 0 }],
             isSubmitSuccessful: false,
         };
     }
