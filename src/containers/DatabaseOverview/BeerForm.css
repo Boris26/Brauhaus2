@@ -175,6 +175,8 @@ select {
     display: inline-block;
     padding: 3px;
     font-size: 0.9rem;
+    box-sizing: border-box;
+    height: 30px; /* Einheitliche Höhe für alle Eingabefelder */
 }
 
 .action-column {
