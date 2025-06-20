@@ -95,6 +95,33 @@ select {
     grid-row: 2;
 }
 
+/* Scrollbare Tabellen */
+.table-wrapper {
+    max-height: 180px;
+    overflow-y: auto;
+    margin-bottom: 5px;
+    border: 1px solid #555;
+    border-radius: 3px;
+}
+
+.table-wrapper::-webkit-scrollbar {
+    width: 8px;
+}
+
+.table-wrapper::-webkit-scrollbar-track {
+    background: #333;
+    border-radius: 3px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb {
+    background: #666;
+    border-radius: 3px;
+}
+
+.table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #888;
+}
+
 /* Tabellenstile für Maischeplan, Malz, Hopfen und Hefe */
 .ingredient-table {
     width: 100%;

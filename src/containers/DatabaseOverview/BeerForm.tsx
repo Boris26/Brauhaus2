@@ -367,196 +367,204 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 <div className="full-width tables-container">
                     <div className="table-section">
                         <h3>Maischeplan:</h3>
-                        <table className="ingredient-table">
-                            <thead>
-                                <tr>
-                                    <th>Type</th>
-                                    <th>Temp (°C)</th>
-                                    <th>Zeit (min)</th>
-                                    <th className="action-column">Aktion</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {fermentationSteps?.map((step, index) => (
-                                    <tr key={index}>
-                                        <td>
-                                            <select name="type" value={step.type} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={false}>
-                                                <option value="">Typ</option>
-                                                {Object.values(MashingType).map((mashingType) => (
-                                                    <option key={mashingType} value={mashingType}>
-                                                        {mashingType}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <input type="number" name="temperature" value={step.temperature} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />
-                                        </td>
-                                        <td>
-                                            <input type="number" name="time" value={step.time} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />
-                                        </td>
-                                        <td className="action-column">
-                                            {index > 0 && <button type="button" onClick={() => this.removeFermentationStep(index)}>Löschen</button>}
-                                        </td>
+                        <div className="table-wrapper">
+                            <table className="ingredient-table">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Temp (°C)</th>
+                                        <th>Zeit (min)</th>
+                                        <th className="action-column">Aktion</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {fermentationSteps?.map((step, index) => (
+                                        <tr key={index}>
+                                            <td>
+                                                <select name="type" value={step.type} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={false}>
+                                                    <option value="">Typ</option>
+                                                    {Object.values(MashingType).map((mashingType) => (
+                                                        <option key={mashingType} value={mashingType}>
+                                                            {mashingType}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input type="number" name="temperature" value={step.temperature} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />
+                                            </td>
+                                            <td>
+                                                <input type="number" name="time" value={step.time} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />
+                                            </td>
+                                            <td className="action-column">
+                                                {index > 0 && <button type="button" onClick={() => this.removeFermentationStep(index)}>Löschen</button>}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                         <button type="button" className="add-button" onClick={this.addFermentationStep}>Rast zufügen</button>
                     </div>
 
                     <div className="table-section">
                         <h3>Malze</h3>
-                        <table className="ingredient-table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Menge (g)</th>
-                                    <th className="action-column">Aktion</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {maltsDTO?.map((step, index) => (
-                                    <tr key={index}>
-                                        <td>
-                                            <select
-                                                name="name"
-                                                value={step.name}
-                                                onChange={(e) => this.handleMaltChange(e.target.value, e.target.name, index)}
-                                                required={true}
-                                            >
-                                                <option value="">Malz</option>
-                                                {malts.map((malt) => (
-                                                    <option key={malt.id} value={malt.name}>
-                                                        {malt.name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <input
-                                                type="number"
-                                                name="quantity"
-                                                min={0}
-                                                value={step.quantity}
-                                                onChange={(e) => this.handleMaltChange(e.target.value, e.target.name, index)}
-                                                required={true}
-                                            />
-                                        </td>
-                                        <td className="action-column">
-                                            <button type="button" onClick={() => this.removeMalts(index)}>Löschen</button>
-                                        </td>
+                        <div className="table-wrapper">
+                            <table className="ingredient-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Menge (g)</th>
+                                        <th className="action-column">Aktion</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {maltsDTO?.map((step, index) => (
+                                        <tr key={index}>
+                                            <td>
+                                                <select
+                                                    name="name"
+                                                    value={step.name}
+                                                    onChange={(e) => this.handleMaltChange(e.target.value, e.target.name, index)}
+                                                    required={true}
+                                                >
+                                                    <option value="">Malz</option>
+                                                    {malts.map((malt) => (
+                                                        <option key={malt.id} value={malt.name}>
+                                                            {malt.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    name="quantity"
+                                                    min={0}
+                                                    value={step.quantity}
+                                                    onChange={(e) => this.handleMaltChange(e.target.value, e.target.name, index)}
+                                                    required={true}
+                                                />
+                                            </td>
+                                            <td className="action-column">
+                                                <button type="button" onClick={() => this.removeMalts(index)}>Löschen</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                         <button type="button" className="add-button" onClick={this.addMalts}>Malz zufügen</button>
                     </div>
 
                     <div className="table-section">
                         <h3>Hopfen</h3>
-                        <table className="ingredient-table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Menge (g)</th>
-                                    <th>Zeit (min)</th>
-                                    <th className="action-column">Aktion</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {hopsDTO?.map((step, index) => (
-                                    <tr key={index}>
-                                        <td>
-                                            <select
-                                                name="name"
-                                                value={step.name}
-                                                onChange={(e) => this.handleHopChange(e.target.value, "name", index)}
-                                                required={true}
-                                            >
-                                                <option value="">Hopfen</option>
-                                                {hops.map((hop) => (
-                                                    <option key={hop.id} value={hop.name}>
-                                                        {hop.name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <input
-                                                type="number"
-                                                name="quantity"
-                                                min={0}
-                                                value={step.quantity}
-                                                onChange={(e) => this.handleHopChange(e.target.value, "quantity", index)}
-                                                required={true}
-                                            />
-                                        </td>
-                                        <td>
-                                            <input
-                                                type="number"
-                                                name="time"
-                                                min={0}
-                                                value={step.time}
-                                                onChange={(e) => this.handleHopChange(e.target.value, "time", index)}
-                                                required={true}
-                                            />
-                                        </td>
-                                        <td className="action-column">
-                                            <button type="button" onClick={() => this.removeHops(index)}>Löschen</button>
-                                        </td>
+                        <div className="table-wrapper">
+                            <table className="ingredient-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Menge (g)</th>
+                                        <th>Zeit (min)</th>
+                                        <th className="action-column">Aktion</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {hopsDTO?.map((step, index) => (
+                                        <tr key={index}>
+                                            <td>
+                                                <select
+                                                    name="name"
+                                                    value={step.name}
+                                                    onChange={(e) => this.handleHopChange(e.target.value, "name", index)}
+                                                    required={true}
+                                                >
+                                                    <option value="">Hopfen</option>
+                                                    {hops.map((hop) => (
+                                                        <option key={hop.id} value={hop.name}>
+                                                            {hop.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    name="quantity"
+                                                    min={0}
+                                                    value={step.quantity}
+                                                    onChange={(e) => this.handleHopChange(e.target.value, "quantity", index)}
+                                                    required={true}
+                                                />
+                                            </td>
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    name="time"
+                                                    min={0}
+                                                    value={step.time}
+                                                    onChange={(e) => this.handleHopChange(e.target.value, "time", index)}
+                                                    required={true}
+                                                />
+                                            </td>
+                                            <td className="action-column">
+                                                <button type="button" onClick={() => this.removeHops(index)}>Löschen</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                         <button type="button" className="add-button" onClick={this.addHops}>Hopfen zufügen</button>
                     </div>
 
                     <div className="table-section">
                         <h3>Hefe</h3>
-                        <table className="ingredient-table">
-                            <thead>
-                                <tr>
-                                    <th>Name</th>
-                                    <th>Menge (g)</th>
-                                    <th className="action-column">Aktion</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {yeastsDTO?.map((step, index) => (
-                                    <tr key={index}>
-                                        <td>
-                                            <select
-                                                name="name"
-                                                value={step.name}
-                                                onChange={(e) => this.handleYeastChange(e.target.value, e.target.name, index)}
-                                                required={true}
-                                            >
-                                                <option value="">Hefe</option>
-                                                {yeasts.map((yeast) => (
-                                                    <option key={yeast.id} value={yeast.name}>
-                                                        {yeast.name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </td>
-                                        <td>
-                                            <input
-                                                type="number"
-                                                name="quantity"
-                                                min={0}
-                                                value={step.quantity}
-                                                onChange={(e) => this.handleYeastChange(e.target.value, e.target.name, index)}
-                                                required={true}
-                                            />
-                                        </td>
-                                        <td className="action-column">
-                                            <button type="button" onClick={() => this.removeYeast(index)}>Löschen</button>
-                                        </td>
+                        <div className="table-wrapper">
+                            <table className="ingredient-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Menge (g)</th>
+                                        <th className="action-column">Aktion</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {yeastsDTO?.map((step, index) => (
+                                        <tr key={index}>
+                                            <td>
+                                                <select
+                                                    name="name"
+                                                    value={step.name}
+                                                    onChange={(e) => this.handleYeastChange(e.target.value, e.target.name, index)}
+                                                    required={true}
+                                                >
+                                                    <option value="">Hefe</option>
+                                                    {yeasts.map((yeast) => (
+                                                        <option key={yeast.id} value={yeast.name}>
+                                                            {yeast.name}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <input
+                                                    type="number"
+                                                    name="quantity"
+                                                    min={0}
+                                                    value={step.quantity}
+                                                    onChange={(e) => this.handleYeastChange(e.target.value, e.target.name, index)}
+                                                    required={true}
+                                                />
+                                            </td>
+                                            <td className="action-column">
+                                                <button type="button" onClick={() => this.removeYeast(index)}>Löschen</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                         <button type="button" className="add-button" onClick={this.addYeast}>Hefe zufügen</button>
                     </div>
                 </div>
