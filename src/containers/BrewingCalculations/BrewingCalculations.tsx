@@ -4,11 +4,10 @@ import 'simplebar/dist/simplebar.min.css';
 import { Paper, TextField, Typography, Box, Grid } from '@mui/material';
 import './BrewingCalculations.css';
 import {
-    brixToPlato,
+    brixToPlato, calculateFromRefractometer,
     platoToBrix,
     temperatureCorrection,
-    correctedBrixTerrill,
-    correctedBrixNovotny
+
 } from '../../utils/Calculations/calculationsUtils';
 import { eSugarTypes } from '../../enums/eSugerTypes';
 
@@ -96,7 +95,6 @@ class BrewingCalculations extends React.Component<{}, BrewingCalculationsState> 
          return Math.round(sugarGrams);
     }
 
-    // Methoden für einzelne UI-Blöcke
     renderBrixPlatoBlock = () => {
         const { brix, plato } = this.state;
         return (
@@ -313,7 +311,7 @@ class BrewingCalculations extends React.Component<{}, BrewingCalculationsState> 
         const fgBrixNum = parseFloat(fgBrix || '');
         const terrillResult =
             ogBrix !== '' && fgBrix !== '' && !isNaN(ogBrixNum) && !isNaN(fgBrixNum)
-                ? correctedBrixNovotny(ogBrixNum, fgBrixNum).toFixed(2)
+                ? calculateFromRefractometer(ogBrixNum, fgBrixNum).apparentExtractPlato.toFixed(2)
                 : '';
         return (
             <Box mb={3}>

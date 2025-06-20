@@ -1,10 +1,11 @@
 .Header {
   width: 100%;
-  height: 1.5rem; /* Änderung von 30px auf 1.5rem */
+  height: 3rem; /* Erhöht um mehr Platz für Tab-Styling zu haben */
   position: relative;
   display: flex;
   justify-content: center;
   align-items: center;
+  margin-top: 1.75rem; /* Änderung von 20px auf 1.25rem */
 }
 
 h1 {
@@ -12,7 +13,6 @@ h1 {
   font-weight: bold;
   color: black;
   text-align: center;
-  margin: 0.625rem 0; /* Änderung von 10px auf 0.625rem */
 }
 
 .Header .time {
@@ -28,14 +28,23 @@ h1 {
   left: 1.25rem; /* Änderung von 20px auf 1.25rem */
   top: 50%;
   transform: translateY(-50%);
+  display: flex; /* Flexbox für die Tab-Anordnung */
+  align-items: center;
 }
 
 .icon {
-  width: 2.5rem; /* Änderung von 40px auf 2.5rem */
-  height: 2.5rem; /* Änderung von 40px auf 2.5rem */
-  margin-right: 1.25rem; /* Änderung von 20px auf 1.25rem */
+  width: 4.0rem; /* Änderung von 40px auf 2.5rem */
+  height: 3.5rem; /* Änderung von 40px auf 2.5rem */
+  margin-right: 0.5rem; /* Verringert für besser angeordnete Tabs */
   cursor: pointer;
-  transition: opacity 0.3s ease;
+  transition: all 0.3s ease;
+  padding: 0.5rem;
+  border-radius: 0.5rem 0.5rem 0 0; /* Abgerundete obere Ecken für Tabs */
+  background-color: darkorange; /* Hellgrauer Hintergrund */
+  border: 1px solid #ccc;
+  border-bottom: none; /* Kein unterer Rand */
+  box-shadow: 0 -2px 5px rgba(0,0,0,0.1); /* Sanfter Schatten für 3D-Effekt */
+  position: relative;
 }
 
 .icon:last-child {
@@ -43,5 +52,15 @@ h1 {
 }
 
 .icon:hover {
-  opacity: 0.7;
+  opacity: 0.9;
+  background-color: darkorange; /* Hellgrauer Hintergrund beim Hover */
+  transform: translateY(-3px); /* Leicht nach oben bewegen beim Hover */
+}
+
+/* Für aktiven Tab-Zustand - wird später mit JavaScript/React gesteuert */
+.icon.active {
+  background-color: darkorange;
+  border-bottom: 2px solid #ccc; /* Überdeckt die Border-Bottom der Header-Klasse */
+  z-index: 1;
+  transform: translateY(-3px);
 }

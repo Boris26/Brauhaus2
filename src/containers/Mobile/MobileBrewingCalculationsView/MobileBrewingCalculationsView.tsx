@@ -1,12 +1,14 @@
 import React, { Component } from 'react';
 import './MobileBrewingCalculationsView.css';
-import { brixToPlato, platoToBrix, temperatureCorrection } from '../../../utils/Calculations/calculationsUtils';
-import { eSugarTypes } from '../../../enums/eSugerTypes';
+import {
+    brixToPlato,
+    platoToBrix,
+    temperatureCorrection,
 
-const ML_TO_L_CONVERSION = 1000;
-const SUCROSE_YIELD_FACTOR = 0.512;
-const GLUCOSE_YIELD_FACTOR = 0.443;
-const DEFAULT_REST_CO2 = 1.7;
+    calculateSugarAmount, calculateFromRefractometer,
+
+} from '../../../utils/Calculations/calculationsUtils';
+import { eSugarTypes } from '../../../enums/eSugerTypes';
 
 interface State {
     brix: string;
@@ -16,6 +18,8 @@ interface State {
     carbTarget: string;
     carbLiters: string;
     waterForSolutionML: string;
+    terrillOgBrix: string;
+    terrillFgBrix: string;
 }
 
 class MobileBrewingCalculationsView extends Component<{}, State> {
@@ -27,6 +31,8 @@ class MobileBrewingCalculationsView extends Component<{}, State> {
         carbTarget: '',
         carbLiters: '',
         waterForSolutionML: '', // leer lassen, damit placeholder angezeigt wird
+        terrillOgBrix: '',
+        terrillFgBrix: '',
     };
 
     setBrix = (value: string) => this.setState({ brix: value === '0' ? '' : value });
@@ -38,25 +44,10 @@ class MobileBrewingCalculationsView extends Component<{}, State> {
     setWaterForSolutionML = (value: string) => {
         this.setState({ waterForSolutionML: value === '' || value === '0' ? '' : value });
     };
+    setTerrillOgBrix = (value: string) => this.setState({ terrillOgBrix: value === '0' ? '' : value });
+    setTerrillFgBrix = (value: string) => this.setState({ terrillFgBrix: value === '0' ? '' : value });
 
-    getWaterForSolutionML = () => {
-        // Wenn leer, Standardwert 1000 verwenden
-        return this.state.waterForSolutionML === '' ? '1000' : this.state.waterForSolutionML;
-    };
 
-    calculateSugarAmount(aSugarType: eSugarTypes): number {
-        const volumeBeerL = parseFloat(this.state.carbLiters);
-        const targetCO2_gL = parseFloat(this.state.carbTarget);
-        // Für waterForSolutionML: Wenn leer, rechne mit 1000
-        const waterVolumeMl = this.state.waterForSolutionML === '' ? 1000 : parseFloat(this.state.waterForSolutionML);
-        const volumeWaterL = waterVolumeMl / ML_TO_L_CONVERSION;
-        const totalVolumeL = volumeBeerL + volumeWaterL;
-        const deltaCO2 = targetCO2_gL * totalVolumeL - DEFAULT_REST_CO2 * volumeBeerL;
-        if (isNaN(deltaCO2) || deltaCO2 <= 0) return 0;
-        const factor = aSugarType === eSugarTypes.Sucrose ? 1 / SUCROSE_YIELD_FACTOR : 1 / GLUCOSE_YIELD_FACTOR;
-        const sugarGrams = deltaCO2 * factor;
-        return Math.round(sugarGrams * 100) / 100;
-    }
 
     handleWheel = (field: keyof State) => (e: React.WheelEvent<HTMLInputElement>) => {
         e.preventDefault();
@@ -76,104 +67,180 @@ class MobileBrewingCalculationsView extends Component<{}, State> {
         }
     };
 
+    renderBrixToPlatoBlock() {
+        const { brix } = this.state;
+        return (
+            <div className="mobile-calc-block">
+                <div className="calc-title" style={{fontSize: '1.35em', display: 'flex', alignItems: 'center', gap: 12}}>
+                    Brix
+                    <span style={{fontSize: '2.2em', color: '#b8860b', display: 'flex', alignItems: 'center', fontWeight: 900, lineHeight: 1, position: 'relative', top: '-6px'}} aria-label="arrow" role="img">&#8594;</span>
+                    Plato
+                </div>
+                <input
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value={brix}
+                    onChange={e => this.setBrix(e.target.value)}
+                    placeholder="Brix"
+                    onWheel={this.handleWheel('brix')}
+                />
+                <span>= {brix !== '' ? brixToPlato(parseFloat(brix)).toFixed(2) : ''} °P</span>
+            </div>
+        );
+    }
+
+    renderPlatoToBrixBlock() {
+        const { plato } = this.state;
+        return (
+            <div className="mobile-calc-block">
+                <div className="calc-title" style={{fontSize: '1.35em', display: 'flex', alignItems: 'center', gap: 12}}>
+                    Plato
+                    <span style={{fontSize: '2.2em', color: '#b8860b', display: 'flex', alignItems: 'center', fontWeight: 900, lineHeight: 1, position: 'relative', top: '-6px'}} aria-label="arrow" role="img">&#8594;</span>
+                    Brix
+                </div>
+                <input
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value={plato}
+                    onChange={e => this.setPlato(e.target.value)}
+                    placeholder="Plato"
+                    onWheel={this.handleWheel('plato')}
+                />
+                <span>= {plato !== '' ? platoToBrix(parseFloat(plato)).toFixed(2) : ''} Brix</span>
+            </div>
+        );
+    }
+
+    renderTemperatureCorrectionBlock() {
+        const { brix, plato, temp } = this.state;
+        return (
+            <div className="mobile-calc-block">
+                <div className="calc-title" style={{fontSize: '1.2em'}}>
+                    Temperaturkorrektur (°C)
+                </div>
+                <input
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    value={temp}
+                    onChange={e => this.setTemp(e.target.value)}
+                    placeholder="Temp (°C)"
+                    onWheel={this.handleWheel('temp')}
+                />
+                <span>Brix korrigiert: {brix !== '' && temp !== '' ? temperatureCorrection(parseFloat(brix), parseFloat(temp)).toFixed(2) : ''}</span>
+                <span>Plato korrigiert: {plato !== '' && temp !== '' ? temperatureCorrection(parseFloat(plato), parseFloat(temp)).toFixed(2) : ''}</span>
+            </div>
+        );
+    }
+
+    renderCarbonationBlock() {
+        const { carbTemp, carbTarget, carbLiters, waterForSolutionML } = this.state;
+        const sucroseSugar = calculateSugarAmount(
+            parseFloat(carbLiters),
+            parseFloat(carbTarget),
+            waterForSolutionML === '' ? 1000 : parseFloat(waterForSolutionML),
+            eSugarTypes.Sucrose
+        );
+        const glucoseSugar = calculateSugarAmount(
+            parseFloat(carbLiters),
+            parseFloat(carbTarget),
+            waterForSolutionML === '' ? 1000 : parseFloat(waterForSolutionML),
+            eSugarTypes.Glucose
+        );
+        return (
+            <div className="mobile-calc-block">
+                <div className="calc-title" style={{fontSize: '1.2em'}}>
+                    Karbonisierung
+                </div>
+                <input
+                    type="number"
+                    min="0"
+                    value={carbTemp}
+                    onChange={e => this.setCarbTemp(e.target.value)}
+                    placeholder="Jungbiertemperatur (°C)"
+                    style={{marginBottom: 6}}
+                />
+                <input
+                    type="number"
+                    min="0"
+                    value={carbTarget}
+                    onChange={e => this.setCarbTarget(e.target.value)}
+                    placeholder="Ziel-CO₂ (g/L)"
+                    style={{marginBottom: 6}}
+                    onWheel={this.handleWheel('carbTarget')}
+                />
+                <input
+                    type="number"
+                    min="0"
+                    value={carbLiters}
+                    onChange={e => this.setCarbLiters(e.target.value)}
+                    placeholder="Liter Bier"
+                    style={{marginBottom: 6}}
+                />
+                <input
+                    type="number"
+                    min="0"
+                    step="100"
+                    value={waterForSolutionML}
+                    onChange={e => this.setWaterForSolutionML(e.target.value)}
+                    placeholder="Klarwasser (1000ml)"
+                    style={{marginBottom: 6}}
+                />
+                <span>Haushaltszucker (g): <b>{sucroseSugar > 0 ? Math.round(sucroseSugar) : ''}</b></span>
+                <span>Traubenzucker (g): <b>{glucoseSugar > 0 ? Math.round(glucoseSugar) : ''}</b></span>
+            </div>
+        );
+    }
+
+    renderTerrillBlock() {
+        const { terrillOgBrix, terrillFgBrix } = this.state;
+        let terrillResult = '';
+        if (terrillOgBrix !== '' && terrillFgBrix !== '') {
+            const og = parseFloat(terrillOgBrix);
+            const fg = parseFloat(terrillFgBrix);
+            if (!isNaN(og) && !isNaN(fg)) {
+                terrillResult = calculateFromRefractometer(og, fg).realExtractPlato.toFixed(2);
+            }
+        }
+        return (
+            <div className="mobile-calc-block">
+                <div className="calc-title" style={{fontSize: '1.2em'}}>
+                    Scheinbarer Restextrakt (Terrill-Korrektur)
+                </div>
+                <input
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value={terrillOgBrix}
+                    onChange={e => this.setTerrillOgBrix(e.target.value)}
+                    placeholder="Stammwürze (Brix)"
+                    style={{marginBottom: 6}}
+                />
+                <input
+                    type="number"
+                    min="0"
+                    step="0.1"
+                    value={terrillFgBrix}
+                    onChange={e => this.setTerrillFgBrix(e.target.value)}
+                    placeholder="Restextrakt (Brix)"
+                    style={{marginBottom: 6}}
+                />
+                <span>Scheinbarer Restextrakt (Brix, Terrill): <b>{terrillResult}</b></span>
+            </div>
+        );
+    }
+
     render() {
-        const { brix, plato, temp, carbTemp, carbTarget, carbLiters, waterForSolutionML } = this.state;
-        const sucroseSugar = this.calculateSugarAmount(eSugarTypes.Sucrose);
-        const glucoseSugar = this.calculateSugarAmount(eSugarTypes.Glucose);
         return (
             <div className="mobile-brewing-calc-container" style={{overflowY: 'auto', maxHeight: '100vh'}}>
                 <h2>Bierbrau-Berechnungen</h2>
-                <div className="mobile-calc-block">
-                    <div className="calc-title" style={{fontSize: '1.35em', display: 'flex', alignItems: 'center', gap: 12}}>
-                        Brix
-                        <span style={{fontSize: '2.2em', color: '#b8860b', display: 'flex', alignItems: 'center', fontWeight: 900, lineHeight: 1, position: 'relative', top: '-6px'}} aria-label="arrow" role="img">&#8594;</span>
-                        Plato
-                    </div>
-                    <input
-                        type="number"
-                        min="0"
-                        step="0.1"
-                        value={brix}
-                        onChange={e => this.setBrix(e.target.value)}
-                        placeholder="Brix"
-                        onWheel={this.handleWheel('brix')}
-                    />
-                    <span>= {brix !== '' ? brixToPlato(parseFloat(brix)).toFixed(2) : ''} °P</span>
-                </div>
-                <div className="mobile-calc-block">
-                    <div className="calc-title" style={{fontSize: '1.35em', display: 'flex', alignItems: 'center', gap: 12}}>
-                        Plato
-                        <span style={{fontSize: '2.2em', color: '#b8860b', display: 'flex', alignItems: 'center', fontWeight: 900, lineHeight: 1, position: 'relative', top: '-6px'}} aria-label="arrow" role="img">&#8594;</span>
-                        Brix
-                    </div>
-                    <input
-                        type="number"
-                        min="0"
-                        step="0.1"
-                        value={plato}
-                        onChange={e => this.setPlato(e.target.value)}
-                        placeholder="Plato"
-                        onWheel={this.handleWheel('plato')}
-                    />
-                    <span>= {plato !== '' ? platoToBrix(parseFloat(plato)).toFixed(2) : ''} Brix</span>
-                </div>
-                <div className="mobile-calc-block">
-                    <div className="calc-title" style={{fontSize: '1.2em'}}>
-                        Temperaturkorrektur (°C)
-                    </div>
-                    <input
-                        type="number"
-                        min="0"
-                        step="0.5"
-                        value={temp}
-                        onChange={e => this.setTemp(e.target.value)}
-                        placeholder="Temp (°C)"
-                        onWheel={this.handleWheel('temp')}
-                    />
-                    <span>Brix korrigiert: {brix !== '' && temp !== '' ? temperatureCorrection(parseFloat(brix), parseFloat(temp)).toFixed(2) : ''}</span>
-                    <span>Plato korrigiert: {plato !== '' && temp !== '' ? temperatureCorrection(parseFloat(plato), parseFloat(temp)).toFixed(2) : ''}</span>
-                </div>
-                <div className="mobile-calc-block">
-                    <div className="calc-title" style={{fontSize: '1.2em'}}>
-                        Karbonisierung
-                    </div>
-                    <input
-                        type="number"
-                        min="0"
-                        value={carbTemp}
-                        onChange={e => this.setCarbTemp(e.target.value)}
-                        placeholder="Jungbiertemperatur (°C)"
-                        style={{marginBottom: 6}}
-                    />
-                    <input
-                        type="number"
-                        min="0"
-                        value={carbTarget}
-                        onChange={e => this.setCarbTarget(e.target.value)}
-                        placeholder="Ziel-CO₂ (g/L)"
-                        style={{marginBottom: 6}}
-                        onWheel={this.handleWheel('carbTarget')}
-                    />
-                    <input
-                        type="number"
-                        min="0"
-                        value={carbLiters}
-                        onChange={e => this.setCarbLiters(e.target.value)}
-                        placeholder="Liter Bier"
-                        style={{marginBottom: 6}}
-                    />
-                    <input
-                        type="number"
-                        min="0"
-                        step="100"
-                        value={waterForSolutionML}
-                        onChange={e => this.setWaterForSolutionML(e.target.value)}
-                        placeholder="Klarwasser (1000ml)"
-                        style={{marginBottom: 6}}
-                    />
-                    <span>Haushaltszucker (g): <b>{sucroseSugar > 0 ? Math.round(sucroseSugar) : ''}</b></span>
-                    <span>Traubenzucker (g): <b>{glucoseSugar > 0 ? Math.round(glucoseSugar) : ''}</b></span>
-                </div>
+                {this.renderBrixToPlatoBlock()}
+                {this.renderPlatoToBrixBlock()}
+                {this.renderTemperatureCorrectionBlock()}
+                {this.renderTerrillBlock()}
+                {this.renderCarbonationBlock()}
             </div>
         );
     }
