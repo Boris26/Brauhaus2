@@ -338,10 +338,6 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                     <input type="number" name="bitterness" className="field-number-small" value={bitterness} min={0} step={0.1} onChange={this.handleChange} required={true} max={99} />
                 </label>
 
-                <label className="full-width">
-                    Beschreibung:
-                    <textarea name="description" value={description} onChange={this.handleChange} />
-                </label>
 
                 <label>
                     Bewertung:
@@ -366,6 +362,16 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 <label>
                     Kochtemp.:
                     <input type="number" name="cookingTemperatur" className="field-number-small" min={70} value={cookingTemperatur} onChange={this.handleChange} required={true} max={99} />
+                </label>
+
+                <label className="full-width">
+                    Beschreibung:
+                    <textarea
+                        name="description"
+                        value={description}
+                        onChange={this.handleChange}
+                        style={{ height: '50px' ,width: '66.4%' }}
+                    />
                 </label>
 
                 <div className="full-width tables-container">

@@ -3,9 +3,9 @@
 }
 .beer-form {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    grid-gap: 3px;
-    column-gap: 2px;
+    grid-template-columns: repeat(3, 1fr); /* Zurück zu 3 Spalten für mehr Platz */
+    grid-gap: 5px; /* Mehr Abstand zwischen den Feldern */
+    column-gap: 15px; /* Horizontaler Abstand erhöht */
 }
 
 /* Reduzieren der Höhe von Textareas */
@@ -14,11 +14,27 @@ textarea {
 }
 
 .fermentation-steps-container {
+    margin-top: 20px;
     margin-bottom: 15px;
 }
 
 .fermentation-step-container {
     grid-column: span 2;
+}
+
+.table-section {
+    margin-top: 20px; /* Fügt Abstand über den Tabellenbereichen hinzu */
+}
+
+.tables-container {
+    display: grid;
+    grid-template-columns: 49% 49%; /* Verkleinerte Spaltenbreite für mehr Platz am Rand */
+    grid-template-rows: auto auto;
+    grid-gap: 2%; /* Verringerter Abstand zwischen den Elementen */
+    margin-bottom: 10px;
+    margin-top: 15px; /* Zusätzlicher Abstand zum vorherigen Element */
+    width: 100%;
+    box-sizing: border-box; /* Stellt sicher, dass Padding und Border in der Gesamtbreite enthalten sind */
 }
 
 button {
@@ -57,16 +73,18 @@ select {
 
 /* Verbesserte Layout für die Tabellen-Anordnung */
 .full-width {
-    grid-column: span 4;
+    grid-column: span 3; /* Auf 3 Spalten anpassen */
 }
 
 .tables-container {
     display: grid;
-    grid-template-columns: 50% 50%;
+    grid-template-columns: 49% 49%; /* Verkleinerte Spaltenbreite für mehr Platz am Rand */
     grid-template-rows: auto auto;
-    grid-gap: 10px;
+    grid-gap: 2%; /* Verringerter Abstand zwischen den Elementen */
     margin-bottom: 10px;
+    margin-top: 15px; /* Zusätzlicher Abstand zum vorherigen Element */
     width: 100%;
+    box-sizing: border-box; /* Stellt sicher, dass Padding und Border in der Gesamtbreite enthalten sind */
 }
 
 .table-section {
@@ -170,42 +188,52 @@ select {
 }
 
 .fermentation-steps-container h3 {
-    margin-bottom: 8px;
+    margin-top: 5px;
 }
 
 /* Kompaktere Labels mit weniger Abstand */
 .beer-form label {
+    margin: 0 0 5px 0;
     display: flex;
     flex-direction: column;
-    padding: 0;
-    margin: 0 1px 3px 0;
+}
+
+/* Verbesserte Abstände und Breiten für die Input-Felder */
+.beer-form input,
+.beer-form select {
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Spezifische Feldbreiten für verschiedene Eingabetypen mit optimiertem Platz */
 .beer-form .field-name {
-    width: 95%;
-    max-width: 140px;
+    width: 100%;
+    min-width: 180px;
 }
 
 .beer-form .field-type {
-    width: 95%;
-    max-width: 95px;
+    width: 100%;
+    min-width: 130px;
 }
 
 .beer-form .field-color {
-    width: 45px;
+    width: 100%;
+    min-width: 60px;
 }
 
 .beer-form .field-number-small {
-    width: 40px;
+    width: 100%;
+    min-width: 60px;
 }
 
 .beer-form .field-number-medium {
-    width: 55px;
+    width: 100%;
+    min-width: 80px;
 }
 
 .beer-form .field-number-large {
-    width: 75px;
+    width: 100%;
+    min-width: 100px;
 }
 
 /* Flexbox Layout für Label und Eingabefelder */
