@@ -37,6 +37,25 @@ textarea {
     box-sizing: border-box; /* Stellt sicher, dass Padding und Border in der Gesamtbreite enthalten sind */
 }
 
+/* Styling für Labels der Textfelder */
+.beer-form label {
+    color: #ffffff;
+    font-weight: 500;
+    margin-bottom: 5px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Styling für Abschnittsüberschriften (Maischeplan, Malze, Hopfen, Hefe) */
+.table-section h3 {
+    color: #ffffff;
+    font-size: 1.2rem;
+    margin-bottom: 12px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid darkorange;
+    display: inline-block;
+}
+
 button {
     padding: 4px 8px;
     background-color: darkorange; /* Geändert von #007bff zu darkorange für Konsistenz */

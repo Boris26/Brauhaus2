@@ -653,14 +653,14 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         return (
             <div className='containerBeerForm'>
                 <div>
-                    <Accordion defaultExpanded sx={{backgroundColor: '#404040'}}>
-                        <AccordionSummary sx={{ backgroundColor: 'darkorange', borderRadius: '10px 10px 0 0' }} expandIcon={<ExpandMoreIcon />} aria-controls="panel1a-content" id="panel1a-header">
-                            <Typography>Bier</Typography>
-                        </AccordionSummary>
-                        <SimpleBar style={{ maxHeight: '716px' }}>
-                            <AccordionDetails sx={{ backgroundColor: '#404040' }}>{this.renderCreateBeerForm()}</AccordionDetails>
+                    <div style={{ border: '1px solid rgba(0, 0, 0, 0.12)', borderRadius: '10px', overflow: 'hidden' }}>
+                        <div style={{ backgroundColor: 'darkorange', padding: '12px 16px', borderRadius: '10px 10px 0 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <Typography style={{ color: 'white' }}>Bier</Typography>
+                        </div>
+                        <SimpleBar style={{ maxHeight: '716px', backgroundColor: '#404040' }}>
+                            <div style={{ padding: '16px' }}>{this.renderCreateBeerForm()}</div>
                         </SimpleBar>
-                    </Accordion>
+                    </div>
                 </div>
             </div>
         );
