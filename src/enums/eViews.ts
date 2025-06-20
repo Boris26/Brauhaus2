@@ -3,5 +3,6 @@ export enum Views {
     PRODUCTION = 1,
     DATABASE = 2,
     FINISHED_BREWS = 3,
-    BREWING_CALCULATIONS = 4
+    BREWING_CALCULATIONS = 4,
+    INGREDIENTS = 5
 }

@@ -66,6 +66,13 @@ class Header extends React.Component<HeaderProps> {
                         onClick={() => this.handleIconClick(Views.BREWING_CALCULATIONS)}
                         title="Bierbrau-Berechnungen"
                     />
+                    <img
+                        src="brewery.png"
+                        alt="Zutaten"
+                        className={this.getTabClassName(Views.INGREDIENTS)}
+                        onClick={() => this.handleIconClick(Views.INGREDIENTS)}
+                        title="Zutaten verwalten"
+                    />
                 </div>
             </div>
 

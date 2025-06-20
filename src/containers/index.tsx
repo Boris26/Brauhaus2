@@ -13,6 +13,7 @@ import {TextMapper} from "../utils/TextMapper";
 import {FinishedBrew} from "../model/FinishedBrew";
 import FinishedBrewsTable from "./MainView/FinishBrewsBeers/FinishedBrewsTable";
 import BrewingCalculations from "./BrewingCalculations/BrewingCalculations";
+import IngredientsFormPage from "./DatabaseOverview/IngredientsFormPage";
 
 interface indexMainProps {
     viewState: Views;
@@ -85,6 +86,7 @@ class Index extends React.Component<indexMainProps> {
                 </SimpleBar>
                 {viewState === Views.PRODUCTION && <Production/>}
                 {viewState === Views.DATABASE && <DatabaseOverview></DatabaseOverview>}
+                {viewState === Views.INGREDIENTS && <IngredientsFormPage></IngredientsFormPage>}
                 <SimpleBar style={{maxHeight: '100%', overflowY: 'auto'}}>
                     {viewState === Views.FINISHED_BREWS && <FinishedBrewsTable></FinishedBrewsTable>}
                 </SimpleBar>

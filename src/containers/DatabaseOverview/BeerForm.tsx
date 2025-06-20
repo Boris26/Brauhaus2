@@ -628,26 +628,6 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                             <AccordionDetails sx={{ backgroundColor: '#404040' }}>{this.renderCreateBeerForm()}</AccordionDetails>
                         </SimpleBar>
                     </Accordion>
-                    <Accordion>
-                        <AccordionSummary sx={{ backgroundColor: 'darkorange'}} expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
-                            <Typography>Malz</Typography>
-                        </AccordionSummary>
-                        <AccordionDetails sx={{ backgroundColor: '#404040' }}><MaltForm></MaltForm></AccordionDetails>
-                    </Accordion>
-                    <Accordion>
-                        <AccordionSummary sx={{ backgroundColor: 'darkorange' }} expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
-                            <Typography>Hopfen</Typography>
-                        </AccordionSummary>
-                        <AccordionDetails sx={{ backgroundColor: '#404040' }}><HopForm></HopForm></AccordionDetails>
-                    </Accordion>
-                    <Accordion sx={{backgroundColor: '#404040'}}>
-                        <AccordionSummary sx={{ backgroundColor: 'darkorange',borderRadius: '0px 0px 10px 10px' }} expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
-                            <Typography>Hefe</Typography>
-                        </AccordionSummary>
-                        <AccordionDetails sx={{ backgroundColor: '#404040' }}>
-                            <YeastForm></YeastForm>
-                        </AccordionDetails>
-                    </Accordion>
                 </div>
             </div>
         );
