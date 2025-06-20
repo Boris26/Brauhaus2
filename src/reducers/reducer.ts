@@ -46,7 +46,8 @@ export interface BeerDataReducerState {
     type: string | undefined,
     selectedBeer?: Beer,
     beerToBrew?: Beer | undefined,
-    finishedBrews?: FinishedBrew[] | undefined
+    finishedBrews?: FinishedBrew[] | undefined,
+    beerFormState?: any
 }
 
 export interface ProductionReducerState {
@@ -275,6 +276,14 @@ const beerDataReducer = (aState: BeerDataReducerState = initialBeerState, aActio
                 finishedBrews.push(updatedBrew);
             }
             return { ...aState, finishedBrews };
+        }
+
+        case BeerActions.ActionTypes.SAVE_BEER_FORM_STATE: {
+            return { ...aState, beerFormState: aAction.payload.formState };
+        }
+
+        case BeerActions.ActionTypes.LOAD_BEER_FORM_STATE: {
+            return { ...aState, beerFormState: aAction.payload.formState };
         }
 
         default:

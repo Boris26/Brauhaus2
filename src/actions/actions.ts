@@ -43,6 +43,8 @@ export namespace BeerActions {
         DELETE_FINISHED_BEER_SUCCESS = 'BeerActions.DELETE_FINISHED_BEER_SUCCESS',
         ADD_FINISHED_BREW = 'BeerActions.ADD_FINISHED_BREW',
         UPDATE_FINISHED_BREW_SUCCESS = 'BeerActions.UPDATE_FINISHED_BREW_SUCCESS',
+        SAVE_BEER_FORM_STATE = 'BeerActions.SAVE_BEER_FORM_STATE',
+        LOAD_BEER_FORM_STATE = 'BeerActions.LOAD_BEER_FORM_STATE',
     }
 
     export interface SetIsSubmitSuccessful {
@@ -233,6 +235,20 @@ export namespace BeerActions {
         payload: { beer: FinishedBrew };
     }
 
+    export interface SaveBeerFormState {
+        readonly type: ActionTypes.SAVE_BEER_FORM_STATE
+        payload: {
+            formState: any
+        }
+    }
+
+    export interface LoadBeerFormState {
+        readonly type: ActionTypes.LOAD_BEER_FORM_STATE
+        payload: {
+            formState: any
+        }
+    }
+
 
     export type AllBeerActions =
         SubmitBeer |
@@ -261,7 +277,9 @@ export namespace BeerActions {
         DeleteFinishedBeer|
         DeleteFinishedBeerSuccess |
         AddFinishedBrew |
-        UpdateFinishedBrewSuccess;
+        UpdateFinishedBrewSuccess |
+        SaveBeerFormState |
+        LoadBeerFormState;
 
 
     export function isSubmitSuccessful(aIsSuccessful: boolean, aMessage: string, aType: string): SetIsSubmitSuccessful {
@@ -449,6 +467,20 @@ export namespace BeerActions {
             type: ActionTypes.UPDATE_FINISHED_BREW_SUCCESS,
             payload: { beer }
         };
+    }
+
+    export function saveBeerFormState(formState: any): SaveBeerFormState {
+        return {
+            type: ActionTypes.SAVE_BEER_FORM_STATE,
+            payload: { formState }
+        }
+    }
+
+    export function loadBeerFormState(formState: any): LoadBeerFormState {
+        return {
+            type: ActionTypes.LOAD_BEER_FORM_STATE,
+            payload: { formState }
+        }
     }
 }
 

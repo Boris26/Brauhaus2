@@ -23,12 +23,14 @@ interface BeerFormProps {
     getMalt: (isFetching: boolean) => void;
     getHop: (isFetching: boolean) => void;
     getYeast: (isFetching: boolean) => void;
+    saveBeerFormState: (formState: any) => void;
     malts: Malt[];
     hops: Hop[];
     yeasts: Yeast[];
     isSubmitSuccessful: boolean;
     messageType: string;
     message: string;
+    beerFormState?: any;
 }
 
 interface BeerFormState {
@@ -54,7 +56,9 @@ interface BeerFormState {
 class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
     constructor(props: BeerFormProps) {
         super(props);
-        this.state = {
+
+        // Standardstatus initialisieren
+        const defaultState = {
             name: '',
             type: '',
             color: '',
@@ -77,15 +81,21 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             yeastsDTO: [{ id: '', name: '', quantity: 0 }],
             isSubmitSuccessful: false,
         };
+
+        // Wenn ein gespeicherter Formularstatus existiert, verwenden wir diesen, ansonsten den Standardstatus
+        this.state = props.beerFormState || defaultState;
     }
 
     handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        this.setState({[name]: value} as unknown as Pick<BeerFormState, keyof BeerFormState>);
+        this.setState({[name]: value} as unknown as Pick<BeerFormState, keyof BeerFormState>, () => {
+            // Nach jeder Statusänderung den aktuellen Formularstatus speichern
+            this.props.saveBeerFormState(this.state);
+        });
     };
 
     componentDidMount() {
-        const {getMalt,getHop,getYeast} = this.props;
+        const {getMalt, getHop, getYeast} = this.props;
         getMalt(true);
         getHop(true);
         getYeast(true);
@@ -95,6 +105,11 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         const {isSubmitSuccessful} = this.props;
         if (!isEqual(this.state.isSubmitSuccessful,prevState.isSubmitSuccessful)) {
             this.setState({isSubmitSuccessful:isSubmitSuccessful});
+        }
+
+        // Wenn der Status geändert wurde, speichern wir den aktuellen Formularstatus
+        if (!isEqual(this.state, prevState)) {
+            this.props.saveBeerFormState(this.state);
         }
     }
 
@@ -108,6 +123,9 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
           // @ts-ignore
           step[name] = value;
           return { fermentationSteps };
+       }, () => {
+            // Nach jeder Statusänderung den aktuellen Formularstatus speichern
+            this.props.saveBeerFormState(this.state);
        });
     };
 
@@ -118,6 +136,9 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             // @ts-ignore
             step[name] = value;
             return { maltsDTO };
+        }, () => {
+            // Nach jeder Statusänderung den aktuellen Formularstatus speichern
+            this.props.saveBeerFormState(this.state);
         });
     }
 
@@ -128,6 +149,9 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             // @ts-ignore
             step[name] = value;
             return { hopsDTO };
+        }, () => {
+            // Nach jeder Statusänderung den aktuellen Formularstatus speichern
+            this.props.saveBeerFormState(this.state);
         });
     }
 
@@ -138,6 +162,9 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             // @ts-ignore
             step[name] = value;
             return { yeastsDTO };
+        }, () => {
+            // Nach jeder Statusänderung den aktuellen Formularstatus speichern
+            this.props.saveBeerFormState(this.state);
         });
     }
 
@@ -146,7 +173,10 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         const selectedValues = Array.from(options)
             .filter((option) => option.selected)
             .map((option) => option.value);
-        this.setState({[name]: selectedValues} as unknown as Pick<BeerFormState, keyof BeerFormState>);
+        this.setState({[name]: selectedValues} as unknown as Pick<BeerFormState, keyof BeerFormState>, () => {
+            // Nach jeder Statusänderung den aktuellen Formularstatus speichern
+            this.props.saveBeerFormState(this.state);
+        });
     };
 
     handleSubmit = (e: FormEvent) => {
@@ -235,6 +265,9 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             maltsDTO: [],
             hopsDTO: [],
             yeastsDTO: [],
+        }, () => {
+            // Nach dem Zurücksetzen des Formulars aktualisieren wir den gespeicherten Status
+            this.props.saveBeerFormState(this.state);
         });
     };
 
@@ -641,6 +674,7 @@ const mapStateToProps = (state: any) => ({
     isSubmitSuccessful: state.beerDataReducer.isSubmitSuccessful,
     message: state.beerDataReducer.message,
     messageType: state.beerDataReducer.type,
+    beerFormState: state.beerDataReducer.beerFormState,
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
@@ -648,6 +682,7 @@ const mapDispatchToProps = (dispatch: any) => ({
     getMalt: (isFetching: boolean) => dispatch(BeerActions.getMalts(isFetching)),
     getHop: (isFetching: boolean) => dispatch(BeerActions.getHops(isFetching)),
     getYeast: (isFetching: boolean) => dispatch(BeerActions.getYeasts(isFetching)),
+    saveBeerFormState: (formState: any) => dispatch(BeerActions.saveBeerFormState(formState)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(BeerForm);
