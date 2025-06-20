@@ -1,0 +1,54 @@
+.containerIngredientsForm {
+    margin: 10px;
+    width: 100%;
+}
+
+.containerIngredientsForm .MuiPaper-root.FinishedBrewsTable {
+    margin-top: 10px;
+    width: 98%;
+}
+
+/* Überschreiben einiger Stile aus FinishedBrewsTable.css für bessere Anpassung */
+.containerIngredientsForm .FinishedBrewsTable {
+    width: 100%;
+}
+
+.containerIngredientsForm .table-edit-field {
+    width: 100%;
+    padding: 4px 8px;
+    background-color: rgba(0, 0, 0, 0.2);
+    border: 1px solid #666;
+    border-radius: 4px;
+}
+
+.containerIngredientsForm .table-edit-field:focus {
+    border-color: darkorange;
+    outline: none;
+}
+
+/* Button-Stile für einheitlichen Look */
+.containerIngredientsForm .finish-btn,
+.containerIngredientsForm .cancel-btn {
+    height: 34px;
+    width: 34px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Ensure tables look good inside the accordions */
+.containerIngredientsForm .table-wrapper {
+    padding: 0;
+    margin: 0;
+}
+
+/* Styling für neue Zeilen zum Hinzufügen */
+.containerIngredientsForm .table-row:first-child {
+    background-color: rgba(255, 165, 0, 0.1); /* Leicht orangener Hintergrund für neue Eingabezeilen */
+}
+
+/* Einheitliche Tabellenbreiten */
+.containerIngredientsForm .table-cell input[type="number"] {
+    text-align: right;
+}
