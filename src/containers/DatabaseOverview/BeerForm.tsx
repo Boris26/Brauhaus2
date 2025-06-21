@@ -652,12 +652,12 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
     render() {
         return (
             <div className='containerBeerForm'>
-                <div>
-                    <div style={{ border: '1px solid rgba(0, 0, 0, 0.12)', borderRadius: '10px', overflow: 'hidden' }}>
+                <div style={{ height: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column' }}>
+                    <div style={{ border: '1px solid rgba(0, 0, 0, 0.12)', borderRadius: '10px', overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column' }}>
                         <div style={{ backgroundColor: 'darkorange', padding: '12px 16px', borderRadius: '10px 10px 0 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <Typography style={{ color: 'white' }}>Bier</Typography>
                         </div>
-                        <SimpleBar style={{ maxHeight: '716px', backgroundColor: '#404040' }}>
+                        <SimpleBar style={{ flexGrow: 1, backgroundColor: '#404040' }}>
                             <div style={{ padding: '16px' }}>{this.renderCreateBeerForm()}</div>
                         </SimpleBar>
                     </div>

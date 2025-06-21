@@ -119,7 +119,6 @@ const IngredientsFormPage: React.FC<IngredientsFormPageProps> = ({
                                 title="Neuen Malz hinzufügen"
                             >
                                 <span role="img" aria-label="Plus" style={{ fontSize: 22, verticalAlign: 'middle', marginRight: 4 }}>➕</span>
-                                Neues Malz
                             </button>
                         </div>
 
@@ -214,7 +213,6 @@ const IngredientsFormPage: React.FC<IngredientsFormPageProps> = ({
                                 title="Neuen Hopfen hinzufügen"
                             >
                                 <span role="img" aria-label="Plus" style={{ fontSize: 22, verticalAlign: 'middle', marginRight: 4 }}>➕</span>
-                                Neuer Hopfen
                             </button>
                         </div>
 
@@ -320,7 +318,6 @@ const IngredientsFormPage: React.FC<IngredientsFormPageProps> = ({
                                 title="Neue Hefe hinzufügen"
                             >
                                 <span role="img" aria-label="Plus" style={{ fontSize: 22, verticalAlign: 'middle', marginRight: 4 }}>➕</span>
-                                Neue Hefe
                             </button>
                         </div>
 
