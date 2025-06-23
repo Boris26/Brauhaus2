@@ -14,6 +14,7 @@ export interface BeerTableProps {
     setBeerToBrew: (beer: Beer | undefined) => void;
     beerToBrew?: Beer;
     isPollingRunning?: boolean;
+    exportShoppingListPdf: (beer: Beer) => void;
 }
 
 
@@ -81,6 +82,11 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
         setBeerToBrew(undefined);
     }
 
+    handleExportShoppingListPdfForBeer = (aBeer: Beer) => {
+
+        this.props.exportShoppingListPdf(aBeer);
+    };
+
     render() {
         const {beers, beerToBrew, isPollingRunning} = this.props;
         const {sortConfig, selectedBeerId} = this.state;
@@ -97,101 +103,102 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
             });
 
             return (
-                <TableContainer component={Paper} className="Table">
-                    <Table className="Table">
-                        <TableHead className="table-header">
-                            <TableRow>
-                                <TableCell>
-                                    <TableSortLabel
-                                        active={sortConfig.key === 'id'}
-                                        direction={sortConfig.direction}
-                                        onClick={() => this.onSort('id')}
-                                        className="table-header-cell"
-                                    >
-                                        Id
-                                    </TableSortLabel>
-                                </TableCell>
-                                <TableCell>
-                                    <TableSortLabel
-                                        active={sortConfig.key === 'name'}
-                                        direction={sortConfig.direction}
-                                        onClick={() => this.onSort('name')}
-                                        className="table-header-cell"
-                                    >
-                                        Name
-                                    </TableSortLabel>
-                                </TableCell>
-                                <TableCell>
-                                    <TableSortLabel
-                                        active={sortConfig.key === 'type'}
-                                        direction={sortConfig.direction}
-                                        onClick={() => this.onSort('type')}
-                                        className="table-header-cell"
-                                    >
-                                        Sorte
-                                    </TableSortLabel>
-                                </TableCell>
-                                <TableCell>
-                                    <TableSortLabel
-                                        active={sortConfig.key === 'color'}
-                                        direction={sortConfig.direction}
-                                        onClick={() => this.onSort('color')}
-                                        className="table-header-cell"
-                                    >
-                                        Farbe
-                                    </TableSortLabel>
-                                </TableCell>
-                                <TableCell>
-                                    <TableSortLabel
-                                        active={sortConfig.key === 'alcohol'}
-                                        direction={sortConfig.direction}
-                                        onClick={() => this.onSort('alcohol')}
-                                        className="table-header-cell"
-                                    >
-                                        Alkohol
-                                    </TableSortLabel>
-                                </TableCell>
-                                <TableCell>
-                                    Aktion
-                                </TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {sortedData.map((item, index) => (
-                                <TableRow key={item.id} onClick={() => this.onSelectBeer(item)}
-                                          className={`table-row ${selectedBeerId !== null && item.id === selectedBeerId ? 'selected' : ''}`}
-                                >
-                                    <TableCell className="table-cell">{item.id}</TableCell>
-                                    <TableCell className="table-cell">{item.name}</TableCell>
-                                    <TableCell className="table-cell">{item.type}</TableCell>
-                                    <TableCell className="table-cell">{item.color}</TableCell>
-                                    <TableCell className="table-cell">{item.alcohol}</TableCell>
-                                    <TableCell className="table-cell">
-                                        <button
-                                            className="select-btn"
-                                            onClick={e => {
-                                                e.stopPropagation();
-                                                if (beerToBrew && beerToBrew.id === item.id) {
-                                                    if (!this.props.isPollingRunning) {
-                                                        this.onCancelBrew();
-                                                    }
-                                                } else {
-                                                    this.onBrewBeer(item);
-                                                }
-                                            }}
-                                            disabled={
-                                                (!!beerToBrew && beerToBrew.id !== item.id) ||
-                                                (beerToBrew && beerToBrew.id === item.id && isPollingRunning)
-                                            }
+                <>
+
+                    <TableContainer component={Paper} className="Table">
+                        <Table className="Table">
+                            <TableHead className="table-header">
+                                <TableRow>
+                                    <TableCell>
+                                        <TableSortLabel
+                                            active={sortConfig.key === 'name'}
+                                            direction={sortConfig.direction}
+                                            onClick={() => this.onSort('name')}
+                                            className="table-header-cell"
                                         >
-                                            {beerToBrew && beerToBrew.id === item.id ? 'Abbrechen' : 'Brauen'}
-                                        </button>
+                                            Name
+                                        </TableSortLabel>
+                                    </TableCell>
+                                    <TableCell>
+                                        <TableSortLabel
+                                            active={sortConfig.key === 'type'}
+                                            direction={sortConfig.direction}
+                                            onClick={() => this.onSort('type')}
+                                            className="table-header-cell"
+                                        >
+                                            Sorte
+                                        </TableSortLabel>
+                                    </TableCell>
+                                    <TableCell>
+                                        <TableSortLabel
+                                            active={sortConfig.key === 'color'}
+                                            direction={sortConfig.direction}
+                                            onClick={() => this.onSort('color')}
+                                            className="table-header-cell"
+                                        >
+                                            Farbe
+                                        </TableSortLabel>
+                                    </TableCell>
+                                    <TableCell>
+                                        <TableSortLabel
+                                            active={sortConfig.key === 'alcohol'}
+                                            direction={sortConfig.direction}
+                                            onClick={() => this.onSort('alcohol')}
+                                            className="table-header-cell"
+                                        >
+                                            Alkohol
+                                        </TableSortLabel>
+                                    </TableCell>
+                                    <TableCell>
+                                        Aktion
                                     </TableCell>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                            </TableHead>
+                            <TableBody>
+                                {sortedData.map((item, index) => (
+                                    <TableRow key={item.id} onClick={() => this.onSelectBeer(item)}
+                                              className={`table-row ${selectedBeerId !== null && item.id === selectedBeerId ? 'selected' : ''}`}
+                                    >
+                                        <TableCell className="table-cell">{item.name}</TableCell>
+                                        <TableCell className="table-cell">{item.type}</TableCell>
+                                        <TableCell className="table-cell">{item.color}</TableCell>
+                                        <TableCell className="table-cell">{item.alcohol}</TableCell>
+                                        <TableCell className="table-cell">
+                                            <button
+                                                className="select-btn"
+                                                onClick={e => {
+                                                    e.stopPropagation();
+                                                    this.handleExportShoppingListPdfForBeer(item);
+                                                }}
+                                            >
+                                                Einkaufsliste
+                                            </button>
+                                            <button
+                                                className="select-btn"
+                                                onClick={e => {
+                                                    e.stopPropagation();
+                                                    if (beerToBrew && beerToBrew.id === item.id) {
+                                                        if (!this.props.isPollingRunning) {
+                                                            this.onCancelBrew();
+                                                        }
+                                                    } else {
+                                                        this.onBrewBeer(item);
+                                                    }
+                                                }}
+                                                disabled={
+                                                    (!!beerToBrew && beerToBrew.id !== item.id) ||
+                                                    (beerToBrew && beerToBrew.id === item.id && isPollingRunning)
+                                                }
+                                            >
+                                                {beerToBrew && beerToBrew.id === item.id ? 'Abbrechen' : 'Brauen'}
+                                            </button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </>
             );
         }
         return <div className="Table">No data</div>;
@@ -207,6 +214,7 @@ const mapStateToProps = (state: any) => ({
 const mapDispatchToProps = (dispatch: any) => ({
     setSelectedBeer: (beer: Beer) => dispatch(setSelectedBeer(beer)),
     setBeerToBrew: (beer: Beer | undefined ) => dispatch(BeerActions.setBeerToBrew(beer)),
+    exportShoppingListPdf: (beer: Beer) => dispatch(BeerActions.exportShoppingListPdf(beer)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(BeerTableComponent);

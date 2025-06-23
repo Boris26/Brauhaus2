@@ -14,9 +14,10 @@ import {ToggleState} from "../enums/eToggleState";
 import {BrewingStatus} from "../model/BrewingStatus";
 import {ConfirmStates} from "../enums/eConfirmStates";
 import {WaterStatus} from "../components/Controlls/WaterControll/WaterControl";
-import {GenericPdfGenerator} from "../utils/pdf/GenericPdfGenerator";
-import {finishedBrewStrategy} from "../utils/pdf/finishedBrewStrategy";
+import {PdfGenerator} from "../utils/pdf/PdfGenerator";
+import {FinishedBrewListPdfStrategy} from "../utils/pdf/finishedBrewStrategy";
 import {FinishedBrew} from "../model/FinishedBrew";
+import {BeerPdfStrategy} from "../utils/pdf/shoppingListPdfStrategy";
 
 export interface ApplicationReducerState {
     view: Views;
@@ -222,14 +223,17 @@ const beerDataReducer = (aState: BeerDataReducerState = initialBeerState, aActio
         }
 
         case BeerActions.ActionTypes.EXPORT_FINISHED_BREWS: {
-            const pdfGenerator = new GenericPdfGenerator<FinishedBrew>();
-            pdfGenerator.generate(aAction.payload.brews, finishedBrewStrategy, "finished_brews.pdf")
-                .then(() => {
-                    console.log("PDF export successful");
-                })
-                .catch((error) => {
-                    console.error("Error generating PDF:", error);
-                });
+            const pdfGenerator = new PdfGenerator(new FinishedBrewListPdfStrategy());
+            pdfGenerator.generatePdf(aState.finishedBrews || [], "Fertig Gebraute");
+            return {...aState};
+        }
+
+        case BeerActions.ActionTypes.EXPORT_SHOPPING_LIST_PDF: {
+            const pdfGenerator = new PdfGenerator(new BeerPdfStrategy());
+            const beer = aAction.payload.beer;
+            pdfGenerator.generatePdf(beer,beer.name);
+
+
             return {...aState};
         }
 
@@ -285,6 +289,8 @@ const beerDataReducer = (aState: BeerDataReducerState = initialBeerState, aActio
         case BeerActions.ActionTypes.LOAD_BEER_FORM_STATE: {
             return { ...aState, beerFormState: aAction.payload.formState };
         }
+
+
 
         default:
             return aState;

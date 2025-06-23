@@ -31,6 +31,7 @@ interface BeerFormProps {
     messageType: string;
     message: string;
     beerFormState?: any;
+    beers: Beer[]; // <-- Hinzugefügt
 }
 
 interface BeerFormState {
@@ -201,27 +202,33 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             yeastsDTO,
         } = this.state;
 
-        const malts_DTO = maltsDTO.map((aMalt) => {
-            // @ts-ignore
-            const malt = malts.find((malt) => malt.name === aMalt.name)!;
-            const quantity = aMalt.quantity;
-            return {name: malt.name, id: malt.id, quantity: quantity};
-        });
+        const malts_DTO = maltsDTO
+            .map((aMalt) => {
+                const malt = malts.find((malt) => malt.name === aMalt.name);
+                if (!malt) return undefined;
+                const quantity = aMalt.quantity;
+                return { name: malt.name, id: malt.id, quantity: quantity };
+            })
+            .filter((m): m is MaltDTO => m !== undefined);
 
-        const hops_DTO = hopsDTO.map((aHop) => {
-            // @ts-ignore
-            const hop = hops.find((hop) => hop.name === aHop.name)!;
-            const quantity = aHop.quantity;
-            const time = aHop.time;
-            return { id: hop.id, name: hop.name, quantity: quantity, time: time };
-        });
+        const hops_DTO = hopsDTO
+            .map((aHop) => {
+                const hop = hops.find((hop) => hop.name === aHop.name);
+                if (!hop) return undefined;
+                const quantity = aHop.quantity;
+                const time = aHop.time;
+                return { id: hop.id, name: hop.name, quantity: quantity, time: time };
+            })
+            .filter((h): h is HopDTO => h !== undefined);
 
-        const yeasts_DTO = yeastsDTO.map((aYeast) => {
-            // @ts-ignore
-            const yeast = yeasts.find((yeast) => yeast.name === aYeast.name)!;
-            const quantity = aYeast.quantity;
-            return {name: yeast.name, id: yeast.id, quantity: quantity};
-        });
+        const yeasts_DTO = yeastsDTO
+            .map((aYeast) => {
+                const yeast = yeasts.find((yeast) => yeast.name === aYeast.name);
+                if (!yeast) return undefined;
+                const quantity = aYeast.quantity;
+                return { name: yeast.name, id: yeast.id, quantity: quantity };
+            })
+            .filter((y): y is YeastDTO => y !== undefined);
 
         const beer: BeerDTO = {
             id: 0,
@@ -327,10 +334,44 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         });
     }
 
+    handleBeerSelect = (e: ChangeEvent<HTMLSelectElement>) => {
+        const { beers } = this.props;
+        const selectedId = e.target.value;
+        if (!selectedId) {
+            // Formular leeren
+            this.resetForm();
+            return;
+        }
+        const selectedBeer = beers.find(b => String(b.id) === selectedId);
+        if (selectedBeer) {
+            // Felder mit den Daten des Bieres befüllen
+            this.setState({
+                name: selectedBeer.name || '',
+                type: selectedBeer.type || '',
+                color: selectedBeer.color || '',
+                alcohol: selectedBeer.alcohol || 0,
+                originalwort: selectedBeer.originalwort || 0,
+                bitterness: selectedBeer.bitterness || 0,
+                description: selectedBeer.description || '',
+                rating: selectedBeer.rating || 0,
+                mashVolume: selectedBeer.mashVolume || 0,
+                spargeVolume: selectedBeer.spargeVolume || 0,
+                cookingTime: selectedBeer.cookingTime || 0,
+                cookingTemperatur: selectedBeer.cookingTemperatur || 0,
+                fermentationSteps: selectedBeer.fermentation ? [...selectedBeer.fermentation] : [],
+                maltsDTO: selectedBeer.malts ? selectedBeer.malts.map(m => ({ id: m.id, name: m.name, quantity: m.quantity })) : [],
+                hopsDTO: selectedBeer.wortBoiling && selectedBeer.wortBoiling.hops ? selectedBeer.wortBoiling.hops.map(h => ({ id: h.id, name: h.name, quantity: h.quantity, time: h.time })) : [],
+                yeastsDTO: selectedBeer.fermentationMaturation && selectedBeer.fermentationMaturation.yeast ? selectedBeer.fermentationMaturation.yeast.map(y => ({ id: y.id, name: y.name, quantity: y.quantity })) : [],
+                isSubmitSuccessful: false,
+            }, () => {
+                this.props.saveBeerFormState(this.state);
+            });
+        }
+    };
+
     renderCreateBeerForm() {
         const {maltsDTO, hopsDTO, yeastsDTO, isSubmitSuccessful, name, type, color, alcohol, originalwort, bitterness, description, rating, mashVolume, spargeVolume, fermentationSteps, cookingTime, cookingTemperatur} = this.state;
-        // Standardwerte setzen, falls Daten noch nicht geladen sind
-        const { malts = [], hops = [], yeasts = [], messageType, message } = this.props;
+        const { malts = [], hops = [], yeasts = [], messageType, message, beers = [] } = this.props;
 
         let info: string = "";
         if (isEqual(isSubmitSuccessful, true)) {
@@ -341,6 +382,19 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         return (
             <form className="beer-form" onSubmit={this.handleSubmit}>
+                {/* Dropdown für Bierauswahl */}
+                <label className="full-width">
+                    Bier auswählen:
+                    <select onChange={this.handleBeerSelect} value={beers.find(b => b.name === name)?.id || ''}>
+                        <option value="">Neues Bier anlegen</option>
+                        {beers.map(beer => (
+                            <option key={beer.id} value={beer.id}>{beer.name}</option>
+                        ))}
+                    </select>
+                </label>
+                {/* Button zum Leeren des Formulars */}
+                <button type="button" className="add-button" onClick={this.resetForm} style={{marginBottom: 10}}>Neues Bier</button>
+
                 <label>
                     Name:
                     <input type="text" name="name" className="field-name" value={name} onChange={this.handleChange} required={true} maxLength={15} />
@@ -652,12 +706,12 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
     render() {
         return (
             <div className='containerBeerForm'>
-                <div style={{ height: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ height: '870px', display: 'flex', flexDirection: 'column' }}>
                     <div style={{ border: '1px solid rgba(0, 0, 0, 0.12)', borderRadius: '10px', overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column' }}>
                         <div style={{ backgroundColor: 'darkorange', padding: '12px 16px', borderRadius: '10px 10px 0 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <Typography style={{ color: 'white' }}>Bier</Typography>
                         </div>
-                        <SimpleBar style={{ flexGrow: 1, backgroundColor: '#404040' }}>
+                        <SimpleBar style={{ maxHeight: '820px', backgroundColor: '#404040' }}>
                             <div style={{ padding: '16px' }}>{this.renderCreateBeerForm()}</div>
                         </SimpleBar>
                     </div>
@@ -675,6 +729,7 @@ const mapStateToProps = (state: any) => ({
     message: state.beerDataReducer.message,
     messageType: state.beerDataReducer.type,
     beerFormState: state.beerDataReducer.beerFormState,
+    beers: state.beerDataReducer.beers, // <-- Hinzugefügt
 });
 
 const mapDispatchToProps = (dispatch: any) => ({

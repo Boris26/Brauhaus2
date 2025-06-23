@@ -36,6 +36,7 @@ export namespace BeerActions {
         SET_IS_SUBMIT_SUCCESSFUL = 'BeerActions.SET_IS_SUBMIT_SUCCESSFUL',
         SET_BEER_TO_BREW = 'BeerActions.SET_BEER_TO_BREW',
         EXPORT_FINISHED_BREWS = 'BeerActions.EXPORT_FINISHED_BREWS',
+        EXPORT_SHOPPING_LIST_PDF = 'BeerActions.EXPORT_SHOPPING_LIST_PDF',
         UPDATE_ACTIVE_BEER = 'BeerActions.UPDATE_ACTIVE_BEER',
         GET_FINISHED_BEERS = 'BeerActions.GET_FINISHED_BEERS',
         GET_FINISHED_BEERS_SUCCESS = 'BeerActions.GET_FINISHED_BEERS_SUCCESS',
@@ -249,6 +250,13 @@ export namespace BeerActions {
         }
     }
 
+    export interface ExportShoppingListPdf {
+        readonly type: ActionTypes.EXPORT_SHOPPING_LIST_PDF;
+        payload: {
+            beer: Beer;
+        };
+    }
+
 
     export type AllBeerActions =
         SubmitBeer |
@@ -279,7 +287,8 @@ export namespace BeerActions {
         AddFinishedBrew |
         UpdateFinishedBrewSuccess |
         SaveBeerFormState |
-        LoadBeerFormState;
+        LoadBeerFormState |
+        ExportShoppingListPdf;
 
 
     export function isSubmitSuccessful(aIsSuccessful: boolean, aMessage: string, aType: string): SetIsSubmitSuccessful {
@@ -419,6 +428,13 @@ export namespace BeerActions {
             type: BeerActions.ActionTypes.EXPORT_FINISHED_BREWS,
             payload: {brews: aFinishedBrews}
         }
+    }
+
+    export function exportShoppingListPdf(aBeer: Beer): ExportShoppingListPdf {
+        return {
+            type: ActionTypes.EXPORT_SHOPPING_LIST_PDF,
+            payload: { beer: aBeer }
+        };
     }
 
     export function updateActiveBeer(aFinishedBrew: FinishedBrew): UpdateActiveBeer {
