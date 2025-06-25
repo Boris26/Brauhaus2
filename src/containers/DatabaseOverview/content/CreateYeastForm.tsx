@@ -3,7 +3,7 @@ import {ChangeEvent, FormEvent} from 'react';
 import {BeerActions} from "../../../actions/actions";
 import {connect} from "react-redux";
 import {isEqual} from "lodash";
-import {Yeasts} from "../../../model/Yeast";
+import {Yeasts} from "../../../model/Yeasts";
 import {YeastEVG, YeastType} from "../../../enums/eYeastType";
 import '../BeerForm.css'
 import ModalDialog, {DialogType} from "../../../components/ModalDialog/ModalDialog";

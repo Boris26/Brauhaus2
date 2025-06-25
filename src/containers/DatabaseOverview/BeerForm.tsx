@@ -5,16 +5,9 @@ import {BeerActions} from "../../actions/actions";
 import {connect} from "react-redux";
 import {isEqual} from "lodash";
 import {
-    Accordion,
-    AccordionDetails,
-    AccordionSummary,
     Typography
 } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {MashingType} from "../../enums/eMashingType";
-import MaltForm from './content/CreateMaltForm';
-import YeastForm from './content/CreateYeastForm';
-import HopForm from "./content/CreateHopForm";
 import './BeerForm.css'
 import SimpleBar from 'simplebar-react';
 
@@ -31,7 +24,7 @@ interface BeerFormProps {
     messageType: string;
     message: string;
     beerFormState?: any;
-    beers: Beer[]; // <-- Hinzugefügt
+    beers: Beer[];
 }
 
 interface BeerFormState {
@@ -55,10 +48,12 @@ interface BeerFormState {
 }
 
 class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
+    private fileInput: HTMLInputElement | null | undefined;
     constructor(props: BeerFormProps) {
+
         super(props);
 
-        // Standardstatus initialisieren
+
         const defaultState = {
             name: '',
             type: '',
@@ -169,16 +164,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         });
     }
 
-    handleSelectChange = (e: ChangeEvent<HTMLSelectElement>) => {
-        const { name, options } = e.target;
-        const selectedValues = Array.from(options)
-            .filter((option) => option.selected)
-            .map((option) => option.value);
-        this.setState({[name]: selectedValues} as unknown as Pick<BeerFormState, keyof BeerFormState>, () => {
-            // Nach jeder Statusänderung den aktuellen Formularstatus speichern
-            this.props.saveBeerFormState(this.state);
-        });
-    };
+
 
     handleSubmit = (e: FormEvent) => {
         const {malts,hops,yeasts} = this.props;
@@ -344,7 +330,6 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         }
         const selectedBeer = beers.find(b => String(b.id) === selectedId);
         if (selectedBeer) {
-            // Felder mit den Daten des Bieres befüllen
             this.setState({
                 name: selectedBeer.name || '',
                 type: selectedBeer.type || '',
@@ -380,8 +365,25 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             info = "Beer creation failed";
         }
 
+        // Import-Button und verstecktes File-Input
         return (
             <form className="beer-form" onSubmit={this.handleSubmit}>
+                {/* Import Button */}
+                <input
+                    type="file"
+                    accept="application/json"
+                    style={{ display: 'none' }}
+                    ref={ref => this.fileInput = ref}
+                    onChange={this.handleImportBeerJson}
+                />
+                <button
+                    type="button"
+                    className="add-button"
+                    style={{ marginBottom: 10, marginRight: 10 }}
+                    onClick={() => this.fileInput && this.fileInput.click()}
+                >
+                    Importieren
+                </button>
                 {/* Dropdown für Bierauswahl */}
                 <label className="full-width">
                     Bier auswählen:
@@ -703,6 +705,10 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         );
     }
 
+    handleImportBeerJson = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files && event.target.files[0];
+    };
+
     render() {
         return (
             <div className='containerBeerForm'>
@@ -729,7 +735,7 @@ const mapStateToProps = (state: any) => ({
     message: state.beerDataReducer.message,
     messageType: state.beerDataReducer.type,
     beerFormState: state.beerDataReducer.beerFormState,
-    beers: state.beerDataReducer.beers, // <-- Hinzugefügt
+    beers: state.beerDataReducer.beers,
 });
 
 const mapDispatchToProps = (dispatch: any) => ({

@@ -1,0 +1,167 @@
+import { BeerActions } from '../actions/actions';
+import { PdfGenerator } from '../utils/pdf/PdfGenerator';
+import { FinishedBrewListPdfStrategy } from '../utils/pdf/finishedBrewStrategy';
+import { BeerPdfStrategy } from '../utils/pdf/shoppingListPdfStrategy';
+import AllBeerActions = BeerActions.AllBeerActions;
+import {Beer, Yeast} from "../model/Beer";
+import {BeerDTO} from "../model/BeerDTO";
+import {Malts} from "../model/Malt";
+import {Hops} from "../model/Hops";
+import {FinishedBrew} from "../model/FinishedBrew";
+
+
+export interface BeerDataReducerState {
+    beers: Beer[] | undefined
+    beer: BeerDTO | undefined
+    malts: Malts[] | undefined
+    hops: Hops[] | undefined
+    yeasts: Yeast[] | undefined
+    isSuccessful: boolean,
+    isFetching: boolean,
+    isSubmitMaltSuccessful: boolean | undefined,
+    isSubmitHopSuccessful: boolean | undefined,
+    isSubmitYeastSuccessful: boolean | undefined,
+    isSubmitSuccessful: boolean | undefined,
+    message: string | undefined,
+    type: string | undefined,
+    selectedBeer?: Beer,
+    beerToBrew?: Beer | undefined,
+    finishedBrews?: FinishedBrew[] | undefined,
+    beerFormState?: any
+}
+
+export const initialBeerState: BeerDataReducerState =
+    {
+        beers: undefined,
+        beer: undefined,
+        malts: undefined,
+        hops: undefined,
+        yeasts: undefined,
+        isSuccessful: false,
+        isFetching: false,
+        isSubmitMaltSuccessful: true,
+        isSubmitHopSuccessful: true,
+        isSubmitYeastSuccessful: true,
+        isSubmitSuccessful: true,
+        message: undefined,
+        type: undefined
+    }
+
+const beerDataReducer = (
+  aState: BeerDataReducerState = initialBeerState,
+  aAction: AllBeerActions
+) => {
+  switch (aAction.type) {
+    case BeerActions.ActionTypes.SUBMIT_BEER: {
+      return { ...aState };
+    }
+    case BeerActions.ActionTypes.GET_BEERS_SUCCESS: {
+      return { ...aState, beers: aAction.payload.beers, isFetching: false };
+    }
+    case BeerActions.ActionTypes.GET_BEERS: {
+      return { ...aState, isFetching: aAction.payload.isFetching };
+    }
+    case BeerActions.ActionTypes.SET_SELECTED_BEER: {
+      return { ...aState, selectedBeer: aAction.payload.beer };
+    }
+    case BeerActions.ActionTypes.SUBMIT_BEER_SUCCESS: {
+      return { ...aState, isSuccessful: aAction.payload.isSubmitBeerSuccessful };
+    }
+    case BeerActions.ActionTypes.GET_MALTS: {
+      return { ...aState, isFetching: aAction.payload.isFetching };
+    }
+    case BeerActions.ActionTypes.GET_HOPS: {
+      return { ...aState, isFetching: aAction.payload.isFetching };
+    }
+    case BeerActions.ActionTypes.GET_YEASTS: {
+      return { ...aState, isFetching: aAction.payload.isFetching };
+    }
+    case BeerActions.ActionTypes.GET_MALTS_SUCCESS: {
+      return { ...aState, malts: aAction.payload.malts, isSuccessful: aAction.payload.isSuccessful };
+    }
+    case BeerActions.ActionTypes.GET_HOPS_SUCCESS: {
+      console.log(aAction.payload.hops);
+      return { ...aState, hops: aAction.payload.hops, isSuccessful: aAction.payload.isSuccessful };
+    }
+    case BeerActions.ActionTypes.GET_YEASTS_SUCCESS: {
+      return { ...aState, yeasts: aAction.payload.yeasts, isSuccessful: aAction.payload.isSuccessful };
+    }
+    case BeerActions.ActionTypes.SUBMIT_NEW_MALT: {
+      return { ...aState };
+    }
+    case BeerActions.ActionTypes.SUBMIT_NEW_HOP: {
+      return { ...aState };
+    }
+    case BeerActions.ActionTypes.SUBMIT_NEW_YEAST: {
+      return { ...aState };
+    }
+    case BeerActions.ActionTypes.SUBMIT_NEW_MALT_SUCCESS: {
+      return { ...aState, isSubmitMaltSuccessful: aAction.payload.isSubmitMaltSuccessful };
+    }
+    case BeerActions.ActionTypes.SUBMIT_NEW_HOP_SUCCESS: {
+      return { ...aState, isSubmitHopSuccessful: aAction.payload.isSubmitHopSuccessful };
+    }
+    case BeerActions.ActionTypes.SUBMIT_NEW_YEAST_SUCCESS: {
+      return { ...aState, isSubmitYeastSuccessful: aAction.payload.isSubmitYeastSuccessful };
+    }
+    case BeerActions.ActionTypes.SET_IS_SUBMIT_SUCCESSFUL: {
+      return { ...aState, isSubmitSuccessful: aAction.payload.isSubmitSuccessful };
+    }
+    case BeerActions.ActionTypes.SET_BEER_TO_BREW: {
+      return { ...aState, beerToBrew: aAction.payload.beer };
+    }
+    case BeerActions.ActionTypes.EXPORT_FINISHED_BREWS: {
+      const pdfGenerator = new PdfGenerator(new FinishedBrewListPdfStrategy());
+      pdfGenerator.generatePdf(aState.finishedBrews || [], 'Fertig Gebraute');
+      return { ...aState };
+    }
+    case BeerActions.ActionTypes.EXPORT_SHOPPING_LIST_PDF: {
+      const pdfGenerator = new PdfGenerator(new BeerPdfStrategy());
+      const beer = aAction.payload.beer;
+      pdfGenerator.generatePdf(beer, beer.name);
+      return { ...aState };
+    }
+    case BeerActions.ActionTypes.GET_FINISHED_BEERS: {
+      return { ...aState, isFetching: aAction.payload.isFetching };
+    }
+    case BeerActions.ActionTypes.GET_FINISHED_BEERS_SUCCESS: {
+      return { ...aState, finishedBrews: aAction.payload.finishedBeers };
+    }
+    case BeerActions.ActionTypes.UPDATE_ACTIVE_BEER: {
+      return { ...aState };
+    }
+    case BeerActions.ActionTypes.DELETE_FINISHED_BEER: {
+      return { ...aState };
+    }
+    case BeerActions.ActionTypes.DELETE_FINISHED_BEER_SUCCESS: {
+      let finishedBrews = aState.finishedBrews ? [...aState.finishedBrews] : [];
+      finishedBrews = finishedBrews.filter(b => b.id !== aAction.payload.deletedFinishedBrewId);
+      return { ...aState, finishedBrews };
+    }
+    case BeerActions.ActionTypes.ADD_FINISHED_BREW: {
+      return { ...aState };
+    }
+    case BeerActions.ActionTypes.UPDATE_FINISHED_BREW_SUCCESS: {
+      const updatedBrew = aAction.payload.beer;
+      let finishedBrews = aState.finishedBrews ? [...aState.finishedBrews] : [];
+      const idx = finishedBrews.findIndex(b => b.id === updatedBrew.id);
+      if (idx !== -1) {
+        finishedBrews[idx] = updatedBrew;
+      } else {
+        finishedBrews.push(updatedBrew);
+      }
+      return { ...aState, finishedBrews };
+    }
+    case BeerActions.ActionTypes.SAVE_BEER_FORM_STATE: {
+      return { ...aState, beerFormState: aAction.payload.formState };
+    }
+    case BeerActions.ActionTypes.LOAD_BEER_FORM_STATE: {
+      return { ...aState, beerFormState: aAction.payload.formState };
+    }
+    default:
+      return aState;
+  }
+};
+
+export default beerDataReducer;
+export { beerDataReducer };

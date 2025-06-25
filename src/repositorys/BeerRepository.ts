@@ -5,69 +5,151 @@ import store from "../store";
 import {DatabaseURL} from "../global";
 import {Malts} from "../model/Malt";
 import {Hops} from "../model/Hops";
-import {Yeasts} from "../model/Yeast";
+import {Yeasts} from "../model/Yeasts";
 import {FinishedBrew} from "../model/FinishedBrew";
+import {Beer} from "../model/Beer";
 
 export class BeerRepository
 {
+    //region GET-Methoden
+    static async getBeers(): Promise<Beer[] | undefined>
+    {
+        return await this._doGetBeers();
+    }
+
+    static async getMalts(): Promise<Malts[] | undefined>
+    {
+        return await this._doGetMalts();
+    }
+
+    static async getHops(): Promise<Hops[] | undefined>
+    {
+        return await this._doGetHops();
+    }
+
+    static async getYeasts(): Promise<Yeasts[] | undefined>
+    {
+        return await this._doGetYeasts();
+    }
+
+    static async getFinishedBeers(): Promise<FinishedBrew[] | undefined>
+    {
+        return await this._doGetFinishedBeers();
+    }
+
+    //region PRIVATE GET-Methoden
+    private static async _doGetBeers(): Promise<Beer[] | undefined>
+    {
+        try {
+            const response = await axios.get(DatabaseURL + 'beers');
+            if(response.status === 200)
+            {
+                return  JSON.parse(response.data)
+            }
+
+        } catch (error) {
+            console.error('Fehler beim API-Aufruf', error);
+        }
+
+    }
+    private static async _doGetMalts(): Promise<Malts[] | undefined>{
+        try {
+            const response = await axios.get(DatabaseURL+'malts');
+            if (response.status === 200) {
+                return  JSON.parse(response.data)
+
+            }
+        }
+        catch (error) {
+            console.error('Fehler beim API-Aufruf', error);
+        }
+    }
+    private static async _doGetHops():Promise<Hops[] | undefined> {
+        try {
+            const response = await axios.get(DatabaseURL+'hops');
+            if (response.status === 200) {
+
+                return JSON.parse(response.data)
+
+            }
+
+        }
+        catch (error) {
+            console.error('Fehler beim API-Aufruf', error);
+        }
+    }
+    private static async _doGetYeasts(): Promise<Yeasts[] | undefined> {
+        try {
+            const response = await axios.get(DatabaseURL + 'yeasts');
+            if (response.status === 200) {
+                return  JSON.parse(response.data)
+
+            }
+
+        }
+        catch (error) {
+            console.error('Fehler beim API-Aufruf', error);
+        }
+    }
+    private static async _doGetFinishedBeers():Promise<FinishedBrew[] | undefined>
+    {
+        try {
+            const response = await axios.get(DatabaseURL + 'finishedbeers');
+            if(response.status === 200)
+            {
+                return response.data;
+            }
+        } catch (error) {
+            console.error('Fehler beim API-Aufruf', error);
+        }
+
+    }
+    //endregion PRIVATE GET-Methoden
+    //endregion GET-Methoden
+
+    //region SUBMIT-Methoden
     static async submitBeer(beer: BeerDTO )
     {
-        return await BeerRepository._doSubmitBeer(beer);
+        return await this._doSubmitBeer(beer);
     }
 
     static async submitMalt(malt: Malts)
     {
-        return await BeerRepository._doSubmitMalt(malt);
+        return await this._doSubmitMalt(malt);
     }
 
     static async submitHop(hop: Hops)
     {
-        return await BeerRepository._doSubmitHop(hop);
+        return await this._doSubmitHop(hop);
     }
 
     static async submitYeast(yeast: Yeasts)
     {
-        return await BeerRepository._doSubmitYeast(yeast);
+        return await this._doSubmitYeast(yeast);
     }
 
-    static async getBeers()
+    //region PRIVATE SUBMIT-Methoden
+    private static async _doSubmitBeer(beer: BeerDTO)
     {
-        return await BeerRepository._doGetBeers();
+        try {
+            const jsonstring = JSON.stringify(beer);
+            const header = {headers: {'Content-Type': 'application/json'}};
+            const response = await axios.post(DatabaseURL + 'beer',  jsonstring, header);
+            if(response.status === 200)
+            {
+                store.dispatch(BeerActions.submitBeerSuccess(true));
+            }
+            else {
+                store.dispatch(BeerActions.submitBeerSuccess(false));
+            }
+
+        } catch (error) {
+            store.dispatch(BeerActions.submitBeerSuccess(false));
+            console.error('Fehler beim API-Aufruf', error);
+
+        }
+
     }
-
-    static async getMalts()
-    {
-        return await BeerRepository._doGetMalts();
-    }
-
-    static async getHops()
-    {
-        return await BeerRepository._doGetHops();
-    }
-
-    static async getYeasts()
-    {
-        return await BeerRepository._doGetYeasts();
-    }
-
-    static async getFinishedBeers()
-    {
-        return await BeerRepository._doGetFinishedBeers();
-    }
-
-    static async updateFinishedBeer(beer: FinishedBrew ){
-        return await BeerRepository._doSendFinishedBeer(beer);
-    }
-
-    static async sendNewFinishedBeer(beer: FinishedBrew ){
-        return await BeerRepository._doSendFinishedBeer(beer);
-    }
-
-    static async deleteFinishedBeer(beerId: string) {
-        return await BeerRepository._doDeleteFinishedBeer(beerId);
-    }
-
-
     private static async _doSubmitMalt(malt: Malts){
         try {
             const jsonstring = JSON.stringify(malt);
@@ -128,119 +210,14 @@ export class BeerRepository
             store.dispatch(BeerActions.isSubmitSuccessful(false, "Yeast not saved", "Yeast"));
         }
     }
-
-    private static async _doGetYeasts() {
-        try {
-            const response = await axios.get(DatabaseURL + 'yeasts');
-            if (response.status === 200) {
-               const object = JSON.parse(response.data)
-               store.dispatch(BeerActions.getYeastsSuccess(object, true));
-            }
-            else {
-                store.dispatch(BeerActions.getYeastsSuccess(null, false));
-            }
-        }
-        catch (error) {
-            console.error('Fehler beim API-Aufruf', error);
-        }
-    }
-
-    private static async _doGetHops() {
-        try {
-            const response = await axios.get(DatabaseURL+'hops');
-            if (response.status === 200) {
-
-                const object = JSON.parse(response.data)
-                store.dispatch(BeerActions.getHopsSuccess(object, true));
-            }
-            else {
-                store.dispatch(BeerActions.getHopsSuccess(null, false));
-            }
-        }
-        catch (error) {
-            console.error('Fehler beim API-Aufruf', error);
-        }
-    }
-
-    private static async _doGetMalts() {
-        try {
-            const response = await axios.get(DatabaseURL+'malts');
-            if (response.status === 200) {
-                console.log(response.data);
-                const object = JSON.parse(response.data)
-                store.dispatch(BeerActions.getMaltsSuccess(object, true));
-            }
-            else {
-                store.dispatch(BeerActions.getMaltsSuccess(null, false));
-            }
-        }
-        catch (error) {
-            console.error('Fehler beim API-Aufruf', error);
-        }
-    }
-
-    private static async _doSubmitBeer(beer: BeerDTO)
-    {
-        try {
-            const jsonstring = JSON.stringify(beer);
-            const header = {headers: {'Content-Type': 'application/json'}};
-            const response = await axios.post(DatabaseURL + 'beer',  jsonstring, header);
-            if(response.status === 200)
-            {
-                store.dispatch(BeerActions.submitBeerSuccess(true));
-            }
-            else {
-                store.dispatch(BeerActions.submitBeerSuccess(false));
-            }
-
-        } catch (error) {
-            store.dispatch(BeerActions.submitBeerSuccess(false));
-            console.error('Fehler beim API-Aufruf', error);
-
-        }
-
-    }
-    private static async _doGetBeers()
-    {
-        try {
-            const response = await axios.get(DatabaseURL + 'beers');
-            if(response.status === 200)
-            {
-               const object = JSON.parse(response.data)
-               store.dispatch(BeerActions.getBeersSuccess(object));
-            }
-
-
-            return response.data;
-        } catch (error) {
-            console.error('Fehler beim API-Aufruf', error);
-        }
-
-    }
-
-    private static async _doGetFinishedBeers()
-    {
-        try {
-            const response = await axios.get(DatabaseURL + 'finishedbeers');
-            if(response.status === 200)
-            {
-               store.dispatch(BeerActions.getFinishedBeersSuccess(response.data));
-            }
-        } catch (error) {
-            console.error('Fehler beim API-Aufruf', error);
-        }
-
-    }
-
     private static async _doSendFinishedBeer(beer: FinishedBrew)
     {
         try {
-            const jsonstring = JSON.stringify(beer);
             const header = {headers: {'Content-Type': 'application/json'}};
-            const response = await axios.post(DatabaseURL + 'finishedbeer',  jsonstring, header);
+            const response = await axios.post(DatabaseURL + 'finishedbeer',  beer, header);
             if(response.status === 200)
             {
-                store.dispatch(BeerActions.updateFinishedBrewSuccess(response.data));
+                return response.data;
             }
             else
             {
@@ -252,7 +229,21 @@ export class BeerRepository
             return null;
         }
     }
+    //endregion PRIVATE SUBMIT-Methoden
+    //endregion SUBMIT-Methoden
 
+    //region DELETE-Methoden
+    static async deleteFinishedBeer(beerId: string) {
+        return await this._doDeleteFinishedBeer(beerId);
+    }
+    static async updateFinishedBeer(beer: FinishedBrew ){
+        return await this._doSendFinishedBeer(beer);
+    }
+    static async sendNewFinishedBeer(beer: FinishedBrew ){
+        return await this._doSendFinishedBeer(beer);
+    }
+
+    //region PRIVATE DELETE-Methoden
     private static async _doDeleteFinishedBeer(beerId: string){
         try {
             const response = await axios.delete(`${DatabaseURL}finishedbeer/${beerId}`);
@@ -269,4 +260,6 @@ export class BeerRepository
             console.error('Fehler beim API-Aufruf', error);
         }
     }
+    //endregion PRIVATE DELETE-Methoden
+    //endregion DELETE-Methoden
 }

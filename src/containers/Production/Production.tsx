@@ -18,7 +18,6 @@ import {BrewingData} from "../../model/BrewingData";
 import {BrewingStatus} from "../../model/BrewingStatus";
 import {TimeFormatter} from "../../utils/TimeFormatter";
 import ModalDialog, {DialogType} from "../../components/ModalDialog/ModalDialog";
-import {BackendAvailable} from "../../reducers/reducer";
 import {ProgressBar} from "react-bootstrap";
 import {MashingType} from "../../enums/eMashingType";
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
@@ -28,6 +27,7 @@ import {TextMapper} from "../../utils/TextMapper";
 import {IconProp} from "@fortawesome/fontawesome-svg-core";
 import {FinishedBrew} from "../../model/FinishedBrew";
 import {eBrewState} from "../../enums/eBrewState";
+import {BackendAvailable} from "../../reducers/productionReducer";
 
 interface ProductionProps {
     selectedBeer: Beer;

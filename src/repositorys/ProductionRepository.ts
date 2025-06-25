@@ -7,8 +7,8 @@ import {MashAgitatorStates} from "../model/MashAgitator";
 import {BrewingData} from "../model/BrewingData";
 import {BrewingStatus} from "../model/BrewingStatus";
 import {ConfirmStates} from "../enums/eConfirmStates";
-import {BackendAvailable} from "../reducers/reducer";
 import {WaterStatus} from "../components/Controlls/WaterControll/WaterControl";
+import {BackendAvailable} from "../reducers/productionReducer";
 
 export class ProductionRepository {
     private static pollingIntervalId: NodeJS.Timeout | null = null;

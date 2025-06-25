@@ -18,7 +18,7 @@ import { connect } from 'react-redux';
 import { BeerActions } from '../../actions/actions';
 import { Malts } from '../../model/Malt';
 import { Hops } from '../../model/Hops';
-import { Yeasts } from '../../model/Yeast';
+import { Yeasts } from '../../model/Yeasts';
 import SimpleBar from 'simplebar-react';
 import 'simplebar/dist/simplebar.min.css';
 import '../MainView/FinishBrewsBeers/FinishedBrewsTable.css';

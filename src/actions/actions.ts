@@ -3,15 +3,15 @@ import {Views} from "../enums/eViews";
 import {BeerDTO} from "../model/BeerDTO";
 import {Malts} from "../model/Malt";
 import {Hops} from "../model/Hops";
-import {Yeasts} from "../model/Yeast";
+import {Yeasts} from "../model/Yeasts";
 import {ToggleState} from "../enums/eToggleState";
 import {MashAgitatorStates} from "../model/MashAgitator";
 import {BrewingData} from "../model/BrewingData";
 import {BrewingStatus} from "../model/BrewingStatus";
 import {ConfirmStates} from "../enums/eConfirmStates";
-import {BackendAvailable} from "../reducers/reducer";
 import {WaterStatus} from "../components/Controlls/WaterControll/WaterControl";
 import {FinishedBrew} from "../model/FinishedBrew";
+import {BackendAvailable} from "../reducers/productionReducer";
 
 export namespace BeerActions {
 
@@ -46,6 +46,20 @@ export namespace BeerActions {
         UPDATE_FINISHED_BREW_SUCCESS = 'BeerActions.UPDATE_FINISHED_BREW_SUCCESS',
         SAVE_BEER_FORM_STATE = 'BeerActions.SAVE_BEER_FORM_STATE',
         LOAD_BEER_FORM_STATE = 'BeerActions.LOAD_BEER_FORM_STATE',
+    }
+
+    export interface GetBeers {
+        readonly type: ActionTypes.GET_BEERS
+        payload: {
+            isFetching: boolean
+        }
+    }
+
+    export interface GetBeersSuccess {
+        readonly type: ActionTypes.GET_BEERS_SUCCESS
+        payload: {
+            beers: Beer[]
+        }
     }
 
     export interface SetIsSubmitSuccessful {
@@ -113,12 +127,7 @@ export namespace BeerActions {
         }
     }
 
-    export interface GetBeers {
-        readonly type: ActionTypes.GET_BEERS
-        payload: {
-            isFetching: boolean
-        }
-    }
+
 
     export interface GetMalts {
         readonly type: ActionTypes.GET_MALTS
@@ -130,7 +139,7 @@ export namespace BeerActions {
     export interface GetMaltsSuccess {
         readonly type: ActionTypes.GET_MALTS_SUCCESS
         payload: {
-            malts: Malts[] | null,
+            malts: Malts[],
             isSuccessful: boolean
         }
     }
@@ -145,7 +154,7 @@ export namespace BeerActions {
     export interface GetHopsSuccess {
         readonly type: ActionTypes.GET_HOPS_SUCCESS
         payload: {
-            hops: Hops[] | null,
+            hops: Hops[],
             isSuccessful: boolean
         }
     }
@@ -160,17 +169,11 @@ export namespace BeerActions {
     export interface GetYeastsSuccess {
         readonly type: ActionTypes.GET_YEASTS_SUCCESS
         payload: {
-            yeasts: Yeast[] | null
+            yeasts: Yeasts[],
             isSuccessful: boolean
         }
     }
 
-    export interface GetBeersSuccess {
-        readonly type: ActionTypes.GET_BEERS_SUCCESS
-        payload: {
-            beers: Beer[]
-        }
-    }
 
 
     export interface SetSelectedBeer {
@@ -354,14 +357,14 @@ export namespace BeerActions {
         }
     }
 
-    export function getHopsSuccess(aHops: Hops[] | null, aIsSuccessful: boolean): GetHopsSuccess {
+    export function getHopsSuccess(aHops: Hops[], aIsSuccessful: boolean): GetHopsSuccess {
         return {
             type: ActionTypes.GET_HOPS_SUCCESS,
             payload: {hops: aHops, isSuccessful: aIsSuccessful}
         }
     }
 
-    export function getYeastsSuccess(aYeasts: Yeast[] | null, aIsSuccessful: boolean): GetYeastsSuccess {
+    export function getYeastsSuccess(aYeasts: Yeasts[], aIsSuccessful: boolean): GetYeastsSuccess {
         return {
             type: ActionTypes.GET_YEASTS_SUCCESS,
             payload: {yeasts: aYeasts, isSuccessful: aIsSuccessful}
@@ -375,7 +378,7 @@ export namespace BeerActions {
         }
     }
 
-    export function getMaltsSuccess(aMalts: Malts[] | null, aIsSuccessful: boolean): BeerActions.GetMaltsSuccess {
+    export function getMaltsSuccess(aMalts: Malts[], aIsSuccessful: boolean): BeerActions.GetMaltsSuccess {
         return {
             type: ActionTypes.GET_MALTS_SUCCESS,
             payload: {malts: aMalts, isSuccessful: aIsSuccessful}
@@ -497,6 +500,30 @@ export namespace BeerActions {
             type: ActionTypes.LOAD_BEER_FORM_STATE,
             payload: { formState }
         }
+    }
+
+    export function getYeastsFailure(error: any) {
+        return undefined;
+    }
+
+    export function getFinishedBeersFailure(error: any) {
+        return undefined;
+    }
+
+    export function submitBeerFailure(error: any) {
+        return undefined;
+    }
+
+    export function getHopsFailure(error: any) {
+        return undefined;
+    }
+
+    export function getMaltsFailure(error: any) {
+        return undefined;
+    }
+
+    export function getBeersFailure(param: any) {
+        return undefined;
     }
 }
 
