@@ -93,11 +93,71 @@ export const submitBeerEpic = (action$: any) =>
     )
   );
 
+export const submitNewMaltEpic = (action$: any) =>
+  action$.pipe(
+    ofType(BeerActions.ActionTypes.SUBMIT_NEW_MALT),
+    mergeMap((action: any) =>
+      from(BeerRepository.submitMalt(action.payload.malt)).pipe(
+        map(() => BeerActions.submitMaltSuccess(true)),
+        catchError((error) => of(BeerActions.getMaltsFailure(error)))
+      )
+    )
+  );
 
+export const submitNewHopEpic = (action$: any) =>
+  action$.pipe(
+    ofType(BeerActions.ActionTypes.SUBMIT_NEW_HOP),
+    mergeMap((action: any) =>
+      from(BeerRepository.submitHop(action.payload.hop)).pipe(
+        map(() => BeerActions.submitHopSuccess(true)),
+        catchError((error) => of(BeerActions.getHopsFailure(error)))
+      )
+    )
+  );
 
+export const submitNewYeastEpic = (action$: any) =>
+  action$.pipe(
+    ofType(BeerActions.ActionTypes.SUBMIT_NEW_YEAST),
+    mergeMap((action: any) =>
+      from(BeerRepository.submitYeast(action.payload.yeast)).pipe(
+        map(() => BeerActions.submitYeastSuccess(true)),
+        catchError((error) => of(BeerActions.getYeastsFailure(error)))
+      )
+    )
+  );
 
+export const deleteFinishedBeerEpic = (action$: any) =>
+  action$.pipe(
+    ofType(BeerActions.ActionTypes.DELETE_FINISHED_BEER),
+    mergeMap((action: any) =>
+      from(BeerRepository.deleteFinishedBeer(action.payload.finishedBrewId)).pipe(
+        map(() => BeerActions.deleteFinishedBeerSuccess(true, action.payload.finishedBrewId)),
+        catchError((error) => of(BeerActions.getFinishedBeersFailure(error)))
+      )
+    )
+  );
 
+export const updateFinishedBeerEpic = (action$: any) =>
+  action$.pipe(
+    ofType(BeerActions.ActionTypes.UPDATE_ACTIVE_BEER),
+    mergeMap((action: any) =>
+      from(BeerRepository.updateFinishedBeer(action.payload.beer)).pipe(
+        map((beer) => BeerActions.updateFinishedBrewSuccess(beer)),
+        catchError((error) => of(BeerActions.getFinishedBeersFailure(error)))
+      )
+    )
+  );
 
+export const sendNewFinishedBeerEpic = (action$: any) =>
+  action$.pipe(
+    ofType(BeerActions.ActionTypes.ADD_FINISHED_BREW),
+    mergeMap((action: any) =>
+      from(BeerRepository.sendNewFinishedBeer(action.payload.finishedBrew)).pipe(
+        map(() => BeerActions.getFinishedBeers(true)),
+        catchError((error) => of(BeerActions.getFinishedBeersFailure(error)))
+      )
+    )
+  );
 
 export const beerEpics = [
   getBeersEpic,
@@ -105,5 +165,11 @@ export const beerEpics = [
   getMaltsEpic,
   getHopsEpic,
   getYeastsEpic,
-  getFinishedBeersEpic
+  getFinishedBeersEpic,
+  submitNewMaltEpic,
+  submitNewHopEpic,
+  submitNewYeastEpic,
+  deleteFinishedBeerEpic,
+  updateFinishedBeerEpic,
+  sendNewFinishedBeerEpic
 ];

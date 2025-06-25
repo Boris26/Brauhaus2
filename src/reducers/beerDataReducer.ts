@@ -80,7 +80,6 @@ const beerDataReducer = (
       return { ...aState, malts: aAction.payload.malts, isSuccessful: aAction.payload.isSuccessful };
     }
     case BeerActions.ActionTypes.GET_HOPS_SUCCESS: {
-      console.log(aAction.payload.hops);
       return { ...aState, hops: aAction.payload.hops, isSuccessful: aAction.payload.isSuccessful };
     }
     case BeerActions.ActionTypes.GET_YEASTS_SUCCESS: {
