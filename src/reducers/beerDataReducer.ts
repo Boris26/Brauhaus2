@@ -1,7 +1,4 @@
 import { BeerActions } from '../actions/actions';
-import { PdfGenerator } from '../utils/pdf/PdfGenerator';
-import { FinishedBrewListPdfStrategy } from '../utils/pdf/finishedBrewStrategy';
-import { BeerPdfStrategy } from '../utils/pdf/shoppingListPdfStrategy';
 import AllBeerActions = BeerActions.AllBeerActions;
 import {Beer, Yeast} from "../model/Beer";
 import {BeerDTO} from "../model/BeerDTO";
@@ -154,5 +151,4 @@ const beerDataReducer = (
   }
 };
 
-export default beerDataReducer;
 export { beerDataReducer };

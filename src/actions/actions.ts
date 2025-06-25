@@ -1,4 +1,4 @@
-import {Beer, Yeast} from "../model/Beer";
+import {Beer} from "../model/Beer";
 import {Views} from "../enums/eViews";
 import {BeerDTO} from "../model/BeerDTO";
 import {Malts} from "../model/Malt";
