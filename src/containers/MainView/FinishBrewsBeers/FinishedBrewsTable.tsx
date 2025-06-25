@@ -524,7 +524,7 @@ const mapDispatchToProps = (dispatch: any) => ({
         dispatch(BeerActions.updateActiveBeer(brew));
     },
     exportPdf: (brews: FinishedBrew[]) => {
-        dispatch(BeerActions.exportFinishedBrewsToPdf(brews));
+        dispatch(BeerActions.generateFinishedBrewsPdf(brews));
     },
     getFinishedBrews: (isFetching: boolean) => {
         dispatch(BeerActions.getFinishedBeers(isFetching));

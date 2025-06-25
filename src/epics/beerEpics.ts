@@ -8,6 +8,9 @@ import {Malts} from "../model/Malt";
 import {Hops} from "../model/Hops";
 import {Yeasts} from "../model/Yeasts";
 import {FinishedBrew} from "../model/FinishedBrew";
+import { FinishedBrewListPdfStrategy } from '../utils/pdf/finishedBrewStrategy';
+import {PdfGenerator} from "../utils/pdf/PdfGenerator";
+import { BeerPdfStrategy } from '../utils/pdf/shoppingListPdfStrategy';
 
 /**
  * Epic to handle the GET_BEERS action.
@@ -159,6 +162,32 @@ export const sendNewFinishedBeerEpic = (action$: any) =>
     )
   );
 
+export const generateFinishedBrewsPdfEpic = (action$: any) =>
+  action$.pipe(
+    ofType(BeerActions.ActionTypes.GENERATE_FINISHED_BREWS_PDF),
+    mergeMap((action: any) => {
+      const pdfGenerator = new PdfGenerator(new FinishedBrewListPdfStrategy());
+      return from(pdfGenerator.generatePdf(action.payload.finishedBrews, 'Fertig Gebraute'))
+        .pipe(
+          map(() => BeerActions.generateFinishedBrewsPdfSuccess()),
+          catchError((error) => of(BeerActions.generateFinishedBrewsPdfFailure(error)))
+        );
+    })
+  );
+
+export const generateShoppingListPdfEpic = (action$: any) =>
+  action$.pipe(
+    ofType(BeerActions.ActionTypes.GENERATE_SHOPPING_LIST_PDF),
+    mergeMap((action: any) => {
+      const pdfGenerator = new PdfGenerator(new BeerPdfStrategy());
+      return from(pdfGenerator.generatePdf(action.payload.beer, action.payload.beer.name))
+        .pipe(
+          map(() => BeerActions.generateShoppingListPdfSuccess()),
+          catchError((error) => of(BeerActions.generateShoppingListPdfFailure(error)))
+        );
+    })
+  );
+
 export const beerEpics = [
   getBeersEpic,
   submitBeerEpic,
@@ -171,5 +200,7 @@ export const beerEpics = [
   submitNewYeastEpic,
   deleteFinishedBeerEpic,
   updateFinishedBeerEpic,
-  sendNewFinishedBeerEpic
+  sendNewFinishedBeerEpic,
+  generateFinishedBrewsPdfEpic,
+  generateShoppingListPdfEpic
 ];

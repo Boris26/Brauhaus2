@@ -35,8 +35,6 @@ export namespace BeerActions {
         GET_YEASTS_SUCCESS = 'BeerActions.GET_YEASTS_SUCCESS',
         SET_IS_SUBMIT_SUCCESSFUL = 'BeerActions.SET_IS_SUBMIT_SUCCESSFUL',
         SET_BEER_TO_BREW = 'BeerActions.SET_BEER_TO_BREW',
-        EXPORT_FINISHED_BREWS = 'BeerActions.EXPORT_FINISHED_BREWS',
-        EXPORT_SHOPPING_LIST_PDF = 'BeerActions.EXPORT_SHOPPING_LIST_PDF',
         UPDATE_ACTIVE_BEER = 'BeerActions.UPDATE_ACTIVE_BEER',
         GET_FINISHED_BEERS = 'BeerActions.GET_FINISHED_BEERS',
         GET_FINISHED_BEERS_SUCCESS = 'BeerActions.GET_FINISHED_BEERS_SUCCESS',
@@ -46,6 +44,12 @@ export namespace BeerActions {
         UPDATE_FINISHED_BREW_SUCCESS = 'BeerActions.UPDATE_FINISHED_BREW_SUCCESS',
         SAVE_BEER_FORM_STATE = 'BeerActions.SAVE_BEER_FORM_STATE',
         LOAD_BEER_FORM_STATE = 'BeerActions.LOAD_BEER_FORM_STATE',
+        GENERATE_FINISHED_BREWS_PDF = 'BeerActions.GENERATE_FINISHED_BREWS_PDF',
+        GENERATE_FINISHED_BREWS_PDF_SUCCESS = 'BeerActions.GENERATE_FINISHED_BREWS_PDF_SUCCESS',
+        GENERATE_FINISHED_BREWS_PDF_FAILURE = 'BeerActions.GENERATE_FINISHED_BREWS_PDF_FAILURE',
+        GENERATE_SHOPPING_LIST_PDF = 'BeerActions.GENERATE_SHOPPING_LIST_PDF',
+        GENERATE_SHOPPING_LIST_PDF_SUCCESS = 'BeerActions.GENERATE_SHOPPING_LIST_PDF_SUCCESS',
+        GENERATE_SHOPPING_LIST_PDF_FAILURE = 'BeerActions.GENERATE_SHOPPING_LIST_PDF_FAILURE',
     }
 
     export interface GetBeers {
@@ -186,12 +190,7 @@ export namespace BeerActions {
         payload: { beer: Beer | undefined }
     }
 
-    export interface ExportFinishedBrews {
-        readonly type: ActionTypes.EXPORT_FINISHED_BREWS
-        payload: {
-            brews: FinishedBrew[]
-        }
-    }
+
     export interface UpdateActiveBeer {
         readonly type: ActionTypes.UPDATE_ACTIVE_BEER
         payload: {
@@ -253,11 +252,29 @@ export namespace BeerActions {
         }
     }
 
-    export interface ExportShoppingListPdf {
-        readonly type: ActionTypes.EXPORT_SHOPPING_LIST_PDF;
-        payload: {
-            beer: Beer;
-        };
+
+
+    export interface GenerateFinishedBrewsPdf {
+        readonly type: ActionTypes.GENERATE_FINISHED_BREWS_PDF;
+        payload: { finishedBrews: FinishedBrew[] };
+    }
+    export interface GenerateFinishedBrewsPdfSuccess {
+        readonly type: ActionTypes.GENERATE_FINISHED_BREWS_PDF_SUCCESS;
+    }
+    export interface GenerateFinishedBrewsPdfFailure {
+        readonly type: ActionTypes.GENERATE_FINISHED_BREWS_PDF_FAILURE;
+        payload: { error: any };
+    }
+    export interface GenerateShoppingListPdf {
+        readonly type: ActionTypes.GENERATE_SHOPPING_LIST_PDF;
+        payload: { beer: Beer };
+    }
+    export interface GenerateShoppingListPdfSuccess {
+        readonly type: ActionTypes.GENERATE_SHOPPING_LIST_PDF_SUCCESS;
+    }
+    export interface GenerateShoppingListPdfFailure {
+        readonly type: ActionTypes.GENERATE_SHOPPING_LIST_PDF_FAILURE;
+        payload: { error: any };
     }
 
 
@@ -281,7 +298,6 @@ export namespace BeerActions {
         SetIsSubmitSuccessful |
         SetSelectedBeer|
         SetBeerToBrew|
-        ExportFinishedBrews |
         UpdateActiveBeer |
         GetFinishedBeers |
         GetFinishedBeersSuccess |
@@ -291,7 +307,12 @@ export namespace BeerActions {
         UpdateFinishedBrewSuccess |
         SaveBeerFormState |
         LoadBeerFormState |
-        ExportShoppingListPdf;
+        GenerateFinishedBrewsPdf |
+        GenerateFinishedBrewsPdfSuccess |
+        GenerateFinishedBrewsPdfFailure |
+        GenerateShoppingListPdf |
+        GenerateShoppingListPdfSuccess |
+        GenerateShoppingListPdfFailure;
 
 
     export function isSubmitSuccessful(aIsSuccessful: boolean, aMessage: string, aType: string): SetIsSubmitSuccessful {
@@ -426,17 +447,39 @@ export namespace BeerActions {
             payload: {beer: aBeer}
         }
     }
-    export function exportFinishedBrewsToPdf(aFinishedBrews: FinishedBrew[]): ExportFinishedBrews {
-        return {
-            type: BeerActions.ActionTypes.EXPORT_FINISHED_BREWS,
-            payload: {brews: aFinishedBrews}
-        }
-    }
 
-    export function exportShoppingListPdf(aBeer: Beer): ExportShoppingListPdf {
+    export function generateFinishedBrewsPdf(finishedBrews: FinishedBrew[]): GenerateFinishedBrewsPdf {
         return {
-            type: ActionTypes.EXPORT_SHOPPING_LIST_PDF,
-            payload: { beer: aBeer }
+            type: ActionTypes.GENERATE_FINISHED_BREWS_PDF,
+            payload: { finishedBrews }
+        };
+    }
+    export function generateFinishedBrewsPdfSuccess(): GenerateFinishedBrewsPdfSuccess {
+        return {
+            type: ActionTypes.GENERATE_FINISHED_BREWS_PDF_SUCCESS
+        };
+    }
+    export function generateFinishedBrewsPdfFailure(error: any): GenerateFinishedBrewsPdfFailure {
+        return {
+            type: ActionTypes.GENERATE_FINISHED_BREWS_PDF_FAILURE,
+            payload: { error }
+        };
+    }
+    export function generateShoppingListPdf(beer: Beer): GenerateShoppingListPdf {
+        return {
+            type: ActionTypes.GENERATE_SHOPPING_LIST_PDF,
+            payload: { beer }
+        };
+    }
+    export function generateShoppingListPdfSuccess(): GenerateShoppingListPdfSuccess {
+        return {
+            type: ActionTypes.GENERATE_SHOPPING_LIST_PDF_SUCCESS
+        };
+    }
+    export function generateShoppingListPdfFailure(error: any): GenerateShoppingListPdfFailure {
+        return {
+            type: ActionTypes.GENERATE_SHOPPING_LIST_PDF_FAILURE,
+            payload: { error }
         };
     }
 

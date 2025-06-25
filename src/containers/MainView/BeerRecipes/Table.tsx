@@ -214,7 +214,7 @@ const mapStateToProps = (state: any) => ({
 const mapDispatchToProps = (dispatch: any) => ({
     setSelectedBeer: (beer: Beer) => dispatch(setSelectedBeer(beer)),
     setBeerToBrew: (beer: Beer | undefined ) => dispatch(BeerActions.setBeerToBrew(beer)),
-    exportShoppingListPdf: (beer: Beer) => dispatch(BeerActions.exportShoppingListPdf(beer)),
+    exportShoppingListPdf: (beer: Beer) => dispatch(BeerActions.generateShoppingListPdf(beer)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(BeerTableComponent);

@@ -15,10 +15,12 @@ export class PdfGenerator<T> {
         this.strategy = strategy;
     }
 
-    generatePdf(data: T, filename: string = "download"): void {
+    async generatePdf(data: T, filename: string = "download"): Promise<void> {
         const content = this.strategy.buildContent(data);
         const styles = this.strategy.getStyles();
         const docDefinition = { content, styles };
-        pdfMake.createPdf(docDefinition).download(filename);
+        return new Promise((resolve, reject) => {
+            pdfMake.createPdf(docDefinition).download(filename, () => resolve(), (error: any) => reject(error));
+        });
     }
 }

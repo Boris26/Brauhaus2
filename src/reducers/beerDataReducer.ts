@@ -109,17 +109,7 @@ const beerDataReducer = (
     case BeerActions.ActionTypes.SET_BEER_TO_BREW: {
       return { ...aState, beerToBrew: aAction.payload.beer };
     }
-    case BeerActions.ActionTypes.EXPORT_FINISHED_BREWS: {
-      const pdfGenerator = new PdfGenerator(new FinishedBrewListPdfStrategy());
-      pdfGenerator.generatePdf(aState.finishedBrews || [], 'Fertig Gebraute');
-      return { ...aState };
-    }
-    case BeerActions.ActionTypes.EXPORT_SHOPPING_LIST_PDF: {
-      const pdfGenerator = new PdfGenerator(new BeerPdfStrategy());
-      const beer = aAction.payload.beer;
-      pdfGenerator.generatePdf(beer, beer.name);
-      return { ...aState };
-    }
+
     case BeerActions.ActionTypes.GET_FINISHED_BEERS: {
       return { ...aState, isFetching: aAction.payload.isFetching };
     }
@@ -141,17 +131,19 @@ const beerDataReducer = (
       return { ...aState };
     }
     case BeerActions.ActionTypes.UPDATE_FINISHED_BREW_SUCCESS: {
-      const updatedBrew = aAction.payload.beer;
-      let finishedBrews = aState.finishedBrews ? [...aState.finishedBrews] : [];
-      const idx = finishedBrews.findIndex(b => b.id === updatedBrew.id);
-      if (idx !== -1) {
-        finishedBrews[idx] = updatedBrew;
-      } else {
-        finishedBrews.push(updatedBrew);
+        const updatedBrew = aAction.payload.beer;
+          const finishedBrews = aState.finishedBrews ?? [];
+          const found = finishedBrews.some(b => b.id === updatedBrew.id);
+
+          return {
+              ...aState,
+              finishedBrews: found
+                  ? finishedBrews.map(b => b.id === updatedBrew.id ? updatedBrew : b)
+                  : [...finishedBrews, updatedBrew],
+          };
       }
-      return { ...aState, finishedBrews };
-    }
-    case BeerActions.ActionTypes.SAVE_BEER_FORM_STATE: {
+
+      case BeerActions.ActionTypes.SAVE_BEER_FORM_STATE: {
       return { ...aState, beerFormState: aAction.payload.formState };
     }
     case BeerActions.ActionTypes.LOAD_BEER_FORM_STATE: {
