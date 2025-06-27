@@ -840,4 +840,8 @@ export namespace ProductionActions {
             payload: {temperature: aTemperature}
         }
     }
+
+    export function waterFillingFailure(error: any) {
+        return undefined;
+    }
 }

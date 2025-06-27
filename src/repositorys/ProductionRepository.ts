@@ -11,44 +11,38 @@ import {WaterStatus} from "../components/Controlls/WaterControll/WaterControl";
 import {BackendAvailable} from "../reducers/productionReducer";
 
 export class ProductionRepository {
-    private static pollingIntervalId: NodeJS.Timeout | null = null;
+
+    static async getTemperature(): Promise<number> {
+        return await this._doGetTemperature();
+    }
+
+    static async setAgitatorSpeed(speed: number) {
+        return await this._doSetAgitatorSpeed(speed);
+    }
+
+    static async toggleAgitator(aMashAgitatorStates: MashAgitatorStates): Promise<boolean> {
+        return await this._doToggleAgitator(aMashAgitatorStates);
+    }
+
+    static async fillWaterAutomatic(aLiters: number) {
+        return await  this._doFillWaterAutomatic(aLiters);
+    }
+
+    static async getWaterStatus() {
+         return await this._doGetWaterFillStatus();
+    }
 
     static async confirm(aConfirmState: ConfirmStates) {
         return await ProductionRepository._doConfirm(aConfirmState);
-    }
-
-
-    static async setAgitatorSpeed(speed: number) {
-        return await ProductionRepository._doSetAgitatorSpeed(speed);
-    }
-
-    static async toggleAgitator(aMashAgitatorStates: MashAgitatorStates) {
-        return await ProductionRepository._doToggleAgitator(aMashAgitatorStates);
     }
 
     static async sendBrewingData(aBrewingData: BrewingData) {
         return await ProductionRepository._doSendBrewingData(aBrewingData);
     }
 
-    static async startBrewingStatusPolling() {
-        if (this.pollingIntervalId === null) {
-            this.pollingIntervalId = setInterval(async () => {
-                try {
-                    await this._doGetBrewingStatus();
-                } catch (error) {
-                    console.error('Fehler beim Abfragen des Braustatus:', error);
-                }
-            }, 1000); // Alle 10 Sekunden abfragen (10000 Millisekunden)
-        }
+    static async getBrewingStatus(): Promise<{ available: BackendAvailable, brewingStatus: BrewingStatus | undefined }> {
+       return await this._doGetBrewingStatus();
     }
-
-    static async stopBrewingStatusPolling() {
-        if (this.pollingIntervalId !== null) {
-            clearInterval(this.pollingIntervalId);
-            this.pollingIntervalId = null;
-        }
-    }
-
 
     static async toggleHeater(aIsTurnOn: ToggleState) {
         return await ProductionRepository._doToggleHeater(aIsTurnOn);
@@ -58,18 +52,6 @@ export class ProductionRepository {
         return await ProductionRepository._doStartBrewing();
     }
 
-    static async fillWaterAutomatic(aLiters: number) {
-        return await ProductionRepository._doFillWaterAutomatic(aLiters);
-    }
-
-
-    static async getWaterFillStatus() {
-        return await ProductionRepository._doGetWaterFillStatus();
-    }
-
-    static async getTemperature() {
-        return await ProductionRepository._doGetTemperature();
-    }
 
     private static async _doConfirm(aConfirmState: ConfirmStates) {
         try {
@@ -85,18 +67,18 @@ export class ProductionRepository {
 
     }
 
-    private static async _doGetTemperature() {
+    private static async _doGetTemperature(): Promise<number> {
         try {
             const tempURL = 'temperatur:\"\"';
             const response = await axios.get(CommandsURL + tempURL);
             if (response.status == 200) {
-                store.dispatch(ProductionActions.setTemperature(response.data));
-                console.log(response.data);
+                return response.data;
             } else {
-                console.log(response.data);
+                return 0;
             }
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);
+            return 0;
         }
 
     }
@@ -106,15 +88,10 @@ export class ProductionRepository {
             const response = await axios.get(BaseURL + 'WaterStatus');
             if (response.status == 200) {
                 const parsedWaterStatus: WaterStatus = JSON.parse((JSON.stringify(response.data)))
-                store.dispatch(ProductionActions.setWaterStatus(parsedWaterStatus))
-                if (parsedWaterStatus.openClose === true) {
-                    setTimeout(() => {
-                        this._doGetWaterFillStatus();
-                    }, 1000);
-                }
+                return parsedWaterStatus;
 
             } else {
-                console.log(response.data);
+                return { liters: 0, openClose: false };
             }
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);
@@ -176,48 +153,39 @@ export class ProductionRepository {
     private static async _doStartBrewing() {
         try {
             const response = await axios.get(CommandsURL + 'StartBrewing:\"\"');
-            if (response.status == 200) {
-                console.log(response.data);
-                this.startBrewingStatusPolling();
-            } else {
-                console.log(response.data);
-            }
+            return response.status == 200;
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);
         }
     }
 
-    private static async _doGetBrewingStatus() {
+    private static async _doGetBrewingStatus(): Promise<{ available: BackendAvailable, brewingStatus: BrewingStatus | undefined }> {
         try {
             const response = await axios.get(BaseURL + 'Status/');
             if (response.status == 200) {
-                const available: BackendAvailable =
-                    {
-                        isBackenAvailable: true, statusText: response.statusText
-                    }
-
+                const available: BackendAvailable = {
+                    isBackenAvailable: true, statusText: response.statusText
+                };
                 const parsedBrewingStatus: BrewingStatus = JSON.parse(JSON.stringify(response.data));
-                store.dispatch(ProductionActions.isBackenAvailable(available));
-                store.dispatch(ProductionActions.setBrewingStatus(parsedBrewingStatus));
+                return { available, brewingStatus: parsedBrewingStatus };
             } else {
-                const available: BackendAvailable =
-                    {
-                        isBackenAvailable: false, statusText: response.statusText
-                    }
-                store.dispatch(ProductionActions.isBackenAvailable(available));
+                const available: BackendAvailable = {
+                    isBackenAvailable: false, statusText: response.statusText
+                };
+                return { available, brewingStatus: undefined };
             }
         } catch (error) {
             let message = '';
             if (error instanceof Error) {
-                message = error.message
+                message = error.message;
             } else {
                 message = "Ein unbekannter Fehler ist aufgetreten.";
             }
-            const available: BackendAvailable =
-                {
-                    isBackenAvailable: false, statusText: message
-                }
-            store.dispatch(ProductionActions.isBackenAvailable(available));
+            const available: BackendAvailable = {
+                isBackenAvailable: false, statusText: message
+            };
+            // Rückgabe statt dispatch
+            return { available, brewingStatus: undefined };
         }
     }
 
@@ -225,30 +193,21 @@ export class ProductionRepository {
         try {
             const response = await axios.post(BaseURL + 'Recipe/', aBrewingData);
 
-            if (response.status == 201) {
-                await this.startBrewing()
-                console.log(response.data);
-            } else {
-                console.log(response.data);
-            }
+            return response.status == 201;
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);
+            return false;
         }
 
     }
 
-    private static async _doFillWaterAutomatic(aLiters: number) {
+    private static async _doFillWaterAutomatic(aLiters: number): Promise<boolean> {
         try {
             const response = await axios.get(CommandsURL + 'FillWaterAutomatic:' + aLiters.toString());
-            if (response.status == 200) {
-                store.dispatch(ProductionActions.startWaterFillingSuccess(true));
-                this._doGetWaterFillStatus();
-            } else {
-                store.dispatch(ProductionActions.startWaterFillingSuccess(false));
-            }
+            return response.status == 200;
         } catch (error) {
-            store.dispatch(ProductionActions.startWaterFillingSuccess(false));
-
+            console.error('Fehler beim API-Aufruf', error);
+            return false;
         }
     }
 
@@ -271,33 +230,26 @@ export class ProductionRepository {
         }
     }
 
-    private static async _doSetAgitatorSpeed(speed: number) {
+    private static async _doSetAgitatorSpeed(speed: number): Promise<boolean> {
         try {
             const response = await axios.get(CommandsURL + 'Speed:' + speed.toString());
-            if (response.status == 200) {
-                console.log(response.data);
-            } else {
-                console.log(response.data);
-            }
+            return response.status == 200;
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);
+            return false;
         }
     }
 
-    private static async _doToggleAgitator(aMashAgitatorStates: MashAgitatorStates) {
+    private static async _doToggleAgitator(aMashAgitatorStates: MashAgitatorStates): Promise<boolean> {
         try {
             let response: AxiosResponse<any, any>;
 
             response = await axios.post(CommandsURL + 'AgitatorInterval:\"\"', aMashAgitatorStates);
-            if (response.status === 200) {
-                store.dispatch(ProductionActions.toggleAgitatorSuccess(true));
-            } else {
-                store.dispatch(ProductionActions.toggleAgitatorSuccess(false));
-            }
+            return response.status === 200;
 
         } catch (error) {
-            store.dispatch(ProductionActions.toggleAgitatorSuccess(false));
             console.error('Fehler beim API-Aufruf', error);
+            return false;
         }
     }
 

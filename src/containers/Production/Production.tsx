@@ -114,6 +114,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
 
     componentDidMount() {
         const {getTemperatures, agitatorSpeed, agitatorIsRunning, selectedBeer, checkIsBackenAvailable} = this.props;
+
         checkIsBackenAvailable();
         if (!isUndefined(selectedBeer)) {
             this.calculateTheHopTimes();
