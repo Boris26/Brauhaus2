@@ -50,6 +50,7 @@ interface ProductionProps {
     isBackenAvailable: BackendAvailable;
     waterStatus: WaterStatus;
     addFinishedBrew: (finishedBrew: FinishedBrew) => void;
+    nextProcedureStep: () => void;
 }
 
 interface ProductionState {
@@ -128,10 +129,11 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         const {intervalSwitchState, mainSwitchState, waterSwitchState,heatingAndStirringSwitchState,showHopsDialog,showFinishDialog} = this.state;
 
         if (prevProps.isBackenAvailable !== isBackenAvailable) {
+            //todo
             if (!isBackenAvailable.isBackenAvailable) {
-                this.setState({showErrorDialog: true})
+              //  this.setState({showErrorDialog: true})
             } else {
-                this.setState({showErrorDialog: false})
+               // this.setState({showErrorDialog: false})
             }
         }
 
@@ -451,7 +453,10 @@ class Production extends React.Component<ProductionProps, ProductionState> {
 
                 </div>
                 <div className="startBtnDiv">
-                    <button className="startBtn" disabled={isUndefined(selectedBeer)} onClick={this.startBrewing}>Start</button>
+                    <button className="startBtn" disabled={isUndefined(selectedBeer) || !this.props.isBackenAvailable.isBackenAvailable} onClick={this.startBrewing}>Start</button>
+                    <button className="nextStepBtn" onClick={this.props.nextProcedureStep} title="Nächster Prozessschritt">
+                        Nächster Schritt
+                    </button>
                 </div>
                 <div className="startPollingBtnDiv">
                     <button className="startPollingBtn" onClick={this.ab}>
@@ -640,8 +645,8 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         return (
             <div className="containerProduction ">
                 {
-                    showHopsDialog &&
-                    (this.renderHopDialog())
+                    //showHopsDialog &&
+                    //(this.renderHopDialog())
                 }
                 {
                     isBackenAvailable &&
@@ -691,6 +696,9 @@ const mapDispatchToProps = (dispatch: any) => ({
     },
     addFinishedBrew: (finishedBrew: FinishedBrew) => {
         dispatch(BeerActions.addFinishedBrew(finishedBrew))
+    },
+    nextProcedureStep: () => {
+        dispatch(ProductionActions.nextProcedureStep())
     }
 });
 const mapStateToProps = (state: any) => (

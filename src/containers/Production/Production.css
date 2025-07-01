@@ -25,7 +25,7 @@ html, body, .container {
         "Water Water Agitator Agitator Settings"
         "Water Water Temp Temp Settings"
         "Water Water Info Info Info"
-        "Flame Flame Info Info Info"        
+        "Flame Flame Info Info Info"
 }
 
 /* Header-Stil */
@@ -72,7 +72,7 @@ html, body, .container {
 }
 
 /* Stil für Agitator-Elemente */
-.Agitator {   
+.Agitator {
     width: 33rem;
     grid-area: Agitator;
     align-items: center;
@@ -83,11 +83,11 @@ html, body, .container {
 
 /* Container für die Messanzeige */
 .GaugeContainer {
-    padding: 1rem; /* Verwendung von rem für Abstand */    
+    padding: 1rem; /* Verwendung von rem für Abstand */
 }
 
 /* Stil für Temp-Elemente */
-.Temp {       
+.Temp {
     width:33rem;
     grid-area: Temp;
     display: flex;
@@ -105,7 +105,7 @@ html, body, .container {
 }
 
 /* Stil für Info-Elemente */
-.Info {   
+.Info {
     height: 7.8rem;
     width: 65rem;
     grid-area: Info;
@@ -120,7 +120,7 @@ html, body, .container {
     margin-left: 0.5rem;
     justify-content: center;
     align-items: center;
-    background-color: #c9c9c9;  
+    background-color: #c9c9c9;
     height: 1rem;
 }
 
@@ -201,6 +201,34 @@ html, body, .container {
     height: 4rem;
     width: 15rem;
     font-size: 1rem; /* Verwendung von rem für Schriftgröße */
+    padding: 0.3rem 1.2rem;
+    border-radius: 6px;
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    margin-right: 0.5rem;
+    min-width: 80px;
+    min-height: 32px;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.startBtn:hover:not(:disabled) {
+    background-color: darkorange;
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(34,139,34,0.25);
+    transform: translateY(-2px) scale(1.03);
+    cursor: pointer;
+}
+
+.startBtn:disabled,
+.startBtn:disabled:hover {
+    background-color: darkorange;
+    color: #fff;
+    opacity: 0.5;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    cursor: not-allowed;
+    transform: none;
 }
 
 /* Stil für den Start-Button Container */
@@ -210,12 +238,28 @@ html, body, .container {
     justify-content: center;
 }
 .startBtnDiv button:disabled {
-    opacity: 0.5; 
-    cursor: not-allowed;    
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 /* Stil für die Start-Polling-Taste */
 .startPollingBtn {
     background-color: Transparent;
 }
 
+/* Stil für die Next-Step-Taste */
+.nextStepBtn {
+    font-size: 0.95rem;
+    padding: 0.3rem 1.1rem;
+    border-radius: 6px;
+    background-color: #1976d2;
+    color: white;
+    border: none;
+    min-width: 80px;
+    min-height: 32px;
+    margin-left: 0.2rem;
+    transition: background 0.2s;
+}
 
+.nextStepBtn:hover {
+    background-color: #1565c0;
+}

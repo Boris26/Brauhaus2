@@ -1,14 +1,15 @@
 import { ofType } from 'redux-observable';
-import { from, of, interval, EMPTY } from 'rxjs';
-import { catchError, map, mergeMap, switchMap, takeUntil } from 'rxjs/operators';
+import {from, of, interval, EMPTY, timer, filter, takeWhile} from 'rxjs';
+import { catchError, map, mergeMap, switchMap, takeUntil, delay, retryWhen, take, toArray } from 'rxjs/operators';
 import { ProductionActions } from '../actions/actions';
 import { ProductionRepository } from '../repositorys/ProductionRepository';
 import {BrewingStatus} from "../model/BrewingStatus";
+import { delayWhen } from 'rxjs/operators';
 
 const BREWING_STATUS_POLL_INTERVAL = 1000;
 
 export const getTemperaturesEpic$ = (action$: any) =>
-  action$.pipe(
+    action$.pipe(
     ofType(ProductionActions.ActionTypes.GET_TEMPERATURES),
     mergeMap(() =>
       from(ProductionRepository.getTemperature()).pipe(
@@ -39,6 +40,8 @@ export const setAgitatorSpeedEpic$ = (action$: any) =>
       )
     )
   );
+
+
 
 export const startWaterFillingEpic$ = (action$: any) =>
   action$.pipe(
@@ -79,6 +82,7 @@ export const sendBrewingDataEpic$ = (action$: any) =>
                 if (startResult) {
                   return interval(BREWING_STATUS_POLL_INTERVAL).pipe(
                     switchMap(() => from(ProductionRepository.getBrewingStatus())),
+                    takeWhile(({ brewingStatus }) => brewingStatus?.StatusText !== "Fertig", true),
                     switchMap(({ available, brewingStatus }) => {
                       if (available?.isBackenAvailable && brewingStatus !== undefined) {
                         return [
@@ -89,13 +93,6 @@ export const sendBrewingDataEpic$ = (action$: any) =>
                         return [ProductionActions.isBackenAvailable(available)];
                       }
                     }),
-                    takeUntil(
-                      interval(BREWING_STATUS_POLL_INTERVAL).pipe(
-                        switchMap(() => from(ProductionRepository.getBrewingStatus())),
-                        map(({ brewingStatus }) => brewingStatus?.StatusText === "Fertig"),
-                        // takeUntil erwartet ein Observable<boolean>, das true wird, wenn beendet werden soll
-                      )
-                    ),
                     catchError((error) => of({ type: 'NO_OP' }))
                   );
                 } else {
@@ -112,13 +109,57 @@ export const sendBrewingDataEpic$ = (action$: any) =>
     )
   );
 
+export const confirmEpic$ = (action$: any) =>
+  action$.pipe(
+    ofType(ProductionActions.ActionTypes.CONFIRM),
+    mergeMap((action: any) =>
+      from(ProductionRepository.confirm(action.payload.confirmState)).pipe(
+        map(() => ({ type: 'NO_OP' })),
+        catchError((error) => of({ type: 'NO_OP' }))
+      )
+    )
+  );
 
+export const checkIsBackendAvailableEpic$ = (action$: any) =>
+  action$.pipe(
+    ofType(ProductionActions.ActionTypes.CHECK_IS_BACKEND_AVAILABLE),
+    switchMap(() =>
+      timer(0, 10000).pipe(
+        switchMap((attempt) => {
+          return from(ProductionRepository.checkIsBackendAvailable()).pipe(
+            map((result) => ({ result, isAvailable: result.isBackenAvailable })),
+            catchError((error) => of({ result: { isBackenAvailable: false, statusText: String(error) }, isAvailable: false }))
+          );
+        }),
+        // Polling stoppen, sobald Verbindung erfolgreich
+        takeWhile(({ isAvailable }) => !isAvailable, true),
+        map(({ result }) => ProductionActions.isBackenAvailable(result))
+      )
+    )
+  );
 
+export const nextProcedureStepEpic$ = (action$: any) =>
+  action$.pipe(
+    ofType(ProductionActions.ActionTypes.NEXT_PROCEDURE_STEP),
+    switchMap(() =>
+      from(ProductionRepository.nextProcedureStep()).pipe(
+        map((result) =>
+          result
+            ? ProductionActions.nextProcedureStepSuccess()
+            : ProductionActions.nextProcedureStepFailure('Fehler beim nächsten Schritt')
+        ),
+        catchError((error) => of(ProductionActions.nextProcedureStepFailure(error)))
+      )
+    )
+  );
 
 export const productionEpics = [
   getTemperaturesEpic$,
   toggleAgitatorEpic$,
   setAgitatorSpeedEpic$,
   sendBrewingDataEpic$,
-  startWaterFillingEpic$
+  startWaterFillingEpic$,
+  confirmEpic$,
+  checkIsBackendAvailableEpic$,
+  nextProcedureStepEpic$
 ];

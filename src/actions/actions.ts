@@ -628,7 +628,10 @@ export namespace ProductionActions {
         CONFIRM = 'ProductionActions.CONFIRM',
         CHECK_IS_BACKEND_AVAILABLE = 'ProductionActions.CHECK_IS_BACKEND_AVAILABLE',
         IS_BACKEND_AVAILABLE = 'ProductionActions.IS_BACKEND_AVAILABLE',
-        SET_WATER_STATUS = 'ProductionActions.'
+        SET_WATER_STATUS = 'ProductionActions.SET_WATER_STATUS',
+        NEXT_PROCEDURE_STEP = 'ProductionActions.NEXT_PROCEDURE_STEP',
+        NEXT_PROCEDURE_STEP_SUCCESS = 'ProductionActions.NEXT_PROCEDURE_STEP_SUCCESS',
+        NEXT_PROCEDURE_STEP_FAILURE = 'ProductionActions.NEXT_PROCEDURE_STEP_FAILURE',
     }
 
     export interface SetWaterStatus {
@@ -711,6 +714,17 @@ export namespace ProductionActions {
         readonly type: ActionTypes.GET_TEMPERATURES
     }
 
+    export interface NextProcedureStep {
+        readonly type: ActionTypes.NEXT_PROCEDURE_STEP;
+    }
+    export interface NextProcedureStepSuccess {
+        readonly type: ActionTypes.NEXT_PROCEDURE_STEP_SUCCESS;
+    }
+    export interface NextProcedureStepFailure {
+        readonly type: ActionTypes.NEXT_PROCEDURE_STEP_FAILURE;
+        payload: { error: any };
+    }
+
     export type AllProductionActions =
         GetTemperatures |
         SetTemperatures |
@@ -727,7 +741,10 @@ export namespace ProductionActions {
         SendBrewingData |
         CheckIsBackendAvailable |
         IsBackendAvailable |
-        SetWaterStatus;
+        SetWaterStatus |
+        NextProcedureStep |
+        NextProcedureStepSuccess |
+        NextProcedureStepFailure;
 
     export function setWaterStatus(aWaterStatus: WaterStatus): ProductionActions.SetWaterStatus {
         return {
@@ -839,6 +856,23 @@ export namespace ProductionActions {
             type: ActionTypes.SET_TEMPERATURE,
             payload: {temperature: aTemperature}
         }
+    }
+
+    export function nextProcedureStep(): NextProcedureStep {
+        return {
+            type: ActionTypes.NEXT_PROCEDURE_STEP
+        };
+    }
+    export function nextProcedureStepSuccess(): NextProcedureStepSuccess {
+        return {
+            type: ActionTypes.NEXT_PROCEDURE_STEP_SUCCESS
+        };
+    }
+    export function nextProcedureStepFailure(error: any): NextProcedureStepFailure {
+        return {
+            type: ActionTypes.NEXT_PROCEDURE_STEP_FAILURE,
+            payload: { error }
+        };
     }
 
     export function waterFillingFailure(error: any) {

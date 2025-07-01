@@ -52,6 +52,10 @@ export class ProductionRepository {
         return await ProductionRepository._doStartBrewing();
     }
 
+    static async nextProcedureStep() {
+        return await ProductionRepository._doNextProcedureStep();
+    }
+
 
     private static async _doConfirm(aConfirmState: ConfirmStates) {
         try {
@@ -69,7 +73,7 @@ export class ProductionRepository {
 
     private static async _doGetTemperature(): Promise<number> {
         try {
-            const tempURL = 'temperatur:\"\"';
+            const tempURL = 'Temperatur:\"\"';
             const response = await axios.get(CommandsURL + tempURL);
             if (response.status == 200) {
                 return response.data;
@@ -261,36 +265,37 @@ export class ProductionRepository {
         try {
             const response = await axios.get(BaseURL);
             if (response.status === 200) {
-                const available: BackendAvailable =
-                    {
-                        isBackenAvailable: true, statusText: ""
-                    }
-                store.dispatch(ProductionActions.isBackenAvailable(available));
+                const available: BackendAvailable = {
+                    isBackenAvailable: true, statusText: ""
+                };
+                return available;
             } else {
-                const available: BackendAvailable =
-                    {
-                        isBackenAvailable: false, statusText: response.statusText
-                    }
-                store.dispatch(ProductionActions.isBackenAvailable(available));
-                setTimeout(() => {
-                    this._doCheckIsBackendAvailable(); // Erneute Überprüfung nach 10 Sekunden
-                }, 10000); // 10000 Millisekunden sind 10 Sekunden
+                const available: BackendAvailable = {
+                    isBackenAvailable: false, statusText: response.statusText
+                };
+                return available;
             }
         } catch (error) {
             let message = '';
             if (error instanceof Error) {
-                message = error.message
+                message = error.message;
             } else {
                 message = "Ein unbekannter Fehler ist aufgetreten.";
             }
-            const available: BackendAvailable =
-                {
-                    isBackenAvailable: false, statusText: message
-                }
-            store.dispatch(ProductionActions.isBackenAvailable(available));
-            setTimeout(() => {
-                this._doCheckIsBackendAvailable(); // Erneute Überprüfung nach 10 Sekunden
-            }, 10000); // 10000 Millisekunden sind 10 Sekunden
+            const available: BackendAvailable = {
+                isBackenAvailable: false, statusText: message
+            };
+            return available;
+        }
+    }
+
+    private static async _doNextProcedureStep() {
+        try {
+            const response = await axios.get(CommandsURL + 'next:\"\"');
+            return response.status === 200;
+        } catch (error) {
+            console.error('Fehler beim API-Aufruf', error);
+            return false;
         }
     }
 
