@@ -4,203 +4,203 @@
     100% { opacity: 1; }
 }
 
-/* Container für die gesamte Anwendung */
-html, body, .container {
-    height: 80%;
-    margin: 0;
-}
-
-/* Raster-Layout für den Hauptcontainer */
+/* Gesamtes App-Grid */
 .containerProduction {
     display: grid;
-    grid-template-columns: repeat(4, 1fr); /* Verteilt die Spalten gleichmäßig */
-    grid-template-rows: 0.2fr 0.1fr 1fr;
-    gap: 0.5rem; /* Verwendung von rem für Abstand */
-    grid-auto-flow: row;
-    justify-content: space-between;
-    justify-items: stretch;
-    align-items: stretch;
+    grid-template-columns: 20rem 1.4fr 650px 400px;
+    grid-template-rows: auto 1fr 1fr 100px;
     grid-template-areas:
-        "Header Header Header Header Header"
-        "Water Water Agitator Agitator Settings"
-        "Water Water Temp Temp Settings"
-        "Water Water Info Info Info"
-        "Flame Flame Info Info Info"
+        "Header Header Header Header"
+        "Left List Agitator Settings"
+        "Left List Temp Settings"
+        "Info Info Info Info";
+    height: 100vh;
+    background: #353535;
+    box-sizing: border-box;
+    padding: 1rem ;
+    overflow: hidden;
+    gap: 1rem;  /* <-- Das sorgt für die sichtbaren Spaltenabstände */
+    margin-top: -20px; /* Leichter Versatz nach oben */
 }
 
-/* Header-Stil */
+
+.Left {
+    grid-area: Left;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    height: 100%;
+}
+
+.List {
+    grid-area: List;
+    background: #393939;
+    border-radius: 10px;
+    margin: 0 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    padding: 1rem 0.7rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 160px;
+    overflow: auto;
+    max-height: 650px;
+}
+
+/* Header */
 .HeaderProduction {
-    margin: 0.3rem;
     grid-area: Header;
     display: flex;
-    justify-content: left;
     align-items: center;
+    margin: 0.3rem 0 0.7rem 0.7rem;
 }
-
 .HeaderText {
-    margin-left: 1rem;
-    margin-top: 0.5rem;
     color: #eeeeee;
-    font-size: 2rem; /* Verwendung von rem für Schriftgröße */
+    font-size: 2.1rem;
     font-weight: bold;
-    display: flex;
-    justify-content: left;
-    align-items: center;
+    margin-left: 0.7rem;
 }
 
-/* Stil für Water-Elemente */
+/* Water & Flame */
 .Water {
-    max-height: 620px;
-    width: 22rem;
-    margin-left: 1rem;
-    grid-area: Water;
+    flex: 1 1 auto;    /* wächst und füllt alles über Flame */
     display: flex;
     justify-content: center;
     align-items: center;
     background: #404040;
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.13);
+    min-height: 120px;
+    max-height: 580px;
+    overflow: hidden;
 }
 
-/* Stil für Flame-Elemente */
 .Flame {
-    width: 22rem;
-    margin-left: 1rem;
-    grid-area: Flame;
+    flex: 0 0 72px;  /* Exakte Höhe für Flame (z.B. 72px) */
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     background: #e23030;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 2px 8px rgba(226,48,48,0.08);
+    overflow: hidden;
+    max-height: 50px;
 }
 
-/* Stil für Agitator-Elemente */
+/* Agitator und Temperatur mittig */
 .Agitator {
-    width: 33rem;
     grid-area: Agitator;
+    background: #404040;
+    border-radius: 14px;
+    display: flex;
     align-items: center;
     justify-content: center;
-    display: flex;
-    background: #404040;
+    min-height: 150px;
+    margin-bottom: 1.2rem;
+    flex-wrap: wrap;
+    gap: 2rem;
 }
-
-/* Container für die Messanzeige */
-.GaugeContainer {
-    padding: 1rem; /* Verwendung von rem für Abstand */
-}
-
-/* Stil für Temp-Elemente */
 .Temp {
-    width:33rem;
     grid-area: Temp;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     background: #404040;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100px;
+    margin-bottom: 1.2rem;
+    padding: 0 1rem;
+    max-height: 260px; /* Maximalhöhe für Temp */
 }
 
-/* Stil für Settings-Elemente */
+/* Settings Panel */
 .Settings {
-    margin-right: 1rem;
-    width: 31.6rem;
     grid-area: Settings;
     background: #404040;
-}
-
-/* Stil für Info-Elemente */
-.Info {
-    height: 7.8rem;
-    width: 65rem;
-    grid-area: Info;
+    border-radius: 12px;
+    padding: 1.3rem 1.3rem 1.7rem 1.3rem;
+    min-width: 300px;
+    max-width: 410px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.14);
     display: flex;
-    justify-content: left;
+    flex-direction: column;
+    gap: 1.5rem;
+    margin-left: 1rem; /* Leichter Versatz nach links */
+    max-height: 650px; /* Maximalhöhe für Settings */
+}
+.Info {
+    grid-area: Info;
     background: #404040;
+    border-radius: 10px;
+    padding: 1.2rem ;
+    margin-top: -7.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    min-height: 60px;
+    max-height: 150px;
+    overflow-y: auto;
 }
 
-/* Stil für den Container der Zeitleiste */
+
+
+/* Zeit- und Label-Anzeigen */
 .timeContainer {
-    margin-top: 0.6rem;
-    margin-left: 0.5rem;
-    justify-content: center;
-    align-items: center;
+    margin: 0.6rem 0.5rem 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
     background-color: #c9c9c9;
-    height: 1rem;
+    border-radius: 6px;
+    height: 1.5rem;
 }
-
-/* Stil für den Rahmen */
 .frame {
     border: 2px solid #333;
-    padding: 1rem; /* Verwendung von rem für Abstand */
+    padding: 1rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     background-color: #333333;
-    box-shadow: 0px 0.25rem 0.375rem rgba(0, 0, 0, 0.1); /* Verwendung von rem für Schatten */
+    box-shadow: 0px 0.25rem 0.375rem rgba(0,0,0,0.1);
 }
-
-/* Stil für Beschriftungen */
 .label {
     color: #eeeeee;
-    font-size: 1rem; /* Verwendung von rem für Schriftgröße */
+    font-size: 1rem;
     font-weight: bold;
-    margin-bottom: 0.5rem; /* Verwendung von rem für Abstand */
+    margin-bottom: 0.5rem;
 }
-
-/* Stil für Zeitanzeigen */
 .time {
     color: #eeeeee;
-    font-size: 1.5rem; /* Verwendung von rem für Schriftgröße */
+    font-size: 1.4rem;
 }
-
-/* Stil für Zeilen mit Einstellungen */
-.settingsRow {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-top: 1rem; /* Verwendung von rem für Abstand */
-}
-
-.settingsRowWater {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-}
-
-/* Rechts ausgerichtete Elemente */
-.rightAligned {
-    margin-right: 2.5rem; /* Verwendung von rem für Abstand */
-}
-
-/* Stil für Elemente mit Mengenauswahl */
-.quantityPickerItem {
-    margin-top: 1rem; /* Verwendung von rem für Abstand */
-}
-
-/* Links ausgerichtete Elemente */
-.leftAligned {
-    margin-left: 2.5rem; /* Verwendung von rem für Abstand */
-    margin-top: 1.75rem;
-}
-
-/* Stil für Formularsteuerelemente */
-.formControlGroup {
-    display: flex;
-    flex-direction: column;
-    margin-left: 0.625rem; /* Verwendung von rem für Abstand */
-}
-
-.formControlLabelItem {
-    margin-bottom: 1.15rem; /* Verwendung von rem für Abstand */
-}
-
 .progressLabel {
     margin-top: -1rem;
-    margin-left: 0.625rem; /* Verwendung von rem für Abstand */
+    margin-left: 0.625rem;
     color: #eeeeee;
 }
 
-/* Stil für Starttaste */
+/* Bedienelemente/Settings innen */
+.settingsRow, .settingsRowWater {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.4rem;
+}
+.rightAligned { margin-right: 1rem; }
+.leftAligned { margin-left: 1rem; }
+
+.quantityPickerItem { margin-top: 1rem; }
+
+/* Buttons */
+.startBtnDiv {
+    margin-top: 2.2rem;
+    display: flex;
+    justify-content: center;
+}
 .startBtn {
-    height: 4rem;
-    width: 15rem;
-    font-size: 1rem; /* Verwendung von rem für Schriftgröße */
+    height: 3rem;
+    width: 12rem;
+    font-size: 1rem;
     padding: 0.3rem 1.2rem;
     border-radius: 6px;
     background-color: #4caf50;
@@ -210,43 +210,23 @@ html, body, .container {
     min-width: 80px;
     min-height: 32px;
     transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.13);
 }
-
 .startBtn:hover:not(:disabled) {
     background-color: darkorange;
     color: #fff;
-    box-shadow: 0 4px 16px rgba(34,139,34,0.25);
+    box-shadow: 0 4px 16px rgba(34,139,34,0.16);
     transform: translateY(-2px) scale(1.03);
     cursor: pointer;
 }
-
 .startBtn:disabled,
 .startBtn:disabled:hover {
     background-color: darkorange;
     color: #fff;
     opacity: 0.5;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     cursor: not-allowed;
     transform: none;
 }
-
-/* Stil für den Start-Button Container */
-.startBtnDiv {
-    margin-top: 3rem; /* Verwendung von rem für Abstand */
-    display: flex;
-    justify-content: center;
-}
-.startBtnDiv button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-/* Stil für die Start-Polling-Taste */
-.startPollingBtn {
-    background-color: Transparent;
-}
-
-/* Stil für die Next-Step-Taste */
 .nextStepBtn {
     font-size: 0.95rem;
     padding: 0.3rem 1.1rem;
@@ -259,7 +239,11 @@ html, body, .container {
     margin-left: 0.2rem;
     transition: background 0.2s;
 }
-
 .nextStepBtn:hover {
     background-color: #1565c0;
+}
+
+/* Gauge-Container */
+.GaugeContainer {
+    padding: 1.1rem;
 }

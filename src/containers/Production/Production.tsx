@@ -28,7 +28,10 @@ import {IconProp} from "@fortawesome/fontawesome-svg-core";
 import {FinishedBrew} from "../../model/FinishedBrew";
 import {eBrewState} from "../../enums/eBrewState";
 import {BackendAvailable} from "../../reducers/productionReducer";
-
+import {ProcessList} from "./ProcessList/ProcessList";
+export interface ProcessStep {
+    name: string;
+}
 interface ProductionProps {
     selectedBeer: Beer;
     temperature: number;
@@ -337,16 +340,6 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         );
     }
 
-
-    renderTimeline() {
-        return (<div className='Timeline'>
-            <div className="timeline">
-                <Timeline timeLineData={this.timelineData}></Timeline>
-            </div>
-
-        </div>);
-    }
-
     renderInfo() {
         const {brewingStatus} = this.props;
         let elapsedTime = '----';
@@ -454,12 +447,9 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                 </div>
                 <div className="startBtnDiv">
                     <button className="startBtn" disabled={isUndefined(selectedBeer) || !this.props.isBackenAvailable.isBackenAvailable} onClick={this.startBrewing}>Start</button>
-                    <button className="nextStepBtn" onClick={this.props.nextProcedureStep} title="Nächster Prozessschritt">
-                        Nächster Schritt
-                    </button>
                 </div>
                 <div className="startPollingBtnDiv">
-                    <button className="startPollingBtn" onClick={this.ab}>
+                    <button className="startPollingBtn" onClick={this.startBrewing}>
                         <FontAwesomeIcon icon={faRepeat as IconProp} />
                     </button>
                 </div>
@@ -532,25 +522,6 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         }
     }
 
-    renderProgressBar1() {
-
-                const progressBarStyle = {
-                    width: '43rem',    // Width of the progress bar
-                    height: '3rem',    // Height of the progress bar
-                    marginLeft: '1rem'
-                };
-                return (
-                    <div className="container mt-4">
-                        <h3 className='progressLabel'>Rast 1</h3>
-                        <ProgressBar animated striped now={10} label={20}
-                                     style={progressBarStyle}/>
-                    </div>
-                );
-            }
-
-
-
-
     renderHeader() {
         const {selectedBeer} = this.props;
 
@@ -569,26 +540,6 @@ class Production extends React.Component<ProductionProps, ProductionState> {
 
     }
 
-    ab= async ()=> {
-        const { stopPolling, selectedBeer, addFinishedBrew } = this.props;
-        stopPolling();
-        // FinishedBrew erzeugen und speichern
-        if (selectedBeer) {
-            const finishedBrew : FinishedBrew = {
-                id: uuidv4(), // Default or dynamically generated ID
-                name: selectedBeer.name || 'Unknown Beer',
-                liters: 0,
-                originalwort:  0,
-                residual_extract:  0, // Standardwert hinzugefügt
-                note: '', // Standardwert hinzugefügt
-                startDate: new Date().toISOString().slice(0, 10),
-                beer_id: selectedBeer.id.toString(), // Assuming beer_id is a string
-                active: true,
-                state: eBrewState.FERMENTATION
-            };
-            addFinishedBrew(finishedBrew);
-        }
-    }
 
     confirmFinishDialog = async () => {
         const { stopPolling, selectedBeer, addFinishedBrew } = this.props;
@@ -638,6 +589,29 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         </div>);
     }
 
+    renderProcessList() {
+        const processSteps: ProcessStep[] = [
+            { name: "Heating up for mashing-in" },
+            { name: "Mashing-in" },
+            { name: "Heating up for rest 1" },
+            { name: "Rest 1" },
+            { name: "Heating up for rest 2" },
+            { name: "Rest 2" },
+            { name: "Heating up for mashing-out" },
+            { name: "Mashing-out" },
+        ];
+        const currentStepIndex = 2; // Das kannst du dynamisch aus dem Status holen!
+        return (
+            <div>
+            <ProcessList steps={processSteps} currentStepIndex={currentStepIndex} />
+                <button className="nextStepBtn" onClick={this.props.nextProcedureStep} title="Nächster Prozessschritt">
+                    Nächster Schritt
+                </button>
+            </div>)
+
+    }
+
+
     render() {
         const {isBackenAvailable} = this.props;
         const {showHopsDialog,showFinishDialog} = this.state;
@@ -656,16 +630,25 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                     showFinishDialog &&
                     (this.renderFinishDialog())
                 }
+
                 {this.renderHeader()}
-                {this.renderWater()}
+                <div className="Left">
+                    {this.renderWater()}
+                    {this.renderFlames()}
+                </div>
+                <div className="List">
+                    {this.renderProcessList()}  {/* Hier deine List-Renderfunktion */}
+                </div>
                 {this.renderAgitator()}
-                {this.renderSettings()}
                 {this.renderTemperature()}
-                {this.renderFlames()}
+                {this.renderSettings()}
                 {this.renderInfo()}
+
+
             </div>
         )
     }
+
 
 }
 
