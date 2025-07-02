@@ -590,23 +590,16 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     }
 
     renderProcessList() {
-        const processSteps: ProcessStep[] = [
-            { name: "Heating up for mashing-in" },
-            { name: "Mashing-in" },
-            { name: "Heating up for rest 1" },
-            { name: "Rest 1" },
-            { name: "Heating up for rest 2" },
-            { name: "Rest 2" },
-            { name: "Heating up for rest 2" },
-            { name: "Rest 2" },
-            { name: "Heating up for rest 2" },
-            { name: "Rest 2" },
-            { name: "Heating up for rest 2" },
-            { name: "Rest 2" },
-            { name: "Heating up for mashing-out" },
-            { name: "Mashing-out" },
-        ];
-        const currentStepIndex = 2; // Das kannst du dynamisch aus dem Status holen!
+        const { selectedBeer } = this.props;
+        let processSteps: ProcessStep[] = [];
+        if (selectedBeer && Array.isArray(selectedBeer.fermentation)) {
+            selectedBeer.fermentation.forEach((step) => {
+                processSteps.push({ name: `Aufheizen auf ${step.type}` });
+                processSteps.push({ name: step.type });
+            });
+        }
+        processSteps.push({ name: 'Kochen' });
+        const currentStepIndex = 10; // Das kannst du dynamisch aus dem Status holen!
         return (
             <ProcessList steps={processSteps} currentStepIndex={currentStepIndex} onNextStep={this.props.nextProcedureStep} />
         )
