@@ -599,7 +599,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
             });
         }
         processSteps.push({ name: 'Kochen' });
-        const currentStepIndex = 10; // Das kannst du dynamisch aus dem Status holen!
+        const currentStepIndex = 14; // Das kannst du dynamisch aus dem Status holen!
         return (
             <ProcessList steps={processSteps} currentStepIndex={currentStepIndex} onNextStep={this.props.nextProcedureStep} />
         )

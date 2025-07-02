@@ -15,7 +15,7 @@ interface ProcessListProps {
 
 export class ProcessList extends React.Component<ProcessListProps> {
     activeStepRef: React.RefObject<HTMLLIElement>;
-    simpleBarRef: React.RefObject<any>;
+    simpleBarRef: React.RefObject<HTMLDivElement>;
 
     constructor(props: ProcessListProps) {
         super(props);
@@ -24,19 +24,28 @@ export class ProcessList extends React.Component<ProcessListProps> {
     }
 
     componentDidUpdate(prevProps: ProcessListProps) {
-        if (prevProps.currentStepIndex !== this.props.currentStepIndex && this.activeStepRef.current && this.simpleBarRef.current) {
-            // Scrollen, so dass das aktive Element sichtbar ist
-            const node = this.activeStepRef.current;
-            const simpleBarNode = this.simpleBarRef.current.getScrollElement();
-            const nodeTop = node.offsetTop;
-            const nodeBottom = node.offsetTop + node.offsetHeight;
-            const viewTop = simpleBarNode.scrollTop;
-            const viewBottom = viewTop + simpleBarNode.clientHeight;
-            if (nodeTop < viewTop) {
-                simpleBarNode.scrollTop = nodeTop;
-            } else if (nodeBottom > viewBottom) {
-                simpleBarNode.scrollTop = nodeBottom - simpleBarNode.clientHeight;
-            }
+        if (
+            prevProps.currentStepIndex !== this.props.currentStepIndex &&
+            this.activeStepRef.current &&
+            this.simpleBarRef.current
+        ) {
+            setTimeout(() => {
+                const simpleBarScroll = this.simpleBarRef.current;
+                const activeNode = this.activeStepRef.current;
+                if (simpleBarScroll && activeNode) {
+                    // SimpleBar scrollt auf das innere Scroll-Element, nicht das Wrapper-Div
+                    const scrollElement = simpleBarScroll.querySelector('.simplebar-content-wrapper');
+                    if (scrollElement) {
+                        const containerRect = scrollElement.getBoundingClientRect();
+                        const nodeRect = activeNode.getBoundingClientRect();
+                        if (nodeRect.top < containerRect.top) {
+                            scrollElement.scrollTop += nodeRect.top - containerRect.top;
+                        } else if (nodeRect.bottom > containerRect.bottom) {
+                            scrollElement.scrollTop += nodeRect.bottom - containerRect.bottom;
+                        }
+                    }
+                }
+            }, 0);
         }
     }
 
@@ -45,7 +54,7 @@ export class ProcessList extends React.Component<ProcessListProps> {
         return (
             <div className="process-list">
                 <h3 className="process-title">Process</h3>
-                <SimpleBar className="process-list-scroll" ref={this.simpleBarRef}>
+                <SimpleBar className="process-list-scroll" scrollableNodeProps={{ ref: this.simpleBarRef }}>
                     <ul>
                         {steps.map((step, idx) => (
                             <li
