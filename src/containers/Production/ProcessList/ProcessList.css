@@ -1,6 +1,9 @@
 .process-list {
     width: 100%;
     padding: 0.5rem 0.7rem;
+    position: relative;
+    min-height: 350px; /* oder gewünschte Höhe */
+    padding-bottom: 4.5rem; /* Platz für Button am unteren Rand */
 }
 
 .process-title {
@@ -40,4 +43,16 @@
     margin-right: 0.7rem;
     font-weight: bold;
     color: #ffa726;
+}
+
+.next-step-btn-container {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 580px;
+    width: 100%;
+    display: flex;
+    justify-content: left;
+    padding: 0;
+    background: transparent;
 }

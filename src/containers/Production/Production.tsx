@@ -602,13 +602,8 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         ];
         const currentStepIndex = 2; // Das kannst du dynamisch aus dem Status holen!
         return (
-            <div>
-            <ProcessList steps={processSteps} currentStepIndex={currentStepIndex} />
-                <button className="nextStepBtn" onClick={this.props.nextProcedureStep} title="Nächster Prozessschritt">
-                    Nächster Schritt
-                </button>
-            </div>)
-
+            <ProcessList steps={processSteps} currentStepIndex={currentStepIndex} onNextStep={this.props.nextProcedureStep} />
+        )
     }
 
 

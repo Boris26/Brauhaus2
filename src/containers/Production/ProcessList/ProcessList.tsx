@@ -8,11 +8,12 @@ export interface ProcessStep {
 interface ProcessListProps {
     steps: ProcessStep[];
     currentStepIndex: number; // 0-based
+    onNextStep?: () => void;
 }
 
 export class ProcessList extends React.Component<ProcessListProps> {
     render() {
-        const { steps, currentStepIndex } = this.props;
+        const { steps, currentStepIndex, onNextStep } = this.props;
         return (
             <div className="process-list">
                 <h3 className="process-title">Process</h3>
@@ -28,6 +29,13 @@ export class ProcessList extends React.Component<ProcessListProps> {
                         </li>
                     ))}
                 </ul>
+                {onNextStep && (
+                    <div className="next-step-btn-container">
+                        <button className="nextStepBtn" onClick={onNextStep} title="Nächster Prozessschritt">
+                            Nächster Schritt
+                        </button>
+                    </div>
+                )}
             </div>
         );
     }
