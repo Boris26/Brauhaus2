@@ -1,5 +1,7 @@
 import React from "react";
 import "./ProcessList.css";
+import SimpleBar from 'simplebar-react';
+import 'simplebar-react/dist/simplebar.min.css';
 
 export interface ProcessStep {
     name: string;
@@ -17,24 +19,29 @@ export class ProcessList extends React.Component<ProcessListProps> {
         return (
             <div className="process-list">
                 <h3 className="process-title">Process</h3>
-                <ul>
-                    {steps.map((step, idx) => (
-                        <li
-                            key={step.name + idx}
-                            className={
-                                "process-step" + (idx === currentStepIndex ? " active" : "")
-                            }
-                        >
-                            <span className="step-number">{idx + 1}.</span> {step.name}
-                        </li>
-                    ))}
-                </ul>
+                <SimpleBar className="process-list-scroll">
+                    <ul>
+                        {steps.map((step, idx) => (
+                            <li
+                                key={step.name + idx}
+                                className={
+                                    "process-step" + (idx === currentStepIndex ? " active" : "")
+                                }
+                            >
+                                <span className="step-number">{idx + 1}.</span> {step.name}
+                            </li>
+                        ))}
+                    </ul>
+                </SimpleBar>
                 {onNextStep && (
-                    <div className="next-step-btn-container">
-                        <button className="nextStepBtn" onClick={onNextStep} title="Nächster Prozessschritt">
-                            Nächster Schritt
-                        </button>
-                    </div>
+                    <>
+                        <hr className="next-step-separator" />
+                        <div className="next-step-btn-container">
+                            <button className="nextStepBtn" onClick={onNextStep} title="Nächster Prozessschritt">
+                                Nächster Schritt
+                            </button>
+                        </div>
+                    </>
                 )}
             </div>
         );

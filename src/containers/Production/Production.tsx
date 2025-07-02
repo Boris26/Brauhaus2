@@ -597,6 +597,12 @@ class Production extends React.Component<ProductionProps, ProductionState> {
             { name: "Rest 1" },
             { name: "Heating up for rest 2" },
             { name: "Rest 2" },
+            { name: "Heating up for rest 2" },
+            { name: "Rest 2" },
+            { name: "Heating up for rest 2" },
+            { name: "Rest 2" },
+            { name: "Heating up for rest 2" },
+            { name: "Rest 2" },
             { name: "Heating up for mashing-out" },
             { name: "Mashing-out" },
         ];

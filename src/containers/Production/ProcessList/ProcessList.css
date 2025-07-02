@@ -45,6 +45,14 @@
     color: #ffa726;
 }
 
+.next-step-separator {
+    border: none;
+    border-top: 2px solid #ffa726;
+    margin: 0 0 16px 0;
+    width: 100%;
+
+}
+
 .next-step-btn-container {
     position: absolute;
     left: 0;
@@ -55,4 +63,10 @@
     justify-content: left;
     padding: 0;
     background: transparent;
+}
+
+.process-list-scroll {
+    height: 500px; /* Höhe des Scrollbereichs */
+    overflow: auto;
+    padding-right: 8px;
 }
