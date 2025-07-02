@@ -48,16 +48,16 @@
 .next-step-separator {
     border: none;
     border-top: 2px solid #ffa726;
-    margin: 0 0 16px 0;
+    margin: 25px 0 0 0;
     width: 100%;
 
 }
 
 .next-step-btn-container {
     position: absolute;
-    left: 0;
+    left: 8px;
     right: 0;
-    top: 580px;
+    bottom: 0px;
     width: 100%;
     display: flex;
     justify-content: left;
@@ -66,7 +66,14 @@
 }
 
 .process-list-scroll {
-    height: 500px; /* Höhe des Scrollbereichs */
-    overflow: auto;
-    padding-right: 8px;
+    height: 500px;
+    margin: 0 auto;
+    width: 95%;
+    box-sizing: border-box;
+    /* SimpleBar Scrollbar ausblenden */
+    --simplebar-scrollbar-width: 0px;
+}
+
+.process-list-scroll .simplebar-scrollbar {
+    display: none !important;
 }
