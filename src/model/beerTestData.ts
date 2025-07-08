@@ -3,7 +3,7 @@ import {MashingType} from "../enums/eMashingType";
 
 export const testBeers: Beer[] = [
     {
-        id: 15,
+        id: '15',
         name: "IPA",
         type: "Ale",
         color: "Amber",
@@ -85,7 +85,7 @@ export const testBeers: Beer[] = [
         },
     },
     {
-        id: 16,
+        id: '16',
         name: "Boris",
         type: "Ale",
         color: "Amber",

@@ -1,5 +1,5 @@
 import { ofType } from 'redux-observable';
-import {from, of, tap} from 'rxjs';
+import {fromEvent, of, from} from 'rxjs';
 import { catchError, map, mergeMap } from 'rxjs/operators';
 import { BeerActions } from '../actions/actions';
 import { BeerRepository } from '../repositorys/BeerRepository';
@@ -11,6 +11,7 @@ import {FinishedBrew} from "../model/FinishedBrew";
 import { FinishedBrewListPdfStrategy } from '../utils/pdf/finishedBrewStrategy';
 import {PdfGenerator} from "../utils/pdf/PdfGenerator";
 import { BeerPdfStrategy } from '../utils/pdf/shoppingListPdfStrategy';
+import { mapImportedJsonToBeerDTO } from '../utils/BeerImportMapper';
 
 /**
  * Epic to handle the GET_BEERS action.
@@ -188,6 +189,33 @@ export const generateShoppingListPdfEpic = (action$: any) =>
     })
   );
 
+// Epic für den Import von Bier-JSON-Dateien
+export const importBeerEpic = (action$: any) =>
+    action$.pipe(
+        ofType(BeerActions.ActionTypes.IMPORT_BEER),
+        mergeMap((action: any) => {
+            const file: File = action.payload.file;
+            if (!file) {
+                return of(BeerActions.isSubmitSuccessful(false, 'Keine Datei ausgewählt', 'import'));
+            }
+            const reader = new FileReader();
+            const load$ = fromEvent(reader, 'load');
+            reader.readAsText(file);
+            return load$.pipe(
+                map((event: any) => {
+                    try {
+                        const json = JSON.parse(event.target.result);
+                        const beerDTO = mapImportedJsonToBeerDTO(json);
+                        return BeerActions.submitBeer(beerDTO);
+                    } catch (e) {
+                        return BeerActions.isSubmitSuccessful(false, 'Fehler beim Parsen der Datei', 'import');
+                    }
+                }),
+                catchError(() => of(BeerActions.isSubmitSuccessful(false, 'Fehler beim Einlesen der Datei', 'import')))
+            );
+        })
+    );
+
 export const beerEpics = [
   getBeersEpic,
   submitBeerEpic,
@@ -202,5 +230,6 @@ export const beerEpics = [
   updateFinishedBeerEpic,
   sendNewFinishedBeerEpic,
   generateFinishedBrewsPdfEpic,
-  generateShoppingListPdfEpic
+  generateShoppingListPdfEpic,
+  importBeerEpic
 ];

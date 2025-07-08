@@ -10,6 +10,7 @@ import {
 import {MashingType} from "../../enums/eMashingType";
 import './BeerForm.css'
 import SimpleBar from 'simplebar-react';
+import { mapImportedJsonToBeer } from '../../utils/BeerImportMapper';
 
 interface BeerFormProps {
     onSubmitBeer: (beer: BeerDTO) => void;
@@ -25,9 +26,11 @@ interface BeerFormProps {
     message: string;
     beerFormState?: any;
     beers: Beer[];
+    importBeer: (file: File) => void;
 }
 
 interface BeerFormState {
+    id: string;
     name: string;
     type: string;
     color: string;
@@ -55,6 +58,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
 
         const defaultState = {
+            id: '0',
             name: '',
             type: '',
             color: '',
@@ -167,6 +171,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         const {malts,hops,yeasts} = this.props;
         e.preventDefault();
         const {
+            id,
             name,
             type,
             color,
@@ -214,7 +219,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             .filter((y): y is YeastDTO => y !== undefined);
 
         const beer: BeerDTO = {
-            id: 0,
+            id: id || '0',
             name,
             type,
             color,
@@ -334,6 +339,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         const selectedBeer = beers.find(b => String(b.id) === selectedId);
         if (selectedBeer) {
             this.setState({
+                id: selectedBeer.id || '0',
                 name: selectedBeer.name || '',
                 type: selectedBeer.type || '',
                 color: selectedBeer.color || '',
@@ -469,9 +475,9 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 <div className="full-width tables-container">
                     <div className="table-section">
                         <h3>Maischeplan:</h3>
-                        <div className="table-wrapper">
-                            <table className="ingredient-table">
-                                <thead>
+                        <div className="table-wrapper" style={{overflowX: 'auto', maxHeight: '180px'}}>
+                            <table className="ingredient-table" style={{width: '100%', borderCollapse: 'collapse'}}>
+                                <thead style={{position: 'sticky', top: 0, background: '#fff', zIndex: 2}}>
                                     <tr>
                                         <th>Type</th>
                                         <th>Temp (°C)</th>
@@ -544,9 +550,9 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
                     <div className="table-section">
                         <h3>Malze</h3>
-                        <div className="table-wrapper">
-                            <table className="ingredient-table">
-                                <thead>
+                        <div className="table-wrapper" style={{overflowX: 'auto', maxHeight: '180px'}}>
+                            <table className="ingredient-table" style={{width: '100%', borderCollapse: 'collapse'}}>
+                                <thead style={{position: 'sticky', top: 0, background: '#fff', zIndex: 2}}>
                                     <tr>
                                         <th>Name</th>
                                         <th>Menge (g)</th>
@@ -601,9 +607,9 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
                     <div className="table-section">
                         <h3>Hopfen</h3>
-                        <div className="table-wrapper">
-                            <table className="ingredient-table">
-                                <thead>
+                        <div className="table-wrapper" style={{overflowX: 'auto', maxHeight: '180px'}}>
+                            <table className="ingredient-table" style={{width: '100%', borderCollapse: 'collapse'}}>
+                                <thead style={{position: 'sticky', top: 0, background: '#fff', zIndex: 2}}>
                                     <tr>
                                         <th>Name</th>
                                         <th>Menge (g)</th>
@@ -669,9 +675,9 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
                     <div className="table-section">
                         <h3>Hefe</h3>
-                        <div className="table-wrapper">
-                            <table className="ingredient-table">
-                                <thead>
+                        <div className="table-wrapper" style={{overflowX: 'auto', maxHeight: '180px'}}>
+                            <table className="ingredient-table" style={{width: '100%', borderCollapse: 'collapse'}}>
+                                <thead style={{position: 'sticky', top: 0, background: '#fff', zIndex: 2}}>
                                     <tr>
                                         <th>Name</th>
                                         <th>Menge (g)</th>
@@ -734,6 +740,38 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
     handleImportBeerJson = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files && event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const json = JSON.parse(e.target?.result as string);
+                    const beer = mapImportedJsonToBeer(json);
+                    this.setState({
+                        id: beer.id || '0',
+                        name: beer.name || '',
+                        type: beer.type || '',
+                        color: beer.color || '',
+                        alcohol: beer.alcohol || 0,
+                        originalwort: beer.originalwort || 0,
+                        bitterness: beer.bitterness || 0,
+                        description: beer.description || '',
+                        rating: beer.rating || 0,
+                        mashVolume: beer.mashVolume || 0,
+                        spargeVolume: beer.spargeVolume || 0,
+                        cookingTime: beer.cookingTime || 0,
+                        cookingTemperatur: beer.cookingTemperatur || 0,
+                        fermentationSteps: beer.fermentation ? [...beer.fermentation] : [],
+                        maltsDTO: beer.malts ? beer.malts.map(m => ({ id: m.id, name: m.name, quantity: m.quantity })) : [],
+                        hopsDTO: beer.wortBoiling && beer.wortBoiling.hops ? beer.wortBoiling.hops.map(h => ({ id: h.id, name: h.name, quantity: h.quantity, time: h.time })) : [],
+                        yeastsDTO: beer.fermentationMaturation && beer.fermentationMaturation.yeast ? beer.fermentationMaturation.yeast.map(y => ({ id: y.id, name: y.name, quantity: y.quantity })) : [],
+                        isSubmitSuccessful: false,
+                    });
+                } catch (err) {
+                    alert('Fehler beim Parsen der Datei!');
+                }
+            };
+            reader.readAsText(file);
+        }
     };
 
     render() {
@@ -771,6 +809,7 @@ const mapDispatchToProps = (dispatch: any) => ({
     getHop: (isFetching: boolean) => dispatch(BeerActions.getHops(isFetching)),
     getYeast: (isFetching: boolean) => dispatch(BeerActions.getYeasts(isFetching)),
     saveBeerFormState: (formState: any) => dispatch(BeerActions.saveBeerFormState(formState)),
+    importBeer: (file: File) => dispatch(BeerActions.importBeer(file)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(BeerForm);

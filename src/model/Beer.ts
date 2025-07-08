@@ -44,7 +44,7 @@ export interface FermentationMaturation {
 }
 
 export interface Beer {
-    id: number;
+    id: string;
     name: string;
     type: string;
     color: string;

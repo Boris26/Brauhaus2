@@ -20,7 +20,7 @@ export interface BeerTableProps {
 
 interface BeerTableState {
     sortConfig: SortConfig;
-    selectedBeerId: number | null;
+    selectedBeerId: string | null;
 }
 
 

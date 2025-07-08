@@ -50,6 +50,7 @@ export namespace BeerActions {
         GENERATE_SHOPPING_LIST_PDF = 'BeerActions.GENERATE_SHOPPING_LIST_PDF',
         GENERATE_SHOPPING_LIST_PDF_SUCCESS = 'BeerActions.GENERATE_SHOPPING_LIST_PDF_SUCCESS',
         GENERATE_SHOPPING_LIST_PDF_FAILURE = 'BeerActions.GENERATE_SHOPPING_LIST_PDF_FAILURE',
+        IMPORT_BEER = 'BeerActions.IMPORT_BEER',
     }
 
     export interface GetBeers {
@@ -252,8 +253,6 @@ export namespace BeerActions {
         }
     }
 
-
-
     export interface GenerateFinishedBrewsPdf {
         readonly type: ActionTypes.GENERATE_FINISHED_BREWS_PDF;
         payload: { finishedBrews: FinishedBrew[] };
@@ -275,6 +274,13 @@ export namespace BeerActions {
     export interface GenerateShoppingListPdfFailure {
         readonly type: ActionTypes.GENERATE_SHOPPING_LIST_PDF_FAILURE;
         payload: { error: any };
+    }
+
+    export interface ImportBeer {
+        readonly type: ActionTypes.IMPORT_BEER;
+        payload: {
+            file: File;
+        }
     }
 
 
@@ -567,6 +573,13 @@ export namespace BeerActions {
 
     export function getBeersFailure(param: any) {
         return undefined;
+    }
+
+    export function importBeer(file: File): ImportBeer {
+        return {
+            type: ActionTypes.IMPORT_BEER,
+            payload: { file }
+        };
     }
 }
 
