@@ -10,7 +10,7 @@ import {
 import {MashingType} from "../../enums/eMashingType";
 import './BeerForm.css'
 import SimpleBar from 'simplebar-react';
-import { mapImportedJsonToBeer } from '../../utils/BeerImportMapper';
+import { mapImportedJsonToBeer, mapImportedJsonToBeerWithMissing } from '../../utils/BeerImportMapper';
 
 interface BeerFormProps {
     onSubmitBeer: (beer: BeerDTO) => void;
@@ -48,6 +48,9 @@ interface BeerFormState {
     hopsDTO: HopDTO[];
     yeastsDTO: YeastDTO[];
     isSubmitSuccessful: boolean;
+    missingMalts?: string[];
+    missingHops?: string[];
+    missingYeasts?: string[];
 }
 
 class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
@@ -375,6 +378,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         }
 
         // Import-Button und verstecktes File-Input
+        const { missingMalts = [], missingHops = [], missingYeasts = [] } = this.state;
         return (
             <form className="beer-form" onSubmit={this.handleSubmit}>
                 {/* Import Button */}
@@ -393,6 +397,14 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 >
                     Importieren
                 </button>
+                {/* Fehlende Zutaten anzeigen */}
+                {(missingMalts.length > 0 || missingHops.length > 0 || missingYeasts.length > 0) && (
+                    <div style={{ color: 'orange', marginBottom: 10 }}>
+                        {missingMalts.length > 0 && <div>Fehlende Malze: {missingMalts.join(', ')}</div>}
+                        {missingHops.length > 0 && <div>Fehlende Hopfen: {missingHops.join(', ')}</div>}
+                        {missingYeasts.length > 0 && <div>Fehlende Hefen: {missingYeasts.join(', ')}</div>}
+                    </div>
+                )}
                 {/* Dropdown für Bierauswahl */}
                 <label className="full-width">
                     Bier auswählen:
@@ -745,7 +757,8 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             reader.onload = (e) => {
                 try {
                     const json = JSON.parse(e.target?.result as string);
-                    const beer = mapImportedJsonToBeer(json, this.props.malts, this.props.hops, this.props.yeasts);
+                    const result = mapImportedJsonToBeerWithMissing(json, this.props.malts, this.props.hops, this.props.yeasts);
+                    const beer = result.beer;
                     this.setState({
                         id: beer.id || '0',
                         name: beer.name || '',
@@ -765,6 +778,9 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                         hopsDTO: beer.wortBoiling && beer.wortBoiling.hops ? beer.wortBoiling.hops.map(h => ({ id: h.id, name: h.name, quantity: h.quantity, time: h.time })) : [],
                         yeastsDTO: beer.fermentationMaturation && beer.fermentationMaturation.yeast ? beer.fermentationMaturation.yeast.map(y => ({ id: y.id, name: y.name, quantity: y.quantity })) : [],
                         isSubmitSuccessful: false,
+                        missingMalts: result.missingMalts,
+                        missingHops: result.missingHops,
+                        missingYeasts: result.missingYeasts,
                     });
                 } catch (err) {
                     alert('Fehler beim Parsen der Datei!');

@@ -368,3 +368,140 @@ export function mapImportedJsonToBeer(json: any, maltsList: Malt[], hopsList: Ho
     // Fremdformat-Mapping:
     return mapForeignJsonToBeer(json, maltsList, hopsList, yeastsList);
 }
+
+export interface ImportResult {
+    beer: Beer;
+    missingMalts: string[];
+    missingHops: string[];
+    missingYeasts: string[];
+}
+
+function mapMaltsFromJsonWithMissing(json: any, maltsList: Malt[]): { malts: Malt[], missingMalts: string[] } {
+    const malts: Malt[] = [];
+    const missingMalts: string[] = [];
+    let i = 1;
+    while (json[`Malz${i}`]) {
+        const name = json[`Malz${i}`];
+        const menge = json[`Malz${i}_Menge`] || 0;
+        const einheit = json[`Malz${i}_Einheit`] || 'g';
+        const maltObj = maltsList.find(m => m.name === name);
+        if (!maltObj) missingMalts.push(name);
+        malts.push({
+            id: maltObj?.id || '',
+            name,
+            description: maltObj?.description || '',
+            EBC: maltObj?.EBC || 0,
+            quantity: Number(menge) * (einheit === 'kg' ? 1000 : 1)
+        });
+        i++;
+    }
+    return { malts, missingMalts };
+}
+
+function mapHopsFromJsonWithMissing(json: any, hopsList: Hop[]): { hops: Hop[], missingHops: string[] } {
+    const hops: Hop[] = [];
+    const missingHops: string[] = [];
+    let i = 1;
+    while (json[`Hopfen_${i}_Sorte`]) {
+        const name = json[`Hopfen_${i}_Sorte`];
+        const hopObj = hopsList.find(h => h.name === name);
+        if (!hopObj) missingHops.push(name);
+        hops.push({
+            id: hopObj?.id || '',
+            name,
+            description: hopObj?.description || '',
+            alpha: hopObj?.alpha || 0,
+            quantity: Number(json[`Hopfen_${i}_Menge`]) || 0,
+            time: Number(json[`Hopfen_${i}_Kochzeit`]) || 0
+        });
+        i++;
+    }
+    return { hops, missingHops };
+}
+
+function mapYeastsFromJsonWithMissing(json: any, yeastsList: Yeast[]): { yeasts: Yeast[], missingYeasts: string[] } {
+    const yeasts: Yeast[] = [];
+    const missingYeasts: string[] = [];
+    let i = 1;
+    if (json['Hefe']) {
+        const yeastObj = yeastsList.find(y => y.name === json['Hefe']);
+        if (!yeastObj) missingYeasts.push(json['Hefe']);
+        yeasts.push({
+            id: yeastObj?.id || '',
+            name: json['Hefe'],
+            description: yeastObj?.description || '',
+            EVG: yeastObj?.EVG || '',
+            temperature: yeastObj?.temperature || '',
+            type: yeastObj?.type || '',
+            quantity: 0
+        });
+    }
+    while (json[`Hefe${i}`]) {
+        const yeastObj = yeastsList.find(y => y.name === json[`Hefe${i}`]);
+        if (!yeastObj) missingYeasts.push(json[`Hefe${i}`]);
+        yeasts.push({
+            id: yeastObj?.id || '',
+            name: json[`Hefe${i}`],
+            description: yeastObj?.description || '',
+            EVG: yeastObj?.EVG || '',
+            temperature: yeastObj?.temperature || '',
+            type: yeastObj?.type || '',
+            quantity: 0
+        });
+        i++;
+    }
+    return { yeasts, missingYeasts };
+}
+
+export function mapImportedJsonToBeerWithMissing(json: any, maltsList: Malt[], hopsList: Hop[], yeastsList: Yeast[]): ImportResult {
+    // Wenn das JSON bereits ein Beer-Objekt ist (z.B. Export aus der App), parse nur die Typen korrekt
+    if (json.malts && json.wortBoiling && json.fermentationMaturation && json.fermentation) {
+        return {
+            beer: mapBeerObjectToBeer(json),
+            missingMalts: [],
+            missingHops: [],
+            missingYeasts: []
+        };
+    }
+    if (json.malts && json.wortBoiling && json.fermentationMaturation) {
+        return {
+            beer: mapBeerDtoToBeer(json),
+            missingMalts: [],
+            missingHops: [],
+            missingYeasts: []
+        };
+    }
+    // Fremdformat-Mapping mit Prüfung auf fehlende Zutaten:
+    const { malts, missingMalts } = mapMaltsFromJsonWithMissing(json, maltsList);
+    const { hops, missingHops } = mapHopsFromJsonWithMissing(json, hopsList);
+    const { yeasts, missingYeasts } = mapYeastsFromJsonWithMissing(json, yeastsList);
+    const fermentation = mapFermentationStepsFromJson(json);
+    return {
+        beer: {
+            id: '',
+            name: json.Name || '',
+            type: json.Sorte || '',
+            color: json.Farbe ? String(json.Farbe) : '',
+            alcohol: Number(json.Alkohol) || 0,
+            originalwort: Number(json.Stammwuerze) || 0,
+            bitterness: Number(json.Bittere) || 0,
+            description: json.Kurzbeschreibung || '',
+            rating: 0,
+            mashVolume: Number(json.Infusion_Hauptguss) || 0,
+            spargeVolume: Number(json.Nachguss) || 0,
+            cookingTime: Number(json.Kochzeit_Wuerze) || 0,
+            cookingTemperatur: 100,
+            fermentation,
+            malts,
+            wortBoiling: { totalTime: Number(json.Kochzeit_Wuerze) || 0, hops },
+            fermentationMaturation: {
+                fermentationTemperature: Number(json.Gaertemperatur) || 0,
+                carbonation: Number(json.Karbonisierung) || 0,
+                yeast: yeasts
+            }
+        },
+        missingMalts,
+        missingHops,
+        missingYeasts
+    };
+}
