@@ -481,19 +481,39 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                 </thead>
                                 <tbody>
                                     {fermentationSteps?.map((step, index) => {
-                                        // Zähle nur die Rasten (leere oder nicht im Enum MashingType enthalten)
                                         const rastCount = fermentationSteps.slice(0, index + 1).filter((s) => !Object.values(MashingType).includes(s.type as MashingType) || s.type === '').length;
+                                        const fixedTypes = ['Einmaischen', 'Abmaischen', 'Kochen'];
+                                        const isFixed = fixedTypes.includes(step.type);
                                         return (
                                             <tr key={index}>
                                                 <td>
-                                                    <select name="type" value={step.type} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={false}>
-                                                        <option value="">Rast {rastCount}</option>
-                                                        {Object.values(MashingType).map((mashingType) => (
-                                                            <option key={mashingType} value={mashingType}>
-                                                                {mashingType}
-                                                            </option>
-                                                        ))}
-                                                    </select>
+                                                    {isFixed ? (
+                                                        <span style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'flex-start',
+                                                            background: 'white',
+                                                            color: '#333',
+                                                            border: '1px solid #ced4da',
+                                                            borderRadius: '4px',
+                                                            fontSize: '15px',
+                                                            fontFamily: 'inherit',
+                                                            minWidth: '120px',
+                                                            boxSizing: 'border-box',
+                                                            height: '30px',
+                                                            padding: '0 2px',
+                                                            textAlign: 'left'
+                                                        }}>{step.type}</span>
+                                                    ) : (
+                                                        <select name="type" value={step.type} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={false}>
+                                                            <option value="">Rast {rastCount}</option>
+                                                            {Object.values(MashingType).map((mashingType) => (
+                                                                <option key={mashingType} value={mashingType}>
+                                                                    {mashingType}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    )}
                                                 </td>
                                                 <td>
                                                     <input type="number" name="temperature" value={step.temperature} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />
@@ -502,7 +522,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                                     <input type="number" name="time" value={step.time} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />
                                                 </td>
                                                 <td className="action-column">
-                                                    {index > 0 && (
+                                                    {index > 0 && !isFixed && (
                                                         <button
                                                             type="button"
                                                             className="cancel-btn"
