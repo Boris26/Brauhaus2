@@ -133,159 +133,80 @@ export function mapImportedJsonToBeerDTO(json: any): BeerDTO {
 }
 
 /**
- * Wandelt beliebiges JSON (Fremdformat oder BeerDTO) in ein Beer-Objekt um.
+ * Wandelt beliebiges JSON (Fremdformat oder BeerDTO) in ein Beer-Objekt um und matched Malze/Hopfen/Hefe anhand Name mit den vorhandenen Listen.
  */
-export function mapImportedJsonToBeer(json: any): Beer {
-    // Wenn das JSON bereits ein Beer-Objekt ist (z.B. Export aus der App), parse nur die Typen korrekt
-    if (json.malts && json.wortBoiling && json.fermentationMaturation && json.fermentation) {
-        return {
-            id: String(json.id ?? ''),
-            name: json.name || '',
-            type: json.type || '',
-            color: String(json.color ?? ''),
-            alcohol: Number(json.alcohol) || 0,
-            originalwort: Number(json.originalwort) || 0,
-            bitterness: Number(json.bitterness) || 0,
-            description: json.description || '',
-            rating: Number(json.rating) || 0,
-            mashVolume: Number(json.mashVolume) || 0,
-            spargeVolume: Number(json.spargeVolume) || 0,
-            cookingTime: Number(json.cookingTime) || 0,
-            cookingTemperatur: Number(json.cookingTemperatur) || 0,
-            fermentation: (json.fermentation || []).map((r: any) => ({
-                type: r.type,
-                temperature: Number(r.temperature) || 0,
-                time: Number(r.time) || 0
-            })),
-            malts: (json.malts || []).map((m: any) => ({
-                id: String(m.id ?? ''),
-                name: m.name,
-                description: m.description || '',
-                EBC: Number(m.EBC) || 0,
-                quantity: Number(m.quantity) || 0
-            })),
-            wortBoiling: {
-                totalTime: Number(json.wortBoiling?.totalTime) || 0,
-                hops: (json.wortBoiling?.hops || []).map((h: any) => ({
-                    id: String(h.id ?? ''),
-                    name: h.name,
-                    description: h.description || '',
-                    alpha: Number(h.alpha) || 0,
-                    quantity: Number(h.quantity) || 0,
-                    time: Number(h.time) || 0
-                }))
-            },
-            fermentationMaturation: {
-                fermentationTemperature: Number(json.fermentationMaturation?.fermentationTemperature) || 0,
-                carbonation: Number(json.fermentationMaturation?.carbonation) || 0,
-                yeast: (json.fermentationMaturation?.yeast || []).map((y: any) => ({
-                    id: String(y.id ?? ''),
-                    name: y.name,
-                    description: y.description || '',
-                    EVG: y.EVG || '',
-                    temperature: y.temperature || '',
-                    type: y.type || '',
-                    quantity: Number(y.quantity) || 0
-                }))
-            }
-        };
-    }
-    // Wenn das JSON ein BeerDTO ist, mappe es auf Beer
-    if (json.malts && json.wortBoiling && json.fermentationMaturation) {
-        return {
-            id: String(json.id ?? ''),
-            name: json.name || '',
-            type: json.type || '',
-            color: String(json.color ?? ''),
-            alcohol: Number(json.alcohol) || 0,
-            originalwort: Number(json.originalwort) || 0,
-            bitterness: Number(json.bitterness) || 0,
-            description: json.description || '',
-            rating: Number(json.rating) || 0,
-            mashVolume: Number(json.mashVolume) || 0,
-            spargeVolume: Number(json.spargeVolume) || 0,
-            cookingTime: Number(json.cookingTime) || 0,
-            cookingTemperatur: Number(json.cookingTemperatur) || 0,
-            fermentation: (json.fermentationSteps || []).map((r: any) => ({
-                type: r.type,
-                temperature: Number(r.temperature) || 0,
-                time: Number(r.time) || 0
-            })),
-            malts: (json.malts || []).map((m: any) => ({
-                id: String(m.id ?? ''),
-                name: m.name,
-                description: '',
-                EBC: 0,
-                quantity: Number(m.quantity) || 0
-            })),
-            wortBoiling: {
-                totalTime: Number(json.wortBoiling?.totalTime) || 0,
-                hops: (json.wortBoiling?.hops || []).map((h: any) => ({
-                    id: String(h.id ?? ''),
-                    name: h.name,
-                    description: '',
-                    alpha: 0,
-                    quantity: Number(h.quantity) || 0,
-                    time: Number(h.time) || 0
-                }))
-            },
-            fermentationMaturation: {
-                fermentationTemperature: Number(json.fermentationMaturation?.fermentationTemperature) || 0,
-                carbonation: Number(json.fermentationMaturation?.carbonation) || 0,
-                yeast: (json.fermentationMaturation?.yeast || []).map((y: any) => ({
-                    id: String(y.id ?? ''),
-                    name: y.name,
-                    description: '',
-                    EVG: '',
-                    temperature: '',
-                    type: '',
-                    quantity: Number(y.quantity) || 0
-                }))
-            }
-        };
-    }
-    // ...optional: Mapping von Fremdformat wie bei mapImportedJsonToBeerDTO
-    // Dynamisch alle Malze sammeln
+function mapMaltsFromJson(json: any, maltsList: Malt[]): Malt[] {
     const malts: Malt[] = [];
     let i = 1;
+    console.log('Mapping malts from JSON:', json);
     while (json[`Malz${i}`]) {
         const name = json[`Malz${i}`];
         const menge = json[`Malz${i}_Menge`] || 0;
         const einheit = json[`Malz${i}_Einheit`] || 'g';
+        const maltObj = maltsList.find(m => m.name === name);
         malts.push({
-            id: '',
+            id: maltObj?.id || '',
             name,
-            description: '',
-            EBC: 0,
+            description: maltObj?.description || '',
+            EBC: maltObj?.EBC || 0,
             quantity: Number(menge) * (einheit === 'kg' ? 1000 : 1)
         });
         i++;
     }
-    // Dynamisch alle Hopfen sammeln
+    return malts;
+}
+
+function mapHopsFromJson(json: any, hopsList: Hop[]): Hop[] {
     const hops: Hop[] = [];
-    i = 1;
+    let i = 1;
     while (json[`Hopfen_${i}_Sorte`]) {
+        const name = json[`Hopfen_${i}_Sorte`];
+        const hopObj = hopsList.find(h => h.name === name);
         hops.push({
-            id: '',
-            name: json[`Hopfen_${i}_Sorte`],
-            description: '',
-            alpha: Number(json[`Hopfen_${i}_alpha`]) || 0,
+            id: hopObj?.id || '',
+            name,
+            description: hopObj?.description || '',
+            alpha: hopObj?.alpha || 0,
             quantity: Number(json[`Hopfen_${i}_Menge`]) || 0,
             time: Number(json[`Hopfen_${i}_Kochzeit`]) || 0
         });
         i++;
     }
-    // Dynamisch alle Hefen sammeln (Hefe, Hefe2, Hefe3...)
+    return hops;
+}
+
+function mapYeastsFromJson(json: any, yeastsList: Yeast[]): Yeast[] {
     const yeasts: Yeast[] = [];
-    i = 1;
+    let i = 1;
     if (json['Hefe']) {
-        yeasts.push({ id: '', name: json['Hefe'], description: '', EVG: '', temperature: '', type: '', quantity: 0 });
+        const yeastObj = yeastsList.find(y => y.name === json['Hefe']);
+        yeasts.push({
+            id: yeastObj?.id || '',
+            name: json['Hefe'],
+            description: yeastObj?.description || '',
+            EVG: yeastObj?.EVG || '',
+            temperature: yeastObj?.temperature || '',
+            type: yeastObj?.type || '',
+            quantity: 0
+        });
     }
     while (json[`Hefe${i}`]) {
-        yeasts.push({ id: '', name: json[`Hefe${i}`], description: '', EVG: '', temperature: '', type: '', quantity: 0 });
+        const yeastObj = yeastsList.find(y => y.name === json[`Hefe${i}`]);
+        yeasts.push({
+            id: yeastObj?.id || '',
+            name: json[`Hefe${i}`],
+            description: yeastObj?.description || '',
+            EVG: yeastObj?.EVG || '',
+            temperature: yeastObj?.temperature || '',
+            type: yeastObj?.type || '',
+            quantity: 0
+        });
         i++;
     }
-    // Rast- und Maischschritte (Reihenfolge: Einmaischen, Rast 1..n, Abmaischen)
+    return yeasts;
+}
+
+function mapFermentationStepsFromJson(json: any): FermentationSteps[] {
     const fermentation: FermentationSteps[] = [];
     if (json.Infusion_Einmaischtemperatur) fermentation.push({ type: 'Einmaischen', temperature: Number(json.Infusion_Einmaischtemperatur), time: 0 });
     for (let j = 1; j <= 20; j++) {
@@ -294,7 +215,122 @@ export function mapImportedJsonToBeer(json: any): Beer {
         }
     }
     if (json.Abmaischtemperatur) fermentation.push({ type: 'Abmaischen', temperature: Number(json.Abmaischtemperatur), time: 0 });
-    // Beer zusammenbauen
+    return fermentation;
+}
+
+function mapBeerObjectToBeer(json: any): Beer {
+    return {
+        id: String(json.id ?? ''),
+        name: json.name || '',
+        type: json.type || '',
+        color: String(json.color ?? ''),
+        alcohol: Number(json.alcohol) || 0,
+        originalwort: Number(json.originalwort) || 0,
+        bitterness: Number(json.bitterness) || 0,
+        description: json.description || '',
+        rating: Number(json.rating) || 0,
+        mashVolume: Number(json.mashVolume) || 0,
+        spargeVolume: Number(json.spargeVolume) || 0,
+        cookingTime: Number(json.cookingTime) || 0,
+        cookingTemperatur: Number(json.cookingTemperatur) || 0,
+        fermentation: (json.fermentation || []).map((r: any) => ({
+            type: r.type,
+            temperature: Number(r.temperature) || 0,
+            time: Number(r.time) || 0
+        })),
+        malts: (json.malts || []).map((m: any) => ({
+            id: String(m.id ?? ''),
+            name: m.name,
+            description: m.description || '',
+            EBC: Number(m.EBC) || 0,
+            quantity: Number(m.quantity) || 0
+        })),
+        wortBoiling: {
+            totalTime: Number(json.wortBoiling?.totalTime) || 0,
+            hops: (json.wortBoiling?.hops || []).map((h: any) => ({
+                id: String(h.id ?? ''),
+                name: h.name,
+                description: h.description || '',
+                alpha: Number(h.alpha) || 0,
+                quantity: Number(h.quantity) || 0,
+                time: Number(h.time) || 0
+            }))
+        },
+        fermentationMaturation: {
+            fermentationTemperature: Number(json.fermentationMaturation?.fermentationTemperature) || 0,
+            carbonation: Number(json.fermentationMaturation?.carbonation) || 0,
+            yeast: (json.fermentationMaturation?.yeast || []).map((y: any) => ({
+                id: String(y.id ?? ''),
+                name: y.name,
+                description: y.description || '',
+                EVG: y.EVG || '',
+                temperature: y.temperature || '',
+                type: y.type || '',
+                quantity: Number(y.quantity) || 0
+            }))
+        }
+    };
+}
+
+function mapBeerDtoToBeer(json: any): Beer {
+    return {
+        id: String(json.id ?? ''),
+        name: json.name || '',
+        type: json.type || '',
+        color: String(json.color ?? ''),
+        alcohol: Number(json.alcohol) || 0,
+        originalwort: Number(json.originalwort) || 0,
+        bitterness: Number(json.bitterness) || 0,
+        description: json.description || '',
+        rating: Number(json.rating) || 0,
+        mashVolume: Number(json.mashVolume) || 0,
+        spargeVolume: Number(json.spargeVolume) || 0,
+        cookingTime: Number(json.cookingTime) || 0,
+        cookingTemperatur: Number(json.cookingTemperatur) || 0,
+        fermentation: (json.fermentationSteps || []).map((r: any) => ({
+            type: r.type,
+            temperature: Number(r.temperature) || 0,
+            time: Number(r.time) || 0
+        })),
+        malts: (json.malts || []).map((m: any) => ({
+            id: String(m.id ?? ''),
+            name: m.name,
+            description: '',
+            EBC: 0,
+            quantity: Number(m.quantity) || 0
+        })),
+        wortBoiling: {
+            totalTime: Number(json.wortBoiling?.totalTime) || 0,
+            hops: (json.wortBoiling?.hops || []).map((h: any) => ({
+                id: String(h.id ?? ''),
+                name: h.name,
+                description: '',
+                alpha: 0,
+                quantity: Number(h.quantity) || 0,
+                time: Number(h.time) || 0
+            }))
+        },
+        fermentationMaturation: {
+            fermentationTemperature: Number(json.fermentationMaturation?.fermentationTemperature) || 0,
+            carbonation: Number(json.fermentationMaturation?.carbonation) || 0,
+            yeast: (json.fermentationMaturation?.yeast || []).map((y: any) => ({
+                id: String(y.id ?? ''),
+                name: y.name,
+                description: '',
+                EVG: '',
+                temperature: '',
+                type: '',
+                quantity: Number(y.quantity) || 0
+            }))
+        }
+    };
+}
+
+function mapForeignJsonToBeer(json: any, maltsList: Malt[], hopsList: Hop[], yeastsList: Yeast[]): Beer {
+    const malts = mapMaltsFromJson(json, maltsList);
+    const hops = mapHopsFromJson(json, hopsList);
+    const yeasts = mapYeastsFromJson(json, yeastsList);
+    const fermentation = mapFermentationStepsFromJson(json);
     return {
         id: '',
         name: json.Name || '',
@@ -318,4 +354,17 @@ export function mapImportedJsonToBeer(json: any): Beer {
             yeast: yeasts
         }
     };
+}
+
+export function mapImportedJsonToBeer(json: any, maltsList: Malt[], hopsList: Hop[], yeastsList: Yeast[]): Beer {
+    // Wenn das JSON bereits ein Beer-Objekt ist (z.B. Export aus der App), parse nur die Typen korrekt
+    if (json.malts && json.wortBoiling && json.fermentationMaturation && json.fermentation) {
+        return mapBeerObjectToBeer(json);
+    }
+    // Wenn das JSON ein BeerDTO ist, mappe es auf Beer
+    if (json.malts && json.wortBoiling && json.fermentationMaturation) {
+        return mapBeerDtoToBeer(json);
+    }
+    // Fremdformat-Mapping:
+    return mapForeignJsonToBeer(json, maltsList, hopsList, yeastsList);
 }

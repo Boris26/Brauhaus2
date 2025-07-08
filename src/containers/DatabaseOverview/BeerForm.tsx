@@ -745,7 +745,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             reader.onload = (e) => {
                 try {
                     const json = JSON.parse(e.target?.result as string);
-                    const beer = mapImportedJsonToBeer(json);
+                    const beer = mapImportedJsonToBeer(json, this.props.malts, this.props.hops, this.props.yeasts);
                     this.setState({
                         id: beer.id || '0',
                         name: beer.name || '',
