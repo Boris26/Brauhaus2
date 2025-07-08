@@ -5,6 +5,7 @@ export class TextMapper{
         waitingOfIodineTest: 'Bitte Jod Test durchführen!',
         waitingOfStartKochen: 'Kann der Koch Prozess gestartet werden?',
         waitingOfWaterIsKochen: 'Bitte Bestätigen wenn Wasser Kocht!',
+        HEATING: 'Wird erhitzt',
     }
       static mapToText(text:string):string{
         return this.readableText[text] || `Unbekannter Status: ${text}`;

@@ -15,7 +15,7 @@ import {ToggleState} from "../../enums/eToggleState";
 import {MashAgitatorStates} from "../../model/MashAgitator";
 import QuantityPicker from '../../components/Controlls/QuantityPicker/QuantityPicker';
 import {BrewingData} from "../../model/BrewingData";
-import {BrewingStatus} from "../../model/BrewingStatus";
+import {BrewingStatus, HeatingStates} from "../../model/BrewingStatus";
 import {TimeFormatter} from "../../utils/TimeFormatter";
 import ModalDialog, {DialogType} from "../../components/ModalDialog/ModalDialog";
 import {ProgressBar} from "react-bootstrap";
@@ -57,7 +57,6 @@ interface ProductionProps {
 }
 
 interface ProductionState {
-    temperature: number;
     agitatorState: ToggleState;
     agitatorSpeed: number;
     heatingAndStirringSwitchState: boolean
@@ -77,6 +76,8 @@ interface ProductionState {
     showErrorDialog: boolean
     showFinishDialog: boolean
     brewingFinished: boolean
+    indexOfCurrentStep: number;
+    processSteps: ProcessStep[];
 }
 
 class Production extends React.Component<ProductionProps, ProductionState> {
@@ -93,7 +94,6 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     constructor(props: ProductionProps) {
         super(props);
         this.state = {
-            temperature: 0,
             agitatorState: ToggleState.OFF,
             agitatorSpeed: 5,
             heatingAndStirringSwitchState: false,
@@ -112,15 +112,50 @@ class Production extends React.Component<ProductionProps, ProductionState> {
             showHopsDialog: false,
             showErrorDialog: false,
             showFinishDialog: false,
-            brewingFinished: false
+            brewingFinished: false,
+            indexOfCurrentStep: 0,
+            processSteps: []
         }
+    }
+
+    createProcessSteps(selectedBeer: Beer | undefined): ProcessStep[] {
+        let processSteps: ProcessStep[] = [];
+        if (!selectedBeer || !Array.isArray(selectedBeer.fermentation)) {
+            return processSteps;
+        }
+        const fermentation = selectedBeer.fermentation;
+        // Einmaischen finden
+        const einmaischen = fermentation.find(step => step.type === 'Einmaischen');
+        if (einmaischen) {
+            processSteps.push({ name: `Aufheizen auf Einmaischen` });
+            processSteps.push({ name: 'Einmaischen' });
+        }
+        // Rasten (außer Einmaischen und Abmaischen)
+        fermentation.forEach(step => {
+            if (step.type !== 'Einmaischen' && step.type !== 'Abmaischen') {
+                processSteps.push({ name: `Aufheizen auf ${step.type}` });
+                processSteps.push({ name: step.type });
+            }
+        });
+        // Abmaischen finden
+        const abmaischen = fermentation.find(step => step.type === 'Abmaischen');
+        if (abmaischen) {
+            processSteps.push({ name: `Aufheizen auf Abmaischen` });
+            processSteps.push({ name: 'Abmaischen' });
+        }
+        // Kochen
+        processSteps.push({ name: 'Kochen' });
+        return processSteps;
     }
 
     componentDidMount() {
         const {getTemperatures, agitatorSpeed, agitatorIsRunning, selectedBeer, checkIsBackenAvailable} = this.props;
 
         checkIsBackenAvailable();
-        if (!isUndefined(selectedBeer)) {
+        if (!isUndefined(selectedBeer))
+        {
+            const processSteps = this.createProcessSteps(selectedBeer);
+            this.setState({processSteps, indexOfCurrentStep: -1});
             this.calculateTheHopTimes();
         }
         getTemperatures();
@@ -129,7 +164,13 @@ class Production extends React.Component<ProductionProps, ProductionState> {
 
     componentDidUpdate(prevProps: Readonly<ProductionProps>, prevState: Readonly<ProductionState>) {
         const {toggleAgitator, brewingStatus,isBackenAvailable,temperature,isToggleAgitatorSuccess,isWaterFillingSuccessful} = this.props;
-        const {intervalSwitchState, mainSwitchState, waterSwitchState,heatingAndStirringSwitchState,showHopsDialog,showFinishDialog} = this.state;
+        const {intervalSwitchState, mainSwitchState, waterSwitchState,heatingAndStirringSwitchState,showHopsDialog,showFinishDialog, indexOfCurrentStep} = this.state;
+
+
+        if (prevProps.selectedBeer !== this.props.selectedBeer) {
+            const processSteps = this.createProcessSteps(this.props.selectedBeer);
+            this.setState({processSteps, indexOfCurrentStep: 0});
+        }
 
         if (prevProps.isBackenAvailable !== isBackenAvailable) {
             //todo
@@ -138,10 +179,6 @@ class Production extends React.Component<ProductionProps, ProductionState> {
             } else {
                // this.setState({showErrorDialog: false})
             }
-        }
-
-        if (prevProps.temperature !== temperature) {
-            this.setState({temperature: temperature})
         }
 
         if (!isToggleAgitatorSuccess && mainSwitchState) {
@@ -181,6 +218,13 @@ class Production extends React.Component<ProductionProps, ProductionState> {
             }
 
         }
+        if( brewingStatus?.StatusText !== prevProps?.brewingStatus?.StatusText)
+        {
+            const currentIndex = this.state.indexOfCurrentStep +1;
+            this.setState({indexOfCurrentStep:currentIndex});
+        }
+
+
         if (brewingStatus?.Type === MashingType.COOKING && !showHopsDialog) {
             this.checkForHopAddition()
         }
@@ -328,7 +372,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
 
         return (
             <div className='Flame'>
-              {brewingStatus?.HeatUpStatus === true && (
+              {brewingStatus?.HeatingStates === HeatingStates.ON && (
                     <>
                         <Flame/>
                         <Flame/>
@@ -378,9 +422,16 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     }
 
     renderTemperature() {
-        const {brewingStatus, waterStatus} = this.props;
+        const {brewingStatus, temperature} = this.props;
+        let value: number;
+        if (brewingStatus?.Temperature === undefined || Number(brewingStatus?.Temperature) === 0) {
+            value = temperature;
+        } else {
+            value = isNaN(Number(brewingStatus?.Temperature)) ? 0 : Number(brewingStatus?.Temperature);
+        }
+        const targetValue = isNaN(Number(brewingStatus?.TargetTemperature)) ? 0 : Number(brewingStatus?.TargetTemperature);
         return (<div className="Temp">
-            <Gauge showAreas={true} value={brewingStatus?.Temperature} targetValue={brewingStatus?.TargetTemperature}
+            <Gauge showAreas={true} value={value} targetValue={targetValue}
                    height={220}
                    offset={1} minValue={0} maxValue={100} label={"°C"}/>
         </div>);
@@ -460,15 +511,20 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         const infinitySymbol = '\u221E';
         const {liters} = this.state;
         const {currentAgitatorSpeed, agitatorIsRunning, agitatorSpeed, waterStatus} = this.props;
+        // Werte absichern
+        const gaugeValue = isNaN(Number(agitatorSpeed)) ? 0 : Number(agitatorSpeed);
+        const gaugeTarget = isNaN(Number(currentAgitatorSpeed)) ? 0 : Number(currentAgitatorSpeed);
+        const waterValue = isNaN(Number(waterStatus?.liters)) ? 0 : Number(waterStatus?.liters);
+        const waterTarget = isNaN(Number(liters)) ? 0 : Number(liters);
         return (<div className="Agitator">
 
             <div className="GaugeContainer">
-                <Gauge showAreas={true} value={agitatorSpeed} targetValue={currentAgitatorSpeed} height={200} offset={1}
+                <Gauge showAreas={true} value={gaugeValue} targetValue={gaugeTarget} height={200} offset={1}
                        minValue={0}
                        maxValue={this.MAX_AGITATOR_SPEED} label={infinitySymbol}/>
             </div>
             <div className="GaugeContainer">
-                <Gauge showAreas={false} value={waterStatus?.liters} targetValue={liters} height={200}
+                <Gauge showAreas={false} value={waterValue} targetValue={waterTarget} height={200}
                        offset={0.5} minValue={0} maxValue={this.MAX_WATER_LEVEL} label={"Liter"}/>
             </div>
         </div>);
@@ -490,10 +546,9 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         const {brewingStatus} = this.props;
         let statusText = '';
         if (!isUndefined(brewingStatus)) {
-            if (brewingStatus.WaitingStatus) {
                 statusText = TextMapper.mapToText(brewingStatus?.StatusText);
-            }
-                if(brewingStatus.HeatUpStatus && brewingStatus.Type !== MashingType.COOKING){
+
+                if(brewingStatus?.HeatingStates === HeatingStates.ON){
                     return (
                         <div className="container mt-4">
                             <h3 className='progressLabel'>{brewingStatus.Name}</h3>
@@ -590,18 +645,11 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     }
 
     renderProcessList() {
-        const { selectedBeer } = this.props;
-        let processSteps: ProcessStep[] = [];
-        if (selectedBeer && Array.isArray(selectedBeer.fermentation)) {
-            selectedBeer.fermentation.forEach((step) => {
-                processSteps.push({ name: `Aufheizen auf ${step.type}` });
-                processSteps.push({ name: step.type });
-            });
-        }
-        processSteps.push({ name: 'Kochen' });
-        const currentStepIndex = 14; // Das kannst du dynamisch aus dem Status holen!
+        const { processSteps } = this.state;
+        const {indexOfCurrentStep} = this.state;
+
         return (
-            <ProcessList steps={processSteps} currentStepIndex={currentStepIndex} onNextStep={this.props.nextProcedureStep} />
+            <ProcessList steps={processSteps} currentStepIndex={indexOfCurrentStep} onNextStep={this.props.nextProcedureStep} />
         )
     }
 

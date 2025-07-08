@@ -149,7 +149,7 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                                             Alkohol
                                         </TableSortLabel>
                                     </TableCell>
-                                    <TableCell>
+                                    <TableCell className="table-header-cell">
                                         Aktion
                                     </TableCell>
                                 </TableRow>
@@ -164,34 +164,40 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                                         <TableCell className="table-cell">{item.color}</TableCell>
                                         <TableCell className="table-cell">{item.alcohol}</TableCell>
                                         <TableCell className="table-cell">
-                                            <button
-                                                className="select-btn"
-                                                onClick={e => {
-                                                    e.stopPropagation();
-                                                    this.handleExportShoppingListPdfForBeer(item);
-                                                }}
-                                            >
-                                                Einkaufsliste
-                                            </button>
-                                            <button
-                                                className="select-btn"
-                                                onClick={e => {
-                                                    e.stopPropagation();
-                                                    if (beerToBrew && beerToBrew.id === item.id) {
-                                                        if (!this.props.isPollingRunning) {
-                                                            this.onCancelBrew();
+                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                                <button
+                                                    className="select-btn"
+                                                    onClick={e => {
+                                                        e.stopPropagation();
+                                                        this.handleExportShoppingListPdfForBeer(item);
+                                                    }}
+                                                    title="Einkaufsliste"
+                                                >
+                                                    <span role="img" aria-label="Einkaufsliste" style={{fontSize: '1.2rem'}}>🛒</span>
+                                                </button>
+                                                <button
+                                                    className="select-btn"
+                                                    onClick={e => {
+                                                        e.stopPropagation();
+                                                        if (beerToBrew && beerToBrew.id === item.id) {
+                                                            if (!this.props.isPollingRunning) {
+                                                                this.onCancelBrew();
+                                                            }
+                                                        } else {
+                                                            this.onBrewBeer(item);
                                                         }
-                                                    } else {
-                                                        this.onBrewBeer(item);
+                                                    }}
+                                                    disabled={
+                                                        (!!beerToBrew && beerToBrew.id !== item.id) ||
+                                                        (beerToBrew && beerToBrew.id === item.id && isPollingRunning)
                                                     }
-                                                }}
-                                                disabled={
-                                                    (!!beerToBrew && beerToBrew.id !== item.id) ||
-                                                    (beerToBrew && beerToBrew.id === item.id && isPollingRunning)
-                                                }
-                                            >
-                                                {beerToBrew && beerToBrew.id === item.id ? 'Abbrechen' : 'Brauen'}
-                                            </button>
+                                                    title={beerToBrew && beerToBrew.id === item.id ? 'Abbrechen' : 'Brauen'}
+                                                >
+                                                    <span role="img" aria-label={beerToBrew && beerToBrew.id === item.id ? 'Abbrechen' : 'Brauen'} style={{fontSize: '1.2rem'}}>
+                                                        {beerToBrew && beerToBrew.id === item.id ? '✖️' : '🍺'}
+                                                    </span>
+                                                </button>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))}

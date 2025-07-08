@@ -87,7 +87,6 @@ export const sendBrewingDataEpic$ = (action$: any) =>
                       if (available?.isBackenAvailable && brewingStatus !== undefined) {
                         return [
                           ProductionActions.setBrewingStatus(brewingStatus),
-                          ProductionActions.isBackenAvailable(available)
                         ];
                       } else {
                         return [ProductionActions.isBackenAvailable(available)];
@@ -124,7 +123,7 @@ export const checkIsBackendAvailableEpic$ = (action$: any) =>
   action$.pipe(
     ofType(ProductionActions.ActionTypes.CHECK_IS_BACKEND_AVAILABLE),
     switchMap(() =>
-      timer(0, 10000).pipe(
+      timer(0, 20000).pipe(
         switchMap((attempt) => {
           return from(ProductionRepository.checkIsBackendAvailable()).pipe(
             map((result) => ({ result, isAvailable: result.isBackenAvailable })),

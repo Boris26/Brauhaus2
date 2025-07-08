@@ -110,9 +110,6 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
     }
 
     handleFermentationStepChange = (value: string, name: string, index: number) => {
-       if (value === 'Rast') {
-            value = value + index;
-       }
        this.setState((prevState) => {
           const fermentationSteps = [...prevState.fermentationSteps];
           const step = fermentationSteps[index];
@@ -265,9 +262,15 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
     };
 
     addFermentationStep = () => {
-        this.setState((prevState) => ({
-            fermentationSteps: [...prevState.fermentationSteps, { type: '', temperature: 0, time: 0 }],
-        }));
+        this.setState((prevState) => {
+            const rastCount = prevState.fermentationSteps.filter((s) => !Object.values(MashingType).includes(s.type as MashingType) || s.type === '').length + 1;
+            return {
+                fermentationSteps: [
+                    ...prevState.fermentationSteps,
+                    { type: `Rast ${rastCount}`, temperature: 0, time: 0 }
+                ],
+            };
+        });
     };
 
     addMalts = () => {
@@ -477,38 +480,42 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {fermentationSteps?.map((step, index) => (
-                                        <tr key={index}>
-                                            <td>
-                                                <select name="type" value={step.type} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={false}>
-                                                    <option value="">Typ</option>
-                                                    {Object.values(MashingType).map((mashingType) => (
-                                                        <option key={mashingType} value={mashingType}>
-                                                            {mashingType}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </td>
-                                            <td>
-                                                <input type="number" name="temperature" value={step.temperature} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />
-                                            </td>
-                                            <td>
-                                                <input type="number" name="time" value={step.time} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />
-                                            </td>
-                                            <td className="action-column">
-                                                {index > 0 && (
-                                                    <button
-                                                        type="button"
-                                                        className="cancel-btn"
-                                                        onClick={() => this.removeFermentationStep(index)}
-                                                        title="Löschen"
-                                                    >
-                                                        <span role="img" aria-label="Löschen" style={{ fontSize: 22, verticalAlign: 'middle', display: 'inline-block', position: 'relative', top: '3px' }}>🗑️</span>
-                                                    </button>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {fermentationSteps?.map((step, index) => {
+                                        // Zähle nur die Rasten (leere oder nicht im Enum MashingType enthalten)
+                                        const rastCount = fermentationSteps.slice(0, index + 1).filter((s) => !Object.values(MashingType).includes(s.type as MashingType) || s.type === '').length;
+                                        return (
+                                            <tr key={index}>
+                                                <td>
+                                                    <select name="type" value={step.type} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={false}>
+                                                        <option value="">Rast {rastCount}</option>
+                                                        {Object.values(MashingType).map((mashingType) => (
+                                                            <option key={mashingType} value={mashingType}>
+                                                                {mashingType}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </td>
+                                                <td>
+                                                    <input type="number" name="temperature" value={step.temperature} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />
+                                                </td>
+                                                <td>
+                                                    <input type="number" name="time" value={step.time} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />
+                                                </td>
+                                                <td className="action-column">
+                                                    {index > 0 && (
+                                                        <button
+                                                            type="button"
+                                                            className="cancel-btn"
+                                                            onClick={() => this.removeFermentationStep(index)}
+                                                            title="Löschen"
+                                                        >
+                                                            <span role="img" aria-label="Löschen" style={{ fontSize: 22, verticalAlign: 'middle', display: 'inline-block', position: 'relative', top: '3px' }}>🗑️</span>
+                                                        </button>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>

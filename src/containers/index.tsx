@@ -34,32 +34,45 @@ class Index extends React.Component<indexMainProps> {
         }
     }
 
-    confirmDialog = (content: string) => {
-        const {confirm} = this.props
-        switch (content) {
-            case 'Einmaischen, bitte abschliessen' : {
-                confirm(ConfirmStates.MASHUP);
+    confirmDialog = () => {
+        const {confirm, brewingStatus} = this.props;
+        switch (brewingStatus?.Type) {
+            case 'Einmaischen':
+                confirm(ConfirmStates.WAITING);
                 break;
-            }
-            case 'Bitte Jod Test durchführen!' : {
-                confirm(ConfirmStates.IODINE);
+            case 'IODINE':
+                confirm(ConfirmStates.WAITING);
                 break;
-            }
-            case 'Kann der Koch Prozess gestartet werden?' : {
-                confirm(ConfirmStates.COOKING);
+            case 'COOKING':
+                confirm(ConfirmStates.WAITING);
                 break;
-            }
-            case 'Bitte Bestätigen wenn Wasser Kocht!' : {
-                confirm(ConfirmStates.BOILING);
+            case 'BOILING':
+                confirm(ConfirmStates.WAITING);
                 break;
-            }
+            default:
+                break;
         }
+    }
 
+    getDialogMessage() {
+        const {brewingStatus} = this.props;
+        switch (brewingStatus?.Type) {
+            case 'Einmaischen':
+                return 'Einmaischen, bitte abschließen';
+            case 'IODINE':
+                return 'Bitte Jod Test durchführen!';
+            case 'COOKING':
+                return 'Kann der Koch Prozess gestartet werden?';
+            case 'BOILING':
+                return 'Bitte bestätigen, wenn Wasser kocht!';
+            default:
+                return '';
+        }
     }
 
     showDialog() {
         const {brewingStatus} = this.props;
-        const message = TextMapper.mapToText(brewingStatus?.StatusText);
+        const message = this.getDialogMessage();
         return (
             <div>
                 <ModalDialog

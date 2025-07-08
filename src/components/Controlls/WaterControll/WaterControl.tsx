@@ -1,6 +1,5 @@
 import React from 'react';
 import './WaterControll.css';
-import rührwerk from '../../../assets/rührwerk.png';
 import { ToggleState } from "../../../enums/eToggleState";
 
 export interface WaterStatus {
@@ -37,7 +36,7 @@ class WaterControl extends React.Component<WaterControllProps, WaterControllStat
                     this.agitatorRef.current.style.left = '50%'; // Zurück zur Mitte verschieben
                 } else if (this.state.isAnimating && this.agitatorRef.current) {
                     const agitatorSpeed = this.props.agitatorSpeed;
-                    const agitatorAnimationSpeed = this.state.isAnimating ? 60 / agitatorSpeed : 0;
+                    const agitatorAnimationSpeed = this.state.isAnimating ? 60 / agitatorSpeed : 20;
                     this.agitatorRef.current.style.animation = `spin ${agitatorAnimationSpeed}s linear infinite`; // Animation neu starten
                 }
             });
@@ -45,9 +44,9 @@ class WaterControl extends React.Component<WaterControllProps, WaterControllStat
     }
 
     render() {
-        const { liters, agitatorSpeed } = this.props;
-        const { isAnimating } = this.state;
-        const agitatorAnimationSpeed = isAnimating ? 60 / agitatorSpeed : 0;
+        const { liters } = this.props;
+        const isAnimating = this.state.isAnimating;
+        const agitatorAnimationSpeed = 30; // Speed immer auf 30 gesetzt
         const waterLevel = (liters / 70) * 100;
         const scaleItems = [];
         for (let i = 70; i >= 0; i--) {
@@ -68,14 +67,26 @@ class WaterControl extends React.Component<WaterControllProps, WaterControllStat
                 <div className="water-level" style={{ height: `${waterLevel}%` }}>
                     <div className="waves" />
                 </div>
-                <div className="agitator" ref={this.agitatorRef} style={{ position: 'absolute', bottom: '15px', left: '50%', transform: 'translateX(-50%)', animation: isAnimating ? `spin ${agitatorAnimationSpeed}s linear infinite` : 'none' }}>
-                    {/* Hier fügen wir das animierte PNG-Bild ein */}
+                <div className="agitator" ref={this.agitatorRef} style={{
+                    position: 'absolute',
+                    bottom: '15px',
+                    left: '50%',
+                    transform: 'translate(-50%, 0)', // Korrigiert: zentriert exakt horizontal
+                    width: '80px',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'flex-end',
+                }}>
+                    {/* Animation direkt auf das Bild anwenden */}
                     <img
-                        src="rührwerk.png"
+                        src={process.env.PUBLIC_URL + '/rührwerk.png'}
                         alt="Wasser"
                         style={{
                             width: '80px',
                             height: '80px',
+                            animation: isAnimating && agitatorAnimationSpeed > 0 ? `spin ${agitatorAnimationSpeed}s linear infinite` : 'none',
+                            display: 'block',
+                            margin: '0 auto',
                         }}
                     />
                 </div>
