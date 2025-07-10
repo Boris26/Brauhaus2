@@ -356,7 +356,70 @@ function mapForeignJsonToBeer(json: any, maltsList: Malt[], hopsList: Hop[], yea
     };
 }
 
+// Neues Format von www.maischemalzundmehr.de erkennen
+function mapMaischeMalzundMehrJsonToBeer(json: any, maltsList: Malt[], hopsList: Hop[], yeastsList: Yeast[]): Beer {
+    // Malze
+    const malts: Malt[] = (json.Malze || []).map((m: any) => {
+        const maltObj = maltsList.find((ml) => ml.name === m.Name);
+        return {
+            id: maltObj?.id || '',
+            name: m.Name,
+            description: maltObj?.description || '',
+            EBC: maltObj?.EBC || 0,
+            quantity: Number(m.Menge) * (m.Einheit === 'kg' ? 1000 : 1)
+        };
+    });
+    // Hopfen
+    const hops: Hop[] = (json.Hopfenkochen || []).map((h: any) => {
+        const hopObj = hopsList.find((hl) => hl.name === h.Sorte);
+        return {
+            id: hopObj?.id || '',
+            name: h.Sorte,
+            description: hopObj?.description || '',
+            alpha: h.Alpha || hopObj?.alpha || 0,
+            quantity: Number(h.Menge) || 0,
+            time: Number(h.Zeit) || 0
+        };
+    });
+    // Hefe
+    const yeastObj = yeastsList.find((y) => y.name === json.Hefe);
+    const yeasts: Yeast[] = yeastObj ? [yeastObj] : [{ id: '', name: json.Hefe, description: '', type: '', quantity: 0, EVG: '', temperature: '' }];
+    // Rasten
+    const fermentation = (json.Rasten || []).map((r: any) => ({
+        type: 'Rast',
+        temperature: Number(r.Temperatur) || 0,
+        time: Number(r.Zeit) || 0
+    }));
+    return {
+        id: '',
+        name: json.Name || '',
+        type: json.Sorte || '',
+        color: json.Farbe ? String(json.Farbe) : '',
+        alcohol: Number(json.Alkohol) || 0,
+        originalwort: Number(json.Stammwuerze) || 0,
+        bitterness: Number(json.Bittere) || 0,
+        description: json.Kurzbeschreibung || '',
+        rating: 0,
+        mashVolume: Number(json.Hauptguss) || 0,
+        spargeVolume: Number(json.Nachguss) || 0,
+        cookingTime: Number(json.Kochzeit_Wuerze) || 0,
+        cookingTemperatur: 100,
+        fermentation,
+        malts,
+        wortBoiling: { totalTime: Number(json.Kochzeit_Wuerze) || 0, hops },
+        fermentationMaturation: {
+            fermentationTemperature: typeof json.Gaertemperatur === 'string' ? json.Gaertemperatur : Number(json.Gaertemperatur) || 0,
+            carbonation: Number(json.Karbonisierung) || 0,
+            yeast: yeasts
+        }
+    };
+}
+
 export function mapImportedJsonToBeer(json: any, maltsList: Malt[], hopsList: Hop[], yeastsList: Yeast[]): Beer {
+    // Neues Format von www.maischemalzundmehr.de erkennen
+    if (Array.isArray(json.Malze)) {
+        return mapMaischeMalzundMehrJsonToBeer(json, maltsList, hopsList, yeastsList);
+    }
     // Wenn das JSON bereits ein Beer-Objekt ist (z.B. Export aus der App), parse nur die Typen korrekt
     if (json.malts && json.wortBoiling && json.fermentationMaturation && json.fermentation) {
         return mapBeerObjectToBeer(json);

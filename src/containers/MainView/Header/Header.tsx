@@ -4,17 +4,53 @@ import './Header.css';
 import {Views} from "../../../enums/eViews";
 import {ApplicationActions, BeerActions} from "../../../actions/actions";
 import setViewState = ApplicationActions.setViewState;
+import StatusDisplay from './StatusDisplay';
 
 
 
 interface HeaderProps {
     setViewState: (viewState: Views) => void;
-    currentView: Views; // Hinzufügen des aktuellen Views als Prop
+    currentView: Views;
 }
 
-class Header extends React.Component<HeaderProps> {
+interface HeaderState {
+    currentTime: string;
+    currentDate: string;
+}
+
+class Header extends React.Component<HeaderProps, HeaderState> {
     private timer: NodeJS.Timer | undefined;
 
+    constructor(props: HeaderProps) {
+        super(props);
+        this.state = {
+            currentTime: this.getCurrentTimeString(),
+            currentDate: this.getCurrentDateString(),
+        };
+    }
+
+    componentDidMount() {
+        this.timer = setInterval(() => {
+            this.setState({
+                currentTime: this.getCurrentTimeString(),
+                currentDate: this.getCurrentDateString(),
+            });
+        }, 1000);
+    }
+
+    componentWillUnmount() {
+        if (this.timer) clearInterval(this.timer);
+    }
+
+    getCurrentTimeString = () => {
+        const now = new Date();
+        return now.toLocaleTimeString('de-DE', { hour12: false });
+    }
+
+    getCurrentDateString = () => {
+        const now = new Date();
+        return now.toLocaleDateString('de-DE');
+    }
 
     handleIconClick = (viewState: Views) => {
         const{setViewState} = this.props;
@@ -27,9 +63,15 @@ class Header extends React.Component<HeaderProps> {
     }
 
     render() {
+        // Beispielwerte für Backend-Status und Nachrichten
+        const backendStatus = 'Online'; // Hier später dynamisch aus State/Props
+        const messages = ['Info 1', 'Warnung 2']; // Beispielhafte Nachrichten
         return (
             <div className="Header">
-                <h1>Brauhaus</h1>
+                <div className="header-left">
+                  <h1>Brauhaus</h1>
+                  <StatusDisplay backendStatus={backendStatus} messages={messages} />
+                </div>
                 <div className="icons-container">
                     <img
                         src="beer.png"
@@ -74,6 +116,10 @@ class Header extends React.Component<HeaderProps> {
                         title="Zutaten verwalten"
                     />
                 </div>
+                <span className="time">
+                  <span>{this.state.currentDate}</span>
+                  <span>{this.state.currentTime}</span>
+                </span>
             </div>
 
         );

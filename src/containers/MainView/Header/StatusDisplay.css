@@ -1,0 +1,24 @@
+.status-display {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  font-size: 0.95rem;
+  margin-left: 1.5rem;
+  color: #333;
+}
+
+.backend-status {
+  font-weight: bold;
+  color: #388e3c;
+}
+
+.messages {
+  margin-top: 0.25rem;
+}
+
+.message {
+  color: #b26a00;
+  font-size: 0.92rem;
+  margin-bottom: 0.1rem;
+}
+
