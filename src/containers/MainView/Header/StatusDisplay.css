@@ -1,24 +1,85 @@
 .status-display {
   display: flex;
   flex-direction: column;
+  justify-content: center;
   align-items: flex-start;
-  font-size: 0.95rem;
-  margin-left: 1.5rem;
+  font-size: 0.92rem;
   color: #333;
+  background: linear-gradient(180deg, #ffe0b2 60%, #ffb74d 100%);
+  border: 2px inset #b26a00;
+  border-radius: 0.6rem;
+  box-shadow: 0 2px 6px rgba(180,106,0,0.10) inset, 0 1px 0 #fff;
+  padding-top: 0.1rem;
+  padding-bottom: 0.1rem;
+  padding-left: 5px;
+  padding-top: 5px;
+  height: 70px;
+  width: 350px;
+  left: 10px;
 }
 
 .backend-status {
   font-weight: bold;
   color: #388e3c;
+  margin-bottom: 0.08rem;
+  background: transparent;
+  z-index: 2;
+  font-size: 0.95rem;
+  line-height: 1.1;
+  padding: 0 0 0.05rem 0;
+}
+
+.backend-status-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 0.3rem;
+  justify-content: space-between;
+}
+
+.close-x {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #b26a00;
+  background: #fff3e0;
+  border-radius: 50%;
+  border: 1px solid #ffb74d;
+  cursor: pointer;
+  margin-right: 3px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.close-x:hover {
+  background: #ffb74d;
+  color: #fff;
 }
 
 .messages {
-  margin-top: 0.25rem;
+  margin-top: 0.1rem;
+  max-height: 48px;
+  overflow-y: auto;
+  width: 100%;
+  background: transparent;
+  scrollbar-width: none;
+}
+
+.messages::-webkit-scrollbar {
+  display: none;
 }
 
 .message {
   color: #b26a00;
   font-size: 0.92rem;
-  margin-bottom: 0.1rem;
+  margin-bottom: 0.03rem;
 }
 
+.message-row {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}

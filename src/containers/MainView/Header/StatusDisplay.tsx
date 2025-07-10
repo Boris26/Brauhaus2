@@ -4,20 +4,28 @@ import './StatusDisplay.css';
 interface StatusDisplayProps {
   backendStatus: string;
   messages?: string[];
+  onDeleteMessage?: (index: number) => void;
 }
 
 interface StatusDisplayState {}
 
 class StatusDisplay extends React.Component<StatusDisplayProps, StatusDisplayState> {
   render() {
-    const { backendStatus, messages } = this.props;
+    const { backendStatus, messages, onDeleteMessage } = this.props;
     return (
       <div className="status-display">
-        <div className="backend-status">Backend: {backendStatus}</div>
+        <div className="backend-status-row">
+          <span className="backend-status">Backend: {backendStatus}</span>
+          <span className="close-x" title="Alle Nachrichten löschen" onClick={() => onDeleteMessage && onDeleteMessage(-1)}>
+            ×
+          </span>
+        </div>
         {messages && messages.length > 0 && (
           <div className="messages">
             {messages.map((msg, idx) => (
-              <div className="message" key={idx}>{msg}</div>
+              <div className="message-row" key={idx}>
+                <span className="message">{msg}</span>
+              </div>
             ))}
           </div>
         )}

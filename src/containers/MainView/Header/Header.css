@@ -4,17 +4,37 @@
   position: relative;
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
-  margin-top: 1.75rem;
-  padding: 0 1rem;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 1.2rem;
+  margin-right: auto;
 }
+
+.header-status {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: flex-end;
+  width: auto;
+  gap: 0.5rem;
+  margin-left: auto;
+  margin-top: 0;
+  height: 100%;
+  margin-right: 1.5rem;
+}
+
+.status-display-wrapper {
+  display: flex;
+  align-items: flex-start;
+  /* Abstand zum oberen Rand nur für StatusDisplay */
+  margin-top: 5px;
+}
+
+
 
 h1 {
   font-size: 1.25rem;
@@ -29,25 +49,23 @@ h1 {
   text-align: center;
   font-size: 1rem; /* Änderung von 10px auf 0.625rem */
   color: #000000;
-  position: absolute;
-  right: 10px;
-  transform: translateY(-50%);
+  position: static;
   margin-right: 0;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   justify-content: center;
   height: 100%;
-  top: 20%;
 }
 
 .icons-container {
   position: absolute;
   left: 1.25rem; /* Änderung von 20px auf 1.25rem */
-  top: 50%;
-  transform: translateY(-50%);
+  bottom: 0;
+  top: 70px;
+  transform: none;
   display: flex; /* Flexbox für die Tab-Anordnung */
-  align-items: center;
+  align-items: flex-end;
 }
 
 .icon {
@@ -90,30 +108,4 @@ h1 {
 .icon:not(.active) {
   color: #b26a00;
   filter: none;
-}
-
-.status-display {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  font-size: 0.92rem;
-  margin-left: 0.5rem;
-  color: #333;
-  min-width: 110px;
-}
-
-.backend-status {
-  font-weight: bold;
-  color: #388e3c;
-  font-size: 0.95rem;
-}
-
-.messages {
-  margin-top: 0.1rem;
-}
-
-.message {
-  color: #b26a00;
-  font-size: 0.9rem;
-  margin-bottom: 0.05rem;
 }

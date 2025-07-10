@@ -70,7 +70,6 @@ class Header extends React.Component<HeaderProps, HeaderState> {
             <div className="Header">
                 <div className="header-left">
                   <h1>Brauhaus</h1>
-                  <StatusDisplay backendStatus={backendStatus} messages={messages} />
                 </div>
                 <div className="icons-container">
                     <img
@@ -116,10 +115,15 @@ class Header extends React.Component<HeaderProps, HeaderState> {
                         title="Zutaten verwalten"
                     />
                 </div>
-                <span className="time">
-                  <span>{this.state.currentDate}</span>
-                  <span>{this.state.currentTime}</span>
-                </span>
+                <div className="header-status">
+                  <div className="status-display-wrapper">
+                    <StatusDisplay backendStatus={backendStatus} messages={messages} />
+                  </div>
+                  <div className="time">
+                    <span>{this.state.currentDate}</span>
+                    <span>{this.state.currentTime}</span>
+                  </div>
+                </div>
             </div>
 
         );
