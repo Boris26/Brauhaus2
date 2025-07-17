@@ -11,6 +11,9 @@ import StatusDisplay from './StatusDisplay';
 interface HeaderProps {
     setViewState: (viewState: Views) => void;
     currentView: Views;
+    messages?: string[];
+    removeAllMessages: () => void;
+    backendStatus: string;
 }
 
 interface HeaderState {
@@ -63,9 +66,8 @@ class Header extends React.Component<HeaderProps, HeaderState> {
     }
 
     render() {
-        // Beispielwerte für Backend-Status und Nachrichten
-        const backendStatus = 'Online'; // Hier später dynamisch aus State/Props
-        const messages = ['Info 1', 'Warnung 2']; // Beispielhafte Nachrichten
+       const { messages = [] , removeAllMessages, backendStatus} = this.props; // Default-Wert für messages ist ein leeres Array
+
         return (
             <div className="Header">
                 <div className="header-left">
@@ -117,7 +119,7 @@ class Header extends React.Component<HeaderProps, HeaderState> {
                 </div>
                 <div className="header-status">
                   <div className="status-display-wrapper">
-                    <StatusDisplay backendStatus={backendStatus} messages={messages} />
+                    <StatusDisplay backendStatus={backendStatus} messages={messages} disableScrollAnimation={true} removeAllMessages={removeAllMessages}/>
                   </div>
                   <div className="time">
                     <span>{this.state.currentDate}</span>
@@ -133,10 +135,13 @@ class Header extends React.Component<HeaderProps, HeaderState> {
 const mapStateToProps = (state: any) => ({
     currentTime: state.applicationReducer.currentTime,
     currentView: state.applicationReducer.view,
+    messages: state.applicationReducer.message,
+    backendStatus: state.applicationReducer.isBackenAvailable ? 'Online' : 'Offline',
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
     setViewState: (viewState: Views) => dispatch(setViewState(viewState)),
+    removeAllMessages: () => dispatch(ApplicationActions.removeMessage()),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Header);

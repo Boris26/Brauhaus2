@@ -38,9 +38,9 @@ export const initialProductionState: ProductionReducerState = {
     isToggleAgitatorSuccess: true,
     brewingStatus: undefined,
     confirmState: undefined,
-    isBackenAvailable: { isBackenAvailable: true, statusText: '' },
+    isBackenAvailable: { isBackenAvailable: false, statusText: '' },
     waterStatus: { liters: 0, openClose: false },
-    isPollingRunning: false,
+    isPollingRunning: false
 };
 
 const productionReducer = (

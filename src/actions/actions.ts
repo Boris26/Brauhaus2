@@ -51,6 +51,10 @@ export namespace BeerActions {
         GENERATE_SHOPPING_LIST_PDF_SUCCESS = 'BeerActions.GENERATE_SHOPPING_LIST_PDF_SUCCESS',
         GENERATE_SHOPPING_LIST_PDF_FAILURE = 'BeerActions.GENERATE_SHOPPING_LIST_PDF_FAILURE',
         IMPORT_BEER = 'BeerActions.IMPORT_BEER',
+        SET_IMPORTED_BEER = 'BeerActions.SET_IMPORTED_BEER',
+        SET_UNKNOWN_MALTS = 'BeerActions.SET_UNKNOWN_MALTS',
+        SET_UNKNOWN_HOPS = 'BeerActions.SET_UNKNOWN_HOPS',
+        SET_UNKNOWN_YEASTS = 'BeerActions.SET_UNKNOWN_YEASTS'
     }
 
     export interface GetBeers {
@@ -133,7 +137,6 @@ export namespace BeerActions {
     }
 
 
-
     export interface GetMalts {
         readonly type: ActionTypes.GET_MALTS
         payload: {
@@ -180,7 +183,6 @@ export namespace BeerActions {
     }
 
 
-
     export interface SetSelectedBeer {
         readonly type: ActionTypes.SET_SELECTED_BEER
         payload: { beer: Beer }
@@ -205,6 +207,7 @@ export namespace BeerActions {
             isFetching: boolean
         }
     }
+
     export interface GetFinishedBeersSuccess {
         readonly type: ActionTypes.GET_FINISHED_BEERS_SUCCESS
         payload: {
@@ -257,20 +260,25 @@ export namespace BeerActions {
         readonly type: ActionTypes.GENERATE_FINISHED_BREWS_PDF;
         payload: { finishedBrews: FinishedBrew[] };
     }
+
     export interface GenerateFinishedBrewsPdfSuccess {
         readonly type: ActionTypes.GENERATE_FINISHED_BREWS_PDF_SUCCESS;
     }
+
     export interface GenerateFinishedBrewsPdfFailure {
         readonly type: ActionTypes.GENERATE_FINISHED_BREWS_PDF_FAILURE;
         payload: { error: any };
     }
+
     export interface GenerateShoppingListPdf {
         readonly type: ActionTypes.GENERATE_SHOPPING_LIST_PDF;
         payload: { beer: Beer };
     }
+
     export interface GenerateShoppingListPdfSuccess {
         readonly type: ActionTypes.GENERATE_SHOPPING_LIST_PDF_SUCCESS;
     }
+
     export interface GenerateShoppingListPdfFailure {
         readonly type: ActionTypes.GENERATE_SHOPPING_LIST_PDF_FAILURE;
         payload: { error: any };
@@ -280,6 +288,34 @@ export namespace BeerActions {
         readonly type: ActionTypes.IMPORT_BEER;
         payload: {
             file: File;
+        }
+    }
+
+    export interface SetImportedBeer {
+        readonly type: ActionTypes.SET_IMPORTED_BEER;
+        payload: {
+            importedBeer: Beer | null;
+        }
+    }
+
+    export interface SetUnknownMalts {
+        readonly type: ActionTypes.SET_UNKNOWN_MALTS;
+        payload: {
+            unknownMalts: string[];
+        }
+    }
+
+    export interface SetUnknownHops {
+        readonly type: ActionTypes.SET_UNKNOWN_HOPS;
+        payload: {
+            unknownHops: string[];
+        }
+    }
+
+    export interface SetUnknownYeasts {
+        readonly type: ActionTypes.SET_UNKNOWN_YEASTS;
+        payload: {
+            unknownYeasts: string[];
         }
     }
 
@@ -302,12 +338,12 @@ export namespace BeerActions {
         GetHopsSuccess |
         GetYeastsSuccess |
         SetIsSubmitSuccessful |
-        SetSelectedBeer|
-        SetBeerToBrew|
+        SetSelectedBeer |
+        SetBeerToBrew |
         UpdateActiveBeer |
         GetFinishedBeers |
         GetFinishedBeersSuccess |
-        DeleteFinishedBeer|
+        DeleteFinishedBeer |
         DeleteFinishedBeerSuccess |
         AddFinishedBrew |
         UpdateFinishedBrewSuccess |
@@ -318,7 +354,11 @@ export namespace BeerActions {
         GenerateFinishedBrewsPdfFailure |
         GenerateShoppingListPdf |
         GenerateShoppingListPdfSuccess |
-        GenerateShoppingListPdfFailure;
+        GenerateShoppingListPdfFailure |
+        SetImportedBeer |
+        SetUnknownMalts |
+        SetUnknownHops |
+        SetUnknownYeasts;
 
 
     export function isSubmitSuccessful(aIsSuccessful: boolean, aMessage: string, aType: string): SetIsSubmitSuccessful {
@@ -457,35 +497,40 @@ export namespace BeerActions {
     export function generateFinishedBrewsPdf(finishedBrews: FinishedBrew[]): GenerateFinishedBrewsPdf {
         return {
             type: ActionTypes.GENERATE_FINISHED_BREWS_PDF,
-            payload: { finishedBrews }
+            payload: {finishedBrews}
         };
     }
+
     export function generateFinishedBrewsPdfSuccess(): GenerateFinishedBrewsPdfSuccess {
         return {
             type: ActionTypes.GENERATE_FINISHED_BREWS_PDF_SUCCESS
         };
     }
+
     export function generateFinishedBrewsPdfFailure(error: any): GenerateFinishedBrewsPdfFailure {
         return {
             type: ActionTypes.GENERATE_FINISHED_BREWS_PDF_FAILURE,
-            payload: { error }
+            payload: {error}
         };
     }
+
     export function generateShoppingListPdf(beer: Beer): GenerateShoppingListPdf {
         return {
             type: ActionTypes.GENERATE_SHOPPING_LIST_PDF,
-            payload: { beer }
+            payload: {beer}
         };
     }
+
     export function generateShoppingListPdfSuccess(): GenerateShoppingListPdfSuccess {
         return {
             type: ActionTypes.GENERATE_SHOPPING_LIST_PDF_SUCCESS
         };
     }
+
     export function generateShoppingListPdfFailure(error: any): GenerateShoppingListPdfFailure {
         return {
             type: ActionTypes.GENERATE_SHOPPING_LIST_PDF_FAILURE,
-            payload: { error }
+            payload: {error}
         };
     }
 
@@ -502,6 +547,7 @@ export namespace BeerActions {
             payload: {isFetching: aIsFetching}
         }
     }
+
     export function getFinishedBeersSuccess(aFinishedBeers: FinishedBrew[] | null): GetFinishedBeersSuccess {
         return {
             type: BeerActions.ActionTypes.GET_FINISHED_BEERS_SUCCESS,
@@ -526,28 +572,28 @@ export namespace BeerActions {
     export function addFinishedBrew(finishedBrew: FinishedBrew): AddFinishedBrew {
         return {
             type: ActionTypes.ADD_FINISHED_BREW,
-            payload: { finishedBrew }
+            payload: {finishedBrew}
         };
     }
 
     export function updateFinishedBrewSuccess(beer: FinishedBrew): UpdateFinishedBrewSuccess {
         return {
             type: ActionTypes.UPDATE_FINISHED_BREW_SUCCESS,
-            payload: { beer }
+            payload: {beer}
         };
     }
 
     export function saveBeerFormState(formState: any): SaveBeerFormState {
         return {
             type: ActionTypes.SAVE_BEER_FORM_STATE,
-            payload: { formState }
+            payload: {formState}
         }
     }
 
     export function loadBeerFormState(formState: any): LoadBeerFormState {
         return {
             type: ActionTypes.LOAD_BEER_FORM_STATE,
-            payload: { formState }
+            payload: {formState}
         }
     }
 
@@ -578,15 +624,44 @@ export namespace BeerActions {
     export function importBeer(file: File): ImportBeer {
         return {
             type: ActionTypes.IMPORT_BEER,
-            payload: { file }
+            payload: {file}
         };
     }
-}
 
+    export function setImportedBeer(importedBeer: Beer | null): SetImportedBeer {
+        return {
+            type: ActionTypes.SET_IMPORTED_BEER,
+            payload: {importedBeer}
+        }
+    }
+
+    export function setUnknownMalts(unknownMalts: string[]): SetUnknownMalts {
+        return {
+            type: ActionTypes.SET_UNKNOWN_MALTS,
+            payload: {unknownMalts}
+        }
+    }
+
+    export function setUnknownHops(unknownHops: string[]): SetUnknownHops {
+        return {
+            type: ActionTypes.SET_UNKNOWN_HOPS,
+            payload: {unknownHops}
+        }
+    }
+
+    export function setUnknownYeasts(unknownYeasts: string[]): SetUnknownYeasts {
+        return {
+            type: ActionTypes.SET_UNKNOWN_YEASTS,
+            payload: {unknownYeasts}
+        }
+    }
+}
 export namespace ApplicationActions {
     export enum ActionTypes {
         SET_VIEW = 'ApplicationActions.SET_VIEW',
         OPEN_ERROR_DIALOG = 'ApplicationActions.OPEN_ERROR_DIALOG',
+        SET_MESSAGE = 'ApplicationActions.SET_MESSAGE',
+        REMOVE_MESSAGE = 'ApplicationActions.REMOVE_MESSAGE',
     }
 
     export interface SetView {
@@ -603,11 +678,23 @@ export namespace ApplicationActions {
         }
     }
 
+    export interface SetMessage {
+        readonly type: ActionTypes.SET_MESSAGE
+        payload: {
+            message: string
+        }
+    }
+
+    export interface RemoveMessage {
+        readonly type: ActionTypes.REMOVE_MESSAGE
+    }
+
     export type AllApplicationActions =
 
         SetView |
-        OpenDialog
-        ;
+        OpenDialog |
+        SetMessage |
+        RemoveMessage;
 
     export function setViewState(aView: Views): SetView {
         return {
@@ -620,6 +707,19 @@ export namespace ApplicationActions {
         return {
             type: ActionTypes.OPEN_ERROR_DIALOG,
             payload: {open: aOpen, header: aHeader, content: aContent}
+        }
+    }
+
+    export function setMessage(aMessage: string): SetMessage {
+        return {
+            type: ActionTypes.SET_MESSAGE,
+            payload: {message: aMessage}
+        }
+    }
+
+    export function removeMessage(): RemoveMessage {
+        return {
+            type: ActionTypes.REMOVE_MESSAGE
         }
     }
 }

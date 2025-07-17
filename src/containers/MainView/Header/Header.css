@@ -30,7 +30,7 @@
 .status-display-wrapper {
   display: flex;
   align-items: flex-start;
-  /* Abstand zum oberen Rand nur für StatusDisplay */
+  margin-right: 1.5rem;
   margin-top: 5px;
 }
 
@@ -56,6 +56,7 @@ h1 {
   align-items: flex-end;
   justify-content: center;
   height: 100%;
+  margin-top: 0.75rem;
 }
 
 .icons-container {

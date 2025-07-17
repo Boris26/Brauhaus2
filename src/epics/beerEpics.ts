@@ -1,7 +1,7 @@
 import { ofType } from 'redux-observable';
 import {fromEvent, of, from} from 'rxjs';
 import { catchError, map, mergeMap } from 'rxjs/operators';
-import { BeerActions } from '../actions/actions';
+import {ApplicationActions, BeerActions} from '../actions/actions';
 import { BeerRepository } from '../repositorys/BeerRepository';
 import {Beer} from "../model/Beer";
 import {Malts} from "../model/Malt";
@@ -11,7 +11,7 @@ import {FinishedBrew} from "../model/FinishedBrew";
 import { FinishedBrewListPdfStrategy } from '../utils/pdf/finishedBrewStrategy';
 import {PdfGenerator} from "../utils/pdf/PdfGenerator";
 import { BeerPdfStrategy } from '../utils/pdf/shoppingListPdfStrategy';
-import { mapImportedJsonToBeerDTO } from '../utils/BeerImportMapper';
+import {parseBeerWithFactory} from "../utils/BeerImporterUtil/beerParserFactory";
 
 /**
  * Epic to handle the GET_BEERS action.
@@ -190,7 +190,7 @@ export const generateShoppingListPdfEpic = (action$: any) =>
   );
 
 // Epic für den Import von Bier-JSON-Dateien
-export const importBeerEpic = (action$: any) =>
+export const importBeerEpic = (action$: any, state$: any) =>
     action$.pipe(
         ofType(BeerActions.ActionTypes.IMPORT_BEER),
         mergeMap((action: any) => {
@@ -202,13 +202,38 @@ export const importBeerEpic = (action$: any) =>
             const load$ = fromEvent(reader, 'load');
             reader.readAsText(file);
             return load$.pipe(
-                map((event: any) => {
+                mergeMap((event: any) => {
                     try {
                         const json = JSON.parse(event.target.result);
-                        const beerDTO = mapImportedJsonToBeerDTO(json);
-                        return BeerActions.submitBeer(beerDTO);
+                        const beerData = state$.value.beerDataReducer;
+                        if (!beerData || !beerData.malts || !beerData.hops || !beerData.yeasts) {
+                            return of(BeerActions.isSubmitSuccessful(false, 'Malze, Hopfen oder Hefen nicht geladen', 'import'));
+                        }
+                        const malts = beerData.malts;
+                        const hops = beerData.hops;
+                        const yeasts = beerData.yeasts;
+
+                        const beer = parseBeerWithFactory(json, malts, hops, yeasts);
+                        const actions: any[] = [BeerActions.setImportedBeer(beer.beer)];
+                        if (beer.unknownMalts && beer.unknownMalts.length > 0) {
+                            for (const malt of beer.unknownMalts) {
+                                actions.push(ApplicationActions.setMessage("Fehlendes Malz: " +malt));
+                            }
+                        }
+                        if (beer.unknownHops && beer.unknownHops.length > 0) {
+                            for (const hop of beer.unknownHops) {
+                                actions.push(ApplicationActions.setMessage("Fehlender Hopfen: " + hop));
+                            }
+                        }
+                        if (beer.unknownYeasts && beer.unknownYeasts.length > 0) {
+                            for (const yeast of beer.unknownYeasts) {
+                                actions.push(ApplicationActions.setMessage("Fehlende Hefe: " + yeast));
+                            }
+                        }
+                        return from(actions);
                     } catch (e) {
-                        return BeerActions.isSubmitSuccessful(false, 'Fehler beim Parsen der Datei', 'import');
+                        console.error('Fehler beim Parsen der Datei:', e);
+                        return of(BeerActions.isSubmitSuccessful(false, 'Fehler beim Parsen der Datei', 'import'));
                     }
                 }),
                 catchError(() => of(BeerActions.isSubmitSuccessful(false, 'Fehler beim Einlesen der Datei', 'import')))

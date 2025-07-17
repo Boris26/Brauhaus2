@@ -10,7 +10,6 @@ import {
 import {MashingType} from "../../enums/eMashingType";
 import './BeerForm.css'
 import SimpleBar from 'simplebar-react';
-import { mapImportedJsonToBeer, mapImportedJsonToBeerWithMissing } from '../../utils/BeerImportMapper';
 
 interface BeerFormProps {
     onSubmitBeer: (beer: BeerDTO) => void;
@@ -27,6 +26,7 @@ interface BeerFormProps {
     beerFormState?: any;
     beers: Beer[];
     importBeer: (file: File) => void;
+    importedBeer?: Beer;
 }
 
 interface BeerFormState {
@@ -105,12 +105,37 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
     }
 
     componentDidUpdate(prevProps: Readonly<BeerFormProps>, prevState: Readonly<BeerFormState>, snapshot?: any) {
-        const {isSubmitSuccessful} = this.props;
+        const {isSubmitSuccessful, importedBeer} = this.props;
         if (!isEqual(this.state.isSubmitSuccessful,prevState.isSubmitSuccessful)) {
             this.setState({isSubmitSuccessful:isSubmitSuccessful});
         }
 
-        // Wenn der Status geändert wurde, speichern wir den aktuellen Formularstatus
+        // Wenn importedBeer gesetzt ist und sich geändert hat, Formular mit importierten Daten füllen
+        if (importedBeer && importedBeer !== prevProps.importedBeer) {
+            this.setState({
+                id: importedBeer.id || '0',
+                name: importedBeer.name || '',
+                type: importedBeer.type || '',
+                color: importedBeer.color || '',
+                alcohol: importedBeer.alcohol || 0,
+                originalwort: importedBeer.originalwort || 0,
+                bitterness: importedBeer.bitterness || 0,
+                description: importedBeer.description || '',
+                rating: importedBeer.rating || 0,
+                mashVolume: importedBeer.mashVolume || 0,
+                spargeVolume: importedBeer.spargeVolume || 0,
+                cookingTime: importedBeer.cookingTime || 0,
+                cookingTemperatur: importedBeer.cookingTemperatur || 0,
+                fermentationSteps: importedBeer.fermentation ? [...importedBeer.fermentation] : [],
+                maltsDTO: importedBeer.malts ? importedBeer.malts.map(m => ({ id: m.id, name: m.name, quantity: m.quantity })) : [],
+                hopsDTO: importedBeer.wortBoiling && importedBeer.wortBoiling.hops ? importedBeer.wortBoiling.hops.map(h => ({ id: h.id, name: h.name, quantity: h.quantity, time: h.time })) : [],
+                yeastsDTO: importedBeer.fermentationMaturation && importedBeer.fermentationMaturation.yeast ? importedBeer.fermentationMaturation.yeast.map(y => ({ id: y.id, name: y.name, quantity: y.quantity })) : [],
+                isSubmitSuccessful: false,
+            }, () => {
+                this.props.saveBeerFormState(this.state);
+            });
+        }
+
         if (!isEqual(this.state, prevState)) {
             this.props.saveBeerFormState(this.state);
         }
@@ -751,42 +776,10 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
     }
 
     handleImportBeerJson = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const { importBeer } = this.props;
         const file = event.target.files && event.target.files[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                try {
-                    const json = JSON.parse(e.target?.result as string);
-                    const result = mapImportedJsonToBeerWithMissing(json, this.props.malts, this.props.hops, this.props.yeasts);
-                    const beer = result.beer;
-                    this.setState({
-                        id: beer.id || '0',
-                        name: beer.name || '',
-                        type: beer.type || '',
-                        color: beer.color || '',
-                        alcohol: beer.alcohol || 0,
-                        originalwort: beer.originalwort || 0,
-                        bitterness: beer.bitterness || 0,
-                        description: beer.description || '',
-                        rating: beer.rating || 0,
-                        mashVolume: beer.mashVolume || 0,
-                        spargeVolume: beer.spargeVolume || 0,
-                        cookingTime: beer.cookingTime || 0,
-                        cookingTemperatur: beer.cookingTemperatur || 0,
-                        fermentationSteps: beer.fermentation ? [...beer.fermentation] : [],
-                        maltsDTO: beer.malts ? beer.malts.map(m => ({ id: m.id, name: m.name, quantity: m.quantity })) : [],
-                        hopsDTO: beer.wortBoiling && beer.wortBoiling.hops ? beer.wortBoiling.hops.map(h => ({ id: h.id, name: h.name, quantity: h.quantity, time: h.time })) : [],
-                        yeastsDTO: beer.fermentationMaturation && beer.fermentationMaturation.yeast ? beer.fermentationMaturation.yeast.map(y => ({ id: y.id, name: y.name, quantity: y.quantity })) : [],
-                        isSubmitSuccessful: false,
-                        missingMalts: result.missingMalts,
-                        missingHops: result.missingHops,
-                        missingYeasts: result.missingYeasts,
-                    });
-                } catch (err) {
-                    alert('Fehler beim Parsen der Datei!');
-                }
-            };
-            reader.readAsText(file);
+            importBeer(file);
         }
     };
 
@@ -817,6 +810,7 @@ const mapStateToProps = (state: any) => ({
     messageType: state.beerDataReducer.type,
     beerFormState: state.beerDataReducer.beerFormState,
     beers: state.beerDataReducer.beers,
+    importedBeer: state.beerDataReducer.importedBeer,
 });
 
 const mapDispatchToProps = (dispatch: any) => ({

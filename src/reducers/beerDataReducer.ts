@@ -25,6 +25,7 @@ export interface BeerDataReducerState {
     beerToBrew?: Beer | undefined,
     finishedBrews?: FinishedBrew[] | undefined,
     beerFormState?: any
+    importedBeer?: Beer | undefined
 }
 
 export const initialBeerState: BeerDataReducerState =
@@ -41,7 +42,8 @@ export const initialBeerState: BeerDataReducerState =
         isSubmitYeastSuccessful: true,
         isSubmitSuccessful: true,
         message: undefined,
-        type: undefined
+        type: undefined,
+        importedBeer: undefined,
     }
 
 const beerDataReducer = (
@@ -145,6 +147,9 @@ const beerDataReducer = (
     }
     case BeerActions.ActionTypes.LOAD_BEER_FORM_STATE: {
       return { ...aState, beerFormState: aAction.payload.formState };
+    }
+    case BeerActions.ActionTypes.SET_IMPORTED_BEER: {
+      return { ...aState, importedBeer: aAction.payload.importedBeer };
     }
     default:
       return aState;

@@ -1,12 +1,14 @@
-import { ApplicationActions } from '../actions/actions';
+import {ApplicationActions} from '../actions/actions';
+import {Views} from '../enums/eViews';
 import AllApplicationActions = ApplicationActions.AllApplicationActions;
-import { Views } from '../enums/eViews';
+import ActionTypes = ApplicationActions.ActionTypes;
 
 export interface ApplicationReducerState {
     view: Views;
     errorDialogHeader: string;
     errorDialogMessage: string;
     errorDialogOpen: boolean;
+    message?: string[];
 }
 
 export const initialApplicationState: ApplicationReducerState = {
@@ -14,6 +16,7 @@ export const initialApplicationState: ApplicationReducerState = {
     errorDialogHeader: '',
     errorDialogMessage: '',
     errorDialogOpen: false,
+    message: [], // Default ist jetzt ein leeres Array
 };
 
 const applicationReducer = (
@@ -30,6 +33,19 @@ const applicationReducer = (
                 errorDialogHeader: aAction.payload.header,
                 errorDialogMessage: aAction.payload.content,
                 errorDialogOpen: aAction.payload.open,
+            };
+        }
+        case ActionTypes.SET_MESSAGE: {
+            return {
+                ...aState,
+                message: [...(aState.message || []), aAction.payload.message],
+            };
+        }
+
+        case ApplicationActions.ActionTypes.REMOVE_MESSAGE: {
+            return {
+                ...aState,
+                message: [],
             };
         }
         default:

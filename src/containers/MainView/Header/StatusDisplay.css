@@ -1,40 +1,55 @@
 .status-display {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: flex-start;
   font-size: 0.92rem;
   color: #333;
-  background: linear-gradient(180deg, #ffe0b2 60%, #ffb74d 100%);
+  background: linear-gradient(180deg, #ff9800 60%, #e65100 100%);
   border: 2px inset #b26a00;
   border-radius: 0.6rem;
-  box-shadow: 0 2px 6px rgba(180,106,0,0.10) inset, 0 1px 0 #fff;
-  padding-top: 0.1rem;
-  padding-bottom: 0.1rem;
-  padding-left: 5px;
-  padding-top: 5px;
-  height: 70px;
-  width: 350px;
+  box-shadow: 0 1px 2px #b26a00 inset, 0 1.5px 0 #fff;
+  padding-left: 8px;
+  padding-top: 4px;
+  height: 65px;
+  width: 600px;
   left: 10px;
+  margin-top: 3px;
 }
 
 .backend-status {
   font-weight: bold;
-  color: #388e3c;
+  color: #fff;
+  margin-top: 0;
   margin-bottom: 0.08rem;
   background: transparent;
   z-index: 2;
   font-size: 0.95rem;
   line-height: 1.1;
   padding: 0 0 0.05rem 0;
+  text-shadow: 0 1px 2px #e65100;
+}
+
+.backend-status.online {
+  color: #43a047;
+  text-shadow: 0 1px 2px #1b5e20;
+}
+
+.backend-status.offline {
+  color: #e53935;
+  text-shadow: 0 1px 2px #b71c1c;
 }
 
 .backend-status-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   width: 100%;
   gap: 0.3rem;
   justify-content: space-between;
+  border-bottom: 1px solid #b26a00;
+  padding-bottom: 0.1rem;
+  margin-bottom: 0.1rem;
+  padding-left: 0;
 }
 
 .close-x {
@@ -45,17 +60,17 @@
   height: 18px;
   font-size: 1.1rem;
   font-weight: bold;
-  color: #b26a00;
-  background: #fff3e0;
+  color: #fff;
+  background: #e65100;
   border-radius: 50%;
-  border: 1px solid #ffb74d;
+  border: 1.5px solid #b26a00;
   cursor: pointer;
   margin-right: 3px;
   transition: background 0.2s, color 0.2s;
 }
 
 .close-x:hover {
-  background: #ffb74d;
+  background: #ff9800;
   color: #fff;
 }
 
@@ -66,6 +81,7 @@
   width: 100%;
   background: transparent;
   scrollbar-width: none;
+  scroll-behavior: smooth;
 }
 
 .messages::-webkit-scrollbar {
@@ -73,9 +89,12 @@
 }
 
 .message {
-  color: #b26a00;
+  color: #000;
   font-size: 0.92rem;
   margin-bottom: 0.03rem;
+  border-radius: 0.3rem;
+  background: none;
+  line-height: 1.1;
 }
 
 .message-row {
