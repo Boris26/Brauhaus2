@@ -2,7 +2,7 @@ import React from 'react';
 import './StatusDisplay.css';
 
 interface StatusDisplayProps {
-  backendStatus: string;
+  backendStatus: boolean;
   messages?: string[];
   disableScrollAnimation?: boolean;
   removeAllMessages: () => void;
@@ -62,11 +62,12 @@ class StatusDisplay extends React.Component<StatusDisplayProps, StatusDisplaySta
 
   render() {
     const { backendStatus, messages, removeAllMessages } = this.props;
-    const backendClass = backendStatus === 'Online' ? 'online' : backendStatus === 'Offline' ? 'offline' : '';
+
+    const backendClass = backendStatus ? 'Online' : 'Offline';
     return (
       <div className="status-display">
         <div className="backend-status-row">
-          <span className={`backend-status ${backendClass}`}>Backend: {backendStatus}</span>
+          <span className={`backend-status ${backendClass}`}>Backend: {backendClass}</span>
           <span className="close-x" title="Alle Nachrichten löschen" onClick={() => removeAllMessages()}>
             ×
           </span>

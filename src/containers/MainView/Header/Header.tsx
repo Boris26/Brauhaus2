@@ -13,7 +13,7 @@ interface HeaderProps {
     currentView: Views;
     messages?: string[];
     removeAllMessages: () => void;
-    backendStatus: string;
+    backendStatus: boolean;
 }
 
 interface HeaderState {
@@ -136,7 +136,7 @@ const mapStateToProps = (state: any) => ({
     currentTime: state.applicationReducer.currentTime,
     currentView: state.applicationReducer.view,
     messages: state.applicationReducer.message,
-    backendStatus: state.applicationReducer.isBackenAvailable ? 'Online' : 'Offline',
+    backendStatus: state.productionReducer.isBackenAvailable,
 });
 
 const mapDispatchToProps = (dispatch: any) => ({

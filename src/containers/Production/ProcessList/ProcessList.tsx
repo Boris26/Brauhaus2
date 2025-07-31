@@ -8,7 +8,7 @@ export interface ProcessStep {
 }
 
 interface ProcessListProps {
-    steps: ProcessStep[];
+    selectedBeer: any;
     currentStepIndex: number; // 0-based
     onNextStep?: () => void;
 }
@@ -33,14 +33,13 @@ export class ProcessList extends React.Component<ProcessListProps> {
                 const simpleBarScroll = this.simpleBarRef.current;
                 const activeNode = this.activeStepRef.current;
                 if (simpleBarScroll && activeNode) {
-                    // SimpleBar scrollt auf das innere Scroll-Element, nicht das Wrapper-Div
                     const scrollElement = simpleBarScroll.querySelector('.simplebar-content-wrapper');
                     if (scrollElement) {
                         const containerRect = scrollElement.getBoundingClientRect();
                         const nodeRect = activeNode.getBoundingClientRect();
-                        if (nodeRect.top < containerRect.top) {
-                            scrollElement.scrollTop += nodeRect.top - containerRect.top;
-                        } else if (nodeRect.bottom > containerRect.bottom) {
+                        // Prüfen, ob der Schritt bereits sichtbar ist
+                        if (nodeRect.bottom > containerRect.bottom || nodeRect.top < containerRect.top) {
+                            // Immer so scrollen, dass der Schritt am unteren Rand sichtbar ist
                             scrollElement.scrollTop += nodeRect.bottom - containerRect.bottom;
                         }
                     }
@@ -50,7 +49,8 @@ export class ProcessList extends React.Component<ProcessListProps> {
     }
 
     render() {
-        const { steps, currentStepIndex, onNextStep } = this.props;
+        const { selectedBeer, currentStepIndex, onNextStep } = this.props;
+        const steps = createProcessSteps(selectedBeer);
         return (
             <div className="process-list">
                 <h3 className="process-title">Process</h3>
@@ -82,4 +82,42 @@ export class ProcessList extends React.Component<ProcessListProps> {
             </div>
         );
     }
+}
+
+
+export function createProcessSteps(selectedBeer: any): ProcessStep[] {
+    let processSteps: ProcessStep[] = [];
+    if (!selectedBeer || !Array.isArray(selectedBeer.fermentation)) {
+        return processSteps;
+    }
+    const fermentation = selectedBeer.fermentation;
+    // Einmaischen finden
+    const einmaischen = fermentation.find((step: any) => step.type === 'Einmaischen');
+    if (einmaischen) {
+        processSteps.push({ name: `Aufheizen auf Einmaischen` });
+        processSteps.push({ name: 'Einmaischen' });
+    }
+    // Nur Rast-Schritte (Rast1, Rast 2, ...) berücksichtigen
+    let lastRastIndex = -1;
+    fermentation.forEach((step: any, idx: number) => {
+        if (/^Rast\s*\d+$/i.test(step.type)) {
+            processSteps.push({ name: `Aufheizen auf ${step.type}` });
+            processSteps.push({ name: step.type });
+            lastRastIndex = processSteps.length - 1;
+        }
+    });
+    // Nach der letzten Rast Jod Probe einfügen
+    if (lastRastIndex !== -1) {
+        processSteps.splice(lastRastIndex + 1, 0, { name: 'Jod Probe' });
+    }
+    // Abmaischen finden und vor Kochen einfügen
+    const abmaischen = fermentation.find((step: any) => step.type === 'Abmaischen');
+    if (abmaischen) {
+        processSteps.push({ name: `Aufheizen auf Abmaischen` });
+        processSteps.push({ name: 'Abmaischen' });
+    }
+    // Am Ende "Aufheizen auf Kochen" und "Kochen" hinzufügen
+    processSteps.push({ name: 'Aufheizen auf Kochen' });
+    processSteps.push({ name: 'Kochen' });
+    return processSteps;
 }

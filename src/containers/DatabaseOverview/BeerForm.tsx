@@ -496,7 +496,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
                 <label>
                     Kochtemp.:
-                    <input type="number" name="cookingTemperatur" className="field-number-small" min={70} value={cookingTemperatur} onChange={this.handleChange} required={true} max={99} />
+                    <input type="number" name="cookingTemperatur" className="field-number-small" min={1} value={cookingTemperatur} onChange={this.handleChange} required={true} max={99} />
                 </label>
 
                 <label className="full-width">

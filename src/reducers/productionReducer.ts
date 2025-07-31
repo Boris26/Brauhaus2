@@ -22,7 +22,7 @@ export interface ProductionReducerState {
     isToggleAgitatorSuccess: boolean;
     brewingStatus: BrewingStatus | undefined;
     confirmState: ConfirmStates | undefined;
-    isBackenAvailable: BackendAvailable;
+    isBackenAvailable: boolean;
     waterStatus: WaterStatus;
     isPollingRunning: boolean;
 }
@@ -38,7 +38,7 @@ export const initialProductionState: ProductionReducerState = {
     isToggleAgitatorSuccess: true,
     brewingStatus: undefined,
     confirmState: undefined,
-    isBackenAvailable: { isBackenAvailable: false, statusText: '' },
+    isBackenAvailable:  false,
     waterStatus: { liters: 0, openClose: false },
     isPollingRunning: false
 };
@@ -84,15 +84,13 @@ const productionReducer = (
             return { ...aState };
         }
         case ProductionActions.ActionTypes.CONFIRM: {
-            //ProductionRepository.confirm(aAction.payload.confirmState);
             return { ...aState };
         }
         case ProductionActions.ActionTypes.CHECK_IS_BACKEND_AVAILABLE: {
-            //ProductionRepository.checkIsBackendAvailable();
             return { ...aState };
         }
         case ProductionActions.ActionTypes.IS_BACKEND_AVAILABLE: {
-            return { ...aState, isBackenAvailable: aAction.payload.isBackenAvailable };
+            return { ...aState, isBackenAvailable: aAction.payload.isBackenAvailable.isBackenAvailable };
         }
         case ProductionActions.ActionTypes.SET_WATER_STATUS: {
             return { ...aState, waterStatus: aAction.payload.waterStatus };

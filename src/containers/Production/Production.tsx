@@ -28,7 +28,8 @@ import {IconProp} from "@fortawesome/fontawesome-svg-core";
 import {FinishedBrew} from "../../model/FinishedBrew";
 import {eBrewState} from "../../enums/eBrewState";
 import {BackendAvailable} from "../../reducers/productionReducer";
-import {ProcessList} from "./ProcessList/ProcessList";
+import {ProcessList, createProcessSteps} from "./ProcessList/ProcessList";
+import { dataCollector } from '../../utils/DataCollector/dataCollector';
 export interface ProcessStep {
     name: string;
 }
@@ -49,7 +50,6 @@ interface ProductionProps {
     brewingStatus: BrewingStatus;
     startPolling: () => void;
     stopPolling: () => void;
-    checkIsBackenAvailable: () => void;
     isBackenAvailable: BackendAvailable;
     waterStatus: WaterStatus;
     addFinishedBrew: (finishedBrew: FinishedBrew) => void;
@@ -77,7 +77,7 @@ interface ProductionState {
     showFinishDialog: boolean
     brewingFinished: boolean
     indexOfCurrentStep: number;
-    processSteps: ProcessStep[];
+    brewingIsRunning: boolean;
 }
 
 class Production extends React.Component<ProductionProps, ProductionState> {
@@ -114,48 +114,13 @@ class Production extends React.Component<ProductionProps, ProductionState> {
             showFinishDialog: false,
             brewingFinished: false,
             indexOfCurrentStep: 0,
-            processSteps: []
+            brewingIsRunning: false
         }
-    }
-
-    createProcessSteps(selectedBeer: Beer | undefined): ProcessStep[] {
-        let processSteps: ProcessStep[] = [];
-        if (!selectedBeer || !Array.isArray(selectedBeer.fermentation)) {
-            return processSteps;
-        }
-        const fermentation = selectedBeer.fermentation;
-        // Einmaischen finden
-        const einmaischen = fermentation.find(step => step.type === 'Einmaischen');
-        if (einmaischen) {
-            processSteps.push({ name: `Aufheizen auf Einmaischen` });
-            processSteps.push({ name: 'Einmaischen' });
-        }
-        // Rasten (außer Einmaischen und Abmaischen)
-        fermentation.forEach(step => {
-            if (step.type !== 'Einmaischen' && step.type !== 'Abmaischen') {
-                processSteps.push({ name: `Aufheizen auf ${step.type}` });
-                processSteps.push({ name: step.type });
-            }
-        });
-        // Abmaischen finden
-        const abmaischen = fermentation.find(step => step.type === 'Abmaischen');
-        if (abmaischen) {
-            processSteps.push({ name: `Aufheizen auf Abmaischen` });
-            processSteps.push({ name: 'Abmaischen' });
-        }
-        // Kochen
-        processSteps.push({ name: 'Kochen' });
-        return processSteps;
     }
 
     componentDidMount() {
-        const {getTemperatures, agitatorSpeed, agitatorIsRunning, selectedBeer, checkIsBackenAvailable} = this.props;
-
-        checkIsBackenAvailable();
-        if (!isUndefined(selectedBeer))
-        {
-            const processSteps = this.createProcessSteps(selectedBeer);
-            this.setState({processSteps, indexOfCurrentStep: -1});
+        const {getTemperatures, selectedBeer} = this.props;
+        if (!isUndefined(selectedBeer)) {
             this.calculateTheHopTimes();
         }
         getTemperatures();
@@ -168,18 +133,9 @@ class Production extends React.Component<ProductionProps, ProductionState> {
 
 
         if (prevProps.selectedBeer !== this.props.selectedBeer) {
-            const processSteps = this.createProcessSteps(this.props.selectedBeer);
-            this.setState({processSteps, indexOfCurrentStep: 0});
+            this.setState({indexOfCurrentStep: 0});
         }
 
-        if (prevProps.isBackenAvailable !== isBackenAvailable) {
-            //todo
-            if (!isBackenAvailable.isBackenAvailable) {
-              //  this.setState({showErrorDialog: true})
-            } else {
-               // this.setState({showErrorDialog: false})
-            }
-        }
 
         if (!isToggleAgitatorSuccess && mainSwitchState) {
             const delay = 300;
@@ -343,6 +299,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                 CookingTime: selectedBeer.cookingTime,
                 Rasten: selectedBeer.fermentation
             }
+            this.setState({brewingIsRunning: true});
             sendBrewingData(brewingData);
         }
     }
@@ -497,7 +454,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
 
                 </div>
                 <div className="startBtnDiv">
-                    <button className="startBtn" disabled={isUndefined(selectedBeer) || !this.props.isBackenAvailable.isBackenAvailable} onClick={this.startBrewing}>Start</button>
+                    <button className="startBtn" disabled={isUndefined(selectedBeer) || !this.props.isBackenAvailable} onClick={this.startBrewing}>Start</button>
                 </div>
                 <div className="startPollingBtnDiv">
                     <button className="startPollingBtn" onClick={this.startBrewing}>
@@ -600,6 +557,8 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         const { stopPolling, selectedBeer, addFinishedBrew } = this.props;
         this.setState({ showFinishDialog: false, brewingFinished: true });
         stopPolling();
+        // Messdaten als Blob holen
+        const jsonString = dataCollector.getAllDataAsJSONString();
         // FinishedBrew erzeugen und speichern
         if (selectedBeer) {
             const finishedBrew : FinishedBrew = {
@@ -612,7 +571,8 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                 startDate: new Date().toISOString().slice(0, 10),
                 beer_id: selectedBeer.id.toString(), // Assuming beer_id is a string
                 active: true,
-                state: eBrewState.FERMENTATION
+                state: eBrewState.FERMENTATION,
+                brewValues: jsonString // Messdaten anhängen
             };
             addFinishedBrew(finishedBrew);
         }
@@ -645,12 +605,12 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     }
 
     renderProcessList() {
-        const { processSteps } = this.state;
-        const {indexOfCurrentStep} = this.state;
-
+        const { selectedBeer, brewingStatus } = this.props;
+        // Fallback auf 0, falls brewingStatus oder brewingStatus.index nicht definiert ist
+        const currentStepIndex = brewingStatus && typeof brewingStatus.index === 'number' ? brewingStatus.index : 0;
         return (
-            <ProcessList steps={processSteps} currentStepIndex={indexOfCurrentStep} onNextStep={this.props.nextProcedureStep} />
-        )
+            <ProcessList selectedBeer={selectedBeer} currentStepIndex={currentStepIndex} onNextStep={this.props.nextProcedureStep} />
+        );
     }
 
 
@@ -716,9 +676,7 @@ const mapDispatchToProps = (dispatch: any) => ({
     stopPolling: () => {
         dispatch(ProductionActions.stopPolling())
     },
-    checkIsBackenAvailable: () => {
-        dispatch(ProductionActions.checkIsBackenAvailable())
-    },
+
     addFinishedBrew: (finishedBrew: FinishedBrew) => {
         dispatch(BeerActions.addFinishedBrew(finishedBrew))
     },

@@ -5,6 +5,7 @@ import {BeerDTO} from "../model/BeerDTO";
 import {Malts} from "../model/Malt";
 import {Hops} from "../model/Hops";
 import {FinishedBrew} from "../model/FinishedBrew";
+import _ from 'lodash';
 
 
 export interface BeerDataReducerState {
@@ -55,7 +56,28 @@ const beerDataReducer = (
       return { ...aState };
     }
     case BeerActions.ActionTypes.GET_BEERS_SUCCESS: {
-      return { ...aState, beers: aAction.payload.beers, isFetching: false };
+      // Lesbarere Sortierlogik für beliebig viele Rasten (Rast1, Rast2, ... RastN) mit lodash
+      const stepOrderMap: Record<string, number> = {
+        einmaischen: 0,
+        abmaischen: 1000,
+        kochen: 2000
+      };
+      const getStepOrder = (type: string) => {
+        if (!type) return 9999;
+        const t = type.replace(/\s+/g, '').toLowerCase();
+        if (stepOrderMap.hasOwnProperty(t)) return stepOrderMap[t];
+        const rastMatch = t.match(/^rast(\d+)$/);
+        if (rastMatch) return 1 + parseInt(rastMatch[1], 10); // Rast1=2, Rast2=3, ...
+        return 9999; // Unbekannte Typen ans Ende
+      };
+      const sortedBeers = aAction.payload.beers.map((beer: any) => {
+        if (Array.isArray(beer.fermentation)) {
+          const sortedFermentation = _.sortBy(beer.fermentation, (step) => getStepOrder(step.type));
+          return { ...beer, fermentation: sortedFermentation };
+        }
+        return beer;
+      });
+      return { ...aState, beers: sortedBeers, isFetching: false };
     }
     case BeerActions.ActionTypes.GET_BEERS: {
       return { ...aState, isFetching: aAction.payload.isFetching };

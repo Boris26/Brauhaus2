@@ -10,6 +10,8 @@ import {BeerActions} from "../../../actions/actions";
 import {isNil} from "lodash";
 import { v4 as uuidv4 } from 'uuid';
 import { eBrewState, BrewStateGerman } from '../../../enums/eBrewState';
+import Panel from '../../Panel/Panel';
+import FinishedBrewDetails from './FinishedBrewDetails';
 
 
 interface FinishedBrewsTableProps {
@@ -29,6 +31,7 @@ interface FinishedBrewsTableState {
     clickedFinishBtn: Record<string, boolean>;
     newRowActive?: boolean;
     newRowData?: Partial<FinishedBrew>;
+    panelBrewId?: string | null;
 }
 
 const calcAlcohol = (w1: number, w2: number | null) => {
@@ -40,7 +43,7 @@ const calcAlcohol = (w1: number, w2: number | null) => {
 class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, FinishedBrewsTableState> {
     constructor(props: FinishedBrewsTableProps) {
         super(props);
-        this.state = { editRows: {}, filterYear: '', showOnlyActive: false, filterOutActive: false, clickedFinishBtn: {} };
+        this.state = { editRows: {}, filterYear: '', showOnlyActive: false, filterOutActive: false, clickedFinishBtn: {}, panelBrewId: null };
     }
 
     componentDidMount() {
@@ -141,6 +144,13 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
         const { onDelete } = this.props;
         onDelete(id);
     };
+
+    handleShowDetails = (brewId: string | null) => {
+        this.setState(prev => ({
+            panelBrewId: prev.panelBrewId === brewId ? null : brewId
+        }));
+
+    }
 
     private filterBrewsByYearAndActive(aBrews: FinishedBrew[] = [], aFilterYear: string, aShowOnlyActive: boolean, aFilterOutActive: boolean) {
         return (aBrews || []).filter(brew => {
@@ -465,6 +475,13 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
                             <span role="img" aria-label="Löschen" style={{ fontSize: 22, verticalAlign: 'middle',  display: 'inline-block', position: 'relative', top: '3px' }}>🗑️</span>
 
                         </button>
+                        <button
+                            className="details-btn"
+                            onClick={() => this.handleShowDetails(brewId)}
+                            title="Details"
+                        >
+                            <span role="img" aria-label="Details" style={{ fontSize: 22, verticalAlign: 'middle',  display: 'inline-block', position: 'relative', top: '3px' }}>🔍</span>
+                        </button>
                     </div>
                 </TableCell>
             </TableRow>
@@ -502,13 +519,24 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
 
     render() {
         const { brews, beers } = this.props;
-        const { filterYear, showOnlyActive, filterOutActive } = this.state;
+        const { filterYear, showOnlyActive, filterOutActive, panelBrewId } = this.state;
         const years = this.getYearsFromBrews();
         const filteredBrews = this.filterBrewsByYearAndActive(brews, filterYear, showOnlyActive, filterOutActive);
+        const selectedBrew = panelBrewId ? brews.find(b => b.id === panelBrewId) : null;
         return (
             <>
                 {this.renderFilterControls(years)}
                 {this.renderTable(filteredBrews, beers)}
+                {/* Panel als Overlay am Ende */}
+                {selectedBrew && (
+                    <div style={{ position: 'fixed', left: 0, top: 0, width: '100vw', height: '100vh', zIndex: 2000, pointerEvents: 'none' }}>
+                        <div style={{ pointerEvents: 'auto' }}>
+                            <Panel title={selectedBrew.name || 'Details'} onClose={() => this.setState({ panelBrewId: null })}>
+                                <FinishedBrewDetails brew={selectedBrew} />
+                            </Panel>
+                        </div>
+                    </div>
+                )}
             </>
         );
     }

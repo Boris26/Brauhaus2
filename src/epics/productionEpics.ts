@@ -1,10 +1,11 @@
 import { ofType } from 'redux-observable';
-import {from, of, interval, EMPTY, timer, filter, takeWhile} from 'rxjs';
+import {from, of, interval, EMPTY, timer, filter, takeWhile, startWith} from 'rxjs';
 import { catchError, map, mergeMap, switchMap, takeUntil, delay, retryWhen, take, toArray } from 'rxjs/operators';
 import { ProductionActions } from '../actions/actions';
 import { ProductionRepository } from '../repositorys/ProductionRepository';
 import {BrewingStatus} from "../model/BrewingStatus";
 import { delayWhen } from 'rxjs/operators';
+import { dataCollector } from '../utils/DataCollector/dataCollector';
 
 const BREWING_STATUS_POLL_INTERVAL = 1000;
 
@@ -82,9 +83,11 @@ export const sendBrewingDataEpic$ = (action$: any) =>
                 if (startResult) {
                   return interval(BREWING_STATUS_POLL_INTERVAL).pipe(
                     switchMap(() => from(ProductionRepository.getBrewingStatus())),
-                    takeWhile(({ brewingStatus }) => brewingStatus?.StatusText !== "Fertig", true),
+                    takeWhile(({ brewingStatus }) => brewingStatus?.StatusText !== "BREWING_FINISHED", true),
                     switchMap(({ available, brewingStatus }) => {
                       if (available?.isBackenAvailable && brewingStatus !== undefined) {
+                        // BrewingStatus im DataCollector speichern
+                        dataCollector.setBrewingStatus(brewingStatus);
                         return [
                           ProductionActions.setBrewingStatus(brewingStatus),
                         ];
@@ -123,16 +126,14 @@ export const checkIsBackendAvailableEpic$ = (action$: any) =>
   action$.pipe(
     ofType(ProductionActions.ActionTypes.CHECK_IS_BACKEND_AVAILABLE),
     switchMap(() =>
-      timer(0, 20000).pipe(
-        switchMap((attempt) => {
-          return from(ProductionRepository.checkIsBackendAvailable()).pipe(
-            map((result) => ({ result, isAvailable: result.isBackenAvailable })),
-            catchError((error) => of({ result: { isBackenAvailable: false, statusText: String(error) }, isAvailable: false }))
-          );
-        }),
-        // Polling stoppen, sobald Verbindung erfolgreich
-        takeWhile(({ isAvailable }) => !isAvailable, true),
-        map(({ result }) => ProductionActions.isBackenAvailable(result))
+      interval(20000).pipe(
+        startWith(0),
+        switchMap(() =>
+          from(ProductionRepository.checkIsBackendAvailable()).pipe(
+            map((isAvailable: boolean) => ProductionActions.isBackenAvailable({ isBackenAvailable: isAvailable, statusText: "" })),
+            catchError(() => of(ProductionActions.isBackenAvailable({ isBackenAvailable: false, statusText: "Fehler beim Backend-Check" })))
+          )
+        )
       )
     )
   );

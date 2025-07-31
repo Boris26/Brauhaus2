@@ -1,0 +1,82 @@
+.custom-panel {
+  position: absolute;
+  background: #23272b;
+  border: 1.5px solid darkorange;
+  border-radius: 8px;
+  box-shadow: 0 4px 24px rgba(25, 118, 210, 0.18), 0 1.5px 6px rgba(0,0,0,0.18);
+  overflow: hidden;
+  z-index: 1000;
+  min-width: 220px;
+  min-height: 120px;
+  max-height: 90vh;
+  user-select: none;
+  color: #fff;
+}
+
+.custom-panel-header {
+  background: darkorange;
+  color: #111;
+  padding: 2px 8px; /* Höhe reduziert */
+  cursor: move;
+  font-weight: bold;
+  border-bottom: 2px solid #ffa726;
+  font-size: 0.92rem; /* Schriftgröße leicht reduziert */
+  letter-spacing: 0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.custom-panel-header > div {
+  display: flex;
+  align-items: center;
+  gap: 0 !important;
+}
+
+.custom-panel-close-btn,
+.custom-panel-max-btn {
+  background: transparent;
+  border: none;
+  color: #111;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s;
+  top: 2px;
+  height: 30px;
+  width: 30px;
+  left: 10%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.custom-panel-close-btn > *,
+.custom-panel-max-btn > * {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.custom-panel-content {
+  padding: 18px 18px 16px 18px;
+  height: auto;
+  max-height: calc(90vh - 48px);
+  overflow: auto;
+  background: #23272b;
+}
+
+.custom-panel-resize {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 18px;
+  height: 18px;
+  cursor: se-resize;
+  background: linear-gradient(135deg, transparent 60%, darkorange 60%);
+}

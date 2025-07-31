@@ -16,4 +16,5 @@ export interface BrewingStatus {
     WaitingStatus: boolean,
     HeatUpStatus: boolean,
     AgitatorStatus: boolean,
+    index: number,
 }

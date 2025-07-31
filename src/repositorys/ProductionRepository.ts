@@ -257,35 +257,16 @@ export class ProductionRepository {
         }
     }
 
-    static async checkIsBackendAvailable() {
+    static async checkIsBackendAvailable(): Promise<boolean> {
         return await ProductionRepository._doCheckIsBackendAvailable();
     }
 
-    private static async _doCheckIsBackendAvailable() {
+    private static async _doCheckIsBackendAvailable(): Promise<boolean> {
         try {
-            const response = await axios.get(BaseURL);
-            if (response.status === 200) {
-                const available: BackendAvailable = {
-                    isBackenAvailable: true, statusText: ""
-                };
-                return available;
-            } else {
-                const available: BackendAvailable = {
-                    isBackenAvailable: false, statusText: response.statusText
-                };
-                return available;
-            }
+            const response = await axios.get(BaseURL+"Available/");
+            return response.status === 200;
         } catch (error) {
-            let message = '';
-            if (error instanceof Error) {
-                message = error.message;
-            } else {
-                message = "Ein unbekannter Fehler ist aufgetreten.";
-            }
-            const available: BackendAvailable = {
-                isBackenAvailable: false, statusText: message
-            };
-            return available;
+            return false;
         }
     }
 

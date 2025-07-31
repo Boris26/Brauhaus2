@@ -19,11 +19,17 @@ interface indexMainProps {
     viewState: Views;
     brewingStatus: BrewingStatus;
     confirm: (confirmState: ConfirmStates) => void;
+    checkIsBackenAvailable : () => void;
 }
 
 class Index extends React.Component<indexMainProps> {
     constructor(props: indexMainProps) {
         super(props);
+    }
+
+    componentDidMount() {
+        const {checkIsBackenAvailable} = this.props;
+        checkIsBackenAvailable();
     }
 
     componentDidUpdate(prevProps: Readonly<indexMainProps>, prevState: Readonly<{}>, snapshot?: any) {
@@ -35,35 +41,20 @@ class Index extends React.Component<indexMainProps> {
     }
 
     confirmDialog = () => {
-        const {confirm, brewingStatus} = this.props;
-        switch (brewingStatus?.Type) {
-            case 'Einmaischen':
-                confirm(ConfirmStates.WAITING);
-                break;
-            case 'IODINE':
-                confirm(ConfirmStates.WAITING);
-                break;
-            case 'COOKING':
-                confirm(ConfirmStates.WAITING);
-                break;
-            case 'BOILING':
-                confirm(ConfirmStates.WAITING);
-                break;
-            default:
-                break;
-        }
+        const {confirm} = this.props;
+        confirm(ConfirmStates.WAITING);
     }
 
     getDialogMessage() {
         const {brewingStatus} = this.props;
-        switch (brewingStatus?.Type) {
-            case 'Einmaischen':
+        switch (brewingStatus?.StatusText) {
+            case 'WAITING_FOR_MASHING_IN':
                 return 'Einmaischen, bitte abschließen';
-            case 'IODINE':
+            case 'WAITING_FOR_IODINE_TEST':
                 return 'Bitte Jod Test durchführen!';
-            case 'COOKING':
+            case 'WAITING_FOR_COOKING_START':
                 return 'Kann der Koch Prozess gestartet werden?';
-            case 'BOILING':
+            case 'WAITING_FOR_WATER_BOIL':
                 return 'Bitte bestätigen, wenn Wasser kocht!';
             default:
                 return '';
@@ -118,7 +109,11 @@ const mapStateToProps = (state: any) => ({
 const mapDispatchToProps = (dispatch: any) => ({
     confirm: (confirmState: ConfirmStates) => {
         dispatch(ProductionActions.confirm(confirmState))
-    }
+    },
+
+    checkIsBackenAvailable: () => {
+        dispatch(ProductionActions.checkIsBackenAvailable())
+    },
 
 })
 
