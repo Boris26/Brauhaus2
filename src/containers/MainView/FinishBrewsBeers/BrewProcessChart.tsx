@@ -219,7 +219,10 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
                   // Temperaturwerte auf eine Dezimalstelle runden
                   const formattedValue = Number(value).toFixed(1);
                   // Name der Datenreihe anpassen
-                  const seriesName = name === 'Temperature' ? 'Ist-Temperatur' : 'Soll-Temperatur';
+                  let seriesName = name;
+                  if (name === 'Temperature') seriesName = 'Ist-Temperatur';
+                  else if (name === 'TargetTemperature') seriesName = 'Soll-Temperatur';
+                  else seriesName = name;
                   return [`${formattedValue} °C`, seriesName];
                 }}
                 labelFormatter={(label, payload) => {
@@ -313,8 +316,8 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
                   />
                 );
               })}
-              <Line type="monotone" dataKey="Temperature" stroke="#8884d8" name="Ist-Temperatur" dot={false} />
-              <Line type="monotone" dataKey="TargetTemperature" stroke="#82ca9d" name="Soll-Temperatur" dot={false} />
+              <Line type="monotone" dataKey="Temperature" stroke="#FF0000" name="Ist-Temperatur" dot={false} />
+              <Line type="monotone" dataKey="TargetTemperature" stroke="#FFFD00" name="Soll-Temperatur" dot={false} />
 
               {/* Brush auskommentiert für mehr Diagrammhöhe
               <Brush
