@@ -29,7 +29,7 @@ class Panel extends React.Component<PanelProps, PanelState> {
       position: { x: 100, y: 100 },
       size: { width: 400, height: 300 },
       dragStart: null,
-      maximized: false,
+      maximized: true, // Start maximized
     };
   }
 
