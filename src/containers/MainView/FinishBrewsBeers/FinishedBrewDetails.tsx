@@ -48,7 +48,7 @@ class FinishedBrewDetails extends Component<FinishedBrewDetailsProps> {
         {/* Diagramm anzeigen, falls Daten vorhanden */}
         {groupedData && (
           <>
-            <h4 style={{ marginTop: 50, marginBottom: 32 }}>Temperaturverlauf</h4>
+            <h4 style={{ marginTop: 30 }}>Temperaturverlauf</h4>
             <div style={{ marginBottom: 32 }}>
               <BrewProcessChart groupedData={groupedData} />
             </div>

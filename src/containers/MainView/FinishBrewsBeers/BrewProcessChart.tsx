@@ -232,9 +232,9 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
           ))}
         </div>
 
-        <div style={{ width: '100%', height: 500 }}>
+        <div style={{ width: '100%', height: 505 }}>
           <ResponsiveContainer>
-            <LineChart data={data} margin={{ top: 60, right: 30, left: 0, bottom: 40 }}>
+            <LineChart data={data} margin={{ top: 50, right: 30, left: 0, bottom: 40 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="elapsedTime"
@@ -247,14 +247,37 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
               />
               <YAxis label={{ value: 'Temperatur (°C)', angle: -90, position: 'insideLeft' }} />
               <Tooltip
-                formatter={(value, name, props) => [value, name === 'Temperature' ? 'Ist-Temperatur' : 'Soll-Temperatur']}
-                labelFormatter={(label, payload) => {
-                  const found = payload && payload[0] && payload[0].payload;
-                  return found ? `${this.formatSecondsToHMS(label)} – %c${found.state}` : this.formatSecondsToHMS(label);
+                formatter={(value, name, props) => {
+                  // Temperaturwerte auf eine Dezimalstelle runden
+                  const formattedValue = Number(value).toFixed(1);
+                  // Name der Datenreihe anpassen
+                  const seriesName = name === 'Temperature' ? 'Ist-Temperatur' : 'Soll-Temperatur';
+                  return [`${formattedValue} °C`, seriesName];
                 }}
-                contentStyle={{ fontWeight: 'bold', fontSize: 15, background: '#f9f9f9', border: '1px solid #bbb' }}
+                labelFormatter={(label, payload) => {
+                  if (!payload || !payload[0] || !payload[0].payload) {
+                    return this.formatSecondsToHMS(label);
+                  }
+
+                  const dataPoint = payload[0].payload;
+                  // Zeit und Prozess einfach als formatierter Text zurückgeben
+                  return `${this.formatSecondsToHMS(label)} - ${dataPoint.step} (${this.capitalizeState(dataPoint.state)})`;
+                }}
+                contentStyle={{
+                  fontWeight: 'normal',
+                  fontSize: 12,
+                  background: '#333333',
+                  border: '2px solid #ff9800',
+                  borderRadius: '4px',
+                  padding: '8px',
+                  boxShadow: '2px 2px 6px rgba(0,0,0,0.15)',
+                  maxWidth: '200px',
+                  width: 'auto'
+                }}
+                wrapperStyle={{ zIndex: 1000 }}
+                cursor={{ stroke: '#ff9800', strokeWidth: 1 }}
               />
-              <Legend verticalAlign="top" align="center" wrapperStyle={{ top: 415 }} />
+              <Legend verticalAlign="top" align="center" wrapperStyle={{ top: 460 }} />
               {/* Prozessbereiche als farbige Flächen mit Dauer in einem Label */}
               {processAreas.map((area, idx) => (
                 <ReferenceArea
@@ -331,6 +354,7 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
               })}
               <Line type="monotone" dataKey="Temperature" stroke="#8884d8" name="Ist-Temperatur" dot={false} />
               <Line type="monotone" dataKey="TargetTemperature" stroke="#82ca9d" name="Soll-Temperatur" dot={false} />
+              {/* Brush auskommentiert für mehr Diagrammhöhe
               <Brush
                 dataKey="elapsedTime"
                 height={36}
@@ -348,6 +372,7 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
                 }}
                 alwaysShowText={true}
               />
+              */}
             </LineChart>
           </ResponsiveContainer>
         </div>
