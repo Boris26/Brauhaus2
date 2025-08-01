@@ -12,5 +12,5 @@ export interface FinishedBrew {
     active: boolean;
     beer_id?: string; // Optional beer ID, kann jetzt eine UUID (string) sein
     state: eBrewState;
-    brewValues?: string; // Optional: Messdaten als Blob (z.B. von DataCollector)
+    brewValues?: string;
 }

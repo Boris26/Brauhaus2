@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import {FinishedBrew} from "../../../model/FinishedBrew";
+import BrewProcessChart from './BrewProcessChart';
+
 interface FinishedBrewDetailsProps {
   brew: FinishedBrew;
 }
@@ -8,6 +10,16 @@ class FinishedBrewDetails extends Component<FinishedBrewDetailsProps> {
   render() {
     const { brew } = this.props;
     if (!brew) return <div>Keine Daten verfügbar.</div>;
+
+    let groupedData: any = undefined;
+    if (brew.brewValues) {
+      try {
+        const parsed = typeof brew.brewValues === 'string' ? JSON.parse(brew.brewValues) : brew.brewValues;
+        groupedData = parsed.groupedData;
+      } catch (e) {
+        groupedData = undefined;
+      }
+    }
 
     return (
       <div className="finished-brew-details">
@@ -33,6 +45,15 @@ class FinishedBrewDetails extends Component<FinishedBrewDetailsProps> {
             {/* Weitere Felder nach Bedarf ergänzen */}
           </tbody>
         </table>
+        {/* Diagramm anzeigen, falls Daten vorhanden */}
+        {groupedData && (
+          <>
+            <h4 style={{ marginTop: 50, marginBottom: 32 }}>Temperaturverlauf</h4>
+            <div style={{ marginBottom: 32 }}>
+              <BrewProcessChart groupedData={groupedData} />
+            </div>
+          </>
+        )}
       </div>
     );
   }
