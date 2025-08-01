@@ -82,6 +82,24 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
       .join(':');
   }
 
+  // Hilfsfunktion: Berechnet die Dauer zwischen zwei Zeitpunkten und formatiert sie
+  formatDuration(startSeconds: number, endSeconds: number) {
+    const durationSec = endSeconds - startSeconds;
+    return this.formatSecondsToHMS(durationSec);
+  }
+
+  // Hilfsfunktion: Tick-Werte für die X-Achse alle 1 Minute generieren
+  generateTicksEveryMinute(data: any[]) {
+    const ticks: number[] = [];
+    if (data.length === 0) return ticks;
+    const minTime = Math.floor(data[0].elapsedTime / 60) * 60;
+    const maxTime = Math.ceil(data[data.length - 1].elapsedTime / 60) * 60;
+    for (let t = minTime; t <= maxTime; t += 60) {
+      ticks.push(t);
+    }
+    return ticks;
+  }
+
   render() {
     const { groupedData } = this.props;
     if (!groupedData) return <div>Keine Diagrammdaten vorhanden.</div>;
@@ -156,8 +174,14 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
         <ResponsiveContainer>
           <LineChart data={data} margin={{ top: 60, right: 30, left: 0, bottom: 40 }}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="elapsedTime" type="number" label={{ value: 'Zeit', position: 'insideBottomRight', offset: -5 }}
+            <XAxis
+              dataKey="elapsedTime"
+              type="number"
+              label={{ value: 'Zeit', position: 'insideBottomRight', offset: -5 }}
               tickFormatter={this.formatSecondsToHMS}
+              interval={0}
+              ticks={this.generateTicksEveryMinute(data)}
+              fontSize={11}
             />
             <YAxis label={{ value: 'Temperatur (°C)', angle: -90, position: 'insideLeft' }} />
             <Tooltip
@@ -169,25 +193,34 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
               contentStyle={{ fontWeight: 'bold', fontSize: 15, background: '#f9f9f9', border: '1px solid #bbb' }}
             />
             <Legend verticalAlign="top" align="center" wrapperStyle={{ top: 415 }} />
-            {/* Prozessbereiche als farbige Flächen */}
+            {/* Prozessbereiche als farbige Flächen mit Dauer in einem Label */}
             {processAreas.map((area, idx) => (
-              <ReferenceArea key={area.step} x1={area.start} x2={area.end} strokeOpacity={0} fill={areaColors[idx % areaColors.length]} fillOpacity={0.18} label={undefined} />
+              <ReferenceArea
+                key={area.step}
+                x1={area.start}
+                x2={area.end}
+                strokeOpacity={0}
+                fill={areaColors[idx % areaColors.length]}
+                fillOpacity={0.18}
+                label={{
+                  value: `${area.step} (${this.formatDuration(area.start, area.end)})`,
+                  position: 'top',
+                  fill: 'White',
+                  fontSize: 13,
+                  fontWeight: 'bold',
+                  dy: -55,
+                  dx: 0
+                }}
+              />
             ))}
-            {/* Prozesswechsel als vertikale Linien markieren */}
+
+            {/* Prozesswechsel nur als vertikale Linien markieren, ohne Label */}
             {processChanges.map(pc => (
               <ReferenceLine
                 key={pc.step}
-                x={pc.elapsedTime} // Offset für bessere Lesbarkeit
+                x={pc.elapsedTime}
                 stroke="#ff9800"
-                label={{
-                  value: pc.step,
-                  position: 'top',
-                  fill: '#ff9800',
-                  fontSize: 15,
-                  fontWeight: 'bold',
-                  dy: -35,
-                  dx: +40,
-                }}
+                strokeWidth={1}
               />
             ))}
             {/* Bereiche für jeden State farblich markieren */}
@@ -203,14 +236,36 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
                 label={{
                   value: this.capitalizeState(area.state),
                   position: 'top',
-                  fill: '#ff9800',
-                  fontSize: 12,
+                  fill: 'White',
+                  fontSize: 11,
                   fontWeight: 'bold',
-                  dy: -5,
+                  dy: -15,
                   dx: 0
                 }}
               />
             ))}
+
+            {/* State-Dauer als separate Referenzlinie, um Überlappung zu vermeiden */}
+            {stateAreas.map((area, idx) => {
+              const centerX = area.start + (area.end - area.start) / 2;
+              // Nur anzeigen, wenn der Bereich groß genug ist
+              if ((area.end - area.start) < 60) return null; // Zu kleine Bereiche überspringen
+              return (
+                <ReferenceLine
+                  key={`state_duration_${area.key}`}
+                  x={centerX}
+                  stroke="transparent"
+                  label={{
+                    value: `(${this.formatDuration(area.start, area.end)})`,
+                    position: 'top',
+                    fill: 'White',
+                    fontSize: 11,
+                    dy: -1,
+                    dx: 0
+                  }}
+                />
+              );
+            })}
             <Line type="monotone" dataKey="Temperature" stroke="#8884d8" name="Ist-Temperatur" dot={false} />
             <Line type="monotone" dataKey="TargetTemperature" stroke="#82ca9d" name="Soll-Temperatur" dot={false} />
             <Brush
@@ -222,6 +277,13 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
               tickFormatter={this.formatSecondsToHMS}
               className="brew-brush"
               y={440}
+              startIndex={0}
+              endIndex={data.length - 1}
+              gap={4}
+              onChange={(viewport) => {
+                // Optional: Hier könnte ein Zoom-Event-Handler implementiert werden
+              }}
+              alwaysShowText={true}
             />
           </LineChart>
         </ResponsiveContainer>
