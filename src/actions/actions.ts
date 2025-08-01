@@ -745,6 +745,9 @@ export namespace ProductionActions {
         NEXT_PROCEDURE_STEP = 'ProductionActions.NEXT_PROCEDURE_STEP',
         NEXT_PROCEDURE_STEP_SUCCESS = 'ProductionActions.NEXT_PROCEDURE_STEP_SUCCESS',
         NEXT_PROCEDURE_STEP_FAILURE = 'ProductionActions.NEXT_PROCEDURE_STEP_FAILURE',
+        WEBSOCKET_CONNECT = 'ProductionActions.WEBSOCKET_CONNECT',
+        WEBSOCKET_DISCONNECT = 'ProductionActions.WEBSOCKET_DISCONNECT',
+        OVERHEAT_RECEIVED = 'ProductionActions.OVERHEAT_RECEIVED',
     }
 
     export interface SetWaterStatus {
@@ -838,6 +841,19 @@ export namespace ProductionActions {
         payload: { error: any };
     }
 
+    export interface WebSocketConnect {
+        readonly type: ActionTypes.WEBSOCKET_CONNECT;
+    }
+    export interface WebSocketDisconnect {
+        readonly type: ActionTypes.WEBSOCKET_DISCONNECT;
+    }
+    export interface OverheatReceived {
+        readonly type: ActionTypes.OVERHEAT_RECEIVED;
+        payload: {
+            data: any;
+        };
+    }
+
     export type AllProductionActions =
         GetTemperatures |
         SetTemperatures |
@@ -857,7 +873,10 @@ export namespace ProductionActions {
         SetWaterStatus |
         NextProcedureStep |
         NextProcedureStepSuccess |
-        NextProcedureStepFailure;
+        NextProcedureStepFailure |
+        WebSocketConnect |
+        WebSocketDisconnect |
+        OverheatReceived;
 
     export function setWaterStatus(aWaterStatus: WaterStatus): ProductionActions.SetWaterStatus {
         return {
@@ -990,5 +1009,24 @@ export namespace ProductionActions {
 
     export function waterFillingFailure(error: any) {
         return undefined;
+    }
+
+    export function webSocketConnect(): WebSocketConnect {
+        return {
+            type: ActionTypes.WEBSOCKET_CONNECT
+        };
+    }
+
+    export function webSocketDisconnect(): WebSocketDisconnect {
+        return {
+            type: ActionTypes.WEBSOCKET_DISCONNECT
+        };
+    }
+
+    export function overheatReceived(data: any): OverheatReceived {
+        return {
+            type: ActionTypes.OVERHEAT_RECEIVED,
+            payload: { data }
+        };
     }
 }

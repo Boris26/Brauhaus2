@@ -2,13 +2,14 @@ import React from "react";
 import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
 import './ProcessList.css';
+import {Beer, FermentationSteps} from "../../../model/Beer";
 
 export interface ProcessStep {
     name: string;
 }
 
 interface ProcessListProps {
-    selectedBeer: any;
+    selectedBeer: Beer;
     currentStepIndex: number; // 0-based
     onNextStep?: () => void;
 }
@@ -85,7 +86,7 @@ export class ProcessList extends React.Component<ProcessListProps> {
 }
 
 
-export function createProcessSteps(selectedBeer: any): ProcessStep[] {
+export function createProcessSteps(selectedBeer: Beer): ProcessStep[] {
     let processSteps: ProcessStep[] = [];
     if (!selectedBeer || !Array.isArray(selectedBeer.fermentation)) {
         return processSteps;
@@ -94,15 +95,18 @@ export function createProcessSteps(selectedBeer: any): ProcessStep[] {
     // Einmaischen finden
     const einmaischen = fermentation.find((step: any) => step.type === 'Einmaischen');
     if (einmaischen) {
-        processSteps.push({ name: `Aufheizen auf Einmaischen` });
+        const temperature = einmaischen.temperature
+        processSteps.push({ name: `Aufheizen für Einmaischen -> ${temperature}°C`});
         processSteps.push({ name: 'Einmaischen' });
     }
     // Nur Rast-Schritte (Rast1, Rast 2, ...) berücksichtigen
     let lastRastIndex = -1;
-    fermentation.forEach((step: any, idx: number) => {
+    fermentation.forEach((step: FermentationSteps, idx: number) => {
+        const temperature = step.temperature
+        const type = step.type
         if (/^Rast\s*\d+$/i.test(step.type)) {
-            processSteps.push({ name: `Aufheizen auf ${step.type}` });
-            processSteps.push({ name: step.type });
+            processSteps.push({ name: `Aufheizen für ${type} -> ${temperature}°C`});
+            processSteps.push({ name: type });
             lastRastIndex = processSteps.length - 1;
         }
     });
@@ -113,7 +117,8 @@ export function createProcessSteps(selectedBeer: any): ProcessStep[] {
     // Abmaischen finden und vor Kochen einfügen
     const abmaischen = fermentation.find((step: any) => step.type === 'Abmaischen');
     if (abmaischen) {
-        processSteps.push({ name: `Aufheizen auf Abmaischen` });
+        const temperature = abmaischen.temperature
+        processSteps.push({ name: `Aufheizen für Abmaischen -> ${temperature}°C`});
         processSteps.push({ name: 'Abmaischen' });
     }
     // Am Ende "Aufheizen auf Kochen" und "Kochen" hinzufügen

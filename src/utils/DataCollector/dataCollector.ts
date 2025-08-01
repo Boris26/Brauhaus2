@@ -22,60 +22,69 @@ class DataCollector {
   setBrewingStatus(status: BrewingStatus) {
     const { Name, StatusText, elapsedTime, currentTime, Temperature, TargetTemperature } = status;
 
-    // Prüfe auf Statuswechsel
-    const hasChanged =
+    const currentKey = { Name, StatusText };
+    const currentMeasurement: BrewingStatusMeasurement = {
+      elapsedTime,
+      currentTime,
+      Temperature,
+      TargetTemperature,
+    };
+
+    const isStatusChanged =
         this.lastStatusKey &&
         (this.lastStatusKey.Name !== Name || this.lastStatusKey.StatusText !== StatusText);
 
-    // Wenn sich der Status geändert hat → letzten Messpunkt dem alten Status hinzufügen
-    if (hasChanged && this.lastMeasurement) {
-      const { Name: prevName, StatusText: prevStatusText } = this.lastStatusKey!;
+    // Falls der Status sich geändert hat, füge die letzte Messung dem vorherigen Status hinzu
+    if (isStatusChanged && this.lastStatusKey && this.lastMeasurement) {
+      const { Name: prevName, StatusText: prevStatusText } = this.lastStatusKey;
+
       if (!this.groupedData[prevName]) {
         this.groupedData[prevName] = {};
       }
+
       if (!this.groupedData[prevName][prevStatusText]) {
         this.groupedData[prevName][prevStatusText] = [];
       }
+
       this.groupedData[prevName][prevStatusText].push(this.lastMeasurement);
-      console.debug('[DataCollector] Statuswechsel: letzter Messpunkt gespeichert:', {
+      console.debug('[DataCollector] Statuswechsel: letzte Messung übernommen:', {
         prevName,
         prevStatusText,
         lastMeasurement: this.lastMeasurement
       });
     }
 
-    // Status aktualisieren
-    this.lastStatusKey = { Name, StatusText };
-    this.lastMeasurement = { elapsedTime, currentTime, Temperature, TargetTemperature };
-
-    // Daten speichern
+    // Initialisiere aktuelle Gruppe, falls nicht vorhanden
     if (!this.groupedData[Name]) {
       this.groupedData[Name] = {};
     }
 
     if (!this.groupedData[Name][StatusText]) {
-      // Neuer Status → erste Messung speichern
-      this.groupedData[Name][StatusText] = [this.lastMeasurement];
-      console.debug('[DataCollector] setBrewingStatus (neu):', {
+      // Neue Gruppe → erste Messung direkt speichern
+      this.groupedData[Name][StatusText] = [currentMeasurement];
+      console.debug('[DataCollector] Neuer Status → erste Messung gespeichert:', {
         Name,
         StatusText,
         groupedLength: 1,
-        lastMeasurement: this.lastMeasurement
+        measurement: currentMeasurement,
       });
     } else {
-      // Temperatur hat sich geändert → speichern
-      const last = this.groupedData[Name][StatusText].at(-1);
-      if (last?.Temperature !== Temperature) {
-        this.groupedData[Name][StatusText].push(this.lastMeasurement);
-        console.debug('[DataCollector] setBrewingStatus (Temp geändert):', {
+      const lastStored = this.groupedData[Name][StatusText].at(-1);
+
+      if (lastStored?.Temperature !== Temperature) {
+        this.groupedData[Name][StatusText].push(currentMeasurement);
+        console.debug('[DataCollector] Temperaturänderung → neue Messung gespeichert:', {
           Name,
           StatusText,
           groupedLength: this.groupedData[Name][StatusText].length,
-          lastMeasurement: this.lastMeasurement
+          measurement: currentMeasurement,
         });
       }
     }
 
+    // Status & letzte Messung merken
+    this.lastStatusKey = currentKey;
+    this.lastMeasurement = currentMeasurement;
     this.brewingStatus = status;
   }
 
@@ -86,7 +95,7 @@ class DataCollector {
   }
 
   getAllDataAsJSONString(): string {
-    return JSON.stringify({ groupedData: this.groupedData });
+    return JSON.stringify({ groupedData: this.groupedData }, null, 2);
   }
 }
 

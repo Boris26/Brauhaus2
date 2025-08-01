@@ -20,6 +20,7 @@ interface indexMainProps {
     brewingStatus: BrewingStatus;
     confirm: (confirmState: ConfirmStates) => void;
     checkIsBackenAvailable : () => void;
+    webSocketConnect: () => void;
 }
 
 class Index extends React.Component<indexMainProps> {
@@ -114,6 +115,12 @@ const mapDispatchToProps = (dispatch: any) => ({
     checkIsBackenAvailable: () => {
         dispatch(ProductionActions.checkIsBackenAvailable())
     },
+
+    webSocketConnect: () => {
+        dispatch(ProductionActions.webSocketConnect());
+    }
+
+
 
 })
 

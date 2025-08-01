@@ -1,13 +1,17 @@
 import { ofType } from 'redux-observable';
-import {from, of, interval, EMPTY, timer, filter, takeWhile, startWith} from 'rxjs';
+import {from, of, interval, EMPTY, timer, filter, takeWhile, startWith, Observable} from 'rxjs';
 import { catchError, map, mergeMap, switchMap, takeUntil, delay, retryWhen, take, toArray } from 'rxjs/operators';
 import { ProductionActions } from '../actions/actions';
 import { ProductionRepository } from '../repositorys/ProductionRepository';
 import {BrewingStatus} from "../model/BrewingStatus";
 import { delayWhen } from 'rxjs/operators';
 import { dataCollector } from '../utils/DataCollector/dataCollector';
+import { WebSocketController } from '../utils/WebSocketController';
+import {BaseURL} from "../global";
 
 const BREWING_STATUS_POLL_INTERVAL = 1000;
+const WS_URL = (typeof BaseURL !== 'undefined' ? BaseURL : '').replace(/^http/, 'ws');
+let wsController: WebSocketController | null = null;
 
 export const getTemperaturesEpic$ = (action$: any) =>
     action$.pipe(
@@ -153,6 +157,43 @@ export const nextProcedureStepEpic$ = (action$: any) =>
     )
   );
 
+export const productionWebSocketEpic$ = (action$: any) =>
+  action$.pipe(
+    ofType(
+      ProductionActions.ActionTypes.WEBSOCKET_CONNECT,
+      ProductionActions.ActionTypes.WEBSOCKET_DISCONNECT
+    ),
+    switchMap((action: any) => {
+      if (action.type === ProductionActions.ActionTypes.WEBSOCKET_CONNECT) {
+        if (!wsController) {
+          wsController = new WebSocketController(WS_URL);
+        }
+        return new Observable((observer) => {
+          wsController!.onMessage((event) => {
+            try {
+              const msg = JSON.parse(event.data);
+              if (msg.event === 'overheat') {
+                observer.next(ProductionActions.overheatReceived(msg.data));
+              }
+            } catch (e) {
+              // ignore invalid messages
+            }
+          });
+          wsController!.connect();
+          return () => {
+            wsController?.disconnect();
+            wsController = null;
+          };
+        });
+      } else if (action.type === ProductionActions.ActionTypes.WEBSOCKET_DISCONNECT) {
+        wsController?.disconnect();
+        wsController = null;
+        return EMPTY;
+      }
+      return EMPTY;
+    })
+  );
+
 export const productionEpics = [
   getTemperaturesEpic$,
   toggleAgitatorEpic$,
@@ -161,5 +202,6 @@ export const productionEpics = [
   startWaterFillingEpic$,
   confirmEpic$,
   checkIsBackendAvailableEpic$,
-  nextProcedureStepEpic$
+  nextProcedureStepEpic$,
+  productionWebSocketEpic$
 ];

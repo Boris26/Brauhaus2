@@ -25,6 +25,7 @@ export interface ProductionReducerState {
     isBackenAvailable: boolean;
     waterStatus: WaterStatus;
     isPollingRunning: boolean;
+    overHeat: boolean;
 }
 
 export const initialProductionState: ProductionReducerState = {
@@ -40,7 +41,8 @@ export const initialProductionState: ProductionReducerState = {
     confirmState: undefined,
     isBackenAvailable:  false,
     waterStatus: { liters: 0, openClose: false },
-    isPollingRunning: false
+    isPollingRunning: false,
+    overHeat: false
 };
 
 const productionReducer = (
@@ -95,6 +97,11 @@ const productionReducer = (
         case ProductionActions.ActionTypes.SET_WATER_STATUS: {
             return { ...aState, waterStatus: aAction.payload.waterStatus };
         }
+        case ProductionActions.ActionTypes.OVERHEAT_RECEIVED: {
+            console.warn('Overheat received, setting overHeat to true');
+            return { ...aState, overHeat: true };
+        }
+
         default:
             return aState;
     }
