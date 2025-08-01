@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, ReferenceArea, Brush } from 'recharts';
+import './BrewProcessChart.css';
 
 interface BrewProcessChartProps {
   groupedData: any;
@@ -167,7 +168,6 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
     });
 
     // Farbzuweisungen bleiben unverändert
-    const stateColors = ['rgba(255,255,255,0.0)', 'rgba(44,62,80,0.10)'];
     const stateColorMap: Record<string, string> = {
       HEATING: '#ffe082',
       WAITING_FOR_MASHING_IN: '#b3e5fc',
@@ -179,36 +179,13 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
       default: '#eeeeee'
     };
 
-    // Hilfskomponente für vertikale Linien-Labels mit fester Höhe
-    const FixedHeightLabel = ({ value }: { value: string }) => (
-      <text
-        x={0}
-        y={-35} // Feste Höhe über der Linie
-        textAnchor="middle"
-        fill="#ff9800"
-        fontSize={12}
-        fontWeight="bold"
-        style={{ pointerEvents: 'none' }}
-      >
-        {value}
-      </text>
-    );
     return (
-      <div style={{ width: '100%' }}>
+      <div className="brew-process-container">
         {/* Prozessfilter-Auswahl */}
-        <div style={{ marginBottom: 15, display: 'flex', justifyContent: 'center', flexWrap: 'wrap' }}>
+        <div className="brew-chart-filter">
           <button
             onClick={() => this.handleProcessChange('all')}
-            style={{
-              margin: '5px',
-              padding: '8px 12px',
-              border: 'none',
-              borderRadius: '4px',
-              backgroundColor: !selectedProcess ? '#ff9800' : '#f5f5f5',
-              color: !selectedProcess ? 'white' : '#333',
-              cursor: 'pointer',
-              fontWeight: !selectedProcess ? 'bold' : 'normal'
-            }}
+            className={`brew-filter-button ${!selectedProcess ? 'active' : ''}`}
           >
             Alle Prozesse
           </button>
@@ -216,23 +193,14 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
             <button
               key={process}
               onClick={() => this.handleProcessChange(process)}
-              style={{
-                margin: '5px',
-                padding: '8px 12px',
-                border: 'none',
-                borderRadius: '4px',
-                backgroundColor: selectedProcess === process ? '#ff9800' : '#f5f5f5',
-                color: selectedProcess === process ? 'white' : '#333',
-                cursor: 'pointer',
-                fontWeight: selectedProcess === process ? 'bold' : 'normal'
-              }}
+              className={`brew-filter-button ${selectedProcess === process ? 'active' : ''}`}
             >
               {process}
             </button>
           ))}
         </div>
 
-        <div style={{ width: '100%', height: 505 }}>
+        <div className="brew-chart-container">
           <ResponsiveContainer>
             <LineChart data={data} margin={{ top: 50, right: 30, left: 0, bottom: 40 }}>
               <CartesianGrid strokeDasharray="3 3" />
@@ -247,7 +215,7 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
               />
               <YAxis label={{ value: 'Temperatur (°C)', angle: -90, position: 'insideLeft' }} />
               <Tooltip
-                formatter={(value, name, props) => {
+                formatter={(value, name) => {
                   // Temperaturwerte auf eine Dezimalstelle runden
                   const formattedValue = Number(value).toFixed(1);
                   // Name der Datenreihe anpassen
@@ -267,17 +235,19 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
                   fontWeight: 'normal',
                   fontSize: 12,
                   background: '#333333',
+                  color: '#ffffff',
                   border: '2px solid #ff9800',
                   borderRadius: '4px',
                   padding: '8px',
                   boxShadow: '2px 2px 6px rgba(0,0,0,0.15)',
-                  maxWidth: '200px',
+                  maxWidth: '220px',
                   width: 'auto'
                 }}
                 wrapperStyle={{ zIndex: 1000 }}
                 cursor={{ stroke: '#ff9800', strokeWidth: 1 }}
               />
               <Legend verticalAlign="top" align="center" wrapperStyle={{ top: 460 }} />
+
               {/* Prozessbereiche als farbige Flächen mit Dauer in einem Label */}
               {processAreas.map((area, idx) => (
                 <ReferenceArea
@@ -290,11 +260,8 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
                   label={{
                     value: `${area.step} (${this.formatDuration(area.start, area.end)})`,
                     position: 'top',
-                    fill: 'White',
-                    fontSize: 13,
-                    fontWeight: 'bold',
-                    dy: -45,
-                    dx: 0
+                    className: "brew-process-area-label",
+                    dy: -45
                   }}
                 />
               ))}
@@ -322,11 +289,8 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
                   label={{
                     value: this.capitalizeState(area.state),
                     position: 'top',
-                    fill: 'White',
-                    fontSize: 11,
-                    fontWeight: 'bold',
-                    dy: -15,
-                    dx: 0
+                    className: "brew-state-area-label",
+                    dy: -18
                   }}
                 />
               ))}
@@ -342,18 +306,16 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
                     x={centerX}
                     stroke="transparent"
                     label={{
-                      value: `(${this.formatDuration(area.start, area.end)})`,
+                      value: `${this.formatDuration(area.start, area.end)}`,
                       position: 'top',
-                      fill: 'White',
-                      fontSize: 11,
-                      dy: +1,
-                      dx: 0
+                      className: "brew-state-duration-label",
                     }}
                   />
                 );
               })}
               <Line type="monotone" dataKey="Temperature" stroke="#8884d8" name="Ist-Temperatur" dot={false} />
               <Line type="monotone" dataKey="TargetTemperature" stroke="#82ca9d" name="Soll-Temperatur" dot={false} />
+
               {/* Brush auskommentiert für mehr Diagrammhöhe
               <Brush
                 dataKey="elapsedTime"

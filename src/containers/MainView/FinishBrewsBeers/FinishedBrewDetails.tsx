@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import {FinishedBrew} from "../../../model/FinishedBrew";
+import { FinishedBrew } from "../../../model/FinishedBrew";
 import BrewProcessChart from './BrewProcessChart';
 
 interface FinishedBrewDetailsProps {
@@ -26,10 +26,6 @@ class FinishedBrewDetails extends Component<FinishedBrewDetailsProps> {
         <h3>Brau-Durchgang Details</h3>
         <table>
           <tbody>
-            <tr>
-              <td><b>ID:</b></td>
-              <td>{brew.id}</td>
-            </tr>
             <tr>
               <td><b>Name:</b></td>
               <td>{brew.name}</td>

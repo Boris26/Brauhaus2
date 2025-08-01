@@ -1,0 +1,77 @@
+/* Styles für das Brau-Prozessdiagramm */
+
+.brew-process-container {
+  width: 100%;
+}
+
+.brew-chart-filter {
+  margin-bottom: 15px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.brew-filter-button {
+  margin: 5px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #f5f5f5;
+  color: #333;
+  font-weight: normal;
+}
+
+.brew-filter-button.active {
+  background-color: #ff9800;
+  color: white;
+  font-weight: bold;
+}
+
+.brew-chart-container {
+  width: 100%;
+  height: 505px;
+}
+
+.brew-tooltip {
+  font-weight: normal;
+  font-size: 12px;
+  background: #ffffff;
+  border: 2px solid #ff9800;
+  border-radius: 4px;
+  padding: 8px;
+  box-shadow: 2px 2px 6px rgba(0,0,0,0.15);
+  max-width: 220px;
+  width: auto;
+}
+
+.brew-tooltip-dark {
+  background: #333333;
+  color: #ffffff;
+}
+
+.brew-process-area-label {
+  fill: white;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.brew-state-area-label {
+  fill: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.brew-state-duration-label {
+  fill: white;
+  font-size: 12px;
+}
+
+.brew-cursor {
+  stroke: #ff9800;
+  stroke-width: 1;
+}
+
+.brew-brush {
+  height: 36px;
+}
