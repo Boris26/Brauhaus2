@@ -72,6 +72,16 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
     return cleaned.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
   }
 
+  // Hilfsfunktion: Sekunden in h:mm:ss
+  formatSecondsToHMS(seconds: number) {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    return [h, m, s]
+      .map((v, i) => (i === 0 ? v : v.toString().padStart(2, '0')))
+      .join(':');
+  }
+
   render() {
     const { groupedData } = this.props;
     if (!groupedData) return <div>Keine Diagrammdaten vorhanden.</div>;
@@ -146,13 +156,15 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
         <ResponsiveContainer>
           <LineChart data={data} margin={{ top: 60, right: 30, left: 0, bottom: 40 }}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="elapsedTime" type="number" label={{ value: 'Zeit (s)', position: 'insideBottomRight', offset: -5 }} />
+            <XAxis dataKey="elapsedTime" type="number" label={{ value: 'Zeit', position: 'insideBottomRight', offset: -5 }}
+              tickFormatter={this.formatSecondsToHMS}
+            />
             <YAxis label={{ value: 'Temperatur (°C)', angle: -90, position: 'insideLeft' }} />
             <Tooltip
               formatter={(value, name, props) => [value, name === 'Temperature' ? 'Ist-Temperatur' : 'Soll-Temperatur']}
               labelFormatter={(label, payload) => {
                 const found = payload && payload[0] && payload[0].payload;
-                return found ? `${label} s – ` + `%c${found.state}` : `${label} s`;
+                return found ? `${this.formatSecondsToHMS(label)} – %c${found.state}` : this.formatSecondsToHMS(label);
               }}
               contentStyle={{ fontWeight: 'bold', fontSize: 15, background: '#f9f9f9', border: '1px solid #bbb' }}
             />
@@ -207,7 +219,7 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
               stroke="#ff9800"
               travellerWidth={14}
               fill="#23272b"
-              tickFormatter={tick => `${tick}s`}
+              tickFormatter={this.formatSecondsToHMS}
               className="brew-brush"
               y={440}
             />
