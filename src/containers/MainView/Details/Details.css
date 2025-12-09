@@ -1,8 +1,10 @@
-.detailsContainer
-{
-    margin: 10px;
-    overflow: auto;
+.detailsContainer {
+    display: flex;
+    flex-direction: column;
+    /* KEIN overflow hier – SimpleBar scrollt außen */
 }
+
+/* Header bleibt oben kleben */
 .header {
     background-color: darkorange;
     height: 57px;
@@ -11,12 +13,83 @@
     justify-content: center;
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
+
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .header-text {
     font-size: 20px;
     color: black;
 }
+
+.batch-settings {
+    position: sticky;
+    background: #303030;
+    padding: 16px 14px; /* Links identisch zu Tabellen */
+    flex-shrink: 0;
+    height: 72px; /* etwas höher */
+    display: flex;
+    align-items: center; /* vertikal zentriert */
+    border-bottom: 1px solid #444;
+}
+
+/* Schönere Abstände zwischen den Eingabeelementen */
+.batch-settings .settings-row {
+    display: flex;
+    align-items: center;
+    gap: 40px; /* etwas weiter auseinander */
+}
+
+.batch-settings label {
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Basis Input */
+.batch-select,
+.batch-input {
+    margin-left: 10px;
+    padding: 6px 10px;
+    background-color: #2f2f2f;
+    color: #ffffff;
+    border-radius: 6px;
+    border: 1px solid #555;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+/* Hover */
+.batch-select:hover,
+.batch-input:hover {
+    border-color: #888;
+}
+
+/* Fokus (orange glow) */
+.batch-select:focus,
+.batch-input:focus {
+    border-color: darkorange;
+    box-shadow: 0 0 6px rgba(255, 140, 0, 0.6);
+    background-color: #3b3b3b;
+}
+
+/* Select Option Styling (Firefox/Chrome) */
+.batch-select option {
+    background: #2f2f2f;
+    color: white;
+}
+
+/* Number input: Entferne die Spinners (Chrome) */
+.batch-input::-webkit-inner-spin-button,
+.batch-input::-webkit-outer-spin-button {
+    opacity: 1; /* 1 = sichtbar, 0 = unsichtbar, choose your style */
+}
+
+
+/* Wortkochen Header bleibt wie gehabt */
 .wortBoiling-header {
     display: flex;
     border-radius: 5px;
@@ -25,8 +98,8 @@
     margin-bottom: 0.2rem;
     height: 1.5rem;
     align-items: center;
-
 }
+
 .wortBoiling-header-text {
     font-size: 16px;
     font-family: Arial, Helvetica, sans-serif;
@@ -34,30 +107,10 @@
     margin-left: 1.5rem;
 }
 
-
-
-
-.table-divider {
-    border-bottom: 2px solid grey; /* Dickerer Trennstrich mit 2 Pixel Breite */
-
-}
-
-
-
-.input-container {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 10px;
-}
+/* Tabellen: Text weiß + dunkler Hintergrund */
 .wortBoiling-table .MuiTableCell-root,
 .wortBoiling-table .MuiTableCell-head,
 .wortBoiling-table .MuiTableCell-body {
     color: white !important;
-}
-
-.wortBoiling-table,
-.wortBoiling-table .MuiTableCell-root,
-.wortBoiling-table .MuiTableCell-head,
-.wortBoiling-table .MuiTableCell-body {
     background-color: #404040 !important;
 }

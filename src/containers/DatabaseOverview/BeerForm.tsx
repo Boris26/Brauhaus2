@@ -10,6 +10,9 @@ import {
 import {MashingType} from "../../enums/eMashingType";
 import './BeerForm.css'
 import SimpleBar from 'simplebar-react';
+import {MaltsActions} from "../../actions/malt.actions";
+import {HopsActions} from "../../actions/hops.actions";
+import {YeastActions} from "../../actions/yeast.actions";
 
 interface BeerFormProps {
     onSubmitBeer: (beer: BeerDTO) => void;
@@ -802,9 +805,9 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 }
 
 const mapStateToProps = (state: any) => ({
-    malts: state.beerDataReducer.malts,
-    hops: state.beerDataReducer.hops,
-    yeasts: state.beerDataReducer.yeasts,
+    malts: state.maltsReducer.malts,
+    hops: state.hopsReducer.hops,
+    yeasts: state.yeastReducer.yeasts,
     isSubmitSuccessful: state.beerDataReducer.isSubmitSuccessful,
     message: state.beerDataReducer.message,
     messageType: state.beerDataReducer.type,
@@ -815,9 +818,9 @@ const mapStateToProps = (state: any) => ({
 
 const mapDispatchToProps = (dispatch: any) => ({
     onSubmitBeer: (beer: BeerDTO) => dispatch(BeerActions.submitBeer(beer)),
-    getMalt: (isFetching: boolean) => dispatch(BeerActions.getMalts(isFetching)),
-    getHop: (isFetching: boolean) => dispatch(BeerActions.getHops(isFetching)),
-    getYeast: (isFetching: boolean) => dispatch(BeerActions.getYeasts(isFetching)),
+    getMalt: (isFetching: boolean) => dispatch(MaltsActions.getMalts(isFetching)),
+    getHop: (isFetching: boolean) => dispatch(HopsActions.getHops(isFetching)),
+    getYeast: (isFetching: boolean) => dispatch(YeastActions.getYeasts(isFetching)),
     saveBeerFormState: (formState: any) => dispatch(BeerActions.saveBeerFormState(formState)),
     importBeer: (file: File) => dispatch(BeerActions.importBeer(file)),
 });

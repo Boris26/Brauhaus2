@@ -3,6 +3,7 @@ import {FormEvent} from "react";
 import {Hops} from "../../../model/Hops";
 import {BeerActions} from "../../../actions/actions";
 import {connect} from "react-redux";
+import {HopsActions} from "../../../actions/hops.actions";
 interface HopFormState {
   name: string;
   type: string;
@@ -74,11 +75,11 @@ render() {
 
 }
 const mapStateToProps = (state: any) => ({
-    isSuccessful: state.beerDataReducer.isSubmitHopSuccessful
+    isSuccessful: state.hopsReducer.isSubmitHopSuccessful
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
-    onSubmitHop: (hop: Hops) => dispatch(BeerActions.submitNewHop(hop))
+    onSubmitHop: (hop: Hops) => dispatch(HopsActions.submitNewHop(hop))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(HopForm);

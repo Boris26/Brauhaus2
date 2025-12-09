@@ -51,19 +51,18 @@ class Main extends React.Component<MainProps,MainState> {
 
 
     render() {
-        const {beers} = this.props
         const { maxHeight } = this.state;
 
         return (
             <div className="content">
                 <div className="CustomTable">
                     <SimpleBar style={{ maxHeight: maxHeight+'px' }}>
-                        {beers && <BeerTable beers={beers} />}
+                      <BeerTable/>
                     </SimpleBar>
                 </div>
                 <div className="Details">
                     <SimpleBar style={{ maxHeight: maxHeight+'px' }}>
-                        <Details />
+                        <Details/>
                     </SimpleBar>
 
                 </div>
@@ -72,9 +71,11 @@ class Main extends React.Component<MainProps,MainState> {
     }
 }
 const mapStateToProps = (state: any) => ({beers: state.beerDataReducer.beers});
-const mapDispatchToProps = (dispatch: any) => ({
-    getBeers: (isFetching:boolean) => dispatch(getBeers(isFetching)),
-});
+const mapDispatchToProps =
+    (dispatch: any) => ({
+        getBeers: (isFetching: boolean) => dispatch(getBeers(isFetching))
+    });
+
 
 
 export default connect(mapStateToProps,mapDispatchToProps)(Main);

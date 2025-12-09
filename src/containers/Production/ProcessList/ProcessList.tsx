@@ -14,55 +14,88 @@ interface ProcessListProps {
     onNextStep?: () => void;
 }
 
-export class ProcessList extends React.Component<ProcessListProps> {
+interface ProcessListState {
+    testStepIndex: number | null;   // interner Test-Index
+}
+
+export class ProcessList extends React.Component<ProcessListProps, ProcessListState> {
     activeStepRef: React.RefObject<HTMLLIElement>;
     simpleBarRef: React.RefObject<HTMLDivElement>;
 
     constructor(props: ProcessListProps) {
         super(props);
+
+        this.state = {
+            testStepIndex: null,
+        };
+
         this.activeStepRef = React.createRef();
         this.simpleBarRef = React.createRef();
     }
 
-    componentDidUpdate(prevProps: ProcessListProps) {
+    // Welcher Index soll wirklich verwendet werden? (Test oder echter)
+    get effectiveStepIndex(): number {
+        return this.state.testStepIndex ?? this.props.currentStepIndex;
+    }
+
+    componentDidUpdate(prevProps: ProcessListProps, prevState: ProcessListState) {
+        const prevIndex = prevState.testStepIndex ?? prevProps.currentStepIndex;
+        const newIndex = this.effectiveStepIndex;
+
         if (
-            prevProps.currentStepIndex !== this.props.currentStepIndex &&
+            prevIndex !== newIndex &&
             this.activeStepRef.current &&
             this.simpleBarRef.current
         ) {
             setTimeout(() => {
-                const simpleBarScroll = this.simpleBarRef.current;
+                const scrollWrapper = this.simpleBarRef.current; // ⭐ direkt das Scroll-Element
                 const activeNode = this.activeStepRef.current;
-                if (simpleBarScroll && activeNode) {
-                    const scrollElement = simpleBarScroll.querySelector('.simplebar-content-wrapper');
-                    if (scrollElement) {
-                        const containerRect = scrollElement.getBoundingClientRect();
-                        const nodeRect = activeNode.getBoundingClientRect();
-                        // Prüfen, ob der Schritt bereits sichtbar ist
-                        if (nodeRect.bottom > containerRect.bottom || nodeRect.top < containerRect.top) {
-                            // Immer so scrollen, dass der Schritt am unteren Rand sichtbar ist
-                            scrollElement.scrollTop += nodeRect.bottom - containerRect.bottom;
-                        }
-                    }
+
+                if (scrollWrapper && activeNode) {
+                    // Variante mit getBoundingClientRect: aktiven Step ganz nach oben
+                    const containerRect = scrollWrapper.getBoundingClientRect();
+                    const nodeRect = activeNode.getBoundingClientRect();
+
+                    scrollWrapper.scrollTop += (nodeRect.top - containerRect.top);
+
+                    // Alternative (falls dir lieber):
+                    // scrollWrapper.scrollTop = activeNode.offsetTop - scrollWrapper.offsetTop;
                 }
             }, 0);
         }
     }
 
+    // Test-Step erhöhen (wrap-around)
+    stepTestForward = () => {
+        const steps = createProcessSteps(this.props.selectedBeer);
+
+        this.setState(prev => {
+            const baseIndex = prev.testStepIndex ?? this.props.currentStepIndex;
+            const next = baseIndex + 1;
+            return { testStepIndex: next >= steps.length ? 0 : next };
+        });
+    };
+
     render() {
-        const { selectedBeer, currentStepIndex, onNextStep } = this.props;
+        const { selectedBeer, onNextStep } = this.props;
         const steps = createProcessSteps(selectedBeer);
+        const stepIndex = this.effectiveStepIndex;
+
         return (
             <div className="process-list">
                 <h3 className="process-title">Process</h3>
-                <SimpleBar className="process-list-scroll" scrollableNodeProps={{ ref: this.simpleBarRef }}>
+
+                <SimpleBar
+                    className="process-list-scroll"
+                    scrollableNodeProps={{ ref: this.simpleBarRef }}
+                >
                     <ul>
                         {steps.map((step, idx) => (
                             <li
                                 key={step.name + idx}
-                                ref={idx === currentStepIndex ? this.activeStepRef : undefined}
+                                ref={idx === stepIndex ? this.activeStepRef : undefined}
                                 className={
-                                    "process-step" + (idx === currentStepIndex ? " active" : "")
+                                    "process-step" + (idx === stepIndex ? " active" : "")
                                 }
                             >
                                 <span className="step-number">{idx + 1}.</span> {step.name}
@@ -70,59 +103,84 @@ export class ProcessList extends React.Component<ProcessListProps> {
                         ))}
                     </ul>
                 </SimpleBar>
+
+                {/* regulärer Next-Button aus Parent/Redux */}
                 {onNextStep && (
                     <>
                         <hr className="next-step-separator" />
                         <div className="next-step-btn-container">
-                            <button className="nextStepBtn" onClick={onNextStep} title="Nächster Prozessschritt">
+                            <button
+                                className="nextStepBtn"
+                                onClick={onNextStep}
+                                title="Nächster Prozessschritt"
+                            >
                                 Nächster Schritt
                             </button>
                         </div>
                     </>
                 )}
+
+                {/* Test-Button zum Durchsteppen */}
+                <div className="test-step-btn-container">
+                    <button
+                        className="testStepBtn"
+                        onClick={this.stepTestForward}
+                        title="Test: Schritt weiterschalten (nur UI)"
+                    >
+                        Test: Step++
+                    </button>
+                </div>
             </div>
         );
     }
 }
 
 
+// -------------------------------------------------------
+// PROCESS STEPS GENERATION
+// -------------------------------------------------------
+
 export function createProcessSteps(selectedBeer: Beer): ProcessStep[] {
     let processSteps: ProcessStep[] = [];
     if (!selectedBeer || !Array.isArray(selectedBeer.fermentation)) {
         return processSteps;
     }
+
     const fermentation = selectedBeer.fermentation;
-    // Einmaischen finden
-    const einmaischen = fermentation.find((step: any) => step.type === 'Einmaischen');
+
+    // Einmaischen
+    const einmaischen = fermentation.find(step => step.type === 'Einmaischen');
     if (einmaischen) {
-        const temperature = einmaischen.temperature
-        processSteps.push({ name: `Aufheizen für Einmaischen -> ${temperature}°C`});
+        processSteps.push({ name: `Aufheizen für Einmaischen -> ${einmaischen.temperature}°C` });
         processSteps.push({ name: 'Einmaischen' });
     }
-    // Nur Rast-Schritte (Rast1, Rast 2, ...) berücksichtigen
+
     let lastRastIndex = -1;
-    fermentation.forEach((step: FermentationSteps, idx: number) => {
-        const temperature = step.temperature
-        const type = step.type
+
+    // Rasten
+    fermentation.forEach((step: FermentationSteps) => {
         if (/^Rast\s*\d+$/i.test(step.type)) {
-            processSteps.push({ name: `Aufheizen für ${type} -> ${temperature}°C`});
-            processSteps.push({ name: type });
+            processSteps.push({ name: `Aufheizen für ${step.type} -> ${step.temperature}°C` });
+            processSteps.push({ name: step.type });
             lastRastIndex = processSteps.length - 1;
         }
     });
-    // Nach der letzten Rast Jod Probe einfügen
+
+    // Jod-Probe nach letzter Rast
     if (lastRastIndex !== -1) {
         processSteps.splice(lastRastIndex + 1, 0, { name: 'Jod Probe' });
     }
-    // Abmaischen finden und vor Kochen einfügen
-    const abmaischen = fermentation.find((step: any) => step.type === 'Abmaischen');
+
+    // Abmaischen
+    const abmaischen = fermentation.find(step => step.type === 'Abmaischen');
     if (abmaischen) {
-        const temperature = abmaischen.temperature
-        processSteps.push({ name: `Aufheizen für Abmaischen -> ${temperature}°C`});
+        processSteps.push({ name: `Aufheizen für Abmaischen -> ${abmaischen.temperature}°C` });
         processSteps.push({ name: 'Abmaischen' });
     }
-    // Am Ende "Aufheizen auf Kochen" und "Kochen" hinzufügen
+
+    // Kochen
     processSteps.push({ name: 'Aufheizen auf Kochen' });
     processSteps.push({ name: 'Kochen' });
+
     return processSteps;
 }

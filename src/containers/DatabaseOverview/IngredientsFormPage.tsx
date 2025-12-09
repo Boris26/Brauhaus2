@@ -23,6 +23,9 @@ import SimpleBar from 'simplebar-react';
 import 'simplebar/dist/simplebar.min.css';
 import '../MainView/FinishBrewsBeers/FinishedBrewsTable.css';
 import './IngredientsFormPage.css';
+import {MaltsActions} from "../../actions/malt.actions";
+import {HopsActions} from "../../actions/hops.actions";
+import {YeastActions} from "../../actions/yeast.actions";
 
 interface IngredientsFormPageProps {
     malts: Malts[];
@@ -64,7 +67,7 @@ const IngredientsFormPage: React.FC<IngredientsFormPageProps> = ({
     }, [getMalt, getHop, getYeast]);
 
     const handleAddMalt = () => {
-        if (newMalt.name && newMalt.ebc) {
+        if (newMalt.name) {
             submitNewMalt(newMalt as Malts);
             setNewMalt({});
             setShowNewMaltRow(false);
@@ -72,7 +75,7 @@ const IngredientsFormPage: React.FC<IngredientsFormPageProps> = ({
     };
 
     const handleAddHop = () => {
-        if (newHop.name && newHop.alpha) {
+        if (newHop.name) {
             // Stellen Sie sicher, dass alle erforderlichen Felder vorhanden sind
             const hopToSubmit: Hops = {
                 id: 0, // ID wird vom Server generiert
@@ -181,6 +184,7 @@ const IngredientsFormPage: React.FC<IngredientsFormPageProps> = ({
                                                         </button>
                                                     </div>
                                                 </TableCell>
+
                                             </TableRow>
                                         )}
                                         {malts.map((malt) => (
@@ -189,6 +193,14 @@ const IngredientsFormPage: React.FC<IngredientsFormPageProps> = ({
                                                 <TableCell className="table-cell">{malt.description}</TableCell>
                                                 <TableCell className="table-cell">{malt.ebc}</TableCell>
                                                 <TableCell className="table-cell">
+                                                    <button
+                                                        className="cancel-btn"
+                                                        onClick={() => console.log(malt.id)}
+                                                        title="Löschen"
+                                                    >
+                                                        <span role="img" aria-label="Löschen" style={{ fontSize: 22, verticalAlign: 'middle',  display: 'inline-block', position: 'relative', top: '3px' }}>🗑️</span>
+
+                                                    </button>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -294,6 +306,14 @@ const IngredientsFormPage: React.FC<IngredientsFormPageProps> = ({
                                                 <TableCell className="table-cell">{hop.type}</TableCell>
                                                 <TableCell className="table-cell">{hop.description}</TableCell>
                                                 <TableCell className="table-cell">
+                                                    <button
+                                                        className="cancel-btn"
+                                                        onClick={() => console.log(hop.id)}
+                                                        title="Löschen"
+                                                    >
+                                                        <span role="img" aria-label="Löschen" style={{ fontSize: 22, verticalAlign: 'middle',  display: 'inline-block', position: 'relative', top: '3px' }}>🗑️</span>
+
+                                                    </button>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -399,6 +419,14 @@ const IngredientsFormPage: React.FC<IngredientsFormPageProps> = ({
                                                 <TableCell className="table-cell">{yeast.temperature}</TableCell>
                                                 <TableCell className="table-cell">{yeast.evg}</TableCell>
                                                 <TableCell className="table-cell">
+                                                    <button
+                                                        className="cancel-btn"
+                                                        onClick={() => console.log(yeast.id)}
+                                                        title="Löschen"
+                                                    >
+                                                        <span role="img" aria-label="Löschen" style={{ fontSize: 22, verticalAlign: 'middle',  display: 'inline-block', position: 'relative', top: '3px' }}>🗑️</span>
+
+                                                    </button>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
@@ -414,18 +442,18 @@ const IngredientsFormPage: React.FC<IngredientsFormPageProps> = ({
 };
 
 const mapStateToProps = (state: any) => ({
-    malts: state.beerDataReducer.malts || [],
-    hops: state.beerDataReducer.hops || [],
-    yeasts: state.beerDataReducer.yeasts || []
+    malts: state.maltsReducer.malts || [],
+    hops: state.hopsReducer.hops || [],
+    yeasts: state.yeastReducer.yeasts || []
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
-    getMalt: (isFetching: boolean) => dispatch(BeerActions.getMalts(isFetching)),
-    getHop: (isFetching: boolean) => dispatch(BeerActions.getHops(isFetching)),
-    getYeast: (isFetching: boolean) => dispatch(BeerActions.getYeasts(isFetching)),
-    submitNewMalt: (malt: Malts) => dispatch(BeerActions.submitNewMalt(malt)),
-    submitNewHop: (hop: Hops) => dispatch(BeerActions.submitNewHop(hop)),
-    submitNewYeast: (yeast: Yeasts) => dispatch(BeerActions.submitNewYeast(yeast))
+    getMalt: (isFetching: boolean) => dispatch(MaltsActions.getMalts(isFetching)),
+    getHop: (isFetching: boolean) => dispatch(HopsActions.getHops(isFetching)),
+    getYeast: (isFetching: boolean) => dispatch(YeastActions.getYeasts(isFetching)),
+    submitNewMalt: (malt: Malts) => dispatch(MaltsActions.submitNewMalt(malt)),
+    submitNewHop: (hop: Hops) => dispatch(HopsActions.submitNewHop(hop)),
+    submitNewYeast: (yeast: Yeasts) => dispatch(YeastActions.submitNewYeast(yeast))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(IngredientsFormPage);

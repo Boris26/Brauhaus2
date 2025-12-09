@@ -1,9 +1,6 @@
 import {Beer} from "../model/Beer";
 import {Views} from "../enums/eViews";
 import {BeerDTO} from "../model/BeerDTO";
-import {Malts} from "../model/Malt";
-import {Hops} from "../model/Hops";
-import {Yeasts} from "../model/Yeasts";
 import {ToggleState} from "../enums/eToggleState";
 import {MashAgitatorStates} from "../model/MashAgitator";
 import {BrewingData} from "../model/BrewingData";
@@ -12,27 +9,16 @@ import {ConfirmStates} from "../enums/eConfirmStates";
 import {WaterStatus} from "../components/Controlls/WaterControll/WaterControl";
 import {FinishedBrew} from "../model/FinishedBrew";
 import {BackendAvailable} from "../reducers/productionReducer";
+import {scalingValues} from "../utils/BeerScaler/ScalingBeerRecipe";
 
 export namespace BeerActions {
 
     export enum ActionTypes {
         SUBMIT_BEER = 'BeerActions.SUBMIT_BEER',
-        SUBMIT_NEW_MALT = 'BeerActions.SUBMIT_NEW_MALT',
-        SUBMIT_NEW_HOP = 'BeerActions.SUBMIT_NEW_HOP',
-        SUBMIT_NEW_YEAST = 'BeerActions.SUBMIT_NEW_YEAST',
         SUBMIT_BEER_SUCCESS = 'BeerActions.SUBMIT_BEER_SUCCESS',
-        SUBMIT_NEW_MALT_SUCCESS = 'BeerActions.SUBMIT_NEW_MALT_SUCCESS',
-        SUBMIT_NEW_HOP_SUCCESS = 'BeerActions.SUBMIT_NEW_HOP_SUCCESS',
-        SUBMIT_NEW_YEAST_SUCCESS = 'BeerActions.SUBMIT_NEW_YEAST_SUCCESS',
         GET_BEERS = 'BeerActions.GET_BEERS',
         GET_BEERS_SUCCESS = 'BeerActions.GET_BEERS_SUCCESS',
         SET_SELECTED_BEER = 'BeerActions.SET_SELECTED_BEER',
-        GET_MALTS = 'BeerActions.GET_MALTS',
-        GET_HOPS = 'BeerActions.GET_HOPS',
-        GET_YEASTS = 'BeerActions.GET_YEASTS',
-        GET_MALTS_SUCCESS = 'BeerActions.GET_MALTS_SUCCESS',
-        GET_HOPS_SUCCESS = 'BeerActions.GET_HOPS_SUCCESS',
-        GET_YEASTS_SUCCESS = 'BeerActions.GET_YEASTS_SUCCESS',
         SET_IS_SUBMIT_SUCCESSFUL = 'BeerActions.SET_IS_SUBMIT_SUCCESSFUL',
         SET_BEER_TO_BREW = 'BeerActions.SET_BEER_TO_BREW',
         UPDATE_ACTIVE_BEER = 'BeerActions.UPDATE_ACTIVE_BEER',
@@ -51,10 +37,9 @@ export namespace BeerActions {
         GENERATE_SHOPPING_LIST_PDF_SUCCESS = 'BeerActions.GENERATE_SHOPPING_LIST_PDF_SUCCESS',
         GENERATE_SHOPPING_LIST_PDF_FAILURE = 'BeerActions.GENERATE_SHOPPING_LIST_PDF_FAILURE',
         IMPORT_BEER = 'BeerActions.IMPORT_BEER',
-        SET_IMPORTED_BEER = 'BeerActions.SET_IMPORTED_BEER',
-        SET_UNKNOWN_MALTS = 'BeerActions.SET_UNKNOWN_MALTS',
-        SET_UNKNOWN_HOPS = 'BeerActions.SET_UNKNOWN_HOPS',
-        SET_UNKNOWN_YEASTS = 'BeerActions.SET_UNKNOWN_YEASTS'
+        ADD_IMPORTED_BEER = 'BeerActions.ADD_IMPORTED_BEER',
+        UPDATE_RECIPE_SCALING = 'BeerActions.UPDATE_RECIPE_SCALING'
+
     }
 
     export interface GetBeers {
@@ -80,47 +65,8 @@ export namespace BeerActions {
         }
     }
 
-    export interface SubmitNewMalt {
-        readonly type: ActionTypes.SUBMIT_NEW_MALT
-        payload: {
-            malt: Malts
-        }
-    }
 
-    export interface SubmitNewYeast {
-        readonly type: ActionTypes.SUBMIT_NEW_YEAST
-        payload: {
-            yeast: Yeasts
-        }
-    }
 
-    export interface SubmitNewHop {
-        readonly type: ActionTypes.SUBMIT_NEW_HOP
-        payload: {
-            hop: Hops
-        }
-    }
-
-    export interface SubmitNewMaltSuccess {
-        readonly type: ActionTypes.SUBMIT_NEW_MALT_SUCCESS
-        payload: {
-            isSubmitMaltSuccessful: boolean
-        }
-    }
-
-    export interface SubmitNewHopSuccess {
-        readonly type: ActionTypes.SUBMIT_NEW_HOP_SUCCESS
-        payload: {
-            isSubmitHopSuccessful: boolean
-        }
-    }
-
-    export interface SubmitNewYeastSuccess {
-        readonly type: ActionTypes.SUBMIT_NEW_YEAST_SUCCESS
-        payload: {
-            isSubmitYeastSuccessful: boolean
-        }
-    }
 
     export interface SubmitBeer {
         readonly type: ActionTypes.SUBMIT_BEER
@@ -131,57 +77,7 @@ export namespace BeerActions {
 
     export interface SubmitBeerSuccess {
         readonly type: ActionTypes.SUBMIT_BEER_SUCCESS
-        payload: {
-            isSubmitBeerSuccessful: boolean
-        }
     }
-
-
-    export interface GetMalts {
-        readonly type: ActionTypes.GET_MALTS
-        payload: {
-            isFetching: boolean
-        }
-    }
-
-    export interface GetMaltsSuccess {
-        readonly type: ActionTypes.GET_MALTS_SUCCESS
-        payload: {
-            malts: Malts[],
-            isSuccessful: boolean
-        }
-    }
-
-    export interface GetHops {
-        readonly type: ActionTypes.GET_HOPS
-        payload: {
-            isFetching: boolean
-        }
-    }
-
-    export interface GetHopsSuccess {
-        readonly type: ActionTypes.GET_HOPS_SUCCESS
-        payload: {
-            hops: Hops[],
-            isSuccessful: boolean
-        }
-    }
-
-    export interface GetYeasts {
-        readonly type: ActionTypes.GET_YEASTS
-        payload: {
-            isFetching: boolean
-        }
-    }
-
-    export interface GetYeastsSuccess {
-        readonly type: ActionTypes.GET_YEASTS_SUCCESS
-        payload: {
-            yeasts: Yeasts[],
-            isSuccessful: boolean
-        }
-    }
-
 
     export interface SetSelectedBeer {
         readonly type: ActionTypes.SET_SELECTED_BEER
@@ -291,52 +187,25 @@ export namespace BeerActions {
         }
     }
 
-    export interface SetImportedBeer {
-        readonly type: ActionTypes.SET_IMPORTED_BEER;
+    export interface AddImportedBeer {
+        readonly type: ActionTypes.ADD_IMPORTED_BEER;
         payload: {
-            importedBeer: Beer | null;
+            importedBeer: Beer;
         }
     }
 
-    export interface SetUnknownMalts {
-        readonly type: ActionTypes.SET_UNKNOWN_MALTS;
+    export interface UpdateRecipeScaling {
+        readonly type: ActionTypes.UPDATE_RECIPE_SCALING;
         payload: {
-            unknownMalts: string[];
+            scalingValues: scalingValues
         }
     }
-
-    export interface SetUnknownHops {
-        readonly type: ActionTypes.SET_UNKNOWN_HOPS;
-        payload: {
-            unknownHops: string[];
-        }
-    }
-
-    export interface SetUnknownYeasts {
-        readonly type: ActionTypes.SET_UNKNOWN_YEASTS;
-        payload: {
-            unknownYeasts: string[];
-        }
-    }
-
 
     export type AllBeerActions =
         SubmitBeer |
         SubmitBeerSuccess |
-        SubmitNewMalt |
-        SubmitNewMaltSuccess |
-        SubmitNewHop |
-        SubmitNewHopSuccess |
-        SubmitNewYeast |
-        SubmitNewYeastSuccess |
         GetBeers |
         GetBeersSuccess |
-        GetMalts |
-        GetHops |
-        GetYeasts |
-        GetMaltsSuccess |
-        GetHopsSuccess |
-        GetYeastsSuccess |
         SetIsSubmitSuccessful |
         SetSelectedBeer |
         SetBeerToBrew |
@@ -355,100 +224,14 @@ export namespace BeerActions {
         GenerateShoppingListPdf |
         GenerateShoppingListPdfSuccess |
         GenerateShoppingListPdfFailure |
-        SetImportedBeer |
-        SetUnknownMalts |
-        SetUnknownHops |
-        SetUnknownYeasts;
+        AddImportedBeer |
+        UpdateRecipeScaling
 
 
     export function isSubmitSuccessful(aIsSuccessful: boolean, aMessage: string, aType: string): SetIsSubmitSuccessful {
         return {
             type: ActionTypes.SET_IS_SUBMIT_SUCCESSFUL,
             payload: {isSubmitSuccessful: aIsSuccessful, message: aMessage, type: aType}
-        }
-    }
-
-    export function submitMaltSuccess(aIsSuccessful: boolean): SubmitNewMaltSuccess {
-        return {
-            type: ActionTypes.SUBMIT_NEW_MALT_SUCCESS,
-            payload: {isSubmitMaltSuccessful: aIsSuccessful}
-        }
-    }
-
-    export function submitHopSuccess(aIsSuccessful: boolean): SubmitNewHopSuccess {
-        return {
-            type: ActionTypes.SUBMIT_NEW_HOP_SUCCESS,
-            payload: {isSubmitHopSuccessful: aIsSuccessful}
-        }
-    }
-
-    export function submitYeastSuccess(aIsSuccessful: boolean): SubmitNewYeastSuccess {
-        return {
-            type: ActionTypes.SUBMIT_NEW_YEAST_SUCCESS,
-            payload: {isSubmitYeastSuccessful: aIsSuccessful}
-        }
-    }
-
-    export function submitNewMalt(aMalt: Malts): SubmitNewMalt {
-        return {
-            type: ActionTypes.SUBMIT_NEW_MALT,
-            payload: {malt: aMalt}
-        }
-    }
-
-    export function submitNewHop(aHop: Hops): SubmitNewHop {
-        return {
-            type: ActionTypes.SUBMIT_NEW_HOP,
-            payload: {hop: aHop}
-        }
-    }
-
-    export function submitNewYeast(aYeast: Yeasts): SubmitNewYeast {
-        return {
-            type: ActionTypes.SUBMIT_NEW_YEAST,
-            payload: {yeast: aYeast}
-        }
-    }
-
-    export function getYeasts(aIsFetching: boolean): GetYeasts {
-        return {
-            type: ActionTypes.GET_YEASTS,
-            payload: {isFetching: aIsFetching}
-        }
-    }
-
-    export function getHops(aIsFetching: boolean): GetHops {
-        return {
-            type: ActionTypes.GET_HOPS,
-            payload: {isFetching: aIsFetching}
-        }
-    }
-
-    export function getHopsSuccess(aHops: Hops[], aIsSuccessful: boolean): GetHopsSuccess {
-        return {
-            type: ActionTypes.GET_HOPS_SUCCESS,
-            payload: {hops: aHops, isSuccessful: aIsSuccessful}
-        }
-    }
-
-    export function getYeastsSuccess(aYeasts: Yeasts[], aIsSuccessful: boolean): GetYeastsSuccess {
-        return {
-            type: ActionTypes.GET_YEASTS_SUCCESS,
-            payload: {yeasts: aYeasts, isSuccessful: aIsSuccessful}
-        }
-    }
-
-    export function getMalts(aIsFetching: boolean): GetMalts {
-        return {
-            type: ActionTypes.GET_MALTS,
-            payload: {isFetching: aIsFetching}
-        }
-    }
-
-    export function getMaltsSuccess(aMalts: Malts[], aIsSuccessful: boolean): BeerActions.GetMaltsSuccess {
-        return {
-            type: ActionTypes.GET_MALTS_SUCCESS,
-            payload: {malts: aMalts, isSuccessful: aIsSuccessful}
         }
     }
 
@@ -466,10 +249,9 @@ export namespace BeerActions {
         }
     }
 
-    export function submitBeerSuccess(aIsSuccessful: boolean): SubmitBeerSuccess {
+    export function submitBeerSuccess(): SubmitBeerSuccess {
         return {
-            type: ActionTypes.SUBMIT_BEER_SUCCESS,
-            payload: {isSubmitBeerSuccessful: aIsSuccessful}
+            type: ActionTypes.SUBMIT_BEER_SUCCESS
         }
     }
 
@@ -590,72 +372,39 @@ export namespace BeerActions {
         }
     }
 
-    export function loadBeerFormState(formState: any): LoadBeerFormState {
-        return {
-            type: ActionTypes.LOAD_BEER_FORM_STATE,
-            payload: {formState}
-        }
-    }
-
-    export function getYeastsFailure(error: any) {
-        return undefined;
-    }
-
-    export function getFinishedBeersFailure(error: any) {
-        return undefined;
-    }
-
-    export function submitBeerFailure(error: any) {
-        return undefined;
-    }
-
-    export function getHopsFailure(error: any) {
-        return undefined;
-    }
-
-    export function getMaltsFailure(error: any) {
-        return undefined;
-    }
-
-    export function getBeersFailure(param: any) {
-        return undefined;
-    }
-
     export function importBeer(file: File): ImportBeer {
+        console.log(file);
         return {
             type: ActionTypes.IMPORT_BEER,
             payload: {file}
         };
     }
 
-    export function setImportedBeer(importedBeer: Beer | null): SetImportedBeer {
+    export function addImportedBeer(aImportedBeer: Beer): AddImportedBeer {
         return {
-            type: ActionTypes.SET_IMPORTED_BEER,
-            payload: {importedBeer}
+            type: ActionTypes.ADD_IMPORTED_BEER,
+            payload: {importedBeer: aImportedBeer}
         }
     }
 
-    export function setUnknownMalts(unknownMalts: string[]): SetUnknownMalts {
+    export function updateRecipeScaling(aScalingValues: scalingValues){
         return {
-            type: ActionTypes.SET_UNKNOWN_MALTS,
-            payload: {unknownMalts}
+            type: ActionTypes.UPDATE_RECIPE_SCALING,
+            payload: {
+                scalingValues: aScalingValues
+            }
         }
     }
 
-    export function setUnknownHops(unknownHops: string[]): SetUnknownHops {
-        return {
-            type: ActionTypes.SET_UNKNOWN_HOPS,
-            payload: {unknownHops}
-        }
-    }
 
-    export function setUnknownYeasts(unknownYeasts: string[]): SetUnknownYeasts {
-        return {
-            type: ActionTypes.SET_UNKNOWN_YEASTS,
-            payload: {unknownYeasts}
-        }
-    }
+
+
+
+
 }
+
+
+
 export namespace ApplicationActions {
     export enum ActionTypes {
         SET_VIEW = 'ApplicationActions.SET_VIEW',
@@ -723,7 +472,6 @@ export namespace ApplicationActions {
         }
     }
 }
-
 export namespace ProductionActions {
     export enum ActionTypes {
         GET_TEMPERATURES = 'ProductionActions.GET_TEMPERATURES',

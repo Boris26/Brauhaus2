@@ -15,6 +15,7 @@ export interface BeerTableProps {
     beerToBrew?: Beer;
     isPollingRunning?: boolean;
     exportShoppingListPdf: (beer: Beer) => void;
+    selectedBeer: Beer;
 }
 
 
@@ -38,15 +39,16 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
         };
     }
 
-    componentDidMount() {
-        const {beers} = this.props;
-        console.log(beers);
-        if (beers.length > 0) {
-            const firstBeer = beers[0];
-            this.props.setSelectedBeer(firstBeer);
-            this.setState({selectedBeerId: firstBeer.id});
+
+
+    componentDidUpdate(prevProps: Readonly<BeerTableProps>) {
+        const {selectedBeer} = this.props;
+
+        if (selectedBeer?.id !== prevProps.selectedBeer?.id) {
+            this.setState({ selectedBeerId: selectedBeer ? selectedBeer.id : null });
         }
     }
+
 
     onSort = (key: keyof Beer) => {
         const {sortConfig} = this.state;
@@ -83,8 +85,13 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
     }
 
     handleExportShoppingListPdfForBeer = (aBeer: Beer) => {
+        const {selectedBeer} = this.props
+        if(selectedBeer.id === aBeer.id)
+        {
+            this.props.exportShoppingListPdf(selectedBeer);
+        }
 
-        this.props.exportShoppingListPdf(aBeer);
+
     };
 
     render() {
@@ -215,6 +222,8 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
 const mapStateToProps = (state: any) => ({
     beerToBrew: state.beerDataReducer.beerToBrew,
     isPollingRunning: state.productionReducer.isPollingRunning,
+    beers: state.beerDataReducer.beers ?? [],
+    selectedBeer: state.beerDataReducer.selectedBeer
 });
 
 const mapDispatchToProps = (dispatch: any) => ({

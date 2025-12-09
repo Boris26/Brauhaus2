@@ -4,6 +4,7 @@ import {BeerActions} from "../../../actions/actions";
 import {connect} from "react-redux";
 import {Malts} from "../../../model/Malt";
 import {isEqual} from "lodash";
+import {MaltsActions} from "../../../actions/malt.actions";
 
 interface MaltFormState {
     id: string;
@@ -115,7 +116,7 @@ const mapStateToProps = (state: any) => ({
     isSuccessful: state.beerDataReducer.isSubmitMaltSuccessful
 });
 const mapDispatchToProps = (dispatch: any) => ({
-    onSubmitMalt: (malt: Malts) => dispatch(BeerActions.submitNewMalt(malt)),
+    onSubmitMalt: (malt: Malts) => dispatch(MaltsActions.submitNewMalt(malt)),
 
 });
 export default connect(mapStateToProps,mapDispatchToProps)(MaltForm);
