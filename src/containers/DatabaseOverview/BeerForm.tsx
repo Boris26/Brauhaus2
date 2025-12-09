@@ -13,6 +13,7 @@ import SimpleBar from 'simplebar-react';
 import {MaltsActions} from "../../actions/malt.actions";
 import {HopsActions} from "../../actions/hops.actions";
 import {YeastActions} from "../../actions/yeast.actions";
+import { COLOR_WHITE, COLOR_BREW_BG, COLOR_ACCENT, BORDER_TRANSPARENT } from '../../colors';
 
 interface BeerFormProps {
     onSubmitBeer: (beer: BeerDTO) => void;
@@ -517,7 +518,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                         <h3>Maischeplan:</h3>
                         <div className="table-wrapper" style={{overflowX: 'auto', maxHeight: '180px'}}>
                             <table className="ingredient-table" style={{width: '100%', borderCollapse: 'collapse'}}>
-                                <thead style={{position: 'sticky', top: 0, background: '#fff', zIndex: 2}}>
+                                <thead style={{position: 'sticky', top: 0, background: COLOR_WHITE, zIndex: 2}}>
                                     <tr>
                                         <th>Type</th>
                                         <th>Temp (°C)</th>
@@ -538,9 +539,9 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                                             display: 'flex',
                                                             alignItems: 'center',
                                                             justifyContent: 'flex-start',
-                                                            background: 'white',
+                                                            background: COLOR_WHITE,
                                                             color: '#333',
-                                                            border: '1px solid #ced4da',
+                                                            border: `1px solid #ced4da`,
                                                             borderRadius: '4px',
                                                             fontSize: '15px',
                                                             fontFamily: 'inherit',
@@ -790,11 +791,11 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         return (
             <div className='containerBeerForm'>
                 <div style={{ height: '870px', display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ border: '1px solid rgba(0, 0, 0, 0.12)', borderRadius: '10px', overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column' }}>
-                        <div style={{ backgroundColor: 'darkorange', padding: '12px 16px', borderRadius: '10px 10px 0 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <Typography style={{ color: 'white' }}>Bier</Typography>
+                    <div style={{ border: `1px solid ${BORDER_TRANSPARENT}`, borderRadius: '10px', overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ backgroundColor: COLOR_ACCENT, padding: '12px 16px', borderRadius: '10px 10px 0 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <Typography style={{ color: COLOR_WHITE }}>Bier</Typography>
                         </div>
-                        <SimpleBar style={{ maxHeight: '820px', backgroundColor: '#404040' }}>
+                        <SimpleBar style={{ maxHeight: '820px', backgroundColor: COLOR_BREW_BG }}>
                             <div style={{ padding: '16px' }}>{this.renderCreateBeerForm()}</div>
                         </SimpleBar>
                     </div>

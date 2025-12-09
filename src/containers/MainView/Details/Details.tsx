@@ -19,6 +19,7 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {scalingValues} from "../../../utils/BeerScaler/ScalingBeerRecipe";
 import {BeerActions} from "../../../actions/actions";
+import {COLOR_ACCENT} from "../../../colors";
 
 interface DetailsProps {
     selectedBeer: Beer;
@@ -151,7 +152,7 @@ class Details extends React.Component<DetailsProps, DetailsState> {
             <Accordion defaultExpanded>
                 <AccordionSummary
                     sx={{
-                        backgroundColor: 'darkorange',
+                        backgroundColor: COLOR_ACCENT,
                         color: 'white',
                         '& .MuiTypography-root': { color: 'white' }
                     }}
@@ -194,7 +195,7 @@ class Details extends React.Component<DetailsProps, DetailsState> {
             <Accordion>
                 <AccordionSummary
                     sx={{
-                        backgroundColor: 'darkorange',
+                        backgroundColor: COLOR_ACCENT,
                         color: 'white',
                         '& .MuiTypography-root': { color: 'white' }
                     }}
@@ -246,7 +247,7 @@ class Details extends React.Component<DetailsProps, DetailsState> {
             <Accordion>
                 <AccordionSummary
                     sx={{
-                        backgroundColor: 'darkorange',
+                        backgroundColor: COLOR_ACCENT,
                         color: 'white',
                         '& .MuiTypography-root': { color: 'white' }
                     }}
@@ -296,7 +297,7 @@ class Details extends React.Component<DetailsProps, DetailsState> {
             <Accordion>
                 <AccordionSummary
                     sx={{
-                        backgroundColor: 'darkorange',
+                        backgroundColor: COLOR_ACCENT,
                         color: 'white',
                         '& .MuiTypography-root': { color: 'white' }
                     }}
@@ -355,7 +356,7 @@ class Details extends React.Component<DetailsProps, DetailsState> {
             <Accordion>
                 <AccordionSummary
                     sx={{
-                        backgroundColor: 'darkorange',
+                        backgroundColor: COLOR_ACCENT,
                         color: 'white',
                         '& .MuiTypography-root': { color: 'white' }
                     }}
@@ -416,7 +417,7 @@ class Details extends React.Component<DetailsProps, DetailsState> {
             <Accordion>
                 <AccordionSummary
                     sx={{
-                        backgroundColor: 'darkorange',
+                        backgroundColor: COLOR_ACCENT,
                         color: 'white',
                         '& .MuiTypography-root': { color: 'white' }
                     }}

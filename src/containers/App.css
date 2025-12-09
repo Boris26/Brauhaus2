@@ -18,7 +18,7 @@
     top: 0;
     height: 80px;
     width: 100%;
-    background: darkorange;
+    background: var(--color-accent);
     z-index: 999;
 }
 
@@ -36,7 +36,7 @@
     flex: 30%; /* Nimmt 30% des verfügbaren Platzes im Content-Bereich ein */
     display: flex;
     flex-direction: column;
-    background-color: #404040;
+    background-color: var(--color-brew-bg);
     margin: 10px;
 }
 .Index {

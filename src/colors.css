@@ -1,0 +1,31 @@
+/* Auto-generiert: Farbvariablen für das Projekt */
+:root {
+  --color-dark-bg: #333333;
+  --color-panel-bg: #23272b;
+  --color-white: #fff;
+  --color-black: #111;
+  --color-accent: #ffa726;
+  --color-brew-bg: #404040;
+  --color-light-text: #eeeeee;
+  --color-input-bg: #ffffff;
+  --color-input-border: #404040;
+  --color-input-bg2: #f0f0f0;
+  --color-input-bg3: #ccc6c6;
+
+  --shadow-primary: rgba(0,0,0,0.04);
+  --shadow-secondary: rgba(0,0,0,0.10);
+  --shadow-panel: rgba(25, 118, 210, 0.18);
+  --shadow-panel2: rgba(0,0,0,0.18);
+  --shadow-gold: rgba(184,134,11,0.08);
+  --shadow-gold-light: rgba(184,134,11,0.06);
+  --shadow-orange: rgba(255,140,0,0.4);
+  --bg-transparent-black: rgba(0, 0, 0, 0.25);
+  --bg-transparent-orange: rgba(255, 165, 0, 0.25);
+  --bg-transparent-red: rgba(255, 0, 0, 0.25);
+  --border-transparent: rgba(0, 0, 0, 0.12);
+  --shadow-water: rgba(0, 0, 0, 0.5);
+  --shadow-knob-blue: rgba(0, 0, 255, 0.7);
+  --shadow-knob-red: rgba(255, 0, 0, 0.7);
+  --shadow-knob-black: rgba(0, 0, 0, 0.7);
+}
+

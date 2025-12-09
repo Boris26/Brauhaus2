@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
     Accordion,
     AccordionDetails,
@@ -13,433 +13,366 @@ import {
     Paper
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import './BeerForm.css';
 import { connect } from 'react-redux';
-import { BeerActions } from '../../actions/actions';
+import SimpleBar from "simplebar-react";
+
 import { Malts } from '../../model/Malt';
 import { Hops } from '../../model/Hops';
 import { Yeasts } from '../../model/Yeasts';
-import SimpleBar from 'simplebar-react';
-import 'simplebar/dist/simplebar.min.css';
-import '../MainView/FinishBrewsBeers/FinishedBrewsTable.css';
+import { COLOR_ACCENT } from '../../colors';
+
 import './IngredientsFormPage.css';
-import {MaltsActions} from "../../actions/malt.actions";
-import {HopsActions} from "../../actions/hops.actions";
-import {YeastActions} from "../../actions/yeast.actions";
 
-interface IngredientsFormPageProps {
-    malts: Malts[];
-    hops: Hops[];
-    yeasts: Yeasts[];
-    getMalt: (isFetching: boolean) => void;
-    getHop: (isFetching: boolean) => void;
-    getYeast: (isFetching: boolean) => void;
-    submitNewMalt: (malt: Malts) => void;
-    submitNewHop: (hop: Hops) => void;
-    submitNewYeast: (yeast: Yeasts) => void;
-}
+import { MaltsActions } from "../../actions/malt.actions";
+import { HopsActions } from "../../actions/hops.actions";
+import { YeastActions } from "../../actions/yeast.actions";
 
-/**
- * Komponente zur Erstellung und Verwaltung von Zutaten für Bier (Malz, Hopfen, Hefe)
- */
-const IngredientsFormPage: React.FC<IngredientsFormPageProps> = ({
-    malts = [],
-    hops = [],
-    yeasts = [],
-    getMalt,
-    getHop,
-    getYeast,
-    submitNewMalt,
-    submitNewHop,
-    submitNewYeast
-}) => {
-    const [newMalt, setNewMalt] = useState<Partial<Malts>>({});
-    const [newHop, setNewHop] = useState<Partial<Hops>>({});
-    const [newYeast, setNewYeast] = useState<Partial<Yeasts>>({});
-    const [showNewMaltRow, setShowNewMaltRow] = useState(false);
-    const [showNewHopRow, setShowNewHopRow] = useState(false);
-    const [showNewYeastRow, setShowNewYeastRow] = useState(false);
 
-    useEffect(() => {
-        getMalt(true);
-        getHop(true);
-        getYeast(true);
-    }, [getMalt, getHop, getYeast]);
+class IngredientsFormPage extends React.Component<any, any> {
 
-    const handleAddMalt = () => {
+    simpleBarRef: any = null;
+
+    constructor(props: any) {
+        super(props);
+
+        this.state = {
+            newMalt: {},
+            newHop: {},
+            newYeast: {},
+            showNewMaltRow: false,
+            showNewHopRow: false,
+            showNewYeastRow: false
+        };
+    }
+
+    componentDidMount() {
+        this.props.getMalt(true);
+        this.props.getHop(true);
+        this.props.getYeast(true);
+    }
+
+    componentDidUpdate() {
+        if (this.simpleBarRef && this.simpleBarRef.recalculate) {
+            this.simpleBarRef.recalculate();
+        }
+    }
+
+
+    handleAddMalt = () => {
+        const { newMalt } = this.state;
         if (newMalt.name) {
-            submitNewMalt(newMalt as Malts);
-            setNewMalt({});
-            setShowNewMaltRow(false);
+            this.props.submitNewMalt(newMalt);
+            this.setState({ newMalt: {}, showNewMaltRow: false });
         }
     };
 
-    const handleAddHop = () => {
+    handleAddHop = () => {
+        const { newHop } = this.state;
         if (newHop.name) {
-            // Stellen Sie sicher, dass alle erforderlichen Felder vorhanden sind
-            const hopToSubmit: Hops = {
-                id: 0, // ID wird vom Server generiert
-                name: newHop.name || '',
-                type: newHop.type || '',
-                alpha: String(newHop.alpha), // Umwandlung in String, da das Interface einen String erwartet
-                description: newHop.description || ''
+            const hop = {
+                id: 0,
+                name: newHop.name,
+                type: newHop.type,
+                alpha: String(newHop.alpha),
+                description: newHop.description
             };
-            submitNewHop(hopToSubmit);
-            setNewHop({});
-            setShowNewHopRow(false);
+            this.props.submitNewHop(hop);
+            this.setState({ newHop: {}, showNewHopRow: false });
         }
     };
 
-    const handleAddYeast = () => {
+    handleAddYeast = () => {
+        const { newYeast } = this.state;
         if (newYeast.name) {
-            // Stellen Sie sicher, dass alle erforderlichen Felder vorhanden sind
-            const yeastToSubmit: Yeasts = {
-                id: 0, // ID wird vom Server generiert
-                name: newYeast.name || '',
-                type: newYeast.type || '',
-                temperature: String(newYeast.temperature || ''), // Umwandlung in String
-                evg: String(newYeast.evg || ''), // Verwenden Sie evg statt fermentation_level
-                description: newYeast.description || ''
+            const yeast = {
+                id: 0,
+                name: newYeast.name,
+                type: newYeast.type,
+                temperature: String(newYeast.temperature),
+                evg: String(newYeast.evg),
+                description: newYeast.description
             };
-            submitNewYeast(yeastToSubmit);
-            setNewYeast({});
-            setShowNewYeastRow(false);
+            this.props.submitNewYeast(yeast);
+            this.setState({ newYeast: {}, showNewYeastRow: false });
         }
     };
 
-    return (
-        <div className='containerIngredientsForm'>
-            <Accordion defaultExpanded sx={{backgroundColor: '#404040'}}>
-                <AccordionSummary sx={{ backgroundColor: 'darkorange', borderRadius: '10px 10px 0 0' }} expandIcon={<ExpandMoreIcon />} aria-controls="panel1a-content" id="panel1a-header">
-                    <Typography>Malz</Typography>
-                </AccordionSummary>
-                <AccordionDetails sx={{ backgroundColor: '#404040' }}>
-                    <div>
-                        <div className="filter-container">
-                            <button
-                                className="finish-btn"
-                                onClick={() => setShowNewMaltRow(true)}
-                                title="Neuen Malz hinzufügen"
-                            >
-                                <span role="img" aria-label="Plus" style={{ fontSize: 22, verticalAlign: 'middle', marginRight: 4 }}>➕</span>
-                            </button>
-                        </div>
 
-                        <SimpleBar style={{ maxHeight: 400 }}>
-                            <TableContainer component={Paper} className="FinishedBrewsTable">
-                                <Table>
-                                    <TableHead className="table-header">
+    render() {
+        const { malts, hops, yeasts } = this.props;
+        const {
+            newMalt, newHop, newYeast,
+            showNewMaltRow, showNewHopRow, showNewYeastRow
+        } = this.state;
+
+
+        return (
+            <SimpleBar
+                ref={(ref) => { this.simpleBarRef = ref }}
+                style={{ height: "calc(100vh - 0px)" }}
+                autoHide={false}
+            >
+                <div className='containerIngredientsForm'>
+
+                    {/* ----------------------------------- MALZ ----------------------------------- */}
+                    <Accordion defaultExpanded sx={{ backgroundColor: "#404040" }}>
+                        <AccordionSummary
+                            sx={{ backgroundColor: COLOR_ACCENT, borderRadius: "10px 10px 0 0" }}
+                            expandIcon={<ExpandMoreIcon />}
+                        >
+                            <Typography>Malz</Typography>
+                        </AccordionSummary>
+
+                        <AccordionDetails sx={{ backgroundColor: "#404040" }}>
+                            <div className="filter-container">
+                                <button
+                                    className="finish-btn"
+                                    onClick={() => this.setState({ showNewMaltRow: true })}
+                                >
+                                    ➕
+                                </button>
+                            </div>
+
+                            <TableContainer className="FinishedBrewsTable" sx={{ maxHeight: 400 }}>
+
+                                <Table stickyHeader>
+                                    <TableHead>
                                         <TableRow>
-                                            <TableCell className="table-header-cell">Name</TableCell>
-                                            <TableCell className="table-header-cell">Beschreibung</TableCell>
-                                            <TableCell className="table-header-cell">EBC</TableCell>
-                                            <TableCell className="table-header-cell">Aktion</TableCell>
+                                            <TableCell>Name</TableCell>
+                                            <TableCell>Beschreibung</TableCell>
+                                            <TableCell>EBC</TableCell>
+                                            <TableCell>Aktion</TableCell>
                                         </TableRow>
                                     </TableHead>
+
                                     <TableBody>
                                         {showNewMaltRow && (
-                                            <TableRow className="table-row">
-                                                <TableCell className="table-cell">
-                                                    <input
-                                                        type="text"
-                                                        className="table-edit-field"
-                                                        value={newMalt.name || ''}
-                                                        onChange={(e) => setNewMalt({...newMalt, name: e.target.value})}
-                                                        placeholder="Name"
+                                            <TableRow>
+                                                <TableCell>
+                                                    <input className="table-edit-field"
+                                                           value={newMalt.name || ""}
+                                                           onChange={e => this.setState({ newMalt: { ...newMalt, name: e.target.value } })}
                                                     />
                                                 </TableCell>
-                                                <TableCell className="table-cell">
-                                                    <input
-                                                        type="text"
-                                                        className="table-edit-field"
-                                                        value={newMalt.description || ''}
-                                                        onChange={(e) => setNewMalt({...newMalt, description: e.target.value})}
-                                                        placeholder="Beschreibung"
+
+                                                <TableCell>
+                                                    <input className="table-edit-field"
+                                                           value={newMalt.description || ""}
+                                                           onChange={e => this.setState({ newMalt: { ...newMalt, description: e.target.value } })}
                                                     />
                                                 </TableCell>
-                                                <TableCell className="table-cell">
-                                                    <input
-                                                        type="number"
-                                                        className="table-edit-field"
-                                                        value={newMalt.ebc || ''}
-                                                        onChange={(e) => setNewMalt({...newMalt, ebc: Number(e.target.value)})}
-                                                        placeholder="EBC"
+
+                                                <TableCell>
+                                                    <input type="number" className="table-edit-field"
+                                                           value={newMalt.ebc || ""}
+                                                           onChange={e => this.setState({ newMalt: { ...newMalt, ebc: Number(e.target.value) } })}
                                                     />
                                                 </TableCell>
-                                                <TableCell className="table-cell">
-                                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                        <button
-                                                            className="finish-btn"
-                                                            onClick={handleAddMalt}
-                                                            title="Speichern"
-                                                        >
-                                                            <span role="img" aria-label="Speichern" style={{ fontSize: 22, verticalAlign: 'middle', display: 'inline-block', position: 'relative', top: '3px' }}>💾</span>
-                                                        </button>
-                                                        <button
-                                                            className="cancel-btn"
-                                                            onClick={() => setShowNewMaltRow(false)}
-                                                            title="Abbrechen"
-                                                        >
-                                                            <span role="img" aria-label="Abbrechen" style={{ fontSize: 22, verticalAlign: 'middle', display: 'inline-block', position: 'relative', top: '3px' }}>✖️</span>
-                                                        </button>
+
+                                                <TableCell>
+                                                    <div className="action-buttons">
+                                                        <button className="finish-btn" onClick={this.handleAddMalt}>💾</button>
+                                                        <button className="cancel-btn" onClick={() => this.setState({ showNewMaltRow: false })}>✖️</button>
                                                     </div>
                                                 </TableCell>
-
                                             </TableRow>
                                         )}
-                                        {malts.map((malt) => (
-                                            <TableRow key={malt.id} className="table-row">
-                                                <TableCell className="table-cell">{malt.name}</TableCell>
-                                                <TableCell className="table-cell">{malt.description}</TableCell>
-                                                <TableCell className="table-cell">{malt.ebc}</TableCell>
-                                                <TableCell className="table-cell">
-                                                    <button
-                                                        className="cancel-btn"
-                                                        onClick={() => console.log(malt.id)}
-                                                        title="Löschen"
-                                                    >
-                                                        <span role="img" aria-label="Löschen" style={{ fontSize: 22, verticalAlign: 'middle',  display: 'inline-block', position: 'relative', top: '3px' }}>🗑️</span>
 
-                                                    </button>
+                                        {malts.map((m: any) => (
+                                            <TableRow key={m.id}>
+                                                <TableCell>{m.name}</TableCell>
+                                                <TableCell>{m.description}</TableCell>
+                                                <TableCell>{m.ebc}</TableCell>
+                                                <TableCell>
+                                                    <div className="action-buttons">
+                                                        <button className="cancel-btn">🗑️</button>
+                                                    </div>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
                                 </Table>
                             </TableContainer>
-                        </SimpleBar>
-                    </div>
-                </AccordionDetails>
-            </Accordion>
+                        </AccordionDetails>
+                    </Accordion>
 
-            <Accordion>
-                <AccordionSummary sx={{ backgroundColor: 'darkorange' }} expandIcon={<ExpandMoreIcon />} aria-controls="panel2a-content" id="panel2a-header">
-                    <Typography>Hopfen</Typography>
-                </AccordionSummary>
-                <AccordionDetails sx={{ backgroundColor: '#404040' }}>
-                    <div>
-                        <div className="filter-container">
-                            <button
-                                className="finish-btn"
-                                onClick={() => setShowNewHopRow(true)}
-                                title="Neuen Hopfen hinzufügen"
-                            >
-                                <span role="img" aria-label="Plus" style={{ fontSize: 22, verticalAlign: 'middle', marginRight: 4 }}>➕</span>
-                            </button>
-                        </div>
 
-                        <SimpleBar style={{ maxHeight: 400 }}>
-                            <TableContainer component={Paper} className="FinishedBrewsTable">
-                                <Table>
-                                    <TableHead className="table-header">
+                    {/* ----------------------------------- HOPFEN ----------------------------------- */}
+                    <Accordion sx={{ backgroundColor: "#404040" }}>
+                        <AccordionSummary
+                            sx={{ backgroundColor: COLOR_ACCENT }}
+                            expandIcon={<ExpandMoreIcon />}
+                        >
+                            <Typography>Hopfen</Typography>
+                        </AccordionSummary>
+
+                        <AccordionDetails sx={{ backgroundColor: "#404040" }}>
+                            <button className="finish-btn" onClick={() => this.setState({ showNewHopRow: true })}>➕</button>
+
+                            <TableContainer className="FinishedBrewsTable" sx={{ maxHeight: 400 }}>
+                                <Table stickyHeader>
+
+                                    <TableHead>
                                         <TableRow>
-                                            <TableCell className="table-header-cell">Name</TableCell>
-                                            <TableCell className="table-header-cell">Alpha (%)</TableCell>
-                                            <TableCell className="table-header-cell">Typ</TableCell>
-                                            <TableCell className="table-header-cell">Herkunft</TableCell>
-                                            <TableCell className="table-header-cell">Aktion</TableCell>
+                                            <TableCell>Name</TableCell>
+                                            <TableCell>Alpha</TableCell>
+                                            <TableCell>Typ</TableCell>
+                                            <TableCell>Beschreibung</TableCell>
+                                            <TableCell>Aktion</TableCell>
                                         </TableRow>
                                     </TableHead>
+
                                     <TableBody>
                                         {showNewHopRow && (
-                                            <TableRow className="table-row">
-                                                <TableCell className="table-cell">
-                                                    <input
-                                                        type="text"
-                                                        className="table-edit-field"
-                                                        value={newHop.name || ''}
-                                                        onChange={(e) => setNewHop({...newHop, name: e.target.value})}
-                                                        placeholder="Name"
+                                            <TableRow>
+                                                <TableCell>
+                                                    <input className="table-edit-field" value={newHop.name || ""}
+                                                           onChange={e => this.setState({ newHop: { ...newHop, name: e.target.value } })}
                                                     />
                                                 </TableCell>
-                                                <TableCell className="table-cell">
-                                                    <input
-                                                        type="text"
-                                                        className="table-edit-field"
-                                                        value={newHop.alpha || ''}
-                                                        onChange={(e) => setNewHop({...newHop, alpha: e.target.value})}
-                                                        placeholder="Alpha"
+
+                                                <TableCell>
+                                                    <input className="table-edit-field" value={newHop.alpha || ""}
+                                                           onChange={e => this.setState({ newHop: { ...newHop, alpha: e.target.value } })}
                                                     />
                                                 </TableCell>
-                                                <TableCell className="table-cell">
-                                                    <input
-                                                        type="text"
-                                                        className="table-edit-field"
-                                                        value={newHop.type || ''}
-                                                        onChange={(e) => setNewHop({...newHop, type: e.target.value})}
-                                                        placeholder="Typ"
+
+                                                <TableCell>
+                                                    <input className="table-edit-field" value={newHop.type || ""}
+                                                           onChange={e => this.setState({ newHop: { ...newHop, type: e.target.value } })}
                                                     />
                                                 </TableCell>
-                                                <TableCell className="table-cell">
-                                                    <input
-                                                        type="text"
-                                                        className="table-edit-field"
-                                                        value={newHop.description || ''}
-                                                        onChange={(e) => setNewHop({...newHop, description: e.target.value})}
-                                                        placeholder="Herkunft/Beschreibung"
+
+                                                <TableCell>
+                                                    <input className="table-edit-field" value={newHop.description || ""}
+                                                           onChange={e => this.setState({ newHop: { ...newHop, description: e.target.value } })}
                                                     />
                                                 </TableCell>
-                                                <TableCell className="table-cell">
-                                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                        <button
-                                                            className="finish-btn"
-                                                            onClick={handleAddHop}
-                                                            title="Speichern"
-                                                        >
-                                                            <span role="img" aria-label="Speichern" style={{ fontSize: 22, verticalAlign: 'middle', display: 'inline-block', position: 'relative', top: '3px' }}>💾</span>
-                                                        </button>
-                                                        <button
-                                                            className="cancel-btn"
-                                                            onClick={() => setShowNewHopRow(false)}
-                                                            title="Abbrechen"
-                                                        >
-                                                            <span role="img" aria-label="Abbrechen" style={{ fontSize: 22, verticalAlign: 'middle', display: 'inline-block', position: 'relative', top: '3px' }}>✖️</span>
-                                                        </button>
+
+                                                <TableCell>
+                                                    <div className="action-buttons">
+                                                        <button className="finish-btn" onClick={this.handleAddHop}>💾</button>
+                                                        <button className="cancel-btn" onClick={() => this.setState({ showNewHopRow: false })}>✖️</button>
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
                                         )}
-                                        {hops.map((hop) => (
-                                            <TableRow key={hop.id} className="table-row">
-                                                <TableCell className="table-cell">{hop.name}</TableCell>
-                                                <TableCell className="table-cell">{hop.alpha}</TableCell>
-                                                <TableCell className="table-cell">{hop.type}</TableCell>
-                                                <TableCell className="table-cell">{hop.description}</TableCell>
-                                                <TableCell className="table-cell">
-                                                    <button
-                                                        className="cancel-btn"
-                                                        onClick={() => console.log(hop.id)}
-                                                        title="Löschen"
-                                                    >
-                                                        <span role="img" aria-label="Löschen" style={{ fontSize: 22, verticalAlign: 'middle',  display: 'inline-block', position: 'relative', top: '3px' }}>🗑️</span>
 
-                                                    </button>
+                                        {hops.map((h: any) => (
+                                            <TableRow key={h.id}>
+                                                <TableCell>{h.name}</TableCell>
+                                                <TableCell>{h.alpha}</TableCell>
+                                                <TableCell>{h.type}</TableCell>
+                                                <TableCell>{h.description}</TableCell>
+                                                <TableCell>
+                                                    <div className="action-buttons">
+                                                        <button className="cancel-btn">🗑️</button>
+                                                    </div>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
+
                                 </Table>
                             </TableContainer>
-                        </SimpleBar>
-                    </div>
-                </AccordionDetails>
-            </Accordion>
+                        </AccordionDetails>
+                    </Accordion>
 
-            <Accordion sx={{backgroundColor: '#404040'}}>
-                <AccordionSummary sx={{ backgroundColor: 'darkorange', borderRadius: '0px 0px 10px 10px' }} expandIcon={<ExpandMoreIcon />} aria-controls="panel3a-content" id="panel3a-header">
-                    <Typography>Hefe</Typography>
-                </AccordionSummary>
-                <AccordionDetails sx={{ backgroundColor: '#404040' }}>
-                    <div>
-                        <div className="filter-container">
-                            <button
-                                className="finish-btn"
-                                onClick={() => setShowNewYeastRow(true)}
-                                title="Neue Hefe hinzufügen"
-                            >
-                                <span role="img" aria-label="Plus" style={{ fontSize: 22, verticalAlign: 'middle', marginRight: 4 }}>➕</span>
-                            </button>
-                        </div>
 
-                        <SimpleBar style={{ maxHeight: 400 }}>
-                            <TableContainer component={Paper} className="FinishedBrewsTable">
-                                <Table>
-                                    <TableHead className="table-header">
+                    {/* ----------------------------------- HEFE ----------------------------------- */}
+                    <Accordion sx={{ backgroundColor: "#404040" }}>
+                        <AccordionSummary
+                            sx={{ backgroundColor: COLOR_ACCENT, borderRadius: "0 0 10px 10px" }}
+                            expandIcon={<ExpandMoreIcon />}
+                        >
+                            <Typography>Hefe</Typography>
+                        </AccordionSummary>
+
+                        <AccordionDetails sx={{ backgroundColor: "#404040" }}>
+                            <button className="finish-btn" onClick={() => this.setState({ showNewYeastRow: true })}>➕</button>
+
+                            <TableContainer className="FinishedBrewsTable" sx={{ maxHeight: 400 }}>
+                                <Table stickyHeader>
+
+                                    <TableHead>
                                         <TableRow>
-                                            <TableCell className="table-header-cell">Name</TableCell>
-                                            <TableCell className="table-header-cell">Typ</TableCell>
-                                            <TableCell className="table-header-cell">Temperatur (°C)</TableCell>
-                                            <TableCell className="table-header-cell">Vergärungsgrad (%)</TableCell>
-                                            <TableCell className="table-header-cell">Aktion</TableCell>
+                                            <TableCell>Name</TableCell>
+                                            <TableCell>Typ</TableCell>
+                                            <TableCell>Temperatur</TableCell>
+                                            <TableCell>EVG</TableCell>
+                                            <TableCell>Aktion</TableCell>
                                         </TableRow>
                                     </TableHead>
+
                                     <TableBody>
                                         {showNewYeastRow && (
-                                            <TableRow className="table-row">
-                                                <TableCell className="table-cell">
-                                                    <input
-                                                        type="text"
-                                                        className="table-edit-field"
-                                                        value={newYeast.name || ''}
-                                                        onChange={(e) => setNewYeast({...newYeast, name: e.target.value})}
-                                                        placeholder="Name"
+                                            <TableRow>
+                                                <TableCell>
+                                                    <input className="table-edit-field"
+                                                           value={newYeast.name || ""}
+                                                           onChange={e => this.setState({ newYeast: { ...newYeast, name: e.target.value } })}
                                                     />
                                                 </TableCell>
-                                                <TableCell className="table-cell">
-                                                    <input
-                                                        type="text"
-                                                        className="table-edit-field"
-                                                        value={newYeast.type || ''}
-                                                        onChange={(e) => setNewYeast({...newYeast, type: e.target.value})}
-                                                        placeholder="Typ"
+
+                                                <TableCell>
+                                                    <input className="table-edit-field"
+                                                           value={newYeast.type || ""}
+                                                           onChange={e => this.setState({ newYeast: { ...newYeast, type: e.target.value } })}
                                                     />
                                                 </TableCell>
-                                                <TableCell className="table-cell">
-                                                    <input
-                                                        type="text"
-                                                        className="table-edit-field"
-                                                        value={newYeast.temperature || ''}
-                                                        onChange={(e) => setNewYeast({...newYeast, temperature: e.target.value})}
-                                                        placeholder="Temperatur"
+
+                                                <TableCell>
+                                                    <input className="table-edit-field"
+                                                           value={newYeast.temperature || ""}
+                                                           onChange={e => this.setState({ newYeast: { ...newYeast, temperature: e.target.value } })}
                                                     />
                                                 </TableCell>
-                                                <TableCell className="table-cell">
-                                                    <input
-                                                        type="text"
-                                                        className="table-edit-field"
-                                                        value={newYeast.evg || ''}
-                                                        onChange={(e) => setNewYeast({...newYeast, evg: e.target.value})}
-                                                        placeholder="Vergärungsgrad"
+
+                                                <TableCell>
+                                                    <input className="table-edit-field"
+                                                           value={newYeast.evg || ""}
+                                                           onChange={e => this.setState({ newYeast: { ...newYeast, evg: e.target.value } })}
                                                     />
                                                 </TableCell>
-                                                <TableCell className="table-cell">
-                                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                        <button
-                                                            className="finish-btn"
-                                                            onClick={handleAddYeast}
-                                                            title="Speichern"
-                                                        >
-                                                            <span role="img" aria-label="Speichern" style={{ fontSize: 22, verticalAlign: 'middle', display: 'inline-block', position: 'relative', top: '3px' }}>💾</span>
-                                                        </button>
-                                                        <button
-                                                            className="cancel-btn"
-                                                            onClick={() => setShowNewYeastRow(false)}
-                                                            title="Abbrechen"
-                                                        >
-                                                            <span role="img" aria-label="Abbrechen" style={{ fontSize: 22, verticalAlign: 'middle', display: 'inline-block', position: 'relative', top: '3px' }}>✖️</span>
-                                                        </button>
+
+                                                <TableCell>
+                                                    <div className="action-buttons">
+                                                        <button className="finish-btn" onClick={this.handleAddYeast}>💾</button>
+                                                        <button className="cancel-btn" onClick={() => this.setState({ showNewYeastRow: false })}>✖️</button>
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
                                         )}
-                                        {yeasts.map((yeast) => (
-                                            <TableRow key={yeast.id} className="table-row">
-                                                <TableCell className="table-cell">{yeast.name}</TableCell>
-                                                <TableCell className="table-cell">{yeast.type}</TableCell>
-                                                <TableCell className="table-cell">{yeast.temperature}</TableCell>
-                                                <TableCell className="table-cell">{yeast.evg}</TableCell>
-                                                <TableCell className="table-cell">
-                                                    <button
-                                                        className="cancel-btn"
-                                                        onClick={() => console.log(yeast.id)}
-                                                        title="Löschen"
-                                                    >
-                                                        <span role="img" aria-label="Löschen" style={{ fontSize: 22, verticalAlign: 'middle',  display: 'inline-block', position: 'relative', top: '3px' }}>🗑️</span>
 
-                                                    </button>
+                                        {yeasts.map((y: any) => (
+                                            <TableRow key={y.id}>
+                                                <TableCell>{y.name}</TableCell>
+                                                <TableCell>{y.type}</TableCell>
+                                                <TableCell>{y.temperature}</TableCell>
+                                                <TableCell>{y.evg}</TableCell>
+                                                <TableCell>
+                                                    <div className="action-buttons">
+                                                        <button className="cancel-btn">🗑️</button>
+                                                    </div>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
+
                                 </Table>
                             </TableContainer>
-                        </SimpleBar>
-                    </div>
-                </AccordionDetails>
-            </Accordion>
-        </div>
-    );
-};
+                        </AccordionDetails>
+                    </Accordion>
+
+                </div>
+            </SimpleBar>
+        );
+    }
+}
+
+
+
+/* ====================== Redux Mapper ====================== */
 
 const mapStateToProps = (state: any) => ({
     malts: state.maltsReducer.malts || [],

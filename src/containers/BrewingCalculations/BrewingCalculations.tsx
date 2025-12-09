@@ -10,6 +10,7 @@ import {
 
 } from '../../utils/Calculations/calculationsUtils';
 import { eSugarTypes } from '../../enums/eSugerTypes';
+import { COLOR_ACCENT } from '../../colors';
 
 
 const ML_TO_L_CONVERSION = 1000; // Umrechnung von Milliliter zu Liter
@@ -278,7 +279,7 @@ class BrewingCalculations extends React.Component<{}, BrewingCalculationsState> 
                     </Grid>
                     <Grid container spacing={2} alignItems="center" style={{ marginTop: 16 }}>
                         <Grid item xs={12} sm={6}>
-                            <Typography variant="subtitle2" style={{color:'#90caf9',marginBottom:4}}>Haushaltszucker (Saccharose)</Typography>
+                            <Typography variant="subtitle2" style={{color:COLOR_ACCENT,marginBottom:4}}>Haushaltszucker (Saccharose)</Typography>
                             <TextField
                                 label="Zucker gesamt (g)"
                                 value={sucroseSugar ? sucroseSugar.toFixed(2) : ''}
@@ -289,7 +290,7 @@ class BrewingCalculations extends React.Component<{}, BrewingCalculationsState> 
                             />
                         </Grid>
                         <Grid item xs={12} sm={6}>
-                            <Typography variant="subtitle2" style={{color:'#90caf9',marginBottom:4}}>Traubenzucker (Glucose/Dextrose)</Typography>
+                            <Typography variant="subtitle2" style={{color:COLOR_ACCENT,marginBottom:4}}>Traubenzucker (Glucose/Dextrose)</Typography>
                             <TextField
                                 label="Traubenzucker gesamt (g)"
                                 value={glucoseSugar ? glucoseSugar.toFixed(2) : ''}

@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, ReferenceArea, Brush } from 'recharts';
 import './BrewProcessChart.css';
+import { COLOR_DARK_BG, COLOR_WHITE, COLOR_ACCENT, SHADOW_PANEL2 } from '../../../colors';
 
 interface BrewProcessChartProps {
   groupedData: any;
@@ -237,17 +238,16 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
                 contentStyle={{
                   fontWeight: 'normal',
                   fontSize: 12,
-                  background: '#333333',
-                  color: '#ffffff',
-                  border: '2px solid #ff9800',
+                  background: COLOR_DARK_BG,
+                  color: COLOR_WHITE,
+                  border: `2px solid ${COLOR_ACCENT}`,
                   borderRadius: '4px',
                   padding: '8px',
-                  boxShadow: '2px 2px 6px rgba(0,0,0,0.15)',
+                  boxShadow: `2px 2px 6px ${SHADOW_PANEL2}`,
                   maxWidth: '220px',
                   width: 'auto'
                 }}
-                wrapperStyle={{ zIndex: 1000 }}
-                cursor={{ stroke: '#ff9800', strokeWidth: 1 }}
+                cursor={{ stroke: COLOR_ACCENT, strokeWidth: 1 }}
               />
               <Legend verticalAlign="top" align="center" wrapperStyle={{ top: 460 }} />
 
@@ -274,7 +274,7 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
                 <ReferenceLine
                   key={pc.step}
                   x={pc.elapsedTime}
-                  stroke="#ff9800"
+                  stroke={COLOR_ACCENT}
                   strokeWidth={1}
                 />
               ))}
@@ -323,9 +323,9 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
               <Brush
                 dataKey="elapsedTime"
                 height={36}
-                stroke="#ff9800"
+                stroke={COLOR_ACCENT}
                 travellerWidth={14}
-                fill="#23272b"
+                fill={COLOR_DARK_BG}
                 tickFormatter={this.formatSecondsToHMS}
                 className="brew-brush"
                 y={440}

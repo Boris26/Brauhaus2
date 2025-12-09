@@ -91,7 +91,9 @@ class Index extends React.Component<indexMainProps> {
                 </SimpleBar>
                 {viewState === Views.PRODUCTION && <Production/>}
                 {viewState === Views.DATABASE && <DatabaseOverview></DatabaseOverview>}
-                {viewState === Views.INGREDIENTS && <IngredientsFormPage></IngredientsFormPage>}
+                <div className="ingredients-wrapper">
+                    {viewState === Views.INGREDIENTS && <IngredientsFormPage />}
+                </div>
                 <SimpleBar style={{maxHeight: '100%', overflowY: 'auto'}}>
                     {viewState === Views.FINISHED_BREWS && <FinishedBrewsTable></FinishedBrewsTable>}
                 </SimpleBar>

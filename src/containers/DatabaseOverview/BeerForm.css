@@ -52,13 +52,13 @@ textarea {
     font-size: 1.2rem;
     margin-bottom: 12px;
     padding-bottom: 5px;
-    border-bottom: 2px solid darkorange;
+    border-bottom: 2px solid var(--color-accent);
     display: inline-block;
 }
 
 button {
     padding: 4px 8px;
-    background-color: darkorange; /* Geändert von #007bff zu darkorange für Konsistenz */
+    background-color: var(--color-accent); /* Geändert von #007bff zu var(--color-accent) für Konsistenz */
     color: #fff;
     border: none;
     border-radius: 4px; /* Gerundete Ecken wie bei FinishedBrewsTable */
@@ -75,7 +75,7 @@ button {
     height: 40px;
     width: 120px;
     padding: 4px 8px;
-    background-color: #007bff;
+    background-color: var(--color-accent);
     color: #fff;
     border: none;
     border-radius: 4px;
@@ -265,7 +265,7 @@ select {
 
 /* Button-Stile aus FinishedBrewsTable übernommen */
 .finish-btn {
-    background-color: darkorange;
+    background-color: var(--color-accent);
     color: #fff;
     border: none;
     border-radius: 4px;
@@ -295,7 +295,7 @@ select {
 }
 
 .cancel-btn {
-    background-color: darkorange;
+    background-color: var(--color-accent);
     color: #fff;
     border: none;
     border-radius: 4px;

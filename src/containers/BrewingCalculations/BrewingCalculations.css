@@ -2,16 +2,16 @@
 
 /* Farben und Kontraste für Dark Mode */
 .Paper-root, .MuiPaper-root {
-    background-color: #404040 !important; /* Dunkler Hintergrund */
-    color: #fff !important;
+    background-color: var(--color-brew-bg) !important; /* Dunkler Hintergrund */
+    color: var(--color-white) !important;
 }
 
 .MuiTypography-root, .MuiInputBase-root, .MuiFormLabel-root {
-    color: #fff !important;
+    color: var(--color-white) !important;
 }
 
 .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
-    border-color: darkorange !important;
+    border-color: var(--color-accent) !important;
 }
 
 .MuiTextField-root {
@@ -19,7 +19,7 @@
 }
 
 .header-container h1 {
-    color: darkorange;
+    color: var(--color-accent);
 }
 
 .icon {
@@ -29,7 +29,7 @@
 
 /* Beispiel: Abstand zwischen Boxen */
 .MuiBox-root {
-    background: #404040;
+    background: var(--color-brew-bg);
     border-radius: 10px;
     padding: 1.5rem;
     margin-bottom: 2rem;
@@ -38,13 +38,13 @@
 
 /* Buttons, falls benötigt */
 .MuiButton-root {
-    background: darkorange;
+    background: var(--color-accent);
 
 }
 
 /* Orange für Labels und Akzente */
 .MuiTypography-subtitle2 {
-    color: darkorange !important;
+    color: var(--color-accent) !important;
 }
 
 /* Wrapper-Klassen für die Komponente und den SimpleBar-Container */

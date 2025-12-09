@@ -15,7 +15,7 @@
 
 .FinishedBrewsTable .table-header {
   height: 1rem;
-  background-color: darkorange;
+  background-color: var(--color-accent);
 }
 
 .FinishedBrewsTable .table-header-cell,
@@ -56,7 +56,7 @@
 }
 
 .FinishedBrewsTable .select-btn {
-  background-color: #ff9800;
+
   color: #fff;
   border: none;
   border-radius: 4px;
@@ -86,7 +86,7 @@
 }
 
 .FinishedBrewsTable .cancel-btn {
-  background-color: darkorange;
+  background-color: var(--color-accent);
   color: #fff;
   border: none;
   border-radius: 4px;
@@ -128,7 +128,7 @@
 }
 
 .FinishedBrewsTable-year-filter:focus {
-  border: 1.5px solid darkorange;
+  border: 1.5px solid var(--color-accent);
 }
 
 .FinishedBrewsTable-year-filter option {
@@ -163,7 +163,7 @@
 }
 
 .active-filter-checkbox {
-  accent-color: darkorange;
+  accent-color: var(--color-accent);
   width: 1.1rem;
   height: 1.1rem;
   /* vertikale Ausrichtung anpassen */
@@ -171,7 +171,7 @@
 }
 
 .finish-btn {
-  background-color: darkorange;
+  background-color: var(--color-accent);
   color: #fff;
   border: none;
   border-radius: 4px;
@@ -220,13 +220,13 @@
 }
 
 .FinishedBrewsTable .table-edit-field:focus {
-  border: 1.5px solid darkorange !important;
+  border: 1.5px solid var(--color-accent) !important;
   border-radius: 4px;
   background: #333333;
 }
 
 .FinishedBrewsTable .table-edit-field input:focus:not([readonly]) {
-  border: 1.5px solid darkorange !important;
+  border: 1.5px solid var(--color-accent) !important;
   border-radius: 4px;
   background: #333333;
 }

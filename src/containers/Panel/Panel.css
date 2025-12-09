@@ -1,7 +1,7 @@
 .custom-panel {
   position: absolute;
   background: #23272b;
-  border: 1.5px solid darkorange;
+  border: 1.5px solid var(--color-accent);
   border-radius: 8px;
   box-shadow: 0 4px 24px rgba(25, 118, 210, 0.18), 0 1.5px 6px rgba(0,0,0,0.18);
   overflow: hidden;
@@ -14,7 +14,7 @@
 }
 
 .custom-panel-header {
-  background: darkorange;
+  background: var(--color-accent);
   color: #111;
   padding: 2px 8px; /* Höhe reduziert */
   cursor: move;
@@ -78,5 +78,5 @@
   width: 18px;
   height: 18px;
   cursor: se-resize;
-  background: linear-gradient(135deg, transparent 60%, darkorange 60%);
+  background: linear-gradient(135deg, transparent 60%, var(--color-accent) 60%);
 }

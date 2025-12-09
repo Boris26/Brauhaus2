@@ -1,32 +1,92 @@
+/* --- Page Container darf Scroll nicht blockieren --- */
 .containerIngredientsForm {
     margin: 10px;
     width: 100%;
+    height: auto !important;
+    overflow: visible !important;
 }
 
-.containerIngredientsForm .MuiPaper-root.FinishedBrewsTable {
-    margin-top: 10px;
-    width: 98%;
+/* AccordionDetails dürfen auch kein Overflow blockieren */
+.containerIngredientsForm .MuiAccordionDetails-root {
+    overflow: visible !important;
 }
 
-/* Überschreiben einiger Stile aus FinishedBrewsTable.css für bessere Anpassung */
+/* --- TABLE DESIGN DARK MODE --- */
+
 .containerIngredientsForm .FinishedBrewsTable {
-    width: 100%;
+    width: 100% !important;
+    background-color: #404040 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
 }
+
+.containerIngredientsForm .MuiTableContainer-root {
+    background-color: #404040 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+/* Sticky orange header */
+.containerIngredientsForm .MuiTableHead-root .MuiTableCell-head {
+    background-color: var(--color-accent) !important;
+    color: black !important;
+    font-weight: bold !important;
+    border-bottom: 2px solid #222 !important;
+
+    position: sticky !important;
+    top: 0;
+    z-index: 20 !important;
+}
+
+/* Table cells */
+.containerIngredientsForm .MuiTableCell-root {
+    background-color: #404040 !important;
+    color: white !important;
+    border-bottom: 1px solid #555 !important;
+    padding: 8px 10px !important;
+}
+
+/* Table rows */
+.containerIngredientsForm .MuiTableRow-root {
+    background-color: #404040 !important;
+}
+
+/* --- INPUT FIELDS --- */
 
 .containerIngredientsForm .table-edit-field {
     width: 100%;
     padding: 4px 8px;
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: rgba(0, 0, 0, 0.25);
     border: 1px solid #666;
     border-radius: 4px;
+    color: white;
 }
 
 .containerIngredientsForm .table-edit-field:focus {
-    border-color: darkorange;
+    border-color: var(--color-accent) !important;
     outline: none;
 }
 
-/* Button-Stile für einheitlichen Look */
+.containerIngredientsForm input[type="number"] {
+    text-align: right;
+}
+
+/* --- ACTION BUTTON GROUP ALWAYS INLINE --- */
+
+.action-buttons {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    white-space: nowrap; /* No wrapping */
+}
+
+.action-buttons button {
+    flex-shrink: 0;
+}
+
+/* --- BUTTONS STYLE --- */
+
 .containerIngredientsForm .finish-btn,
 .containerIngredientsForm .cancel-btn {
     height: 34px;
@@ -34,28 +94,17 @@
     padding: 0;
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    line-height: 1;
+    justify-content: center;
     font-size: 1.5rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
 }
 
-.containerIngredientsForm .finish-btn svg,
-.containerIngredientsForm .cancel-btn svg {
-    margin-left: 0;
-    padding: 0;
-    display: block;
-    vertical-align: middle;
-    horiz-align: center;
+.containerIngredientsForm .finish-btn:hover {
+    background-color: rgba(255, 165, 0, 0.25);
 }
 
-/* Ensure tables look good inside the accordions */
-.containerIngredientsForm .table-wrapper {
-    padding: 0;
-    margin: 0;
-}
-
-
-/* Einheitliche Tabellenbreiten */
-.containerIngredientsForm .table-cell input[type="number"] {
-    text-align: right;
+.containerIngredientsForm .cancel-btn:hover {
+    background-color: rgba(255, 0, 0, 0.25);
 }

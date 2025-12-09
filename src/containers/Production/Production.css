@@ -214,7 +214,7 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.13);
 }
 .startBtn:hover:not(:disabled) {
-    background-color: darkorange;
+    background-color: var(--color-accent);
     color: #fff;
     box-shadow: 0 4px 16px rgba(34,139,34,0.16);
     transform: translateY(-2px) scale(1.03);
@@ -222,7 +222,7 @@
 }
 .startBtn:disabled,
 .startBtn:disabled:hover {
-    background-color: darkorange;
+    background-color: var(--color-accent);
     color: #fff;
     opacity: 0.5;
     cursor: not-allowed;

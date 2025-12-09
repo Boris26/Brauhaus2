@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import {Basic, Donut, White} from 'react-dial-knob'
 import {ToggleState} from "../../../enums/eToggleState";
+import { SHADOW_KNOB_BLUE, SHADOW_KNOB_RED, SHADOW_KNOB_BLACK } from '../../../colors';
 
 interface MyPageState {
     value: number;
@@ -50,14 +51,14 @@ class MyKnob extends Component<MyPageProps,MyPageState> {
         let knobStyle;
 
         if (isButtonDown) {
-            knobStyle = { boxShadow: '0 0 10px 5px rgba(0, 0, 255, 0.7)', transform: 'translateY(2px)' };
+            knobStyle = { boxShadow: `0 0 10px 5px ${SHADOW_KNOB_BLUE}`, transform: 'translateY(2px)' };
         }
         else if (isAktive === ToggleState.ON)
         {
-            knobStyle = { boxShadow: '0 0 10px 5px rgba(255, 0, 0, 0.7)'};
+            knobStyle = { boxShadow: `0 0 10px 5px ${SHADOW_KNOB_RED}`};
         }
         else {
-            knobStyle = { boxShadow: '0 0 10px 5px rgba(0, 0, 0, 0.7)' };
+            knobStyle = { boxShadow: `0 0 10px 5px ${SHADOW_KNOB_BLACK}` };
         }
         return (
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>

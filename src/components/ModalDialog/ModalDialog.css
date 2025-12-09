@@ -17,8 +17,5 @@
 }
 
 .info {
-    background-color: darkorange;
+    background-color: var(--color-accent);
 }
-
-
-

@@ -5,6 +5,11 @@
     padding: 10px;
     height: 100%;
 }
+.ingredients-wrapper {
+    overflow: visible;
+    height: auto;
+}
+
 
 .DetailsContainer {
     flex: 1;

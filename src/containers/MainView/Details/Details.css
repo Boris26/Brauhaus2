@@ -6,7 +6,7 @@
 
 /* Header bleibt oben kleben */
 .header {
-    background-color: darkorange;
+    background-color: var(--color-accent);
     height: 57px;
     display: flex;
     align-items: center;
@@ -71,7 +71,7 @@
 /* Fokus (orange glow) */
 .batch-select:focus,
 .batch-input:focus {
-    border-color: darkorange;
+    border-color: var(--color-accent);
     box-shadow: 0 0 6px rgba(255, 140, 0, 0.6);
     background-color: #3b3b3b;
 }
