@@ -179,7 +179,7 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                                                     }}
                                                     title="Einkaufsliste"
                                                 >
-                                                    <span role="img" aria-label="Einkaufsliste" style={{fontSize: '1.5rem'}}>🛒</span>
+                                                    <span role="img" aria-label="Einkaufsliste" style={{fontSize: '1.5rem', marginTop: '0.4rem'}}>🛒</span>
                                                 </button>
                                                 <button
                                                     className={`table-action-button ${beerToBrew && beerToBrew.id === item.id ? 'cancel-brew-button' : 'brew-button'}`}
@@ -199,7 +199,7 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                                                     }
                                                     title={beerToBrew && beerToBrew.id === item.id ? 'Abbrechen' : 'Brauen'}
                                                 >
-                                                    <span role="img" aria-label={beerToBrew && beerToBrew.id === item.id ? 'Abbrechen' : 'Brauen'} style={{fontSize: '1.5rem'}}>
+                                                    <span role="img" aria-label={beerToBrew && beerToBrew.id === item.id ? 'Abbrechen' : 'Brauen'} style={{fontSize: '1.5rem', marginTop: '0.3rem'}}>
                                                         {beerToBrew && beerToBrew.id === item.id ? '✖️' : '🍺'}
                                                     </span>
                                                 </button>

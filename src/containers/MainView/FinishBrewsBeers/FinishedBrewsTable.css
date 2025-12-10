@@ -185,6 +185,11 @@
   color: #fff;
 }
 
+.FinishedBrewsTable .finish-btn {
+    background-color: transparent;
+    color: #fff;
+}
+
 .finish-btn.clicked {
   transform: scale(0.92);
   box-shadow: 0 0 8px 2px rgba(255,140,0,0.4);

@@ -476,7 +476,7 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
 
                         </button>
                         <button
-                            className="details-btn"
+                            className="cancel-btn"
                             onClick={() => this.handleShowDetails(brewId)}
                             title="Details"
                         >
