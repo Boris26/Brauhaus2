@@ -14,6 +14,7 @@ import {FinishedBrew} from "../model/FinishedBrew";
 import FinishedBrewsTable from "./MainView/FinishBrewsBeers/FinishedBrewsTable";
 import BrewingCalculations from "./BrewingCalculations/BrewingCalculations";
 import IngredientsFormPage from "./DatabaseOverview/IngredientsFormPage";
+import SettingsPage from "./Settings/SettingsPage";
 
 interface indexMainProps {
     viewState: Views;
@@ -94,6 +95,7 @@ class Index extends React.Component<indexMainProps> {
                 <div className="ingredients-wrapper">
                     {viewState === Views.INGREDIENTS && <IngredientsFormPage />}
                 </div>
+                {viewState === Views.SETTINGS && <SettingsPage />}
                 <SimpleBar style={{maxHeight: '100%', overflowY: 'auto'}}>
                     {viewState === Views.FINISHED_BREWS && <FinishedBrewsTable></FinishedBrewsTable>}
                 </SimpleBar>

@@ -4,5 +4,6 @@ export enum Views {
     DATABASE = 2,
     FINISHED_BREWS = 3,
     BREWING_CALCULATIONS = 4,
-    INGREDIENTS = 5
+    INGREDIENTS = 5,
+    SETTINGS = 6,
 }

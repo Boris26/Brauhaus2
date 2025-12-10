@@ -6,6 +6,8 @@ import {ApplicationActions, BeerActions} from "../../../actions/actions";
 import setViewState = ApplicationActions.setViewState;
 import StatusDisplay from './StatusDisplay';
 import { ThemeName } from '../../../utils/theme';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faGear } from '@fortawesome/free-solid-svg-icons';
 
 
 
@@ -127,6 +129,15 @@ class Header extends React.Component<HeaderProps, HeaderState> {
                         onClick={() => this.handleIconClick(Views.INGREDIENTS)}
                         title="Zutaten verwalten"
                     />
+                    <div
+                        className={this.getTabClassName(Views.SETTINGS)}
+                        onClick={() => this.handleIconClick(Views.SETTINGS)}
+                        title="Einstellungen"
+                        role="button"
+                        aria-label="Einstellungen"
+                    >
+                        <FontAwesomeIcon icon={faGear} size="lg" />
+                    </div>
                 </div>
                 <div className="header-status">
                   <div className="status-display-wrapper">
