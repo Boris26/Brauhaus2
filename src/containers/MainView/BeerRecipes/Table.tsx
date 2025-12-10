@@ -173,7 +173,7 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                                         <TableCell className="table-cell">
                                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                                 <button
-
+                                                    className="table-action-button export-button"
                                                     onClick={e => {
                                                         e.stopPropagation();
                                                         this.handleExportShoppingListPdfForBeer(item);
@@ -183,6 +183,7 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                                                     <span role="img" aria-label="Einkaufsliste" style={{fontSize: '1.2rem'}}>🛒</span>
                                                 </button>
                                                 <button
+                                                    className={`table-action-button ${beerToBrew && beerToBrew.id === item.id ? 'cancel-brew-button' : 'brew-button'}`}
                                                     onClick={e => {
                                                         e.stopPropagation();
                                                         if (beerToBrew && beerToBrew.id === item.id) {

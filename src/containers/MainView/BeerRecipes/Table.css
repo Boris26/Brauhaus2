@@ -83,3 +83,57 @@
   background-color: #d32f2f;
   color: #fff;
 }
+
+.Table .table-action-button {
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2rem;
+  min-width: 2.5rem;
+  background-color: #757575;
+}
+
+.Table .table-action-button:hover {
+  transform: translateY(-1px);
+}
+
+.Table .table-action-button:disabled {
+  background-color: #bdbdbd;
+  color: #888;
+  cursor: not-allowed;
+  border: none;
+  opacity: 1;
+}
+
+.Table .export-button {
+  background-color: var(--color-accent);
+  color: #222;
+}
+
+.Table .export-button:hover {
+  background-color: #ffa726;
+}
+
+.Table .brew-button {
+  background-color: #2e7d32;
+}
+
+.Table .brew-button:hover {
+  background-color: #388e3c;
+}
+
+.Table .cancel-brew-button {
+  background-color: #b71c1c;
+}
+
+.Table .cancel-brew-button:hover {
+  background-color: #d32f2f;
+}
