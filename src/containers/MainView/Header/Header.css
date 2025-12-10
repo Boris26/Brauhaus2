@@ -14,6 +14,29 @@
   margin-right: auto;
 }
 
+.theme-toggle {
+  margin-left: 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-input-border);
+  background: var(--color-input-bg2);
+  color: var(--color-black);
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 2px var(--shadow-primary);
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.theme-toggle:hover {
+  box-shadow: 0 3px 8px var(--shadow-secondary);
+  transform: translateY(-1px);
+}
+
+.theme-toggle:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px var(--shadow-secondary) inset;
+}
+
 .header-status {
   display: flex;
   flex-direction: row;

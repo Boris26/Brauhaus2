@@ -1,5 +1,7 @@
 export type ThemeName = 'default' | 'dark-alt';
 
+const THEME_STORAGE_KEY = 'theme';
+
 /**
  * Aktiviert die gewünschte Farbpalette, indem die passende Theme-Klasse
  * bzw. das data-Attribut am Root-Element gesetzt wird. Alle Komponenten
@@ -17,4 +19,20 @@ export const applyTheme = (theme: ThemeName): void => {
 
   root.classList.remove('theme-dark-alt');
   root.removeAttribute('data-theme');
+};
+
+export const setTheme = (theme: ThemeName): void => {
+  applyTheme(theme);
+  localStorage.setItem(THEME_STORAGE_KEY, theme);
+};
+
+export const getStoredTheme = (): ThemeName | null => {
+  const stored = localStorage.getItem(THEME_STORAGE_KEY);
+  return stored === 'dark-alt' || stored === 'default' ? stored : null;
+};
+
+export const getActiveTheme = (): ThemeName => {
+  return document.documentElement.getAttribute('data-theme') === 'dark-alt'
+    ? 'dark-alt'
+    : 'default';
 };

@@ -4,10 +4,10 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import store from './store';
 import App from './containers/App';
-import { applyTheme, ThemeName } from './utils/theme';
+import { applyTheme, getStoredTheme, ThemeName } from './utils/theme';
 
 const setInitialTheme = (): void => {
-    const storedTheme = (localStorage.getItem('theme') as ThemeName | null);
+    const storedTheme = getStoredTheme();
 
     if (storedTheme) {
         applyTheme(storedTheme);

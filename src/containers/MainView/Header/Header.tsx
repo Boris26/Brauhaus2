@@ -5,6 +5,7 @@ import {Views} from "../../../enums/eViews";
 import {ApplicationActions, BeerActions} from "../../../actions/actions";
 import setViewState = ApplicationActions.setViewState;
 import StatusDisplay from './StatusDisplay';
+import { getActiveTheme, setTheme, ThemeName } from '../../../utils/theme';
 
 
 
@@ -19,6 +20,7 @@ interface HeaderProps {
 interface HeaderState {
     currentTime: string;
     currentDate: string;
+    theme: ThemeName;
 }
 
 class Header extends React.Component<HeaderProps, HeaderState> {
@@ -26,10 +28,11 @@ class Header extends React.Component<HeaderProps, HeaderState> {
 
     constructor(props: HeaderProps) {
         super(props);
-        this.state = {
-            currentTime: this.getCurrentTimeString(),
-            currentDate: this.getCurrentDateString(),
-        };
+            this.state = {
+                currentTime: this.getCurrentTimeString(),
+                currentDate: this.getCurrentDateString(),
+                theme: getActiveTheme(),
+            };
     }
 
     componentDidMount() {
@@ -65,14 +68,24 @@ class Header extends React.Component<HeaderProps, HeaderState> {
         return `icon ${this.props.currentView === view ? 'active' : ''}`;
     }
 
+    toggleTheme = () => {
+        const nextTheme: ThemeName = this.state.theme === 'dark-alt' ? 'default' : 'dark-alt';
+        setTheme(nextTheme);
+        this.setState({ theme: nextTheme });
+    }
+
     render() {
        const { messages = [] , removeAllMessages, backendStatus} = this.props; // Default-Wert für messages ist ein leeres Array
+       const { theme } = this.state;
 
         return (
             <div className="Header">
                 <div className="header-left">
                   <h1>Brauhaus</h1>
                 </div>
+                <button className="theme-toggle" onClick={this.toggleTheme} type="button">
+                  {theme === 'dark-alt' ? 'Helles Theme' : 'Dunkles Theme'}
+                </button>
                 <div className="icons-container">
                     <img
                         src="beer.png"
