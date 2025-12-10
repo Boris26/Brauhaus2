@@ -4,6 +4,21 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import store from './store';
 import App from './containers/App';
+import { applyTheme, ThemeName } from './utils/theme';
+
+const setInitialTheme = (): void => {
+    const storedTheme = (localStorage.getItem('theme') as ThemeName | null);
+
+    if (storedTheme) {
+        applyTheme(storedTheme);
+        return;
+    }
+
+    const prefersDarkAlt = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+    applyTheme(prefersDarkAlt ? 'dark-alt' : 'default');
+};
+
+setInitialTheme();
 
 ReactDOM.render(
     <Provider store={store}>
