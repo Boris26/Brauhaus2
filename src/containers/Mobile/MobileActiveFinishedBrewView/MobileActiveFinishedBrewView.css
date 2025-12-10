@@ -10,7 +10,7 @@
   padding: 0;
   position: relative;
   left: 0;
-  background: #181818;
+  background: var(--color-dark-18);
 }
 
 .mobile-activebrew-info-list {
@@ -32,12 +32,12 @@
 
 .mobile-activebrew-label {
   font-weight: bold;
-  color: #fff;
+  color: var(--color-white);
   min-width: 120px;
 }
 
 .mobile-activebrew-value {
-  color: #fff;
+  color: var(--color-white);
   margin-left: 1rem;
   word-break: break-word;
 }
@@ -45,20 +45,20 @@
 .mobile-activebrew-input {
   padding: 0.3rem 0.6rem;
   border-radius: 4px;
-  border: 1px solid #888;
+  border: 1px solid var(--color-gray-strong);
   font-size: 1rem;
-  background: #232323;
-  color: #fff;
+  background: var(--color-dark-23);
+  color: var(--color-white);
   width: 160px;
 }
 
 .mobile-activebrew-textarea {
   width: 100%;
   border-radius: 4px;
-  border: 1px solid #888;
+  border: 1px solid var(--color-gray-strong);
   font-size: 1rem;
-  background: #232323;
-  color: #fff;
+  background: var(--color-dark-23);
+  color: var(--color-white);
   padding: 0.5rem;
   margin-top: 0.5rem;
 }
@@ -68,8 +68,8 @@
   padding: 0.7rem 2.2rem;
   border-radius: 6px;
   border: none;
-  background: #ff9800;
-  color: #fff;
+  background: var(--color-orange-main);
+  color: var(--color-white);
   font-size: 1.1rem;
   font-weight: bold;
   cursor: pointer;
@@ -77,5 +77,5 @@
 }
 
 .mobile-activebrew-btn:hover {
-  background: #ffa733;
+  background: var(--color-waiting-orange);
 }

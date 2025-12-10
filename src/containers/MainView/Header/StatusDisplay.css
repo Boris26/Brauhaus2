@@ -4,11 +4,11 @@
   justify-content: flex-start;
   align-items: flex-start;
   font-size: 0.92rem;
-  color: #333;
-  background: linear-gradient(180deg, #ff9800 60%, #e65100 100%);
-  border: 2px inset #b26a00;
+  color: var(--color-dark-bg);
+  background: linear-gradient(180deg, var(--color-orange-main) 60%, var(--color-orange-strong) 100%);
+  border: 2px inset var(--color-orange-dark);
   border-radius: 0.6rem;
-  box-shadow: 0 1px 2px #b26a00 inset, 0 1.5px 0 #fff;
+  box-shadow: 0 1px 2px var(--color-orange-dark) inset, 0 1.5px 0 var(--color-white);
   padding-left: 8px;
   padding-top: 4px;
   height: 65px;
@@ -19,7 +19,7 @@
 
 .backend-status {
   font-weight: bold;
-  color: #fff;
+  color: var(--color-white);
   margin-top: 0;
   margin-bottom: 0.08rem;
   background: transparent;
@@ -27,17 +27,17 @@
   font-size: 0.95rem;
   line-height: 1.1;
   padding: 0 0 0.05rem 0;
-  text-shadow: 0 1px 2px #e65100;
+  text-shadow: 0 1px 2px var(--color-orange-strong);
 }
 
 .backend-status.Online {
-  color: #43a047;
-  text-shadow: 0 1px 2px #1b5e20;
+  color: var(--color-success-bright);
+  text-shadow: 0 1px 2px var(--color-success-dark);
 }
 
 .backend-status.Offline {
-  color: #e53935;
-  text-shadow: 0 1px 2px #b71c1c;
+  color: var(--color-error-highlight);
+  text-shadow: 0 1px 2px var(--color-error-deep);
 }
 
 .backend-status-row {
@@ -46,7 +46,7 @@
   width: 100%;
   gap: 0.3rem;
   justify-content: space-between;
-  border-bottom: 1px solid #b26a00;
+  border-bottom: 1px solid var(--color-orange-dark);
   padding-bottom: 0.1rem;
   margin-bottom: 0.1rem;
   padding-left: 0;
@@ -60,18 +60,18 @@
   height: 18px;
   font-size: 1.1rem;
   font-weight: bold;
-  color: #fff;
-  background: #e65100;
+  color: var(--color-white);
+  background: var(--color-orange-strong);
   border-radius: 50%;
-  border: 1.5px solid #b26a00;
+  border: 1.5px solid var(--color-orange-dark);
   cursor: pointer;
   margin-right: 3px;
   transition: background 0.2s, color 0.2s;
 }
 
 .close-x:hover {
-  background: #ff9800;
-  color: #fff;
+  background: var(--color-orange-main);
+  color: var(--color-white);
 }
 
 .messages {
@@ -89,7 +89,7 @@
 }
 
 .message {
-  color: #000;
+  color: var(--color-header-text);
   font-size: 0.92rem;
   margin-bottom: 0.03rem;
   border-radius: 0.3rem;

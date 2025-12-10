@@ -15,6 +15,7 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { connect } from 'react-redux';
 import SimpleBar from "simplebar-react";
+import { COLOR_BREW_BG } from '../../colors';
 
 import { Malts } from '../../model/Malt';
 import { Hops } from '../../model/Hops';
@@ -115,7 +116,7 @@ class IngredientsFormPage extends React.Component<any, any> {
                 <div className='containerIngredientsForm'>
 
                     {/* ----------------------------------- MALZ ----------------------------------- */}
-                    <Accordion defaultExpanded sx={{ backgroundColor: "#404040" }}>
+                    <Accordion defaultExpanded sx={{ backgroundColor: COLOR_BREW_BG }}>
                         <AccordionSummary
                             sx={{ backgroundColor: COLOR_ACCENT, borderRadius: "10px 10px 0 0" }}
                             expandIcon={<ExpandMoreIcon />}
@@ -123,7 +124,7 @@ class IngredientsFormPage extends React.Component<any, any> {
                             <Typography>Malz</Typography>
                         </AccordionSummary>
 
-                        <AccordionDetails sx={{ backgroundColor: "#404040" }}>
+                        <AccordionDetails sx={{ backgroundColor: COLOR_BREW_BG }}>
                             <div className="filter-container">
                                 <button
                                     className="finish-btn"
@@ -198,7 +199,7 @@ class IngredientsFormPage extends React.Component<any, any> {
 
 
                     {/* ----------------------------------- HOPFEN ----------------------------------- */}
-                    <Accordion sx={{ backgroundColor: "#404040" }}>
+                    <Accordion sx={{ backgroundColor: COLOR_BREW_BG }}>
                         <AccordionSummary
                             sx={{ backgroundColor: COLOR_ACCENT }}
                             expandIcon={<ExpandMoreIcon />}
@@ -206,7 +207,7 @@ class IngredientsFormPage extends React.Component<any, any> {
                             <Typography>Hopfen</Typography>
                         </AccordionSummary>
 
-                        <AccordionDetails sx={{ backgroundColor: "#404040" }}>
+                        <AccordionDetails sx={{ backgroundColor: COLOR_BREW_BG }}>
                             <button className="finish-btn" onClick={() => this.setState({ showNewHopRow: true })}>➕</button>
 
                             <TableContainer className="FinishedBrewsTable" sx={{ maxHeight: 400 }}>
@@ -280,7 +281,7 @@ class IngredientsFormPage extends React.Component<any, any> {
 
 
                     {/* ----------------------------------- HEFE ----------------------------------- */}
-                    <Accordion sx={{ backgroundColor: "#404040" }}>
+                    <Accordion sx={{ backgroundColor: COLOR_BREW_BG }}>
                         <AccordionSummary
                             sx={{ backgroundColor: COLOR_ACCENT, borderRadius: "0 0 10px 10px" }}
                             expandIcon={<ExpandMoreIcon />}
@@ -288,7 +289,7 @@ class IngredientsFormPage extends React.Component<any, any> {
                             <Typography>Hefe</Typography>
                         </AccordionSummary>
 
-                        <AccordionDetails sx={{ backgroundColor: "#404040" }}>
+                        <AccordionDetails sx={{ backgroundColor: COLOR_BREW_BG }}>
                             <button className="finish-btn" onClick={() => this.setState({ showNewYeastRow: true })}>➕</button>
 
                             <TableContainer className="FinishedBrewsTable" sx={{ maxHeight: 400 }}>

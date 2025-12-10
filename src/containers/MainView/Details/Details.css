@@ -26,13 +26,13 @@
 
 .batch-settings {
     position: sticky;
-    background: #303030;
+    background: var(--color-surface-graph);
     padding: 16px 14px; /* Links identisch zu Tabellen */
     flex-shrink: 0;
     height: 72px; /* etwas höher */
     display: flex;
     align-items: center; /* vertikal zentriert */
-    border-bottom: 1px solid #444;
+    border-bottom: 1px solid var(--color-gray-very-dark);
 }
 
 /* Schönere Abstände zwischen den Eingabeelementen */
@@ -43,7 +43,7 @@
 }
 
 .batch-settings label {
-    color: #ffffff;
+    color: var(--color-white);
     font-size: 14px;
     font-weight: 500;
 }
@@ -53,10 +53,10 @@
 .batch-input {
     margin-left: 10px;
     padding: 6px 10px;
-    background-color: #2f2f2f;
-    color: #ffffff;
+    background-color: var(--color-panel-contrast);
+    color: var(--color-white);
     border-radius: 6px;
-    border: 1px solid #555;
+    border: 1px solid var(--color-border-strong);
     font-size: 14px;
     transition: all 0.2s ease;
     outline: none;
@@ -65,20 +65,20 @@
 /* Hover */
 .batch-select:hover,
 .batch-input:hover {
-    border-color: #888;
+    border-color: var(--color-gray-strong);
 }
 
 /* Fokus (orange glow) */
 .batch-select:focus,
 .batch-input:focus {
     border-color: var(--color-accent);
-    box-shadow: 0 0 6px rgba(255, 140, 0, 0.6);
-    background-color: #3b3b3b;
+    box-shadow: 0 0 6px var(--shadow-orange-stronger);
+    background-color: var(--color-surface-muted);
 }
 
 /* Select Option Styling (Firefox/Chrome) */
 .batch-select option {
-    background: #2f2f2f;
+    background: var(--color-panel-contrast);
     color: white;
 }
 
@@ -112,5 +112,5 @@
 .wortBoiling-table .MuiTableCell-head,
 .wortBoiling-table .MuiTableCell-body {
     color: white !important;
-    background-color: #404040 !important;
+    background-color: var(--color-brew-bg) !important;
 }

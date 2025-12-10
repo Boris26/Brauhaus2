@@ -39,7 +39,7 @@ textarea {
 
 /* Styling für Labels der Textfelder */
 .beer-form label {
-    color: #ffffff;
+    color: var(--color-white);
     font-weight: 500;
     margin-bottom: 5px;
     display: flex;
@@ -48,7 +48,7 @@ textarea {
 
 /* Styling für Abschnittsüberschriften (Maischeplan, Malze, Hopfen, Hefe) */
 .table-section h3 {
-    color: #ffffff;
+    color: var(--color-white);
     font-size: 1.2rem;
     margin-bottom: 12px;
     padding-bottom: 5px;
@@ -58,8 +58,8 @@ textarea {
 
 button {
     padding: 4px 8px;
-    background-color: var(--color-accent); /* Geändert von #007bff zu var(--color-accent) für Konsistenz */
-    color: #fff;
+    background-color: var(--color-accent); /* Geändert auf var(--color-accent) für Konsistenz */
+    color: var(--color-white);
     border: none;
     border-radius: 4px; /* Gerundete Ecken wie bei FinishedBrewsTable */
     cursor: pointer;
@@ -76,14 +76,14 @@ button {
     width: 120px;
     padding: 4px 8px;
     background-color: var(--color-accent);
-    color: #fff;
+    color: var(--color-white);
     border: none;
     border-radius: 4px;
     cursor: pointer;
 }
 
 button:hover {
-    background-color: #c96a00; /* Dunklere Version der darkorange Farbe */
+    background-color: var(--color-surface-highlight); /* Dunklere Version der darkorange Farbe */
 }
 
 select {
@@ -137,7 +137,7 @@ select {
     max-height: 180px;
     overflow-y: auto;
     margin-bottom: 5px;
-    border: 1px solid #555;
+    border: 1px solid var(--color-border-strong);
     border-radius: 3px;
 }
 
@@ -146,17 +146,17 @@ select {
 }
 
 .table-wrapper::-webkit-scrollbar-track {
-    background: #333;
+    background: var(--color-dark-bg);
     border-radius: 3px;
 }
 
 .table-wrapper::-webkit-scrollbar-thumb {
-    background: #666;
+    background: var(--color-border-mid);
     border-radius: 3px;
 }
 
 .table-wrapper::-webkit-scrollbar-thumb:hover {
-    background: #888;
+    background: var(--color-gray-strong);
 }
 
 /* Tabellenstile für Maischeplan, Malz, Hopfen und Hefe */
@@ -169,7 +169,7 @@ select {
 }
 
 .ingredient-table th {
-    background-color: #555;
+    background-color: var(--color-border-strong);
     padding: 6px;
     text-align: left;
     font-weight: bold;
@@ -180,11 +180,11 @@ select {
 }
 
 .ingredient-table tr:nth-child(even) {
-    background-color: #4a4a4a;
+    background-color: var(--color-surface-strong);
 }
 
 .ingredient-table tr:nth-child(odd) {
-    background-color: #3a3a3a;
+    background-color: var(--color-surface-deep);
 }
 
 .ingredient-table input,
@@ -266,7 +266,7 @@ select {
 /* Button-Stile aus FinishedBrewsTable übernommen */
 .finish-btn {
     background-color: var(--color-accent);
-    color: #fff;
+    color: var(--color-white);
     border: none;
     border-radius: 4px;
     padding: 0.25rem 0.75rem;
@@ -276,27 +276,27 @@ select {
 }
 
 .finish-btn:hover {
-    background-color: #c96a00;
-    color: #fff;
+    background-color: var(--color-surface-highlight);
+    color: var(--color-white);
 }
 
 .finish-btn.clicked {
     transform: scale(0.92);
-    box-shadow: 0 0 8px 2px rgba(255,140,0,0.4);
+    box-shadow: 0 0 8px 2px var(--shadow-orange);
 }
 
 .finish-btn:disabled {
-    background-color: #e0e0e0;
-    color: #bdbdbd;
+    background-color: var(--color-gray-soft);
+    color: var(--color-gray-muted);
     cursor: not-allowed;
     box-shadow: none;
     opacity: 0.7;
-    border: 1px solid #cccccc;
+    border: 1px solid var(--color-surface-light);
 }
 
 .cancel-btn {
     background-color: var(--color-accent);
-    color: #fff;
+    color: var(--color-white);
     border: none;
     border-radius: 4px;
     padding: 0.25rem 0.75rem;
@@ -306,6 +306,6 @@ select {
 }
 
 .cancel-btn:hover {
-    background-color: #d32f2f;
-    color: #fff;
+    background-color: var(--color-error-mid);
+    color: var(--color-white);
 }

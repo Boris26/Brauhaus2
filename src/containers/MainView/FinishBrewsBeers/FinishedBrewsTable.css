@@ -6,7 +6,7 @@
 
 /* Setze Hintergrund und Ecken gezielt auf das MUI Paper-Element */
 .MuiPaper-root.FinishedBrewsTable {
-  background-color: #404040; /* wie Table.css */
+  background-color: var(--color-brew-bg); /* wie Table.css */
   border-top-left-radius: 5px !important;
   border-top-right-radius: 5px !important;
   margin: 0.6rem;
@@ -57,7 +57,7 @@
 
 .FinishedBrewsTable .select-btn {
 
-  color: #fff;
+  color: var(--color-white);
   border: none;
   border-radius: 4px;
   padding: 0.25rem 0.75rem;
@@ -73,13 +73,13 @@
 }
 
 .FinishedBrewsTable .select-btn:hover {
-  background-color: #ffa726;
-  color: #222;
+  background-color: var(--color-accent);
+  color: var(--color-gray-deep);
 }
 
 .FinishedBrewsTable .select-btn:disabled {
-  background-color: #bdbdbd;
-  color: #888;
+  background-color: var(--color-gray-muted);
+  color: var(--color-gray-strong);
   cursor: not-allowed;
   border: none;
   opacity: 1;
@@ -87,7 +87,7 @@
 
 .FinishedBrewsTable .cancel-btn {
   background-color: var(--color-accent);
-  color: #fff;
+  color: var(--color-white);
   border: none;
   border-radius: 4px;
   padding: 0.25rem 0.75rem;
@@ -97,13 +97,13 @@
 }
 
 .FinishedBrewsTable .cancel-btn:hover {
-  background-color: #d32f2f;
-  color: #fff;
+  background-color: var(--color-error-mid);
+  color: var(--color-white);
 }
 
 .FinishedBrewsTable .active-row {
-  background-color: #2e7d32 !important; /* Grüner Hintergrund für aktive Zeile */
-  color: #fff;
+  background-color: var(--color-success-alt) !important; /* Grüner Hintergrund für aktive Zeile */
+  color: var(--color-white);
   font-weight: bold;
   transition: background 0.3s;
 }
@@ -115,9 +115,9 @@
 }
 
 .FinishedBrewsTable-year-filter {
-  background: #404040;
+  background: var(--color-brew-bg);
   color: white;
-  border: 1px solid #888;
+  border: 1px solid var(--color-gray-strong);
   border-radius: 4px;
   font-size: 1rem;
   margin-top: 0.7rem;
@@ -132,7 +132,7 @@
 }
 
 .FinishedBrewsTable-year-filter option {
-  background: #404040;
+  background: var(--color-brew-bg);
   color: white;
 }
 
@@ -172,7 +172,7 @@
 
 .finish-btn {
   background-color: var(--color-accent);
-  color: #fff;
+  color: var(--color-white);
   border: none;
   border-radius: 4px;
   padding: 0.25rem 0.75rem;
@@ -182,22 +182,22 @@
 }
 
 .FinishedBrewsTable .finish-btn:hover {
-  background-color: #c96a00;
-  color: #fff;
+  background-color: var(--color-surface-highlight);
+  color: var(--color-white);
 }
 
 .finish-btn.clicked {
   transform: scale(0.92);
-  box-shadow: 0 0 8px 2px rgba(255,140,0,0.4);
+  box-shadow: 0 0 8px 2px var(--shadow-orange);
 }
 
 .FinishedBrewsTable .finish-btn:disabled {
-  background-color: #e0e0e0;
-  color: #bdbdbd;
+  background-color: var(--color-gray-soft);
+  color: var(--color-gray-muted);
   cursor: not-allowed;
   box-shadow: none;
   opacity: 0.7;
-  border: 1px solid #cccccc;
+  border: 1px solid var(--color-surface-light);
 }
 
 .FinishedBrewsTable .table-cell.originalwort {
@@ -222,13 +222,13 @@
 .FinishedBrewsTable .table-edit-field:focus {
   border: 1.5px solid var(--color-accent) !important;
   border-radius: 4px;
-  background: #333333;
+  background: var(--color-dark-bg);
 }
 
 .FinishedBrewsTable .table-edit-field input:focus:not([readonly]) {
   border: 1.5px solid var(--color-accent) !important;
   border-radius: 4px;
-  background: #333333;
+  background: var(--color-dark-bg);
 }
 
 .FinishedBrewsTable .table-edit-field input[type=number]::-webkit-outer-spin-button,

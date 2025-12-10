@@ -3,7 +3,7 @@
     height: 90%;
     position: relative;
     background: white;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 0 10px var(--shadow-water);
 }
 
 .water-level {
@@ -12,7 +12,7 @@
     left: 0;
     right: 0;
     height: 0;
-    background-color: #0af;
+    background-color: var(--color-water-blue);
     transition: height 0.5s;
 }
 
@@ -22,7 +22,7 @@
     left: 0;
     right: 0;
     height: 10px;
-    background-image: linear-gradient(transparent, #0af);
+    background-image: linear-gradient(transparent, var(--color-water-blue));
     animation: waves 1s infinite linear;
 }
 
