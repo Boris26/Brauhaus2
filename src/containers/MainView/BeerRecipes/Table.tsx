@@ -111,7 +111,6 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
 
             return (
                 <>
-
                     <TableContainer component={Paper} className="Table">
                         <Table className="Table">
                             <TableHead className="table-header">
@@ -180,7 +179,7 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                                                     }}
                                                     title="Einkaufsliste"
                                                 >
-                                                    <span role="img" aria-label="Einkaufsliste" style={{fontSize: '1.2rem'}}>🛒</span>
+                                                    <span role="img" aria-label="Einkaufsliste" style={{fontSize: '1.5rem'}}>🛒</span>
                                                 </button>
                                                 <button
                                                     className={`table-action-button ${beerToBrew && beerToBrew.id === item.id ? 'cancel-brew-button' : 'brew-button'}`}
@@ -200,7 +199,7 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                                                     }
                                                     title={beerToBrew && beerToBrew.id === item.id ? 'Abbrechen' : 'Brauen'}
                                                 >
-                                                    <span role="img" aria-label={beerToBrew && beerToBrew.id === item.id ? 'Abbrechen' : 'Brauen'} style={{fontSize: '1.2rem'}}>
+                                                    <span role="img" aria-label={beerToBrew && beerToBrew.id === item.id ? 'Abbrechen' : 'Brauen'} style={{fontSize: '1.5rem'}}>
                                                         {beerToBrew && beerToBrew.id === item.id ? '✖️' : '🍺'}
                                                     </span>
                                                 </button>
