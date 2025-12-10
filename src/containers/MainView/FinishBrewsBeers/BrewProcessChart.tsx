@@ -1,7 +1,24 @@
 import React, { Component } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, ReferenceArea, Brush } from 'recharts';
 import './BrewProcessChart.css';
-import { COLOR_DARK_BG, COLOR_WHITE, COLOR_ACCENT, SHADOW_PANEL2 } from '../../../colors';
+import {
+  COLOR_ACCENT,
+  COLOR_BREW_FINISHED,
+  COLOR_CHART_BLUE,
+  COLOR_CHART_GREEN,
+  COLOR_CHART_PEACH,
+  COLOR_CHART_PINK,
+  COLOR_CHART_PURPLE,
+  COLOR_CHART_RED,
+  COLOR_CHART_YELLOW,
+  COLOR_CHART_YELLOW_STRONG,
+  COLOR_DARK_BG,
+  COLOR_HEATING,
+  COLOR_LIGHT_TEXT,
+  COLOR_WAITING_MASHING,
+  COLOR_WHITE,
+  SHADOW_PANEL2
+} from '../../../colors';
 
 interface BrewProcessChartProps {
   groupedData: any;
@@ -145,7 +162,14 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
       const end = processChanges[idx + 1] ? processChanges[idx + 1].elapsedTime : data[data.length - 1]?.elapsedTime;
       return { step: pc.step, start, end };
     });
-    const areaColors = ['#ffe0b2', '#c8e6c9', '#bbdefb', '#f8bbd0', '#d1c4e9', '#fff9c4'];
+    const areaColors = [
+      COLOR_CHART_PEACH,
+      COLOR_CHART_GREEN,
+      COLOR_CHART_BLUE,
+      COLOR_CHART_PINK,
+      COLOR_CHART_PURPLE,
+      COLOR_CHART_YELLOW
+    ];
 
     // Bereiche für jeden State (Prozessabschnitt) berechnen - basierend auf dem gefilterten Datensatz
     const stateAreas: { key: string; step: string; state: string; start: number; end: number }[] = [];
@@ -170,14 +194,14 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
 
     // Farbzuweisungen bleiben unverändert
     const stateColorMap: Record<string, string> = {
-      HEATING: '#ffe082',
-      WAITING_FOR_MASHING_IN: '#b3e5fc',
-      RUNNING: '#c8e6c9',
-      WAITING_FOR_IODINE_TEST: '#f8bbd0',
-      WAITING_FOR_COOKING_START: '#d1c4e9',
-      WAITING_FOR_WATER_BOIL: '#fff9c4',
-      BREWING_FINISHED: '#ffccbc',
-      default: '#eeeeee'
+      HEATING: COLOR_HEATING,
+      WAITING_FOR_MASHING_IN: COLOR_WAITING_MASHING,
+      RUNNING: COLOR_CHART_GREEN,
+      WAITING_FOR_IODINE_TEST: COLOR_CHART_PINK,
+      WAITING_FOR_COOKING_START: COLOR_CHART_PURPLE,
+      WAITING_FOR_WATER_BOIL: COLOR_CHART_YELLOW,
+      BREWING_FINISHED: COLOR_BREW_FINISHED,
+      default: COLOR_LIGHT_TEXT
     };
 
     return (
@@ -316,8 +340,8 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
                   />
                 );
               })}
-              <Line type="monotone" dataKey="Temperature" stroke="#FF0000" name="Ist-Temperatur" dot={false} />
-              <Line type="monotone" dataKey="TargetTemperature" stroke="#FFFD00" name="Soll-Temperatur" dot={false} />
+              <Line type="monotone" dataKey="Temperature" stroke={COLOR_CHART_RED} name="Ist-Temperatur" dot={false} />
+              <Line type="monotone" dataKey="TargetTemperature" stroke={COLOR_CHART_YELLOW_STRONG} name="Soll-Temperatur" dot={false} />
 
               {/* Brush auskommentiert für mehr Diagrammhöhe
               <Brush

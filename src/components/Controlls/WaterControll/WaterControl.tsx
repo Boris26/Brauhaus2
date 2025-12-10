@@ -1,6 +1,7 @@
 import React from 'react';
 import './WaterControll.css';
 import { ToggleState } from "../../../enums/eToggleState";
+import { COLOR_SURFACE_LIGHT } from '../../../colors';
 
 export interface WaterStatus {
     liters: number
@@ -52,7 +53,7 @@ class WaterControl extends React.Component<WaterControllProps, WaterControllStat
         for (let i = 70; i >= 0; i--) {
             const scaleItemStyle = {
                 height: `${100 / 70}%`,
-                borderBottom: i === 0 ? 'none' : '1px solid #ccc',
+                borderBottom: i === 0 ? 'none' : `1px solid ${COLOR_SURFACE_LIGHT}`,
                 opacity: waterLevel >= i ? 1 : 0.5,
             };
             scaleItems.push(

@@ -1,5 +1,5 @@
 .Table {
-  background-color: #404040;
+  background-color: var(--color-brew-bg);
   border-top-left-radius: 5px;
   border-top-right-radius: 5px;
 }
@@ -30,6 +30,7 @@
 .selected {
   background-color: var(--color-select);
 }
+
 
 .Table .cancel-btn {
   background-color: #b71c1c;

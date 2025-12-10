@@ -13,7 +13,7 @@ import SimpleBar from 'simplebar-react';
 import {MaltsActions} from "../../actions/malt.actions";
 import {HopsActions} from "../../actions/hops.actions";
 import {YeastActions} from "../../actions/yeast.actions";
-import { COLOR_WHITE, COLOR_BREW_BG, COLOR_ACCENT, BORDER_TRANSPARENT } from '../../colors';
+import { COLOR_WHITE, COLOR_BREW_BG, COLOR_ACCENT, BORDER_TRANSPARENT, COLOR_DARK_BG, COLOR_BORDER_INPUT_ALT } from '../../colors';
 
 interface BeerFormProps {
     onSubmitBeer: (beer: BeerDTO) => void;
@@ -540,8 +540,8 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                                             alignItems: 'center',
                                                             justifyContent: 'flex-start',
                                                             background: COLOR_WHITE,
-                                                            color: '#333',
-                                                            border: `1px solid #ced4da`,
+                                                            color: COLOR_DARK_BG,
+                                                            border: `1px solid ${COLOR_BORDER_INPUT_ALT}`,
                                                             borderRadius: '4px',
                                                             fontSize: '15px',
                                                             fontFamily: 'inherit',
@@ -593,7 +593,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                         <h3>Malze</h3>
                         <div className="table-wrapper" style={{overflowX: 'auto', maxHeight: '180px'}}>
                             <table className="ingredient-table" style={{width: '100%', borderCollapse: 'collapse'}}>
-                                <thead style={{position: 'sticky', top: 0, background: '#fff', zIndex: 2}}>
+                                <thead style={{position: 'sticky', top: 0, background: COLOR_WHITE, zIndex: 2}}>
                                     <tr>
                                         <th>Name</th>
                                         <th>Menge (g)</th>
@@ -650,7 +650,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                         <h3>Hopfen</h3>
                         <div className="table-wrapper" style={{overflowX: 'auto', maxHeight: '180px'}}>
                             <table className="ingredient-table" style={{width: '100%', borderCollapse: 'collapse'}}>
-                                <thead style={{position: 'sticky', top: 0, background: '#fff', zIndex: 2}}>
+                                <thead style={{position: 'sticky', top: 0, background: COLOR_WHITE, zIndex: 2}}>
                                     <tr>
                                         <th>Name</th>
                                         <th>Menge (g)</th>
@@ -718,7 +718,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                         <h3>Hefe</h3>
                         <div className="table-wrapper" style={{overflowX: 'auto', maxHeight: '180px'}}>
                             <table className="ingredient-table" style={{width: '100%', borderCollapse: 'collapse'}}>
-                                <thead style={{position: 'sticky', top: 0, background: '#fff', zIndex: 2}}>
+                                <thead style={{position: 'sticky', top: 0, background: COLOR_WHITE, zIndex: 2}}>
                                     <tr>
                                         <th>Name</th>
                                         <th>Menge (g)</th>

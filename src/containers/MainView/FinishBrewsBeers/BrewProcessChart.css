@@ -17,13 +17,13 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  background-color: #f5f5f5;
-  color: #333;
+  background-color: var(--color-surface-soft);
+  color: var(--color-dark-bg);
   font-weight: normal;
 }
 
 .brew-filter-button.active {
-  background-color: #ff9800;
+  background-color: var(--color-orange-main);
   color: white;
   font-weight: bold;
 }
@@ -36,18 +36,18 @@
 .brew-tooltip {
   font-weight: normal;
   font-size: 12px;
-  background: #ffffff;
-  border: 2px solid #ff9800;
+  background: var(--color-white);
+  border: 2px solid var(--color-orange-main);
   border-radius: 4px;
   padding: 8px;
-  box-shadow: 2px 2px 6px rgba(0,0,0,0.15);
+  box-shadow: 2px 2px 6px var(--shadow-card-strong);
   max-width: 220px;
   width: auto;
 }
 
 .brew-tooltip-dark {
-  background: #333333;
-  color: #ffffff;
+  background: var(--color-dark-bg)333;
+  color: var(--color-white);
 }
 
 .brew-process-area-label {
@@ -68,7 +68,7 @@
 }
 
 .brew-cursor {
-  stroke: #ff9800;
+  stroke: var(--color-orange-main);
   stroke-width: 1;
 }
 

@@ -8,7 +8,7 @@
 
 .process-title {
     margin: 0 0 0.8rem 0;
-    color: #ffa726;
+    color: var(--color-accent);
     font-size: 1.18rem;
     letter-spacing: 0.03em;
     font-weight: bold;
@@ -24,8 +24,8 @@
     padding: 0.6rem 0.7rem;
     margin-bottom: 0.4rem;
     border-radius: 7px;
-    background: #444;
-    color: #fff;
+    background: var(--color-gray-very-dark);
+    color: var(--color-white);
     display: flex;
     align-items: center;
     font-size: 1.1rem;
@@ -33,21 +33,21 @@
 }
 
 .process-step.active {
-    background: #1976d2;
-    color: #fff;
+    background: var(--color-surface-alt);
+    color: var(--color-white);
     font-weight: bold;
-    border-left: 6px solid #ffa726;
+    border-left: 6px solid var(--color-accent);
 }
 
 .step-number {
     margin-right: 0.7rem;
     font-weight: bold;
-    color: #ffa726;
+    color: var(--color-accent);
 }
 
 .next-step-separator {
     border: none;
-    border-top: 2px solid #ffa726;
+    border-top: 2px solid var(--color-accent);
     margin: 25px 0 0 0;
     width: 100%;
 
