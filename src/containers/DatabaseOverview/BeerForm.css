@@ -58,8 +58,8 @@ textarea {
 
 button {
     padding: 4px 8px;
-    background-color: var(--color-accent); /* Geändert von #007bff zu var(--color-accent) für Konsistenz */
-    color: #fff;
+    background-color: transparent;
+    color: var(--color-accent);
     border: none;
     border-radius: 4px; /* Gerundete Ecken wie bei FinishedBrewsTable */
     cursor: pointer;
@@ -75,15 +75,16 @@ button {
     height: 40px;
     width: 120px;
     padding: 4px 8px;
-    background-color: var(--color-accent);
-    color: #fff;
+    background-color: transparent;
+    color: var(--color-accent);
     border: none;
     border-radius: 4px;
     cursor: pointer;
 }
 
 button:hover {
-    background-color: #c96a00; /* Dunklere Version der darkorange Farbe */
+    background-color: transparent;
+    color: #fff;
 }
 
 select {
@@ -265,8 +266,8 @@ select {
 
 /* Button-Stile aus FinishedBrewsTable übernommen */
 .finish-btn {
-    background-color: var(--color-accent);
-    color: #fff;
+    background-color: transparent;
+    color: var(--color-accent);
     border: none;
     border-radius: 4px;
     padding: 0.25rem 0.75rem;
@@ -276,7 +277,7 @@ select {
 }
 
 .finish-btn:hover {
-    background-color: #c96a00;
+    background-color: transparent;
     color: #fff;
 }
 
@@ -286,17 +287,17 @@ select {
 }
 
 .finish-btn:disabled {
-    background-color: #e0e0e0;
+    background-color: transparent;
     color: #bdbdbd;
     cursor: not-allowed;
     box-shadow: none;
     opacity: 0.7;
-    border: 1px solid #cccccc;
+    border: none;
 }
 
 .cancel-btn {
-    background-color: var(--color-accent);
-    color: #fff;
+    background-color: transparent;
+    color: #d32f2f;
     border: none;
     border-radius: 4px;
     padding: 0.25rem 0.75rem;
@@ -306,6 +307,6 @@ select {
 }
 
 .cancel-btn:hover {
-    background-color: #d32f2f;
-    color: #fff;
+    background-color: transparent;
+    color: #ff6b6b;
 }
