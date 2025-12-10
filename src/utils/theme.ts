@@ -31,8 +31,13 @@ export const getStoredTheme = (): ThemeName | null => {
   return stored === 'dark-alt' || stored === 'default' ? stored : null;
 };
 
-export const getActiveTheme = (): ThemeName => {
-  return document.documentElement.getAttribute('data-theme') === 'dark-alt'
-    ? 'dark-alt'
-    : 'default';
+export const resolveInitialTheme = (): ThemeName => {
+  const storedTheme = getStoredTheme();
+
+  if (storedTheme) {
+    return storedTheme;
+  }
+
+  const prefersDarkAlt = window.matchMedia?.('(prefers-color-scheme: dark)').matches;
+  return prefersDarkAlt ? 'dark-alt' : 'default';
 };

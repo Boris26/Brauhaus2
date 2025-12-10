@@ -5,7 +5,7 @@ import {Views} from "../../../enums/eViews";
 import {ApplicationActions, BeerActions} from "../../../actions/actions";
 import setViewState = ApplicationActions.setViewState;
 import StatusDisplay from './StatusDisplay';
-import { getActiveTheme, setTheme, ThemeName } from '../../../utils/theme';
+import { ThemeName } from '../../../utils/theme';
 
 
 
@@ -15,12 +15,13 @@ interface HeaderProps {
     messages?: string[];
     removeAllMessages: () => void;
     backendStatus: boolean;
+    theme: ThemeName;
+    setTheme: (theme: ThemeName) => void;
 }
 
 interface HeaderState {
     currentTime: string;
     currentDate: string;
-    theme: ThemeName;
 }
 
 class Header extends React.Component<HeaderProps, HeaderState> {
@@ -31,7 +32,6 @@ class Header extends React.Component<HeaderProps, HeaderState> {
             this.state = {
                 currentTime: this.getCurrentTimeString(),
                 currentDate: this.getCurrentDateString(),
-                theme: getActiveTheme(),
             };
     }
 
@@ -69,14 +69,12 @@ class Header extends React.Component<HeaderProps, HeaderState> {
     }
 
     toggleTheme = () => {
-        const nextTheme: ThemeName = this.state.theme === 'dark-alt' ? 'default' : 'dark-alt';
-        setTheme(nextTheme);
-        this.setState({ theme: nextTheme });
+        const nextTheme: ThemeName = this.props.theme === 'dark-alt' ? 'default' : 'dark-alt';
+        this.props.setTheme(nextTheme);
     }
 
     render() {
-       const { messages = [] , removeAllMessages, backendStatus} = this.props; // Default-Wert für messages ist ein leeres Array
-       const { theme } = this.state;
+       const { messages = [] , removeAllMessages, backendStatus, theme} = this.props; // Default-Wert für messages ist ein leeres Array
 
         return (
             <div className="Header">
@@ -150,11 +148,13 @@ const mapStateToProps = (state: any) => ({
     currentView: state.applicationReducer.view,
     messages: state.applicationReducer.message,
     backendStatus: state.productionReducer.isBackenAvailable,
+    theme: state.applicationReducer.theme,
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
     setViewState: (viewState: Views) => dispatch(setViewState(viewState)),
     removeAllMessages: () => dispatch(ApplicationActions.removeMessage()),
+    setTheme: (theme: ThemeName) => dispatch(ApplicationActions.setTheme(theme)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Header);
