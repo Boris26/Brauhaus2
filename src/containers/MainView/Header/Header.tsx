@@ -2,12 +2,9 @@ import React from 'react';
 import { connect } from 'react-redux';
 import './Header.css';
 import {Views} from "../../../enums/eViews";
-import {ApplicationActions, BeerActions} from "../../../actions/actions";
+import {ApplicationActions} from "../../../actions/actions";
 import setViewState = ApplicationActions.setViewState;
 import StatusDisplay from './StatusDisplay';
-import { ThemeName } from '../../../utils/theme';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faGear } from '@fortawesome/free-solid-svg-icons';
 
 
 
@@ -17,8 +14,6 @@ interface HeaderProps {
     messages?: string[];
     removeAllMessages: () => void;
     backendStatus: boolean;
-    theme: ThemeName;
-    setTheme: (theme: ThemeName) => void;
 }
 
 interface HeaderState {
@@ -70,22 +65,14 @@ class Header extends React.Component<HeaderProps, HeaderState> {
         return `icon ${this.props.currentView === view ? 'active' : ''}`;
     }
 
-    toggleTheme = () => {
-        const nextTheme: ThemeName = this.props.theme === 'dark-alt' ? 'default' : 'dark-alt';
-        this.props.setTheme(nextTheme);
-    }
-
     render() {
-       const { messages = [] , removeAllMessages, backendStatus, theme} = this.props; // Default-Wert für messages ist ein leeres Array
+       const { messages = [] , removeAllMessages, backendStatus } = this.props; // Default-Wert für messages ist ein leeres Array
 
         return (
             <div className="Header">
                 <div className="header-left">
                   <h1>Brauhaus</h1>
                 </div>
-                <button className="theme-toggle" onClick={this.toggleTheme} type="button">
-                  {theme === 'dark-alt' ? 'Helles Theme' : 'Dunkles Theme'}
-                </button>
                 <div className="icons-container">
                     <img
                         src="beer.png"
@@ -129,15 +116,15 @@ class Header extends React.Component<HeaderProps, HeaderState> {
                         onClick={() => this.handleIconClick(Views.INGREDIENTS)}
                         title="Zutaten verwalten"
                     />
-                    <div
+                    <img
+                        src="brewery.png"
+                        alt="Einstellungen"
                         className={this.getTabClassName(Views.SETTINGS)}
                         onClick={() => this.handleIconClick(Views.SETTINGS)}
                         title="Einstellungen"
                         role="button"
                         aria-label="Einstellungen"
-                    >
-                        <FontAwesomeIcon icon={faGear} size="lg" />
-                    </div>
+                    />
                 </div>
                 <div className="header-status">
                   <div className="status-display-wrapper">
@@ -155,17 +142,14 @@ class Header extends React.Component<HeaderProps, HeaderState> {
 }
 
 const mapStateToProps = (state: any) => ({
-    currentTime: state.applicationReducer.currentTime,
     currentView: state.applicationReducer.view,
     messages: state.applicationReducer.message,
     backendStatus: state.productionReducer.isBackenAvailable,
-    theme: state.applicationReducer.theme,
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
     setViewState: (viewState: Views) => dispatch(setViewState(viewState)),
     removeAllMessages: () => dispatch(ApplicationActions.removeMessage()),
-    setTheme: (theme: ThemeName) => dispatch(ApplicationActions.setTheme(theme)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Header);
