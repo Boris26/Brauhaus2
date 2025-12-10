@@ -110,6 +110,12 @@ h1 {
   color: #b26a00;
 }
 
+.icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: inherit;
+}
+
 .icon:last-child {
   margin-right: 0;
 }
