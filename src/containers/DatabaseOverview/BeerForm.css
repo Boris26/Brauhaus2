@@ -56,34 +56,28 @@ textarea {
     display: inline-block;
 }
 
-button {
-    padding: 4px 8px;
-    background-color: var(--color-accent); /* Geändert von #007bff zu var(--color-accent) für Konsistenz */
-    color: #fff;
+.beer-form button {
+    padding: 6px 12px;
+    background-color: var(--color-accent);
+    color: #000;
     border: none;
-    border-radius: 4px; /* Gerundete Ecken wie bei FinishedBrewsTable */
+    border-radius: 6px;
     cursor: pointer;
-    bottom: 10px;
-    right: 10px;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    transition: transform 0.1s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+
+.beer-form button:hover {
+    filter: brightness(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+    transform: translateY(-1px);
 }
 
 .submit-button {
-    bottom: 10px;
     margin-right: 10px;
     margin-top: 10px;
-    height: 40px;
-    width: 120px;
-    padding: 4px 8px;
-    background-color: var(--color-accent);
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-button:hover {
-    background-color: #c96a00; /* Dunklere Version der darkorange Farbe */
+    align-self: flex-start;
 }
 
 select {
@@ -264,20 +258,34 @@ select {
 }
 
 /* Button-Stile aus FinishedBrewsTable übernommen */
-.finish-btn {
-    background-color: var(--color-accent);
-    color: #fff;
+.finish-btn,
+.cancel-btn {
+    height: 34px;
+    width: 34px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    background: transparent;
     border: none;
-    border-radius: 4px;
-    padding: 0.25rem 0.75rem;
-    font-size: 1rem;
+    border-radius: 6px;
     cursor: pointer;
-    transition: transform 0.1s, box-shadow 0.1s;
+    box-shadow: none;
+    filter: none;
+    transition: background-color 0.15s ease, transform 0.1s ease, color 0.15s ease;
+}
+
+.finish-btn {
+    color: var(--color-accent);
 }
 
 .finish-btn:hover {
-    background-color: #c96a00;
+    background-color: rgba(255, 165, 0, 0.25);
     color: #fff;
+    box-shadow: none;
+    filter: none;
+    transform: translateY(-1px);
 }
 
 .finish-btn.clicked {
@@ -286,26 +294,22 @@ select {
 }
 
 .finish-btn:disabled {
-    background-color: #e0e0e0;
+    background-color: transparent;
     color: #bdbdbd;
     cursor: not-allowed;
     box-shadow: none;
     opacity: 0.7;
-    border: 1px solid #cccccc;
+    border: none;
 }
 
 .cancel-btn {
-    background-color: var(--color-accent);
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    padding: 0.25rem 0.75rem;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: transform 0.1s, box-shadow 0.1s;
+    color: #d32f2f;
 }
 
 .cancel-btn:hover {
-    background-color: #d32f2f;
-    color: #fff;
+    background-color: rgba(255, 0, 0, 0.25);
+    color: #ff6b6b;
+    box-shadow: none;
+    filter: none;
+    transform: translateY(-1px);
 }
