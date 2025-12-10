@@ -1,5 +1,6 @@
 import {ApplicationActions} from '../actions/actions';
 import {Views} from '../enums/eViews';
+import { ThemeName, resolveInitialTheme } from '../utils/theme';
 import AllApplicationActions = ApplicationActions.AllApplicationActions;
 import ActionTypes = ApplicationActions.ActionTypes;
 
@@ -9,6 +10,7 @@ export interface ApplicationReducerState {
     errorDialogMessage: string;
     errorDialogOpen: boolean;
     message?: string[];
+    theme: ThemeName;
 }
 
 export const initialApplicationState: ApplicationReducerState = {
@@ -17,6 +19,7 @@ export const initialApplicationState: ApplicationReducerState = {
     errorDialogMessage: '',
     errorDialogOpen: false,
     message: [], // Default ist jetzt ein leeres Array
+    theme: resolveInitialTheme(),
 };
 
 const applicationReducer = (
@@ -46,6 +49,12 @@ const applicationReducer = (
             return {
                 ...aState,
                 message: [],
+            };
+        }
+        case ApplicationActions.ActionTypes.SET_THEME: {
+            return {
+                ...aState,
+                theme: aAction.payload.theme,
             };
         }
         default:

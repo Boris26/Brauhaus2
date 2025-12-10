@@ -29,3 +29,35 @@
   --shadow-knob-black: rgba(0, 0, 0, 0.7);
 }
 
+/* Alternative Dark-Mode-Palette */
+:root.theme-dark-alt,
+:root[data-theme="dark-alt"] {
+  --color-dark-bg: #0f1724;
+  --color-panel-bg: #131b2a;
+  --color-white: #e8edf5;
+  --color-black: #05070d;
+  --color-accent: #8ab4f8;
+  --color-brew-bg: #0b1220;
+  --color-light-text: #d6def0;
+  --color-input-bg: #1f2a3d;
+  --color-input-border: #3c4a64;
+  --color-input-bg2: #23314a;
+  --color-input-bg3: #2e3c59;
+
+  --shadow-primary: rgba(4, 12, 26, 0.24);
+  --shadow-secondary: rgba(4, 12, 26, 0.36);
+  --shadow-panel: rgba(138, 180, 248, 0.22);
+  --shadow-panel2: rgba(0, 0, 0, 0.3);
+  --shadow-gold: rgba(255, 214, 102, 0.12);
+  --shadow-gold-light: rgba(255, 214, 102, 0.1);
+  --shadow-orange: rgba(255, 180, 112, 0.38);
+  --bg-transparent-black: rgba(5, 7, 13, 0.55);
+  --bg-transparent-orange: rgba(255, 180, 112, 0.28);
+  --bg-transparent-red: rgba(255, 121, 121, 0.28);
+  --border-transparent: rgba(255, 255, 255, 0.08);
+  --shadow-water: rgba(122, 183, 255, 0.5);
+  --shadow-knob-blue: rgba(138, 180, 248, 0.7);
+  --shadow-knob-red: rgba(255, 121, 121, 0.7);
+  --shadow-knob-black: rgba(5, 7, 13, 0.7);
+}
+

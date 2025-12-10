@@ -5,6 +5,7 @@ import {Views} from "../../../enums/eViews";
 import {ApplicationActions, BeerActions} from "../../../actions/actions";
 import setViewState = ApplicationActions.setViewState;
 import StatusDisplay from './StatusDisplay';
+import { ThemeName } from '../../../utils/theme';
 
 
 
@@ -14,6 +15,8 @@ interface HeaderProps {
     messages?: string[];
     removeAllMessages: () => void;
     backendStatus: boolean;
+    theme: ThemeName;
+    setTheme: (theme: ThemeName) => void;
 }
 
 interface HeaderState {
@@ -26,10 +29,10 @@ class Header extends React.Component<HeaderProps, HeaderState> {
 
     constructor(props: HeaderProps) {
         super(props);
-        this.state = {
-            currentTime: this.getCurrentTimeString(),
-            currentDate: this.getCurrentDateString(),
-        };
+            this.state = {
+                currentTime: this.getCurrentTimeString(),
+                currentDate: this.getCurrentDateString(),
+            };
     }
 
     componentDidMount() {
@@ -65,14 +68,22 @@ class Header extends React.Component<HeaderProps, HeaderState> {
         return `icon ${this.props.currentView === view ? 'active' : ''}`;
     }
 
+    toggleTheme = () => {
+        const nextTheme: ThemeName = this.props.theme === 'dark-alt' ? 'default' : 'dark-alt';
+        this.props.setTheme(nextTheme);
+    }
+
     render() {
-       const { messages = [] , removeAllMessages, backendStatus} = this.props; // Default-Wert für messages ist ein leeres Array
+       const { messages = [] , removeAllMessages, backendStatus, theme} = this.props; // Default-Wert für messages ist ein leeres Array
 
         return (
             <div className="Header">
                 <div className="header-left">
                   <h1>Brauhaus</h1>
                 </div>
+                <button className="theme-toggle" onClick={this.toggleTheme} type="button">
+                  {theme === 'dark-alt' ? 'Helles Theme' : 'Dunkles Theme'}
+                </button>
                 <div className="icons-container">
                     <img
                         src="beer.png"
@@ -137,11 +148,13 @@ const mapStateToProps = (state: any) => ({
     currentView: state.applicationReducer.view,
     messages: state.applicationReducer.message,
     backendStatus: state.productionReducer.isBackenAvailable,
+    theme: state.applicationReducer.theme,
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
     setViewState: (viewState: Views) => dispatch(setViewState(viewState)),
     removeAllMessages: () => dispatch(ApplicationActions.removeMessage()),
+    setTheme: (theme: ThemeName) => dispatch(ApplicationActions.setTheme(theme)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(Header);

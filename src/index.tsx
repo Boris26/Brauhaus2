@@ -4,6 +4,10 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import store from './store';
 import App from './containers/App';
+import { resolveInitialTheme } from './utils/theme';
+import { ApplicationActions } from './actions/actions';
+
+store.dispatch(ApplicationActions.setTheme(resolveInitialTheme()));
 
 ReactDOM.render(
     <Provider store={store}>

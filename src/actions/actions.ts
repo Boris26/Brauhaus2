@@ -10,6 +10,7 @@ import {WaterStatus} from "../components/Controlls/WaterControll/WaterControl";
 import {FinishedBrew} from "../model/FinishedBrew";
 import {BackendAvailable} from "../reducers/productionReducer";
 import {scalingValues} from "../utils/BeerScaler/ScalingBeerRecipe";
+import { ThemeName, setTheme as applyAndStoreTheme } from "../utils/theme";
 
 export namespace BeerActions {
 
@@ -411,6 +412,7 @@ export namespace ApplicationActions {
         OPEN_ERROR_DIALOG = 'ApplicationActions.OPEN_ERROR_DIALOG',
         SET_MESSAGE = 'ApplicationActions.SET_MESSAGE',
         REMOVE_MESSAGE = 'ApplicationActions.REMOVE_MESSAGE',
+        SET_THEME = 'ApplicationActions.SET_THEME',
     }
 
     export interface SetView {
@@ -438,12 +440,18 @@ export namespace ApplicationActions {
         readonly type: ActionTypes.REMOVE_MESSAGE
     }
 
+    export interface SetTheme {
+        readonly type: ActionTypes.SET_THEME
+        payload: { theme: ThemeName }
+    }
+
     export type AllApplicationActions =
 
         SetView |
         OpenDialog |
         SetMessage |
-        RemoveMessage;
+        RemoveMessage |
+        SetTheme;
 
     export function setViewState(aView: Views): SetView {
         return {
@@ -470,6 +478,15 @@ export namespace ApplicationActions {
         return {
             type: ActionTypes.REMOVE_MESSAGE
         }
+    }
+
+    export function setTheme(theme: ThemeName): SetTheme {
+        applyAndStoreTheme(theme);
+
+        return {
+            type: ActionTypes.SET_THEME,
+            payload: { theme },
+        };
     }
 }
 export namespace ProductionActions {
