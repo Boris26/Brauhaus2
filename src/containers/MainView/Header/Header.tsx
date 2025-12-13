@@ -117,7 +117,7 @@ class Header extends React.Component<HeaderProps, HeaderState> {
                         title="Zutaten verwalten"
                     />
                     <img
-                        src="brewery.png"
+                        src="settings.png"
                         alt="Einstellungen"
                         className={this.getTabClassName(Views.SETTINGS)}
                         onClick={() => this.handleIconClick(Views.SETTINGS)}
