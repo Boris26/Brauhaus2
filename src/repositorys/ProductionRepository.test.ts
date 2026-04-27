@@ -1,0 +1,97 @@
+import axios from 'axios';
+import { ProductionRepository } from './ProductionRepository';
+import { ConfirmStates } from '../enums/eConfirmStates';
+import { MashAgitatorStates } from '../model/MashAgitator';
+
+jest.mock('axios');
+
+const mockedAxios = axios as jest.Mocked<typeof axios>;
+
+describe('ProductionRepository API method/path usage', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockedAxios.get.mockResolvedValue({ status: 200, data: 42, statusText: 'OK' } as any);
+    mockedAxios.post.mockResolvedValue({ status: 200, data: {}, statusText: 'OK' } as any);
+  });
+
+  it('uses POST for confirm actions', async () => {
+    await ProductionRepository.confirm(ConfirmStates.WAITING);
+
+    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Confirm/Wait'));
+    expect(mockedAxios.get).not.toHaveBeenCalledWith(expect.stringContaining('/Confirm/'));
+  });
+
+  it('uses POST for command-based state changes', async () => {
+    await ProductionRepository.startBrewing();
+    await ProductionRepository.fillWaterAutomatic(15);
+    await ProductionRepository.setAgitatorSpeed(22);
+
+    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Command/StartBrewing:""'));
+    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Command/FillWaterAutomatic:15'));
+    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Command/Speed:22'));
+  });
+
+  it('uses POST /next for next procedure step', async () => {
+    await ProductionRepository.nextProcedureStep();
+
+    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/next'));
+    expect(mockedAxios.get).not.toHaveBeenCalledWith(expect.stringContaining('/Command/next'));
+  });
+
+  it('keeps safe reads on GET', async () => {
+    await ProductionRepository.getWaterStatus();
+    await ProductionRepository.getBrewingStatus();
+    await ProductionRepository.checkIsBackendAvailable();
+
+    expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining('/WaterStatus'));
+    expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining('/Status/'));
+    expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining('/Available/'));
+  });
+
+  it('uses canonical GET /temperatur/<alter> for temperature reads', async () => {
+    mockedAxios.get.mockResolvedValueOnce({ status: 200, data: 67 } as any);
+
+    const value = await ProductionRepository.getTemperature();
+
+    expect(value).toBe(67);
+    expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining('/temperatur/0'));
+    expect(mockedAxios.get).not.toHaveBeenCalledWith(expect.stringContaining('/Command/Temperatur'));
+  });
+
+  it('keeps recipe submission as POST /Recipe/ and expects 201 success', async () => {
+    mockedAxios.post.mockResolvedValueOnce({ status: 201 } as any);
+
+    const result = await ProductionRepository.sendBrewingData({
+      MashdownTemperature: 76,
+      MashupTemperature: 52,
+      CookingTemperature: 100,
+      CookingTime: 60,
+      Rasten: []
+    });
+
+    expect(mockedAxios.post).toHaveBeenCalledWith(
+      expect.stringContaining('/Recipe/'),
+      expect.objectContaining({ CookingTime: 60 })
+    );
+    expect(result).toBe(true);
+  });
+
+  it('keeps agitator interval command as POST with JSON body', async () => {
+    const state: MashAgitatorStates = {
+      isTurnOn: true,
+      rotationsPerMinute: 40,
+      runningTime: 10,
+      breakTime: 5,
+      isIntervalTurnOn: true,
+      isHeatingAndStirringTurnOn: false,
+    };
+
+    const result = await ProductionRepository.toggleAgitator(state);
+
+    expect(mockedAxios.post).toHaveBeenCalledWith(
+      expect.stringContaining('/Command/AgitatorInterval:""'),
+      state
+    );
+    expect(result).toBe(true);
+  });
+});
