@@ -1,4 +1,4 @@
-import {BaseURL, CommandsURL, ConfirmURL, DatabaseURL} from "../global";
+import {BaseURL, CommandsURL, ConfirmURL} from "../global";
 import axios, {AxiosResponse} from "axios";
 import {ToggleState} from "../enums/eToggleState";
 import {ProductionActions} from "../actions/actions";
@@ -59,7 +59,7 @@ export class ProductionRepository {
 
     private static async _doConfirm(aConfirmState: ConfirmStates) {
         try {
-            const response = await axios.get(ConfirmURL + aConfirmState);
+            const response = await axios.post(ConfirmURL + aConfirmState);
             if (response.status == 200) {
                 console.log(response.data);
             } else {
@@ -73,8 +73,7 @@ export class ProductionRepository {
 
     private static async _doGetTemperature(): Promise<number> {
         try {
-            const tempURL = 'Temperatur:\"\"';
-            const response = await axios.get(CommandsURL + tempURL);
+            const response = await axios.get(BaseURL + 'temperatur/0');
             if (response.status == 200) {
                 return response.data;
             } else {
@@ -102,61 +101,9 @@ export class ProductionRepository {
         }
     }
 
-    private static async _doConfirmMashup() {
-        try {
-            const response = await axios.get(ConfirmURL + 'Mashup');
-            if (response.status == 200) {
-                console.log(response.data);
-            } else {
-                console.log(response.data);
-            }
-        } catch (error) {
-            console.error('Fehler beim API-Aufruf', error);
-        }
-    }
-
-    private static async _doConfirmIodineTest() {
-        try {
-            const response = await axios.get(ConfirmURL + 'Iodine');
-            if (response.status == 200) {
-                console.log(response.data);
-            } else {
-                console.log(response.data);
-            }
-        } catch (error) {
-            console.error('Fehler beim API-Aufruf', error);
-        }
-    }
-
-    private static async _doBoilingPointReached() {
-        try {
-            const response = await axios.get(CommandsURL + 'BoilingPointReached:' + '');
-            if (response.status == 200) {
-                console.log(response.data);
-            } else {
-                console.log(response.data);
-            }
-        } catch (error) {
-            console.error('Fehler beim API-Aufruf', error);
-        }
-    }
-
-    private static async _doStartCooking() {
-        try {
-            const response = await axios.get(CommandsURL + 'StartCooking:' + '');
-            if (response.status == 200) {
-                console.log(response.data);
-            } else {
-                console.log(response.data);
-            }
-        } catch (error) {
-            console.error('Fehler beim API-Aufruf', error);
-        }
-    }
-
     private static async _doStartBrewing() {
         try {
-            const response = await axios.get(CommandsURL + 'StartBrewing:\"\"');
+            const response = await axios.post(CommandsURL + 'StartBrewing:\"\"');
             return response.status == 200;
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);
@@ -207,7 +154,7 @@ export class ProductionRepository {
 
     private static async _doFillWaterAutomatic(aLiters: number): Promise<boolean> {
         try {
-            const response = await axios.get(CommandsURL + 'FillWaterAutomatic:' + aLiters.toString());
+            const response = await axios.post(CommandsURL + 'FillWaterAutomatic:' + aLiters.toString());
             return response.status == 200;
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);
@@ -219,9 +166,9 @@ export class ProductionRepository {
         try {
             let response: AxiosResponse<any, any>;
             if (aIsTurnOn === ToggleState.ON) {
-                response = await axios.get(CommandsURL + 'TurnOn');
+                response = await axios.post(CommandsURL + 'TurnOn');
             } else {
-                response = await axios.get(CommandsURL + 'TurnOff');
+                response = await axios.post(CommandsURL + 'TurnOff');
             }
             if (response.status == 200) {
                 store.dispatch(ProductionActions.toggleAgitatorSuccess(false));
@@ -236,7 +183,7 @@ export class ProductionRepository {
 
     private static async _doSetAgitatorSpeed(speed: number): Promise<boolean> {
         try {
-            const response = await axios.get(CommandsURL + 'Speed:' + speed.toString());
+            const response = await axios.post(CommandsURL + 'Speed:' + speed.toString());
             return response.status == 200;
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);
@@ -272,7 +219,7 @@ export class ProductionRepository {
 
     private static async _doNextProcedureStep() {
         try {
-            const response = await axios.get(CommandsURL + 'next:\"\"');
+            const response = await axios.post(BaseURL + 'next');
             return response.status === 200;
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);
