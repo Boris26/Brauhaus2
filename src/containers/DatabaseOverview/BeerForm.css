@@ -58,8 +58,8 @@ textarea {
 
 button {
     padding: 4px 8px;
-    background-color: transparent;
-    color: var(--color-accent);
+    background-color: var(--color-accent);
+    color: var(--color-black);
     border: none;
     border-radius: 4px; /* Gerundete Ecken wie bei FinishedBrewsTable */
     cursor: pointer;
@@ -75,16 +75,16 @@ button {
     height: 40px;
     width: 120px;
     padding: 4px 8px;
-    background-color: transparent;
-    color: var(--color-accent);
+    background-color: var(--color-accent);
+    color: var(--color-black);
     border: none;
     border-radius: 4px;
     cursor: pointer;
 }
 
 button:hover {
-    background-color: transparent;
-    color: #fff;
+    background-color: #ffb74d;
+    color: var(--color-black);
 }
 
 select {
