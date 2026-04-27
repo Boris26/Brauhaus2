@@ -1,25 +1,25 @@
 .custom-panel {
   position: absolute;
-  background: #23272b;
+  background: var(--color-panel-bg);
   border: 1.5px solid var(--color-accent);
   border-radius: 8px;
-  box-shadow: 0 4px 24px rgba(25, 118, 210, 0.18), 0 1.5px 6px rgba(0,0,0,0.18);
+  box-shadow: 0 4px 24px var(--shadow-panel), 0 1.5px 6px var(--shadow-panel2);
   overflow: hidden;
   z-index: 1000;
   min-width: 220px;
   min-height: 120px;
   max-height: 90vh;
   user-select: none;
-  color: #fff;
+  color: var(--color-white);
 }
 
 .custom-panel-header {
   background: var(--color-accent);
-  color: #111;
+  color: var(--color-black);
   padding: 2px 8px; /* Höhe reduziert */
   cursor: move;
   font-weight: bold;
-  border-bottom: 2px solid #ffa726;
+  border-bottom: 2px solid var(--color-accent);
   font-size: 0.92rem; /* Schriftgröße leicht reduziert */
   letter-spacing: 0.02em;
   display: flex;
@@ -37,7 +37,7 @@
 .custom-panel-max-btn {
   background: transparent;
   border: none;
-  color: #111;
+  color: var(--color-black);
   font-size: 1.5rem;
   font-weight: bold;
   cursor: pointer;
@@ -68,7 +68,7 @@
   height: auto;
   max-height: calc(90vh - 48px);
   overflow: auto;
-  background: #23272b;
+  background: var(--color-panel-bg);
 }
 
 .custom-panel-resize {

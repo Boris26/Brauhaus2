@@ -71,7 +71,7 @@ h1 {
   color: black;
   text-align: center;
   font-size: 1rem; /* Änderung von 10px auf 0.625rem */
-  color: #000000;
+  color: var(--color-header-text);
   position: static;
   margin-right: 0;
   display: flex;
@@ -100,14 +100,14 @@ h1 {
   transition: all 0.2s;
   padding: 0.25rem 0.5rem;
   border-radius: 0.5rem;
-  background: linear-gradient(180deg, #ffa726 60%, #fb8c00 100%);
-  border: 2px solid #b26a00;
-  box-shadow: 0 3px 8px rgba(255,152,0,0.18), 0 2px 0 #ffcc80 inset, 0 2px 0 #b26a00;
+  background: linear-gradient(180deg, var(--color-accent) 60%, var(--color-orange-alt) 100%);
+  border: 2px solid var(--color-orange-dark);
+  box-shadow: 0 3px 8px var(--shadow-orange-strong), 0 2px 0 var(--color-orange-light) inset, 0 2px 0 var(--color-orange-dark);
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #b26a00;
+  color: var(--color-orange-dark);
 }
 
 .icon svg {
@@ -121,21 +121,21 @@ h1 {
 }
 
 .icon:hover {
-  background: linear-gradient(180deg, #fb8c00 60%, #ef6c00 100%);
-  border-color: #ff9800;
-  box-shadow: 0 4px 12px rgba(255,152,0,0.18);
+  background: linear-gradient(180deg, var(--color-orange-alt) 60%, var(--color-orange-deep) 100%);
+  border-color: var(--color-orange-main);
+  box-shadow: 0 4px 12px var(--shadow-orange-strong);
 }
 
 .icon.active {
-  background: linear-gradient(180deg, #ff9800 60%, #e65100 100%);
-  border: 2px inset #b26a00;
-  box-shadow: 0 1px 2px #b26a00 inset, 0 1.5px 0 #fff;
-  color: #fff;
+  background: linear-gradient(180deg, var(--color-orange-main) 60%, var(--color-orange-strong) 100%);
+  border: 2px inset var(--color-orange-dark);
+  box-shadow: 0 1px 2px var(--color-orange-dark) inset, 0 1.5px 0 var(--color-white);
+  color: var(--color-white);
   transform: translateY(2px) scale(0.98);
   z-index: 2;
 }
 
 .icon:not(.active) {
-  color: #b26a00;
+  color: var(--color-orange-dark);
   filter: none;
 }

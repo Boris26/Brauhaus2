@@ -1,5 +1,6 @@
 import { PdfRenderStrategy } from './PdfGenerator';
 import {Beer} from "../../model/Beer";
+import { COLOR_LIGHT_TEXT } from '../../colors';
 
 
 export class BeerPdfStrategy implements PdfRenderStrategy<Beer> {
@@ -26,7 +27,7 @@ export class BeerPdfStrategy implements PdfRenderStrategy<Beer> {
         return {
             header: { fontSize: 22, bold: true, margin: [0, 0, 0, 10] },
             subheader: { fontSize: 14, bold: true, margin: [0, 10, 0, 4] },
-            tableHeader: { bold: true, fillColor: '#eeeeee' },
+            tableHeader: { bold: true, fillColor: COLOR_LIGHT_TEXT },
             table: { margin: [0, 0, 0, 10] },
             description: { fontSize: 11, italics: true, margin: [0, 0, 0, 10] }
         };

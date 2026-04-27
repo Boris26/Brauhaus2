@@ -15,14 +15,14 @@
 
 .containerIngredientsForm .FinishedBrewsTable {
     width: 100% !important;
-    background-color: #404040 !important;
+    background-color: var(--color-brew-bg) !important;
     box-shadow: none !important;
     border-radius: 0 !important;
     padding: 0 !important;
 }
 
 .containerIngredientsForm .MuiTableContainer-root {
-    background-color: #404040 !important;
+    background-color: var(--color-brew-bg) !important;
     box-shadow: none !important;
     padding: 0 !important;
 }
@@ -32,7 +32,7 @@
     background-color: var(--color-accent) !important;
     color: black !important;
     font-weight: bold !important;
-    border-bottom: 2px solid #222 !important;
+    border-bottom: 2px solid var(--color-gray-deep) !important;
 
     position: sticky !important;
     top: 0;
@@ -41,15 +41,15 @@
 
 /* Table cells */
 .containerIngredientsForm .MuiTableCell-root {
-    background-color: #404040 !important;
+    background-color: var(--color-brew-bg) !important;
     color: white !important;
-    border-bottom: 1px solid #555 !important;
+    border-bottom: 1px solid var(--color-border-strong) !important;
     padding: 8px 10px !important;
 }
 
 /* Table rows */
 .containerIngredientsForm .MuiTableRow-root {
-    background-color: #404040 !important;
+    background-color: var(--color-brew-bg) !important;
 }
 
 /* --- INPUT FIELDS --- */
@@ -57,8 +57,8 @@
 .containerIngredientsForm .table-edit-field {
     width: 100%;
     padding: 4px 8px;
-    background-color: rgba(0, 0, 0, 0.25);
-    border: 1px solid #666;
+    background-color: var(--bg-transparent-black);
+    border: 1px solid var(--color-border-mid);
     border-radius: 4px;
     color: white;
 }
@@ -102,9 +102,9 @@
 }
 
 .containerIngredientsForm .finish-btn:hover {
-    background-color: rgba(255, 165, 0, 0.25);
+    background-color: var(--bg-transparent-orange);
 }
 
 .containerIngredientsForm .cancel-btn:hover {
-    background-color: rgba(255, 0, 0, 0.25);
+    background-color: var(--bg-transparent-red);
 }

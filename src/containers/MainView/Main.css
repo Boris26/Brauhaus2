@@ -29,7 +29,7 @@
 }
 
 .simplebar-scrollbar::before {
-    background-color: #888;
+    background-color: var(--color-gray-strong);
 }
 
 .simplebar-scrollbar.simplebar-visible::before {
@@ -37,7 +37,7 @@
 }
 
 .simplebar-track.simplebar-vertical {
-    background-color: #eee;
+    background-color: var(--color-gray-light);
 }
 
 .simplebar-scrollbar.simplebar-visible.simplebar-vertical {
@@ -45,7 +45,7 @@
 }
 
 .simplebar-track.simplebar-horizontal {
-    background-color: #eee;
+    background-color: var(--color-gray-light);
 }
 
 .simplebar-scrollbar.simplebar-visible.simplebar-horizontal {

@@ -19,7 +19,7 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {scalingValues} from "../../../utils/BeerScaler/ScalingBeerRecipe";
 import {BeerActions} from "../../../actions/actions";
-import {COLOR_ACCENT} from "../../../colors";
+import {COLOR_ACCENT, COLOR_BREW_BG} from "../../../colors";
 
 interface DetailsProps {
     selectedBeer: Beer;
@@ -161,7 +161,7 @@ class Details extends React.Component<DetailsProps, DetailsState> {
                     <Typography>Allgemeine Daten</Typography>
                 </AccordionSummary>
 
-                <AccordionDetails sx={{ backgroundColor: '#404040' }}>
+                <AccordionDetails sx={{ backgroundColor: COLOR_BREW_BG }}>
                     {this.renderGeneralData()}
                 </AccordionDetails>
             </Accordion>
@@ -172,7 +172,7 @@ class Details extends React.Component<DetailsProps, DetailsState> {
         const { selectedBeer } = this.props;
 
         return (
-            <TableContainer component={Paper} style={{ backgroundColor: '#404040' }}>
+            <TableContainer component={Paper} style={{ backgroundColor: COLOR_BREW_BG }}>
                 <Table className="wortBoiling-table">
                     <TableBody>
                         <TableRow><TableCell>Name</TableCell><TableCell>{selectedBeer?.name}</TableCell></TableRow>
@@ -204,7 +204,7 @@ class Details extends React.Component<DetailsProps, DetailsState> {
                     <Typography>Maischplan</Typography>
                 </AccordionSummary>
 
-                <AccordionDetails sx={{ backgroundColor: '#404040' }}>
+                <AccordionDetails sx={{ backgroundColor: COLOR_BREW_BG }}>
                     {this.renderFermentation()}
                 </AccordionDetails>
             </Accordion>
@@ -216,7 +216,7 @@ class Details extends React.Component<DetailsProps, DetailsState> {
         if (!selectedBeer?.fermentation) return null;
 
         return (
-            <TableContainer component={Paper} style={{ backgroundColor: '#404040' }}>
+            <TableContainer component={Paper} style={{ backgroundColor: COLOR_BREW_BG }}>
                 <Table className="wortBoiling-table">
                     <TableHead>
                         <TableRow>
@@ -256,7 +256,7 @@ class Details extends React.Component<DetailsProps, DetailsState> {
                     <Typography>Schüttung</Typography>
                 </AccordionSummary>
 
-                <AccordionDetails sx={{ backgroundColor: '#404040' }}>
+                <AccordionDetails sx={{ backgroundColor: COLOR_BREW_BG }}>
                     {this.renderFilling()}
                 </AccordionDetails>
             </Accordion>
@@ -268,7 +268,7 @@ class Details extends React.Component<DetailsProps, DetailsState> {
         if (!selectedBeer?.malts) return null;
 
         return (
-            <TableContainer component={Paper} style={{ backgroundColor: '#404040' }}>
+            <TableContainer component={Paper} style={{ backgroundColor: COLOR_BREW_BG }}>
                 <Table className="wortBoiling-table">
                     <TableHead>
                         <TableRow>
@@ -306,7 +306,7 @@ class Details extends React.Component<DetailsProps, DetailsState> {
                     <Typography>Würzekochen</Typography>
                 </AccordionSummary>
 
-                <AccordionDetails sx={{ backgroundColor: '#404040' }}>
+                <AccordionDetails sx={{ backgroundColor: COLOR_BREW_BG }}>
                     {this.renderWortBoiling()}
                 </AccordionDetails>
             </Accordion>
@@ -365,7 +365,7 @@ class Details extends React.Component<DetailsProps, DetailsState> {
                     <Typography>Gärung und Reifung</Typography>
                 </AccordionSummary>
 
-                <AccordionDetails sx={{ backgroundColor: '#404040' }}>
+                <AccordionDetails sx={{ backgroundColor: COLOR_BREW_BG }}>
                     {this.renderFermentationMaturation()}
                 </AccordionDetails>
             </Accordion>
@@ -426,7 +426,7 @@ class Details extends React.Component<DetailsProps, DetailsState> {
                     <Typography>Wasser</Typography>
                 </AccordionSummary>
 
-                <AccordionDetails sx={{ backgroundColor: '#404040' }}>
+                <AccordionDetails sx={{ backgroundColor: COLOR_BREW_BG }}>
                     {this.renderBrewingWater()}
                 </AccordionDetails>
             </Accordion>
@@ -437,7 +437,7 @@ class Details extends React.Component<DetailsProps, DetailsState> {
         const { selectedBeer } = this.props;
 
         return (
-            <TableContainer component={Paper} style={{ backgroundColor: '#404040' }}>
+            <TableContainer component={Paper} style={{ backgroundColor: COLOR_BREW_BG }}>
                 <Table className="wortBoiling-table">
                     <TableHead>
                         <TableRow>

@@ -111,7 +111,6 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
 
             return (
                 <>
-
                     <TableContainer component={Paper} className="Table">
                         <Table className="Table">
                             <TableHead className="table-header">
@@ -173,16 +172,17 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                                         <TableCell className="table-cell">
                                             <div style={{ display: 'flex', gap: '0.5rem' }}>
                                                 <button
-
+                                                    className="table-action-button export-button"
                                                     onClick={e => {
                                                         e.stopPropagation();
                                                         this.handleExportShoppingListPdfForBeer(item);
                                                     }}
                                                     title="Einkaufsliste"
                                                 >
-                                                    <span role="img" aria-label="Einkaufsliste" style={{fontSize: '1.2rem'}}>🛒</span>
+                                                    <span role="img" aria-label="Einkaufsliste" style={{fontSize: '1.5rem', marginTop: '0.4rem'}}>🛒</span>
                                                 </button>
                                                 <button
+                                                    className={`table-action-button ${beerToBrew && beerToBrew.id === item.id ? 'cancel-brew-button' : 'brew-button'}`}
                                                     onClick={e => {
                                                         e.stopPropagation();
                                                         if (beerToBrew && beerToBrew.id === item.id) {
@@ -199,7 +199,7 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                                                     }
                                                     title={beerToBrew && beerToBrew.id === item.id ? 'Abbrechen' : 'Brauen'}
                                                 >
-                                                    <span role="img" aria-label={beerToBrew && beerToBrew.id === item.id ? 'Abbrechen' : 'Brauen'} style={{fontSize: '1.2rem'}}>
+                                                    <span role="img" aria-label={beerToBrew && beerToBrew.id === item.id ? 'Abbrechen' : 'Brauen'} style={{fontSize: '1.5rem', marginTop: '0.3rem'}}>
                                                         {beerToBrew && beerToBrew.id === item.id ? '✖️' : '🍺'}
                                                     </span>
                                                 </button>
