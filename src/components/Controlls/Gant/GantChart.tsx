@@ -1,6 +1,7 @@
 import React, {Component} from 'react';
 import {Gantt, Task, EventOption, StylingOption, ViewMode, DisplayOption} from 'gantt-task-react';
 import "gantt-task-react/dist/index.css";
+import { COLOR_ORANGE_SOFT, COLOR_ORANGE_SOFT_ALT } from '../../../colors';
 
 
 
@@ -25,7 +26,7 @@ class GanttChart extends Component {
                 type: 'task',
                 progress: 100,
                 isDisabled: true,
-                styles: {progressColor: '#ffbb54', progressSelectedColor: '#ff9e0d'},
+                styles: {progressColor: COLOR_ORANGE_SOFT, progressSelectedColor: COLOR_ORANGE_SOFT_ALT},
             },
             {
                 start:date2,
@@ -35,7 +36,7 @@ class GanttChart extends Component {
                 type: 'task',
                 progress: 100,
                 isDisabled: true,
-                styles: {progressColor: '#ffbb54', progressSelectedColor: '#ff9e0d'},
+                styles: {progressColor: COLOR_ORANGE_SOFT, progressSelectedColor: COLOR_ORANGE_SOFT_ALT},
             },
 
         ];
