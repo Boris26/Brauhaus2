@@ -1,10 +1,11 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import './MobileProductionView.css';
-import { BrewingStatus } from '../../../model/BrewingStatus';
+import { BrewingStatus } from '../../../model/brewingStatus.types';
 import { ProductionActions } from '../../../actions/actions';
 import { TimeFormatter } from "../../../utils/TimeFormatter";
 import MobileBrewingCalculationsView from '../MobileBrewingCalculationsView/MobileBrewingCalculationsView';
+import {getBrewingStatusLabel, getStatusChangeKey, isStepWaiting} from '../../../utils/brewingStatus/selectors';
 
 interface MobileProductionViewProps {
     temperature: number;
@@ -28,8 +29,8 @@ class MobileProductionView extends React.Component<MobileProductionViewProps, Mo
     };
 
     componentDidUpdate(prevProps: MobileProductionViewProps) {
-        const prevStatus = prevProps.brewingStatus?.StatusText;
-        const currStatus = this.props.brewingStatus?.StatusText;
+        const prevStatus = getStatusChangeKey(prevProps.brewingStatus);
+        const currStatus = getStatusChangeKey(this.props.brewingStatus);
         if (prevStatus !== undefined && currStatus !== prevStatus) {
             // Status hat sich geändert, triggere Vibration (falls unterstützt)
             if (navigator.vibrate) {
@@ -69,7 +70,7 @@ class MobileProductionView extends React.Component<MobileProductionViewProps, Mo
     render() {
         const { brewingStatus, startPolling, isPollingRunning } = this.props;
         const { activeTab } = this.state;
-        const statusText = brewingStatus?.Name;
+        const statusText = getBrewingStatusLabel(brewingStatus);
         return (
             <div
                 className="mobile-production-container"
@@ -89,27 +90,27 @@ class MobileProductionView extends React.Component<MobileProductionViewProps, Mo
                         <div className="mobile-info-list">
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Temperatur:</span>
-                                <span className="mobile-value">{brewingStatus?.Temperature ?? '-'} °C</span>
+                                <span className="mobile-value">{brewingStatus?.temperature?.current ?? '-'} °C</span>
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Zieltemperatur:</span>
-                                <span className="mobile-value">{brewingStatus?.TargetTemperature ?? '-'} °C</span>
+                                <span className="mobile-value">{brewingStatus?.temperature?.target ?? '-'} °C</span>
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Typ:</span>
-                                <span className="mobile-value">{brewingStatus?.Type || '-'}</span>
+                                <span className="mobile-value">{brewingStatus?.currentStep?.phase || '-'}</span>
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Warten:</span>
-                                <span className="mobile-value">{brewingStatus?.WaitingStatus ? 'Ja' : 'Nein'}</span>
+                                <span className="mobile-value">{isStepWaiting(brewingStatus) ? 'Ja' : 'Nein'}</span>
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Heizt auf:</span>
-                                <span className="mobile-value">{brewingStatus?.HeatUpStatus ? 'Ja' : 'Nein'}</span>
+                                <span className="mobile-value">{brewingStatus?.currentStep?.mode === 'HEATING' ? 'Ja' : 'Nein'}</span>
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Rührwerk:</span>
-                                <span className="mobile-value">{brewingStatus?.AgitatorStatus ? 'An' : 'Aus'}</span>
+                                <span className="mobile-value">{brewingStatus?.hardware?.agitator === 'ON' ? 'An' : 'Aus'}</span>
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Laufzeit:</span>
