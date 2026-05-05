@@ -1,9 +1,8 @@
 import { ofType } from 'redux-observable';
-import {from, of, interval, EMPTY, timer, filter, takeWhile, startWith, Observable} from 'rxjs';
-import { catchError, map, mergeMap, switchMap, takeUntil, delay, retryWhen, take, toArray } from 'rxjs/operators';
+import {from, of, interval, EMPTY, filter, takeWhile, startWith, Observable} from 'rxjs';
+import { catchError, map, mergeMap, switchMap, takeUntil } from 'rxjs/operators';
 import { ProductionActions } from '../actions/actions';
 import { ProductionRepository } from '../repositorys/ProductionRepository';
-import { delayWhen } from 'rxjs/operators';
 import { dataCollector } from '../utils/DataCollector/dataCollector';
 import { WebSocketController } from '../utils/WebSocketController';
 import {BaseURL} from "../global";
@@ -86,7 +85,12 @@ export const sendBrewingDataEpic$ = (action$: any) =>
               switchMap((startResult) => {
                 if (startResult) {
                   return interval(BREWING_STATUS_POLL_INTERVAL).pipe(
-                    switchMap(() => from(ProductionRepository.getBrewingStatus())),
+                    switchMap(() =>
+                      from(ProductionRepository.getBrewingStatus()).pipe(
+                        catchError(() => of(null))
+                      )
+                    ),
+                    filter((status): status is { available: any; brewingStatus: any } => status !== null),
                     takeWhile(({ brewingStatus }) => !(brewingStatus && (isProcessFinished(brewingStatus) || isProcessAborted(brewingStatus) || isProcessInError(brewingStatus))), true),
                     switchMap(({ available, brewingStatus }) => {
                       if (available?.isBackenAvailable && brewingStatus !== undefined) {
