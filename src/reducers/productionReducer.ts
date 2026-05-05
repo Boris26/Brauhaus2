@@ -83,7 +83,7 @@ const productionReducer = (
             return { ...aState, isPollingRunning: true };
         }
         case ProductionActions.ActionTypes.STOP_POLLING: {
-            return { ...aState };
+            return { ...aState, isPollingRunning: false };
         }
         case ProductionActions.ActionTypes.CONFIRM: {
             return { ...aState };
