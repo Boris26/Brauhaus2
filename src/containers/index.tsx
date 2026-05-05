@@ -6,15 +6,15 @@ import Production from "./Production/Production";
 import DatabaseOverview from "./DatabaseOverview/BeerForm";
 import SimpleBar from "simplebar-react";
 import ModalDialog, {DialogType} from "../components/ModalDialog/ModalDialog";
-import {BrewingStatus} from "../model/BrewingStatus";
+import {BrewingStatus} from "../model/brewingStatus.types";
 import {BeerActions, ProductionActions} from "../actions/actions";
 import {ConfirmStates} from "../enums/eConfirmStates";
-import {TextMapper} from "../utils/TextMapper";
 import {FinishedBrew} from "../model/FinishedBrew";
 import FinishedBrewsTable from "./MainView/FinishBrewsBeers/FinishedBrewsTable";
 import BrewingCalculations from "./BrewingCalculations/BrewingCalculations";
 import IngredientsFormPage from "./DatabaseOverview/IngredientsFormPage";
 import SettingsPage from "./Settings/SettingsPage";
+import {getBrewingStatusLabel, shouldShowConfirmButton, shouldShowWaitingDialog} from "../utils/brewingStatus/selectors";
 
 interface indexMainProps {
     viewState: Views;
@@ -37,8 +37,8 @@ class Index extends React.Component<indexMainProps> {
     componentDidUpdate(prevProps: Readonly<indexMainProps>, prevState: Readonly<{}>, snapshot?: any) {
         const {brewingStatus} = this.props;
 
-        if (brewingStatus?.HeatUpStatus !== prevProps?.brewingStatus?.HeatUpStatus) {
-            console.log("HeatUpStatus has changed");
+        if (brewingStatus?.currentStep?.mode !== prevProps?.brewingStatus?.currentStep?.mode) {
+            console.log("Step mode has changed");
         }
     }
 
@@ -48,19 +48,7 @@ class Index extends React.Component<indexMainProps> {
     }
 
     getDialogMessage() {
-        const {brewingStatus} = this.props;
-        switch (brewingStatus?.StatusText) {
-            case 'WAITING_FOR_MASHING_IN':
-                return 'Einmaischen, bitte abschließen';
-            case 'WAITING_FOR_IODINE_TEST':
-                return 'Bitte Jod Test durchführen!';
-            case 'WAITING_FOR_COOKING_START':
-                return 'Kann der Koch Prozess gestartet werden?';
-            case 'WAITING_FOR_WATER_BOIL':
-                return 'Bitte bestätigen, wenn Wasser kocht!';
-            default:
-                return '';
-        }
+        return getBrewingStatusLabel(this.props.brewingStatus);
     }
 
     showDialog() {
@@ -70,10 +58,10 @@ class Index extends React.Component<indexMainProps> {
             <div>
                 <ModalDialog
                     type={DialogType.CONFIRM}
-                    open={brewingStatus?.WaitingStatus}
+                    open={shouldShowWaitingDialog(brewingStatus)}
                     content={message}
                     header={"Confirm"}
-                    onConfirm={this.confirmDialog}
+                    onConfirm={shouldShowConfirmButton(brewingStatus) ? this.confirmDialog : () => {}}
                 />
             </div>
         );

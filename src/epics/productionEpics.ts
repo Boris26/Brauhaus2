@@ -3,11 +3,11 @@ import {from, of, interval, EMPTY, timer, filter, takeWhile, startWith, Observab
 import { catchError, map, mergeMap, switchMap, takeUntil, delay, retryWhen, take, toArray } from 'rxjs/operators';
 import { ProductionActions } from '../actions/actions';
 import { ProductionRepository } from '../repositorys/ProductionRepository';
-import {BrewingStatus} from "../model/BrewingStatus";
 import { delayWhen } from 'rxjs/operators';
 import { dataCollector } from '../utils/DataCollector/dataCollector';
 import { WebSocketController } from '../utils/WebSocketController';
 import {BaseURL} from "../global";
+import {isProcessAborted, isProcessFinished, isProcessInError} from "../utils/brewingStatus/selectors";
 
 const BREWING_STATUS_POLL_INTERVAL = 1000;
 const WS_URL = (typeof BaseURL !== 'undefined' ? BaseURL : '').replace(/^http/, 'ws');
@@ -87,7 +87,7 @@ export const sendBrewingDataEpic$ = (action$: any) =>
                 if (startResult) {
                   return interval(BREWING_STATUS_POLL_INTERVAL).pipe(
                     switchMap(() => from(ProductionRepository.getBrewingStatus())),
-                    takeWhile(({ brewingStatus }) => brewingStatus?.StatusText !== "BREWING_FINISHED", true),
+                    takeWhile(({ brewingStatus }) => !(brewingStatus && (isProcessFinished(brewingStatus) || isProcessAborted(brewingStatus) || isProcessInError(brewingStatus))), true),
                     switchMap(({ available, brewingStatus }) => {
                       if (available?.isBackenAvailable && brewingStatus !== undefined) {
                         // BrewingStatus im DataCollector speichern

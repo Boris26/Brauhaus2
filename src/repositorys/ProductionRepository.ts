@@ -5,7 +5,8 @@ import {ProductionActions} from "../actions/actions";
 import store from "../store";
 import {MashAgitatorStates} from "../model/MashAgitator";
 import {BrewingData} from "../model/BrewingData";
-import {BrewingStatus} from "../model/BrewingStatus";
+import {BrewingStatus} from "../model/brewingStatus.types";
+import {normalizeBrewingStatus} from "../utils/brewingStatus/normalizeBrewingStatus";
 import {ConfirmStates} from "../enums/eConfirmStates";
 import {WaterStatus} from "../components/Controlls/WaterControll/WaterControl";
 import {BackendAvailable} from "../reducers/productionReducer";
@@ -117,7 +118,7 @@ export class ProductionRepository {
                 const available: BackendAvailable = {
                     isBackenAvailable: true, statusText: response.statusText
                 };
-                const parsedBrewingStatus: BrewingStatus = JSON.parse(JSON.stringify(response.data));
+                const parsedBrewingStatus: BrewingStatus = normalizeBrewingStatus(response.data);
                 return { available, brewingStatus: parsedBrewingStatus };
             } else {
                 const available: BackendAvailable = {
