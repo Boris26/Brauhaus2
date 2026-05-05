@@ -1,4 +1,4 @@
-export {BrewingStatus} from './brewingStatus.types';
+export type {BrewingStatus} from './brewingStatus.types';
 
 export enum HeatingStates {
     ON = 'ON',

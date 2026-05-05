@@ -98,7 +98,7 @@ class MobileProductionView extends React.Component<MobileProductionViewProps, Mo
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Typ:</span>
-                                <span className="mobile-value">{brewingStatus?.Type || '-'}</span>
+                                <span className="mobile-value">{brewingStatus?.currentStep?.phase || '-'}</span>
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Warten:</span>
