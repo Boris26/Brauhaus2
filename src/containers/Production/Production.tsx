@@ -79,6 +79,7 @@ interface ProductionState {
     brewingFinished: boolean
     indexOfCurrentStep: number;
     brewingIsRunning: boolean;
+    announcedHopTimes: number[];
 }
 
 class Production extends React.Component<ProductionProps, ProductionState> {
@@ -115,7 +116,8 @@ class Production extends React.Component<ProductionProps, ProductionState> {
             showFinishDialog: false,
             brewingFinished: false,
             indexOfCurrentStep: 0,
-            brewingIsRunning: false
+            brewingIsRunning: false,
+            announcedHopTimes: []
         }
     }
 
@@ -191,14 +193,25 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     }
 
     checkForHopAddition() {
-        const {hopsTimes} = this.state;
+        const {hopsTimes, announcedHopTimes} = this.state;
         const {brewingStatus} = this.props;
-        const roundedElapsedTime = Math.floor(brewingStatus.elapsedTime)
-            if (hopsTimes.hasOwnProperty(roundedElapsedTime)) {
-                const value = hopsTimes[roundedElapsedTime];
-                this.setState({showHopsDialog: true, hopName: value});
-            }
 
+        // Hopfengaben müssen relativ zur Kochphase berechnet werden,
+        // nicht relativ zur gesamten Sudlaufzeit.
+        const aCookingElapsed = Math.floor(brewingStatus.currentStep?.elapsedTime ?? 0);
+        if (!hopsTimes.hasOwnProperty(aCookingElapsed)) {
+            return;
+        }
+        if (announcedHopTimes.includes(aCookingElapsed)) {
+            return;
+        }
+
+        const aHopName = hopsTimes[aCookingElapsed];
+        this.setState((aPrevState) => ({
+            showHopsDialog: true,
+            hopName: aHopName,
+            announcedHopTimes: [...aPrevState.announcedHopTimes, aCookingElapsed]
+        }));
     }
 
     calculateTheHopTimes() {
@@ -211,7 +224,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
             hopsDict[secTime] = item.name;
 
         })
-        this.setState({hopsTimes: hopsDict});
+        this.setState({hopsTimes: hopsDict, announcedHopTimes: []});
     }
 
     setAgitatorStates(mainSwitchState: boolean) {
@@ -620,8 +633,8 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         return (
             <div className="containerProduction ">
                 {
-                    //showHopsDialog &&
-                    //(this.renderHopDialog())
+                    showHopsDialog &&
+                    (this.renderHopDialog())
                 }
                 {
                     isBackenAvailable &&
