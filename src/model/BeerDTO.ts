@@ -1,8 +1,10 @@
 import { MashingType } from '../enums/eMashingType';
+import { RestExecutionMode } from '../enums/eRestExecutionMode';
 export interface FermentationStepsDTO {
     type: string;
     temperature: number;
-    time: number;
+    time?: number;
+    executionMode?: RestExecutionMode;
 }
 
 export interface MaltDTO {

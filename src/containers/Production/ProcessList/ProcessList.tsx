@@ -3,6 +3,7 @@ import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
 import './ProcessList.css';
 import {Beer, FermentationSteps} from "../../../model/Beer";
+import {RestExecutionMode} from "../../../enums/eRestExecutionMode";
 
 export interface ProcessStep {
     name: string;
@@ -159,7 +160,9 @@ export function createProcessSteps(selectedBeer: Beer): ProcessStep[] {
 
     // Rasten
     fermentation.forEach((step: FermentationSteps) => {
-        if (/^Rast\s*\d+$/i.test(step.type)) {
+        const isRastName = /^Rast\s*\d+$/i.test(step.type);
+        const isConfirmationHold = (step.executionMode ?? RestExecutionMode.TIMED) === RestExecutionMode.CONFIRMATION_HOLD;
+        if (isRastName || isConfirmationHold) {
             processSteps.push({ name: `Aufheizen für ${step.type} -> ${step.temperature}°C` });
             processSteps.push({ name: step.type });
             lastRastIndex = processSteps.length - 1;

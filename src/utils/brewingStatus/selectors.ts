@@ -20,6 +20,7 @@ export const getConfirmButtonLabel = (aStatus?: BrewingStatus) => {
         case WaitingFor.MASHING_OUT_CONFIRMATION: return 'Abmaischen bestätigen';
         case WaitingFor.COOKING_CONFIRMATION: return 'Kochen bestätigen';
         case WaitingFor.BOILING_CONFIRMATION: return 'Siedepunkt bestätigen';
+        case WaitingFor.DECOCTION_CONFIRMATION: return 'Dickmaische bestätigen';
         case WaitingFor.USER_CONFIRMATION: return 'Bestätigen';
         default: return 'Bestätigen';
     }
@@ -34,6 +35,7 @@ export const getBrewingStatusLabel = (aStatus?: BrewingStatus) => {
     const aPhase = aStatus.currentStep.phase; const aMode = aStatus.currentStep.mode; const aWaitingFor = aStatus.waiting.waitingFor;
     if (aMode === ProcessMode.WAITING && aPhase === ProcessPhase.MASHING_IN && aWaitingFor === WaitingFor.MASHING_IN_CONFIRMATION) return 'Einmaischen: bitte bestätigen';
     if (aMode === ProcessMode.WAITING && aPhase === ProcessPhase.RAST && aWaitingFor === WaitingFor.IODINE_TEST) return 'Warten auf Iodine-Test';
+    if (aMode === ProcessMode.WAITING && aPhase === ProcessPhase.RAST && aWaitingFor === WaitingFor.DECOCTION_CONFIRMATION) return 'Warten auf Dickmaische-Bestätigung';
     if (aMode === ProcessMode.WAITING && aPhase === ProcessPhase.MASHING_OUT && aWaitingFor === WaitingFor.MASHING_OUT_CONFIRMATION) return 'Abmaischen: Bestätigung nötig';
     if (aMode === ProcessMode.WAITING && aPhase === ProcessPhase.COOKING && aWaitingFor === WaitingFor.BOILING_CONFIRMATION) return 'Warten auf Siedepunkt-Bestätigung';
     if (aPhase === ProcessPhase.MASHING_IN && aMode === ProcessMode.HEATING) return 'Einmaischen: Aufheizen läuft';

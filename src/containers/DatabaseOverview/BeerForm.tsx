@@ -8,6 +8,7 @@ import {
     Typography
 } from "@mui/material";
 import {MashingType} from "../../enums/eMashingType";
+import {RestExecutionMode} from "../../enums/eRestExecutionMode";
 import './BeerForm.css'
 import SimpleBar from 'simplebar-react';
 import {MaltsActions} from "../../actions/malt.actions";
@@ -59,6 +60,7 @@ interface BeerFormState {
 
 class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
     private fileInput: HTMLInputElement | null | undefined;
+    private fixedTypes = ['Einmaischen', 'Abmaischen', 'Kochen'];
     constructor(props: BeerFormProps) {
 
         super(props);
@@ -149,13 +151,40 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
        this.setState((prevState) => {
           const fermentationSteps = [...prevState.fermentationSteps];
           const step = fermentationSteps[index];
-          // @ts-ignore
-          step[name] = value;
+          // Für TIMED/HOLD ein klares und rückwärtskompatibles Verhalten.
+          if (name === "executionMode") {
+              step.executionMode = value as RestExecutionMode;
+              if (step.executionMode === RestExecutionMode.CONFIRMATION_HOLD) {
+                  delete step.time;
+              } else if (step.time === undefined) {
+                  step.time = 1;
+              }
+          } else if (name === "temperature" || name === "time") {
+              const parsed = Number(value);
+              // @ts-ignore
+              step[name] = isNaN(parsed) ? undefined : parsed;
+          } else {
+              // @ts-ignore
+              step[name] = value;
+          }
           return { fermentationSteps };
        }, () => {
             // Nach jeder Statusänderung den aktuellen Formularstatus speichern
             this.props.saveBeerFormState(this.state);
        });
+    };
+
+    getExecutionMode = (step: FermentationSteps) => step.executionMode ?? RestExecutionMode.TIMED;
+
+    validateFermentationSteps = (steps: FermentationSteps[]) => {
+        for (const step of steps) {
+            const isFixed = this.fixedTypes.includes(step.type);
+            if (isFixed) continue;
+            const mode = this.getExecutionMode(step);
+            if (step.temperature === undefined || Number(step.temperature) <= 0) return false;
+            if (mode === RestExecutionMode.TIMED && (step.time === undefined || Number(step.time) <= 0)) return false;
+        }
+        return true;
     };
 
     handleMaltChange = (value: string, name: string, index: number) => {
@@ -221,6 +250,10 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             hopsDTO,
             yeastsDTO,
         } = this.state;
+        if (!this.validateFermentationSteps(fermentationSteps)) {
+            alert('Bitte prüfe den Maischeplan: Zeitgesteuerte Rasten benötigen Zeit > 0, Halte-Rasten nur Temperatur.');
+            return;
+        }
 
         const malts_DTO = maltsDTO
             .map((aMalt) => {
@@ -304,7 +337,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             return {
                 fermentationSteps: [
                     ...prevState.fermentationSteps,
-                    { type: `Rast ${rastCount}`, temperature: 0, time: 0 }
+                    { type: `Rast ${rastCount}`, temperature: 0, time: 1, executionMode: RestExecutionMode.TIMED }
                 ],
             };
         });
@@ -521,6 +554,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                 <thead style={{position: 'sticky', top: 0, background: COLOR_WHITE, zIndex: 2}}>
                                     <tr>
                                         <th>Type</th>
+                                        <th>Modus</th>
                                         <th>Temp (°C)</th>
                                         <th>Zeit (min)</th>
                                         <th className="action-column">Aktion</th>
@@ -529,8 +563,8 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                 <tbody>
                                     {fermentationSteps?.map((step, index) => {
                                         const rastCount = fermentationSteps.slice(0, index + 1).filter((s) => !Object.values(MashingType).includes(s.type as MashingType) || s.type === '').length;
-                                        const fixedTypes = ['Einmaischen', 'Abmaischen', 'Kochen'];
-                                        const isFixed = fixedTypes.includes(step.type);
+                                        const isFixed = this.fixedTypes.includes(step.type);
+                                        const executionMode = this.getExecutionMode(step);
                                         return (
                                             <tr key={index}>
                                                 <td>
@@ -563,10 +597,28 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                                     )}
                                                 </td>
                                                 <td>
+                                                    {isFixed ? (
+                                                        <span style={{opacity: 0.7}}>–</span>
+                                                    ) : (
+                                                        <select
+                                                            name="executionMode"
+                                                            value={executionMode}
+                                                            onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}
+                                                        >
+                                                            <option value={RestExecutionMode.TIMED}>Zeitgesteuerte Rast</option>
+                                                            <option value={RestExecutionMode.CONFIRMATION_HOLD}>Halten bis Bestätigung</option>
+                                                        </select>
+                                                    )}
+                                                </td>
+                                                <td>
                                                     <input type="number" name="temperature" value={step.temperature} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />
                                                 </td>
                                                 <td>
-                                                    <input type="number" name="time" value={step.time} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />
+                                                    {executionMode === RestExecutionMode.TIMED ? (
+                                                        <input type="number" name="time" min={isFixed ? 0 : 1} value={step.time ?? ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={!isFixed} />
+                                                    ) : (
+                                                        <span style={{opacity: 0.7}}>–</span>
+                                                    )}
                                                 </td>
                                                 <td className="action-column">
                                                     {index > 0 && !isFixed && (
