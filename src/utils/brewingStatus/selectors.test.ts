@@ -23,6 +23,12 @@ describe('brewing selectors', () => {
     expect(getConfirmButtonLabel(s)).toBe('Iodine bestätigen');
   });
 
+  it('handles decoction waiting label', () => {
+    const s = makeStatus({currentStep:{phase:ProcessPhase.RAST, mode:ProcessMode.WAITING}, waiting:{waitingFor:WaitingFor.DECOCTION_CONFIRMATION, canConfirm:true}});
+    expect(getConfirmButtonLabel(s)).toBe('Dickmaische bestätigen');
+    expect(getBrewingStatusLabel(s)).toContain('Dickmaische');
+  });
+
   it('countdown shown only for timer running', () => {
     expect(shouldShowCountdown(makeStatus({currentStep:{phase:ProcessPhase.RAST, mode:ProcessMode.TIMER_RUNNING}}))).toBe(true);
     expect(shouldShowCountdown(makeStatus({currentStep:{phase:ProcessPhase.RAST, mode:ProcessMode.HEATING}}))).toBe(false);

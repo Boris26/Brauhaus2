@@ -37,6 +37,11 @@ export const testBeers: Beer[] = [
                 temperature: 50,
                 time: 30,
             },
+            {
+                type: "Dickmaische führen",
+                temperature: 64,
+                executionMode: "CONFIRMATION_HOLD" as any,
+            },
         ],
         malts: [
             {

@@ -21,6 +21,11 @@ describe('ProductionRepository API method/path usage', () => {
     expect(mockedAxios.get).not.toHaveBeenCalledWith(expect.stringContaining('/Confirm/'));
   });
 
+  it('uses POST for decoction confirm action', async () => {
+    await ProductionRepository.confirm(ConfirmStates.DECOCTION);
+    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Confirm/Decoction'));
+  });
+
   it('uses POST for command-based state changes', async () => {
     await ProductionRepository.startBrewing();
     await ProductionRepository.fillWaterAutomatic(15);
@@ -74,6 +79,25 @@ describe('ProductionRepository API method/path usage', () => {
       expect.objectContaining({ CookingTime: 60 })
     );
     expect(result).toBe(true);
+  });
+
+  it('keeps executionMode in recipe payload', async () => {
+    mockedAxios.post.mockResolvedValueOnce({ status: 201 } as any);
+    await ProductionRepository.sendBrewingData({
+      MashdownTemperature: 76,
+      MashupTemperature: 52,
+      CookingTemperature: 100,
+      CookingTime: 60,
+      Rasten: [{ type: 'Dickmaische führen', temperature: 64, executionMode: 'CONFIRMATION_HOLD' as any }]
+    });
+    expect(mockedAxios.post).toHaveBeenCalledWith(
+      expect.stringContaining('/Recipe/'),
+      expect.objectContaining({
+        Rasten: expect.arrayContaining([
+          expect.objectContaining({ executionMode: 'CONFIRMATION_HOLD' })
+        ])
+      })
+    );
   });
 
   it('keeps agitator interval command as POST with JSON body', async () => {

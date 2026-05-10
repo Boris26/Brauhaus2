@@ -6,7 +6,7 @@ import Production from "./Production/Production";
 import DatabaseOverview from "./DatabaseOverview/BeerForm";
 import SimpleBar from "simplebar-react";
 import ModalDialog, {DialogType} from "../components/ModalDialog/ModalDialog";
-import {BrewingStatus} from "../model/brewingStatus.types";
+import {BrewingStatus, WaitingFor} from "../model/brewingStatus.types";
 import {BeerActions, ProductionActions} from "../actions/actions";
 import {ConfirmStates} from "../enums/eConfirmStates";
 import {FinishedBrew} from "../model/FinishedBrew";
@@ -42,9 +42,28 @@ class Index extends React.Component<indexMainProps> {
         }
     }
 
+    getConfirmStateForWaiting = () => {
+        const waitingFor = this.props.brewingStatus?.waiting?.waitingFor;
+        // Backend liefert den konkreten Wait-Grund, UI mapped auf passenden Confirm-Endpunkt.
+        switch (waitingFor) {
+            case WaitingFor.IODINE_TEST:
+                return ConfirmStates.IODINE;
+            case WaitingFor.MASHING_IN_CONFIRMATION:
+                return ConfirmStates.MASHUP;
+            case WaitingFor.BOILING_CONFIRMATION:
+                return ConfirmStates.BOILING;
+            case WaitingFor.COOKING_CONFIRMATION:
+                return ConfirmStates.COOKING;
+            case WaitingFor.DECOCTION_CONFIRMATION:
+                return ConfirmStates.DECOCTION;
+            default:
+                return ConfirmStates.WAITING;
+        }
+    }
+
     confirmDialog = () => {
         const {confirm} = this.props;
-        confirm(ConfirmStates.WAITING);
+        confirm(this.getConfirmStateForWaiting());
     }
 
     getDialogMessage() {
