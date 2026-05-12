@@ -6,6 +6,7 @@ import {connect} from "react-redux";
 import {BeerActions} from "../../../actions/actions";
 import {WaterHeatingTimeCalculator, cookingTimeOptions} from "../../../utils/WaterHeatingTimeCalculator";
 import {MashingType} from "../../../enums/eMashingType";
+import ModalDialog, {DialogType} from "../../../components/ModalDialog/ModalDialog";
 import setSelectedBeer = BeerActions.setSelectedBeer;
 
 export interface BeerTableProps {
@@ -23,6 +24,7 @@ export interface BeerTableProps {
 interface BeerTableState {
     sortConfig: SortConfig;
     selectedBeerId: string | null;
+    beerPendingDelete?: Beer;
 }
 
 
@@ -36,7 +38,7 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
         super(props);
 
         this.state = {
-            sortConfig: {key: 'name', direction: 'asc'}, selectedBeerId: null
+            sortConfig: {key: 'name', direction: 'asc'}, selectedBeerId: null, beerPendingDelete: undefined
         };
     }
 
@@ -96,19 +98,26 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
     };
 
     handleDeleteBeer = (aBeer: Beer) => {
-        const aBeerNamePart = aBeer.name ? ` „${aBeer.name}“` : '';
-        const aShouldDelete = window.confirm(`Möchtest du das Rezept${aBeerNamePart} wirklich löschen?`);
+        this.setState({beerPendingDelete: aBeer});
+    }
 
-        if (!aShouldDelete) {
-            return;
-        }
+    confirmDeleteBeer = () => {
+        const {beerPendingDelete} = this.state;
+        if (!beerPendingDelete) return;
 
-        this.props.deleteBeer(aBeer.id);
+        this.props.deleteBeer(beerPendingDelete.id);
+        this.setState({beerPendingDelete: undefined});
+    }
+
+    cancelDeleteBeer = () => {
+        this.setState({beerPendingDelete: undefined});
     }
 
     render() {
         const {beers, beerToBrew, isPollingRunning} = this.props;
-        const {sortConfig, selectedBeerId} = this.state;
+        const {sortConfig, selectedBeerId, beerPendingDelete} = this.state;
+        const aBeerNamePart = beerPendingDelete?.name ? ` „${beerPendingDelete.name}“` : '';
+        const aDeleteMessage = `Möchtest du das Rezept${aBeerNamePart} wirklich löschen?`;
         if (beers.length > 0) {
             const sortedData = [...beers].sort((a, b) => {
                 const {key, direction} = sortConfig;
@@ -125,6 +134,17 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
 
             return (
                 <>
+                    <ModalDialog
+                        type={DialogType.CONFIRM}
+                        open={!!beerPendingDelete}
+                        header={"Löschen bestätigen"}
+                        content={aDeleteMessage}
+                        onConfirm={this.confirmDeleteBeer}
+                        onCancel={this.cancelDeleteBeer}
+                        confirmLabel={"Löschen"}
+                        cancelLabel={"Abbrechen"}
+                        showCancelButton={true}
+                    />
                     <TableContainer component={Paper} className="Table">
                         <Table className="Table">
                             <TableHead className="table-header">
