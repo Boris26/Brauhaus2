@@ -11,10 +11,14 @@ export enum DialogType {
 
 interface ModalDialogProps {
     onConfirm: (content: string) => void;
+    onCancel?: () => void;
     type: DialogType;
     open: boolean;
     content: string;
     header: string;
+    confirmLabel?: string;
+    cancelLabel?: string;
+    showCancelButton?: boolean;
 };
 
 interface ModalDialogState {
@@ -42,11 +46,18 @@ class ModalDialog extends React.Component<ModalDialogProps, ModalDialogState> {
 
         onConfirm(content);
     };
+
+    handleCancel = () => {
+        const {onCancel} = this.props;
+        if (onCancel) {
+            onCancel();
+        }
+    };
     render() {
-        const {content, header, open, type} = this.props;
+        const {content, header, open, type, confirmLabel, cancelLabel, showCancelButton} = this.props;
 
         return (
-            <Dialog open={open} maxWidth={'md'} onClose={this.handleClose}>
+            <Dialog open={open} maxWidth={'md'} onClose={showCancelButton ? this.handleCancel : this.handleClose}>
                 <DialogTitle className={type}>
                     {header}
                 </DialogTitle>
@@ -54,8 +65,13 @@ class ModalDialog extends React.Component<ModalDialogProps, ModalDialogState> {
                     <p>{this.contentWithLineBreaks(content)}</p>
                 </DialogContent>
                 <DialogActions>
+                    {showCancelButton && (
+                        <Button onClick={this.handleCancel} color="primary">
+                            {cancelLabel ?? "Abbrechen"}
+                        </Button>
+                    )}
                     <Button onClick={this.handleClose} color="primary">
-                        Ok
+                        {confirmLabel ?? "Ok"}
                     </Button>
                 </DialogActions>
 

@@ -21,6 +21,7 @@ import {YeastActions} from "../../actions/yeast.actions";
 import {AdditionalIngredientsActions} from "../../actions/additionalIngredients.actions";
 import {AdditionalIngredient} from "../../model/AdditionalIngredient";
 import { COLOR_WHITE, COLOR_BREW_BG, COLOR_ACCENT, BORDER_TRANSPARENT, COLOR_DARK_BG, COLOR_BORDER_INPUT_ALT } from '../../colors';
+import ModalDialog, {DialogType} from "../../components/ModalDialog/ModalDialog";
 
 interface BeerFormProps {
     onSubmitBeer: (beer: BeerDTO) => void;
@@ -65,6 +66,8 @@ interface BeerFormState {
     missingMalts?: string[];
     missingHops?: string[];
     missingYeasts?: string[];
+    showValidationDialog: boolean;
+    validationDialogMessage: string;
 }
 
 class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
@@ -99,6 +102,8 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             yeastsDTO: [{ id: '', name: '', quantity: 0 }],
             additionalIngredientsDTO: [],
             isSubmitSuccessful: false,
+            showValidationDialog: false,
+            validationDialogMessage: '',
         };
 
         // Wenn ein gespeicherter Formularstatus existiert, verwenden wir diesen, ansonsten den Standardstatus
@@ -342,7 +347,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             additionalIngredientsDTO,
         } = this.state;
         if (!this.validateFermentationSteps(fermentationSteps)) {
-            alert('Bitte prüfe den Maischeplan: Zeitgesteuerte Rasten benötigen Zeit > 0, Halte-Rasten nur Temperatur.');
+            this.openValidationDialog('Bitte prüfe den Maischeplan: Zeitgesteuerte Rasten benötigen Zeit > 0, Halte-Rasten nur Temperatur.');
             return;
         }
 
@@ -357,7 +362,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         const normalizedHops = hopsDTO.map((aHop) => normalizeHopDto(aHop));
         if (!normalizedHops.every((aHop) => validateHopDto(aHop))) {
-            alert('Bitte prüfe die Hopfengaben: Menge und Zeit müssen > 0 sein. Kochhopfen nutzt Minuten, Hopfen stopfen Stunden oder Tage.');
+            this.openValidationDialog('Bitte prüfe die Hopfengaben: Menge und Zeit müssen > 0 sein. Kochhopfen nutzt Minuten, Hopfen stopfen Stunden oder Tage.');
             return;
         }
 
@@ -388,7 +393,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             .filter((y): y is YeastDTO => y !== undefined);
 
         if (!this.validateAdditionalIngredients(additionalIngredientsDTO)) {
-            alert('Bitte prüfe weitere Zutaten: Zutat (ID/Name), Menge > 0, Einheit und gültige Phase sind erforderlich. Zeit darf nur > 0 gesetzt werden.');
+            this.openValidationDialog('Bitte prüfe weitere Zutaten: Zutat (ID/Name), Menge > 0, Einheit und gültige Phase sind erforderlich. Zeit darf nur > 0 gesetzt werden.');
             return;
         }
 
@@ -416,6 +421,14 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         console.log(beer);
         this.props.onSubmitBeer(beer);
+    };
+
+    openValidationDialog = (message: string) => {
+        this.setState({showValidationDialog: true, validationDialogMessage: message});
+    };
+
+    closeValidationDialog = () => {
+        this.setState({showValidationDialog: false, validationDialogMessage: ''});
     };
 
     resetForm = () => {
@@ -1086,8 +1099,16 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
     };
 
     render() {
+        const {showValidationDialog, validationDialogMessage} = this.state;
         return (
             <div className='containerBeerForm'>
+                <ModalDialog
+                    type={DialogType.ERROR}
+                    open={showValidationDialog}
+                    content={validationDialogMessage}
+                    header={"Validierungsfehler"}
+                    onConfirm={this.closeValidationDialog}
+                />
                 <div style={{ height: '870px', display: 'flex', flexDirection: 'column' }}>
                     <div style={{ border: `1px solid ${BORDER_TRANSPARENT}`, borderRadius: '10px', overflow: 'hidden', height: '100%', display: 'flex', flexDirection: 'column' }}>
                         <div style={{ backgroundColor: COLOR_ACCENT, padding: '12px 16px', borderRadius: '10px 10px 0 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
