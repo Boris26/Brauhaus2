@@ -29,6 +29,15 @@ export function normalizeFermentationStepsForProduction(steps: FermentationSteps
       continue;
     }
 
+    // Einmaischen ist ein fester Prozessschritt und keine normale zeitgesteuerte Rast.
+    if (step.type === 'Einmaischen') {
+      normalized.push({
+        ...step,
+        executionMode
+      });
+      continue;
+    }
+
     if (!isValidTimedDuration(step.time)) {
       return { ok: false, error: `Zeitgesteuerte Rast "${step.type}" benötigt Zeit > 0.` };
     }
