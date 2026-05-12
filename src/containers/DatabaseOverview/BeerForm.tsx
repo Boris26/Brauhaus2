@@ -291,12 +291,19 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         }
 
         const hops_DTO = normalizedHops
-            .map((aHop) => {
+            .map((aHop): HopDTO | undefined => {
                 const hop = hops.find((hop) => hop.name === aHop.name);
                 if (!hop) return undefined;
                 const quantity = aHop.quantity;
                 const time = aHop.time;
-                return { id: hop.id, name: hop.name, quantity: quantity, time: time, usage: aHop.usage, timeUnit: aHop.timeUnit };
+                return {
+                    id: hop.id,
+                    name: hop.name,
+                    quantity,
+                    time,
+                    usage: aHop.usage,
+                    timeUnit: aHop.timeUnit,
+                };
             })
             .filter((h): h is HopDTO => h !== undefined);
 
