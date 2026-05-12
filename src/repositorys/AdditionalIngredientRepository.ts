@@ -9,4 +9,8 @@ export class AdditionalIngredientRepository extends BaseRepository {
     static submitAdditionalIngredient(aIngredient: AdditionalIngredientCreatePayload): Promise<void> {
         return this.post("additionalingredient", aIngredient);
     }
+
+    static deleteAdditionalIngredientById(aId: string): Promise<void> {
+        return this.delete(`additionalingredient/${aId}`);
+    }
 }

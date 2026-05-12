@@ -10,4 +10,8 @@ export class MaltRepository extends BaseRepository {
     static submitMalt(aMalt: Malts): Promise<void> {
         return this.post("malt", aMalt);
     }
+
+    static deleteMaltById(aId: string): Promise<void> {
+        return this.delete(`malt/${aId}`);
+    }
 }

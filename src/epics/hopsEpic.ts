@@ -49,7 +49,31 @@ export const submitNewHopEpic = (action$: any) =>
         )
     );
 
+export const deleteHopByIdEpic = (action$: any) =>
+    action$.pipe(
+        ofType(HopsActions.ActionTypes.DELETE_HOPS_BY_ID),
+        mergeMap((aAction: any) =>
+            from(HopRepository.deleteHopById(aAction.payload.hopsId)).pipe(
+                mergeMap(() =>
+                    from([
+                        HopsActions.getHops(true)
+                    ])
+                ),
+                catchError((aError: Error) =>
+                    from([
+                        ApplicationActions.openErrorDialog(
+                            true,
+                            "Hopfen fehler",
+                            "Delete Hopfen: " + aError.message
+                        )
+                    ])
+                )
+            )
+        )
+    );
+
 export const hopsEpic = [
     getHopsEpic,
-    submitNewHopEpic
+    submitNewHopEpic,
+    deleteHopByIdEpic
 ]
