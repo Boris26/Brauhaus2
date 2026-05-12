@@ -1,6 +1,9 @@
 import React, { ChangeEvent, FormEvent } from 'react';
 import {Beer, FermentationSteps, Hop, Malt, Yeast} from "../../model/Beer";
 import {BeerDTO, HopDTO, MaltDTO, YeastDTO} from "../../model/BeerDTO";
+import { HopUsage } from "../../enums/eHopUsage";
+import { HopTimeUnit } from "../../enums/eHopTimeUnit";
+import { normalizeHopDto, updateHopUsage, validateHopDto } from "./hopDefaults";
 import {BeerActions} from "../../actions/actions";
 import {connect} from "react-redux";
 import {isEqual} from "lodash";
@@ -86,7 +89,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 { type: 'Kochen', temperature: 0, time: 0 }
             ],
             maltsDTO: [{ id: '', name: '', quantity: 0 }],
-            hopsDTO: [{ id: '', name: '', quantity: 0, time: 0 }],
+            hopsDTO: [{ id: '', name: '', quantity: 0, time: 0, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES }],
             yeastsDTO: [{ id: '', name: '', quantity: 0 }],
             isSubmitSuccessful: false,
         };
@@ -134,7 +137,8 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 cookingTemperatur: importedBeer.cookingTemperatur || 0,
                 fermentationSteps: importedBeer.fermentation ? [...importedBeer.fermentation] : [],
                 maltsDTO: importedBeer.malts ? importedBeer.malts.map(m => ({ id: m.id, name: m.name, quantity: m.quantity })) : [],
-                hopsDTO: importedBeer.wortBoiling && importedBeer.wortBoiling.hops ? importedBeer.wortBoiling.hops.map(h => ({ id: h.id, name: h.name, quantity: h.quantity, time: h.time })) : [],
+                // Altrezepte ohne usage/timeUnit bleiben kompatibel und werden auf BOIL/MINUTES normiert.
+                hopsDTO: importedBeer.wortBoiling && importedBeer.wortBoiling.hops ? importedBeer.wortBoiling.hops.map(aHop => normalizeHopDto(aHop)) : [],
                 yeastsDTO: importedBeer.fermentationMaturation && importedBeer.fermentationMaturation.yeast ? importedBeer.fermentationMaturation.yeast.map(y => ({ id: y.id, name: y.name, quantity: y.quantity })) : [],
                 isSubmitSuccessful: false,
             }, () => {
@@ -200,15 +204,27 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         });
     }
 
-    handleHopChange = (value: string, name: string, index: number) => {
+    handleHopChange = (aValue: string, aName: string, aIndex: number) => {
         this.setState((prevState) => {
             const hopsDTO = [...prevState.hopsDTO];
-            const step = hopsDTO[index];
-            // @ts-ignore
-            step[name] = value;
+            const step = hopsDTO[aIndex];
+
+            if (aName === "usage") {
+                hopsDTO[aIndex] = updateHopUsage(step, aValue as HopUsage);
+            } else if (aName === "quantity" || aName === "time") {
+                // usage/timeUnit wird getrennt geführt; Zeit darf nicht als DRY_HOP-Marker missbraucht werden.
+                const parsed = Number(aValue);
+                // @ts-ignore
+                step[aName] = isNaN(parsed) ? 0 : parsed;
+            } else if (aName === "timeUnit") {
+                step.timeUnit = aValue as HopTimeUnit;
+            } else {
+                // @ts-ignore
+                step[aName] = aValue;
+            }
+
             return { hopsDTO };
         }, () => {
-            // Nach jeder Statusänderung den aktuellen Formularstatus speichern
             this.props.saveBeerFormState(this.state);
         });
     }
@@ -264,13 +280,19 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             })
             .filter((m): m is MaltDTO => m !== undefined);
 
-        const hops_DTO = hopsDTO
+        const normalizedHops = hopsDTO.map((aHop) => normalizeHopDto(aHop));
+        if (!normalizedHops.every((aHop) => validateHopDto(aHop))) {
+            alert('Bitte prüfe die Hopfengaben: Menge und Zeit müssen > 0 sein. Kochhopfen nutzt Minuten, Hopfen stopfen Stunden oder Tage.');
+            return;
+        }
+
+        const hops_DTO = normalizedHops
             .map((aHop) => {
                 const hop = hops.find((hop) => hop.name === aHop.name);
                 if (!hop) return undefined;
                 const quantity = aHop.quantity;
                 const time = aHop.time;
-                return { id: hop.id, name: hop.name, quantity: quantity, time: time };
+                return { id: hop.id, name: hop.name, quantity: quantity, time: time, usage: aHop.usage, timeUnit: aHop.timeUnit };
             })
             .filter((h): h is HopDTO => h !== undefined);
 
@@ -351,7 +373,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
     addHops = () => {
         this.setState((prevState) => ({
-            hopsDTO: [...prevState.hopsDTO, { id: '', name: '', quantity: 0, time: 0 }],
+            hopsDTO: [...prevState.hopsDTO, { id: '', name: '', quantity: 0, time: 0, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES }],
         }));
     }
 
@@ -419,7 +441,8 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 cookingTemperatur: selectedBeer.cookingTemperatur || 0,
                 fermentationSteps: selectedBeer.fermentation ? [...selectedBeer.fermentation] : [],
                 maltsDTO: selectedBeer.malts ? selectedBeer.malts.map(m => ({ id: m.id, name: m.name, quantity: m.quantity })) : [],
-                hopsDTO: selectedBeer.wortBoiling && selectedBeer.wortBoiling.hops ? selectedBeer.wortBoiling.hops.map(h => ({ id: h.id, name: h.name, quantity: h.quantity, time: h.time })) : [],
+                // Bestehende Rezepte ohne neue Felder werden im UI als Kochhopfen in Minuten dargestellt.
+                hopsDTO: selectedBeer.wortBoiling && selectedBeer.wortBoiling.hops ? selectedBeer.wortBoiling.hops.map(aHop => normalizeHopDto(aHop)) : [],
                 yeastsDTO: selectedBeer.fermentationMaturation && selectedBeer.fermentationMaturation.yeast ? selectedBeer.fermentationMaturation.yeast.map(y => ({ id: y.id, name: y.name, quantity: y.quantity })) : [],
                 isSubmitSuccessful: false,
             }, () => {
@@ -706,7 +729,9 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                     <tr>
                                         <th>Name</th>
                                         <th>Menge (g)</th>
-                                        <th>Zeit (min)</th>
+                                        <th>Verwendung</th>
+                                        <th>Zeitangabe</th>
+                                        <th>Einheit</th>
                                         <th className="action-column">Aktion</th>
                                     </tr>
                                 </thead>
@@ -739,14 +764,42 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                                 />
                                             </td>
                                             <td>
+                                                <select
+                                                    name="usage"
+                                                    value={step.usage ?? HopUsage.BOIL}
+                                                    onChange={(e) => this.handleHopChange(e.target.value, "usage", index)}
+                                                    required={true}
+                                                >
+                                                    <option value={HopUsage.BOIL}>Kochhopfen</option>
+                                                    <option value={HopUsage.DRY_HOP}>Hopfen stopfen</option>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <label style={{ display: "block", fontSize: 12 }}>
+                                                    {step.usage === HopUsage.DRY_HOP ? "Kontaktzeit" : "Kochzeit / Restkochzeit"}
+                                                </label>
                                                 <input
                                                     type="number"
                                                     name="time"
-                                                    min={0}
+                                                    min={1}
                                                     value={step.time}
                                                     onChange={(e) => this.handleHopChange(e.target.value, "time", index)}
                                                     required={true}
                                                 />
+                                            </td>
+                                            <td>
+                                                {step.usage === HopUsage.DRY_HOP ? (
+                                                    <select
+                                                        name="timeUnit"
+                                                        value={step.timeUnit ?? HopTimeUnit.DAYS}
+                                                        onChange={(e) => this.handleHopChange(e.target.value, "timeUnit", index)}
+                                                    >
+                                                        <option value={HopTimeUnit.HOURS}>Stunden</option>
+                                                        <option value={HopTimeUnit.DAYS}>Tage</option>
+                                                    </select>
+                                                ) : (
+                                                    <span>Minuten</span>
+                                                )}
                                             </td>
                                             <td className="action-column">
                                                 <button

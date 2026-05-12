@@ -1,5 +1,7 @@
 import { MashingType } from '../enums/eMashingType';
 import { RestExecutionMode } from '../enums/eRestExecutionMode';
+import { HopTimeUnit } from '../enums/eHopTimeUnit';
+import { HopUsage } from '../enums/eHopUsage';
 export interface FermentationSteps {
     type: string;
     temperature: number;
@@ -22,6 +24,8 @@ export interface Hop {
     alpha: number;
     quantity: number;
     time: number;
+    usage?: HopUsage;
+    timeUnit?: HopTimeUnit;
 }
 
 export interface WortBoiling {
