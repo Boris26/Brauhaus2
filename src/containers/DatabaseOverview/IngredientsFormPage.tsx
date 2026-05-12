@@ -9,26 +9,23 @@ import {
     TableCell,
     TableContainer,
     TableHead,
-    TableRow,
-    Paper
+    TableRow
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { connect } from 'react-redux';
 import SimpleBar from "simplebar-react";
-import { COLOR_BREW_BG } from '../../colors';
 
 import { Malts } from '../../model/Malt';
 import { Hops } from '../../model/Hops';
 import { Yeasts } from '../../model/Yeasts';
-import { COLOR_ACCENT } from '../../colors';
 
 import './IngredientsFormPage.css';
 
 import { MaltsActions } from "../../actions/malt.actions";
 import { HopsActions } from "../../actions/hops.actions";
 import { YeastActions } from "../../actions/yeast.actions";
-import {AdditionalIngredientsActions} from "../../actions/additionalIngredients.actions";
-import {AdditionalIngredient} from "../../model/AdditionalIngredient";
+import { AdditionalIngredientsActions } from "../../actions/additionalIngredients.actions";
+import { AdditionalIngredient } from "../../model/AdditionalIngredient";
 
 
 class IngredientsFormPage extends React.Component<any, any> {
@@ -47,7 +44,8 @@ class IngredientsFormPage extends React.Component<any, any> {
             showNewYeastRow: false,
             newAdditionalIngredient: { name: "", description: "" },
             showNewAdditionalIngredientRow: false,
-            additionalIngredientError: ""
+            additionalIngredientError: "",
+            expandedAccordion: "malz"
         };
     }
 
@@ -64,6 +62,31 @@ class IngredientsFormPage extends React.Component<any, any> {
         }
     }
 
+    handleAccordionChange = (aAccordionKey: string) => (_aEvent: React.SyntheticEvent, aIsExpanded: boolean) => {
+        // Es bleibt immer genau ein Bereich geöffnet.
+        if (aIsExpanded) {
+            this.setState({ expandedAccordion: aAccordionKey });
+        }
+    };
+
+    renderIngredientAccordion = (aAccordionKey: string, aTitle: string, aContent: React.ReactNode) => {
+        const { expandedAccordion } = this.state;
+
+        return (
+            <Accordion
+                expanded={expandedAccordion === aAccordionKey}
+                onChange={this.handleAccordionChange(aAccordionKey)}
+                className="ingredients-accordion"
+            >
+                <AccordionSummary expandIcon={<ExpandMoreIcon />} className="ingredients-accordion-summary">
+                    <Typography>{aTitle}</Typography>
+                </AccordionSummary>
+                <AccordionDetails className="ingredients-accordion-details">
+                    {aContent}
+                </AccordionDetails>
+            </Accordion>
+        );
+    };
 
     handleAddMalt = () => {
         const { newMalt } = this.state;
@@ -126,15 +149,206 @@ class IngredientsFormPage extends React.Component<any, any> {
         });
     };
 
+    renderMaltContent = () => {
+        const { malts } = this.props;
+        const { newMalt, showNewMaltRow } = this.state;
+
+        return (
+            <>
+                <div className="filter-container">
+                    <button className="finish-btn" onClick={() => this.setState({ showNewMaltRow: true })}>➕</button>
+                </div>
+                <TableContainer className="FinishedBrewsTable" sx={{ maxHeight: 400 }}>
+                    <Table stickyHeader>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Name</TableCell>
+                                <TableCell>Beschreibung</TableCell>
+                                <TableCell>EBC</TableCell>
+                                <TableCell className="action-cell">Aktion</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {showNewMaltRow && (
+                                <TableRow>
+                                    <TableCell><input className="table-edit-field" value={newMalt.name || ""} onChange={e => this.setState({ newMalt: { ...newMalt, name: e.target.value } })} /></TableCell>
+                                    <TableCell><input className="table-edit-field" value={newMalt.description || ""} onChange={e => this.setState({ newMalt: { ...newMalt, description: e.target.value } })} /></TableCell>
+                                    <TableCell><input type="number" className="table-edit-field" value={newMalt.ebc || ""} onChange={e => this.setState({ newMalt: { ...newMalt, ebc: Number(e.target.value) } })} /></TableCell>
+                                    <TableCell className="action-cell">
+                                        <div className="action-buttons">
+                                            <button className="finish-btn" onClick={this.handleAddMalt}>💾</button>
+                                            <button className="cancel-btn" onClick={() => this.setState({ showNewMaltRow: false })}>✖️</button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                            {malts.map((m: any) => (
+                                <TableRow key={m.id}>
+                                    <TableCell>{m.name}</TableCell>
+                                    <TableCell>{m.description}</TableCell>
+                                    <TableCell>{m.ebc}</TableCell>
+                                    <TableCell className="action-cell"><div className="action-buttons"><button className="cancel-btn">🗑️</button></div></TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </>
+        );
+    };
+
+    renderHopContent = () => {
+        const { hops } = this.props;
+        const { newHop, showNewHopRow } = this.state;
+
+        return (
+            <>
+                <div className="filter-container">
+                    <button className="finish-btn" onClick={() => this.setState({ showNewHopRow: true })}>➕</button>
+                </div>
+                <TableContainer className="FinishedBrewsTable" sx={{ maxHeight: 400 }}>
+                    <Table stickyHeader>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Name</TableCell>
+                                <TableCell>Alpha</TableCell>
+                                <TableCell>Typ</TableCell>
+                                <TableCell>Beschreibung</TableCell>
+                                <TableCell className="action-cell">Aktion</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {showNewHopRow && (
+                                <TableRow>
+                                    <TableCell><input className="table-edit-field" value={newHop.name || ""} onChange={e => this.setState({ newHop: { ...newHop, name: e.target.value } })} /></TableCell>
+                                    <TableCell><input className="table-edit-field" value={newHop.alpha || ""} onChange={e => this.setState({ newHop: { ...newHop, alpha: e.target.value } })} /></TableCell>
+                                    <TableCell><input className="table-edit-field" value={newHop.type || ""} onChange={e => this.setState({ newHop: { ...newHop, type: e.target.value } })} /></TableCell>
+                                    <TableCell><input className="table-edit-field" value={newHop.description || ""} onChange={e => this.setState({ newHop: { ...newHop, description: e.target.value } })} /></TableCell>
+                                    <TableCell className="action-cell">
+                                        <div className="action-buttons">
+                                            <button className="finish-btn" onClick={this.handleAddHop}>💾</button>
+                                            <button className="cancel-btn" onClick={() => this.setState({ showNewHopRow: false })}>✖️</button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                            {hops.map((h: any) => (
+                                <TableRow key={h.id}>
+                                    <TableCell>{h.name}</TableCell>
+                                    <TableCell>{h.alpha}</TableCell>
+                                    <TableCell>{h.type}</TableCell>
+                                    <TableCell>{h.description}</TableCell>
+                                    <TableCell className="action-cell"><div className="action-buttons"><button className="cancel-btn">🗑️</button></div></TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </>
+        );
+    };
+
+    renderYeastContent = () => {
+        const { yeasts } = this.props;
+        const { newYeast, showNewYeastRow } = this.state;
+
+        return (
+            <>
+                <div className="filter-container">
+                    <button className="finish-btn" onClick={() => this.setState({ showNewYeastRow: true })}>➕</button>
+                </div>
+                <TableContainer className="FinishedBrewsTable" sx={{ maxHeight: 400 }}>
+                    <Table stickyHeader>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Name</TableCell>
+                                <TableCell>Typ</TableCell>
+                                <TableCell>Temperatur</TableCell>
+                                <TableCell>EVG</TableCell>
+                                <TableCell className="action-cell">Aktion</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {showNewYeastRow && (
+                                <TableRow>
+                                    <TableCell><input className="table-edit-field" value={newYeast.name || ""} onChange={e => this.setState({ newYeast: { ...newYeast, name: e.target.value } })} /></TableCell>
+                                    <TableCell><input className="table-edit-field" value={newYeast.type || ""} onChange={e => this.setState({ newYeast: { ...newYeast, type: e.target.value } })} /></TableCell>
+                                    <TableCell><input className="table-edit-field" value={newYeast.temperature || ""} onChange={e => this.setState({ newYeast: { ...newYeast, temperature: e.target.value } })} /></TableCell>
+                                    <TableCell><input className="table-edit-field" value={newYeast.evg || ""} onChange={e => this.setState({ newYeast: { ...newYeast, evg: e.target.value } })} /></TableCell>
+                                    <TableCell className="action-cell">
+                                        <div className="action-buttons">
+                                            <button className="finish-btn" onClick={this.handleAddYeast}>💾</button>
+                                            <button className="cancel-btn" onClick={() => this.setState({ showNewYeastRow: false })}>✖️</button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                            {yeasts.map((y: any) => (
+                                <TableRow key={y.id}>
+                                    <TableCell>{y.name}</TableCell>
+                                    <TableCell>{y.type}</TableCell>
+                                    <TableCell>{y.temperature}</TableCell>
+                                    <TableCell>{y.evg}</TableCell>
+                                    <TableCell className="action-cell"><div className="action-buttons"><button className="cancel-btn">🗑️</button></div></TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </>
+        );
+    };
+
+    renderAdditionalIngredientsContent = () => {
+        const { additionalIngredients } = this.props;
+        const { newAdditionalIngredient, showNewAdditionalIngredientRow, additionalIngredientError } = this.state;
+
+        return (
+            <>
+                <div className="filter-container">
+                    <button className="finish-btn" onClick={() => this.setState({ showNewAdditionalIngredientRow: true, additionalIngredientError: "" })}>➕</button>
+                    <button className="finish-btn" onClick={() => this.props.getAdditionalIngredients(true)}>↻</button>
+                </div>
+                <TableContainer className="FinishedBrewsTable" sx={{ maxHeight: 400 }}>
+                    <Table stickyHeader>
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>Name</TableCell>
+                                <TableCell>Beschreibung</TableCell>
+                                <TableCell className="action-cell">Aktion</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {showNewAdditionalIngredientRow && (
+                                <TableRow>
+                                    <TableCell>
+                                        <input className="table-edit-field" value={newAdditionalIngredient.name || ""} onChange={e => this.setState({ newAdditionalIngredient: { ...newAdditionalIngredient, name: e.target.value }, additionalIngredientError: "" })} />
+                                        {additionalIngredientError && <div className="ingredient-error">{additionalIngredientError}</div>}
+                                    </TableCell>
+                                    <TableCell><input className="table-edit-field" value={newAdditionalIngredient.description || ""} onChange={e => this.setState({ newAdditionalIngredient: { ...newAdditionalIngredient, description: e.target.value } })} /></TableCell>
+                                    <TableCell className="action-cell">
+                                        <div className="action-buttons">
+                                            <button className="finish-btn" onClick={this.handleAddAdditionalIngredient}>💾</button>
+                                            <button className="cancel-btn" onClick={() => this.setState({ showNewAdditionalIngredientRow: false, additionalIngredientError: "" })}>✖️</button>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                            {additionalIngredients.map((aIngredient: AdditionalIngredient) => (
+                                <TableRow key={aIngredient.id}>
+                                    <TableCell>{aIngredient.name}</TableCell>
+                                    <TableCell>{aIngredient.description}</TableCell>
+                                    <TableCell className="action-cell"><div className="action-buttons"><button className="cancel-btn">🗑️</button></div></TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
+            </>
+        );
+    };
 
     render() {
-        const { malts, hops, yeasts, additionalIngredients } = this.props;
-        const {
-            newMalt, newHop, newYeast, newAdditionalIngredient,
-            showNewMaltRow, showNewHopRow, showNewYeastRow, showNewAdditionalIngredientRow, additionalIngredientError
-        } = this.state;
-
-
         return (
             <SimpleBar
                 ref={(ref) => { this.simpleBarRef = ref }}
@@ -142,331 +356,15 @@ class IngredientsFormPage extends React.Component<any, any> {
                 autoHide={false}
             >
                 <div className='containerIngredientsForm'>
-
-                    {/* ----------------------------------- MALZ ----------------------------------- */}
-                    <Accordion defaultExpanded sx={{ backgroundColor: COLOR_BREW_BG }}>
-                        <AccordionSummary
-                            sx={{ backgroundColor: COLOR_ACCENT, borderRadius: "10px 10px 0 0" }}
-                            expandIcon={<ExpandMoreIcon />}
-                        >
-                            <Typography>Malz</Typography>
-                        </AccordionSummary>
-
-                        <AccordionDetails sx={{ backgroundColor: COLOR_BREW_BG }}>
-                            <div className="filter-container">
-                                <button
-                                    className="finish-btn"
-                                    onClick={() => this.setState({ showNewMaltRow: true })}
-                                >
-                                    ➕
-                                </button>
-                            </div>
-
-                            <TableContainer className="FinishedBrewsTable" sx={{ maxHeight: 400 }}>
-
-                                <Table stickyHeader>
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell>Name</TableCell>
-                                            <TableCell>Beschreibung</TableCell>
-                                            <TableCell>EBC</TableCell>
-                                            <TableCell>Aktion</TableCell>
-                                        </TableRow>
-                                    </TableHead>
-
-                                    <TableBody>
-                                        {showNewMaltRow && (
-                                            <TableRow>
-                                                <TableCell>
-                                                    <input className="table-edit-field"
-                                                           value={newMalt.name || ""}
-                                                           onChange={e => this.setState({ newMalt: { ...newMalt, name: e.target.value } })}
-                                                    />
-                                                </TableCell>
-
-                                                <TableCell>
-                                                    <input className="table-edit-field"
-                                                           value={newMalt.description || ""}
-                                                           onChange={e => this.setState({ newMalt: { ...newMalt, description: e.target.value } })}
-                                                    />
-                                                </TableCell>
-
-                                                <TableCell>
-                                                    <input type="number" className="table-edit-field"
-                                                           value={newMalt.ebc || ""}
-                                                           onChange={e => this.setState({ newMalt: { ...newMalt, ebc: Number(e.target.value) } })}
-                                                    />
-                                                </TableCell>
-
-                                                <TableCell>
-                                                    <div className="action-buttons">
-                                                        <button className="finish-btn" onClick={this.handleAddMalt}>💾</button>
-                                                        <button className="cancel-btn" onClick={() => this.setState({ showNewMaltRow: false })}>✖️</button>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-
-                                        {malts.map((m: any) => (
-                                            <TableRow key={m.id}>
-                                                <TableCell>{m.name}</TableCell>
-                                                <TableCell>{m.description}</TableCell>
-                                                <TableCell>{m.ebc}</TableCell>
-                                                <TableCell>
-                                                    <div className="action-buttons">
-                                                        <button className="cancel-btn">🗑️</button>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                        </AccordionDetails>
-                    </Accordion>
-
-
-                    {/* ----------------------------------- HOPFEN ----------------------------------- */}
-                    <Accordion sx={{ backgroundColor: COLOR_BREW_BG }}>
-                        <AccordionSummary
-                            sx={{ backgroundColor: COLOR_ACCENT }}
-                            expandIcon={<ExpandMoreIcon />}
-                        >
-                            <Typography>Hopfen</Typography>
-                        </AccordionSummary>
-
-                        <AccordionDetails sx={{ backgroundColor: COLOR_BREW_BG }}>
-                            <button className="finish-btn" onClick={() => this.setState({ showNewHopRow: true })}>➕</button>
-
-                            <TableContainer className="FinishedBrewsTable" sx={{ maxHeight: 400 }}>
-                                <Table stickyHeader>
-
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell>Name</TableCell>
-                                            <TableCell>Alpha</TableCell>
-                                            <TableCell>Typ</TableCell>
-                                            <TableCell>Beschreibung</TableCell>
-                                            <TableCell>Aktion</TableCell>
-                                        </TableRow>
-                                    </TableHead>
-
-                                    <TableBody>
-                                        {showNewHopRow && (
-                                            <TableRow>
-                                                <TableCell>
-                                                    <input className="table-edit-field" value={newHop.name || ""}
-                                                           onChange={e => this.setState({ newHop: { ...newHop, name: e.target.value } })}
-                                                    />
-                                                </TableCell>
-
-                                                <TableCell>
-                                                    <input className="table-edit-field" value={newHop.alpha || ""}
-                                                           onChange={e => this.setState({ newHop: { ...newHop, alpha: e.target.value } })}
-                                                    />
-                                                </TableCell>
-
-                                                <TableCell>
-                                                    <input className="table-edit-field" value={newHop.type || ""}
-                                                           onChange={e => this.setState({ newHop: { ...newHop, type: e.target.value } })}
-                                                    />
-                                                </TableCell>
-
-                                                <TableCell>
-                                                    <input className="table-edit-field" value={newHop.description || ""}
-                                                           onChange={e => this.setState({ newHop: { ...newHop, description: e.target.value } })}
-                                                    />
-                                                </TableCell>
-
-                                                <TableCell>
-                                                    <div className="action-buttons">
-                                                        <button className="finish-btn" onClick={this.handleAddHop}>💾</button>
-                                                        <button className="cancel-btn" onClick={() => this.setState({ showNewHopRow: false })}>✖️</button>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-
-                                        {hops.map((h: any) => (
-                                            <TableRow key={h.id}>
-                                                <TableCell>{h.name}</TableCell>
-                                                <TableCell>{h.alpha}</TableCell>
-                                                <TableCell>{h.type}</TableCell>
-                                                <TableCell>{h.description}</TableCell>
-                                                <TableCell>
-                                                    <div className="action-buttons">
-                                                        <button className="cancel-btn">🗑️</button>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-
-                                </Table>
-                            </TableContainer>
-                        </AccordionDetails>
-                    </Accordion>
-
-
-                    {/* ----------------------------------- HEFE ----------------------------------- */}
-                    <Accordion sx={{ backgroundColor: COLOR_BREW_BG }}>
-                        <AccordionSummary
-                            sx={{ backgroundColor: COLOR_ACCENT, borderRadius: "0 0 10px 10px" }}
-                            expandIcon={<ExpandMoreIcon />}
-                        >
-                            <Typography>Hefe</Typography>
-                        </AccordionSummary>
-
-                        <AccordionDetails sx={{ backgroundColor: COLOR_BREW_BG }}>
-                            <button className="finish-btn" onClick={() => this.setState({ showNewYeastRow: true })}>➕</button>
-
-                            <TableContainer className="FinishedBrewsTable" sx={{ maxHeight: 400 }}>
-                                <Table stickyHeader>
-
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell>Name</TableCell>
-                                            <TableCell>Typ</TableCell>
-                                            <TableCell>Temperatur</TableCell>
-                                            <TableCell>EVG</TableCell>
-                                            <TableCell>Aktion</TableCell>
-                                        </TableRow>
-                                    </TableHead>
-
-                                    <TableBody>
-                                        {showNewYeastRow && (
-                                            <TableRow>
-                                                <TableCell>
-                                                    <input className="table-edit-field"
-                                                           value={newYeast.name || ""}
-                                                           onChange={e => this.setState({ newYeast: { ...newYeast, name: e.target.value } })}
-                                                    />
-                                                </TableCell>
-
-                                                <TableCell>
-                                                    <input className="table-edit-field"
-                                                           value={newYeast.type || ""}
-                                                           onChange={e => this.setState({ newYeast: { ...newYeast, type: e.target.value } })}
-                                                    />
-                                                </TableCell>
-
-                                                <TableCell>
-                                                    <input className="table-edit-field"
-                                                           value={newYeast.temperature || ""}
-                                                           onChange={e => this.setState({ newYeast: { ...newYeast, temperature: e.target.value } })}
-                                                    />
-                                                </TableCell>
-
-                                                <TableCell>
-                                                    <input className="table-edit-field"
-                                                           value={newYeast.evg || ""}
-                                                           onChange={e => this.setState({ newYeast: { ...newYeast, evg: e.target.value } })}
-                                                    />
-                                                </TableCell>
-
-                                                <TableCell>
-                                                    <div className="action-buttons">
-                                                        <button className="finish-btn" onClick={this.handleAddYeast}>💾</button>
-                                                        <button className="cancel-btn" onClick={() => this.setState({ showNewYeastRow: false })}>✖️</button>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-
-                                        {yeasts.map((y: any) => (
-                                            <TableRow key={y.id}>
-                                                <TableCell>{y.name}</TableCell>
-                                                <TableCell>{y.type}</TableCell>
-                                                <TableCell>{y.temperature}</TableCell>
-                                                <TableCell>{y.evg}</TableCell>
-                                                <TableCell>
-                                                    <div className="action-buttons">
-                                                        <button className="cancel-btn">🗑️</button>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-
-                                </Table>
-                            </TableContainer>
-                        </AccordionDetails>
-                    </Accordion>
-
-                    {/* ----------------------------------- WEITERE ZUTATEN ----------------------------------- */}
-                    <Accordion sx={{ backgroundColor: COLOR_BREW_BG }}>
-                        <AccordionSummary
-                            sx={{ backgroundColor: COLOR_ACCENT, borderRadius: "0 0 10px 10px" }}
-                            expandIcon={<ExpandMoreIcon />}
-                        >
-                            <Typography>Weitere Zutaten</Typography>
-                        </AccordionSummary>
-
-                        <AccordionDetails sx={{ backgroundColor: COLOR_BREW_BG }}>
-                            <div className="filter-container">
-                                <button className="finish-btn" onClick={() => this.setState({ showNewAdditionalIngredientRow: true, additionalIngredientError: "" })}>
-                                    Neue Zutat
-                                </button>
-                                <button className="finish-btn" onClick={() => this.props.getAdditionalIngredients(true)}>
-                                    Aktualisieren
-                                </button>
-                            </div>
-
-                            <TableContainer className="FinishedBrewsTable" sx={{ maxHeight: 400 }}>
-                                <Table stickyHeader>
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell>Name</TableCell>
-                                            <TableCell>Beschreibung</TableCell>
-                                            <TableCell>Aktion</TableCell>
-                                        </TableRow>
-                                    </TableHead>
-
-                                    <TableBody>
-                                        {showNewAdditionalIngredientRow && (
-                                            <TableRow>
-                                                <TableCell>
-                                                    <input className="table-edit-field"
-                                                           value={newAdditionalIngredient.name || ""}
-                                                           onChange={e => this.setState({ newAdditionalIngredient: { ...newAdditionalIngredient, name: e.target.value }, additionalIngredientError: "" })}
-                                                    />
-                                                    {additionalIngredientError && <div style={{ color: '#d32f2f', fontSize: '0.8rem' }}>{additionalIngredientError}</div>}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <input className="table-edit-field"
-                                                           value={newAdditionalIngredient.description || ""}
-                                                           onChange={e => this.setState({ newAdditionalIngredient: { ...newAdditionalIngredient, description: e.target.value } })}
-                                                    />
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="action-buttons">
-                                                        <button className="finish-btn" onClick={this.handleAddAdditionalIngredient}>Hinzufügen</button>
-                                                        <button className="cancel-btn" onClick={() => this.setState({ showNewAdditionalIngredientRow: false, additionalIngredientError: "" })}>✖️</button>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-
-                                        {additionalIngredients.map((aIngredient: AdditionalIngredient) => (
-                                            <TableRow key={aIngredient.id}>
-                                                <TableCell>{aIngredient.name}</TableCell>
-                                                <TableCell>{aIngredient.description}</TableCell>
-                                                <TableCell />
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                        </AccordionDetails>
-                    </Accordion>
-
+                    {this.renderIngredientAccordion("malz", "Malz", this.renderMaltContent())}
+                    {this.renderIngredientAccordion("hopfen", "Hopfen", this.renderHopContent())}
+                    {this.renderIngredientAccordion("hefe", "Hefe", this.renderYeastContent())}
+                    {this.renderIngredientAccordion("weitere-zutaten", "Weitere Zutaten", this.renderAdditionalIngredientsContent())}
                 </div>
             </SimpleBar>
         );
     }
 }
-
-
 
 /* ====================== Redux Mapper ====================== */
 
