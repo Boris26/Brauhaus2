@@ -2,6 +2,7 @@ import { MashingType } from '../enums/eMashingType';
 import { RestExecutionMode } from '../enums/eRestExecutionMode';
 import { HopTimeUnit } from '../enums/eHopTimeUnit';
 import { HopUsage } from '../enums/eHopUsage';
+import {AdditionalIngredientPhase, AdditionalIngredientTimeUnit} from "./Beer";
 export interface FermentationStepsDTO {
     type: string;
     temperature: number;
@@ -41,6 +42,17 @@ export interface FermentationMaturationDTO {
     yeast: YeastDTO[];
 }
 
+export interface AdditionalIngredientDTO {
+    id?: string | number;
+    name?: string;
+    quantity: number;
+    unit: string;
+    phase: AdditionalIngredientPhase;
+    time?: number;
+    timeUnit?: AdditionalIngredientTimeUnit;
+    description?: string;
+}
+
 export interface BeerDTO {
     id: string;
     name: string;
@@ -59,4 +71,5 @@ export interface BeerDTO {
     malts: MaltDTO[];
     wortBoiling: WortBoilingDTO | null
     fermentationMaturation: FermentationMaturationDTO | null;
+    additionalIngredients?: AdditionalIngredientDTO[];
 }
