@@ -49,6 +49,32 @@ export interface FermentationMaturation {
     yeast: Yeast[];
 }
 
+export enum AdditionalIngredientPhase {
+    MASH = "MASH",
+    BOIL = "BOIL",
+    WHIRLPOOL = "WHIRLPOOL",
+    FERMENTATION = "FERMENTATION",
+    MATURATION = "MATURATION",
+    PACKAGING = "PACKAGING"
+}
+
+export enum AdditionalIngredientTimeUnit {
+    MINUTES = "MINUTES",
+    HOURS = "HOURS",
+    DAYS = "DAYS"
+}
+
+export interface BeerAdditionalIngredient {
+    id?: string | number;
+    name?: string;
+    quantity: number;
+    unit: string;
+    phase: AdditionalIngredientPhase;
+    time?: number;
+    timeUnit?: AdditionalIngredientTimeUnit;
+    description?: string;
+}
+
 export interface Beer {
     id: string;
     name: string;
@@ -67,4 +93,5 @@ export interface Beer {
     malts: Malt[];
     wortBoiling: WortBoiling;
     fermentationMaturation: FermentationMaturation;
+    additionalIngredients?: BeerAdditionalIngredient[];
 }

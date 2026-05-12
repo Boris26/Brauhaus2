@@ -27,6 +27,8 @@ import './IngredientsFormPage.css';
 import { MaltsActions } from "../../actions/malt.actions";
 import { HopsActions } from "../../actions/hops.actions";
 import { YeastActions } from "../../actions/yeast.actions";
+import {AdditionalIngredientsActions} from "../../actions/additionalIngredients.actions";
+import {AdditionalIngredient} from "../../model/AdditionalIngredient";
 
 
 class IngredientsFormPage extends React.Component<any, any> {
@@ -42,7 +44,10 @@ class IngredientsFormPage extends React.Component<any, any> {
             newYeast: {},
             showNewMaltRow: false,
             showNewHopRow: false,
-            showNewYeastRow: false
+            showNewYeastRow: false,
+            newAdditionalIngredient: { name: "", description: "" },
+            showNewAdditionalIngredientRow: false,
+            additionalIngredientError: ""
         };
     }
 
@@ -50,6 +55,7 @@ class IngredientsFormPage extends React.Component<any, any> {
         this.props.getMalt(true);
         this.props.getHop(true);
         this.props.getYeast(true);
+        this.props.getAdditionalIngredients(true);
     }
 
     componentDidUpdate() {
@@ -98,12 +104,34 @@ class IngredientsFormPage extends React.Component<any, any> {
         }
     };
 
+    handleAddAdditionalIngredient = () => {
+        const { newAdditionalIngredient } = this.state;
+        const aTrimmedName = (newAdditionalIngredient.name || "").trim();
+
+        if (!aTrimmedName) {
+            // Name darf nicht leer sein, damit kein ungültiger API-Request gesendet wird.
+            this.setState({ additionalIngredientError: "Name ist erforderlich." });
+            return;
+        }
+
+        this.props.submitNewAdditionalIngredient({
+            name: aTrimmedName,
+            description: newAdditionalIngredient.description || ""
+        });
+
+        this.setState({
+            newAdditionalIngredient: { name: "", description: "" },
+            showNewAdditionalIngredientRow: false,
+            additionalIngredientError: ""
+        });
+    };
+
 
     render() {
-        const { malts, hops, yeasts } = this.props;
+        const { malts, hops, yeasts, additionalIngredients } = this.props;
         const {
-            newMalt, newHop, newYeast,
-            showNewMaltRow, showNewHopRow, showNewYeastRow
+            newMalt, newHop, newYeast, newAdditionalIngredient,
+            showNewMaltRow, showNewHopRow, showNewYeastRow, showNewAdditionalIngredientRow, additionalIngredientError
         } = this.state;
 
 
@@ -365,6 +393,73 @@ class IngredientsFormPage extends React.Component<any, any> {
                         </AccordionDetails>
                     </Accordion>
 
+                    {/* ----------------------------------- WEITERE ZUTATEN ----------------------------------- */}
+                    <Accordion sx={{ backgroundColor: COLOR_BREW_BG }}>
+                        <AccordionSummary
+                            sx={{ backgroundColor: COLOR_ACCENT, borderRadius: "0 0 10px 10px" }}
+                            expandIcon={<ExpandMoreIcon />}
+                        >
+                            <Typography>Weitere Zutaten</Typography>
+                        </AccordionSummary>
+
+                        <AccordionDetails sx={{ backgroundColor: COLOR_BREW_BG }}>
+                            <div className="filter-container">
+                                <button className="finish-btn" onClick={() => this.setState({ showNewAdditionalIngredientRow: true, additionalIngredientError: "" })}>
+                                    Neue Zutat
+                                </button>
+                                <button className="finish-btn" onClick={() => this.props.getAdditionalIngredients(true)}>
+                                    Aktualisieren
+                                </button>
+                            </div>
+
+                            <TableContainer className="FinishedBrewsTable" sx={{ maxHeight: 400 }}>
+                                <Table stickyHeader>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>Name</TableCell>
+                                            <TableCell>Beschreibung</TableCell>
+                                            <TableCell>Aktion</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+
+                                    <TableBody>
+                                        {showNewAdditionalIngredientRow && (
+                                            <TableRow>
+                                                <TableCell>
+                                                    <input className="table-edit-field"
+                                                           value={newAdditionalIngredient.name || ""}
+                                                           onChange={e => this.setState({ newAdditionalIngredient: { ...newAdditionalIngredient, name: e.target.value }, additionalIngredientError: "" })}
+                                                    />
+                                                    {additionalIngredientError && <div style={{ color: '#d32f2f', fontSize: '0.8rem' }}>{additionalIngredientError}</div>}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <input className="table-edit-field"
+                                                           value={newAdditionalIngredient.description || ""}
+                                                           onChange={e => this.setState({ newAdditionalIngredient: { ...newAdditionalIngredient, description: e.target.value } })}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <div className="action-buttons">
+                                                        <button className="finish-btn" onClick={this.handleAddAdditionalIngredient}>Hinzufügen</button>
+                                                        <button className="cancel-btn" onClick={() => this.setState({ showNewAdditionalIngredientRow: false, additionalIngredientError: "" })}>✖️</button>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+
+                                        {additionalIngredients.map((aIngredient: AdditionalIngredient) => (
+                                            <TableRow key={aIngredient.id}>
+                                                <TableCell>{aIngredient.name}</TableCell>
+                                                <TableCell>{aIngredient.description}</TableCell>
+                                                <TableCell />
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        </AccordionDetails>
+                    </Accordion>
+
                 </div>
             </SimpleBar>
         );
@@ -378,7 +473,8 @@ class IngredientsFormPage extends React.Component<any, any> {
 const mapStateToProps = (state: any) => ({
     malts: state.maltsReducer.malts || [],
     hops: state.hopsReducer.hops || [],
-    yeasts: state.yeastReducer.yeasts || []
+    yeasts: state.yeastReducer.yeasts || [],
+    additionalIngredients: state.additionalIngredientsReducer.additionalIngredients || []
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
@@ -387,7 +483,9 @@ const mapDispatchToProps = (dispatch: any) => ({
     getYeast: (isFetching: boolean) => dispatch(YeastActions.getYeasts(isFetching)),
     submitNewMalt: (malt: Malts) => dispatch(MaltsActions.submitNewMalt(malt)),
     submitNewHop: (hop: Hops) => dispatch(HopsActions.submitNewHop(hop)),
-    submitNewYeast: (yeast: Yeasts) => dispatch(YeastActions.submitNewYeast(yeast))
+    submitNewYeast: (yeast: Yeasts) => dispatch(YeastActions.submitNewYeast(yeast)),
+    getAdditionalIngredients: (isFetching: boolean) => dispatch(AdditionalIngredientsActions.getAdditionalIngredients(isFetching)),
+    submitNewAdditionalIngredient: (aIngredient: { name: string; description?: string }) => dispatch(AdditionalIngredientsActions.submitNewAdditionalIngredient(aIngredient))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(IngredientsFormPage);
