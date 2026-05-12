@@ -76,6 +76,7 @@ interface ProductionState {
     hopName: string
     showHopsDialog: boolean
     showErrorDialog: boolean
+    errorDialogContent: string
     showFinishDialog: boolean
     brewingFinished: boolean
     indexOfCurrentStep: number;
@@ -114,6 +115,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
             hopName: '',
             showHopsDialog: false,
             showErrorDialog: false,
+            errorDialogContent: '',
             showFinishDialog: false,
             brewingFinished: false,
             indexOfCurrentStep: 0,
@@ -303,7 +305,10 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         const {selectedBeer, sendBrewingData} = this.props;
         const result = mapBeerToBrewingData(selectedBeer);
         if (!result.ok || !result.brewingData) {
-            alert(result.error ?? 'Rezeptdaten sind für den Start ungültig.');
+            this.setState({
+                showErrorDialog: true,
+                errorDialogContent: result.error ?? 'Rezeptdaten sind für den Start ungültig.'
+            });
             return;
         }
         this.setState({brewingIsRunning: true});
@@ -554,8 +559,8 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         this.setState({showHopsDialog: false});
     }
 
-    confirmErrorDialog() {
-
+    confirmErrorDialog = () => {
+        this.setState({showErrorDialog: false, errorDialogContent: ''});
     }
 
 
@@ -593,9 +598,9 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     }
 
     renderErrorDialog() {
-        const {showErrorDialog} = this.state
+        const {showErrorDialog, errorDialogContent} = this.state
         const {isBackenAvailable} = this.props
-        const contentText = 'Die Brau-Steuerung ist nicht erreichbar\n\n' + isBackenAvailable.statusText
+        const contentText = errorDialogContent || ('Die Brau-Steuerung ist nicht erreichbar\n\n' + isBackenAvailable.statusText)
         return (<div>
             <ModalDialog onConfirm={this.confirmErrorDialog} type={DialogType.ERROR} open={showErrorDialog}
                          content={contentText} header={"Fehler!"}></ModalDialog>
