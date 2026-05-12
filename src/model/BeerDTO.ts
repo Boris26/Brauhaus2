@@ -1,5 +1,7 @@
 import { MashingType } from '../enums/eMashingType';
 import { RestExecutionMode } from '../enums/eRestExecutionMode';
+import { HopTimeUnit } from '../enums/eHopTimeUnit';
+import { HopUsage } from '../enums/eHopUsage';
 export interface FermentationStepsDTO {
     type: string;
     temperature: number;
@@ -18,6 +20,8 @@ export interface HopDTO {
     id: string;
     quantity: number;
     time: number;
+    usage?: HopUsage;
+    timeUnit?: HopTimeUnit;
 }
 
 export interface WortBoilingDTO {
