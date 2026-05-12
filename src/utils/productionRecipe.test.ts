@@ -61,6 +61,20 @@ describe('productionRecipe mapping', () => {
     expect(result.error).toContain('Zeitgesteuerte Rast');
   });
 
+
+  it('keeps imported CONFIRMATION_HOLD without time through production mapping', () => {
+    const result = mapBeerToBrewingData(makeBeer({ fermentation: [
+      { type: 'Einmaischen', temperature: 52, time: 10 },
+      { type: 'Dickmaische führen', temperature: 66, executionMode: RestExecutionMode.CONFIRMATION_HOLD },
+      { type: 'Abmaischen', temperature: 78, time: 10 }
+    ] }));
+
+    expect(result.ok).toBe(true);
+    const hold = result.brewingData?.Rasten.find((s) => s.type === 'Dickmaische führen');
+    expect(hold).toEqual(expect.objectContaining({ executionMode: RestExecutionMode.CONFIRMATION_HOLD }));
+    expect(hold).not.toHaveProperty('time');
+  });
+
   it('does not infer CONFIRMATION_HOLD from time=0', () => {
     const result = mapBeerToBrewingData(makeBeer({ fermentation: [
       { type: 'Einmaischen', temperature: 52, time: 10 },

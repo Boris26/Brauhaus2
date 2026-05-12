@@ -4,6 +4,7 @@ import {BeerDTO, HopDTO, MaltDTO, YeastDTO} from "../../model/BeerDTO";
 import { HopUsage } from "../../enums/eHopUsage";
 import { HopTimeUnit } from "../../enums/eHopTimeUnit";
 import { normalizeHopDto, updateHopUsage, validateHopDto } from "./hopDefaults";
+import { isValidExecutionMode, normalizeFermentationStep } from "./fermentationDefaults";
 import {BeerActions} from "../../actions/actions";
 import {connect} from "react-redux";
 import {isEqual} from "lodash";
@@ -135,7 +136,8 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 spargeVolume: importedBeer.spargeVolume || 0,
                 cookingTime: importedBeer.cookingTime || 0,
                 cookingTemperatur: importedBeer.cookingTemperatur || 0,
-                fermentationSteps: importedBeer.fermentation ? [...importedBeer.fermentation] : [],
+                // Importierte Rasten werden defensiv normalisiert (Altformat ohne executionMode => TIMED).
+                fermentationSteps: importedBeer.fermentation ? importedBeer.fermentation.map((step) => normalizeFermentationStep(step)) : [],
                 maltsDTO: importedBeer.malts ? importedBeer.malts.map(m => ({ id: m.id, name: m.name, quantity: m.quantity })) : [],
                 // Altrezepte ohne usage/timeUnit bleiben kompatibel und werden auf BOIL/MINUTES normiert.
                 hopsDTO: importedBeer.wortBoiling && importedBeer.wortBoiling.hops ? importedBeer.wortBoiling.hops.map(aHop => normalizeHopDto(aHop)) : [],
@@ -185,6 +187,8 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             const isFixed = this.fixedTypes.includes(step.type);
             if (isFixed) continue;
             const mode = this.getExecutionMode(step);
+            // Unbekannte Modi aus Importen nicht stillschweigend akzeptieren.
+            if (!isValidExecutionMode(mode)) return false;
             if (step.temperature === undefined || Number(step.temperature) <= 0) return false;
             if (mode === RestExecutionMode.TIMED && (step.time === undefined || Number(step.time) <= 0)) return false;
         }
