@@ -49,7 +49,31 @@ export const submitNewYeastEpic = (action$: any) =>
         )
     );
 
+export const deleteYeastByIdEpic = (action$: any) =>
+    action$.pipe(
+        ofType(YeastActions.ActionTypes.DELETE_YEAST_BY_ID),
+        mergeMap((aAction: any) =>
+            from(YeastRepository.deleteYeastById(aAction.payload.yeastId)).pipe(
+                mergeMap(() =>
+                    from([
+                        YeastActions.getYeasts(true)
+                    ])
+                ),
+                catchError((aError: Error) =>
+                    from([
+                        ApplicationActions.openErrorDialog(
+                            true,
+                            "Hefe fehler",
+                            "Delete Hefe: " + aError.message
+                        )
+                    ])
+                )
+            )
+        )
+    );
+
 export const yeastEpic =[
     getYeastsEpic,
-    submitNewYeastEpic
+    submitNewYeastEpic,
+    deleteYeastByIdEpic
 ]

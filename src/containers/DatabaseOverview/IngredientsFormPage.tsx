@@ -149,6 +149,22 @@ class IngredientsFormPage extends React.Component<any, any> {
         });
     };
 
+    handleDeleteMalt = (aMalt: Malts) => {
+        this.props.deleteMaltById(String(aMalt.id));
+    };
+
+    handleDeleteHop = (aHop: Hops) => {
+        this.props.deleteHopById(String(aHop.id));
+    };
+
+    handleDeleteYeast = (aYeast: Yeasts) => {
+        this.props.deleteYeastById(String(aYeast.id));
+    };
+
+    handleDeleteAdditionalIngredient = (aIngredient: AdditionalIngredient) => {
+        this.props.deleteAdditionalIngredientById(String(aIngredient.id));
+    };
+
     renderMaltContent = () => {
         const { malts } = this.props;
         const { newMalt, showNewMaltRow } = this.state;
@@ -187,7 +203,7 @@ class IngredientsFormPage extends React.Component<any, any> {
                                     <TableCell>{m.name}</TableCell>
                                     <TableCell>{m.description}</TableCell>
                                     <TableCell>{m.ebc}</TableCell>
-                                    <TableCell className="action-cell"><div className="action-buttons"><button className="cancel-btn">🗑️</button></div></TableCell>
+                                    <TableCell className="action-cell"><div className="action-buttons"><button className="cancel-btn" onClick={() => this.handleDeleteMalt(m)}>🗑️</button></div></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -238,7 +254,7 @@ class IngredientsFormPage extends React.Component<any, any> {
                                     <TableCell>{h.alpha}</TableCell>
                                     <TableCell>{h.type}</TableCell>
                                     <TableCell>{h.description}</TableCell>
-                                    <TableCell className="action-cell"><div className="action-buttons"><button className="cancel-btn">🗑️</button></div></TableCell>
+                                    <TableCell className="action-cell"><div className="action-buttons"><button className="cancel-btn" onClick={() => this.handleDeleteHop(h)}>🗑️</button></div></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -289,7 +305,7 @@ class IngredientsFormPage extends React.Component<any, any> {
                                     <TableCell>{y.type}</TableCell>
                                     <TableCell>{y.temperature}</TableCell>
                                     <TableCell>{y.evg}</TableCell>
-                                    <TableCell className="action-cell"><div className="action-buttons"><button className="cancel-btn">🗑️</button></div></TableCell>
+                                    <TableCell className="action-cell"><div className="action-buttons"><button className="cancel-btn" onClick={() => this.handleDeleteYeast(y)}>🗑️</button></div></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -338,7 +354,7 @@ class IngredientsFormPage extends React.Component<any, any> {
                                 <TableRow key={aIngredient.id}>
                                     <TableCell>{aIngredient.name}</TableCell>
                                     <TableCell>{aIngredient.description}</TableCell>
-                                    <TableCell className="action-cell"><div className="action-buttons"><button className="cancel-btn">🗑️</button></div></TableCell>
+                                    <TableCell className="action-cell"><div className="action-buttons"><button className="cancel-btn" onClick={() => this.handleDeleteAdditionalIngredient(aIngredient)}>🗑️</button></div></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -382,8 +398,12 @@ const mapDispatchToProps = (dispatch: any) => ({
     submitNewMalt: (malt: Malts) => dispatch(MaltsActions.submitNewMalt(malt)),
     submitNewHop: (hop: Hops) => dispatch(HopsActions.submitNewHop(hop)),
     submitNewYeast: (yeast: Yeasts) => dispatch(YeastActions.submitNewYeast(yeast)),
+    deleteMaltById: (aId: string) => dispatch(MaltsActions.deleteMaltsById(aId)),
+    deleteHopById: (aId: string) => dispatch(HopsActions.deleteHopById(aId)),
+    deleteYeastById: (aId: string) => dispatch(YeastActions.deleteYeastById(aId)),
     getAdditionalIngredients: (isFetching: boolean) => dispatch(AdditionalIngredientsActions.getAdditionalIngredients(isFetching)),
-    submitNewAdditionalIngredient: (aIngredient: { name: string; description?: string }) => dispatch(AdditionalIngredientsActions.submitNewAdditionalIngredient(aIngredient))
+    submitNewAdditionalIngredient: (aIngredient: { name: string; description?: string }) => dispatch(AdditionalIngredientsActions.submitNewAdditionalIngredient(aIngredient)),
+    deleteAdditionalIngredientById: (aId: string) => dispatch(AdditionalIngredientsActions.deleteAdditionalIngredientById(aId))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(IngredientsFormPage);

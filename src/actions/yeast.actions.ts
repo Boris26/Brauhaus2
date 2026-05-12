@@ -85,4 +85,11 @@ export namespace YeastActions{
             payload: {unknownYeasts}
         }
     }
+
+    export function deleteYeastById(aYeastId: string): DeleteYeastById {
+        return {
+            type: ActionTypes.DELETE_YEAST_BY_ID,
+            payload: {yeastId: aYeastId}
+        }
+    }
 }

@@ -50,7 +50,29 @@ export const submitNewAdditionalIngredientEpic = (action$: any) =>
         )
     );
 
+export const deleteAdditionalIngredientByIdEpic = (action$: any) =>
+    action$.pipe(
+        ofType(AdditionalIngredientsActions.ActionTypes.DELETE_ADDITIONAL_INGREDIENT_BY_ID),
+        mergeMap((aAction: any) =>
+            from(AdditionalIngredientRepository.deleteAdditionalIngredientById(aAction.payload.ingredientId)).pipe(
+                mergeMap(() => from([
+                    AdditionalIngredientsActions.getAdditionalIngredients(true)
+                ])),
+                catchError((aError: Error) =>
+                    from([
+                        ApplicationActions.openErrorDialog(
+                            true,
+                            "Weitere Zutaten Fehler",
+                            "Delete AdditionalIngredient: " + aError.message
+                        )
+                    ])
+                )
+            )
+        )
+    );
+
 export const additionalIngredientsEpic = [
     getAdditionalIngredientsEpic,
-    submitNewAdditionalIngredientEpic
+    submitNewAdditionalIngredientEpic,
+    deleteAdditionalIngredientByIdEpic
 ]

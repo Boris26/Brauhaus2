@@ -5,7 +5,8 @@ export namespace AdditionalIngredientsActions {
         GET_ADDITIONAL_INGREDIENTS = 'AdditionalIngredientsActions.GET_ADDITIONAL_INGREDIENTS',
         GET_ADDITIONAL_INGREDIENTS_SUCCESS = 'AdditionalIngredientsActions.GET_ADDITIONAL_INGREDIENTS_SUCCESS',
         SUBMIT_NEW_ADDITIONAL_INGREDIENT = 'AdditionalIngredientsActions.SUBMIT_NEW_ADDITIONAL_INGREDIENT',
-        SUBMIT_NEW_ADDITIONAL_INGREDIENT_SUCCESS = 'AdditionalIngredientsActions.SUBMIT_NEW_ADDITIONAL_INGREDIENT_SUCCESS'
+        SUBMIT_NEW_ADDITIONAL_INGREDIENT_SUCCESS = 'AdditionalIngredientsActions.SUBMIT_NEW_ADDITIONAL_INGREDIENT_SUCCESS',
+        DELETE_ADDITIONAL_INGREDIENT_BY_ID = 'AdditionalIngredientsActions.DELETE_ADDITIONAL_INGREDIENT_BY_ID'
     }
 
     export interface GetAdditionalIngredients {
@@ -33,11 +34,19 @@ export namespace AdditionalIngredientsActions {
         readonly type: ActionTypes.SUBMIT_NEW_ADDITIONAL_INGREDIENT_SUCCESS
     }
 
+    export interface DeleteAdditionalIngredientById {
+        readonly type: ActionTypes.DELETE_ADDITIONAL_INGREDIENT_BY_ID
+        payload: {
+            ingredientId: string
+        }
+    }
+
     export type AllAdditionalIngredientsActions =
         GetAdditionalIngredients |
         GetAdditionalIngredientsSuccess |
         SubmitNewAdditionalIngredient |
-        SubmitNewAdditionalIngredientSuccess
+        SubmitNewAdditionalIngredientSuccess |
+        DeleteAdditionalIngredientById
 
     export function getAdditionalIngredients(aIsFetching: boolean): GetAdditionalIngredients {
         return {
@@ -63,6 +72,13 @@ export namespace AdditionalIngredientsActions {
     export function submitNewAdditionalIngredientSuccess(): SubmitNewAdditionalIngredientSuccess {
         return {
             type: ActionTypes.SUBMIT_NEW_ADDITIONAL_INGREDIENT_SUCCESS
+        }
+    }
+
+    export function deleteAdditionalIngredientById(aId: string): DeleteAdditionalIngredientById {
+        return {
+            type: ActionTypes.DELETE_ADDITIONAL_INGREDIENT_BY_ID,
+            payload: {ingredientId: aId}
         }
     }
 }

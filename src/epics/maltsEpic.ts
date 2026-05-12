@@ -48,7 +48,31 @@ export const submitNewMaltEpic = (action$: any) =>
         )
     );
 
+export const deleteMaltByIdEpic = (action$: any) =>
+    action$.pipe(
+        ofType(MaltsActions.ActionTypes.DELETE_MALTS_BY_ID),
+        mergeMap((aAction: any) =>
+            from(MaltRepository.deleteMaltById(aAction.payload.maltsId)).pipe(
+                mergeMap(() =>
+                    from([
+                        MaltsActions.getMalts(true)
+                    ])
+                ),
+                catchError((aError: Error) =>
+                    from([
+                        ApplicationActions.openErrorDialog(
+                            true,
+                            "Malz fehler",
+                            "Delete Malz: " + aError.message
+                        )
+                    ])
+                )
+            )
+        )
+    );
+
 export const maltsEpic = [
     getMaltsEpic,
-    submitNewMaltEpic
+    submitNewMaltEpic,
+    deleteMaltByIdEpic
 ]

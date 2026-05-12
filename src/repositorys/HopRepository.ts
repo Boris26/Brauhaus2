@@ -11,4 +11,8 @@ export class HopRepository extends BaseRepository {
     static submitHop(aHop: Hops): Promise<void> {
         return this.post("hop", aHop);
     }
+
+    static deleteHopById(aId: string): Promise<void> {
+        return this.delete(`hop/${aId}`);
+    }
 }

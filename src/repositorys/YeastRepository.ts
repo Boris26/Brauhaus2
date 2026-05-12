@@ -11,4 +11,8 @@ export class YeastRepository extends BaseRepository {
     static submitYeast(aYeast: Yeasts): Promise<void> {
         return this.post("yeast", aYeast);
     }
+
+    static deleteYeastById(aId: string): Promise<void> {
+        return this.delete(`yeast/${aId}`);
+    }
 }
