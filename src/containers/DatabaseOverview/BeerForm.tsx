@@ -786,9 +786,6 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                                 </select>
                                             </td>
                                             <td>
-                                                <label style={{ display: "block", fontSize: 12 }}>
-                                                    {step.usage === HopUsage.DRY_HOP ? "Kontaktzeit" : "Kochzeit / Restkochzeit"}
-                                                </label>
                                                 <input
                                                     type="number"
                                                     name="time"
