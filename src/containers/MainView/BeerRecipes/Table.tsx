@@ -112,10 +112,12 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
         if (beers.length > 0) {
             const sortedData = [...beers].sort((a, b) => {
                 const {key, direction} = sortConfig;
-                if (a[key] < b[key]) {
+                const aValue = a[key] ?? '';
+                const bValue = b[key] ?? '';
+                if (aValue < bValue) {
                     return direction === 'asc' ? -1 : 1;
                 }
-                if (a[key] > b[key]) {
+                if (aValue > bValue) {
                     return direction === 'asc' ? 1 : -1;
                 }
                 return 0;
