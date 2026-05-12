@@ -25,3 +25,8 @@ yarn-error.log*
 /.idea/dataSources.xml
 /.idea/dataSources/
 /.idea/dataSources.local.xml
+/.idea/copilot.data.migration.agent.xml
+/.idea/copilot.data.migration.ask.xml
+/.idea/copilotDiffState.xml
+/.idea/copilot.data.migration.edit.xml
+/.idea/copilot.data.migration.ask2agent.xml
