@@ -14,6 +14,7 @@ export interface ProductionRecipeNormalizationResult {
 
 export function normalizeFermentationStepsForProduction(steps: FermentationSteps[]): ProductionRecipeNormalizationResult {
   const normalized: FermentationSteps[] = [];
+  const fixedProcessStepTypes = new Set(['Einmaischen', 'Abmaischen']);
 
   for (const step of steps ?? []) {
     const executionMode = step.executionMode ?? RestExecutionMode.TIMED;
@@ -26,6 +27,15 @@ export function normalizeFermentationStepsForProduction(steps: FermentationSteps
     if (executionMode === RestExecutionMode.CONFIRMATION_HOLD) {
       const { time, ...restWithoutTime } = step;
       normalized.push({ ...restWithoutTime, executionMode });
+      continue;
+    }
+
+    // Ein-/Abmaischen sind feste Prozessschritte und keine normalen zeitgesteuerten Rasten.
+    if (fixedProcessStepTypes.has(step.type)) {
+      normalized.push({
+        ...step,
+        executionMode
+      });
       continue;
     }
 
