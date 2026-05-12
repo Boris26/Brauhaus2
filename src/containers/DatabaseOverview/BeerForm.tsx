@@ -901,6 +901,8 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         if (file) {
             importBeer(file);
         }
+        // Damit auch dieselbe Datei erneut ein onChange-Event auslöst.
+        event.target.value = '';
     };
 
     render() {
