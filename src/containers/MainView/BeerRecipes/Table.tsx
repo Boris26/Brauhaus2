@@ -218,7 +218,7 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                                                     </span>
                                                 </button>
                                                 <button
-                                                    className="table-action-button cancel-brew-button"
+                                                    className="table-action-button delete-beer-button"
                                                     onClick={e => {
                                                         e.stopPropagation();
                                                         this.handleDeleteBeer(item);
