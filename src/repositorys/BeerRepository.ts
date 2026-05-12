@@ -20,8 +20,11 @@ export class BeerRepository extends BaseRepository {
         console.log(aFile)
         return this.postFile<any>("importbeer", aFile);
     }
-}
 
+    static async deleteBeer(aBeerId: string): Promise<void> {
+        return this.delete(`beer/${aBeerId}`);
+    }
+}
 
 
 

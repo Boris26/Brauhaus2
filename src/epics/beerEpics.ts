@@ -175,6 +175,25 @@ export const importBeerEpic = (aAction$: any) =>
         )
     );
 
+export const deleteBeerEpic = (action$: any) =>
+    action$.pipe(
+        ofType(BeerActions.ActionTypes.DELETE_BEER),
+        mergeMap((action: any) =>
+            from(BeerRepository.deleteBeer(action.payload.beerId)).pipe(
+                map(() => BeerActions.deleteBeerSuccess(action.payload.beerId)),
+                catchError((aError: Error) =>
+                    from([
+                        ApplicationActions.openErrorDialog(
+                            true,
+                            "Bier fehler",
+                            "Bier konnte nicht gelöscht werden: " + aError.message
+                        )
+                    ])
+                )
+            )
+        )
+    );
+
 
 export const beerEpics = [
   getBeersEpic,
@@ -185,5 +204,6 @@ export const beerEpics = [
   sendNewFinishedBeerEpic,
   generateFinishedBrewsPdfEpic,
   generateShoppingListPdfEpic,
-  importBeerEpic
+  importBeerEpic,
+  deleteBeerEpic
 ];

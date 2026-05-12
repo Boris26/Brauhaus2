@@ -76,6 +76,19 @@ const beerDataReducer = (
     case BeerActions.ActionTypes.SET_BEER_TO_BREW: {
       return { ...aState, beerToBrew: aAction.payload.beer };
     }
+    case BeerActions.ActionTypes.DELETE_BEER_SUCCESS: {
+      const beers = (aState.beers ?? []).filter(aBeer => aBeer.id !== aAction.payload.deletedBeerId);
+      const isSelectedBeerDeleted = aState.selectedBeer?.id === aAction.payload.deletedBeerId;
+      const isBeerToBrewDeleted = aState.beerToBrew?.id === aAction.payload.deletedBeerId;
+
+      // Falls das ausgewählte Rezept gelöscht wurde, wird eine sichere Auswahl gesetzt.
+      const selectedBeer = isSelectedBeerDeleted ? beers.at(-1) : aState.selectedBeer;
+
+      // Sicherheitsverhalten: Ein gelöschtes Rezept darf nicht weiter als "zu brauen" markiert bleiben.
+      const beerToBrew = isBeerToBrewDeleted ? undefined : aState.beerToBrew;
+
+      return { ...aState, beers, selectedBeer, beerToBrew };
+    }
 
     case BeerActions.ActionTypes.GET_FINISHED_BEERS: {
       return { ...aState, isFetching: aAction.payload.isFetching };
