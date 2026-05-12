@@ -16,6 +16,7 @@ export interface BeerTableProps {
     isPollingRunning?: boolean;
     exportShoppingListPdf: (beer: Beer) => void;
     selectedBeer: Beer;
+    deleteBeer: (aBeerId: string) => void;
 }
 
 
@@ -93,6 +94,17 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
 
 
     };
+
+    handleDeleteBeer = (aBeer: Beer) => {
+        const aBeerNamePart = aBeer.name ? ` „${aBeer.name}“` : '';
+        const aShouldDelete = window.confirm(`Möchtest du das Rezept${aBeerNamePart} wirklich löschen?`);
+
+        if (!aShouldDelete) {
+            return;
+        }
+
+        this.props.deleteBeer(aBeer.id);
+    }
 
     render() {
         const {beers, beerToBrew, isPollingRunning} = this.props;
@@ -203,6 +215,16 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                                                         {beerToBrew && beerToBrew.id === item.id ? '✖️' : '🍺'}
                                                     </span>
                                                 </button>
+                                                <button
+                                                    className="table-action-button cancel-brew-button"
+                                                    onClick={e => {
+                                                        e.stopPropagation();
+                                                        this.handleDeleteBeer(item);
+                                                    }}
+                                                    title="Rezept löschen"
+                                                >
+                                                    <span role="img" aria-label="Rezept löschen" style={{fontSize: '1.4rem', marginTop: '0.3rem'}}>🗑️</span>
+                                                </button>
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -229,6 +251,7 @@ const mapDispatchToProps = (dispatch: any) => ({
     setSelectedBeer: (beer: Beer) => dispatch(setSelectedBeer(beer)),
     setBeerToBrew: (beer: Beer | undefined ) => dispatch(BeerActions.setBeerToBrew(beer)),
     exportShoppingListPdf: (beer: Beer) => dispatch(BeerActions.generateShoppingListPdf(beer)),
+    deleteBeer: (aBeerId: string) => dispatch(BeerActions.deleteBeer(aBeerId)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(BeerTableComponent);

@@ -39,7 +39,9 @@ export namespace BeerActions {
         GENERATE_SHOPPING_LIST_PDF_FAILURE = 'BeerActions.GENERATE_SHOPPING_LIST_PDF_FAILURE',
         IMPORT_BEER = 'BeerActions.IMPORT_BEER',
         ADD_IMPORTED_BEER = 'BeerActions.ADD_IMPORTED_BEER',
-        UPDATE_RECIPE_SCALING = 'BeerActions.UPDATE_RECIPE_SCALING'
+        UPDATE_RECIPE_SCALING = 'BeerActions.UPDATE_RECIPE_SCALING',
+        DELETE_BEER = 'BeerActions.DELETE_BEER',
+        DELETE_BEER_SUCCESS = 'BeerActions.DELETE_BEER_SUCCESS'
 
     }
 
@@ -202,6 +204,20 @@ export namespace BeerActions {
         }
     }
 
+    export interface DeleteBeer {
+        readonly type: ActionTypes.DELETE_BEER
+        payload: {
+            beerId: string
+        }
+    }
+
+    export interface DeleteBeerSuccess {
+        readonly type: ActionTypes.DELETE_BEER_SUCCESS
+        payload: {
+            deletedBeerId: string
+        }
+    }
+
     export type AllBeerActions =
         SubmitBeer |
         SubmitBeerSuccess |
@@ -226,7 +242,9 @@ export namespace BeerActions {
         GenerateShoppingListPdfSuccess |
         GenerateShoppingListPdfFailure |
         AddImportedBeer |
-        UpdateRecipeScaling
+        UpdateRecipeScaling |
+        DeleteBeer |
+        DeleteBeerSuccess
 
 
     export function isSubmitSuccessful(aIsSuccessful: boolean, aMessage: string, aType: string): SetIsSubmitSuccessful {
@@ -394,6 +412,20 @@ export namespace BeerActions {
             payload: {
                 scalingValues: aScalingValues
             }
+        }
+    }
+
+    export function deleteBeer(aBeerId: string): DeleteBeer {
+        return {
+            type: ActionTypes.DELETE_BEER,
+            payload: {beerId: aBeerId}
+        }
+    }
+
+    export function deleteBeerSuccess(aDeletedBeerId: string): DeleteBeerSuccess {
+        return {
+            type: ActionTypes.DELETE_BEER_SUCCESS,
+            payload: {deletedBeerId: aDeletedBeerId}
         }
     }
 
