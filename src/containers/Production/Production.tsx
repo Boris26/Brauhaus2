@@ -15,6 +15,7 @@ import {ToggleState} from "../../enums/eToggleState";
 import {MashAgitatorStates} from "../../model/MashAgitator";
 import QuantityPicker from '../../components/Controlls/QuantityPicker/QuantityPicker';
 import {BrewingData} from "../../model/BrewingData";
+import {mapBeerToBrewingData} from "../../utils/productionRecipe";
 import {HeatingStates} from "../../model/BrewingStatus";
 import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState} from "../../model/brewingStatus.types";
 import {TimeFormatter} from "../../utils/TimeFormatter";
@@ -300,20 +301,13 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     }
     startBrewing = () => {
         const {selectedBeer, sendBrewingData} = this.props;
-        const ein = selectedBeer.fermentation.find(item => item.type === 'Einmaischen');
-        const aus = selectedBeer.fermentation.find(item => item.type === 'Abmaischen');
-
-        if (ein?.temperature !== undefined && aus?.temperature !== undefined) {
-            const brewingData: BrewingData = {
-                MashdownTemperature: aus.temperature,
-                MashupTemperature: ein.temperature,
-                CookingTemperature: selectedBeer.cookingTemperatur,
-                CookingTime: selectedBeer.cookingTime,
-                Rasten: selectedBeer.fermentation
-            }
-            this.setState({brewingIsRunning: true});
-            sendBrewingData(brewingData);
+        const result = mapBeerToBrewingData(selectedBeer);
+        if (!result.ok || !result.brewingData) {
+            alert(result.error ?? 'Rezeptdaten sind für den Start ungültig.');
+            return;
         }
+        this.setState({brewingIsRunning: true});
+        sendBrewingData(result.brewingData as BrewingData);
     }
 
     startPolling = () => {
