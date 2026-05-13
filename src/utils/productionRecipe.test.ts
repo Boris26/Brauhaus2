@@ -17,10 +17,11 @@ const makeBeer = (overrides?: Partial<Beer>): Beer => ({
   cookingTime: 60,
   cookingTemperatur: 100,
   fermentation: [
-    { type: 'Einmaischen', temperature: 52, time: 10 },
+    { type: 'Einmaischen', temperature: 52, time: 0 },
     { type: 'Rast 1', temperature: 64, time: 40, executionMode: RestExecutionMode.TIMED },
-    { type: 'Dickmaische führen', temperature: 66, time: 0, executionMode: RestExecutionMode.CONFIRMATION_HOLD },
-    { type: 'Abmaischen', temperature: 78, time: 10 }
+    { type: 'Dickmaische führen', temperature: 66, executionMode: RestExecutionMode.CONFIRMATION_HOLD },
+    { type: 'Kochen', temperature: 100, time: 60 },
+    { type: 'Abmaischen', temperature: 78, time: 0 }
   ],
   malts: [],
   wortBoiling: { totalTime: 60, hops: [] },
@@ -29,146 +30,96 @@ const makeBeer = (overrides?: Partial<Beer>): Beer => ({
 });
 
 describe('productionRecipe mapping', () => {
-  it('keeps executionMode in /Recipe/ payload and strips time for CONFIRMATION_HOLD', () => {
+  it('filters fixed process steps from Rasten and keeps top-level mash/cooking fields', () => {
     const result = mapBeerToBrewingData(makeBeer());
 
     expect(result.ok).toBe(true);
-    const decoction = result.brewingData?.Rasten.find((s) => s.type === 'Dickmaische führen');
-    expect(decoction).toEqual(expect.objectContaining({ executionMode: RestExecutionMode.CONFIRMATION_HOLD }));
-    expect(decoction).not.toHaveProperty('time');
+    expect(result.brewingData?.MashupTemperature).toBe(52);
+    expect(result.brewingData?.MashdownTemperature).toBe(78);
+    expect(result.brewingData?.CookingTime).toBe(60);
+    expect(result.brewingData?.CookingTemperature).toBe(100);
+
+    const stepTypes = result.brewingData?.Rasten.map((step) => step.type) ?? [];
+    expect(stepTypes).not.toContain('Einmaischen');
+    expect(stepTypes).not.toContain('Abmaischen');
+    expect(stepTypes).not.toContain('Kochen');
+    expect(stepTypes.filter((type) => type === 'Einmaischen')).toHaveLength(0);
+    expect(stepTypes.filter((type) => type === 'Abmaischen')).toHaveLength(0);
+    expect(stepTypes.filter((type) => type === 'Kochen')).toHaveLength(0);
   });
 
-  it('normalizes missing executionMode to TIMED for production payload', () => {
-    const result = mapBeerToBrewingData(makeBeer({ fermentation: [
-      { type: 'Einmaischen', temperature: 52, time: 10 },
-      { type: 'Rast 1', temperature: 64, time: 40 },
-      { type: 'Abmaischen', temperature: 78, time: 10 }
-    ] }));
+  it('keeps real timed rests with executionMode TIMED and requires time > 0', () => {
+    const validResult = mapBeerToBrewingData(makeBeer({
+      fermentation: [
+        { type: 'Einmaischen', temperature: 52, time: 0 },
+        { type: 'Rast 2', temperature: 67, time: 20, executionMode: RestExecutionMode.TIMED },
+        { type: 'Abmaischen', temperature: 78, time: 0 }
+      ]
+    }));
 
-    expect(result.ok).toBe(true);
-    const rest = result.brewingData?.Rasten.find((s) => s.type === 'Rast 1');
-    expect(rest).toEqual(expect.objectContaining({ executionMode: RestExecutionMode.TIMED, time: 40 }));
+    expect(validResult.ok).toBe(true);
+    expect(validResult.brewingData?.Rasten).toEqual([
+      expect.objectContaining({ type: 'Rast 2', executionMode: RestExecutionMode.TIMED, time: 20 })
+    ]);
+
+    const invalidResult = mapBeerToBrewingData(makeBeer({
+      fermentation: [
+        { type: 'Einmaischen', temperature: 52, time: 0 },
+        { type: 'Rast 2', temperature: 67, time: 0, executionMode: RestExecutionMode.TIMED },
+        { type: 'Abmaischen', temperature: 78, time: 0 }
+      ]
+    }));
+
+    expect(invalidResult.ok).toBe(false);
+    expect(invalidResult.error).toContain('Zeitgesteuerte Rast');
   });
 
-  it('blocks TIMED rest with missing/invalid time before sending', () => {
-    const result = mapBeerToBrewingData(makeBeer({ fermentation: [
-      { type: 'Einmaischen', temperature: 52, time: 10 },
-      { type: 'Rast 1', temperature: 64, executionMode: RestExecutionMode.TIMED },
-      { type: 'Abmaischen', temperature: 78, time: 10 }
-    ] }));
-
-    expect(result.ok).toBe(false);
-    expect(result.error).toContain('Zeitgesteuerte Rast');
-  });
-
-  it('allows Einmaischen with time=0 as fixed process step', () => {
+  it('keeps CONFIRMATION_HOLD steps in Rasten without requiring time', () => {
     const result = mapBeerToBrewingData(makeBeer({ fermentation: [
       { type: 'Einmaischen', temperature: 52, time: 0 },
-      { type: 'Rast 1', temperature: 64, time: 40, executionMode: RestExecutionMode.TIMED },
-      { type: 'Abmaischen', temperature: 78, time: 10 }
-    ] }));
-
-    expect(result.ok).toBe(true);
-    const mashIn = result.brewingData?.Rasten.find((s) => s.type === 'Einmaischen');
-    expect(mashIn).toEqual(expect.objectContaining({ executionMode: RestExecutionMode.TIMED, time: 0 }));
-  });
-
-  it('allows Einmaischen with missing time as fixed process step', () => {
-    const result = mapBeerToBrewingData(makeBeer({ fermentation: [
-      { type: 'Einmaischen', temperature: 52 },
-      { type: 'Rast 1', temperature: 64, time: 40, executionMode: RestExecutionMode.TIMED },
-      { type: 'Abmaischen', temperature: 78, time: 10 }
-    ] }));
-
-    expect(result.ok).toBe(true);
-    const mashIn = result.brewingData?.Rasten.find((s) => s.type === 'Einmaischen');
-    expect(mashIn).toEqual(expect.objectContaining({ executionMode: RestExecutionMode.TIMED }));
-    expect(mashIn?.time).toBeUndefined();
-  });
-
-  it('allows Abmaischen with time=0 as fixed process step', () => {
-    const result = mapBeerToBrewingData(makeBeer({ fermentation: [
-      { type: 'Einmaischen', temperature: 52, time: 10 },
-      { type: 'Rast 1', temperature: 64, time: 40, executionMode: RestExecutionMode.TIMED },
-      { type: 'Abmaischen', temperature: 78, time: 0 }
-    ] }));
-
-    expect(result.ok).toBe(true);
-    const mashOut = result.brewingData?.Rasten.find((s) => s.type === 'Abmaischen');
-    expect(mashOut).toEqual(expect.objectContaining({ executionMode: RestExecutionMode.TIMED, time: 0 }));
-  });
-
-  it('allows Abmaischen with missing time as fixed process step', () => {
-    const result = mapBeerToBrewingData(makeBeer({ fermentation: [
-      { type: 'Einmaischen', temperature: 52, time: 10 },
-      { type: 'Rast 1', temperature: 64, time: 40, executionMode: RestExecutionMode.TIMED },
-      { type: 'Abmaischen', temperature: 78 }
-    ] }));
-
-    expect(result.ok).toBe(true);
-    const mashOut = result.brewingData?.Rasten.find((s) => s.type === 'Abmaischen');
-    expect(mashOut).toEqual(expect.objectContaining({ executionMode: RestExecutionMode.TIMED }));
-    expect(mashOut?.time).toBeUndefined();
-  });
-
-  it('still fails when Einmaischen temperature is invalid', () => {
-    const result = mapBeerToBrewingData(makeBeer({ fermentation: [
-      { type: 'Einmaischen', temperature: 0 },
-      { type: 'Rast 1', temperature: 64, time: 40, executionMode: RestExecutionMode.TIMED },
-      { type: 'Abmaischen', temperature: 78, time: 10 }
-    ] }));
-
-    expect(result.ok).toBe(false);
-    expect(result.error).toContain('Einmaischen/Abmaischen Temperatur fehlt oder ist ungültig');
-  });
-
-  it('still fails when Abmaischen temperature is invalid', () => {
-    const result = mapBeerToBrewingData(makeBeer({ fermentation: [
-      { type: 'Einmaischen', temperature: 52, time: 10 },
-      { type: 'Rast 1', temperature: 64, time: 40, executionMode: RestExecutionMode.TIMED },
-      { type: 'Abmaischen', temperature: 0 }
-    ] }));
-
-    expect(result.ok).toBe(false);
-    expect(result.error).toContain('Einmaischen/Abmaischen Temperatur fehlt oder ist ungültig');
-  });
-
-
-  it('keeps imported CONFIRMATION_HOLD without time through production mapping', () => {
-    const result = mapBeerToBrewingData(makeBeer({ fermentation: [
-      { type: 'Einmaischen', temperature: 52, time: 10 },
       { type: 'Dickmaische führen', temperature: 66, executionMode: RestExecutionMode.CONFIRMATION_HOLD },
-      { type: 'Abmaischen', temperature: 78, time: 10 }
-    ] }));
-
-    expect(result.ok).toBe(true);
-    const hold = result.brewingData?.Rasten.find((s) => s.type === 'Dickmaische führen');
-    expect(hold).toEqual(expect.objectContaining({ executionMode: RestExecutionMode.CONFIRMATION_HOLD }));
-    expect(hold).not.toHaveProperty('time');
-  });
-
-  it('does not infer CONFIRMATION_HOLD from time=0', () => {
-    const result = mapBeerToBrewingData(makeBeer({ fermentation: [
-      { type: 'Einmaischen', temperature: 52, time: 10 },
-      { type: 'Rast 1', temperature: 64, time: 0 },
-      { type: 'Abmaischen', temperature: 78, time: 10 }
-    ] }));
-
-    expect(result.ok).toBe(false);
-    expect(result.error).toContain('Zeitgesteuerte Rast');
-  });
-
-  it('does not convert Einmaischen/Abmaischen to CONFIRMATION_HOLD', () => {
-    const result = mapBeerToBrewingData(makeBeer({ fermentation: [
-      { type: 'Einmaischen', temperature: 52 },
-      { type: 'Rast 1', temperature: 64, time: 40, executionMode: RestExecutionMode.TIMED },
       { type: 'Abmaischen', temperature: 78, time: 0 }
     ] }));
 
     expect(result.ok).toBe(true);
-    const mashIn = result.brewingData?.Rasten.find((s) => s.type === 'Einmaischen');
-    const mashOut = result.brewingData?.Rasten.find((s) => s.type === 'Abmaischen');
-    expect(mashIn?.executionMode).toBe(RestExecutionMode.TIMED);
-    expect(mashOut?.executionMode).toBe(RestExecutionMode.TIMED);
+    expect(result.brewingData?.Rasten).toEqual([
+      expect.objectContaining({ type: 'Dickmaische führen', executionMode: RestExecutionMode.CONFIRMATION_HOLD })
+    ]);
+    expect(result.brewingData?.Rasten[0]).not.toHaveProperty('time');
+  });
+
+  it('rejects missing or invalid cooking fields', () => {
+    const missingCookingTemp = mapBeerToBrewingData(makeBeer({ cookingTemperatur: null as unknown as number }));
+    expect(missingCookingTemp.ok).toBe(false);
+    expect(missingCookingTemp.error).toContain('Kochtemperatur');
+
+    const invalidCookingTime = mapBeerToBrewingData(makeBeer({ cookingTime: 0 }));
+    expect(invalidCookingTime.ok).toBe(false);
+    expect(invalidCookingTime.error).toContain('Kochzeit');
+  });
+
+  it('accepts the example contract shape with only real rests in Rasten', () => {
+    const result = mapBeerToBrewingData(makeBeer({
+      fermentation: [
+        { type: 'Einmaischen', temperature: 48, time: 0, executionMode: RestExecutionMode.TIMED },
+        { type: 'Rast1', temperature: 63, time: 40, executionMode: RestExecutionMode.TIMED },
+        { type: 'Dickmaische', temperature: 68, executionMode: RestExecutionMode.CONFIRMATION_HOLD },
+        { type: 'Abmaischen', temperature: 78, time: 0, executionMode: RestExecutionMode.TIMED }
+      ],
+      cookingTime: 70,
+      cookingTemperatur: 100
+    }));
+
+    expect(result.ok).toBe(true);
+    expect(result.brewingData).toEqual({
+      MashupTemperature: 48,
+      MashdownTemperature: 78,
+      CookingTime: 70,
+      CookingTemperature: 100,
+      Rasten: [
+        { type: 'Rast1', temperature: 63, time: 40, executionMode: RestExecutionMode.TIMED },
+        { type: 'Dickmaische', temperature: 68, executionMode: RestExecutionMode.CONFIRMATION_HOLD }
+      ]
+    });
   });
 });
