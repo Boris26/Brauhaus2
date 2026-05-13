@@ -14,7 +14,7 @@ export interface ProductionRecipeNormalizationResult {
 
 export function normalizeFermentationStepsForProduction(steps: FermentationSteps[]): ProductionRecipeNormalizationResult {
   const normalized: FermentationSteps[] = [];
-  const fixedProcessStepTypes = new Set(['Einmaischen', 'Abmaischen']);
+  const fixedProcessStepTypes = new Set(['Einmaischen', 'Abmaischen', 'Kochen']);
 
   for (const step of steps ?? []) {
     const executionMode = step.executionMode ?? RestExecutionMode.TIMED;
@@ -30,12 +30,8 @@ export function normalizeFermentationStepsForProduction(steps: FermentationSteps
       continue;
     }
 
-    // Ein-/Abmaischen sind feste Prozessschritte und keine normalen zeitgesteuerten Rasten.
+    // Ein-/Abmaischen/Kochen sind feste Prozessschritte über Top-Level-Felder und dürfen nicht als normale Rasten gesendet werden.
     if (fixedProcessStepTypes.has(step.type)) {
-      normalized.push({
-        ...step,
-        executionMode
-      });
       continue;
     }
 
@@ -59,6 +55,12 @@ export function mapBeerToBrewingData(beer: Beer): ProductionRecipeNormalizationR
 
   if (!ein || !aus || !isValidTemperature(ein.temperature) || !isValidTemperature(aus.temperature)) {
     return { ok: false, error: 'Einmaischen/Abmaischen Temperatur fehlt oder ist ungültig.' };
+  }
+  if (!isValidTimedDuration(beer.cookingTime)) {
+    return { ok: false, error: 'Kochzeit fehlt oder ist ungültig.' };
+  }
+  if (!isValidTemperature(beer.cookingTemperatur)) {
+    return { ok: false, error: 'Kochtemperatur fehlt oder ist ungültig.' };
   }
 
   const normalizedStepsResult = normalizeFermentationStepsForProduction(beer.fermentation);
