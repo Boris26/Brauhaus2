@@ -14,7 +14,7 @@ The PI control service owns brewing runtime state, machine commands, water fill 
 
 ## Important conflict notes
 
-- `GET /Available/` is the confirmed UI-facing availability endpoint.
+- `GET /Available/` is the confirmed UI-facing availability endpoint; `GET /` remains preserved as an existing root route.
 - `currentTime` is a Unix timestamp/status update time and may be `0`; UI must not use it as duration/countdown/progress.
 - `GET /WaterStatus` and `GET /WaterStatus/` are both supported and return an object `{ liters, openClose }` from startup.
 - UI should keep legacy status normalization until structured control status is guaranteed.
@@ -58,7 +58,7 @@ No images/cameras, preview selections, positions, lanes, or tracks were found. I
 
 ## UI-breaking changes
 
-Potentially breaking changes include renaming fields, changing enum values, changing timing units, changing temperature rounding/units, changing generated procedure names/phases/modes, changing confirmation command names, or making initial empty-string statuses impossible/possible in a different way without UI handling verification.
+Potentially breaking changes include renaming fields, changing enum values, changing timing units, changing temperature rounding/units, changing generated procedure names/phases/modes, changing confirmation command names, or changing initial/default status behavior without UI handling verification.
 
 ---
 
@@ -127,7 +127,7 @@ Before changing these fields or their semantics, verify backend and UI consumers
 
 - Recipe top-level fields: `MashupTemperature`, `MashdownTemperature`, `Rasten`, `CookingTime`, `CookingTemperature`.
 - Rest fields: `type`, `temperature`, `time`, `executionMode`.
-- Confirm names: `Iodine`, `Mashup`, `Cooking`, `Boiling`, `Decoction`. `Wait` is a status, not a valid confirmation command.
+- Confirm names: `Iodine`, `Mashup`, `Cooking`, `Boiling`, `Decoction`. `Wait` is a status, not a valid confirmation command; `POST /Confirm/Wait` is rejected with a controlled error.
 - Command names: `start`, `StartBrewing`, `StartCooking`, `TurnOn`, `TurnOff`, `Stop`, `Speed`, `Frq`, `FillWaterAutomatic`, `FillWaterManuel`, `FillWaterManual`, `FillWaterStop`, `AgitatorInterval`.
 - `AgitatorInterval` payload keys expected by mixer code.
 
@@ -157,7 +157,7 @@ Workflow/control endpoints:
 
 - `POST /Recipe/` accepts required recipe JSON and returns 201 empty body on success.
 - `POST /Command/<command>:<value>` dispatches workflow and hardware commands.
-- `POST /Confirm/<confirm>` sets workflow confirmation flags for concrete confirmations only (`Iodine`, `Mashup`, `Cooking`, `Boiling`, `Decoction`); `Wait` must not be sent as a confirm command.
+- `POST /Confirm/<confirm>` sets workflow confirmation flags for concrete confirmations only (`Iodine`, `Mashup`, `Cooking`, `Boiling`, `Decoction`); `Wait` must not be sent as a confirm command and `POST /Confirm/Wait` is rejected with a controlled error.
 - `PUT /Extended/<time>` extends active rest by positive integer minutes.
 - `POST /next` stops the current workflow step and proceeds.
 - `POST /jump/<step_name>` requests a jump to an exact procedure name.
@@ -228,7 +228,7 @@ No unique event ID or monotonic sequence number is generated for statuses. `curr
 - Recipe intake via `POST /Recipe/` returning HTTP 201.
 - Brewing start via `POST /Command/StartBrewing:""` returning HTTP 200.
 - Runtime status via `GET /Status/` returning structured `BrewingStatus` or legacy fallback fields.
-- Availability via `GET /Available/` returning HTTP 200 when reachable.
+- Availability via `GET /Available/` returning HTTP 200 when reachable; `GET /` remains preserved but is not the UI-facing availability route.
 - Temperature fallback via `GET /temperatur/0` returning a number.
 - Water status via `GET /WaterStatus` or `GET /WaterStatus/` returning `{ liters, openClose }`.
 - Hardware commands for water, heater, agitator speed, and agitator interval.
@@ -248,4 +248,4 @@ No unique event ID or monotonic sequence number is generated for statuses. `curr
 - `waiting.canConfirm` tells whether the UI should enable confirmation.
 - `hardware.heater === 'ON'` and `hardware.agitator === 'ON'` are meaningful for display.
 
-Needs verification in control repository: units, socket.io event shape, exact command grammar containing `:""`, trailing slash behavior, and whether `/temperatur/0` is the intended stable temperature read route.
+Needs verification in control repository: socket.io event shape, exact operational meaning of `WaterStatus.liters`, initial empty `Status` behavior, and whether `/temperatur/0` is the intended long-term stable temperature read route.

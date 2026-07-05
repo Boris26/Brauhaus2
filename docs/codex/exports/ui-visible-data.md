@@ -39,3 +39,9 @@ Visible runtime status fields:
 - Water display uses `WaterStatus.liters` from a `{ liters, openClose }` object and should fall back safely to `0` if a request fails.
 - Waiting dialogs may display generic waiting/status text, but confirmation actions are only enabled for concrete PI control confirmation types.
 - Production elapsed/target time displays use seconds-based status fields (`elapsedTime` and `currentStep.duration`), not `currentTime`.
+
+## Final PI-control visible data contract
+
+- Availability display is based on `GET /Available/`.
+- Water UI consumes object-shaped `WaterStatus`; failures fall back to `0` liters and `openClose: false`.
+- Confirmation UI can display waiting status text, but concrete confirm actions exist only for `Iodine`, `Mashup`, `Boiling`, `Cooking`, and `Decoction`.

@@ -33,6 +33,7 @@ Base URL: `BaseURL` (`http://192.168.178.37:5000/`), `CommandsURL`, and `Confirm
 
 | Method | Path | UI use | Success expectation |
 |---|---|---|---|
+| GET | `/` | Preserved PI root route, not UI-facing availability | `200`, empty JSON body |
 | GET | `temperatur/0` | Current temperature fallback | `200`, numeric body |
 | GET | `WaterStatus` | Water fill status | `200`, `{ liters, openClose }`; PI control also supports `WaterStatus/` |
 | GET | `Status/` | Runtime brewing status | `200`, structured or legacy status |
@@ -45,7 +46,7 @@ Base URL: `BaseURL` (`http://192.168.178.37:5000/`), `CommandsURL`, and `Confirm
 | POST | `Command/Speed:{speed}` | Set agitator speed | `200` |
 | POST | `Command/AgitatorInterval:""` | Set agitator interval body | `200` |
 | POST | `next` | Advance process step | `200` |
-| POST | `Confirm/{confirmState}` | Confirm concrete waiting state only (`Iodine`, `Mashup`, `Cooking`, `Boiling`, `Decoction`) | `200`; UI must not send `Confirm/Wait` |
+| POST | `Confirm/{confirmState}` | Confirm concrete waiting state only (`Iodine`, `Mashup`, `Cooking`, `Boiling`, `Decoction`) | `200`; UI must not send `Confirm/Wait`; PI rejects `Confirm/Wait` with a controlled error |
 
 ## Socket.io
 

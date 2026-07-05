@@ -112,3 +112,14 @@ The UI preserves `POST /Command/StartBrewing:""` and `POST /Command/AgitatorInte
 ## Recommended Documentation Updates
 
 This audit has been updated with the confirmed contracts. Keep `docs/codex/interfaces.md`, `docs/codex/data-flow.md`, `docs/codex/domain-model.md`, `docs/codex/external/control-context.md`, and `docs/codex/exports/ui-context-for-control.md` aligned when the PI control API changes.
+
+## Final Verification Addendum
+
+The final confirmed contract is now captured in `docs/codex/compatibility/final-ui-control-compatibility-report.md`.
+
+Additional final confirmations:
+
+- `GET /` remains preserved by PI control as an existing root route, but `/Available/` is the UI-facing availability endpoint.
+- PI control supports both no-value heater aliases (`/Command/TurnOn`, `/Command/TurnOff`) and preserved value-bearing aliases (`/Command/TurnOn:""`, `/Command/TurnOff:""`). The UI uses the no-value aliases.
+- PI control rejects `POST /Confirm/Wait` with a controlled error; UI does not generate this call.
+- The only remaining open items are `WaterStatus.liters` operational meaning, `/temperatur/0` long-term stability, socket.io `overheat` payload shape, and initial empty `Status` behavior.

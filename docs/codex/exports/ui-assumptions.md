@@ -23,3 +23,10 @@ Needs verification: sorting/order guarantees, update semantics, import response 
 
 Needs verification: exact endpoint slash/case conventions, units, command syntax, water fill state semantics, safety constraints.
 
+
+## Final PI-control assumptions
+
+- `/Available/` is the UI-facing PI availability endpoint; `/` remains a preserved PI root route.
+- `WaterStatus` success responses are objects and default to `{ liters: 0, openClose: false }`.
+- `Wait` is status-only; UI must only send concrete confirmations and PI rejects `/Confirm/Wait` with a controlled error.
+- `currentTime` is a Unix timestamp and is not a UI progress/duration/countdown field.

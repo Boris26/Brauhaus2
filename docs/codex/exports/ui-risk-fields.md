@@ -27,3 +27,8 @@ Changing these fields or meanings can break UI behavior.
 - `waiting.waitingFor` and `waiting.canConfirm`: confirm dialog and confirm endpoint.
 - Legacy fallback fields if structured fields are omitted: `Temperature`, `TargetTemperature`, `Type`, `WaitingStatus`, `HeatUpStatus`, `HeatingStates`, `AgitatorStatus`, `Name`, `index`.
 
+
+## Final PI-control risk notes
+
+- Do not change WaterStatus object shape, no-value heater commands, concrete confirmation values, or `currentTime` timestamp semantics without coordinated UI and PI updates.
+- Still-open verification items are `WaterStatus.liters` operational meaning, `/temperatur/0` long-term stability, socket.io `overheat` payload shape, and initial empty `Status` behavior.

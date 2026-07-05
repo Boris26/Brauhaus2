@@ -147,3 +147,7 @@ If a changed field, endpoint, enum, unit, or response shape is listed in this fi
 3. preserve backward compatibility where possible,
 4. update the related Codex documentation,
 5. mark unresolved cross-repo work as `Needs verification`.
+
+### Final UI ↔ PI control contract
+
+The final confirmed contract is documented in `docs/codex/compatibility/final-ui-control-compatibility-report.md`. Future changes must preserve: `GET /Available/` as the UI-facing availability route, `GET /` as an existing PI route, both `GET /WaterStatus` and `GET /WaterStatus/`, object-shaped WaterStatus defaults, no-value `TurnOn`/`TurnOff`, preserved value-bearing command aliases, concrete-only confirmations, rejection of `/Confirm/Wait`, and `currentTime` as a Unix timestamp rather than a UI duration/progress field.

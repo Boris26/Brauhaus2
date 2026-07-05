@@ -26,5 +26,11 @@
 - `waiting.canConfirm` tells whether the UI should enable confirmation.
 - `hardware.heater === 'ON'` and `hardware.agitator === 'ON'` are meaningful for display.
 
-Needs verification in control repository: units, socket.io event shape, exact command grammar containing `:""`, trailing slash behavior, and whether `/temperatur/0` is the intended stable temperature read route.
+Needs verification in control repository: exact operational meaning of `WaterStatus.liters`, long-term stability of `/temperatur/0`, socket.io `overheat` payload shape, and initial empty `Status` behavior.
 
+
+## Final confirmed PI-control contract
+
+See `docs/codex/compatibility/final-ui-control-compatibility-report.md` for the final UI ↔ PI control contract. Resolved items: `/Available/` is UI-facing availability while `/` remains preserved, both `/WaterStatus` and `/WaterStatus/` are supported with object/default shape, `TurnOn`/`TurnOff` no-value aliases are valid, value-bearing command aliases remain preserved, `Wait` is status-only and `/Confirm/Wait` is rejected by PI, and `currentTime` is a Unix timestamp not used for UI progress.
+
+Remaining open items: exact operational meaning of `WaterStatus.liters`, long-term stability of `/temperatur/0`, socket.io `overheat` payload shape, and initial empty `Status` behavior.
