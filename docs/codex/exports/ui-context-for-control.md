@@ -8,9 +8,9 @@
 - Runtime status via `GET /Status/` returning structured `BrewingStatus` or legacy fallback fields.
 - Availability via `GET /Available/` returning HTTP 200 when reachable.
 - Temperature fallback via `GET /temperatur/0` returning a number.
-- Water status via `GET /WaterStatus` returning `{ liters, openClose }`.
+- Water status via `GET /WaterStatus` returning `{ liters, openClose }`; control also supports `GET /WaterStatus/`.
 - Hardware commands for water, heater, agitator speed, and agitator interval.
-- Confirm endpoints for waiting states.
+- Confirm endpoints only for concrete waiting states: `Iodine`, `Mashup`, `Cooking`, `Boiling`, and `Decoction`. `Wait` may be displayed as a status but must not be sent as `/Confirm/Wait`.
 
 ## UI-owned behavior
 
@@ -19,7 +19,7 @@
 
 ## Control-owned behavior assumed by UI
 
-- Status fields use seconds for `elapsedTime`, `currentTime`, `currentStep.elapsedTime`, and `currentStep.remainingTime`.
+- Status timing fields `elapsedTime`, `currentStep.duration`, `currentStep.elapsedTime`, and `currentStep.remainingTime` use seconds. `currentTime` is a PI-control timestamp and must not be used by the UI as duration/countdown/progress unless the contract changes.
 - `process.state` reaches `FINISHED`, `ABORTED`, or `ERROR` to stop polling.
 - `currentStep.phase === COOKING` and `currentStep.elapsedTime` allow hop reminders.
 - `waiting.waitingFor` indicates the exact confirmation type required.

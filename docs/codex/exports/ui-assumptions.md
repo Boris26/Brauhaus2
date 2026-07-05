@@ -18,7 +18,7 @@ Needs verification: sorting/order guarantees, update semantics, import response 
 - `GET Status/` returns complete enough status every second.
 - Status terminal states stop polling.
 - `WaitingFor` enum values match UI mappings.
-- `WaterStatus.openClose !== true` means water filling is no longer open/running.
+- `WaterStatus` is an object `{ liters, openClose }`; `openClose !== true` means water filling is no longer open/running.
 - `Command/AgitatorInterval:""` accepts JSON body with `isTurnOn`, `rotationsPerMinute`, `runningTime`, `breakTime`, `isIntervalTurnOn`, `isHeatingAndStirringTurnOn`.
 
 Needs verification: exact endpoint slash/case conventions, units, command syntax, water fill state semantics, safety constraints.

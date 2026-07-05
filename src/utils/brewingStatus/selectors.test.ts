@@ -1,4 +1,4 @@
-import {getBrewingStatusLabel, getConfirmButtonLabel, shouldShowConfirmButton, shouldShowCountdown} from './selectors';
+import {getBrewingStatusLabel, getConfirmButtonLabel, getCountdownValue, shouldShowConfirmButton, shouldShowCountdown, shouldShowWaitingDialog} from './selectors';
 import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
 
 const makeStatus = (aPart: Partial<BrewingStatus>): BrewingStatus => ({
@@ -29,8 +29,19 @@ describe('brewing selectors', () => {
     expect(getBrewingStatusLabel(s)).toContain('Dickmaische');
   });
 
+  it('does not enable or show confirmation without a concrete confirm endpoint', () => {
+    const s = makeStatus({currentStep:{phase:ProcessPhase.RAST, mode:ProcessMode.WAITING}, waiting:{waitingFor:WaitingFor.USER_CONFIRMATION, canConfirm:true}});
+    expect(shouldShowConfirmButton(s)).toBe(false);
+    expect(shouldShowWaitingDialog(s)).toBe(false);
+  });
+
   it('countdown shown only for timer running', () => {
     expect(shouldShowCountdown(makeStatus({currentStep:{phase:ProcessPhase.RAST, mode:ProcessMode.TIMER_RUNNING}}))).toBe(true);
     expect(shouldShowCountdown(makeStatus({currentStep:{phase:ProcessPhase.RAST, mode:ProcessMode.HEATING}}))).toBe(false);
+  });
+
+  it('does not use currentTime as countdown fallback', () => {
+    expect(getCountdownValue(makeStatus({currentTime: 1710000000, currentStep:{phase:ProcessPhase.RAST, mode:ProcessMode.TIMER_RUNNING}}))).toBe(0);
+    expect(getCountdownValue(makeStatus({currentTime: 1710000000, currentStep:{phase:ProcessPhase.RAST, mode:ProcessMode.TIMER_RUNNING, remainingTime: 45}}))).toBe(45);
   });
 });

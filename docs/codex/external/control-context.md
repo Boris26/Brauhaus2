@@ -14,9 +14,9 @@ The PI control service owns brewing runtime state, machine commands, water fill 
 
 ## Important conflict notes
 
-- UI expects `GET /Available/`; PI control docs do not document this endpoint.
-- UI assumes `currentTime` like a seconds-based time field, but PI control docs describe it as a Unix timestamp and sometimes `0`.
-- UI expects `GET /WaterStatus` returning an object; PI docs document `/WaterStatus/` and say startup value can be an empty string.
+- `GET /Available/` is the confirmed UI-facing availability endpoint.
+- `currentTime` is a Unix timestamp/status update time and may be `0`; UI must not use it as duration/countdown/progress.
+- `GET /WaterStatus` and `GET /WaterStatus/` are both supported and return an object `{ liters, openClose }` from startup.
 - UI should keep legacy status normalization until structured control status is guaranteed.
 
 ---
@@ -77,7 +77,7 @@ See `docs/codex/interfaces.md` for full JSON shape. Important values:
 
 ## Water output
 
-`GET /WaterStatus/` returns `{'liters': <number>, 'openClose': <bool>}` after water code updates it. Initial value is an empty string. Exact `liters` semantics are **Needs verification**.
+`GET /WaterStatus` and `GET /WaterStatus/` return `{'liters': <number>, 'openClose': <bool>}`. The default/initial value is `{'liters': 0, 'openClose': false}`. Exact `liters` semantics beyond the UI display value are **Needs verification**.
 
 ## Temperature output
 
@@ -91,7 +91,7 @@ Status and update log lines contain local timestamp plus `Status: <json>` or `Up
 
 - No run/event/message IDs are generated.
 - No ordering guarantee exists beyond latest in-memory state and log write order.
-- `currentTime` uses `time.time()` during loops; logs use formatted local datetime.
+- `currentTime` uses `time.time()` during loops; logs use formatted local datetime. UI must not treat `currentTime` as a duration.
 
 ---
 
@@ -127,7 +127,7 @@ Before changing these fields or their semantics, verify backend and UI consumers
 
 - Recipe top-level fields: `MashupTemperature`, `MashdownTemperature`, `Rasten`, `CookingTime`, `CookingTemperature`.
 - Rest fields: `type`, `temperature`, `time`, `executionMode`.
-- Confirm names: `Iodine`, `Mashup`, `Cooking`, `Boiling`, `Decoction`.
+- Confirm names: `Iodine`, `Mashup`, `Cooking`, `Boiling`, `Decoction`. `Wait` is a status, not a valid confirmation command.
 - Command names: `start`, `StartBrewing`, `StartCooking`, `TurnOn`, `TurnOff`, `Stop`, `Speed`, `Frq`, `FillWaterAutomatic`, `FillWaterManuel`, `FillWaterManual`, `FillWaterStop`, `AgitatorInterval`.
 - `AgitatorInterval` payload keys expected by mixer code.
 
@@ -136,7 +136,7 @@ Before changing these fields or their semantics, verify backend and UI consumers
 - There are no external context files proving backend/UI tolerance for changes.
 - Status has no schema version.
 - Status has no event ID/sequence number.
-- Some initial endpoint values can be empty strings.
+- Water status initial value is now a stable object; any other initial empty values are Needs verification in PI control repository.
 - Several values are legacy German strings or misspelled names kept for compatibility.
 
 ---
@@ -149,7 +149,7 @@ Safe/read endpoints:
 
 - `GET /` returns HTTP 200 with empty JSON response body.
 - `GET /Status/` returns current status snapshot or `500 {"error": ...}`.
-- `GET /WaterStatus/` returns current water status or `500 {"error": ...}`.
+- `GET /WaterStatus` and `GET /WaterStatus/` return current water status object or `500 {"error": ...}`.
 - `GET /temperatur/<alter>` returns current temperature or `500 {"error": ...}`. The `alter` path segment is not used by the service.
 - `GET /type/` returns `main.getType()`, currently `ProcedureTyps.MASHING_IN`; semantics **Needs verification**.
 
@@ -157,7 +157,7 @@ Workflow/control endpoints:
 
 - `POST /Recipe/` accepts required recipe JSON and returns 201 empty body on success.
 - `POST /Command/<command>:<value>` dispatches workflow and hardware commands.
-- `POST /Confirm/<confirm>` sets workflow confirmation flags.
+- `POST /Confirm/<confirm>` sets workflow confirmation flags for concrete confirmations only (`Iodine`, `Mashup`, `Cooking`, `Boiling`, `Decoction`); `Wait` must not be sent as a confirm command.
 - `PUT /Extended/<time>` extends active rest by positive integer minutes.
 - `POST /next` stops the current workflow step and proceeds.
 - `POST /jump/<step_name>` requests a jump to an exact procedure name.
@@ -173,7 +173,7 @@ Disabled/legacy endpoints:
 `BrewingService` supports:
 
 - Workflow: `start`, `StartBrewing`, `StartCooking`.
-- Heater: `TurnOn`, `TurnOff`.
+- Heater: `TurnOn`, `TurnOff` no-value command aliases are supported; value-bearing forms such as `TurnOn:""` and `TurnOff:""` also remain supported.
 - Mixer: `Stop`, `Speed` integer, `Frq` integer, `AgitatorInterval` JSON object.
 - Water: `FillWaterAutomatic` positive float liters, `FillWaterManuel`, `FillWaterManual`, `FillWaterStop`.
 
@@ -210,7 +210,7 @@ Current status dict shape:
 }
 ```
 
-No unique event ID or monotonic sequence number is generated for statuses. `currentTime` is a Unix timestamp while a timed/heating step is actively updating, but may be 0 immediately after entering a step. `elapsedTime`, `duration`, and `remainingTime` are seconds in status payloads.
+No unique event ID or monotonic sequence number is generated for statuses. `currentTime` is a Unix timestamp while a timed/heating step is actively updating, but may be 0 immediately after entering a step. `elapsedTime`, `duration`, and `remainingTime` are seconds in status payloads; UI progress must use those explicit seconds-based fields instead of `currentTime`.
 
 ## Logs and diagnostics
 
@@ -230,9 +230,9 @@ No unique event ID or monotonic sequence number is generated for statuses. `curr
 - Runtime status via `GET /Status/` returning structured `BrewingStatus` or legacy fallback fields.
 - Availability via `GET /Available/` returning HTTP 200 when reachable.
 - Temperature fallback via `GET /temperatur/0` returning a number.
-- Water status via `GET /WaterStatus` returning `{ liters, openClose }`.
+- Water status via `GET /WaterStatus` or `GET /WaterStatus/` returning `{ liters, openClose }`.
 - Hardware commands for water, heater, agitator speed, and agitator interval.
-- Confirm endpoints for waiting states.
+- Confirm endpoints for concrete waiting states only; `Wait` is display/status text, not `/Confirm/Wait`.
 
 ## UI-owned behavior
 
@@ -241,7 +241,7 @@ No unique event ID or monotonic sequence number is generated for statuses. `curr
 
 ## Control-owned behavior assumed by UI
 
-- Status fields use seconds for `elapsedTime`, `currentTime`, `currentStep.elapsedTime`, and `currentStep.remainingTime`.
+- Status fields use seconds for `elapsedTime`, `currentStep.duration`, `currentStep.elapsedTime`, and `currentStep.remainingTime`; `currentTime` is a timestamp and must not be used as duration.
 - `process.state` reaches `FINISHED`, `ABORTED`, or `ERROR` to stop polling.
 - `currentStep.phase === COOKING` and `currentStep.elapsedTime` allow hop reminders.
 - `waiting.waitingFor` indicates the exact confirmation type required.

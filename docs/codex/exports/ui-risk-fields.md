@@ -21,7 +21,7 @@ Changing these fields or meanings can break UI behavior.
 - `currentStep.mode`: controls waiting dialog, progress, flames/heating status.
 - `currentStep.index`: process list highlighting.
 - `currentStep.elapsedTime`: hop reminders.
-- `currentStep.remainingTime` and `currentTime`: countdown/progress.
+- `currentStep.duration`, `currentStep.elapsedTime`, and `currentStep.remainingTime`: countdown/progress. `currentTime` is not a UI duration/progress field.
 - `temperature.current` and `temperature.target`: gauges/mobile values.
 - `hardware.heater` and `hardware.agitator`: flame and agitator display.
 - `waiting.waitingFor` and `waiting.canConfirm`: confirm dialog and confirm endpoint.

@@ -11,6 +11,20 @@ import {ConfirmStates} from "../enums/eConfirmStates";
 import {WaterStatus} from "../components/Controlls/WaterControll/WaterControl";
 import {BackendAvailable} from "../reducers/productionReducer";
 
+const DEFAULT_WATER_STATUS: WaterStatus = { liters: 0, openClose: false };
+
+const normalizeWaterStatus = (aValue: unknown): WaterStatus => {
+    if (typeof aValue === 'object' && aValue !== null) {
+        const raw = aValue as Partial<WaterStatus>;
+        const liters = Number(raw.liters);
+        return {
+            liters: Number.isFinite(liters) ? liters : DEFAULT_WATER_STATUS.liters,
+            openClose: typeof raw.openClose === 'boolean' ? raw.openClose : DEFAULT_WATER_STATUS.openClose,
+        };
+    }
+    return DEFAULT_WATER_STATUS;
+};
+
 export class ProductionRepository {
 
     static async getTemperature(): Promise<number> {
@@ -91,14 +105,14 @@ export class ProductionRepository {
         try {
             const response = await axios.get(BaseURL + 'WaterStatus');
             if (response.status == 200) {
-                const parsedWaterStatus: WaterStatus = JSON.parse((JSON.stringify(response.data)))
-                return parsedWaterStatus;
+                return normalizeWaterStatus(response.data);
 
             } else {
-                return { liters: 0, openClose: false };
+                return DEFAULT_WATER_STATUS;
             }
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);
+            return DEFAULT_WATER_STATUS;
         }
     }
 

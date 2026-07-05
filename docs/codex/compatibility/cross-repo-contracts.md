@@ -113,23 +113,23 @@ Until this is resolved, do not change finished-brew update behavior without chec
 ### Control availability endpoint
 
 - UI expects `GET /Available/`.
-- PI control documentation does not list `/Available/`.
+- PI control API now confirms `/Available/` as the UI-facing availability endpoint.
 
-Until this is resolved, do not remove or rename availability checks and verify deployed control behavior.
+Do not remove or rename availability checks without a coordinated UI/control change.
 
 ### Status `currentTime`
 
-- UI documentation says `currentTime` behaves like seconds.
 - PI control documentation says `currentTime` is a Unix timestamp during active updates and may be `0`.
+- UI code must not use `currentTime` as elapsed duration, countdown, or progress denominator.
 
-Do not change time fields without checking UI progress/countdown code.
+Use `elapsedTime`, `currentStep.duration`, and `currentStep.remainingTime` for process timing UI unless a new explicit API field is agreed.
 
 ### `WaterStatus`
 
 - UI expects `{ liters, openClose }`.
-- PI control documentation says initial value can be an empty string.
+- PI control API now guarantees an object shape from startup and supports both `/WaterStatus` and `/WaterStatus/`.
 
-UI must tolerate startup/empty status, or the control app must guarantee a stable object. Do not change this silently.
+UI should still keep defensive handling for null, undefined, or failed HTTP responses.
 
 ### `POST /beer` response
 

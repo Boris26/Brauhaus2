@@ -11,8 +11,10 @@ export const isProcessFinished = (aStatus?: BrewingStatus) => aStatus?.process.s
 export const isProcessAborted = (aStatus?: BrewingStatus) => aStatus?.process.state === ProcessState.ABORTED;
 export const isProcessInError = (aStatus?: BrewingStatus) => aStatus?.process.state === ProcessState.ERROR;
 export const isStepWaiting = (aStatus?: BrewingStatus) => aStatus?.currentStep.mode === ProcessMode.WAITING;
-export const shouldShowWaitingDialog = (aStatus?: BrewingStatus) => !!aStatus && isProcessActive(aStatus) && isStepWaiting(aStatus);
-export const shouldShowConfirmButton = (aStatus?: BrewingStatus) => !!aStatus && isStepWaiting(aStatus) && aStatus.waiting.canConfirm && aStatus.waiting.waitingFor !== WaitingFor.NONE;
+const CONCRETE_CONFIRMATION_WAITING_REASONS = [WaitingFor.IODINE_TEST, WaitingFor.MASHING_IN_CONFIRMATION, WaitingFor.BOILING_CONFIRMATION, WaitingFor.COOKING_CONFIRMATION, WaitingFor.DECOCTION_CONFIRMATION];
+export const hasConcreteConfirmation = (aStatus?: BrewingStatus) => !!aStatus && CONCRETE_CONFIRMATION_WAITING_REASONS.includes(aStatus.waiting.waitingFor);
+export const shouldShowWaitingDialog = (aStatus?: BrewingStatus) => !!aStatus && isProcessActive(aStatus) && isStepWaiting(aStatus) && hasConcreteConfirmation(aStatus);
+export const shouldShowConfirmButton = (aStatus?: BrewingStatus) => !!aStatus && isStepWaiting(aStatus) && aStatus.waiting.canConfirm && hasConcreteConfirmation(aStatus);
 export const getConfirmButtonLabel = (aStatus?: BrewingStatus) => {
     switch (aStatus?.waiting.waitingFor) {
         case WaitingFor.IODINE_TEST: return 'Iodine bestätigen';
@@ -47,7 +49,7 @@ export const getBrewingStatusLabel = (aStatus?: BrewingStatus) => {
     return 'Brauprozess aktiv';
 };
 export const shouldShowCountdown = (aStatus?: BrewingStatus) => aStatus?.currentStep.mode === ProcessMode.TIMER_RUNNING;
-export const getCountdownValue = (aStatus?: BrewingStatus) => aStatus?.currentStep.remainingTime ?? aStatus?.currentTime ?? 0;
+export const getCountdownValue = (aStatus?: BrewingStatus) => aStatus?.currentStep.remainingTime ?? 0;
 export const shouldShowTemperatureStatus = (aStatus?: BrewingStatus) => !!aStatus && isProcessActive(aStatus) && [ProcessMode.HEATING, ProcessMode.HOLDING, ProcessMode.TIMER_RUNNING, ProcessMode.WAITING].includes(aStatus.currentStep.mode);
 export const getCurrentStepIdentity = (aStatus?: BrewingStatus) => `${aStatus?.currentStep.index ?? -1}|${aStatus?.currentStep.phase ?? ProcessPhase.NONE}|${aStatus?.currentStep.mode ?? ProcessMode.NONE}|${aStatus?.currentStep.name ?? ''}`;
 export const getStatusChangeKey = (aStatus?: BrewingStatus) => `${aStatus?.process.state ?? ProcessState.IDLE}|${getCurrentStepIdentity(aStatus)}|${aStatus?.waiting.waitingFor ?? WaitingFor.NONE}`;

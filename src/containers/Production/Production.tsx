@@ -357,17 +357,18 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     renderInfo() {
         const {brewingStatus} = this.props;
         let elapsedTime = '----';
-        let currentTime = '----';
+        let targetTime = '----';
        if(!isNaN(brewingStatus?.elapsedTime))
        {
            elapsedTime = this.formatTime(brewingStatus?.elapsedTime);
        }
-       if(!isNaN(brewingStatus?.currentTime))
+       const stepDuration = Number(brewingStatus?.currentStep?.duration);
+       if(Number.isFinite(stepDuration) && stepDuration > 0)
        {
-           currentTime = this.formatTime(brewingStatus?.currentTime);
+           targetTime = this.formatTime(stepDuration);
        }
 
-        if(currentTime )
+        if(targetTime )
         return (
             <div className="Info">
                 <div className="timeContainer">
@@ -379,7 +380,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                 <div className="timeContainer">
                     <div className="frame">
                         <span className="label">Zielzeit</span>
-                        <span className="time">{currentTime}</span>
+                        <span className="time">{targetTime}</span>
                     </div>
                 </div>
                 <div>
@@ -526,7 +527,8 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                         </div>
                     );
                 }
-                const finishedInPercent = Math.round(brewingStatus?.elapsedTime * 100 / brewingStatus?.currentTime);
+                const stepDuration = Number(brewingStatus?.currentStep?.duration);
+                const finishedInPercent = stepDuration > 0 ? Math.min(100, Math.max(0, Math.round((brewingStatus?.elapsedTime ?? 0) * 100 / stepDuration))) : 0;
 
 
                 const progressBarStyle = {
