@@ -323,7 +323,6 @@ class IngredientsFormPage extends React.Component<any, any> {
             <>
                 <div className="filter-container">
                     <button className="finish-btn" onClick={() => this.setState({ showNewAdditionalIngredientRow: true, additionalIngredientError: "" })}>➕</button>
-                    <button className="finish-btn" onClick={() => this.props.getAdditionalIngredients(true)}>↻</button>
                 </div>
                 <TableContainer className="FinishedBrewsTable" sx={{ maxHeight: 400 }}>
                     <Table stickyHeader>

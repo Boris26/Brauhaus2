@@ -303,7 +303,9 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     }
     startBrewing = () => {
         const {selectedBeer, sendBrewingData} = this.props;
+        console.log('Starting brewing with data:', sendBrewingData);
         const result = mapBeerToBrewingData(selectedBeer);
+        console.log('Starting brewing with data:', result);
         if (!result.ok || !result.brewingData) {
             this.setState({
                 showErrorDialog: true,
@@ -312,7 +314,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
             return;
         }
         this.setState({brewingIsRunning: true});
-        sendBrewingData(result.brewingData as BrewingData);
+        console.log('Starting brewing with data:', result.brewingData);
     }
 
     startPolling = () => {
@@ -465,7 +467,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
 
                 </div>
                 <div className="startBtnDiv">
-                    <button className="startBtn" disabled={isUndefined(selectedBeer) || !this.props.isBackenAvailable} onClick={this.startBrewing}>Start</button>
+                    <button className="startBtn" disabled={isUndefined(selectedBeer) } onClick={this.startBrewing}>Start</button>
                 </div>
                 <div className="startPollingBtnDiv">
                     <button className="startPollingBtn" onClick={this.startBrewing}>
