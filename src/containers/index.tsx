@@ -42,9 +42,9 @@ class Index extends React.Component<indexMainProps> {
         }
     }
 
-    getConfirmStateForWaiting = () => {
+    getConfirmStateForWaiting = (): ConfirmStates | undefined => {
         const waitingFor = this.props.brewingStatus?.waiting?.waitingFor;
-        // Backend liefert den konkreten Wait-Grund, UI mapped auf passenden Confirm-Endpunkt.
+        // Wait is a status, not a confirm command. Only concrete wait reasons may send Confirm endpoints.
         switch (waitingFor) {
             case WaitingFor.IODINE_TEST:
                 return ConfirmStates.IODINE;
@@ -57,13 +57,18 @@ class Index extends React.Component<indexMainProps> {
             case WaitingFor.DECOCTION_CONFIRMATION:
                 return ConfirmStates.DECOCTION;
             default:
-                return ConfirmStates.WAITING;
+                return undefined;
         }
     }
 
     confirmDialog = () => {
         const {confirm} = this.props;
-        confirm(this.getConfirmStateForWaiting());
+        const confirmState = this.getConfirmStateForWaiting();
+        if (confirmState === undefined) {
+            console.warn('Waiting state has no concrete confirmation command; no Confirm endpoint will be called.');
+            return;
+        }
+        confirm(confirmState);
     }
 
     getDialogMessage() {

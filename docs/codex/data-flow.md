@@ -40,19 +40,19 @@ Needs verification: backend ordering of `GET beers`, because the UI treats the l
 
 - User selects liters and toggles water switch.
 - UI posts `Command/FillWaterAutomatic:{liters}`.
-- On success, an RxJS interval polls `GET WaterStatus` every 1000 ms and stores `{ liters, openClose }`.
+- On success, an RxJS interval polls `GET WaterStatus` every 1000 ms and stores normalized `{ liters, openClose }`; the confirmed control API also supports `GET WaterStatus/` and always returns an object shape.
 - Needs verification: current `takeUntil` code uses a one-shot `from(ProductionRepository.getWaterStatus())`; confirm intended continuous stop behavior.
 
 ## Confirm/waiting flow
 
 - Normalized status fields `process.state`, `currentStep.mode`, `waiting.waitingFor`, and `waiting.canConfirm` determine whether a modal appears.
-- UI maps waiting reasons to confirm endpoints:
+- UI maps only concrete waiting reasons to confirm endpoints:
   - `IODINE_TEST` -> `Confirm/Iodine`
   - `MASHING_IN_CONFIRMATION` -> `Confirm/Mashup`
   - `BOILING_CONFIRMATION` -> `Confirm/Boiling`
   - `COOKING_CONFIRMATION` -> `Confirm/Cooking`
   - `DECOCTION_CONFIRMATION` -> `Confirm/Decoction`
-  - default -> `Confirm/Wait`
+  - `USER_CONFIRMATION`, `NONE`, or unknown waiting reasons do not send a confirm command. `Wait` may be displayed as a status, but the UI must not call `Confirm/Wait`.
 
 ## Hop reminder flow
 

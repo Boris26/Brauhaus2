@@ -2,6 +2,7 @@ import axios from 'axios';
 import { ProductionRepository } from './ProductionRepository';
 import { ConfirmStates } from '../enums/eConfirmStates';
 import { MashAgitatorStates } from '../model/MashAgitator';
+import { ToggleState } from '../enums/eToggleState';
 
 jest.mock('axios');
 
@@ -14,10 +15,11 @@ describe('ProductionRepository API method/path usage', () => {
     mockedAxios.post.mockResolvedValue({ status: 200, data: {}, statusText: 'OK' } as any);
   });
 
-  it('uses POST for confirm actions', async () => {
-    await ProductionRepository.confirm(ConfirmStates.WAITING);
+  it('uses POST only for concrete confirm actions', async () => {
+    await ProductionRepository.confirm(ConfirmStates.IODINE);
 
-    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Confirm/Wait'));
+    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Confirm/Iodine'));
+    expect(mockedAxios.post).not.toHaveBeenCalledWith(expect.stringContaining('/Confirm/Wait'));
     expect(mockedAxios.get).not.toHaveBeenCalledWith(expect.stringContaining('/Confirm/'));
   });
 
@@ -36,6 +38,16 @@ describe('ProductionRepository API method/path usage', () => {
     expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Command/Speed:22'));
   });
 
+  it('keeps heater commands as no-value aliases', async () => {
+    await ProductionRepository.toggleHeater(ToggleState.ON);
+    await ProductionRepository.toggleHeater(ToggleState.OFF);
+
+    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Command/TurnOn'));
+    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Command/TurnOff'));
+    expect(mockedAxios.post).not.toHaveBeenCalledWith(expect.stringContaining('/Command/TurnOn:""'));
+    expect(mockedAxios.post).not.toHaveBeenCalledWith(expect.stringContaining('/Command/TurnOff:""'));
+  });
+
   it('uses POST /next for next procedure step', async () => {
     await ProductionRepository.nextProcedureStep();
 
@@ -44,6 +56,7 @@ describe('ProductionRepository API method/path usage', () => {
   });
 
   it('keeps safe reads on GET', async () => {
+    mockedAxios.get.mockResolvedValueOnce({ status: 200, data: { liters: 3, openClose: true }, statusText: 'OK' } as any);
     await ProductionRepository.getWaterStatus();
     await ProductionRepository.getBrewingStatus();
     await ProductionRepository.checkIsBackendAvailable();
@@ -117,5 +130,13 @@ describe('ProductionRepository API method/path usage', () => {
       state
     );
     expect(result).toBe(true);
+  });
+
+  it('normalizes unavailable WaterStatus responses to the safe default object', async () => {
+    mockedAxios.get.mockResolvedValueOnce({ status: 200, data: '', statusText: 'OK' } as any);
+    await expect(ProductionRepository.getWaterStatus()).resolves.toEqual({ liters: 0, openClose: false });
+
+    mockedAxios.get.mockRejectedValueOnce(new Error('offline'));
+    await expect(ProductionRepository.getWaterStatus()).resolves.toEqual({ liters: 0, openClose: false });
   });
 });

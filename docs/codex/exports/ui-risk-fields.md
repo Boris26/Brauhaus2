@@ -21,9 +21,14 @@ Changing these fields or meanings can break UI behavior.
 - `currentStep.mode`: controls waiting dialog, progress, flames/heating status.
 - `currentStep.index`: process list highlighting.
 - `currentStep.elapsedTime`: hop reminders.
-- `currentStep.remainingTime` and `currentTime`: countdown/progress.
+- `currentStep.duration`, `currentStep.elapsedTime`, and `currentStep.remainingTime`: countdown/progress. `currentTime` is not a UI duration/progress field.
 - `temperature.current` and `temperature.target`: gauges/mobile values.
 - `hardware.heater` and `hardware.agitator`: flame and agitator display.
 - `waiting.waitingFor` and `waiting.canConfirm`: confirm dialog and confirm endpoint.
 - Legacy fallback fields if structured fields are omitted: `Temperature`, `TargetTemperature`, `Type`, `WaitingStatus`, `HeatUpStatus`, `HeatingStates`, `AgitatorStatus`, `Name`, `index`.
 
+
+## Final PI-control risk notes
+
+- Do not change WaterStatus object shape, no-value heater commands, concrete confirmation values, or `currentTime` timestamp semantics without coordinated UI and PI updates.
+- Still-open verification items are `WaterStatus.liters` operational meaning, `/temperatur/0` long-term stability, socket.io `overheat` payload shape, and initial empty `Status` behavior.

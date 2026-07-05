@@ -118,7 +118,7 @@ class MobileProductionView extends React.Component<MobileProductionViewProps, Mo
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Zielzeit:</span>
-                                <span className="mobile-value">{brewingStatus?.currentTime != null ? TimeFormatter.formatSecondsToHMS(brewingStatus.currentTime) : '-'}</span>
+                                <span className="mobile-value">{brewingStatus?.currentStep?.duration != null ? TimeFormatter.formatSecondsToHMS(brewingStatus.currentStep.duration) : '-'}</span>
                             </div>
                         </div>
                         <div className="mobile-status-block">
