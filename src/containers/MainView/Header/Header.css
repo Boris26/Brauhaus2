@@ -139,3 +139,10 @@ h1 {
   color: var(--color-orange-dark);
   filter: none;
 }
+
+.icons-container button.icon {
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}

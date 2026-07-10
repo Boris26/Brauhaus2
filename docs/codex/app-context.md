@@ -89,3 +89,7 @@ Scripts from `package.json`:
 - `npm run deploy`: copy existing build to the same server path.
 - Storybook scripts are present, but package script names use older `start-storybook` / `build-storybook` commands while Storybook 7 dependencies are installed. Needs verification.
 
+
+## Application version
+
+The desktop UI has a `Version` view in the header information area. The page displays the frontend build version from `REACT_APP_VERSION`, injected before `react-scripts` runs. `scripts/resolve-app-version.js` prefers explicit CI variables (`BRAUHAUS_APP_VERSION`, `REACT_APP_VERSION`, `APP_VERSION`, `BUILD_BUILDNUMBER`, or an Azure `refs/tags/*` source branch), then `git describe --tags --always --dirty`, and finally `unknown` when Git metadata is unavailable.
