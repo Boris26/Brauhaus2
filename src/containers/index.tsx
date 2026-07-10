@@ -14,6 +14,7 @@ import FinishedBrewsTable from "./MainView/FinishBrewsBeers/FinishedBrewsTable";
 import BrewingCalculations from "./BrewingCalculations/BrewingCalculations";
 import IngredientsFormPage from "./DatabaseOverview/IngredientsFormPage";
 import SettingsPage from "./Settings/SettingsPage";
+import VersionPage from "./Version/VersionPage";
 import {getBrewingStatusLabel, shouldShowConfirmButton, shouldShowWaitingDialog} from "../utils/brewingStatus/selectors";
 
 interface indexMainProps {
@@ -24,7 +25,7 @@ interface indexMainProps {
     webSocketConnect: () => void;
 }
 
-class Index extends React.Component<indexMainProps> {
+export class Index extends React.Component<indexMainProps> {
     constructor(props: indexMainProps) {
         super(props);
     }
@@ -112,6 +113,7 @@ class Index extends React.Component<indexMainProps> {
                     {viewState === Views.FINISHED_BREWS && <FinishedBrewsTable></FinishedBrewsTable>}
                 </SimpleBar>
                 {viewState === Views.BREWING_CALCULATIONS && <BrewingCalculations />}
+                {viewState === Views.VERSION && <VersionPage />}
             </div>
 
         );

@@ -21,7 +21,7 @@ interface HeaderState {
     currentDate: string;
 }
 
-class Header extends React.Component<HeaderProps, HeaderState> {
+export class Header extends React.Component<HeaderProps, HeaderState> {
     private timer: NodeJS.Timer | undefined;
 
     constructor(props: HeaderProps) {
@@ -125,6 +125,15 @@ class Header extends React.Component<HeaderProps, HeaderState> {
                         role="button"
                         aria-label="Einstellungen"
                     />
+                    <button
+                        type="button"
+                        className={this.getTabClassName(Views.VERSION)}
+                        onClick={() => this.handleIconClick(Views.VERSION)}
+                        title="Version"
+                        aria-label="Version"
+                    >
+                        i
+                    </button>
                 </div>
                 <div className="header-status">
                   <div className="status-display-wrapper">
