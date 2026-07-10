@@ -4,6 +4,7 @@ import { RestExecutionMode } from '../enums/eRestExecutionMode';
 
 const isValidTemperature = (value: unknown) => typeof value === 'number' && Number.isFinite(value) && value > 0;
 const isValidTimedDuration = (value: unknown) => typeof value === 'number' && Number.isFinite(value) && value > 0;
+const FALLBACK_COOKING_TEMPERATURE_CELSIUS = 99;
 
 export interface ProductionRecipeNormalizationResult {
   ok: boolean;
@@ -59,9 +60,9 @@ export function mapBeerToBrewingData(beer: Beer): ProductionRecipeNormalizationR
   if (!isValidTimedDuration(beer.cookingTime)) {
     return { ok: false, error: 'Kochzeit fehlt oder ist ungültig.' };
   }
-  if (!isValidTemperature(beer.cookingTemperatur)) {
-    return { ok: false, error: 'Kochtemperatur fehlt oder ist ungültig.' };
-  }
+  const cookingTemperature = isValidTemperature(beer.cookingTemperatur)
+    ? beer.cookingTemperatur
+    : FALLBACK_COOKING_TEMPERATURE_CELSIUS;
 
   const normalizedStepsResult = normalizeFermentationStepsForProduction(beer.fermentation);
   if (!normalizedStepsResult.ok) return normalizedStepsResult;
@@ -71,7 +72,7 @@ export function mapBeerToBrewingData(beer: Beer): ProductionRecipeNormalizationR
     brewingData: {
       MashdownTemperature: aus.temperature,
       MashupTemperature: ein.temperature,
-      CookingTemperature: beer.cookingTemperatur,
+      CookingTemperature: cookingTemperature,
       CookingTime: beer.cookingTime,
       Rasten: normalizedStepsResult.fermentationSteps ?? []
     }

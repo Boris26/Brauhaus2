@@ -88,10 +88,14 @@ describe('productionRecipe mapping', () => {
     expect(result.brewingData?.Rasten[0]).not.toHaveProperty('time');
   });
 
-  it('rejects missing or invalid cooking fields', () => {
+  it('uses 99 °C as fallback for missing or invalid cooking temperature only', () => {
     const missingCookingTemp = mapBeerToBrewingData(makeBeer({ cookingTemperatur: null as unknown as number }));
-    expect(missingCookingTemp.ok).toBe(false);
-    expect(missingCookingTemp.error).toContain('Kochtemperatur');
+    expect(missingCookingTemp.ok).toBe(true);
+    expect(missingCookingTemp.brewingData?.CookingTemperature).toBe(99);
+
+    const invalidCookingTemp = mapBeerToBrewingData(makeBeer({ cookingTemperatur: 0 }));
+    expect(invalidCookingTemp.ok).toBe(true);
+    expect(invalidCookingTemp.brewingData?.CookingTemperature).toBe(99);
 
     const invalidCookingTime = mapBeerToBrewingData(makeBeer({ cookingTime: 0 }));
     expect(invalidCookingTime.ok).toBe(false);
