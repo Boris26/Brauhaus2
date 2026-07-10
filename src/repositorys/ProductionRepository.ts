@@ -10,6 +10,7 @@ import {normalizeBrewingStatus} from "../utils/brewingStatus/normalizeBrewingSta
 import {ConfirmStates} from "../enums/eConfirmStates";
 import {WaterStatus} from "../components/Controlls/WaterControll/WaterControl";
 import {BackendAvailable} from "../reducers/productionReducer";
+import {IDiagnosticResponse, normalizeDiagnosticVersion} from "../model/DiagnosticResponse";
 
 const DEFAULT_WATER_STATUS: WaterStatus = { liters: 0, openClose: false };
 
@@ -57,6 +58,10 @@ export class ProductionRepository {
 
     static async getBrewingStatus(): Promise<{ available: BackendAvailable, brewingStatus: BrewingStatus | undefined }> {
        return await this._doGetBrewingStatus();
+    }
+
+    static async getDiagnosticVersion(): Promise<string> {
+        return await this._doGetDiagnosticVersion();
     }
 
     static async toggleHeater(aIsTurnOn: ToggleState) {
@@ -153,6 +158,11 @@ export class ProductionRepository {
             // Rückgabe statt dispatch
             return { available, brewingStatus: undefined };
         }
+    }
+
+    private static async _doGetDiagnosticVersion(): Promise<string> {
+        const response = await axios.get<IDiagnosticResponse>(BaseURL + 'diag');
+        return normalizeDiagnosticVersion(response.data);
     }
 
     private static async _doSendBrewingData(aBrewingData: BrewingData) {

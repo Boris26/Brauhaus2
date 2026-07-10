@@ -55,6 +55,17 @@ describe('ProductionRepository API method/path usage', () => {
     expect(mockedAxios.get).not.toHaveBeenCalledWith(expect.stringContaining('/Command/next'));
   });
 
+
+
+  it('loads control diagnostics from GET /diag', async () => {
+    mockedAxios.get.mockResolvedValueOnce({ status: 200, data: { version: 'v1.2.3' }, statusText: 'OK' } as any);
+
+    const result = await ProductionRepository.getDiagnosticVersion();
+
+    expect(result).toBe('v1.2.3');
+    expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining('/diag'));
+  });
+
   it('keeps safe reads on GET', async () => {
     mockedAxios.get.mockResolvedValueOnce({ status: 200, data: { liters: 3, openClose: true }, statusText: 'OK' } as any);
     await ProductionRepository.getWaterStatus();
