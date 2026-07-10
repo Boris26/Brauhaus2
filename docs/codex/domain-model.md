@@ -17,11 +17,11 @@ The PI/control payload is:
 
 - `MashdownTemperature`: from recipe step `Abmaischen.temperature`.
 - `MashupTemperature`: from recipe step `Einmaischen.temperature`.
-- `CookingTemperature`: from `beer.cookingTemperatur`.
+- `CookingTemperature`: from `beer.cookingTemperatur`, with UI fallback `99` °C only when the stored cooking temperature is missing or invalid.
 - `CookingTime`: from `beer.cookingTime`.
 - `Rasten`: normalized fermentation steps excluding fixed process step types `Einmaischen`, `Abmaischen`, and `Kochen`, unless a step uses `executionMode: CONFIRMATION_HOLD`.
 
-Validation rejects missing/non-positive temperatures and timed rests without `time > 0`.
+Validation rejects missing/non-positive mash-in, mash-out, and rest temperatures and timed rests without `time > 0`; missing/invalid top-level cooking temperature is not rejected and maps to the UI fallback `99` °C.
 
 ## Brewing runtime status
 

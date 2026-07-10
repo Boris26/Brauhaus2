@@ -19,7 +19,7 @@ Needs verification: backend ordering of `GET beers`, because the UI treats the l
 ## Production start flow
 
 - Production view reads `beerDataReducer.beerToBrew` as `selectedBeer`.
-- `mapBeerToBrewingData(selectedBeer)` extracts Einmaischen and Abmaischen temperatures, cooking temperature/time, and normalized timed/confirmation rests.
+- `mapBeerToBrewingData(selectedBeer)` extracts Einmaischen and Abmaischen temperatures, cooking temperature/time, and normalized timed/confirmation rests. Missing or invalid top-level cooking temperature is replaced with `99` °C in the UI mapping before sending control data.
 - On success, `SEND_BREWING_DATA` posts `BrewingData` to `POST Recipe/` and expects HTTP 201.
 - If successful, UI posts `Command/StartBrewing:""` and then begins status polling.
 
