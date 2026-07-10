@@ -315,6 +315,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         }
         this.setState({brewingIsRunning: true});
         console.log('Starting brewing with data:', result.brewingData);
+        sendBrewingData(result.brewingData);
     }
 
     startPolling = () => {
