@@ -32,9 +32,7 @@ import {BackendAvailable} from "../../reducers/productionReducer";
 import {ProcessList, createProcessSteps} from "./ProcessList/ProcessList";
 import { dataCollector } from '../../utils/DataCollector/dataCollector';
 import {getBrewingStatusLabel} from "../../utils/brewingStatus/selectors";
-export interface ProcessStep {
-    name: string;
-}
+
 interface ProductionProps {
     selectedBeer: Beer;
     temperature: number;

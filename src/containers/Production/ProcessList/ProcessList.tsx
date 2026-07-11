@@ -30,7 +30,7 @@ export interface ProcessStep {
     controlStepIndex?: number;
 }
 
-interface ProcessListProps {
+export interface ProcessListProps {
     selectedBeer: Beer;
     currentStepIndex: number; // 1-based PI-control currentStep.index
     onNextStep?: () => void;
