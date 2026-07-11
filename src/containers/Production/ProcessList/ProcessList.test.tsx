@@ -2,6 +2,7 @@ import React from 'react';
 import {render, screen} from '@testing-library/react';
 import '@testing-library/jest-dom';
 import {Beer} from '../../../model/Beer';
+import {ProcessMode, ProcessPhase} from '../../../model/brewingStatus.types';
 import {createProcessSteps, getActiveProcessStepIndex, ProcessList} from './ProcessList';
 
 const selectedBeer = {
@@ -36,20 +37,20 @@ const getActiveStepText = (controlStepIndex: number) => {
 };
 
 describe('ProcessList current-step mapping', () => {
-    it('builds visible process rows with 1-based control indices only on recipe steps', () => {
+    it('builds visible process rows with shared control indices for heating and process entries', () => {
         expect(createProcessSteps(selectedBeer).map(step => `${step.controlStepIndex ?? '-'}:${step.name}`)).toEqual([
-            '-:Aufheizen für Einmaischen -> 57°C',
+            '1:Aufheizen für Einmaischen -> 57°C',
             '1:Einmaischen',
-            '-:Aufheizen für Rast 1 -> 63°C',
+            '2:Aufheizen für Rast 1 -> 63°C',
             '2:Rast 1',
-            '-:Aufheizen für Rast 2 -> 68°C',
+            '3:Aufheizen für Rast 2 -> 68°C',
             '3:Rast 2',
-            '-:Aufheizen für Rast 3 -> 72°C',
+            '4:Aufheizen für Rast 3 -> 72°C',
             '4:Rast 3',
             '-:Jod Probe',
-            '-:Aufheizen für Abmaischen -> 78°C',
+            '5:Aufheizen für Abmaischen -> 78°C',
             '5:Abmaischen',
-            '-:Aufheizen auf Kochen',
+            '6:Aufheizen auf Kochen',
             '6:Kochen',
         ]);
     });
@@ -63,19 +64,13 @@ describe('ProcessList current-step mapping', () => {
         expect(getActiveStepText(controlStepIndex)).toContain(expectedStep);
     });
 
-    it('keeps heating and timer-running modes on the same list entry because mode is not part of the mapping', () => {
+    it('uses currentStep.mode to choose between heating and execution rows for the same control index', () => {
         const steps = createProcessSteps(selectedBeer);
-        const rast1HeatingIndex = getActiveProcessStepIndex(steps, 2);
-        const rast1TimerRunningIndex = getActiveProcessStepIndex(steps, 2);
-        const rast2HeatingIndex = getActiveProcessStepIndex(steps, 3);
-        const rast2TimerRunningIndex = getActiveProcessStepIndex(steps, 3);
-        const rast3HeatingIndex = getActiveProcessStepIndex(steps, 4);
 
-        expect(steps[rast1HeatingIndex].name).toBe('Rast 1');
-        expect(rast1TimerRunningIndex).toBe(rast1HeatingIndex);
-        expect(steps[rast2HeatingIndex].name).toBe('Rast 2');
-        expect(rast2TimerRunningIndex).toBe(rast2HeatingIndex);
-        expect(steps[rast3HeatingIndex].name).toBe('Rast 3');
+        expect(steps[getActiveProcessStepIndex(steps, 1, {index: 1, phase: ProcessPhase.MASHING_IN, mode: ProcessMode.HEATING})].name).toBe('Aufheizen für Einmaischen -> 57°C');
+        expect(steps[getActiveProcessStepIndex(steps, 1, {index: 1, phase: ProcessPhase.MASHING_IN, mode: ProcessMode.TIMER_RUNNING})].name).toBe('Einmaischen');
+        expect(steps[getActiveProcessStepIndex(steps, 2, {index: 2, phase: ProcessPhase.RAST, mode: ProcessMode.HEATING})].name).toBe('Aufheizen für Rast 1 -> 63°C');
+        expect(steps[getActiveProcessStepIndex(steps, 2, {index: 2, phase: ProcessPhase.RAST, mode: ProcessMode.TIMER_RUNNING})].name).toBe('Rast 1');
     });
 
     it('does not treat the 1-based control index as the 0-based React array index', () => {
@@ -101,6 +96,39 @@ describe('ProcessList current-step mapping', () => {
         rerender(<ProcessList selectedBeer={selectedBeer} currentStepIndex={4} />);
         expect(container.querySelector('li.active')).toHaveTextContent('Rast 3');
         expect(container.querySelector('li.active')).not.toHaveTextContent('Rast 2');
+    });
+
+
+
+    it('keeps the first MASHING_IN heating status on the heat-up row', () => {
+        const {container} = render(<ProcessList selectedBeer={selectedBeer} currentStepIndex={1} currentStep={{index: 1, phase: ProcessPhase.MASHING_IN, mode: ProcessMode.HEATING, name: 'Einmaischen'}} />);
+
+        expect(container.querySelectorAll('li.active')).toHaveLength(1);
+        expect(container.querySelector('li.active')).toHaveTextContent('Aufheizen für Einmaischen');
+        expect(container.querySelector('li.active')).not.toHaveTextContent(/^2\. Einmaischen$/);
+    });
+
+    it('moves from a rest heat-up row to the rest row when only mode changes', () => {
+        const {container, rerender} = render(<ProcessList selectedBeer={selectedBeer} currentStepIndex={4} currentStep={{index: 4, phase: ProcessPhase.RAST, mode: ProcessMode.HEATING, name: 'Rast 3'}} />);
+        expect(container.querySelectorAll('li.active')).toHaveLength(1);
+        expect(container.querySelector('li.active')).toHaveTextContent('Aufheizen für Rast 3');
+
+        rerender(<ProcessList selectedBeer={selectedBeer} currentStepIndex={4} currentStep={{index: 4, phase: ProcessPhase.RAST, mode: ProcessMode.TIMER_RUNNING, name: 'Rast 3'}} />);
+        expect(container.querySelectorAll('li.active')).toHaveLength(1);
+        expect(container.querySelector('li.active')).toHaveTextContent('Rast 3');
+        expect(container.querySelector('li.active')).not.toHaveTextContent('Aufheizen');
+    });
+
+    it('follows rest execution, next rest heating, and next rest timer-running statuses', () => {
+        const {container, rerender} = render(<ProcessList selectedBeer={selectedBeer} currentStepIndex={3} currentStep={{index: 3, phase: ProcessPhase.RAST, mode: ProcessMode.TIMER_RUNNING, name: 'Rast 2'}} />);
+        expect(container.querySelector('li.active')).toHaveTextContent('Rast 2');
+
+        rerender(<ProcessList selectedBeer={selectedBeer} currentStepIndex={4} currentStep={{index: 4, phase: ProcessPhase.RAST, mode: ProcessMode.HEATING, name: 'Rast 3'}} />);
+        expect(container.querySelector('li.active')).toHaveTextContent('Aufheizen für Rast 3');
+
+        rerender(<ProcessList selectedBeer={selectedBeer} currentStepIndex={4} currentStep={{index: 4, phase: ProcessPhase.RAST, mode: ProcessMode.TIMER_RUNNING, name: 'Rast 3'}} />);
+        expect(container.querySelectorAll('li.active')).toHaveLength(1);
+        expect(container.querySelector('li.active')).toHaveTextContent('Rast 3');
     });
 
     it('renders all expected rows', () => {
