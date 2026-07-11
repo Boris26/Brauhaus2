@@ -19,7 +19,20 @@ export interface CurrentProcessStep {
     name?: string;
 }
 
-export interface ProcessStep {
+export enum ProcessListEntryType {
+    HEATING = "HEATING",
+    PROCESS = "PROCESS",
+    DISPLAY = "DISPLAY"
+}
+
+export interface ProcessListCurrentStep {
+    index?: number;
+    phase?: ProcessPhase;
+    mode?: ProcessMode;
+    name?: string;
+}
+
+export interface ProcessListStep {
     name: string;
     /**
      * 1-based index reported by the PI control in brewingStatus.currentStep.index.
@@ -162,8 +175,8 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
 // PROCESS STEPS GENERATION
 // -------------------------------------------------------
 
-export function createProcessSteps(selectedBeer: Beer): ProcessStep[] {
-    let processSteps: ProcessStep[] = [];
+export function createProcessSteps(selectedBeer: Beer): ProcessListStep[] {
+    let processSteps: ProcessListStep[] = [];
     if (!selectedBeer || !Array.isArray(selectedBeer.fermentation)) {
         return processSteps;
     }
