@@ -621,14 +621,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     renderProcessList() {
         const { selectedBeer, brewingStatus } = this.props;
         return (
-            <ProcessList
-                selectedBeer={selectedBeer}
-                currentStepIndex={brewingStatus?.currentStep?.index ?? 0}
-                currentStepPhase={brewingStatus?.currentStep?.phase}
-                currentStepMode={brewingStatus?.currentStep?.mode}
-                currentStepName={brewingStatus?.currentStep?.name}
-                onNextStep={this.props.nextProcedureStep}
-            />
+            <ProcessList selectedBeer={selectedBeer} currentStep={brewingStatus?.currentStep ?? {}} onNextStep={this.props.nextProcedureStep} />
         );
     }
 
