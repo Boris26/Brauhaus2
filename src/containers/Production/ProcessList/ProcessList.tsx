@@ -12,19 +12,6 @@ export enum ProcessListEntryType {
     DISPLAY = "DISPLAY"
 }
 
-export interface CurrentProcessStep {
-    index?: number;
-    phase?: ProcessPhase;
-    mode?: ProcessMode;
-    name?: string;
-}
-
-export enum ProcessListEntryType {
-    HEATING = "HEATING",
-    PROCESS = "PROCESS",
-    DISPLAY = "DISPLAY"
-}
-
 export interface ProcessListCurrentStep {
     index?: number;
     phase?: ProcessPhase;
@@ -34,6 +21,7 @@ export interface ProcessListCurrentStep {
 
 export interface ProcessListStep {
     name: string;
+    entryType?: ProcessListEntryType;
     /**
      * 1-based index reported by the PI control in brewingStatus.currentStep.index.
      * Display-only helper rows, e.g. heat-up rows, deliberately do not get a
@@ -223,7 +211,7 @@ export function createProcessSteps(selectedBeer: Beer): ProcessListStep[] {
     return processSteps;
 }
 
-export function getActiveProcessStepIndex(processSteps: ProcessStep[], currentControlStepIndex: number): number {
+export function getActiveProcessStepIndex(processSteps: ProcessListStep[], currentControlStepIndex: number): number {
     const activeIndex = processSteps.findIndex(step => step.controlStepIndex === currentControlStepIndex);
     return activeIndex >= 0 ? activeIndex : 0;
 }
