@@ -24,16 +24,17 @@ export interface ProcessListStep {
     entryType?: ProcessListEntryType;
     /**
      * 1-based index reported by the PI control in brewingStatus.currentStep.index.
-     * Display-only helper rows, e.g. heat-up rows, deliberately do not get a
-     * control step index and are therefore never highlighted as the active
-     * recipe step.
+     * Heating and execution rows can share the same control step index; the
+     * currentStep.mode decides which visible row is active.
      */
     controlStepIndex?: number;
+    phase?: ProcessPhase;
 }
 
 export interface ProcessListProps {
     selectedBeer: Beer;
     currentStepIndex: number; // 1-based PI-control currentStep.index
+    currentStep?: ProcessListCurrentStep;
     onNextStep?: () => void;
 }
 
@@ -58,11 +59,11 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
 
     // Welcher UI-Array-Index soll wirklich verwendet werden? (Test oder echter)
     get effectiveStepIndex(): number {
-        return this.state.testStepIndex ?? getActiveProcessStepIndex(createProcessSteps(this.props.selectedBeer), this.props.currentStepIndex);
+        return this.state.testStepIndex ?? getActiveProcessStepIndex(createProcessSteps(this.props.selectedBeer), this.props.currentStepIndex, this.props.currentStep);
     }
 
     componentDidUpdate(prevProps: ProcessListProps, prevState: ProcessListState) {
-        const prevIndex = prevState.testStepIndex ?? getActiveProcessStepIndex(createProcessSteps(prevProps.selectedBeer), prevProps.currentStepIndex);
+        const prevIndex = prevState.testStepIndex ?? getActiveProcessStepIndex(createProcessSteps(prevProps.selectedBeer), prevProps.currentStepIndex, prevProps.currentStep);
         const newIndex = this.effectiveStepIndex;
 
         if (
@@ -93,7 +94,7 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
         const steps = createProcessSteps(this.props.selectedBeer);
 
         this.setState(prev => {
-            const baseIndex = prev.testStepIndex ?? getActiveProcessStepIndex(steps, this.props.currentStepIndex);
+            const baseIndex = prev.testStepIndex ?? getActiveProcessStepIndex(steps, this.props.currentStepIndex, this.props.currentStep);
             const next = baseIndex + 1;
             return { testStepIndex: next >= steps.length ? 0 : next };
         });
@@ -175,8 +176,9 @@ export function createProcessSteps(selectedBeer: Beer): ProcessListStep[] {
     // Einmaischen
     const einmaischen = fermentation.find(step => step.type === 'Einmaischen');
     if (einmaischen) {
-        processSteps.push({ name: `Aufheizen für Einmaischen -> ${einmaischen.temperature}°C` });
-        processSteps.push({ name: 'Einmaischen', controlStepIndex: controlStepIndex++ });
+        processSteps.push({ name: `Aufheizen für Einmaischen -> ${einmaischen.temperature}°C`, entryType: ProcessListEntryType.HEATING, controlStepIndex, phase: ProcessPhase.MASHING_IN });
+        processSteps.push({ name: 'Einmaischen', entryType: ProcessListEntryType.PROCESS, controlStepIndex, phase: ProcessPhase.MASHING_IN });
+        controlStepIndex++;
     }
 
     let lastRastIndex = -1;
@@ -186,8 +188,9 @@ export function createProcessSteps(selectedBeer: Beer): ProcessListStep[] {
         const isRastName = /^Rast\s*\d+$/i.test(step.type);
         const isConfirmationHold = (step.executionMode ?? RestExecutionMode.TIMED) === RestExecutionMode.CONFIRMATION_HOLD;
         if (isRastName || isConfirmationHold) {
-            processSteps.push({ name: `Aufheizen für ${step.type} -> ${step.temperature}°C` });
-            processSteps.push({ name: step.type, controlStepIndex: controlStepIndex++ });
+            processSteps.push({ name: `Aufheizen für ${step.type} -> ${step.temperature}°C`, entryType: ProcessListEntryType.HEATING, controlStepIndex, phase: ProcessPhase.RAST });
+            processSteps.push({ name: step.type, entryType: ProcessListEntryType.PROCESS, controlStepIndex, phase: ProcessPhase.RAST });
+            controlStepIndex++;
             lastRastIndex = processSteps.length - 1;
         }
     });
@@ -200,18 +203,35 @@ export function createProcessSteps(selectedBeer: Beer): ProcessListStep[] {
     // Abmaischen
     const abmaischen = fermentation.find(step => step.type === 'Abmaischen');
     if (abmaischen) {
-        processSteps.push({ name: `Aufheizen für Abmaischen -> ${abmaischen.temperature}°C` });
-        processSteps.push({ name: 'Abmaischen', controlStepIndex: controlStepIndex++ });
+        processSteps.push({ name: `Aufheizen für Abmaischen -> ${abmaischen.temperature}°C`, entryType: ProcessListEntryType.HEATING, controlStepIndex, phase: ProcessPhase.MASHING_OUT });
+        processSteps.push({ name: 'Abmaischen', entryType: ProcessListEntryType.PROCESS, controlStepIndex, phase: ProcessPhase.MASHING_OUT });
+        controlStepIndex++;
     }
 
     // Kochen
-    processSteps.push({ name: 'Aufheizen auf Kochen' });
-    processSteps.push({ name: 'Kochen', controlStepIndex: controlStepIndex++ });
+    processSteps.push({ name: 'Aufheizen auf Kochen', entryType: ProcessListEntryType.HEATING, controlStepIndex, phase: ProcessPhase.COOKING });
+    processSteps.push({ name: 'Kochen', entryType: ProcessListEntryType.PROCESS, controlStepIndex, phase: ProcessPhase.COOKING });
+    controlStepIndex++;
 
     return processSteps;
 }
 
-export function getActiveProcessStepIndex(processSteps: ProcessListStep[], currentControlStepIndex: number): number {
-    const activeIndex = processSteps.findIndex(step => step.controlStepIndex === currentControlStepIndex);
-    return activeIndex >= 0 ? activeIndex : 0;
+export function getActiveProcessStepIndex(processSteps: ProcessListStep[], currentControlStepIndex: number, currentStep?: ProcessListCurrentStep): number {
+    const controlStepIndex = currentStep?.index ?? currentControlStepIndex;
+    const requestedEntryType = currentStep?.mode === ProcessMode.HEATING
+        ? ProcessListEntryType.HEATING
+        : ProcessListEntryType.PROCESS;
+
+    const activeIndex = processSteps.findIndex(step =>
+        step.controlStepIndex === controlStepIndex &&
+        step.entryType === requestedEntryType &&
+        (currentStep?.phase === undefined || step.phase === undefined || step.phase === currentStep.phase)
+    );
+
+    if (activeIndex >= 0) {
+        return activeIndex;
+    }
+
+    const fallbackIndex = processSteps.findIndex(step => step.controlStepIndex === controlStepIndex);
+    return fallbackIndex >= 0 ? fallbackIndex : 0;
 }
