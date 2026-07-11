@@ -32,9 +32,7 @@ import {BackendAvailable} from "../../reducers/productionReducer";
 import {ProcessList, createProcessSteps} from "./ProcessList/ProcessList";
 import { dataCollector } from '../../utils/DataCollector/dataCollector';
 import {getBrewingStatusLabel} from "../../utils/brewingStatus/selectors";
-export interface ProcessStep {
-    name: string;
-}
+
 interface ProductionProps {
     selectedBeer: Beer;
     temperature: number;
@@ -622,10 +620,8 @@ class Production extends React.Component<ProductionProps, ProductionState> {
 
     renderProcessList() {
         const { selectedBeer, brewingStatus } = this.props;
-        // Fallback auf 0, falls brewingStatus oder brewingStatus.index nicht definiert ist
-        const currentStepIndex = brewingStatus && typeof brewingStatus.currentStep?.index === 'number' ? brewingStatus.currentStep.index : 0;
         return (
-            <ProcessList selectedBeer={selectedBeer} currentStepIndex={currentStepIndex} onNextStep={this.props.nextProcedureStep} />
+            <ProcessList selectedBeer={selectedBeer} currentStep={brewingStatus?.currentStep ?? {}} onNextStep={this.props.nextProcedureStep} />
         );
     }
 
