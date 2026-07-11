@@ -4,6 +4,20 @@ import 'simplebar-react/dist/simplebar.min.css';
 import './ProcessList.css';
 import {Beer, FermentationSteps} from "../../../model/Beer";
 import {RestExecutionMode} from "../../../enums/eRestExecutionMode";
+import {ProcessMode, ProcessPhase} from "../../../model/brewingStatus.types";
+
+export enum ProcessListEntryType {
+    HEATING = "HEATING",
+    PROCESS = "PROCESS",
+    DISPLAY = "DISPLAY"
+}
+
+export interface CurrentProcessStep {
+    index?: number;
+    phase?: ProcessPhase;
+    mode?: ProcessMode;
+    name?: string;
+}
 
 export interface ProcessStep {
     name: string;
@@ -179,7 +193,7 @@ export function createProcessSteps(selectedBeer: Beer): ProcessStep[] {
 
     // Jod-Probe nach letzter Rast
     if (lastRastIndex !== -1) {
-        processSteps.splice(lastRastIndex + 1, 0, { name: 'Jod Probe' });
+        processSteps.splice(lastRastIndex + 1, 0, { name: 'Jod Probe', entryType: ProcessListEntryType.DISPLAY });
     }
 
     // Abmaischen
