@@ -80,7 +80,7 @@ export const sendBrewingDataEpic$ = (action$: any) =>
       from(ProductionRepository.sendBrewingData(action.payload.brewingData)).pipe(
         switchMap((sendResult) => {
           if (sendResult) {
-            // Starte den Brauprozess
+            // Start the brewing process
             return from(ProductionRepository.startBrewing()).pipe(
               switchMap((startResult) => {
                 if (startResult) {
@@ -94,7 +94,7 @@ export const sendBrewingDataEpic$ = (action$: any) =>
                     takeWhile(({ brewingStatus }) => !(brewingStatus && (isProcessFinished(brewingStatus) || isProcessAborted(brewingStatus) || isProcessInError(brewingStatus))), true),
                     switchMap(({ available, brewingStatus }) => {
                       if (available?.isBackenAvailable && brewingStatus !== undefined) {
-                        // BrewingStatus im DataCollector speichern
+                        // Store BrewingStatus in the data collector
                         dataCollector.setBrewingStatus(brewingStatus);
                         return [
                           ProductionActions.setBrewingStatus(brewingStatus),
@@ -106,15 +106,15 @@ export const sendBrewingDataEpic$ = (action$: any) =>
                     catchError((error) => of({ type: 'NO_OP' }))
                   );
                 } else {
-                  return of({ type: 'NO_OP' });
+                  return of(ProductionActions.stopPolling());
                 }
               })
             );
           } else {
-            return of({ type: 'NO_OP' });
+            return of(ProductionActions.stopPolling());
           }
         }),
-        catchError((error) => of({ type: 'NO_OP' }))
+        catchError((error) => of(ProductionActions.stopPolling()))
       )
     )
   );

@@ -248,3 +248,30 @@
 .GaugeContainer {
     padding: 1.1rem;
 }
+
+.recipeWaterButtons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 0.75rem;
+}
+
+.recipeWaterBtn {
+    background-color: var(--color-surface-alt);
+    border: none;
+    border-radius: 0.5rem;
+    color: var(--color-white);
+    cursor: pointer;
+    font-size: 1rem;
+    min-width: 8rem;
+    padding: 0.5rem 1rem;
+}
+
+.recipeWaterBtn:hover:not(:disabled) {
+    background-color: var(--color-surface-alt-dark);
+}
+
+.recipeWaterBtn:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
