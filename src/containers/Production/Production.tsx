@@ -31,7 +31,7 @@ import {eBrewState} from "../../enums/eBrewState";
 import {BackendAvailable} from "../../reducers/productionReducer";
 import {ProcessList, createProcessSteps} from "./ProcessList/ProcessList";
 import { dataCollector } from '../../utils/DataCollector/dataCollector';
-import {getBrewingStatusLabel} from "../../utils/brewingStatus/selectors";
+import {getBrewingStatusLabel, isProcessActive} from "../../utils/brewingStatus/selectors";
 
 export interface ProductionProps {
     selectedBeer: Beer;
@@ -54,6 +54,7 @@ export interface ProductionProps {
     waterStatus: WaterStatus;
     addFinishedBrew: (finishedBrew: FinishedBrew) => void;
     nextProcedureStep: () => void;
+    isPollingRunning: boolean;
 }
 
 type RecipeWaterFill = 'mash' | 'sparge';
@@ -92,6 +93,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
     private blinkIntervalMainSwitch: NodeJS.Timeout | null = null;
     private blinkIntervalWaterSwitch: NodeJS.Timeout | null = null;
     private timelineData: TimelineData[] = [];
+    private isBrewingStartRequestPending = false;
     private readonly MAX_AGITATOR_SPEED = 40;
     private readonly MAX_WATER_LEVEL = 70;
     private readonly MAX_INTERVAL_TIME = 10;
@@ -150,8 +152,15 @@ export class Production extends React.Component<ProductionProps, ProductionState
             this.resetRecipeWaterFillState({indexOfCurrentStep: 0});
         }
 
-        if (prevProps.brewingStatus?.process?.state !== brewingStatus?.process?.state && brewingStatus?.process?.state !== ProcessState.ACTIVE) {
+        const aBrewingProcessChangedToInactive = prevProps.brewingStatus?.process?.state !== brewingStatus?.process?.state && brewingStatus?.process?.state !== ProcessState.ACTIVE;
+        if (aBrewingProcessChangedToInactive) {
             this.resetRecipeWaterFillState();
+        }
+
+        const aStartRequestCompleted = prevProps.isPollingRunning && !this.props.isPollingRunning;
+        if ((this.state.brewingIsRunning || this.isBrewingStartRequestPending) && (aStartRequestCompleted || aBrewingProcessChangedToInactive)) {
+            this.isBrewingStartRequestPending = false;
+            this.setState({brewingIsRunning: false});
         }
 
         if (waterStatus?.openClose === true && !prevProps.waterStatus?.openClose) {
@@ -381,13 +390,28 @@ export class Production extends React.Component<ProductionProps, ProductionState
             this.setState({waterSwitchState: false});
         }
     }
-    startBrewing = () => {
+    isControlBrewingStartAvailable = (): boolean => {
+        const {brewingStatus, isPollingRunning} = this.props;
+        return !isPollingRunning && !isProcessActive(brewingStatus);
+    }
+
+    isStartButtonDisabled = (): boolean => {
+        const {selectedBeer} = this.props;
+        return isUndefined(selectedBeer) || this.state.brewingIsRunning || this.isBrewingStartRequestPending || !this.isControlBrewingStartAvailable();
+    }
+
+    startBrewing = (): void => {
         const {selectedBeer, sendBrewingData} = this.props;
+        if (this.isStartButtonDisabled()) {
+            return;
+        }
+        this.isBrewingStartRequestPending = true;
         this.resetRecipeWaterFillState();
         console.log('Starting brewing with data:', sendBrewingData);
         const result = mapBeerToBrewingData(selectedBeer);
         console.log('Starting brewing with data:', result);
         if (!result.ok || !result.brewingData) {
+            this.isBrewingStartRequestPending = false;
             this.setState({
                 showErrorDialog: true,
                 errorDialogContent: result.error ?? 'Rezeptdaten sind für den Start ungültig.'
@@ -559,10 +583,10 @@ export class Production extends React.Component<ProductionProps, ProductionState
                     <button className="recipeWaterBtn" disabled={spargeWaterDisabled} onClick={this.startSpargeWaterFilling}>Nachguss</button>
                 </div>
                 <div className="startBtnDiv">
-                    <button className="startBtn" disabled={isUndefined(selectedBeer) } onClick={this.startBrewing}>Start</button>
+                    <button className="startBtn" disabled={this.isStartButtonDisabled()} onClick={this.startBrewing}>Start</button>
                 </div>
                 <div className="startPollingBtnDiv">
-                    <button className="startPollingBtn" onClick={this.startBrewing}>
+                    <button className="startPollingBtn" disabled={this.isStartButtonDisabled()} onClick={this.startBrewing}>
                         <FontAwesomeIcon icon={faRepeat as IconProp} />
                     </button>
                 </div>
@@ -800,7 +824,8 @@ const mapStateToProps = (state: any) => (
         isToggleAgitatorSuccess: state.productionReducer.isToggleAgitatorSuccess,
         brewingStatus: state.productionReducer.brewingStatus,
         isBackenAvailable: state.productionReducer.isBackenAvailable,
-        waterStatus: state.productionReducer.waterStatus
+        waterStatus: state.productionReducer.waterStatus,
+        isPollingRunning: state.productionReducer.isPollingRunning
 
     });
 export default connect(mapStateToProps, mapDispatchToProps)(Production);

@@ -3,6 +3,7 @@ import { ProductionRepository } from '../repositorys/ProductionRepository';
 import AllProductionActions = ProductionActions.AllProductionActions;
 import { ToggleState } from '../enums/eToggleState';
 import { BrewingStatus } from '../model/BrewingStatus';
+import { isProcessAborted, isProcessFinished, isProcessIdle, isProcessInError } from '../utils/brewingStatus/selectors';
 import { ConfirmStates } from '../enums/eConfirmStates';
 import { WaterStatus } from '../components/Controlls/WaterControll/WaterControl';
 
@@ -77,7 +78,9 @@ const productionReducer = (
             return { ...aState, isPollingRunning: true };
         }
         case ProductionActions.ActionTypes.SET_BREWING_STATUS: {
-            return { ...aState, brewingStatus: aAction.payload.brewingStatus };
+            const aBrewingStatus = aAction.payload.brewingStatus;
+            const aIsTerminalOrIdle = isProcessIdle(aBrewingStatus) || isProcessFinished(aBrewingStatus) || isProcessAborted(aBrewingStatus) || isProcessInError(aBrewingStatus);
+            return { ...aState, brewingStatus: aBrewingStatus, isPollingRunning: aIsTerminalOrIdle ? false : aState.isPollingRunning };
         }
         case ProductionActions.ActionTypes.START_POLLING: {
             return { ...aState, isPollingRunning: true };

@@ -19,13 +19,16 @@ const createBeer = (aMashVolume: number | undefined = 18, aSpargeVolume: number 
     spargeVolume: aSpargeVolume as number,
     cookingTime: 60,
     cookingTemperatur: 99,
-    fermentation: [],
+    fermentation: [
+        {type: 'Einmaischen', temperature: 60},
+        {type: 'Abmaischen', temperature: 78}
+    ],
     malts: [],
     wortBoiling: {hops: []},
     fermentationMaturation: {yeast: []}
 });
 
-const createBrewingStatus = (aProcessState: ProcessState = ProcessState.ACTIVE): BrewingStatus => ({
+const createBrewingStatus = (aProcessState: ProcessState = ProcessState.IDLE): BrewingStatus => ({
     elapsedTime: 0,
     currentTime: 0,
     process: {state: aProcessState},
@@ -61,6 +64,7 @@ const renderProduction = (aOverrides: Partial<React.ComponentProps<typeof Produc
         isToggleAgitatorSuccess: true,
         sendBrewingData: jest.fn(),
         brewingStatus: createBrewingStatus(),
+        isPollingRunning: false,
         startPolling: jest.fn(),
         stopPolling: jest.fn(),
         isBackenAvailable: {isBackenAvailable: true, statusText: 'OK'},
@@ -71,6 +75,69 @@ const renderProduction = (aOverrides: Partial<React.ComponentProps<typeof Produc
     };
     return {props, ...render(<Production {...props} />)};
 };
+
+describe('Production start button', () => {
+
+    it('keeps the start button enabled when no brew is running', () => {
+        renderProduction({brewingStatus: createBrewingStatus(ProcessState.IDLE), isPollingRunning: false});
+        expect(screen.getByRole('button', {name: 'Start'})).not.toBeDisabled();
+    });
+
+    it('disables the start button while a brew is active', () => {
+        renderProduction({brewingStatus: createBrewingStatus(ProcessState.ACTIVE), isPollingRunning: false});
+        expect(screen.getByRole('button', {name: 'Start'})).toBeDisabled();
+    });
+
+    it('disables the start button while a start request is running', () => {
+        renderProduction({brewingStatus: createBrewingStatus(ProcessState.IDLE), isPollingRunning: true});
+        expect(screen.getByRole('button', {name: 'Start'})).toBeDisabled();
+    });
+
+    it('sends the brewing data only once for fast repeated start clicks', () => {
+        const {props} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.IDLE), isPollingRunning: false});
+        const startButton = screen.getByRole('button', {name: 'Start'});
+        fireEvent.click(startButton);
+        fireEvent.click(startButton);
+        expect(props.sendBrewingData).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not send another start request when a brew is already active', () => {
+        const {props} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.ACTIVE), isPollingRunning: false});
+        fireEvent.click(screen.getByRole('button', {name: 'Start'}));
+        expect(props.sendBrewingData).not.toHaveBeenCalled();
+    });
+
+    it('enables the start button again after finished, aborted, reset, or failed idle states', () => {
+        const {rerender, props} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.ACTIVE), isPollingRunning: true});
+        expect(screen.getByRole('button', {name: 'Start'})).toBeDisabled();
+        rerender(<Production {...props} brewingStatus={createBrewingStatus(ProcessState.FINISHED)} isPollingRunning={false} />);
+        expect(screen.getByRole('button', {name: 'Start'})).not.toBeDisabled();
+        rerender(<Production {...props} brewingStatus={createBrewingStatus(ProcessState.ABORTED)} isPollingRunning={false} />);
+        expect(screen.getByRole('button', {name: 'Start'})).not.toBeDisabled();
+        rerender(<Production {...props} brewingStatus={createBrewingStatus(ProcessState.IDLE)} isPollingRunning={false} />);
+        expect(screen.getByRole('button', {name: 'Start'})).not.toBeDisabled();
+        rerender(<Production {...props} brewingStatus={createBrewingStatus(ProcessState.IDLE)} isPollingRunning={false} />);
+        expect(screen.getByRole('button', {name: 'Start'})).not.toBeDisabled();
+    });
+
+
+    it('enables the start button again after a failed start request without active control status', () => {
+        const {rerender, props} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.IDLE), isPollingRunning: false});
+        fireEvent.click(screen.getByRole('button', {name: 'Start'}));
+        expect(screen.getByRole('button', {name: 'Start'})).toBeDisabled();
+        rerender(<Production {...props} brewingStatus={createBrewingStatus(ProcessState.IDLE)} isPollingRunning={true} />);
+        expect(screen.getByRole('button', {name: 'Start'})).toBeDisabled();
+        rerender(<Production {...props} brewingStatus={createBrewingStatus(ProcessState.IDLE)} isPollingRunning={false} />);
+        expect(screen.getByRole('button', {name: 'Start'})).not.toBeDisabled();
+    });
+
+    it('keeps the existing recipe transfer and start flow unchanged', () => {
+        const {props} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.IDLE), isPollingRunning: false});
+        fireEvent.click(screen.getByRole('button', {name: 'Start'}));
+        expect(props.sendBrewingData).toHaveBeenCalledTimes(1);
+    });
+
+});
 
 describe('Production recipe water filling', () => {
     it('sends the recipe mash water volume when Hauptguss is clicked', () => {
