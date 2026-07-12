@@ -1,6 +1,6 @@
 import { ofType } from 'redux-observable';
 import {from, of, interval, EMPTY, filter, takeWhile, startWith, Observable} from 'rxjs';
-import { catchError, map, mergeMap, switchMap, takeUntil } from 'rxjs/operators';
+import { catchError, map, mergeMap, switchMap } from 'rxjs/operators';
 import { ProductionActions } from '../actions/actions';
 import { ProductionRepository } from '../repositorys/ProductionRepository';
 import { dataCollector } from '../utils/DataCollector/dataCollector';
@@ -55,13 +55,10 @@ export const startWaterFillingEpic$ = (action$: any) =>
         switchMap((result) => {
           if (result) {
             return interval(1000).pipe(
+              startWith(0),
               switchMap(() => from(ProductionRepository.getWaterStatus())),
+              takeWhile((status: any) => status?.openClose === true, true),
               map((status: any) => ProductionActions.setWaterStatus(status)),
-              takeUntil(
-                from(ProductionRepository.getWaterStatus()).pipe(
-                  map((status: any) => status && status.openClose !== true)
-                )
-              ),
               catchError((error) => of(ProductionActions.waterFillingFailure(error)))
             );
           } else {
