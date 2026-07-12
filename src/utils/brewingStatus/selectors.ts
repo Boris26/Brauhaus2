@@ -1,4 +1,5 @@
-import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
+import {ConfirmStates} from '../../enums/eConfirmStates';
+import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor, WaitingState} from '../../model/brewingStatus.types';
 
 /**
  * Diese Selektoren kapseln alle UI-Entscheidungen.
@@ -12,10 +13,36 @@ export const isProcessFinished = (aStatus?: BrewingStatus) => aStatus?.process.s
 export const isProcessAborted = (aStatus?: BrewingStatus) => aStatus?.process.state === ProcessState.ABORTED;
 export const isProcessInError = (aStatus?: BrewingStatus) => aStatus?.process.state === ProcessState.ERROR;
 export const isStepWaiting = (aStatus?: BrewingStatus) => aStatus?.currentStep.mode === ProcessMode.WAITING;
-const CONCRETE_CONFIRMATION_WAITING_REASONS = [WaitingFor.IODINE_TEST, WaitingFor.MASHING_IN_CONFIRMATION, WaitingFor.BOILING_CONFIRMATION, WaitingFor.COOKING_CONFIRMATION, WaitingFor.DECOCTION_CONFIRMATION];
-export const hasConcreteConfirmation = (aStatus?: BrewingStatus) => !!aStatus && CONCRETE_CONFIRMATION_WAITING_REASONS.includes(aStatus.waiting.waitingFor);
-export const shouldShowWaitingDialog = (aStatus?: BrewingStatus) => !!aStatus && isProcessActive(aStatus) && isStepWaiting(aStatus) && hasConcreteConfirmation(aStatus);
-export const shouldShowConfirmButton = (aStatus?: BrewingStatus) => !!aStatus && isStepWaiting(aStatus) && aStatus.waiting.canConfirm && hasConcreteConfirmation(aStatus);
+
+export const confirmationTypeByWaitingState: Partial<Record<WaitingState, ConfirmStates>> = {
+    [WaitingFor.IODINE_TEST]: ConfirmStates.IODINE,
+    [WaitingFor.MASHING_IN_CONFIRMATION]: ConfirmStates.MASHUP,
+    [WaitingFor.MASHING_OUT_CONFIRMATION]: ConfirmStates.MASHUP,
+    [WaitingFor.BOILING_CONFIRMATION]: ConfirmStates.BOILING,
+    [WaitingFor.COOKING_CONFIRMATION]: ConfirmStates.COOKING,
+    [WaitingFor.DECOCTION_CONFIRMATION]: ConfirmStates.DECOCTION,
+};
+
+const warnedUnknownWaitingStates = new Set<string>();
+const waitingStatesWithoutConfirmEndpoint = [WaitingFor.NONE, WaitingFor.USER_CONFIRMATION];
+
+export const getConfirmationTypeForWaitingState = (aWaitingFor?: WaitingState): ConfirmStates | undefined => {
+    if (!aWaitingFor || waitingStatesWithoutConfirmEndpoint.includes(aWaitingFor as WaitingFor)) {
+        return undefined;
+    }
+
+    const confirmationType = confirmationTypeByWaitingState[aWaitingFor];
+    if (confirmationType === undefined && !warnedUnknownWaitingStates.has(aWaitingFor)) {
+        warnedUnknownWaitingStates.add(aWaitingFor);
+        console.warn(`Unknown waitingFor value "${aWaitingFor}" has no concrete confirmation command; no Confirm endpoint will be called.`);
+    }
+    return confirmationType;
+};
+
+export const getConfirmationType = (aStatus?: BrewingStatus) => getConfirmationTypeForWaitingState(aStatus?.waiting.waitingFor);
+export const hasConcreteConfirmation = (aStatus?: BrewingStatus) => getConfirmationType(aStatus) !== undefined;
+export const shouldShowWaitingDialog = (aStatus?: BrewingStatus) => !!aStatus && isProcessActive(aStatus) && isStepWaiting(aStatus) && aStatus.waiting.canConfirm === true && hasConcreteConfirmation(aStatus);
+export const shouldShowConfirmButton = (aStatus?: BrewingStatus) => shouldShowWaitingDialog(aStatus);
 export const getConfirmButtonLabel = (aStatus?: BrewingStatus) => {
     switch (aStatus?.waiting.waitingFor) {
         case WaitingFor.IODINE_TEST: return 'Iodine bestätigen';

@@ -23,4 +23,9 @@ describe('normalizeBrewingStatus', () => {
     expect(s.currentStep.mode).toBe(ProcessMode.HOLDING);
     expect(s.waiting.waitingFor).toBe(WaitingFor.IODINE_TEST);
   });
+
+  it('preserves unknown waitingFor values for central confirmation mapping warnings', () => {
+    const s = normalizeBrewingStatus({waiting:{waitingFor:'future_confirmation', canConfirm:true}});
+    expect(s.waiting.waitingFor).toBe('FUTURE_CONFIRMATION');
+  });
 });

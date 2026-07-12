@@ -1,5 +1,6 @@
-import {getBrewingStatusLabel, getConfirmButtonLabel, getCountdownValue, isBrewingProcessActive, shouldShowConfirmButton, shouldShowCountdown, shouldShowWaitingDialog} from './selectors';
+import {getBrewingStatusLabel, getConfirmButtonLabel, getConfirmationType, getCountdownValue, isBrewingProcessActive, shouldShowConfirmButton, shouldShowCountdown, shouldShowWaitingDialog} from './selectors';
 import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
+import {ConfirmStates} from '../../enums/eConfirmStates';
 
 const makeStatus = (aPart: Partial<BrewingStatus>): BrewingStatus => ({
   elapsedTime: 0, currentTime: 0,
@@ -39,6 +40,18 @@ describe('brewing selectors', () => {
   it('does not enable or show confirmation without a concrete confirm endpoint', () => {
     const s = makeStatus({currentStep:{phase:ProcessPhase.RAST, mode:ProcessMode.WAITING}, waiting:{waitingFor:WaitingFor.USER_CONFIRMATION, canConfirm:true}});
     expect(shouldShowConfirmButton(s)).toBe(false);
+    expect(shouldShowWaitingDialog(s)).toBe(false);
+  });
+
+  it('maps MASHING_OUT_CONFIRMATION to the existing Mashup confirmation endpoint', () => {
+    const s = makeStatus({currentStep:{phase:ProcessPhase.MASHING_OUT, mode:ProcessMode.WAITING}, waiting:{waitingFor:WaitingFor.MASHING_OUT_CONFIRMATION, canConfirm:true}});
+    expect(getConfirmationType(s)).toBe(ConfirmStates.MASHUP);
+    expect(shouldShowWaitingDialog(s)).toBe(true);
+    expect(shouldShowConfirmButton(s)).toBe(true);
+  });
+
+  it('requires canConfirm to show the confirmation dialog', () => {
+    const s = makeStatus({currentStep:{phase:ProcessPhase.MASHING_OUT, mode:ProcessMode.WAITING}, waiting:{waitingFor:WaitingFor.MASHING_OUT_CONFIRMATION, canConfirm:false}});
     expect(shouldShowWaitingDialog(s)).toBe(false);
   });
 

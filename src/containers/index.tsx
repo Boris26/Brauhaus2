@@ -6,16 +6,15 @@ import Production from "./Production/Production";
 import DatabaseOverview from "./DatabaseOverview/BeerForm";
 import SimpleBar from "simplebar-react";
 import ModalDialog, {DialogType} from "../components/ModalDialog/ModalDialog";
-import {BrewingStatus, WaitingFor} from "../model/brewingStatus.types";
-import {BeerActions, ProductionActions} from "../actions/actions";
+import {BrewingStatus} from "../model/brewingStatus.types";
+import {ProductionActions} from "../actions/actions";
 import {ConfirmStates} from "../enums/eConfirmStates";
-import {FinishedBrew} from "../model/FinishedBrew";
 import FinishedBrewsTable from "./MainView/FinishBrewsBeers/FinishedBrewsTable";
 import BrewingCalculations from "./BrewingCalculations/BrewingCalculations";
 import IngredientsFormPage from "./DatabaseOverview/IngredientsFormPage";
 import SettingsPage from "./Settings/SettingsPage";
 import VersionPage from "./Version/VersionPage";
-import {getBrewingStatusLabel, shouldShowConfirmButton, shouldShowWaitingDialog} from "../utils/brewingStatus/selectors";
+import {getBrewingStatusLabel, getConfirmationType, shouldShowConfirmButton, shouldShowWaitingDialog} from "../utils/brewingStatus/selectors";
 
 interface indexMainProps {
     viewState: Views;
@@ -43,24 +42,7 @@ export class Index extends React.Component<indexMainProps> {
         }
     }
 
-    getConfirmStateForWaiting = (): ConfirmStates | undefined => {
-        const waitingFor = this.props.brewingStatus?.waiting?.waitingFor;
-        // Wait is a status, not a confirm command. Only concrete wait reasons may send Confirm endpoints.
-        switch (waitingFor) {
-            case WaitingFor.IODINE_TEST:
-                return ConfirmStates.IODINE;
-            case WaitingFor.MASHING_IN_CONFIRMATION:
-                return ConfirmStates.MASHUP;
-            case WaitingFor.BOILING_CONFIRMATION:
-                return ConfirmStates.BOILING;
-            case WaitingFor.COOKING_CONFIRMATION:
-                return ConfirmStates.COOKING;
-            case WaitingFor.DECOCTION_CONFIRMATION:
-                return ConfirmStates.DECOCTION;
-            default:
-                return undefined;
-        }
-    }
+    getConfirmStateForWaiting = (): ConfirmStates | undefined => getConfirmationType(this.props.brewingStatus);
 
     confirmDialog = () => {
         const {confirm} = this.props;
