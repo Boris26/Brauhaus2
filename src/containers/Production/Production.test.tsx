@@ -1,0 +1,152 @@
+import React from 'react';
+import {render, screen, fireEvent, waitFor} from '@testing-library/react';
+import {Production} from './Production';
+import {Beer} from '../../model/Beer';
+import {ToggleState} from '../../enums/eToggleState';
+import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
+
+const createBeer = (aMashVolume: number | undefined = 18, aSpargeVolume: number | undefined = 12, aId: string = '1'): Beer => ({
+    id: aId,
+    name: aId,
+    type: 'Pils',
+    color: 'Gold',
+    alcohol: 5,
+    originalwort: 12,
+    bitterness: 20,
+    description: '',
+    rating: 3,
+    mashVolume: aMashVolume as number,
+    spargeVolume: aSpargeVolume as number,
+    cookingTime: 60,
+    cookingTemperatur: 99,
+    fermentation: [],
+    malts: [],
+    wortBoiling: {hops: []},
+    fermentationMaturation: {yeast: []}
+});
+
+const createBrewingStatus = (aProcessState: ProcessState = ProcessState.ACTIVE): BrewingStatus => ({
+    elapsedTime: 0,
+    currentTime: 0,
+    process: {state: aProcessState},
+    currentStep: {
+        index: 0,
+        count: 0,
+        phase: ProcessPhase.NONE,
+        mode: ProcessMode.NONE,
+        name: '',
+        duration: 0,
+        elapsedTime: 0,
+        remainingTime: 0
+    },
+    temperature: {},
+    hardware: {},
+    waiting: {waitingFor: WaitingFor.NONE, canConfirm: false},
+    error: {}
+});
+
+const renderProduction = (aOverrides: Partial<React.ComponentProps<typeof Production>> = {}) => {
+    const props: React.ComponentProps<typeof Production> = {
+        selectedBeer: createBeer(),
+        temperature: 20,
+        currentAgitatorState: ToggleState.OFF,
+        currentAgitatorSpeed: 5,
+        agitatorSpeed: 5,
+        agitatorIsRunning: ToggleState.OFF,
+        getTemperatures: jest.fn(),
+        toggleAgitator: jest.fn(),
+        setAgitatorSpeed: jest.fn(),
+        startWaterFilling: jest.fn(),
+        isWaterFillingSuccessful: true,
+        isToggleAgitatorSuccess: true,
+        sendBrewingData: jest.fn(),
+        brewingStatus: createBrewingStatus(),
+        startPolling: jest.fn(),
+        stopPolling: jest.fn(),
+        isBackenAvailable: {isBackenAvailable: true, statusText: 'OK'},
+        waterStatus: {liters: 0, openClose: false},
+        addFinishedBrew: jest.fn(),
+        nextProcedureStep: jest.fn(),
+        ...aOverrides
+    };
+    return {props, ...render(<Production {...props} />)};
+};
+
+describe('Production recipe water filling', () => {
+    it('sends the recipe mash water volume when Hauptguss is clicked', () => {
+        const {props} = renderProduction({selectedBeer: createBeer(21, 9)});
+        fireEvent.click(screen.getByRole('button', {name: 'Hauptguss'}));
+        expect(props.startWaterFilling).toHaveBeenCalledWith(21);
+    });
+
+    it('sends the recipe sparge water volume when Nachguss is clicked', () => {
+        const {props} = renderProduction({selectedBeer: createBeer(21, 9)});
+        fireEvent.click(screen.getByRole('button', {name: 'Nachguss'}));
+        expect(props.startWaterFilling).toHaveBeenCalledWith(9);
+    });
+
+    it('disables both recipe water buttons while water filling is active', () => {
+        renderProduction({waterStatus: {liters: 3, openClose: true}});
+        expect(screen.getByRole('button', {name: 'Hauptguss'})).toBeDisabled();
+        expect(screen.getByRole('button', {name: 'Nachguss'})).toBeDisabled();
+    });
+
+    it('keeps Hauptguss disabled after completed mash water filling and leaves Nachguss available', () => {
+        const {rerender, props} = renderProduction({selectedBeer: createBeer(21, 9), waterStatus: {liters: 0, openClose: false}});
+        fireEvent.click(screen.getByRole('button', {name: 'Hauptguss'}));
+        rerender(<Production {...props} waterStatus={{liters: 2, openClose: true}} />);
+        rerender(<Production {...props} waterStatus={{liters: 21, openClose: false}} />);
+        expect(screen.getByRole('button', {name: 'Hauptguss'})).toBeDisabled();
+        expect(screen.getByRole('button', {name: 'Nachguss'})).not.toBeDisabled();
+    });
+
+    it('keeps Nachguss disabled after completed sparge water filling and leaves Hauptguss available', () => {
+        const {rerender, props} = renderProduction({selectedBeer: createBeer(21, 9), waterStatus: {liters: 0, openClose: false}});
+        fireEvent.click(screen.getByRole('button', {name: 'Nachguss'}));
+        rerender(<Production {...props} waterStatus={{liters: 2, openClose: true}} />);
+        rerender(<Production {...props} waterStatus={{liters: 9, openClose: false}} />);
+        expect(screen.getByRole('button', {name: 'Nachguss'})).toBeDisabled();
+        expect(screen.getByRole('button', {name: 'Hauptguss'})).not.toBeDisabled();
+    });
+
+    it('disables recipe water buttons with missing or invalid volumes', () => {
+        renderProduction({selectedBeer: createBeer(0, -1)});
+        expect(screen.getByRole('button', {name: 'Hauptguss'})).toBeDisabled();
+        expect(screen.getByRole('button', {name: 'Nachguss'})).toBeDisabled();
+    });
+
+    it('does not mark recipe water filling complete when the request fails before water starts', async () => {
+        const {rerender, props} = renderProduction({selectedBeer: createBeer(21, 9), waterStatus: {liters: 0, openClose: false}});
+        fireEvent.click(screen.getByRole('button', {name: 'Hauptguss'}));
+        rerender(<Production {...props} isWaterFillingSuccessful={false} waterStatus={{liters: 0, openClose: false}} />);
+        await waitFor(() => expect(screen.getByRole('button', {name: 'Hauptguss'})).not.toBeDisabled());
+    });
+
+    it('resets completed recipe water filling when the recipe changes', () => {
+        const {rerender, props} = renderProduction({selectedBeer: createBeer(21, 9, '1'), waterStatus: {liters: 0, openClose: false}});
+        fireEvent.click(screen.getByRole('button', {name: 'Hauptguss'}));
+        rerender(<Production {...props} waterStatus={{liters: 2, openClose: true}} />);
+        rerender(<Production {...props} waterStatus={{liters: 21, openClose: false}} />);
+        expect(screen.getByRole('button', {name: 'Hauptguss'})).toBeDisabled();
+        rerender(<Production {...props} selectedBeer={createBeer(22, 10, '2')} waterStatus={{liters: 0, openClose: false}} />);
+        expect(screen.getByRole('button', {name: 'Hauptguss'})).not.toBeDisabled();
+    });
+
+
+    it('resets completed recipe water filling when a new brew starts', () => {
+        const {rerender, props} = renderProduction({selectedBeer: createBeer(21, 9), waterStatus: {liters: 0, openClose: false}});
+        fireEvent.click(screen.getByRole('button', {name: 'Hauptguss'}));
+        rerender(<Production {...props} waterStatus={{liters: 2, openClose: true}} />);
+        rerender(<Production {...props} waterStatus={{liters: 21, openClose: false}} />);
+        expect(screen.getByRole('button', {name: 'Hauptguss'})).toBeDisabled();
+        fireEvent.click(screen.getByRole('button', {name: 'Start'}));
+        expect(screen.getByRole('button', {name: 'Hauptguss'})).not.toBeDisabled();
+    });
+
+    it('keeps the existing manual water filling control unchanged', () => {
+        const {props, container} = renderProduction({selectedBeer: createBeer(21, 9)});
+        const manualWaterSwitch = container.querySelector('.settingsRowWater input') as HTMLInputElement;
+        fireEvent.click(manualWaterSwitch);
+        expect(props.startWaterFilling).toHaveBeenCalledWith(0);
+    });
+});

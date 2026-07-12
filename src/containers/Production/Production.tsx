@@ -33,7 +33,7 @@ import {ProcessList, createProcessSteps} from "./ProcessList/ProcessList";
 import { dataCollector } from '../../utils/DataCollector/dataCollector';
 import {getBrewingStatusLabel} from "../../utils/brewingStatus/selectors";
 
-interface ProductionProps {
+export interface ProductionProps {
     selectedBeer: Beer;
     temperature: number;
     currentAgitatorState: ToggleState;
@@ -55,6 +55,8 @@ interface ProductionProps {
     addFinishedBrew: (finishedBrew: FinishedBrew) => void;
     nextProcedureStep: () => void;
 }
+
+type RecipeWaterFill = 'mash' | 'sparge';
 
 interface ProductionState {
     agitatorState: ToggleState;
@@ -80,9 +82,13 @@ interface ProductionState {
     indexOfCurrentStep: number;
     brewingIsRunning: boolean;
     announcedHopTimes: number[];
+    completedMashWaterFill: boolean;
+    completedSpargeWaterFill: boolean;
+    pendingRecipeWaterFill: RecipeWaterFill | undefined;
+    waterFillHasStarted: boolean;
 }
 
-class Production extends React.Component<ProductionProps, ProductionState> {
+export class Production extends React.Component<ProductionProps, ProductionState> {
     private blinkIntervalMainSwitch: NodeJS.Timeout | null = null;
     private blinkIntervalWaterSwitch: NodeJS.Timeout | null = null;
     private timelineData: TimelineData[] = [];
@@ -118,7 +124,11 @@ class Production extends React.Component<ProductionProps, ProductionState> {
             brewingFinished: false,
             indexOfCurrentStep: 0,
             brewingIsRunning: false,
-            announcedHopTimes: []
+            announcedHopTimes: [],
+            completedMashWaterFill: false,
+            completedSpargeWaterFill: false,
+            pendingRecipeWaterFill: undefined,
+            waterFillHasStarted: false
         }
     }
 
@@ -132,12 +142,24 @@ class Production extends React.Component<ProductionProps, ProductionState> {
 
 
     componentDidUpdate(prevProps: Readonly<ProductionProps>, prevState: Readonly<ProductionState>) {
-        const {toggleAgitator, brewingStatus,isBackenAvailable,temperature,isToggleAgitatorSuccess,isWaterFillingSuccessful} = this.props;
+        const {toggleAgitator, brewingStatus,isBackenAvailable,temperature,isToggleAgitatorSuccess,isWaterFillingSuccessful, waterStatus} = this.props;
         const {intervalSwitchState, mainSwitchState, waterSwitchState,heatingAndStirringSwitchState,showHopsDialog,showFinishDialog, indexOfCurrentStep} = this.state;
 
 
         if (prevProps.selectedBeer !== this.props.selectedBeer) {
-            this.setState({indexOfCurrentStep: 0});
+            this.resetRecipeWaterFillState({indexOfCurrentStep: 0});
+        }
+
+        if (prevProps.brewingStatus?.process?.state !== brewingStatus?.process?.state && brewingStatus?.process?.state !== ProcessState.ACTIVE) {
+            this.resetRecipeWaterFillState();
+        }
+
+        if (waterStatus?.openClose === true && !prevProps.waterStatus?.openClose) {
+            this.setState({waterFillHasStarted: true});
+        }
+
+        if (prevProps.waterStatus?.openClose === true && waterStatus?.openClose === false) {
+            this.completePendingRecipeWaterFill();
         }
 
 
@@ -289,6 +311,66 @@ class Production extends React.Component<ProductionProps, ProductionState> {
         this.setState({liters: value});
     }
 
+    resetRecipeWaterFillState = (aAdditionalState?: Partial<ProductionState>): void => {
+        this.setState({
+            completedMashWaterFill: false,
+            completedSpargeWaterFill: false,
+            pendingRecipeWaterFill: undefined,
+            waterFillHasStarted: false,
+            ...aAdditionalState
+        });
+    }
+
+    completePendingRecipeWaterFill = (): void => {
+        const {pendingRecipeWaterFill, waterFillHasStarted} = this.state;
+        if (!waterFillHasStarted || pendingRecipeWaterFill === undefined) {
+            this.setState({waterSwitchState: false, waterFillHasStarted: false});
+            return;
+        }
+        this.setState({
+            waterSwitchState: false,
+            waterFillHasStarted: false,
+            pendingRecipeWaterFill: undefined,
+            completedMashWaterFill: pendingRecipeWaterFill === 'mash' ? true : this.state.completedMashWaterFill,
+            completedSpargeWaterFill: pendingRecipeWaterFill === 'sparge' ? true : this.state.completedSpargeWaterFill
+        });
+    }
+
+    getRecipeWaterVolume = (aRecipeWaterFill: RecipeWaterFill): number | undefined => {
+        const {selectedBeer} = this.props;
+        if (isUndefined(selectedBeer)) {
+            return undefined;
+        }
+        const volume = aRecipeWaterFill === 'mash' ? Number(selectedBeer.mashVolume) : Number(selectedBeer.spargeVolume);
+        return Number.isFinite(volume) && volume > 0 ? volume : undefined;
+    }
+
+    isWaterFillingActive = (): boolean => {
+        return this.state.waterSwitchState || this.props.waterStatus?.openClose === true;
+    }
+
+    startRecipeWaterFilling = (aRecipeWaterFill: RecipeWaterFill): void => {
+        const volume = this.getRecipeWaterVolume(aRecipeWaterFill);
+        if (volume === undefined || this.isWaterFillingActive()) {
+            return;
+        }
+        this.setState({
+            waterSwitchState: true,
+            liters: volume,
+            pendingRecipeWaterFill: aRecipeWaterFill,
+            waterFillHasStarted: false
+        });
+        this.props.startWaterFilling(volume);
+    }
+
+    startMashWaterFilling = (): void => {
+        this.startRecipeWaterFilling('mash');
+    }
+
+    startSpargeWaterFilling = (): void => {
+        this.startRecipeWaterFilling('sparge');
+    }
+
     toggleWaterSwitchState = () => {
         const {waterSwitchState, liters,} = this.state;
         const {startWaterFilling} = this.props;
@@ -301,6 +383,7 @@ class Production extends React.Component<ProductionProps, ProductionState> {
     }
     startBrewing = () => {
         const {selectedBeer, sendBrewingData} = this.props;
+        this.resetRecipeWaterFillState();
         console.log('Starting brewing with data:', sendBrewingData);
         const result = mapBeerToBrewingData(selectedBeer);
         console.log('Starting brewing with data:', result);
@@ -418,6 +501,11 @@ class Production extends React.Component<ProductionProps, ProductionState> {
             mainAgitatorError
         } = this.state;
         const {currentAgitatorSpeed, agitatorIsRunning, agitatorSpeed, waterStatus,selectedBeer} = this.props;
+        const waterFillingActive = this.isWaterFillingActive();
+        const mashWaterVolume = this.getRecipeWaterVolume('mash');
+        const spargeWaterVolume = this.getRecipeWaterVolume('sparge');
+        const mashWaterDisabled = waterFillingActive || this.state.completedMashWaterFill || mashWaterVolume === undefined;
+        const spargeWaterDisabled = waterFillingActive || this.state.completedSpargeWaterFill || spargeWaterVolume === undefined;
         return (
             <div className="Settings">
                 <h3>Settings</h3>
@@ -465,6 +553,10 @@ class Production extends React.Component<ProductionProps, ProductionState> {
                     </div>
 
 
+                </div>
+                <div className="recipeWaterButtons">
+                    <button className="recipeWaterBtn" disabled={mashWaterDisabled} onClick={this.startMashWaterFilling}>Hauptguss</button>
+                    <button className="recipeWaterBtn" disabled={spargeWaterDisabled} onClick={this.startSpargeWaterFilling}>Nachguss</button>
                 </div>
                 <div className="startBtnDiv">
                     <button className="startBtn" disabled={isUndefined(selectedBeer) } onClick={this.startBrewing}>Start</button>
