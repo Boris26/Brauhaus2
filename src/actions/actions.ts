@@ -804,8 +804,9 @@ export namespace ProductionActions {
         };
     }
 
-    export function waterFillingFailure(error: any) {
-        return undefined;
+    export function waterFillingFailure(_error: any): StartWaterFillingSuccess {
+        void _error;
+        return startWaterFillingSuccess(false);
     }
 
     export function webSocketConnect(): WebSocketConnect {
