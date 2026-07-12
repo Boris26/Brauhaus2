@@ -36,6 +36,7 @@ export interface ProcessListProps {
     currentStepIndex: number; // 1-based PI-control currentStep.index
     currentStep?: ProcessListCurrentStep;
     onNextStep?: () => void;
+    isNextStepDisabled?: boolean;
 }
 
 interface ProcessListState {
@@ -101,7 +102,7 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
     };
 
     render() {
-        const { selectedBeer, onNextStep } = this.props;
+        const { selectedBeer, onNextStep, isNextStepDisabled = false } = this.props;
         const steps = createProcessSteps(selectedBeer);
         const stepIndex = this.effectiveStepIndex;
 
@@ -136,6 +137,7 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
                             <button
                                 className="nextStepBtn"
                                 onClick={onNextStep}
+                                disabled={isNextStepDisabled}
                                 title="Nächster Prozessschritt"
                             >
                                 Nächster Schritt

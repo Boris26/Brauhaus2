@@ -1,4 +1,4 @@
-import {getBrewingStatusLabel, getConfirmButtonLabel, getCountdownValue, shouldShowConfirmButton, shouldShowCountdown, shouldShowWaitingDialog} from './selectors';
+import {getBrewingStatusLabel, getConfirmButtonLabel, getCountdownValue, isBrewingProcessActive, shouldShowConfirmButton, shouldShowCountdown, shouldShowWaitingDialog} from './selectors';
 import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
 
 const makeStatus = (aPart: Partial<BrewingStatus>): BrewingStatus => ({
@@ -10,6 +10,13 @@ const makeStatus = (aPart: Partial<BrewingStatus>): BrewingStatus => ({
 });
 
 describe('brewing selectors', () => {
+  it('derives an active brewing process from process.state ACTIVE only', () => {
+    expect(isBrewingProcessActive(undefined)).toBe(false);
+    expect(isBrewingProcessActive(makeStatus({process:{state:ProcessState.IDLE}}))).toBe(false);
+    expect(isBrewingProcessActive(makeStatus({process:{state:ProcessState.ACTIVE}}))).toBe(true);
+    expect(isBrewingProcessActive(makeStatus({process:{state:ProcessState.FINISHED}}))).toBe(false);
+  });
+
   it('process priority labels', () => {
     expect(getBrewingStatusLabel(makeStatus({process:{state:ProcessState.ERROR}}))).toContain('Fehler');
     expect(getBrewingStatusLabel(makeStatus({process:{state:ProcessState.ABORTED}}))).toContain('abgebrochen');

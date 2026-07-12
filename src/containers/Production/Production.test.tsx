@@ -139,6 +139,62 @@ describe('Production start button', () => {
 
 });
 
+
+describe('Production next button', () => {
+    const getNextButton = () => screen.getByRole('button', {name: 'Nächster Schritt'});
+
+    it('disables the next button while the status has not been loaded yet', () => {
+        renderProduction({brewingStatus: undefined});
+        expect(getNextButton()).toBeDisabled();
+    });
+
+    it('disables the next button without an active brewing process and does not dispatch next', () => {
+        const {props} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.IDLE)});
+        const nextButton = getNextButton();
+
+        expect(nextButton).toBeDisabled();
+        fireEvent.click(nextButton);
+        expect(props.nextProcedureStep).not.toHaveBeenCalled();
+    });
+
+    it('guards the next click handler without an active brewing process', () => {
+        const {props} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.IDLE)});
+        const production = new Production(props);
+
+        production.handleNextProcedureStep();
+
+        expect(props.nextProcedureStep).not.toHaveBeenCalled();
+    });
+
+    it('enables the next button during an active brewing process and dispatches next exactly once', () => {
+        const {props} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.ACTIVE)});
+        const nextButton = getNextButton();
+
+        expect(nextButton).not.toBeDisabled();
+        fireEvent.click(nextButton);
+        expect(props.nextProcedureStep).toHaveBeenCalledTimes(1);
+    });
+
+    it('disables the next button again when the process is finished, aborted, or reset to idle', () => {
+        const {rerender, props} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.ACTIVE)});
+        expect(getNextButton()).not.toBeDisabled();
+
+        rerender(<Production {...props} brewingStatus={createBrewingStatus(ProcessState.FINISHED)} />);
+        expect(getNextButton()).toBeDisabled();
+
+        rerender(<Production {...props} brewingStatus={createBrewingStatus(ProcessState.ABORTED)} />);
+        expect(getNextButton()).toBeDisabled();
+
+        rerender(<Production {...props} brewingStatus={createBrewingStatus(ProcessState.IDLE)} />);
+        expect(getNextButton()).toBeDisabled();
+    });
+
+    it('keeps the next button disabled after a failed status request leaves no status available', () => {
+        renderProduction({brewingStatus: undefined});
+        expect(getNextButton()).toBeDisabled();
+    });
+});
+
 describe('Production recipe water filling', () => {
     it('sends the recipe mash water volume when Hauptguss is clicked', () => {
         const {props} = renderProduction({selectedBeer: createBeer(21, 9)});
