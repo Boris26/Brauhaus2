@@ -49,6 +49,7 @@ Needs verification: backend ordering of `GET beers`, because the UI treats the l
 - UI maps only concrete waiting reasons to confirm endpoints:
   - `IODINE_TEST` -> `Confirm/Iodine`
   - `MASHING_IN_CONFIRMATION` -> `Confirm/Mashup`
+  - `MASHING_OUT_CONFIRMATION` -> `Confirm/Mashup`
   - `BOILING_CONFIRMATION` -> `Confirm/Boiling`
   - `COOKING_CONFIRMATION` -> `Confirm/Cooking`
   - `DECOCTION_CONFIRMATION` -> `Confirm/Decoction`

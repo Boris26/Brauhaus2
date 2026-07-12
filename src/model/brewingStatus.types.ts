@@ -37,6 +37,8 @@ export enum WaitingFor {
     DECOCTION_CONFIRMATION = "DECOCTION_CONFIRMATION"
 }
 
+export type WaitingState = WaitingFor | string;
+
 export interface BrewingStatus {
     elapsedTime: number;
     currentTime: number;
@@ -63,7 +65,7 @@ export interface BrewingStatus {
         agitator?: string;
     };
     waiting: {
-        waitingFor: WaitingFor;
+        waitingFor: WaitingState;
         canConfirm: boolean;
     };
     error: {

@@ -1,9 +1,9 @@
-import {BrewingStatus, LegacyBrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
+import {BrewingStatus, LegacyBrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor, WaitingState} from '../../model/brewingStatus.types';
 const isObject = (aValue: unknown): aValue is Record<string, any> => typeof aValue === 'object' && aValue !== null;
 const normalizePhase = (aValue: unknown): ProcessPhase => { if (typeof aValue !== 'string') return ProcessPhase.NONE; const mapped = aValue.toUpperCase(); return (Object.values(ProcessPhase) as string[]).includes(mapped) ? mapped as ProcessPhase : ProcessPhase.NONE; };
 const normalizeMode = (aValue: unknown): ProcessMode => { if (typeof aValue !== 'string') return ProcessMode.NONE; const mapped = aValue.toUpperCase(); return (Object.values(ProcessMode) as string[]).includes(mapped) ? mapped as ProcessMode : ProcessMode.NONE; };
 const normalizeState = (aValue: unknown): ProcessState => { if (typeof aValue !== 'string') return ProcessState.IDLE; const mapped = aValue.toUpperCase(); return (Object.values(ProcessState) as string[]).includes(mapped) ? mapped as ProcessState : ProcessState.IDLE; };
-const normalizeWaitingFor = (aValue: unknown): WaitingFor => { if (typeof aValue !== 'string') return WaitingFor.NONE; const mapped = aValue.toUpperCase(); return (Object.values(WaitingFor) as string[]).includes(mapped) ? mapped as WaitingFor : WaitingFor.NONE; };
+const normalizeWaitingFor = (aValue: unknown): WaitingState => { if (typeof aValue !== 'string') return WaitingFor.NONE; const mapped = aValue.toUpperCase(); return (Object.values(WaitingFor) as string[]).includes(mapped) ? mapped as WaitingFor : mapped; };
 const mapLegacyTypeToPhase = (aType: unknown): ProcessPhase => { const value = typeof aType === 'string' ? aType.toUpperCase() : ''; if (value.includes('COOK')) return ProcessPhase.COOKING; if (value.includes('FINISH')) return ProcessPhase.FINISHED; if (value.includes('RAST')) return ProcessPhase.RAST; if (value.includes('MASHING_IN') || value.includes('EINMA')) return ProcessPhase.MASHING_IN; if (value.includes('MASHING_OUT') || value.includes('ABMA')) return ProcessPhase.MASHING_OUT; return ProcessPhase.NONE; };
 /**
  * Zentrale Kompatibilitätsschicht:
