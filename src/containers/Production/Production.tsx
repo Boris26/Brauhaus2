@@ -194,15 +194,15 @@ export class Production extends React.Component<ProductionProps, ProductionState
                 this.setState({waterSwitchState: false, waterFillingError: true});
             }, delay);
         }
-        if (brewingStatus?.currentStep?.mode !== prevProps?.brewingStatus?.currentStep?.mode) {
+        if (brewingStatus && brewingStatus.currentStep?.mode !== prevProps?.brewingStatus?.currentStep?.mode) {
             let timelineData: TimelineData | undefined;
             if (brewingStatus.currentStep.mode === ProcessMode.HEATING) {
                 timelineData = {
-                    type: 'heating', elapsed: brewingStatus?.elapsedTime
+                    type: 'heating', elapsed: brewingStatus.elapsedTime
                 }
             } else {
                 timelineData = {
-                    type: 'rast', elapsed: brewingStatus?.elapsedTime
+                    type: 'rast', elapsed: brewingStatus.elapsedTime
                 }
             }
             if (timelineData !== undefined) {
@@ -231,7 +231,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
         // Hopfengaben müssen relativ zur Kochphase berechnet werden,
         // nicht relativ zur gesamten Sudlaufzeit.
-        const aCookingElapsed = Math.floor(brewingStatus.currentStep?.elapsedTime ?? 0);
+        const aCookingElapsed = Math.floor(brewingStatus?.currentStep?.elapsedTime ?? 0);
         if (!hopsTimes.hasOwnProperty(aCookingElapsed)) {
             return;
         }
@@ -450,7 +450,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
         if (this.timelineData.length > 0) {
             const lastObject = _.last(this.timelineData);
             if (lastObject) {
-                lastObject.elapsed = brewingStatus?.elapsedTime;
+                lastObject.elapsed = brewingStatus?.elapsedTime ?? 0;
             }
         }
     }
@@ -476,9 +476,10 @@ export class Production extends React.Component<ProductionProps, ProductionState
         const {brewingStatus} = this.props;
         let elapsedTime = '----';
         let targetTime = '----';
-       if(!isNaN(brewingStatus?.elapsedTime))
+       const currentElapsedTime = brewingStatus?.elapsedTime;
+       if(typeof currentElapsedTime === 'number' && !isNaN(currentElapsedTime))
        {
-           elapsedTime = this.formatTime(brewingStatus?.elapsedTime);
+           elapsedTime = this.formatTime(currentElapsedTime);
        }
        const stepDuration = Number(brewingStatus?.currentStep?.duration);
        if(Number.isFinite(stepDuration) && stepDuration > 0)
