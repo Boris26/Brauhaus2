@@ -24,8 +24,8 @@ const createBeer = (aMashVolume: number | undefined = 18, aSpargeVolume: number 
         {type: 'Abmaischen', temperature: 78}
     ],
     malts: [],
-    wortBoiling: {hops: []},
-    fermentationMaturation: {yeast: []}
+    wortBoiling: {totalTime: 60, hops: []},
+    fermentationMaturation: {fermentationTemperature: 20, carbonation: 5, yeast: []}
 });
 
 const createBrewingStatus = (aProcessState: ProcessState = ProcessState.IDLE): BrewingStatus => ({

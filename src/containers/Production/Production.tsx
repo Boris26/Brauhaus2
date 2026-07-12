@@ -58,6 +58,7 @@ export interface ProductionProps {
 }
 
 type RecipeWaterFill = 'mash' | 'sparge';
+type RecipeWaterFillResetState = Pick<ProductionState, 'completedMashWaterFill' | 'completedSpargeWaterFill' | 'pendingRecipeWaterFill' | 'waterFillHasStarted'>;
 
 interface ProductionState {
     agitatorState: ToggleState;
@@ -320,14 +321,14 @@ export class Production extends React.Component<ProductionProps, ProductionState
         this.setState({liters: value});
     }
 
-    resetRecipeWaterFillState = (aAdditionalState?: Partial<ProductionState>): void => {
-        this.setState({
+    resetRecipeWaterFillState = (aAdditionalState?: Pick<ProductionState, 'indexOfCurrentStep'>): void => {
+        const resetState: RecipeWaterFillResetState = {
             completedMashWaterFill: false,
             completedSpargeWaterFill: false,
             pendingRecipeWaterFill: undefined,
-            waterFillHasStarted: false,
-            ...aAdditionalState
-        });
+            waterFillHasStarted: false
+        };
+        this.setState(aAdditionalState === undefined ? resetState : {...resetState, ...aAdditionalState});
     }
 
     completePendingRecipeWaterFill = (): void => {
