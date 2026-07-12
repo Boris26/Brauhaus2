@@ -7,6 +7,7 @@ import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from
  */
 export const isProcessIdle = (aStatus?: BrewingStatus) => aStatus?.process.state === ProcessState.IDLE;
 export const isProcessActive = (aStatus?: BrewingStatus) => aStatus?.process.state === ProcessState.ACTIVE;
+export const isBrewingProcessActive = (aStatus?: BrewingStatus) => isProcessActive(aStatus);
 export const isProcessFinished = (aStatus?: BrewingStatus) => aStatus?.process.state === ProcessState.FINISHED;
 export const isProcessAborted = (aStatus?: BrewingStatus) => aStatus?.process.state === ProcessState.ABORTED;
 export const isProcessInError = (aStatus?: BrewingStatus) => aStatus?.process.state === ProcessState.ERROR;

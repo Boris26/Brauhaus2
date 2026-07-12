@@ -31,7 +31,7 @@ import {eBrewState} from "../../enums/eBrewState";
 import {BackendAvailable} from "../../reducers/productionReducer";
 import {ProcessList, createProcessSteps} from "./ProcessList/ProcessList";
 import { dataCollector } from '../../utils/DataCollector/dataCollector';
-import {getBrewingStatusLabel, isProcessActive} from "../../utils/brewingStatus/selectors";
+import {getBrewingStatusLabel, isBrewingProcessActive, isProcessActive} from "../../utils/brewingStatus/selectors";
 
 export interface ProductionProps {
     selectedBeer: Beer;
@@ -47,7 +47,7 @@ export interface ProductionProps {
     isWaterFillingSuccessful: boolean;
     isToggleAgitatorSuccess: boolean;
     sendBrewingData: (brewingData: BrewingData) => void;
-    brewingStatus: BrewingStatus;
+    brewingStatus?: BrewingStatus;
     startPolling: () => void;
     stopPolling: () => void;
     isBackenAvailable: BackendAvailable;
@@ -429,6 +429,17 @@ export class Production extends React.Component<ProductionProps, ProductionState
         startPolling();
     }
 
+    isNextProcedureStepAvailable = (): boolean => {
+        return isBrewingProcessActive(this.props.brewingStatus);
+    }
+
+    handleNextProcedureStep = (): void => {
+        if (!this.isNextProcedureStepAvailable()) {
+            return;
+        }
+        this.props.nextProcedureStep();
+    }
+
     formatTime = (time: number) => {
         return TimeFormatter.formatSecondsToHMS(time);
     }
@@ -738,7 +749,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
     renderProcessList() {
         const { selectedBeer, brewingStatus } = this.props;
         return (
-            <ProcessList selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} onNextStep={this.props.nextProcedureStep} />
+            <ProcessList selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} onNextStep={this.handleNextProcedureStep} isNextStepDisabled={!this.isNextProcedureStepAvailable()} />
         );
     }
 
