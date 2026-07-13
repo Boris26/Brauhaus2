@@ -2,7 +2,7 @@ import {ProcessState} from '../model/brewingStatus.types';
 
 export interface DebugMetricsStateSnapshot {
     applicationReducer?: {
-        view?: string;
+        view?: string | number;
         message?: string[];
     };
     productionReducer?: {

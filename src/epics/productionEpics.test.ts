@@ -85,7 +85,9 @@ describe('startWaterFillingEpic$', () => {
 
     const action$ = new Subject<ProductionActions.StartWaterFilling>();
     const emittedActions: ProductionActions.AllProductionActions[] = [];
-    const subscription = startWaterFillingEpic$(action$).subscribe((aAction: ProductionActions.AllProductionActions): void => emittedActions.push(aAction));
+    const subscription = startWaterFillingEpic$(action$).subscribe((aAction: ProductionActions.AllProductionActions): void => {
+      emittedActions.push(aAction);
+    });
 
     action$.next(ProductionActions.startWaterFilling(24.8));
     await flushPromises();
@@ -138,7 +140,9 @@ describe('startWaterFillingEpic$', () => {
 
     const action$ = new Subject<ProductionActions.StartWaterFilling>();
     const emittedActions: ProductionActions.AllProductionActions[] = [];
-    const subscription = startWaterFillingEpic$(action$).subscribe((aAction: ProductionActions.AllProductionActions): void => emittedActions.push(aAction));
+    const subscription = startWaterFillingEpic$(action$).subscribe((aAction: ProductionActions.AllProductionActions): void => {
+      emittedActions.push(aAction);
+    });
 
     action$.next(ProductionActions.startWaterFilling(24.8));
     await flushPromises();
@@ -165,7 +169,9 @@ describe('startWaterFillingEpic$', () => {
 
     const action$ = new Subject<ProductionActions.StartWaterFilling>();
     const emittedActions: ProductionActions.AllProductionActions[] = [];
-    const subscription = startWaterFillingEpic$(action$).subscribe((aAction: ProductionActions.AllProductionActions): void => emittedActions.push(aAction));
+    const subscription = startWaterFillingEpic$(action$).subscribe((aAction: ProductionActions.AllProductionActions): void => {
+      emittedActions.push(aAction);
+    });
 
     action$.next(ProductionActions.startWaterFilling(24.8));
     await flushPromises();
@@ -218,7 +224,9 @@ describe('sendBrewingDataEpic$', (): void => {
 
     const action$ = new Subject<ProductionActions.SendBrewingData>();
     const emittedActions: ProductionActions.AllProductionActions[] = [];
-    const subscription = sendBrewingDataEpic$(action$).subscribe((aAction: ProductionActions.AllProductionActions): void => emittedActions.push(aAction));
+    const subscription = sendBrewingDataEpic$(action$).subscribe((aAction: ProductionActions.AllProductionActions): void => {
+      emittedActions.push(aAction);
+    });
 
     action$.next(ProductionActions.sendBrewingData(createBrewingData()));
     await flushPromises();
@@ -237,7 +245,9 @@ describe('sendBrewingDataEpic$', (): void => {
 
     const action$ = new Subject<ProductionActions.SendBrewingData>();
     const emittedActions: ProductionActions.AllProductionActions[] = [];
-    const subscription = sendBrewingDataEpic$(action$).subscribe((aAction: ProductionActions.AllProductionActions): void => emittedActions.push(aAction));
+    const subscription = sendBrewingDataEpic$(action$).subscribe((aAction: ProductionActions.AllProductionActions): void => {
+      emittedActions.push(aAction);
+    });
 
     action$.next(ProductionActions.sendBrewingData(createBrewingData()));
     await flushPromises();
