@@ -4,6 +4,8 @@ import { ThemeName, resolveInitialTheme } from '../utils/theme';
 import AllApplicationActions = ApplicationActions.AllApplicationActions;
 import ActionTypes = ApplicationActions.ActionTypes;
 
+export const MAX_APPLICATION_MESSAGES = 100;
+
 export interface ApplicationReducerState {
     view: Views;
     errorDialogHeader: string;
@@ -18,7 +20,7 @@ export const initialApplicationState: ApplicationReducerState = {
     errorDialogHeader: '',
     errorDialogMessage: '',
     errorDialogOpen: false,
-    message: [], // Default ist jetzt ein leeres Array
+    message: [],
     theme: resolveInitialTheme(),
 };
 
@@ -39,9 +41,14 @@ const applicationReducer = (
             };
         }
         case ActionTypes.SET_MESSAGE: {
+            const aMessages = aState.message || [];
+            const aLastMessage = aMessages.at(-1);
+            const aNextMessages = aLastMessage === aAction.payload.message
+                ? aMessages
+                : [...aMessages, aAction.payload.message];
             return {
                 ...aState,
-                message: [...(aState.message || []), aAction.payload.message],
+                message: aNextMessages.slice(-MAX_APPLICATION_MESSAGES),
             };
         }
 

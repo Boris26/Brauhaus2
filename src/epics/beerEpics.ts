@@ -9,6 +9,7 @@ import { FinishedBrewListPdfStrategy } from '../utils/pdf/finishedBrewStrategy';
 import {PdfGenerator} from "../utils/pdf/PdfGenerator";
 import { BeerPdfStrategy } from '../utils/pdf/shoppingListPdfStrategy';
 import {FinishedBeerRepository} from "../repositorys/FinishedBeerRepository";
+import {dataCollector} from "../utils/DataCollector/dataCollector";
 
 /**
  * Epic to handle the GET_BEERS action.
@@ -119,7 +120,10 @@ export const sendNewFinishedBeerEpic = (action$: any) =>
     ofType(BeerActions.ActionTypes.ADD_FINISHED_BREW),
     mergeMap((action: any) =>
       from(FinishedBeerRepository.sendNewFinishedBeer(action.payload.finishedBrew)).pipe(
-        map(() => BeerActions.getFinishedBeers(true)),
+        map(() => {
+          dataCollector.reset();
+          return BeerActions.getFinishedBeers(true);
+        }),
         catchError((aError: Error) =>  from([
             ApplicationActions.openErrorDialog(
                 true,

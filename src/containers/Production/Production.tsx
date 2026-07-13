@@ -229,7 +229,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
         const {hopsTimes, announcedHopTimes} = this.state;
         const {brewingStatus} = this.props;
 
-        // Hopfengaben müssen relativ zur Kochphase berechnet werden,
+        // Hop additions must be calculated relative to the cooking phase,
         // nicht relativ zur gesamten Sudlaufzeit.
         const aCookingElapsed = Math.floor(brewingStatus?.currentStep?.elapsedTime ?? 0);
         if (!hopsTimes.hasOwnProperty(aCookingElapsed)) {
@@ -407,6 +407,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
             return;
         }
         this.isBrewingStartRequestPending = true;
+        dataCollector.reset();
         this.resetRecipeWaterFillState();
         console.log('Starting brewing with data:', sendBrewingData);
         const result = mapBeerToBrewingData(selectedBeer);
@@ -709,13 +710,13 @@ export class Production extends React.Component<ProductionProps, ProductionState
                 name: selectedBeer.name || 'Unknown Beer',
                 liters: 0,
                 originalwort:  0,
-                residual_extract:  0, // Standardwert hinzugefügt
-                note: '', // Standardwert hinzugefügt
+                residual_extract:  0, // Default value added
+                note: '', // Default value added
                 startDate: new Date().toISOString().slice(0, 10),
                 beer_id: selectedBeer.id.toString(), // Assuming beer_id is a string
                 active: true,
                 state: eBrewState.FERMENTATION,
-                brewValues: jsonString // Messdaten anhängen
+                brewValues: jsonString // Attach measurement data
             };
             addFinishedBrew(finishedBrew);
         }

@@ -1,14 +1,20 @@
 import { ofType } from 'redux-observable';
 import {from, of, interval, EMPTY, filter, takeWhile, startWith, Observable} from 'rxjs';
-import { catchError, map, mergeMap, switchMap } from 'rxjs/operators';
+import { catchError, exhaustMap, map, mergeMap, switchMap } from 'rxjs/operators';
 import { ProductionActions } from '../actions/actions';
 import { ProductionRepository } from '../repositorys/ProductionRepository';
 import { dataCollector } from '../utils/DataCollector/dataCollector';
 import { WebSocketController } from '../utils/WebSocketController';
 import {BaseURL} from "../global";
 import {isProcessAborted, isProcessFinished, isProcessInError} from "../utils/brewingStatus/selectors";
+import {BackendAvailable} from "../reducers/productionReducer";
+import {BrewingStatus} from "../model/brewingStatus.types";
+import {debugMetrics} from "../utils/debugMetrics";
 
 const BREWING_STATUS_POLL_INTERVAL = 1000;
+export const BREWING_STATUS_REQUEST_TIMEOUT = 8000;
+export const WATER_STATUS_REQUEST_TIMEOUT = 8000;
+export const WATER_FILLING_MAX_DURATION = 30 * 60 * 1000;
 const WS_URL = (typeof BaseURL !== 'undefined' ? BaseURL : '').replace(/^http/, 'ws');
 let wsController: WebSocketController | null = null;
 
@@ -54,12 +60,20 @@ export const startWaterFillingEpic$ = (action$: any) =>
       from(ProductionRepository.fillWaterAutomatic(action.payload.liters)).pipe(
         switchMap((result) => {
           if (result) {
+            const startedAt = Date.now();
             return interval(1000).pipe(
               startWith(0),
-              switchMap(() => from(ProductionRepository.getWaterStatus())),
-              takeWhile((status: any) => status?.openClose === true, true),
-              map((status: any) => ProductionActions.setWaterStatus(status)),
-              catchError((error) => of(ProductionActions.waterFillingFailure(error)))
+              exhaustMap(() => {
+                if (Date.now() - startedAt >= WATER_FILLING_MAX_DURATION) {
+                  return of(ProductionActions.waterFillingFailure('Water filling timed out'));
+                }
+                return from(ProductionRepository.getWaterStatus(WATER_STATUS_REQUEST_TIMEOUT, true)).pipe(
+                  map((status) => ProductionActions.setWaterStatus(status)),
+                  catchError((error) => of(ProductionActions.waterFillingFailure(error)))
+                );
+              }),
+              takeWhile((actionResult) => actionResult.type !== ProductionActions.ActionTypes.START_WATER_FILLING_SUCCESS, true),
+              takeWhile((actionResult) => actionResult.type !== ProductionActions.ActionTypes.SET_WATER_STATUS || actionResult.payload.waterStatus.openClose === true, true)
             );
           } else {
             return of(ProductionActions.waterFillingFailure('fillWaterAutomatic failed'));
@@ -82,12 +96,20 @@ export const sendBrewingDataEpic$ = (action$: any) =>
               switchMap((startResult) => {
                 if (startResult) {
                   return interval(BREWING_STATUS_POLL_INTERVAL).pipe(
-                    switchMap(() =>
-                      from(ProductionRepository.getBrewingStatus()).pipe(
-                        catchError(() => of(null))
-                      )
-                    ),
-                    filter((status): status is { available: any; brewingStatus: any } => status !== null),
+                    exhaustMap(() => {
+                      debugMetrics.statusRequestStarted();
+                      return from(ProductionRepository.getBrewingStatus(BREWING_STATUS_REQUEST_TIMEOUT)).pipe(
+                        map((aStatusResult) => {
+                          debugMetrics.statusRequestCompleted();
+                          return aStatusResult;
+                        }),
+                        catchError(() => {
+                          debugMetrics.statusRequestFailed();
+                          return of(null);
+                        })
+                      );
+                    }),
+                    filter((status): status is { available: BackendAvailable; brewingStatus: BrewingStatus | undefined } => status !== null),
                     takeWhile(({ brewingStatus }) => !(brewingStatus && (isProcessFinished(brewingStatus) || isProcessAborted(brewingStatus) || isProcessInError(brewingStatus))), true),
                     switchMap(({ available, brewingStatus }) => {
                       if (available?.isBackenAvailable && brewingStatus !== undefined) {
