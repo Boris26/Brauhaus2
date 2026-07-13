@@ -20,6 +20,7 @@ export interface BeerDataReducerState {
     finishedBrews?: FinishedBrew[] | undefined,
     beerFormState?: any
     importedBeer?: Beer | undefined
+    isSavingBeer?: boolean
 }
 
 export const initialBeerState: BeerDataReducerState =
@@ -32,6 +33,7 @@ export const initialBeerState: BeerDataReducerState =
         message: undefined,
         type: undefined,
         importedBeer: undefined,
+        isSavingBeer: false,
     }
 
 const beerDataReducer = (
@@ -40,7 +42,7 @@ const beerDataReducer = (
 ) => {
   switch (aAction.type) {
     case BeerActions.ActionTypes.SUBMIT_BEER: {
-      return { ...aState };
+      return { ...aState, isSavingBeer: true, isSubmitSuccessful: undefined, message: undefined, type: undefined };
     }
       case BeerActions.ActionTypes.GET_BEERS_SUCCESS: {
           const selectedBeer = aAction.payload.beers.at(-1);
@@ -65,13 +67,35 @@ const beerDataReducer = (
       return { ...aState, selectedBeer: aAction.payload.beer };
     }
     case BeerActions.ActionTypes.SUBMIT_BEER_SUCCESS: {
-      return { ...aState, isSuccessful: true };
+      const submittedBeer = aAction.payload.beer;
+      const beerForList = {
+        ...submittedBeer,
+        fermentation: submittedBeer.fermentationSteps,
+      } as unknown as Beer;
+      const beers = aState.beers ?? [];
+      const existingIndex = beers.findIndex((aBeer) => aBeer.id === submittedBeer.id);
+      const updatedBeers = existingIndex >= 0
+        ? beers.map((aBeer) => aBeer.id === submittedBeer.id ? { ...aBeer, ...beerForList } : aBeer)
+        : [...beers, beerForList];
+
+      return {
+        ...aState,
+        isSuccessful: true,
+        isSubmitSuccessful: true,
+        isSavingBeer: false,
+        message: 'Beer saved successfully',
+        type: 'success',
+        beer: submittedBeer,
+        beers: updatedBeers,
+        selectedBeer: beerForList,
+        beerFormState: aState.beerFormState ? { ...aState.beerFormState, id: submittedBeer.id } : aState.beerFormState,
+      };
     }
 
 
 
     case BeerActions.ActionTypes.SET_IS_SUBMIT_SUCCESSFUL: {
-      return { ...aState, isSubmitSuccessful: aAction.payload.isSubmitSuccessful };
+      return { ...aState, isSubmitSuccessful: aAction.payload.isSubmitSuccessful, isSavingBeer: false, message: aAction.payload.message, type: aAction.payload.type };
     }
     case BeerActions.ActionTypes.SET_BEER_TO_BREW: {
       return { ...aState, beerToBrew: aAction.payload.beer };

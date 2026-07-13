@@ -22,6 +22,7 @@ import {AdditionalIngredientsActions} from "../../actions/additionalIngredients.
 import {AdditionalIngredient} from "../../model/AdditionalIngredient";
 import { COLOR_WHITE, COLOR_BREW_BG, COLOR_ACCENT, BORDER_TRANSPARENT, COLOR_DARK_BG, COLOR_BORDER_INPUT_ALT } from '../../colors';
 import ModalDialog, {DialogType} from "../../components/ModalDialog/ModalDialog";
+import { isRequiredPositiveQuantity } from "../../utils/beerSubmission";
 
 interface BeerFormProps {
     onSubmitBeer: (beer: BeerDTO) => void;
@@ -41,6 +42,7 @@ interface BeerFormProps {
     beers: Beer[];
     importBeer: (file: File) => void;
     importedBeer?: Beer;
+    isSavingBeer?: boolean;
 }
 
 interface BeerFormState {
@@ -68,6 +70,7 @@ interface BeerFormState {
     missingYeasts?: string[];
     showValidationDialog: boolean;
     validationDialogMessage: string;
+    validationErrors: Record<string, string>;
 }
 
 class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
@@ -79,7 +82,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
 
         const defaultState = {
-            id: '0',
+            id: '',
             name: '',
             type: '',
             color: '',
@@ -97,13 +100,14 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 { type: 'Abmaischen', temperature: 0, time: 0 },
                 { type: 'Kochen', temperature: 0, time: 0 }
             ],
-            maltsDTO: [{ id: '', name: '', quantity: 0 }],
-            hopsDTO: [{ id: '', name: '', quantity: 0, time: 0, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES }],
-            yeastsDTO: [{ id: '', name: '', quantity: 0 }],
+            maltsDTO: [{ id: '', name: '', quantity: undefined as any }],
+            hopsDTO: [{ id: '', name: '', quantity: undefined as any, time: 0, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES }],
+            yeastsDTO: [{ id: '', name: '', quantity: undefined as any }],
             additionalIngredientsDTO: [],
             isSubmitSuccessful: false,
             showValidationDialog: false,
             validationDialogMessage: '',
+            validationErrors: {},
         };
 
         // Wenn ein gespeicherter Formularstatus existiert, verwenden wir diesen, ansonsten den Standardstatus
@@ -135,7 +139,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         // Wenn importedBeer gesetzt ist und sich geändert hat, Formular mit importierten Daten füllen
         if (importedBeer && importedBeer !== prevProps.importedBeer) {
             this.setState({
-                id: importedBeer.id || '0',
+                id: importedBeer.id || '',
                 name: importedBeer.name || '',
                 type: importedBeer.type || '',
                 color: importedBeer.color || '',
@@ -164,6 +168,10 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         if (!isEqual(this.state, prevState)) {
             this.props.saveBeerFormState(this.state);
+        }
+
+        if (this.props.beerFormState?.id && this.props.beerFormState.id !== prevProps.beerFormState?.id && this.props.beerFormState.id !== this.state.id) {
+            this.setState({id: this.props.beerFormState.id});
         }
     }
 
@@ -233,7 +241,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 // usage/timeUnit wird getrennt geführt; Zeit darf nicht als DRY_HOP-Marker missbraucht werden.
                 const parsed = Number(aValue);
                 // @ts-ignore
-                step[aName] = isNaN(parsed) ? 0 : parsed;
+                step[aName] = aValue === '' ? undefined : (isNaN(parsed) ? aValue : parsed);
             } else if (aName === "timeUnit") {
                 step.timeUnit = aValue as HopTimeUnit;
             } else {
@@ -286,7 +294,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 const aParsed = Number(aValue);
                 // time ist optional; leeres Feld bleibt undefined statt 0 als Marker.
                 // @ts-ignore
-                aStep[aName] = aValue === '' ? undefined : (isNaN(aParsed) ? 0 : aParsed);
+                aStep[aName] = aValue === '' ? undefined : (isNaN(aParsed) ? aValue : aParsed);
             } else if (aName === "phase") {
                 aStep.phase = aValue as AdditionalIngredientPhase;
             } else if (aName === "timeUnit") {
@@ -312,7 +320,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         for (const aIngredient of aIngredients) {
             const aHasIdOrName = !!aIngredient.id || !!(aIngredient.name && aIngredient.name.trim().length > 0);
             if (!aHasIdOrName) return false;
-            if (!(Number(aIngredient.quantity) > 0)) return false;
+            if (!this.isValidQuantity(aIngredient.quantity)) return false;
             if (!aIngredient.unit || aIngredient.unit.trim().length === 0) return false;
             if (!Object.values(AdditionalIngredientPhase).includes(aIngredient.phase)) return false;
             if (aIngredient.time !== undefined && !(Number(aIngredient.time) > 0)) return false;
@@ -320,6 +328,36 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         }
         return true;
     }
+
+    isValidQuantity = (aValue: unknown): boolean => {
+        return isRequiredPositiveQuantity(aValue);
+    };
+
+    validateIngredientQuantities = () => {
+        const validationErrors: Record<string, string> = {};
+        const quantityError = 'Bitte eine gültige Menge größer als 0 eingeben.';
+
+        this.state.maltsDTO.forEach((malt, index) => {
+            if (!this.isValidQuantity(malt.quantity)) validationErrors[`maltsDTO.${index}.quantity`] = quantityError;
+        });
+        this.state.hopsDTO.forEach((hop, index) => {
+            if (!this.isValidQuantity(hop.quantity)) validationErrors[`hopsDTO.${index}.quantity`] = quantityError;
+        });
+        this.state.yeastsDTO.forEach((yeast, index) => {
+            if (!this.isValidQuantity(yeast.quantity)) validationErrors[`yeastsDTO.${index}.quantity`] = quantityError;
+        });
+        this.state.additionalIngredientsDTO.forEach((ingredient, index) => {
+            if (!this.isValidQuantity(ingredient.quantity)) validationErrors[`additionalIngredientsDTO.${index}.quantity`] = quantityError;
+        });
+
+        this.setState({validationErrors});
+        return validationErrors;
+    };
+
+    renderFieldError = (aKey: string) => {
+        const error = this.state.validationErrors[aKey];
+        return error ? <div role="alert" style={{color: 'red', fontSize: '0.8rem'}}>{error}</div> : null;
+    };
 
 
 
@@ -346,6 +384,11 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             yeastsDTO,
             additionalIngredientsDTO,
         } = this.state;
+        const quantityValidationErrors = this.validateIngredientQuantities();
+        if (Object.keys(quantityValidationErrors).length > 0) {
+            this.openValidationDialog('Bitte korrigiere die markierten Mengenfelder. Mengen sind erforderlich und müssen größer als 0 sein.');
+            return;
+        }
         if (!this.validateFermentationSteps(fermentationSteps)) {
             this.openValidationDialog('Bitte prüfe den Maischeplan: Zeitgesteuerte Rasten benötigen Zeit > 0, Halte-Rasten nur Temperatur.');
             return;
@@ -355,7 +398,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             .map((aMalt) => {
                 const malt = malts.find((malt) => malt.name === aMalt.name);
                 if (!malt) return undefined;
-                const quantity = aMalt.quantity;
+                const quantity = Number(aMalt.quantity);
                 return { name: malt.name, id: malt.id, quantity: quantity };
             })
             .filter((m): m is MaltDTO => m !== undefined);
@@ -370,7 +413,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             .map((aHop): HopDTO | undefined => {
                 const hop = hops.find((hop) => hop.name === aHop.name);
                 if (!hop) return undefined;
-                const quantity = aHop.quantity;
+                const quantity = Number(aHop.quantity);
                 const time = aHop.time;
                 return {
                     id: hop.id,
@@ -387,7 +430,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             .map((aYeast) => {
                 const yeast = yeasts.find((yeast) => yeast.name === aYeast.name);
                 if (!yeast) return undefined;
-                const quantity = aYeast.quantity;
+                const quantity = Number(aYeast.quantity);
                 return { name: yeast.name, id: yeast.id, quantity: quantity };
             })
             .filter((y): y is YeastDTO => y !== undefined);
@@ -398,7 +441,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         }
 
         const beer: BeerDTO = {
-            id: id || '0',
+            id,
             name,
             type,
             color,
@@ -417,6 +460,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             fermentationMaturation: { fermentationTemperature: 0, carbonation: 0, yeast: yeasts_DTO},
             // additionalIngredients wird 1:1 aus dem Rezepteditor übernommen, damit Import/Load/Save verlustfrei bleibt.
             additionalIngredients: additionalIngredientsDTO
+                .map((aIngredient) => ({...aIngredient, quantity: Number(aIngredient.quantity)}))
         };
 
         console.log(beer);
@@ -434,6 +478,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
     resetForm = () => {
         this.setState({
             name: '',
+            id: '',
             type: '',
             color: '',
             alcohol: 0,
@@ -450,6 +495,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             hopsDTO: [],
             yeastsDTO: [],
             additionalIngredientsDTO: [],
+            validationErrors: {},
         }, () => {
             // Nach dem Zurücksetzen des Formulars aktualisieren wir den gespeicherten Status
             this.props.saveBeerFormState(this.state);
@@ -470,26 +516,26 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
     addMalts = () => {
         this.setState((prevState) => ({
-            maltsDTO: [...prevState.maltsDTO, { id: '', name: '', quantity: 0 }],
+            maltsDTO: [...prevState.maltsDTO, { id: '', name: '', quantity: undefined as any }],
         }));
     }
 
     addHops = () => {
         this.setState((prevState) => ({
-            hopsDTO: [...prevState.hopsDTO, { id: '', name: '', quantity: 0, time: 0, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES }],
+            hopsDTO: [...prevState.hopsDTO, { id: '', name: '', quantity: undefined as any, time: 0, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES }],
         }));
     }
 
     addYeast = () => {
         this.setState((prevState) => ({
-            yeastsDTO: [...prevState.yeastsDTO, {id: '', name: '', quantity: 0}],
+            yeastsDTO: [...prevState.yeastsDTO, {id: '', name: '', quantity: undefined as any}],
         }));
     }
 
     addAdditionalIngredient = () => {
         this.setState((prevState) => ({
             additionalIngredientsDTO: [...prevState.additionalIngredientsDTO, {
-                quantity: 0,
+                quantity: undefined as any,
                 unit: 'g',
                 phase: AdditionalIngredientPhase.MATURATION,
                 time: undefined,
@@ -550,7 +596,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         const selectedBeer = beers.find(b => String(b.id) === selectedId);
         if (selectedBeer) {
             this.setState({
-                id: selectedBeer.id || '0',
+                id: selectedBeer.id || '',
                 name: selectedBeer.name || '',
                 type: selectedBeer.type || '',
                 color: selectedBeer.color || '',
@@ -828,6 +874,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                                     onChange={(e) => this.handleMaltChange(e.target.value, e.target.name, index)}
                                                     required={true}
                                                 />
+                                                {this.renderFieldError(`maltsDTO.${index}.quantity`)}
                                             </td>
                                             <td className="action-column">
                                                 <button
@@ -888,6 +935,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                                     onChange={(e) => this.handleHopChange(e.target.value, "quantity", index)}
                                                     required={true}
                                                 />
+                                                {this.renderFieldError(`hopsDTO.${index}.quantity`)}
                                             </td>
                                             <td>
                                                 <select
@@ -980,6 +1028,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                                     onChange={(e) => this.handleYeastChange(e.target.value, e.target.name, index)}
                                                     required={true}
                                                 />
+                                                {this.renderFieldError(`yeastsDTO.${index}.quantity`)}
                                             </td>
                                             <td className="action-column">
                                                 <button
@@ -1035,6 +1084,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                         <td>
                                             <input type="number" min={0} name="quantity" value={aStep.quantity}
                                                    onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "quantity", aIndex)} />
+                                            {this.renderFieldError(`additionalIngredientsDTO.${aIndex}.quantity`)}
                                         </td>
                                         <td>
                                             <input type="text" name="unit" value={aStep.unit}
@@ -1081,7 +1131,7 @@ class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                     </div>
                 </div>
 
-                <button className="finish-btn submit-button" type="submit">
+                <button className="finish-btn submit-button" type="submit" disabled={this.props.isSavingBeer}>
                     <span role="img" aria-label="Erstellen" style={{ fontSize: 22, verticalAlign: 'middle', display: 'inline-block', position: 'relative', top: '3px', marginRight: '8px' }}>💾</span>
                 </button>
             </form>
@@ -1135,6 +1185,7 @@ const mapStateToProps = (state: any) => ({
     beerFormState: state.beerDataReducer.beerFormState,
     beers: state.beerDataReducer.beers,
     importedBeer: state.beerDataReducer.importedBeer,
+    isSavingBeer: state.beerDataReducer.isSavingBeer,
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
