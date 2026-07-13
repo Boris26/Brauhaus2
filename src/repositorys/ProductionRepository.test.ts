@@ -72,8 +72,8 @@ describe('ProductionRepository API method/path usage', () => {
     await ProductionRepository.getBrewingStatus();
     await ProductionRepository.checkIsBackendAvailable();
 
-    expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining('/WaterStatus'));
-    expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining('/Status/'));
+    expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining('/WaterStatus'), expect.objectContaining({timeout: expect.any(Number)}));
+    expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining('/Status/'), expect.objectContaining({timeout: expect.any(Number)}));
     expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining('/Available/'));
   });
 
@@ -150,4 +150,26 @@ describe('ProductionRepository API method/path usage', () => {
     mockedAxios.get.mockRejectedValueOnce(new Error('offline'));
     await expect(ProductionRepository.getWaterStatus()).resolves.toEqual({ liters: 0, openClose: false });
   });
+
+
+  it('can reject WaterStatus failures when polling needs a controlled failure action', async () => {
+    mockedAxios.get.mockRejectedValueOnce(new Error('timeout'));
+
+    await expect(ProductionRepository.getWaterStatus(1234, true)).rejects.toThrow('timeout');
+  });
+
+  it('passes timeout and abort signal to long-running status reads', async () => {
+    mockedAxios.get.mockResolvedValueOnce({ status: 200, data: {}, statusText: 'OK' } as any);
+
+    await ProductionRepository.getBrewingStatus(1234);
+
+    expect(mockedAxios.get).toHaveBeenCalledWith(
+      expect.stringContaining('/Status/'),
+      expect.objectContaining({
+        signal: expect.any(AbortSignal),
+        timeout: 1234,
+      })
+    );
+  });
+
 });

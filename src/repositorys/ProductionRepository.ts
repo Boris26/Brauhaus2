@@ -13,6 +13,34 @@ import {BackendAvailable} from "../reducers/productionReducer";
 import {IDiagnosticResponse, normalizeDiagnosticVersion} from "../model/DiagnosticResponse";
 
 const DEFAULT_WATER_STATUS: WaterStatus = { liters: 0, openClose: false };
+const DEFAULT_CONTROL_REQUEST_TIMEOUT = 8000;
+
+interface ControlRequestConfig {
+    config: {
+        signal: AbortSignal;
+        timeout: number;
+    };
+    timeoutHandle: ReturnType<typeof setTimeout>;
+}
+
+const createRequestConfig = (aTimeoutMs: number = DEFAULT_CONTROL_REQUEST_TIMEOUT): ControlRequestConfig => {
+    const aController = new AbortController();
+    const aTimeoutHandle = setTimeout((): void => {
+        aController.abort();
+    }, aTimeoutMs);
+
+    return {
+        config: {
+            signal: aController.signal,
+            timeout: aTimeoutMs,
+        },
+        timeoutHandle: aTimeoutHandle,
+    };
+};
+
+const clearRequestTimeout = (aRequestConfig: ControlRequestConfig): void => {
+    clearTimeout(aRequestConfig.timeoutHandle);
+};
 
 const normalizeWaterStatus = (aValue: unknown): WaterStatus => {
     if (typeof aValue === 'object' && aValue !== null) {
@@ -44,8 +72,8 @@ export class ProductionRepository {
         return await  this._doFillWaterAutomatic(aLiters);
     }
 
-    static async getWaterStatus() {
-         return await this._doGetWaterFillStatus();
+    static async getWaterStatus(aTimeoutMs?: number, aFailOnError: boolean = false): Promise<WaterStatus> {
+         return await this._doGetWaterFillStatus(aTimeoutMs, aFailOnError);
     }
 
     static async confirm(aConfirmState: ConfirmStates) {
@@ -56,8 +84,8 @@ export class ProductionRepository {
         return await ProductionRepository._doSendBrewingData(aBrewingData);
     }
 
-    static async getBrewingStatus(): Promise<{ available: BackendAvailable, brewingStatus: BrewingStatus | undefined }> {
-       return await this._doGetBrewingStatus();
+    static async getBrewingStatus(aTimeoutMs?: number): Promise<{ available: BackendAvailable, brewingStatus: BrewingStatus | undefined }> {
+       return await this._doGetBrewingStatus(aTimeoutMs);
     }
 
     static async getDiagnosticVersion(): Promise<string> {
@@ -106,9 +134,10 @@ export class ProductionRepository {
 
     }
 
-    private static async _doGetWaterFillStatus() {
+    private static async _doGetWaterFillStatus(aTimeoutMs?: number, aFailOnError: boolean = false): Promise<WaterStatus> {
+        const aConfig = createRequestConfig(aTimeoutMs);
         try {
-            const response = await axios.get(BaseURL + 'WaterStatus');
+            const response = await axios.get(BaseURL + 'WaterStatus', aConfig.config);
             if (response.status == 200) {
                 return normalizeWaterStatus(response.data);
 
@@ -117,7 +146,12 @@ export class ProductionRepository {
             }
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);
+            if (aFailOnError) {
+                throw error;
+            }
             return DEFAULT_WATER_STATUS;
+        } finally {
+            clearRequestTimeout(aConfig);
         }
     }
 
@@ -130,9 +164,10 @@ export class ProductionRepository {
         }
     }
 
-    private static async _doGetBrewingStatus(): Promise<{ available: BackendAvailable, brewingStatus: BrewingStatus | undefined }> {
+    private static async _doGetBrewingStatus(aTimeoutMs?: number): Promise<{ available: BackendAvailable, brewingStatus: BrewingStatus | undefined }> {
+        const aConfig = createRequestConfig(aTimeoutMs);
         try {
-            const response = await axios.get(BaseURL + 'Status/');
+            const response = await axios.get(BaseURL + 'Status/', aConfig.config);
             if (response.status == 200) {
                 const available: BackendAvailable = {
                     isBackenAvailable: true, statusText: response.statusText
@@ -155,8 +190,10 @@ export class ProductionRepository {
             const available: BackendAvailable = {
                 isBackenAvailable: false, statusText: message
             };
-            // Rückgabe statt dispatch
+            // Return instead of dispatching.
             return { available, brewingStatus: undefined };
+        } finally {
+            clearRequestTimeout(aConfig);
         }
     }
 

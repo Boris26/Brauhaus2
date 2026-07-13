@@ -12,17 +12,19 @@ type BrewingStatusGrouped = {
   [statusKey: string]: BrewingStatusMeasurement[];
 };
 
+export const MAX_MEASUREMENTS_PER_STATUS_GROUP = 1000;
+
 class DataCollector {
   private brewingStatus: BrewingStatus | null = null;
   private groupedData: BrewingStatusGrouped = {};
   private lastStatusKey: string | null = null;
 
-  setBrewingStatus(aStatus: BrewingStatus) {
+  setBrewingStatus(aStatus: BrewingStatus): void {
     const aStatusKey = getStatusChangeKey(aStatus);
     const aCurrentMeasurement: BrewingStatusMeasurement = {
       elapsedTime: aStatus.elapsedTime,
       currentTime: aStatus.currentTime,
-      // Kompatibilitätsausgabe für bestehende Charts/Export.
+      // Compatibility output for existing charts and exports.
       Temperature: Number(aStatus.temperature.current ?? 0),
       TargetTemperature: Number(aStatus.temperature.target ?? 0),
     };
@@ -34,10 +36,28 @@ class DataCollector {
     const aLastStored = this.groupedData[aStatusKey].at(-1);
     if (!aLastStored || aLastStored.Temperature !== aCurrentMeasurement.Temperature) {
       this.groupedData[aStatusKey].push(aCurrentMeasurement);
+      this.trimStatusGroup(aStatusKey);
     }
 
     this.lastStatusKey = aStatusKey;
     this.brewingStatus = aStatus;
+  }
+
+  reset(): void {
+    this.brewingStatus = null;
+    this.groupedData = {};
+    this.lastStatusKey = null;
+  }
+
+  getMeasurementCount(): number {
+    return Object.values(this.groupedData).reduce((aTotal, aMeasurements) => aTotal + aMeasurements.length, 0);
+  }
+
+  private trimStatusGroup(aStatusKey: string): void {
+    const aStatusGroup = this.groupedData[aStatusKey];
+    if (aStatusGroup.length > MAX_MEASUREMENTS_PER_STATUS_GROUP) {
+      aStatusGroup.splice(0, aStatusGroup.length - MAX_MEASUREMENTS_PER_STATUS_GROUP);
+    }
   }
 
   getAllDataAsBlob(): Blob {

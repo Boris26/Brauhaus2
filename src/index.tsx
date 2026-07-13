@@ -6,8 +6,18 @@ import store from './store';
 import App from './containers/App';
 import { resolveInitialTheme } from './utils/theme';
 import { ApplicationActions } from './actions/actions';
+import { debugMetrics } from './utils/debugMetrics';
+import { dataCollector } from './utils/DataCollector/dataCollector';
 
 store.dispatch(ApplicationActions.setTheme(resolveInitialTheme()));
+
+debugMetrics.start(
+    () => store.getState(),
+    () => dataCollector.getMeasurementCount()
+);
+window.addEventListener('beforeunload', (): void => {
+    debugMetrics.stop();
+});
 
 ReactDOM.render(
     <Provider store={store}>
@@ -16,7 +26,7 @@ ReactDOM.render(
     document.getElementById('root')
 );
 
-// Service Worker für PWA registrieren
+// Register the service worker for PWA support.
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register(process.env.PUBLIC_URL + '/service-worker.js')

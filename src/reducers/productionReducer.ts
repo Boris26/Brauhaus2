@@ -95,7 +95,11 @@ const productionReducer = (
             return { ...aState };
         }
         case ProductionActions.ActionTypes.IS_BACKEND_AVAILABLE: {
-            return { ...aState, isBackenAvailable: aAction.payload.isBackenAvailable.isBackenAvailable };
+            const aIsBackenAvailable = aAction.payload.isBackenAvailable.isBackenAvailable;
+            if (aState.isBackenAvailable === aIsBackenAvailable) {
+                return aState;
+            }
+            return { ...aState, isBackenAvailable: aIsBackenAvailable };
         }
         case ProductionActions.ActionTypes.SET_WATER_STATUS: {
             return { ...aState, waterStatus: aAction.payload.waterStatus };
