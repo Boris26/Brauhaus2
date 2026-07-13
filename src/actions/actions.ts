@@ -80,6 +80,7 @@ export namespace BeerActions {
 
     export interface SubmitBeerSuccess {
         readonly type: ActionTypes.SUBMIT_BEER_SUCCESS
+        payload: { beer: BeerDTO }
     }
 
     export interface SetSelectedBeer {
@@ -268,9 +269,10 @@ export namespace BeerActions {
         }
     }
 
-    export function submitBeerSuccess(): SubmitBeerSuccess {
+    export function submitBeerSuccess(aBeer: BeerDTO): SubmitBeerSuccess {
         return {
-            type: ActionTypes.SUBMIT_BEER_SUCCESS
+            type: ActionTypes.SUBMIT_BEER_SUCCESS,
+            payload: {beer: aBeer}
         }
     }
 

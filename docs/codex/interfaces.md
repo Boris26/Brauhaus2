@@ -7,7 +7,8 @@ Base URL: `DatabaseURL` (`http://192.168.178.72:5000/`).
 | Method | Path | UI use | Payload/response expected |
 |---|---|---|---|
 | GET | `beers` | Load recipes | `Beer[]` |
-| POST | `beer` | Create/submit recipe | `BeerDTO`, returns `Beer` |
+| POST | `beer` | Create recipe | `BeerDTO` without `id`, returns `{ id, message, beer: { id } }` |
+| PUT | `beer/{id}` | Update recipe | `BeerDTO` with matching `id` or no body id, returns `{ id, message, beer: { id } }`; unknown id returns `404 BEER_NOT_FOUND` |
 | DELETE | `beer/{id}` | Delete recipe | no body |
 | POST | `importbeer` | Import recipe file | multipart `file`, response `any`/imported beer |
 | GET | `finishedbeers` | Load finished brews | `FinishedBrew[]` |

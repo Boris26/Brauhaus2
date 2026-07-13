@@ -1,9 +1,10 @@
 import { ofType } from 'redux-observable';
 import {fromEvent, of, from} from 'rxjs';
-import { catchError, map, mergeMap } from 'rxjs/operators';
+import { catchError, exhaustMap, map, mergeMap } from 'rxjs/operators';
 import {ApplicationActions, BeerActions} from '../actions/actions';
 import { BeerRepository } from '../repositorys/BeerRepository';
 import {Beer} from "../model/Beer";
+import { extractBeerErrorMessage, resolveSubmittedBeer } from "../utils/beerSubmission";
 import {FinishedBrew} from "../model/FinishedBrew";
 import { FinishedBrewListPdfStrategy } from '../utils/pdf/finishedBrewStrategy';
 import {PdfGenerator} from "../utils/pdf/PdfGenerator";
@@ -53,15 +54,16 @@ export const getFinishedBeersEpic = (action$: any) =>
 export const submitBeerEpic = (aAction$: any) =>
     aAction$.pipe(
         ofType(BeerActions.ActionTypes.SUBMIT_BEER),
-        mergeMap((aAction: any) =>
+        exhaustMap((aAction: any) =>
             from(BeerRepository.submitBeer(aAction.payload.beer)).pipe(
-                map(() => BeerActions.submitBeerSuccess()),
+                map((aResponse) => BeerActions.submitBeerSuccess(resolveSubmittedBeer(aAction.payload.beer, aResponse))),
                 catchError((aError: Error) =>
                     from([
+                        BeerActions.isSubmitSuccessful(false, extractBeerErrorMessage(aError, "Bier konnte nicht gespeichert werden"), "error"),
                         ApplicationActions.openErrorDialog(
                             true,
                             "Bier fehler",
-                            "Submit Bier: " + aError.message
+                            extractBeerErrorMessage(aError, "Bier konnte nicht gespeichert werden")
                         )
                     ])
                 )

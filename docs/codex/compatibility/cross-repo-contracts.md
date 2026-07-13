@@ -131,12 +131,12 @@ Use `elapsedTime`, `currentStep.duration`, and `currentStep.remainingTime` for p
 
 UI should still keep defensive handling for null, undefined, or failed HTTP responses.
 
-### `POST /beer` response
+### Beer recipe create/update
 
-- UI documentation expects a created/imported `Beer`.
-- Database documentation says `POST /beer` returns only a message.
-
-Do not rely on this response without checking actual UI code and backend behavior.
+- New beer recipes are created with `POST /beer`; the request body must not include `id`.
+- Existing beer recipes are updated with `PUT /beer/{id}`; the path id is authoritative and body id, when present, must match it.
+- Create/update responses may include only `{ id, message, beer: { id } }`; the UI must preserve its current form data and merge the returned id instead of requiring a full `Beer`.
+- Unknown update ids return `404 BEER_NOT_FOUND` and must not trigger an automatic POST fallback.
 
 ## Compatibility rule
 

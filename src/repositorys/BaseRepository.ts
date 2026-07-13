@@ -27,6 +27,16 @@ export class BaseRepository {
         }
     }
 
+    protected static async put<T>(aUrl: string, aBody: any): Promise<T> {
+        try {
+            const aResponse = await api.put<T>(aUrl, aBody);
+            return aResponse.data;
+        } catch (aError) {
+            console.error(`PUT ${aUrl} fehlgeschlagen`, aError);
+            throw aError;
+        }
+    }
+
     protected static async delete(aUrl: string): Promise<void> {
         try {
             await api.delete(aUrl);
