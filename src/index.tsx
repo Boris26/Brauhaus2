@@ -26,15 +26,15 @@ ReactDOM.render(
     document.getElementById('root')
 );
 
-// Register the service worker for PWA support.
-if ('serviceWorker' in navigator) {
+// Register the service worker for PWA support in production builds only.
+if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register(process.env.PUBLIC_URL + '/service-worker.js')
       .then(registration => {
-        console.log('ServiceWorker registration successful:', registration);
+        console.info('ServiceWorker registration successful:', registration.scope);
       })
       .catch(error => {
-        console.log('ServiceWorker registration failed:', error);
+        console.warn('ServiceWorker registration failed:', error);
       });
   });
 }

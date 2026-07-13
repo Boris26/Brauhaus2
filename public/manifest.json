@@ -1,6 +1,14 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "id": "/",
+  "name": "Brauhaus",
+  "short_name": "Brauhaus",
+  "description": "Mobile und Desktop-Oberfläche zur Überwachung und Steuerung des Brauhaus-Brauprozesses.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#333333",
+  "background_color": "#333333",
   "icons": [
     {
       "src": "favicon.ico",
@@ -8,18 +16,10 @@
       "type": "image/x-icon"
     },
     {
-      "src": "logo192.png",
+      "src": "brewery.png",
       "type": "image/png",
-      "sizes": "192x192"
-    },
-    {
-      "src": "logo512.png",
-      "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any"
     }
-  ],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  ]
 }
