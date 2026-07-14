@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import './SettingsPage.css';
 import { ThemeName } from '../../utils/theme';
 import { ApplicationActions } from '../../actions/actions';
+import { PushService, getPermissionState, isPushSupported } from '../../utils/pushService';
 
 interface SettingsPageProps {
     theme: ThemeName;
@@ -14,6 +15,11 @@ interface SettingsPageState {
     notificationsEnabled: boolean;
     temperatureUnit: 'celsius' | 'fahrenheit';
     statusMessage: string | null;
+    pushSupported: boolean;
+    pushPermission: NotificationPermission;
+    pushSubscribed: boolean;
+    pushLoading: boolean;
+    pushError: string | null;
 }
 
 class SettingsPage extends React.Component<SettingsPageProps, SettingsPageState> {
@@ -25,12 +31,101 @@ class SettingsPage extends React.Component<SettingsPageProps, SettingsPageState>
             notificationsEnabled: false,
             temperatureUnit: 'celsius',
             statusMessage: null,
+            pushSupported: isPushSupported(),
+            pushPermission: getPermissionState(),
+            pushSubscribed: false,
+            pushLoading: false,
+            pushError: null,
         };
     }
 
     get activeThemeLabel() {
         return this.props.theme === 'dark-alt' ? 'Dunkles Theme' : 'Helles Theme';
     }
+
+    componentDidMount() {
+        this.refreshPushState();
+    }
+
+    refreshPushState = async () => {
+        const pushSupported = isPushSupported();
+        if (!pushSupported) {
+            this.setState({
+                pushSupported: false,
+                pushPermission: getPermissionState(),
+                pushSubscribed: false,
+            });
+            return;
+        }
+
+        try {
+            const subscription = await PushService.getSubscription();
+            this.setState({
+                pushSupported,
+                pushPermission: getPermissionState(),
+                pushSubscribed: Boolean(subscription),
+                pushError: null,
+            });
+        } catch (error) {
+            this.setState({
+                pushSupported,
+                pushPermission: getPermissionState(),
+                pushSubscribed: false,
+                pushError: this.formatPushError(error),
+            });
+        }
+    };
+
+    formatPushError = (error: unknown): string => {
+        if (error instanceof Error) {
+            return error.message;
+        }
+        return 'Push-Benachrichtigungen konnten nicht aktualisiert werden.';
+    };
+
+    get permissionLabel(): string {
+        switch (this.state.pushPermission) {
+            case 'granted':
+                return 'Erlaubt';
+            case 'denied':
+                return 'Blockiert';
+            default:
+                return 'Nicht angefragt';
+        }
+    }
+
+    handlePushToggle = async () => {
+        this.setState({ pushLoading: true, pushError: null, statusMessage: null });
+        try {
+            if (this.state.pushSubscribed) {
+                await PushService.unsubscribe();
+                this.setState({ statusMessage: 'Push-Benachrichtigungen deaktiviert.' });
+            } else {
+                await PushService.subscribe();
+                this.setState({ statusMessage: 'Push-Benachrichtigungen aktiviert.' });
+            }
+            await this.refreshPushState();
+        } catch (error) {
+            this.setState({
+                pushError: this.formatPushError(error),
+                pushPermission: getPermissionState(),
+            });
+        } finally {
+            this.setState({ pushLoading: false });
+        }
+    };
+
+    handlePushTest = async () => {
+        this.setState({ pushLoading: true, pushError: null, statusMessage: null });
+        try {
+            await PushService.sendTestNotification();
+            this.setState({ statusMessage: 'Testnachricht wurde an den Controller übergeben.' });
+        } catch (error) {
+            this.setState({ pushError: this.formatPushError(error) });
+        } finally {
+            this.setState({ pushLoading: false });
+        }
+    };
 
     handleThemeChange = (nextTheme: ThemeName) => {
         this.props.setTheme(nextTheme);
@@ -57,7 +152,7 @@ class SettingsPage extends React.Component<SettingsPageProps, SettingsPageState>
 
     render() {
         const { theme } = this.props;
-        const { autoConnect, notificationsEnabled, temperatureUnit, statusMessage } = this.state;
+        const { autoConnect, notificationsEnabled, temperatureUnit, statusMessage, pushSupported, pushSubscribed, pushLoading, pushError, pushPermission } = this.state;
 
         return (
             <div className="settings-page">
@@ -130,6 +225,46 @@ class SettingsPage extends React.Component<SettingsPageProps, SettingsPageState>
                                 />
                                 <label htmlFor="notifications">{notificationsEnabled ? 'Aktiviert' : 'Deaktiviert'}</label>
                             </div>
+                        </div>
+                    </section>
+
+
+
+                    <section className="settings-card">
+                        <div className="settings-card-header">
+                            <h3>Push-Benachrichtigungen</h3>
+                            <p>Erhalte Hinweise, wenn der Brauvorgang eine Bestätigung benötigt.</p>
+                        </div>
+                        <div className="push-status-list">
+                            <div><strong>Browser unterstützt Push:</strong> {pushSupported ? 'Ja' : 'Nein'}</div>
+                            <div><strong>Berechtigung:</strong> {this.permissionLabel}</div>
+                            <div><strong>Subscription:</strong> {pushSubscribed ? 'Aktiv' : 'Nicht aktiv'}</div>
+                        </div>
+                        {pushPermission === 'denied' && (
+                            <p className="settings-warning">
+                                Die Berechtigung ist blockiert. Bitte Push-Benachrichtigungen in den Browser- oder App-Einstellungen wieder erlauben.
+                            </p>
+                        )}
+                        {pushError && (
+                            <p className="settings-error" role="alert">{pushError}</p>
+                        )}
+                        <div className="setting-options">
+                            <button
+                                className="settings-primary"
+                                type="button"
+                                onClick={this.handlePushToggle}
+                                disabled={!pushSupported || pushLoading || pushPermission === 'denied'}
+                            >
+                                {pushSubscribed ? 'Push-Benachrichtigungen deaktivieren' : 'Push-Benachrichtigungen aktivieren'}
+                            </button>
+                            <button
+                                className="settings-secondary"
+                                type="button"
+                                onClick={this.handlePushTest}
+                                disabled={!pushSubscribed || pushLoading}
+                            >
+                                Testnachricht senden
+                            </button>
                         </div>
                     </section>
 

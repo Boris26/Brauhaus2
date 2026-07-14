@@ -151,3 +151,14 @@ If a changed field, endpoint, enum, unit, or response shape is listed in this fi
 ### Final UI ↔ PI control contract
 
 The final confirmed contract is documented in `docs/codex/compatibility/final-ui-control-compatibility-report.md`. Future changes must preserve: `GET /Available/` as the UI-facing availability route, `GET /` as an existing PI route, both `GET /WaterStatus` and `GET /WaterStatus/`, object-shaped WaterStatus defaults, no-value `TurnOn`/`TurnOff`, preserved value-bearing command aliases, concrete-only confirmations, rejection of `/Confirm/Wait`, and `currentTime` as a Unix timestamp rather than a UI duration/progress field.
+
+### Control Web Push endpoints
+
+The React PWA now expects the PI/control service to expose Web-Push management below the existing controller base URL `/api/controller`:
+
+- `GET /push/public-key` returns `{ "publicKey": "<VAPID_PUBLIC_KEY>" }`.
+- `POST /push/subscriptions` stores a browser `PushSubscription` idempotently.
+- `DELETE /push/subscriptions` removes a subscription by `{ "endpoint": "..." }`.
+- `POST /push/test` sends a test notification to registered subscriptions.
+
+Push notifications are triggered by the control service when `waiting.canConfirm` becomes true for confirmation states such as `MASHING_IN_CONFIRMATION`, `IODINE_TEST`, `MASHING_OUT_CONFIRMATION`, `COOKING_CONFIRMATION`, `BOILING_CONFIRMATION`, or `DECOCTION_CONFIRMATION`. This repository only implements the UI/service-worker side; backend persistence and status-transition detection remain **Needs verification** in the PI/control repository.

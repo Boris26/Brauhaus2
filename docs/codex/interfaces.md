@@ -85,3 +85,16 @@ interface BrewingStatus {
 
 Legacy fallback fields still accepted by `normalizeBrewingStatus`: `Temperature`, `TargetTemperature`, `StatusText`, `HeatingStates`, `Name`, `Type`, `WaitingStatus`, `HeatUpStatus`, `AgitatorStatus`, `index`, `elapsedTime`, and `currentTime`.
 
+
+## PI/control Web Push endpoints
+
+Additional controller API endpoints expected by the PWA:
+
+| Method | Path | Payload/response expected |
+|---|---|---|
+| GET | `/push/public-key` | `200 { "publicKey": "<VAPID_PUBLIC_KEY>" }`; never returns the private key |
+| POST | `/push/subscriptions` | Browser `PushSubscription` JSON; idempotently stores by endpoint |
+| DELETE | `/push/subscriptions` | `{ "endpoint": "..." }`; removes the stored subscription for that endpoint |
+| POST | `/push/test` | Sends a test notification to registered subscriptions |
+
+These paths are consumed through the existing relative UI base URL `/api/controller`. Backend implementation, durable storage, and process-state event detection are **Needs verification** in the PI/control repository.
