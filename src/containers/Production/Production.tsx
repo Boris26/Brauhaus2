@@ -600,7 +600,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
                     <button className="startBtn" disabled={this.isStartButtonDisabled()} onClick={this.startBrewing}>Start</button>
                 </div>
                 <div className="startPollingBtnDiv">
-                    <button className="startPollingBtn" disabled={this.isStartButtonDisabled()} onClick={this.startBrewing}>
+                    <button className="startPollingBtn" disabled={this.props.isPollingRunning} onClick={this.startPolling}>
                         <FontAwesomeIcon icon={faRepeat as IconProp} />
                     </button>
                 </div>
