@@ -12,6 +12,7 @@ interface MobileProductionViewProps {
     temperature: number;
     brewingStatus: BrewingStatus;
     startPolling: () => void;
+    stopPolling: () => void;
     isPollingRunning: boolean;
 }
 
@@ -30,6 +31,16 @@ export class MobileProductionView extends React.Component<MobileProductionViewPr
     handleTabChange = (tab: MobileTab) => {
         this.setState({ activeTab: tab });
     };
+
+    componentDidMount() {
+        if (!this.props.isPollingRunning) {
+            this.props.startPolling();
+        }
+    }
+
+    componentWillUnmount() {
+        this.props.stopPolling();
+    }
 
     componentDidUpdate(prevProps: MobileProductionViewProps) {
         const prevStatus = getStatusChangeKey(prevProps.brewingStatus);
@@ -161,7 +172,8 @@ const mapStateToProps = (state: any) => ({
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
-    startPolling: () => dispatch(ProductionActions.startPolling())
+    startPolling: () => dispatch(ProductionActions.startPolling()),
+    stopPolling: () => dispatch(ProductionActions.stopPolling())
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(MobileProductionView);

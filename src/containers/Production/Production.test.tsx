@@ -137,6 +137,23 @@ describe('Production start button', () => {
         expect(props.sendBrewingData).toHaveBeenCalledTimes(1);
     });
 
+    it('uses the polling refresh flow for the repeat polling button instead of starting a brew', () => {
+        const {props, container} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.ACTIVE), isPollingRunning: false});
+        const startPollingButton = container.querySelector('.startPollingBtn') as HTMLButtonElement;
+
+        fireEvent.click(startPollingButton);
+
+        expect(props.startPolling).toHaveBeenCalledTimes(1);
+        expect(props.sendBrewingData).not.toHaveBeenCalled();
+    });
+
+    it('disables the repeat polling button while polling is already running', () => {
+        const {container} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.ACTIVE), isPollingRunning: true});
+        const startPollingButton = container.querySelector('.startPollingBtn') as HTMLButtonElement;
+
+        expect(startPollingButton).toBeDisabled();
+    });
+
 });
 
 

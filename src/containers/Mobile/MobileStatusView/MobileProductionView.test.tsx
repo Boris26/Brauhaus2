@@ -29,18 +29,21 @@ const makeStatus = (): BrewingStatus => ({
     error: {code: null, details: null},
 });
 
-const renderMobileView = () => {
+const renderMobileView = (overrides: Partial<React.ComponentProps<typeof MobileProductionView>> = {}) => {
     const store = configureStore({reducer: rootReducer});
-    return render(
+    const props = {
+        temperature: 24,
+        brewingStatus: makeStatus(),
+        startPolling: jest.fn(),
+        stopPolling: jest.fn(),
+        isPollingRunning: false,
+        ...overrides,
+    };
+    return {props, ...render(
         <Provider store={store}>
-            <MobileProductionView
-                temperature={24}
-                brewingStatus={makeStatus()}
-                startPolling={jest.fn()}
-                isPollingRunning={false}
-            />
+            <MobileProductionView {...props} />
         </Provider>
-    );
+    )};
 };
 
 describe('MobileProductionView navigation', () => {
@@ -76,5 +79,43 @@ describe('MobileProductionView navigation', () => {
         fireEvent.click(screen.getByRole('button', {name: 'Status'}));
 
         expect(screen.getByRole('heading', {name: 'Brauhaus Mobile'})).toBeInTheDocument();
+    });
+});
+
+
+describe('MobileProductionView polling lifecycle', () => {
+    it('starts polling when the mobile status page opens', () => {
+        const startPolling = jest.fn();
+
+        renderMobileView({startPolling});
+
+        expect(startPolling).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not start a second polling instance when polling is already running', () => {
+        const startPolling = jest.fn();
+
+        renderMobileView({startPolling, isPollingRunning: true});
+
+        expect(startPolling).not.toHaveBeenCalled();
+    });
+
+    it('stops polling when the mobile status page unmounts', () => {
+        const stopPolling = jest.fn();
+        const {unmount} = renderMobileView({stopPolling});
+
+        unmount();
+
+        expect(stopPolling).toHaveBeenCalledTimes(1);
+    });
+
+    it('manual refresh dispatches exactly one START_POLLING request', () => {
+        const startPolling = jest.fn();
+        renderMobileView({startPolling});
+        startPolling.mockClear();
+
+        fireEvent.click(screen.getByRole('button', {name: 'Aktualisieren'}));
+
+        expect(startPolling).toHaveBeenCalledTimes(1);
     });
 });
