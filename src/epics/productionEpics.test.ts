@@ -1,6 +1,6 @@
 import { Subject } from 'rxjs';
 import { ProductionActions } from '../actions/actions';
-import { BREWING_STATUS_REQUEST_TIMEOUT, sendBrewingDataEpic$, startWaterFillingEpic$, WATER_FILLING_MAX_DURATION, WATER_STATUS_REQUEST_TIMEOUT } from './productionEpics';
+import { BREWING_STATUS_REQUEST_TIMEOUT, sendBrewingDataEpic$, startPollingEpic$, startWaterFillingEpic$, WATER_FILLING_MAX_DURATION, WATER_STATUS_REQUEST_TIMEOUT } from './productionEpics';
 import { ProductionRepository } from '../repositorys/ProductionRepository';
 import {BackendAvailable} from '../reducers/productionReducer';
 import {BrewingData} from '../model/BrewingData';
@@ -179,6 +179,84 @@ describe('startWaterFillingEpic$', () => {
     await flushPromises();
 
     expect(emittedActions.at(-1)).toEqual(ProductionActions.startWaterFillingSuccess(false));
+    subscription.unsubscribe();
+  });
+});
+
+
+describe('startPollingEpic$', (): void => {
+  beforeEach((): void => {
+    jest.useFakeTimers();
+    jest.clearAllMocks();
+  });
+
+  afterEach((): void => {
+    jest.useRealTimers();
+  });
+
+  it('fetches status immediately and continues polling after START_POLLING', async (): Promise<void> => {
+    mockedProductionRepository.getBrewingStatus.mockResolvedValue(createStatusResponse(ProcessState.ACTIVE));
+
+    const action$ = new Subject<ProductionActions.AllProductionActions>();
+    const emittedActions: ProductionActions.AllProductionActions[] = [];
+    const subscription = startPollingEpic$(action$).subscribe((aAction: ProductionActions.AllProductionActions): void => {
+      emittedActions.push(aAction);
+    });
+
+    action$.next(ProductionActions.startPolling());
+    await flushPromises();
+
+    expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledTimes(1);
+    expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledWith(BREWING_STATUS_REQUEST_TIMEOUT);
+
+    jest.advanceTimersByTime(1000);
+    await flushPromises();
+
+    expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledTimes(2);
+    expect(emittedActions).toEqual([
+      ProductionActions.setBrewingStatus(createBrewingStatus(ProcessState.ACTIVE)),
+      ProductionActions.setBrewingStatus(createBrewingStatus(ProcessState.ACTIVE)),
+    ]);
+    subscription.unsubscribe();
+  });
+
+  it('continues polling after a failed status request', async (): Promise<void> => {
+    mockedProductionRepository.getBrewingStatus
+      .mockRejectedValueOnce(new Error('timeout'))
+      .mockResolvedValueOnce(createStatusResponse(ProcessState.ACTIVE));
+
+    const action$ = new Subject<ProductionActions.AllProductionActions>();
+    const emittedActions: ProductionActions.AllProductionActions[] = [];
+    const subscription = startPollingEpic$(action$).subscribe((aAction: ProductionActions.AllProductionActions): void => {
+      emittedActions.push(aAction);
+    });
+
+    action$.next(ProductionActions.startPolling());
+    await flushPromises();
+
+    expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledTimes(1);
+
+    jest.advanceTimersByTime(1000);
+    await flushPromises();
+
+    expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledTimes(2);
+    expect(emittedActions).toEqual([ProductionActions.setBrewingStatus(createBrewingStatus(ProcessState.ACTIVE))]);
+    subscription.unsubscribe();
+  });
+
+  it('stops polling after STOP_POLLING', async (): Promise<void> => {
+    mockedProductionRepository.getBrewingStatus.mockResolvedValue(createStatusResponse(ProcessState.ACTIVE));
+
+    const action$ = new Subject<ProductionActions.AllProductionActions>();
+    const subscription = startPollingEpic$(action$).subscribe();
+
+    action$.next(ProductionActions.startPolling());
+    await flushPromises();
+    action$.next(ProductionActions.stopPolling());
+    jest.advanceTimersByTime(5000);
+    await flushPromises();
+
+    expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledTimes(1);
     subscription.unsubscribe();
   });
 });

@@ -1,6 +1,6 @@
 import { ofType } from 'redux-observable';
 import {from, of, interval, EMPTY, filter, takeWhile, startWith, Observable} from 'rxjs';
-import { catchError, exhaustMap, map, mergeMap, switchMap } from 'rxjs/operators';
+import { catchError, exhaustMap, map, mergeMap, switchMap, takeUntil } from 'rxjs/operators';
 import { ProductionActions } from '../actions/actions';
 import { ProductionRepository } from '../repositorys/ProductionRepository';
 import { dataCollector } from '../utils/DataCollector/dataCollector';
@@ -84,6 +84,45 @@ export const startWaterFillingEpic$ = (action$: any) =>
     )
   );
 
+const createBrewingStatusPolling$ = (action$: any) =>
+  interval(BREWING_STATUS_POLL_INTERVAL).pipe(
+    startWith(0),
+    exhaustMap(() => {
+      debugMetrics.statusRequestStarted();
+      return from(ProductionRepository.getBrewingStatus(BREWING_STATUS_REQUEST_TIMEOUT)).pipe(
+        map((aStatusResult) => {
+          debugMetrics.statusRequestCompleted();
+          return aStatusResult;
+        }),
+        catchError(() => {
+          debugMetrics.statusRequestFailed();
+          return of(null);
+        })
+      );
+    }),
+    filter((status): status is { available: BackendAvailable; brewingStatus: BrewingStatus | undefined } => status !== null),
+    takeWhile(({ brewingStatus }) => !(brewingStatus && (isProcessFinished(brewingStatus) || isProcessAborted(brewingStatus) || isProcessInError(brewingStatus))), true),
+    switchMap(({ available, brewingStatus }) => {
+      if (available?.isBackenAvailable && brewingStatus !== undefined) {
+        // Store BrewingStatus in the data collector
+        dataCollector.setBrewingStatus(brewingStatus);
+        return [
+          ProductionActions.setBrewingStatus(brewingStatus),
+        ];
+      } else {
+        return [ProductionActions.isBackenAvailable(available)];
+      }
+    }),
+    takeUntil(action$.pipe(ofType(ProductionActions.ActionTypes.STOP_POLLING))),
+    catchError((error) => of({ type: 'NO_OP' }))
+  );
+
+export const startPollingEpic$ = (action$: any) =>
+  action$.pipe(
+    ofType(ProductionActions.ActionTypes.START_POLLING),
+    switchMap(() => createBrewingStatusPolling$(action$))
+  );
+
 export const sendBrewingDataEpic$ = (action$: any) =>
   action$.pipe(
     ofType(ProductionActions.ActionTypes.SEND_BREWING_DATA),
@@ -93,41 +132,7 @@ export const sendBrewingDataEpic$ = (action$: any) =>
           if (sendResult) {
             // Start the brewing process
             return from(ProductionRepository.startBrewing()).pipe(
-              switchMap((startResult) => {
-                if (startResult) {
-                  return interval(BREWING_STATUS_POLL_INTERVAL).pipe(
-                    exhaustMap(() => {
-                      debugMetrics.statusRequestStarted();
-                      return from(ProductionRepository.getBrewingStatus(BREWING_STATUS_REQUEST_TIMEOUT)).pipe(
-                        map((aStatusResult) => {
-                          debugMetrics.statusRequestCompleted();
-                          return aStatusResult;
-                        }),
-                        catchError(() => {
-                          debugMetrics.statusRequestFailed();
-                          return of(null);
-                        })
-                      );
-                    }),
-                    filter((status): status is { available: BackendAvailable; brewingStatus: BrewingStatus | undefined } => status !== null),
-                    takeWhile(({ brewingStatus }) => !(brewingStatus && (isProcessFinished(brewingStatus) || isProcessAborted(brewingStatus) || isProcessInError(brewingStatus))), true),
-                    switchMap(({ available, brewingStatus }) => {
-                      if (available?.isBackenAvailable && brewingStatus !== undefined) {
-                        // Store BrewingStatus in the data collector
-                        dataCollector.setBrewingStatus(brewingStatus);
-                        return [
-                          ProductionActions.setBrewingStatus(brewingStatus),
-                        ];
-                      } else {
-                        return [ProductionActions.isBackenAvailable(available)];
-                      }
-                    }),
-                    catchError((error) => of({ type: 'NO_OP' }))
-                  );
-                } else {
-                  return of(ProductionActions.stopPolling());
-                }
-              })
+              switchMap((startResult) => startResult ? createBrewingStatusPolling$(action$) : of(ProductionActions.stopPolling()))
             );
           } else {
             return of(ProductionActions.stopPolling());
@@ -222,6 +227,7 @@ export const productionEpics = [
   toggleAgitatorEpic$,
   setAgitatorSpeedEpic$,
   sendBrewingDataEpic$,
+  startPollingEpic$,
   startWaterFillingEpic$,
   confirmEpic$,
   checkIsBackendAvailableEpic$,
