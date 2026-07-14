@@ -6,6 +6,7 @@ import { ProductionActions } from '../../../actions/actions';
 import { TimeFormatter } from "../../../utils/TimeFormatter";
 import MobileBrewingCalculationsView from '../MobileBrewingCalculationsView/MobileBrewingCalculationsView';
 import {getBrewingStatusLabel, getStatusChangeKey, isStepWaiting} from '../../../utils/brewingStatus/selectors';
+import SettingsPage from '../../Settings/SettingsPage';
 
 interface MobileProductionViewProps {
     temperature: number;
@@ -15,16 +16,18 @@ interface MobileProductionViewProps {
 }
 
 interface MobileProductionViewState {
-    activeTab: 'status' | 'finishedBrew' | 'calculations';
+    activeTab: MobileTab;
 }
 
-class MobileProductionView extends React.Component<MobileProductionViewProps, MobileProductionViewState> {
+type MobileTab = 'status' | 'finishedBrew' | 'calculations' | 'settings';
+
+export class MobileProductionView extends React.Component<MobileProductionViewProps, MobileProductionViewState> {
     constructor(props: MobileProductionViewProps) {
         super(props);
         this.state = { activeTab: 'status' };
     }
 
-    handleTabChange = (tab: 'status' | 'finishedBrew' | 'calculations') => {
+    handleTabChange = (tab: MobileTab) => {
         this.setState({ activeTab: tab });
     };
 
@@ -55,7 +58,7 @@ class MobileProductionView extends React.Component<MobileProductionViewProps, Mo
         const deltaX = this.touchEndX - this.touchStartX;
         if (Math.abs(deltaX) > 50) {
             // Swipe nach links: nächste Seite, nach rechts: vorherige Seite
-            const tabOrder: ('status' | 'finishedBrew' | 'calculations')[] = ['status', 'finishedBrew', 'calculations'];
+            const tabOrder: MobileTab[] = ['status', 'finishedBrew', 'calculations', 'settings'];
             const currentIdx = tabOrder.indexOf(this.state.activeTab);
             if (deltaX < 0 && currentIdx < tabOrder.length - 1) {
                 this.setState({ activeTab: tabOrder[currentIdx + 1] });
@@ -82,8 +85,10 @@ class MobileProductionView extends React.Component<MobileProductionViewProps, Mo
                     <button className={activeTab === 'status' ? 'active' : ''} onClick={() => this.handleTabChange('status')}>Status</button>
                     <button className={activeTab === 'finishedBrew' ? 'active' : ''} onClick={() => this.handleTabChange('finishedBrew')}>Aktiver Sud</button>
                     <button className={activeTab === 'calculations' ? 'active' : ''} onClick={() => this.handleTabChange('calculations')}>Berechnungen</button>
+                    <button className={activeTab === 'settings' ? 'active' : ''} onClick={() => this.handleTabChange('settings')}>Einstellungen</button>
                 </div>
                 <hr className="mobile-tabs-separator" />
+                <main className="mobile-content" data-testid="mobile-scroll-content">
                 {activeTab === 'status' && (
                     <>
                         <h2>Brauhaus Mobile</h2>
@@ -138,6 +143,10 @@ class MobileProductionView extends React.Component<MobileProductionViewProps, Mo
                 {activeTab === 'calculations' && (
                     <MobileBrewingCalculationsView />
                 )}
+                {activeTab === 'settings' && (
+                    <SettingsPage />
+                )}
+                </main>
             </div>
         );
     }

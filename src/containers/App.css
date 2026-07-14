@@ -43,4 +43,10 @@
     margin-top: 80px;
 }
 
-
+@media (max-width: 767px) {
+    .AppContainer {
+        height: 100vh;
+        height: 100dvh;
+        overflow: hidden;
+    }
+}
