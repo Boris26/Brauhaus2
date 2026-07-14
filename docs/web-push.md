@@ -4,6 +4,9 @@
 
 - Der Service Worker der PWA wird in `src/index.tsx` bei `window.load` registriert und lädt `public/service-worker.js` nur in Production-Builds.
 - Die UI-Einstellungen liegen in `src/containers/Settings/SettingsPage.tsx` und verwenden bestehende Klassenkomponenten und CSS in `SettingsPage.css`.
+- Mobil wird dieselbe `SettingsPage` über den Tab `Einstellungen` in `MobileProductionView` geöffnet; es gibt keine separate mobile Push-Logik.
+- Die mobile Shell nutzt eine interne Tab-Umschaltung (`Status`, `Aktiver Sud`, `Berechnungen`, `Einstellungen`). Header/Tabs bleiben im mobilen Layout oberhalb des Inhalts, während der Container `.mobile-content` vertikal scrollt.
+- Für Android-Chrome und den installierten PWA-Modus verwendet die mobile Hülle `100dvh` mit `100vh`-Fallback und Safe-Area-Padding. So werden Inhalte nicht durch Browser-Chrome oder den unteren Bildschirmrand abgeschnitten.
 - Steuerungs-Requests sind in `src/repositorys/ProductionRepository.ts` über relative URLs unter `/api/controller` gekapselt; die Push-UI nutzt denselben relativen Controller-Basis-Pfad in `src/utils/pushService.ts`.
 - Der aktuelle Prozessstatus wird von der PI-Steuerung als `GET /Status/` geliefert. Laut externem Control-Kontext liegt die Statushoheit in der Steuerung; in diesem UI-Repository ist der Python-Code nicht vorhanden.
 - Ein Zustandswechsel zu `waiting.waitingFor` muss zuverlässig in der Steuerung beim internen Statuswechsel erkannt werden, nicht beim UI-Polling. Geeigneter Ereignisschlüssel: Prozessidentität, `currentStep.index`, `currentStep.phase`, `waiting.waitingFor`.
@@ -90,12 +93,23 @@ Der Service Worker öffnet ausschließlich URLs innerhalb des eigenen Origins; e
 
 1. PWA über `https://192.168.178.72` laden.
 2. In Android/Chrome die PWA installieren.
-3. In der PWA `Einstellungen` öffnen.
-4. `Push-Benachrichtigungen aktivieren` antippen und Berechtigung erlauben.
-5. `Testnachricht senden` antippen.
-6. PWA schließen oder in den Hintergrund legen.
-7. Einen Brauzustand erreichen, in dem `waiting.canConfirm === true` und `waiting.waitingFor` einer der bestätigungspflichtigen Werte ist.
-8. Prüfen, dass Android eine Benachrichtigung anzeigt und ein Klick die vorhandene PWA fokussiert oder `/` öffnet.
+3. PWA vollständig schließen und nach dem neuen UI-Deployment wieder öffnen, damit der aktualisierte Service Worker und die neue mobile Shell aktiv sind.
+4. Auf der mobilen Statusseite bis zum unteren Inhalt scrollen. Der scrollbare Bereich ist `.mobile-content`; die Tab-Leiste selbst ist nicht der vertikale Scroll-Container.
+5. In der mobilen Tab-Leiste `Einstellungen` öffnen.
+6. Prüfen, dass der Abschnitt `Push-Benachrichtigungen` sichtbar ist und die Statuszeilen `Browser unterstützt Push`, `Berechtigung` und `Subscription` angezeigt werden.
+7. `Push-Benachrichtigungen aktivieren` antippen und Berechtigung erlauben. Die Berechtigungsabfrage erfolgt weiterhin erst durch diese direkte Benutzeraktion.
+8. `Testnachricht senden` antippen.
+9. PWA schließen oder in den Hintergrund legen.
+10. Einen Brauzustand erreichen, in dem `waiting.canConfirm === true` und `waiting.waitingFor` einer der bestätigungspflichtigen Werte ist.
+11. Prüfen, dass Android eine Benachrichtigung anzeigt und ein Klick die vorhandene PWA fokussiert oder `/` öffnet.
+
+## Browser-Mobile-Emulation
+
+1. Chrome DevTools öffnen.
+2. Device Toolbar aktivieren und ein Android-Gerät mit ungefähr `390 × 844` auswählen.
+3. Statusseite öffnen und bis ganz nach unten scrollen.
+4. In der mobilen Tab-Leiste `Einstellungen` öffnen.
+5. Prüfen, dass der vorhandene Push-Bereich der `SettingsPage` vollständig erreichbar ist.
 
 ## Abgelaufene Subscriptions
 
