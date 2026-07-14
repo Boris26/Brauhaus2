@@ -80,6 +80,61 @@ describe('pushService', () => {
         });
     });
 
+
+    it('reuses an existing subscription from navigator.serviceWorker.ready and registers it at the backend', async () => {
+        const requestPermission = jest.fn();
+        const subscription = {
+            endpoint: 'https://push.example/existing',
+            toJSON: () => ({
+                endpoint: 'https://push.example/existing',
+                keys: { p256dh: 'existing-key', auth: 'existing-auth' },
+            }),
+            unsubscribe: jest.fn(),
+        };
+        const pushManager = {
+            getSubscription: jest.fn().mockResolvedValue(subscription),
+            subscribe: jest.fn(),
+        };
+
+        defineWindowProperty('Notification', { permission: 'granted', requestPermission });
+        defineWindowProperty('PushManager', function PushManager() {});
+        defineNavigatorProperty('serviceWorker', {
+            ready: Promise.resolve({ pushManager }),
+        });
+        mockedAxios.post.mockResolvedValue({ status: 201 });
+
+        await expect(subscribe()).resolves.toBe(subscription as unknown as PushSubscription);
+
+        expect(pushManager.getSubscription).toHaveBeenCalledTimes(1);
+        expect(pushManager.subscribe).not.toHaveBeenCalled();
+        expect(requestPermission).not.toHaveBeenCalled();
+        expect(mockedAxios.post).toHaveBeenCalledWith('/api/controller/push/subscriptions', {
+            endpoint: 'https://push.example/existing',
+            keys: { p256dh: 'existing-key', auth: 'existing-auth' },
+        });
+    });
+
+    it('does not resolve as active when backend registration of an existing subscription fails', async () => {
+        const subscription = {
+            endpoint: 'https://push.example/existing',
+            toJSON: () => ({ endpoint: 'https://push.example/existing' }),
+            unsubscribe: jest.fn(),
+        };
+        defineWindowProperty('Notification', { permission: 'granted', requestPermission: jest.fn() });
+        defineWindowProperty('PushManager', function PushManager() {});
+        defineNavigatorProperty('serviceWorker', {
+            ready: Promise.resolve({
+                pushManager: {
+                    getSubscription: jest.fn().mockResolvedValue(subscription),
+                    subscribe: jest.fn(),
+                },
+            }),
+        });
+        mockedAxios.post.mockRejectedValue(new Error('backend unavailable'));
+
+        await expect(subscribe()).rejects.toThrow('backend unavailable');
+    });
+
     it('does not request permission when permission is denied', async () => {
         const requestPermission = jest.fn();
         defineWindowProperty('Notification', {

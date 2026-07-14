@@ -5,12 +5,16 @@
 // - keine Datenbankantworten
 // - keine Build-Metadaten wie index.html, manifest.json, asset-manifest.json oder version.json
 // So bleiben Browser-/Server-Caches und bestehende Versionsmechanismen maßgeblich.
+const SERVICE_WORKER_VERSION = 'brauhaus-push-v2';
+
 self.addEventListener('install', function() {
+  console.debug('[ServiceWorker] Installed', SERVICE_WORKER_VERSION);
   // skipWaiting() wird absichtlich nicht aufgerufen: Ein Update soll eine laufende
   // Brauansicht nicht ungefragt durch einen neuen Service Worker übernehmen.
 });
 
 self.addEventListener('activate', function(event) {
+  console.debug('[ServiceWorker] Activated', SERVICE_WORKER_VERSION);
   event.waitUntil(self.clients.claim());
 });
 
@@ -22,7 +26,7 @@ self.addEventListener('fetch', function() {
 
 const DEFAULT_NOTIFICATION = {
   title: 'Brauhaus',
-  body: 'Der Brauvorgang benötigt Aufmerksamkeit.',
+  body: 'Eine neue Brauhaus-Benachrichtigung ist eingegangen.',
   url: '/',
   tag: 'brauhaus-push',
   icon: '/logo192.png',
@@ -38,8 +42,16 @@ function parsePushPayload(event) {
     const payload = event.data.json();
     return Object.assign({}, DEFAULT_NOTIFICATION, payload || {});
   } catch (error) {
+    console.error('[ServiceWorker] Push payload parsing failed', error);
     return DEFAULT_NOTIFICATION;
   }
+}
+
+function getPayloadData(payload) {
+  if (payload && payload.data && typeof payload.data === 'object') {
+    return payload.data;
+  }
+  return {};
 }
 
 function sameOriginUrl(url) {
@@ -55,6 +67,7 @@ function sameOriginUrl(url) {
 }
 
 self.addEventListener('push', function(event) {
+  console.debug('[ServiceWorker] Push event received');
   const payload = parsePushPayload(event);
   const title = typeof payload.title === 'string' && payload.title ? payload.title : DEFAULT_NOTIFICATION.title;
   const options = {
@@ -62,10 +75,20 @@ self.addEventListener('push', function(event) {
     icon: typeof payload.icon === 'string' ? payload.icon : DEFAULT_NOTIFICATION.icon,
     badge: typeof payload.badge === 'string' ? payload.badge : DEFAULT_NOTIFICATION.badge,
     tag: typeof payload.tag === 'string' ? payload.tag : DEFAULT_NOTIFICATION.tag,
-    data: Object.assign({}, payload.data || {}, { url: sameOriginUrl(payload.url) })
+    renotify: true,
+    data: Object.assign({}, getPayloadData(payload), {
+      url: sameOriginUrl(payload.url),
+      serviceWorkerVersion: SERVICE_WORKER_VERSION
+    })
   };
 
-  event.waitUntil(self.registration.showNotification(title, options));
+  const notificationPromise = self.registration.showNotification(title, options)
+    .catch(function(error) {
+      console.error('[ServiceWorker] Notification display failed', error);
+      throw error;
+    });
+
+  event.waitUntil(notificationPromise);
 });
 
 self.addEventListener('notificationclick', function(event) {
