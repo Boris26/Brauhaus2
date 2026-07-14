@@ -121,7 +121,7 @@ export class ProductionRepository {
 
     private static async _doGetTemperature(): Promise<number> {
         try {
-            const response = await axios.get(BaseURL + 'temperatur/0');
+            const response = await axios.get(`${BaseURL}/temperatur/0`);
             if (response.status == 200) {
                 return response.data;
             } else {
@@ -137,7 +137,7 @@ export class ProductionRepository {
     private static async _doGetWaterFillStatus(aTimeoutMs?: number, aFailOnError: boolean = false): Promise<WaterStatus> {
         const aConfig = createRequestConfig(aTimeoutMs);
         try {
-            const response = await axios.get(BaseURL + 'WaterStatus', aConfig.config);
+            const response = await axios.get(`${BaseURL}/WaterStatus`, aConfig.config);
             if (response.status == 200) {
                 return normalizeWaterStatus(response.data);
 
@@ -167,7 +167,7 @@ export class ProductionRepository {
     private static async _doGetBrewingStatus(aTimeoutMs?: number): Promise<{ available: BackendAvailable, brewingStatus: BrewingStatus | undefined }> {
         const aConfig = createRequestConfig(aTimeoutMs);
         try {
-            const response = await axios.get(BaseURL + 'Status/', aConfig.config);
+            const response = await axios.get(`${BaseURL}/Status/`, aConfig.config);
             if (response.status == 200) {
                 const available: BackendAvailable = {
                     isBackenAvailable: true, statusText: response.statusText
@@ -198,13 +198,13 @@ export class ProductionRepository {
     }
 
     private static async _doGetDiagnosticVersion(): Promise<string> {
-        const response = await axios.get<IDiagnosticResponse>(BaseURL + 'diag');
+        const response = await axios.get<IDiagnosticResponse>(`${BaseURL}/diag`);
         return normalizeDiagnosticVersion(response.data);
     }
 
     private static async _doSendBrewingData(aBrewingData: BrewingData) {
         try {
-            const response = await axios.post(BaseURL + 'Recipe/', aBrewingData);
+            const response = await axios.post(`${BaseURL}/Recipe/`, aBrewingData);
 
             return response.status == 201;
         } catch (error) {
@@ -272,7 +272,7 @@ export class ProductionRepository {
 
     private static async _doCheckIsBackendAvailable(): Promise<boolean> {
         try {
-            const response = await axios.get(BaseURL+"Available/");
+            const response = await axios.get(`${BaseURL}/Available/`);
             return response.status === 200;
         } catch (error) {
             return false;
@@ -281,7 +281,7 @@ export class ProductionRepository {
 
     private static async _doNextProcedureStep() {
         try {
-            const response = await axios.post(BaseURL + 'next');
+            const response = await axios.post(`${BaseURL}/next`);
             return response.status === 200;
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);

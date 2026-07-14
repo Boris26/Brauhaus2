@@ -2,7 +2,7 @@
 
 ## Database/backend REST endpoints
 
-Base URL: `DatabaseURL` (`http://192.168.178.72:5000/`).
+Base URL: `DatabaseURL` (`/api/database`).
 
 | Method | Path | UI use | Payload/response expected |
 |---|---|---|---|
@@ -30,7 +30,7 @@ Base URL: `DatabaseURL` (`http://192.168.178.72:5000/`).
 
 ## PI/control REST endpoints
 
-Base URL: `BaseURL` (`http://192.168.178.37:5000/`), `CommandsURL`, and `ConfirmURL`.
+Base URL: `BaseURL` (`/api/controller`), `CommandsURL` (`/api/controller/Command/`), and `ConfirmURL` (`/api/controller/Confirm/`).
 
 | Method | Path | UI use | Success expectation |
 |---|---|---|---|
