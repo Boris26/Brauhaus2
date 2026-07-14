@@ -2,7 +2,7 @@
 
 ## Repository role
 
-This repository is a Create React App TypeScript UI named `test1`. It presents beer recipes, ingredient/database maintenance, finished brews, brewing calculations, settings, and production/control screens for a Brauhaus brewing setup. The UI talks to two hard-coded HTTP origins: a database/backend service at `http://192.168.178.72:5000/` and a brewing-control service at `http://192.168.178.37:5000/`.
+This repository is a Create React App TypeScript UI named `test1`. It presents beer recipes, ingredient/database maintenance, finished brews, brewing calculations, settings, and production/control screens for a Brauhaus brewing setup. The UI talks to Caddy-routed relative API paths on the current origin: `/api/database` for the database/backend service and `/api/controller` for the brewing-control service. In local CRA development, `src/setupProxy.js` forwards `/api/*` to the Caddy HTTPS origin for development only.
 
 ## Entry points and shell
 
@@ -82,7 +82,7 @@ See `interfaces.md` and `docs/frontend-api-usage.md` for endpoint details.
 
 Scripts from `package.json`:
 
-- `npm start`: CRA dev server.
+- `npm start`: version wrapper around the CRA dev server; CRA loads `src/setupProxy.js` for local `/api` proxying.
 - `npm run build`: production build.
 - `npm test`: CRA/Jest test runner.
 - `npm run build-deploy`: build then `scp -r build/* boris@192.168.178.72:/srv/sites/braumeister`.
