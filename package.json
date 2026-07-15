@@ -61,8 +61,8 @@
   "scripts": {
     "start": "node scripts/build-with-version.js start",
     "build": "node scripts/build-with-version.js build",
-    "build-deploy": "npm run build && scp -r build/* boris@192.168.178.72:/srv/sites/braumeister",
-    "deploy": "scp -r build/* boris@192.168.178.72:/srv/sites/braumeister",
+    "build-deploy": "npm run build && rsync -az --delete build/ boris@192.168.178.72:/home/boris/Brewmaster/App/Brauhaus/",
+    "deploy": "rsync -az --delete build/ boris@192.168.178.72:/home/boris/Brewmaster/App/Brauhaus/",
     "test": "node scripts/build-with-version.js test",
     "eject": "react-scripts eject",
     "storybook": "start-storybook -p 6006",
