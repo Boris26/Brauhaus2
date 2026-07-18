@@ -3,12 +3,32 @@
   min-height: var(--desktop-header-height);
   position: relative;
   display: grid;
-  grid-template-columns: minmax(24rem, 1fr) minmax(30rem, 58rem);
-  grid-template-areas: "nav status";
+  grid-template-columns: minmax(12rem, 1fr) minmax(24rem, 58rem);
+  grid-template-areas:
+    "brand status"
+    "nav nav";
   align-items: center;
-  gap: var(--spacing-md);
+  gap: var(--spacing-sm) var(--spacing-lg);
   box-sizing: border-box;
-  padding: var(--spacing-sm) var(--spacing-xl);
+  padding: var(--spacing-sm) var(--spacing-xl) var(--spacing-md);
+}
+
+.header-brand {
+  grid-area: brand;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.header-title {
+  font-size: var(--font-size-page-title);
+  font-weight: 800;
+  color: var(--color-header-text);
+  text-align: left;
+  margin: 0;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
 }
 
 .header-status {
@@ -51,6 +71,8 @@
   flex-wrap: wrap;
   gap: var(--spacing-sm);
   min-width: 0;
+  padding-top: var(--spacing-xs);
+  border-top: 1px solid var(--bg-transparent-black);
 }
 
 .icon {
@@ -110,6 +132,7 @@
   .Header {
     grid-template-columns: 1fr;
     grid-template-areas:
+      "brand"
       "status"
       "nav";
     align-items: start;
