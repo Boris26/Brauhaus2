@@ -102,7 +102,6 @@ export class MobileProductionView extends React.Component<MobileProductionViewPr
                 <main className="mobile-content" data-testid="mobile-scroll-content">
                 {activeTab === 'status' && (
                     <>
-                        <h2>Brauhaus Mobile</h2>
                         <div className="mobile-info-list">
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Temperatur:</span>

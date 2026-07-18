@@ -3,17 +3,21 @@
     min-height: calc(100dvh - var(--desktop-header-height) - (2 * var(--spacing-lg)));
     display: flex;
     flex-direction: column;
+    min-height: 0;
     min-width: 0;
+    overflow: hidden;
 }
 
 .beer-form-panel {
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius-large);
     display: flex;
+    flex: 1 1 auto;
     flex-direction: column;
     min-height: 0;
     background: var(--color-brew-bg);
     box-sizing: border-box;
+    overflow: hidden;
 }
 
 .beer-form-panel-header {
@@ -28,6 +32,8 @@
     padding: var(--spacing-lg);
     min-height: 0;
     overflow-y: auto;
+    overflow-x: hidden;
+    scroll-padding-bottom: calc(var(--control-height) + var(--spacing-2xl));
     box-sizing: border-box;
 }
 
@@ -122,7 +128,7 @@
     border: 1px solid var(--color-border-strong);
     border-radius: var(--border-radius-large);
     background: var(--color-surface-deep);
-    overflow: clip;
+    overflow: visible;
 }
 
 .beer-accordion.expanded {
@@ -180,6 +186,7 @@
 
 .table-wrapper {
     max-width: 100%;
+    min-width: 0;
     overflow-x: auto;
     overflow-y: visible;
     margin-bottom: var(--spacing-md);

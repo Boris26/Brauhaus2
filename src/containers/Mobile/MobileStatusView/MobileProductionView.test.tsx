@@ -78,7 +78,7 @@ describe('MobileProductionView navigation', () => {
         fireEvent.click(screen.getByRole('button', {name: 'Einstellungen'}));
         fireEvent.click(screen.getByRole('button', {name: 'Status'}));
 
-        expect(screen.getByRole('heading', {name: 'Brauhaus Mobile'})).toBeInTheDocument();
+        expect(screen.queryByRole('heading', {name: 'Brauhaus Mobile'})).not.toBeInTheDocument();
     });
 });
 
