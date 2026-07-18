@@ -7,10 +7,8 @@ class Flame extends React.Component {
         return (
             <div className="flameRoot" aria-label="Heizflamme">
                 <div className="flameContainer">
-                    <div className="outer flame">
-                        <div className="inner flame">
-                        </div>
-                    </div>
+                    <div className="flameOuter flame-shape" />
+                    <div className="flameInner flame-shape" />
                 </div>
             </div>
 
