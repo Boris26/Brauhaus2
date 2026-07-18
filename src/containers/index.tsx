@@ -80,7 +80,7 @@ export class Index extends React.Component<indexMainProps> {
 
         return (
 
-            <div>
+            <div className="IndexContent">
                 {this.showDialog()}
                 <SimpleBar style={{maxHeight: '100%', overflowY: 'auto'}}>
                     {viewState === Views.MAIN && <Main/>}
