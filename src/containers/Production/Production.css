@@ -86,6 +86,7 @@
     box-shadow: 0 2px 8px var(--shadow-error-soft);
     overflow: visible;
     min-height: 4.5rem;
+    padding: var(--spacing-xs) 0;
 }
 
 /* Agitator und Temperatur mittig */
