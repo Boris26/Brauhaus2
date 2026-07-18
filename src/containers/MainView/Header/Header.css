@@ -6,36 +6,9 @@
   grid-template-columns: minmax(24rem, 1fr) minmax(30rem, 58rem);
   grid-template-areas: "nav status";
   align-items: center;
-  gap: 0.75rem;
+  gap: var(--spacing-md);
   box-sizing: border-box;
-  padding: 0.4rem 1.25rem;
-}
-
-.header-left {
-  display: none;
-}
-
-.theme-toggle {
-  margin-left: 1rem;
-  padding: 0.5rem 0.75rem;
-  border-radius: 0.75rem;
-  border: 1px solid var(--color-input-border);
-  background: var(--color-input-bg2);
-  color: var(--color-black);
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 1px 2px var(--shadow-primary);
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
-}
-
-.theme-toggle:hover {
-  box-shadow: 0 3px 8px var(--shadow-secondary);
-  transform: translateY(-1px);
-}
-
-.theme-toggle:active {
-  transform: translateY(0);
-  box-shadow: 0 1px 2px var(--shadow-secondary) inset;
+  padding: var(--spacing-sm) var(--spacing-xl);
 }
 
 .header-status {
@@ -44,7 +17,7 @@
   flex-direction: row;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.75rem;
+  gap: var(--spacing-md);
   min-width: 0;
   width: 100%;
 }
@@ -56,19 +29,10 @@
   flex: 1 1 auto;
 }
 
-h1 {
-  font-size: 1.25rem;
-  font-weight: bold;
-  color: black;
-  text-align: left;
-  margin: 0;
-  overflow-wrap: anywhere;
-}
-
 .Header .time {
   color: var(--color-header-text);
   text-align: center;
-  font-size: 1rem;
+  font-size: var(--font-size-normal);
   position: static;
   margin: 0;
   display: flex;
@@ -76,7 +40,8 @@ h1 {
   align-items: flex-end;
   justify-content: center;
   flex: 0 0 auto;
-  min-height: 2.75rem;
+  min-height: var(--control-height-large);
+  line-height: 1.2;
 }
 
 .icons-container {
@@ -84,18 +49,19 @@ h1 {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.45rem;
+  gap: var(--spacing-sm);
   min-width: 0;
 }
 
 .icon {
   width: 3rem;
-  height: 2.5rem;
+  min-width: var(--touch-target-min);
+  height: var(--touch-target-min);
   cursor: pointer;
   transition: all 0.2s;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.5rem;
-  background: linear-gradient(180deg, var(--color-accent) 60%, var(--color-orange-alt) 100%);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-medium);
+  background: linear-gradient(180deg, var(--color-primary) 60%, var(--color-primary-hover) 100%);
   border: 2px solid var(--color-orange-dark);
   box-shadow: 0 3px 8px var(--shadow-orange-strong), 0 2px 0 var(--color-orange-light) inset, 0 2px 0 var(--color-orange-dark);
   position: relative;
@@ -114,13 +80,13 @@ h1 {
 }
 
 .icon:hover {
-  background: linear-gradient(180deg, var(--color-orange-alt) 60%, var(--color-orange-deep) 100%);
+  background: linear-gradient(180deg, var(--color-primary-hover) 60%, var(--color-orange-deep) 100%);
   border-color: var(--color-orange-main);
   box-shadow: 0 4px 12px var(--shadow-orange-strong);
 }
 
 .icon.active {
-  background: linear-gradient(180deg, var(--color-orange-main) 60%, var(--color-orange-strong) 100%);
+  background: linear-gradient(180deg, var(--color-orange-main) 60%, var(--color-primary-active) 100%);
   border: 2px inset var(--color-orange-dark);
   box-shadow: 0 1px 2px var(--color-orange-dark) inset, 0 1.5px 0 var(--color-white);
   color: var(--color-white);
@@ -144,9 +110,10 @@ h1 {
   .Header {
     grid-template-columns: 1fr;
     grid-template-areas:
-      "nav"
-      "status";
+      "status"
+      "nav";
     align-items: start;
+    padding-inline: var(--spacing-lg);
   }
 
   .header-status {

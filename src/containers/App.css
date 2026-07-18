@@ -54,3 +54,10 @@
         overflow: hidden;
     }
 }
+
+
+@media (max-width: 1100px) {
+    :root {
+        --desktop-header-height: 7.75rem;
+    }
+}

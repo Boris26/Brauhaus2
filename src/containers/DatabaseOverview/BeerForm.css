@@ -1,50 +1,59 @@
 .containerBeerForm {
-    margin: 10px;
-    min-height: calc(100dvh - var(--desktop-header-height) - 20px);
+    margin: var(--spacing-lg);
+    height: calc(100dvh - var(--desktop-header-height) - (2 * var(--spacing-lg)));
     display: flex;
     flex-direction: column;
+    min-height: 0;
     min-width: 0;
+    overflow: hidden;
 }
 
 .beer-form-panel {
-    border: 1px solid transparent;
-    border-radius: 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-large);
     display: flex;
+    flex: 1 1 auto;
     flex-direction: column;
     min-height: 0;
     background: var(--color-brew-bg);
     box-sizing: border-box;
+    overflow: hidden;
 }
 
 .beer-form-panel-header {
     background-color: var(--color-accent);
     color: var(--color-white);
-    padding: 12px 16px;
-    border-radius: 10px 10px 0 0;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
     font-weight: 700;
 }
 
 .beer-form-scroll {
-    padding: 16px;
+    flex: 1 1 auto;
+    padding: var(--spacing-lg);
+    padding-bottom: calc(var(--control-height) + var(--spacing-2xl));
     min-height: 0;
     overflow-y: auto;
+    overflow-x: hidden;
+    scroll-padding-bottom: calc(var(--control-height) + var(--spacing-2xl));
     box-sizing: border-box;
 }
 
 .beer-form {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: var(--spacing-lg);
+    min-height: min-content;
     min-width: 0;
 }
 
 .beer-form-toolbar {
     display: grid;
     grid-template-columns: auto minmax(14rem, 1fr) auto auto;
-    gap: 12px;
+    gap: var(--spacing-md);
     align-items: end;
-    padding: 14px;
-    border-radius: 8px;
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-large);
     background: var(--color-surface-strong);
     border: 1px solid var(--color-border-strong);
     min-width: 0;
@@ -63,7 +72,7 @@
     font-weight: 600;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: var(--spacing-sm);
     min-width: 0;
 }
 
@@ -72,11 +81,11 @@
 .beer-form textarea,
 .readonly-table-value {
     width: 100%;
-    min-height: 40px;
+    min-height: var(--control-height);
     box-sizing: border-box;
-    padding: 8px 10px;
+    padding: var(--spacing-sm) var(--spacing-md);
     border: 1px solid var(--color-border-mid);
-    border-radius: 5px;
+    border-radius: var(--border-radius-medium);
     font: inherit;
     background: var(--color-input-bg);
     color: var(--color-dark-bg);
@@ -100,7 +109,7 @@
 .beer-form-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 16px 18px;
+    gap: var(--spacing-lg) var(--spacing-xl);
     min-width: 0;
 }
 
@@ -115,14 +124,14 @@
 .beer-form-sections {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: var(--spacing-md);
 }
 
 .beer-accordion {
     border: 1px solid var(--color-border-strong);
-    border-radius: 8px;
+    border-radius: var(--border-radius-large);
     background: var(--color-surface-deep);
-    overflow: clip;
+    overflow: visible;
 }
 
 .beer-accordion.expanded {
@@ -135,15 +144,15 @@
 
 .beer-accordion-header {
     width: 100%;
-    min-height: 48px;
+    min-height: var(--control-height-large);
     border: none;
     background: var(--color-accent);
     color: var(--color-black);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    padding: 10px 14px;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) var(--spacing-lg);
     cursor: pointer;
     font: inherit;
     font-weight: 700;
@@ -160,7 +169,7 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 10px;
+    gap: var(--spacing-md);
     color: var(--color-dark-bg);
     font-weight: 600;
     flex-wrap: wrap;
@@ -170,21 +179,23 @@
     color: var(--color-error-highlight);
     background: var(--color-dark-bg);
     border-radius: 999px;
-    padding: 2px 8px;
+    padding: var(--spacing-xs) var(--spacing-sm);
 }
 
 .beer-accordion-content {
-    padding: 16px;
+    padding: var(--spacing-lg);
+    min-height: 0;
     min-width: 0;
 }
 
 .table-wrapper {
     max-width: 100%;
+    min-width: 0;
     overflow-x: auto;
     overflow-y: visible;
-    margin-bottom: 12px;
+    margin-bottom: var(--spacing-md);
     border: 1px solid var(--color-border-strong);
-    border-radius: 6px;
+    border-radius: var(--border-radius-medium);
     box-sizing: border-box;
 }
 
@@ -200,7 +211,7 @@
 .ingredient-table th {
     background-color: var(--color-border-strong);
     color: var(--color-white);
-    padding: 10px;
+    padding: var(--spacing-md);
     text-align: left;
     font-weight: bold;
     position: sticky;
@@ -210,7 +221,7 @@
 }
 
 .ingredient-table td {
-    padding: 6px 8px;
+    padding: var(--spacing-sm) var(--spacing-md);
     min-height: 44px;
     vertical-align: top;
     overflow-wrap: anywhere;
@@ -227,7 +238,7 @@
 .ingredient-table input,
 .ingredient-table select,
 .readonly-table-value {
-    min-height: 40px;
+    min-height: var(--control-height);
     font-size: 0.95rem;
 }
 
@@ -239,10 +250,10 @@
 
 .add-button,
 .finish-btn {
-    min-height: 42px;
+    min-height: var(--control-height);
     border: none;
-    border-radius: 5px;
-    padding: 0.45rem 0.9rem;
+    border-radius: var(--border-radius-medium);
+    padding: var(--spacing-sm) var(--spacing-lg);
     font-size: 1rem;
     font-weight: 700;
     cursor: pointer;
@@ -250,23 +261,25 @@
 }
 
 .add-button {
-    background-color: var(--color-surface-alt);
-    color: var(--color-white);
+    background: linear-gradient(180deg, var(--color-primary) 10%, var(--color-primary-hover) 100%);
+    border: 1px solid var(--color-orange-dark);
+    color: var(--color-text-on-primary);
+    box-shadow: 0 3px 8px var(--shadow-orange-bold);
 }
 
-.add-button:hover,
-.finish-btn:hover {
-    background-color: var(--color-surface-highlight);
+.add-button:hover:not(:disabled),
+.finish-btn:hover:not(:disabled) {
+    background: linear-gradient(180deg, var(--color-primary-hover) 10%, var(--color-primary-active) 100%);
 }
 
 .section-add-button {
-    margin-top: 2px;
+    margin-top: var(--spacing-xs);
 }
 
 .cancel-btn {
-    min-width: 40px;
-    width: 40px;
-    height: 40px;
+    min-width: var(--touch-target-min);
+    width: var(--touch-target-min);
+    height: var(--touch-target-min);
     padding: 0;
     display: inline-flex;
     align-items: center;
@@ -274,13 +287,13 @@
     background-color: transparent;
     color: var(--color-white);
     border: none;
-    border-radius: 5px;
+    border-radius: var(--border-radius-medium);
     font-size: 1.2rem;
     cursor: pointer;
 }
 
-.cancel-btn:hover {
-    background-color: var(--color-error-mid);
+.cancel-btn:hover:not(:disabled) {
+    background-color: var(--color-danger);
 }
 
 .readonly-table-value {
@@ -293,14 +306,14 @@
     opacity: 0.75;
     display: inline-flex;
     align-items: center;
-    min-height: 40px;
+    min-height: var(--control-height);
     color: var(--color-white);
 }
 
 .field-error {
     color: var(--color-error-highlight);
     font-size: 0.85rem;
-    margin-top: 4px;
+    margin-top: var(--spacing-xs);
     overflow-wrap: anywhere;
 }
 
@@ -314,8 +327,8 @@
 .missing-ingredients-warning {
     color: var(--color-waiting-orange);
     border: 1px solid var(--color-waiting-orange);
-    border-radius: 6px;
-    padding: 10px 12px;
+    border-radius: var(--border-radius-medium);
+    padding: var(--spacing-md) var(--spacing-lg);
 }
 
 .beer-form-actions {
@@ -323,24 +336,58 @@
     bottom: 0;
     display: flex;
     justify-content: space-between;
-    gap: 12px;
-    padding: 12px 0 0;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) 0 0;
     background: linear-gradient(180deg, transparent 0%, var(--color-brew-bg) 28%);
     z-index: 5;
 }
 
 .primary-action {
-    background-color: var(--color-success);
-    color: var(--color-white);
+    background: linear-gradient(180deg, var(--color-primary) 10%, var(--color-primary-hover) 100%);
+    border: 1px solid var(--color-orange-dark);
+    color: var(--color-text-on-primary);
     margin-left: auto;
 }
 
 .secondary-action {
-    background-color: var(--color-surface-alt);
+    background: var(--color-surface-raised);
+    border-color: var(--color-border);
+    color: var(--color-text);
 }
 
 .visually-hidden-file {
     display: none;
+}
+
+.beer-form-overview {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--spacing-md);
+}
+
+.beer-form-overview-item {
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-medium);
+    padding: var(--spacing-md);
+    color: var(--color-text);
+    min-width: 0;
+}
+
+.beer-form-overview-item span,
+.beer-form-overview-item strong {
+    display: block;
+    overflow-wrap: anywhere;
+}
+
+.beer-form-overview-item span {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-small);
+    margin-bottom: var(--spacing-xs);
+}
+
+.beer-form-overview-item strong {
+    font-size: var(--font-size-section-title);
 }
 
 @media (max-width: 1100px) {
@@ -354,7 +401,8 @@
         grid-column: 1 / -1;
     }
 
-    .beer-form-grid {
+    .beer-form-grid,
+    .beer-form-overview {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
@@ -362,6 +410,7 @@
 @media (max-width: 720px) {
     .beer-form-toolbar,
     .beer-form-grid,
+    .beer-form-overview,
     .brewing-data-grid {
         grid-template-columns: 1fr;
     }
