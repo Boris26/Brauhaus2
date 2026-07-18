@@ -7,20 +7,20 @@
 /* Gesamtes App-Grid */
 .containerProduction {
     display: grid;
-    grid-template-columns: 20rem 1.4fr 650px 400px;
+    grid-template-columns: minmax(14rem, 20rem) minmax(12rem, 1.4fr) minmax(22rem, 40rem) minmax(18rem, 25rem);
     grid-template-rows: auto 1fr 1fr 100px;
     grid-template-areas:
         "Header Header Header Header"
         "Left List Agitator Settings"
         "Left List Temp Settings"
         "Info Info Info Info";
-    height: 100vh;
+    min-height: calc(100dvh - var(--desktop-header-height));
     background: var(--color-surface-1);
     box-sizing: border-box;
     padding: 1rem ;
-    overflow: hidden;
+    overflow: auto;
     gap: 1rem;  /* <-- Das sorgt für die sichtbaren Spaltenabstände */
-    margin-top: -20px; /* Leichter Versatz nach oben */
+    margin-top: 0;
 }
 
 
@@ -77,15 +77,15 @@
 }
 
 .Flame {
-    flex: 0 0 72px;  /* Exakte Höhe für Flame (z.B. 72px) */
+    flex: 0 0 clamp(4.5rem, 10vh, 7rem);
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    align-items: center;
     background: var(--color-error-strong);
     border-radius: 0 0 12px 12px;
     box-shadow: 0 2px 8px var(--shadow-error-soft);
-    overflow: hidden;
-    max-height: 50px;
+    overflow: visible;
+    min-height: 4.5rem;
 }
 
 /* Agitator und Temperatur mittig */
@@ -112,6 +112,7 @@
     margin-bottom: 1.2rem;
     padding: 0 1rem;
     max-height: 260px; /* Maximalhöhe für Temp */
+    min-width: 0;
 }
 
 /* Settings Panel */
@@ -134,10 +135,10 @@
     background: var(--color-brew-bg);
     border-radius: 10px;
     padding: 1.2rem ;
-    margin-top: -6rem;
+    margin-top: 0;
     display: flex;
     flex-wrap: wrap;
-    align-items: flex-start;
+    align-items: center;
     min-height: 60px;
     max-height: 150px;
     overflow-y: auto;
@@ -184,7 +185,7 @@
 .settingsRow, .settingsRowWater {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     gap: 1.4rem;
 }
 .rightAligned { margin-right: 1rem; }
@@ -274,4 +275,27 @@
 .recipeWaterBtn:disabled {
     cursor: not-allowed;
     opacity: 0.5;
+}
+
+
+.flame-strip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.5rem, 3vw, 2rem);
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+}
+
+@media (max-width: 1280px) {
+    .containerProduction {
+        grid-template-columns: minmax(12rem, 18rem) minmax(12rem, 1fr) minmax(18rem, 1fr);
+        grid-template-areas:
+            "Header Header Header"
+            "Left List Settings"
+            "Left Agitator Settings"
+            "Left Temp Settings"
+            "Info Info Info";
+    }
 }

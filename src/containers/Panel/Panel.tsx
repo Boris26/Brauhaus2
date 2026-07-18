@@ -97,8 +97,17 @@ class Panel extends React.Component<PanelProps, PanelState> {
     }
   };
 
+  getHeaderOffset = (): number => {
+    const cssValue = getComputedStyle(document.documentElement).getPropertyValue('--desktop-header-height').trim();
+    const parsed = Number.parseFloat(cssValue);
+    if (cssValue.endsWith('rem')) {
+      return parsed * Number.parseFloat(getComputedStyle(document.documentElement).fontSize);
+    }
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+
   handleMaximize = () => {
-    const headerOffset = 90; // Höhe des Headers in px (ggf. anpassen)
+    const headerOffset = this.getHeaderOffset();
     if (!this.state.maximized) {
       this.setState({
         maximized: true,
@@ -117,7 +126,7 @@ class Panel extends React.Component<PanelProps, PanelState> {
   render() {
     const { title, children } = this.props;
     const { position, size, maximized } = this.state;
-    const headerOffset = 90; // Höhe des Headers in px (ggf. anpassen)
+    const headerOffset = this.getHeaderOffset();
     return (
       <div
         ref={this.panelRef}

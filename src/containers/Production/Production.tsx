@@ -462,12 +462,12 @@ export class Production extends React.Component<ProductionProps, ProductionState
         return (
             <div className='Flame'>
               {(brewingStatus?.hardware?.heater === HeatingStates.ON || brewingStatus?.currentStep?.mode === ProcessMode.HEATING) && (
-                    <>
+                    <div className="flame-strip" aria-label="Heizung aktiv">
                         <Flame/>
                         <Flame/>
                         <Flame/>
                         <Flame/>
-                    </>
+                    </div>
               )}
             </div>
         );
@@ -661,8 +661,9 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
 
                 const progressBarStyle = {
-                    width: '43rem',    // Width of the progress bar
-                    height: '3rem',    // Height of the progress bar
+                    width: '100%',
+                    maxWidth: '43rem',
+                    height: '3rem',
                     marginLeft: '1rem'
                 };
                 return (

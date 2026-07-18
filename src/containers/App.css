@@ -1,3 +1,7 @@
+:root {
+    --desktop-header-height: 7.25rem;
+}
+
 .AppBody {
     margin: 0;
     padding: 0;
@@ -16,7 +20,7 @@
 .AppHeader {
     position: fixed;
     top: 0;
-    height: 80px;
+    min-height: var(--desktop-header-height);
     width: 100%;
     background: var(--color-accent);
     z-index: 999;
@@ -40,7 +44,7 @@
     margin: 10px;
 }
 .Index {
-    margin-top: 80px;
+    margin-top: var(--desktop-header-height);
 }
 
 @media (max-width: 767px) {

@@ -1,170 +1,219 @@
-.containerBeerForm{
+.containerBeerForm {
     margin: 10px;
-}
-.beer-form {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr); /* Zurück zu 3 Spalten für mehr Platz */
-    grid-gap: 5px; /* Mehr Abstand zwischen den Feldern */
-    column-gap: 15px; /* Horizontaler Abstand erhöht */
-}
-
-/* Reduzieren der Höhe von Textareas */
-textarea {
-    height: 60px;
-}
-
-.fermentation-steps-container {
-    margin-top: 20px;
-    margin-bottom: 15px;
-}
-
-.fermentation-step-container {
-    grid-column: span 2;
-}
-
-.table-section {
-    margin-top: 20px; /* Fügt Abstand über den Tabellenbereichen hinzu */
-}
-
-.tables-container {
-    display: grid;
-    grid-template-columns: 49% 49%; /* Verkleinerte Spaltenbreite für mehr Platz am Rand */
-    grid-template-rows: auto auto;
-    grid-gap: 2%; /* Verringerter Abstand zwischen den Elementen */
-    margin-bottom: 10px;
-    margin-top: 15px; /* Zusätzlicher Abstand zum vorherigen Element */
-    width: 100%;
-    box-sizing: border-box; /* Stellt sicher, dass Padding und Border in der Gesamtbreite enthalten sind */
-}
-
-/* Styling für Labels der Textfelder */
-.beer-form label {
-    color: var(--color-white);
-    font-weight: 500;
-    margin-bottom: 5px;
+    min-height: calc(100dvh - var(--desktop-header-height) - 20px);
     display: flex;
     flex-direction: column;
+    min-width: 0;
 }
 
-/* Styling für Abschnittsüberschriften (Maischeplan, Malze, Hopfen, Hefe) */
-.table-section h3 {
-    color: var(--color-white);
-    font-size: 1.2rem;
-    margin-bottom: 12px;
-    padding-bottom: 5px;
-    border-bottom: 2px solid var(--color-accent);
-    display: inline-block;
-}
-
-
-
-.submit-button {
-    bottom: 10px;
-    margin-right: 10px;
-    margin-top: 10px;
-    height: 40px;
-    width: 120px;
-    padding: 4px 8px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-button:hover {
-    background-color: var(--color-surface-highlight); /* Dunklere Version der darkorange Farbe */
-}
-
-select {
-    height: auto;
-}
-
-/* Verbesserte Layout für die Tabellen-Anordnung */
-.full-width {
-    grid-column: span 3; /* Auf 3 Spalten anpassen */
-}
-
-.tables-container {
-    display: grid;
-    grid-template-columns: 49% 49%; /* Verkleinerte Spaltenbreite für mehr Platz am Rand */
-    grid-template-rows: auto auto;
-    grid-gap: 2%; /* Verringerter Abstand zwischen den Elementen */
-    margin-bottom: 10px;
-    margin-top: 15px; /* Zusätzlicher Abstand zum vorherigen Element */
-    width: 100%;
-    box-sizing: border-box; /* Stellt sicher, dass Padding und Border in der Gesamtbreite enthalten sind */
-}
-
-.table-section {
-    width: 100%;
+.beer-form-panel {
+    border: 1px solid transparent;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--color-brew-bg);
     box-sizing: border-box;
 }
 
-/* Explizite Grid-Positionierung für die 2x2 Anordnung */
-.table-section:nth-child(1) {
-    grid-column: 1 / 2;
-    grid-row: 1;
+.beer-form-panel-header {
+    background-color: var(--color-accent);
+    color: var(--color-white);
+    padding: 12px 16px;
+    border-radius: 10px 10px 0 0;
+    font-weight: 700;
 }
 
-.table-section:nth-child(2) {
-    grid-column: 2 / 3;
-    grid-row: 1;
-}
-
-.table-section:nth-child(3) {
-    grid-column: 1 / 2;
-    grid-row: 2;
-}
-
-.table-section:nth-child(4) {
-    grid-column: 2 / 3;
-    grid-row: 2;
-}
-
-/* Scrollbare Tabellen */
-.table-wrapper {
-    max-height: 180px;
+.beer-form-scroll {
+    padding: 16px;
+    min-height: 0;
     overflow-y: auto;
-    margin-bottom: 5px;
+    box-sizing: border-box;
+}
+
+.beer-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-width: 0;
+}
+
+.beer-form-toolbar {
+    display: grid;
+    grid-template-columns: auto minmax(14rem, 1fr) auto auto;
+    gap: 12px;
+    align-items: end;
+    padding: 14px;
+    border-radius: 8px;
+    background: var(--color-surface-strong);
     border: 1px solid var(--color-border-strong);
-    border-radius: 3px;
+    min-width: 0;
 }
 
-.table-wrapper::-webkit-scrollbar {
-    width: 8px;
+.beer-form-toolbar-title {
+    color: var(--color-white);
+    font-size: 1.15rem;
+    font-weight: 700;
+    align-self: center;
 }
 
-.table-wrapper::-webkit-scrollbar-track {
+.beer-select-label,
+.beer-form label {
+    color: var(--color-white);
+    font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+}
+
+.beer-form input,
+.beer-form select,
+.beer-form textarea,
+.readonly-table-value {
+    width: 100%;
+    min-height: 40px;
+    box-sizing: border-box;
+    padding: 8px 10px;
+    border: 1px solid var(--color-border-mid);
+    border-radius: 5px;
+    font: inherit;
+    background: var(--color-input-bg);
+    color: var(--color-dark-bg);
+    min-width: 0;
+}
+
+.beer-form input:focus,
+.beer-form select:focus,
+.beer-form textarea:focus,
+.beer-accordion-header:focus-visible,
+.beer-form button:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+.beer-description {
+    min-height: 110px;
+    resize: vertical;
+}
+
+.beer-form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px 18px;
+    min-width: 0;
+}
+
+.brewing-data-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+.beer-form-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.beer-accordion {
+    border: 1px solid var(--color-border-strong);
+    border-radius: 8px;
+    background: var(--color-surface-deep);
+    overflow: clip;
+}
+
+.beer-accordion.expanded {
+    box-shadow: 0 2px 10px var(--shadow-secondary);
+}
+
+.beer-accordion.has-error {
+    border-color: var(--color-error-highlight);
+}
+
+.beer-accordion-header {
+    width: 100%;
+    min-height: 48px;
+    border: none;
+    background: var(--color-accent);
+    color: var(--color-black);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+    text-align: left;
+}
+
+.beer-accordion-title,
+.beer-accordion-meta {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.beer-accordion-meta {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    color: var(--color-dark-bg);
+    font-weight: 600;
+    flex-wrap: wrap;
+}
+
+.beer-accordion-error {
+    color: var(--color-error-highlight);
     background: var(--color-dark-bg);
-    border-radius: 3px;
+    border-radius: 999px;
+    padding: 2px 8px;
 }
 
-.table-wrapper::-webkit-scrollbar-thumb {
-    background: var(--color-border-mid);
-    border-radius: 3px;
+.beer-accordion-content {
+    padding: 16px;
+    min-width: 0;
 }
 
-.table-wrapper::-webkit-scrollbar-thumb:hover {
-    background: var(--color-gray-strong);
+.table-wrapper {
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+    margin-bottom: 12px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 6px;
+    box-sizing: border-box;
 }
 
-/* Tabellenstile für Maischeplan, Malz, Hopfen und Hefe */
 .ingredient-table {
     width: 100%;
+    min-width: 34rem;
     border-collapse: collapse;
-    margin-bottom: 8px;
     color: white;
-    font-size: 0.85rem;
+    font-size: 0.95rem;
+    table-layout: auto;
 }
 
 .ingredient-table th {
     background-color: var(--color-border-strong);
-    padding: 6px;
+    color: var(--color-white);
+    padding: 10px;
     text-align: left;
     font-weight: bold;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    overflow-wrap: anywhere;
 }
 
 .ingredient-table td {
-    padding: 3px 2px;
+    padding: 6px 8px;
+    min-height: 44px;
+    vertical-align: top;
+    overflow-wrap: anywhere;
 }
 
 .ingredient-table tr:nth-child(even) {
@@ -176,117 +225,154 @@ select {
 }
 
 .ingredient-table input,
-.ingredient-table select {
-    margin-bottom: 0;
-    width: 90%;
-    display: inline-block;
-    padding: 3px;
-    font-size: 0.9rem;
-    box-sizing: border-box;
-    height: 30px; /* Einheitliche Höhe für alle Eingabefelder */
+.ingredient-table select,
+.readonly-table-value {
+    min-height: 40px;
+    font-size: 0.95rem;
 }
 
 .action-column {
-    width: 70px;
+    width: 4.25rem;
+    min-width: 4.25rem;
     text-align: center;
 }
 
-.add-button {
-    margin-top: 8px;
-    margin-bottom: 5px;
-}
-
-.fermentation-steps-container h3 {
-    margin-top: 5px;
-}
-
-/* Kompaktere Labels mit weniger Abstand */
-.beer-form label {
-    margin: 0 0 5px 0;
-    display: flex;
-    flex-direction: column;
-}
-
-/* Verbesserte Abstände und Breiten für die Input-Felder */
-.beer-form input,
-.beer-form select {
-    width: 100%;
-    box-sizing: border-box;
-}
-
-/* Spezifische Feldbreiten für verschiedene Eingabetypen mit optimiertem Platz */
-.beer-form .field-name {
-    width: 100%;
-    min-width: 180px;
-}
-
-.beer-form .field-type {
-    width: 100%;
-    min-width: 130px;
-}
-
-.beer-form .field-color {
-    width: 100%;
-    min-width: 60px;
-}
-
-.beer-form .field-number-small {
-    width: 100%;
-    min-width: 60px;
-}
-
-.beer-form .field-number-medium {
-    width: 100%;
-    min-width: 80px;
-}
-
-.beer-form .field-number-large {
-    width: 100%;
-    min-width: 100px;
-}
-
-/* Flexbox Layout für Label und Eingabefelder */
-.beer-form label {
-    display: flex;
-    flex-direction: column;
-}
-
-/* Button-Stile aus FinishedBrewsTable übernommen */
+.add-button,
 .finish-btn {
+    min-height: 42px;
     border: none;
-    border-radius: 4px;
-    padding: 0.25rem 0.75rem;
+    border-radius: 5px;
+    padding: 0.45rem 0.9rem;
     font-size: 1rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: transform 0.1s, box-shadow 0.1s;
+    transition: background 0.2s, transform 0.1s, box-shadow 0.1s;
 }
 
+.add-button {
+    background-color: var(--color-surface-alt);
+    color: var(--color-white);
+}
+
+.add-button:hover,
 .finish-btn:hover {
-    background-color: #c96a00;
+    background-color: var(--color-surface-highlight);
 }
 
-.finish-btn.clicked {
-    transform: scale(0.92);
-    box-shadow: 0 0 8px 2px var(--shadow-orange);
-}
-
-.finish-btn:disabled {
-    cursor: not-allowed;
-    box-shadow: none;
-    opacity: 0.7;
+.section-add-button {
+    margin-top: 2px;
 }
 
 .cancel-btn {
-    border: none;
-    border-radius: 4px;
-    padding: 0.25rem 0.75rem;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: transform 0.1s, box-shadow 0.1s;
+    min-width: 40px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background-color: transparent;
+    color: var(--color-white);
+    border: none;
+    border-radius: 5px;
+    font-size: 1.2rem;
+    cursor: pointer;
 }
 
 .cancel-btn:hover {
     background-color: var(--color-error-mid);
+}
+
+.readonly-table-value {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.muted-table-value {
+    opacity: 0.75;
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
     color: var(--color-white);
+}
+
+.field-error {
+    color: var(--color-error-highlight);
+    font-size: 0.85rem;
+    margin-top: 4px;
+    overflow-wrap: anywhere;
+}
+
+.missing-ingredients-warning,
+.beer-form-info,
+.empty-section-note {
+    color: var(--color-white);
+    overflow-wrap: anywhere;
+}
+
+.missing-ingredients-warning {
+    color: var(--color-waiting-orange);
+    border: 1px solid var(--color-waiting-orange);
+    border-radius: 6px;
+    padding: 10px 12px;
+}
+
+.beer-form-actions {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 0 0;
+    background: linear-gradient(180deg, transparent 0%, var(--color-brew-bg) 28%);
+    z-index: 5;
+}
+
+.primary-action {
+    background-color: var(--color-success);
+    color: var(--color-white);
+    margin-left: auto;
+}
+
+.secondary-action {
+    background-color: var(--color-surface-alt);
+}
+
+.visually-hidden-file {
+    display: none;
+}
+
+@media (max-width: 1100px) {
+    .beer-form-toolbar {
+        grid-template-columns: 1fr 1fr;
+        align-items: stretch;
+    }
+
+    .beer-form-toolbar-title,
+    .beer-select-label {
+        grid-column: 1 / -1;
+    }
+
+    .beer-form-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 720px) {
+    .beer-form-toolbar,
+    .beer-form-grid,
+    .brewing-data-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .beer-form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .primary-action,
+    .secondary-action {
+        width: 100%;
+        margin-left: 0;
+    }
 }

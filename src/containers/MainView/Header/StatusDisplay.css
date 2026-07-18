@@ -11,9 +11,10 @@
   box-shadow: 0 1px 2px var(--color-orange-dark) inset, 0 1.5px 0 var(--color-white);
   padding-left: 8px;
   padding-top: 4px;
-  height: 65px;
-  width: 600px;
-  left: 10px;
+  min-height: 4rem;
+  width: min(42rem, 100%);
+  max-width: 100%;
+  box-sizing: border-box;
   margin-top: 3px;
 }
 
@@ -79,6 +80,7 @@
   max-height: 48px;
   overflow-y: auto;
   width: 100%;
+  overflow-wrap: anywhere;
   background: transparent;
   scrollbar-width: none;
   scroll-behavior: smooth;
