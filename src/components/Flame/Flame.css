@@ -1,21 +1,22 @@
-@keyframes flame {
+@keyframes flame-flicker {
     0% {
+        transform: translateY(3%) rotate(43deg) scale(1);
         border-bottom-right-radius: 18%;
-        transform: translateY(4%) rotate(43deg) scale(1);
     }
     100% {
-        border-bottom-right-radius: 28%;
         transform: translateY(-4%) rotate(45deg) scale(0.94);
+        border-bottom-right-radius: 28%;
     }
 }
 
 .flameRoot {
-    width: clamp(2.2rem, 18%, 5rem);
-    aspect-ratio: 8 / 5;
+    width: clamp(2.5rem, 18%, 5rem);
+    aspect-ratio: 1 / 1;
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: center;
-    min-width: 2rem;
+    min-width: 2.5rem;
+    overflow: visible;
 }
 
 .flameContainer {
@@ -23,30 +24,31 @@
     width: 100%;
     height: 100%;
     display: block;
+    overflow: visible;
 }
 
-.outer {
-    width: 46%;
-    height: 58%;
-    background-color: lightblue;
-    box-shadow: 0 0 0.5rem lightblue;
-}
-
-.inner {
-    width: 30%;
-    height: 30%;
-    background-color: orange;
-    right: 28%;
-    bottom: 16%;
-    transform: rotate(0deg) !important;
-    box-shadow: 0 0 0.5rem orange;
-}
-
-.flame {
+.flame-shape {
     position: absolute;
-    right: 26%;
-    bottom: 8%;
     border-radius: 0 110px 20px 110px;
-    animation: flame .5s alternate ease-in-out infinite;
     transform-origin: center bottom;
+    animation: flame-flicker .5s alternate ease-in-out infinite;
+}
+
+.flameOuter {
+    width: 56%;
+    height: 72%;
+    right: 22%;
+    bottom: 8%;
+    background: radial-gradient(circle at 60% 70%, var(--color-orange-light) 0%, var(--color-orange-main) 42%, var(--color-error-strong) 78%);
+    box-shadow: 0 0 0.75rem var(--color-orange-main);
+}
+
+.flameInner {
+    width: 32%;
+    height: 46%;
+    right: 34%;
+    bottom: 12%;
+    background: radial-gradient(circle at 50% 70%, var(--color-white) 0%, var(--color-heating) 48%, var(--color-orange-soft) 100%);
+    box-shadow: 0 0 0.6rem var(--color-heating);
+    animation-delay: .12s;
 }
