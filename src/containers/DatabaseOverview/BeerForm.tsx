@@ -795,7 +795,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         );
 
         return (
-            <form className="beer-form" onSubmit={this.handleSubmit}>
+            <form id="beer-recipe-form" className="beer-form" onSubmit={this.handleSubmit}>
                 <input type="file" accept="application/json" className="visually-hidden-file" ref={ref => this.fileInput = ref} onChange={this.handleImportBeerJson} />
                 <div className="beer-form-toolbar">
                     <div className="beer-form-toolbar-title">Rezept</div>
@@ -819,10 +819,6 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                     {this.renderAccordionSection('hops', 'Hopfen', `${hopsDTO.length} Einträge`, hopsContent)}
                     {this.renderAccordionSection('yeast', 'Hefe', `${yeastsDTO.length} Einträge`, yeastContent)}
                     {this.renderAccordionSection('additional', 'Weitere Zutaten', `${additionalIngredientsDTO.length} Einträge`, additionalContent)}
-                </div>
-                <div className="beer-form-actions">
-                    <button type="button" className="add-button brauhaus-button brauhaus-button-secondary secondary-action" onClick={this.resetForm}>Abbrechen / Zurücksetzen</button>
-                    <button className="finish-btn brauhaus-button brauhaus-button-primary submit-button primary-action" type="submit" disabled={this.props.isSavingBeer}>💾 Rezept speichern</button>
                 </div>
             </form>
         );
@@ -850,7 +846,13 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                     onConfirm={this.closeValidationDialog}
                 />
                 <div className="beer-form-panel">
-                    <div className="beer-form-panel-header">Bier</div>
+                    <div className="beer-form-panel-header">
+                        <span>Bier</span>
+                        <div className="beer-form-panel-actions">
+                            <button type="button" className="add-button brauhaus-button brauhaus-button-secondary secondary-action" onClick={this.resetForm}>Abbrechen / Zurücksetzen</button>
+                            <button className="finish-btn brauhaus-button brauhaus-button-primary submit-button primary-action" type="submit" form="beer-recipe-form" disabled={this.props.isSavingBeer}>💾 Rezept speichern</button>
+                        </div>
+                    </div>
                     <div className="beer-form-scroll">{this.renderCreateBeerForm()}</div>
                 </div>
             </div>

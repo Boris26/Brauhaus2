@@ -26,17 +26,28 @@
     padding: var(--spacing-md) var(--spacing-lg);
     border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
     font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.beer-form-panel-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
 }
 
 .beer-form-scroll {
     flex: 1 1 auto;
     padding: var(--spacing-lg);
-    padding-bottom: calc(var(--control-height) + var(--spacing-2xl));
     min-height: 0;
     min-width: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    scroll-padding-bottom: calc(var(--control-height) + var(--spacing-2xl));
     box-sizing: border-box;
 }
 
@@ -328,16 +339,6 @@
     padding: var(--spacing-md) var(--spacing-lg);
 }
 
-.beer-form-actions {
-    position: sticky;
-    bottom: 0;
-    display: flex;
-    justify-content: space-between;
-    gap: var(--spacing-md);
-    padding: var(--spacing-md) 0 0;
-    background: linear-gradient(180deg, transparent 0%, var(--color-brew-bg) 28%);
-    z-index: 5;
-}
 
 .primary-action {
     background: linear-gradient(180deg, var(--color-primary) 10%, var(--color-primary-hover) 100%);
