@@ -23,7 +23,7 @@ describe('Header navigation', () => {
         expect(setViewState).toHaveBeenCalledWith(Views.VERSION);
     });
 
-    it('renders brand, status, and navigation as separate layout areas', (): void => {
+    it('renders status and navigation as separate compact layout areas without the brand title', (): void => {
         render(
             <Header
                 setViewState={jest.fn()}
@@ -34,7 +34,7 @@ describe('Header navigation', () => {
             />
         );
 
-        expect(screen.getByRole('heading', {name: 'Brauhaus'}).parentElement).toHaveClass('header-left');
+        expect(screen.queryByRole('heading', {name: 'Brauhaus'})).not.toBeInTheDocument();
         expect(screen.getByTitle('Hauptansicht').parentElement).toHaveClass('icons-container');
         expect(screen.getByText(/Backend:/)).toBeInTheDocument();
     });

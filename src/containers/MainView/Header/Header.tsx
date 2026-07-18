@@ -70,9 +70,6 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
 
         return (
             <div className="Header">
-                <div className="header-left">
-                  <h1>Brauhaus</h1>
-                </div>
                 <div className="icons-container">
                     <img
                         src="beer.png"
