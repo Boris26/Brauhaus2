@@ -1,5 +1,5 @@
 :root {
-    --desktop-header-height: 4.75rem;
+    --desktop-header-height: 8.5rem;
 }
 
 .AppBody {
@@ -58,6 +58,6 @@
 
 @media (max-width: 1100px) {
     :root {
-        --desktop-header-height: 7.75rem;
+        --desktop-header-height: 11.5rem;
     }
 }
