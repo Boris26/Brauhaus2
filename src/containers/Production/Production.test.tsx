@@ -290,3 +290,19 @@ describe('Production recipe water filling', () => {
         expect(props.startWaterFilling).toHaveBeenCalledWith(0);
     });
 });
+
+
+describe('Production flame display', () => {
+    it('renders no flame strip when heating is off', () => {
+        const {container} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.IDLE)});
+        expect(container.querySelector('.flame-strip')).toBeNull();
+    });
+
+    it('renders responsive flames while heating', () => {
+        const heatingStatus = createBrewingStatus(ProcessState.ACTIVE);
+        heatingStatus.currentStep.mode = ProcessMode.HEATING;
+        const {container} = renderProduction({brewingStatus: heatingStatus});
+        expect(container.querySelector('.flame-strip')).toBeInTheDocument();
+        expect(screen.getAllByLabelText('Heizflamme')).toHaveLength(4);
+    });
+});

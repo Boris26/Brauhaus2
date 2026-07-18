@@ -22,4 +22,20 @@ describe('Header navigation', () => {
         expect(setViewState).toHaveBeenCalledWith(Views.SETTINGS);
         expect(setViewState).toHaveBeenCalledWith(Views.VERSION);
     });
+
+    it('renders status and navigation as separate compact layout areas without the brand title', (): void => {
+        render(
+            <Header
+                setViewState={jest.fn()}
+                currentView={Views.MAIN}
+                removeAllMessages={jest.fn()}
+                backendStatus={true}
+                messages={['Lange Statusmeldung']}
+            />
+        );
+
+        expect(screen.queryByRole('heading', {name: 'Brauhaus'})).not.toBeInTheDocument();
+        expect(screen.getByTitle('Hauptansicht').parentElement).toHaveClass('icons-container');
+        expect(screen.getByText(/Backend:/)).toBeInTheDocument();
+    });
 });

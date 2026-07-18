@@ -1,43 +1,52 @@
-@keyframes flame{
-    0%{
-        border-bottom-right-radius:10px;
-        bottom:20px;
-        height:80%;
-        transform:rotate(43deg);
+@keyframes flame {
+    0% {
+        border-bottom-right-radius: 18%;
+        transform: translateY(4%) rotate(43deg) scale(1);
     }
-    100%{
-        border-bottom-right-radius:20px;
-        bottom:15px;
-        height:68%;
-        transform:rotate(45deg);
+    100% {
+        border-bottom-right-radius: 28%;
+        transform: translateY(-4%) rotate(45deg) scale(0.94);
     }
 }
-.flameContainer{
-    position:relative;
-    width:80px;
-    height:50px;
-    display:inline-block;
-}
-.outer{
-    width:37px;
-    height:20px;
-    background-color:lightblue;
-    transform:rotate(45deg);
-    box-shadow:0 0 8px lightblue;
-}
-.inner{
-    width:10px;
-    height:10px !important;
-    background-color:orange;
-    bottom:5px !important;
-    right:4px !important;
 
-    transform:rotate(0deg) !important;
-    box-shadow: 0 0 8px orange;
+.flameRoot {
+    width: clamp(2.2rem, 18%, 5rem);
+    aspect-ratio: 8 / 5;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    min-width: 2rem;
 }
-.flame{
-    position:absolute;
-    border-radius:0 110px 20px 110px;
-    animation:flame .5s alternate ease-in-out infinite;
-    right:15px;
+
+.flameContainer {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.outer {
+    width: 46%;
+    height: 58%;
+    background-color: lightblue;
+    box-shadow: 0 0 0.5rem lightblue;
+}
+
+.inner {
+    width: 30%;
+    height: 30%;
+    background-color: orange;
+    right: 28%;
+    bottom: 16%;
+    transform: rotate(0deg) !important;
+    box-shadow: 0 0 0.5rem orange;
+}
+
+.flame {
+    position: absolute;
+    right: 26%;
+    bottom: 8%;
+    border-radius: 0 110px 20px 110px;
+    animation: flame .5s alternate ease-in-out infinite;
+    transform-origin: center bottom;
 }
