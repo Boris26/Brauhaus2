@@ -306,3 +306,28 @@ describe('Production flame display', () => {
         expect(screen.getAllByLabelText('Heizflamme')).toHaveLength(4);
     });
 });
+
+describe('Production layout structure', () => {
+    it('keeps the main production regions in a shared structural grid', () => {
+        const {container} = renderProduction();
+
+        expect(container.querySelector('.containerProduction')).toBeInTheDocument();
+        expect(container.querySelector('.Left')).toBeInTheDocument();
+        expect(container.querySelector('.List')).toBeInTheDocument();
+        expect(container.querySelector('.Meters')).toBeInTheDocument();
+        expect(container.querySelector('.Settings')).toBeInTheDocument();
+        expect(container.querySelector('.Info')).toBeInTheDocument();
+        expect(container.querySelector('.Meters .Agitator')).toBeInTheDocument();
+        expect(container.querySelector('.Meters .Temp')).toBeInTheDocument();
+    });
+
+    it('keeps both time panels reachable after the layout correction', () => {
+        const brewingStatus = createBrewingStatus(ProcessState.ACTIVE);
+        brewingStatus.currentStep.duration = 3600;
+
+        renderProduction({brewingStatus});
+
+        expect(screen.getByText('Laufzeit')).toBeInTheDocument();
+        expect(screen.getByText('Zielzeit')).toBeInTheDocument();
+    });
+});

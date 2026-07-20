@@ -1,9 +1,12 @@
 .process-list {
     width: 100%;
-    padding: 0.5rem 0.7rem;
+    height: 100%;
+    padding: 0.5rem 0.7rem 4.5rem;
     position: relative;
-    min-height: 350px; /* oder gewünschte Höhe */
-    padding-bottom: 4.5rem; /* Platz für Button am unteren Rand */
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
 }
 
 .process-title {
@@ -12,6 +15,7 @@
     font-size: 1.18rem;
     letter-spacing: 0.03em;
     font-weight: bold;
+    flex: 0 0 auto;
 }
 
 .process-list ul {
@@ -50,7 +54,7 @@
     border-top: 2px solid var(--color-accent);
     margin: 25px 0 0 0;
     width: 100%;
-
+    flex: 0 0 auto;
 }
 
 .next-step-btn-container {
@@ -66,11 +70,11 @@
 }
 
 .process-list-scroll {
-    height: 500px;
+    flex: 1 1 auto;
+    min-height: 0;
     margin: 0 auto;
     width: 95%;
     box-sizing: border-box;
-    /* SimpleBar Scrollbar ausblenden */
     --simplebar-scrollbar-width: 0px;
 }
 
