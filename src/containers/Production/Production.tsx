@@ -784,8 +784,10 @@ export class Production extends React.Component<ProductionProps, ProductionState
                 <div className="List">
                     {this.renderProcessList()}  {/* Hier deine List-Renderfunktion */}
                 </div>
-                {this.renderAgitator()}
-                {this.renderTemperature()}
+                <div className="Meters">
+                    {this.renderAgitator()}
+                    {this.renderTemperature()}
+                </div>
                 {this.renderSettings()}
                 {this.renderInfo()}
 
