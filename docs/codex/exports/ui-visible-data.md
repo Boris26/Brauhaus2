@@ -36,7 +36,7 @@ Visible runtime status fields:
 
 ## PI control visible status notes
 
-- Water display uses `WaterStatus.liters` from a `{ liters, openClose }` object and should fall back safely to `0` if a request fails.
+- Water display uses `WaterStatus.filledLiters / WaterStatus.targetLiters` from a `{ filledLiters, targetLiters, openClose }` object and should fall back safely to `0` if a request fails.
 - Waiting dialogs may display generic waiting/status text, but confirmation actions are only enabled for concrete PI control confirmation types.
 - Production elapsed/target time displays use seconds-based status fields (`elapsedTime` and `currentStep.duration`), not `currentTime`.
 

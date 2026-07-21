@@ -4,7 +4,7 @@
 
 The React UI and PI control application are compatible for the finalized availability, water status, command, confirmation, and process timing contracts documented here.
 
-The UI-facing availability endpoint is `GET /Available/`; PI control also preserves `GET /` as an existing root route. Water status is stable as an object from both `GET /WaterStatus` and `GET /WaterStatus/`, and the UI defensively normalizes failed or malformed water responses to `{ "liters": 0, "openClose": false }`. Heater commands use the no-value aliases `POST /Command/TurnOn` and `POST /Command/TurnOff`, while value-bearing command routes such as `StartBrewing:""` and `AgitatorInterval:""` remain valid.
+The UI-facing availability endpoint is `GET /Available/`; PI control also preserves `GET /` as an existing root route. Water status is stable as an object from both `GET /WaterStatus` and `GET /WaterStatus/`, and the UI defensively normalizes failed or malformed water responses to `{ "filledLiters": 0, "targetLiters": 0, "openClose": false }`. Heater commands use the no-value aliases `POST /Command/TurnOn` and `POST /Command/TurnOff`, while value-bearing command routes such as `StartBrewing:""` and `AgitatorInterval:""` remain valid.
 
 `Wait` is status-only. The UI must not call `POST /Confirm/Wait`; PI control must reject that route with a controlled error. The UI only sends concrete confirmations (`Iodine`, `Mashup`, `Boiling`, `Cooking`, `Decoction`) and does not dispatch a confirm request when only a generic waiting state is known.
 
@@ -16,7 +16,7 @@ The UI-facing availability endpoint is `GET /Available/`; PI control also preser
 |---|---|---|---|
 | Availability | `/Available/` was previously documented as uncertain. | `GET /Available/` is the UI-facing availability endpoint; `GET /` remains preserved as an existing PI route. | Confirmed fixed; UI usage verified in code, PI support verified by counterpart repository. |
 | WaterStatus route | UI called `/WaterStatus` while PI docs previously emphasized `/WaterStatus/`. | PI supports both `GET /WaterStatus` and `GET /WaterStatus/`. | Confirmed fixed; UI usage verified in code, PI support verified by counterpart repository. |
-| WaterStatus shape | Startup or malformed water status could be unclear. | Successful responses are always objects; default shape is `{ "liters": 0, "openClose": false }`; UI normalizes null, malformed, failed, and non-200 responses. | Confirmed fixed; UI behavior verified in code/tests, PI support verified by counterpart repository. |
+| WaterStatus shape | Startup or malformed water status could be unclear. | Successful responses are always objects; default shape is `{ "filledLiters": 0, "targetLiters": 0, "openClose": false }`; UI normalizes null, malformed, failed, and non-200 responses. | Confirmed fixed; UI behavior verified in code/tests, PI support verified by counterpart repository. |
 | Heater commands | No-value `TurnOn`/`TurnOff` aliases were previously unclear. | UI may call `POST /Command/TurnOn` and `POST /Command/TurnOff`; PI also preserves value-bearing aliases `TurnOn:""` and `TurnOff:""`. | Confirmed fixed; UI usage verified in code/tests, PI support verified by counterpart repository. |
 | StartBrewing command | Existing empty-value syntax needed to remain stable. | `POST /Command/StartBrewing:""` remains supported. | Confirmed fixed; UI usage verified in code/tests, PI support verified by counterpart repository. |
 | AgitatorInterval command | URL/body split needed clarification. | `POST /Command/AgitatorInterval:""` remains supported; actual configuration values are sent in the JSON request body. | Confirmed fixed; UI usage verified in code/tests, PI support verified by counterpart repository. |
@@ -30,7 +30,7 @@ The UI-facing availability endpoint is `GET /Available/`; PI control also preser
 |---|---|---|---|---|---|
 | GET | `/Available/` | PI control | UI calls through `checkIsBackendAvailable()` and treats HTTP 200 as online; failures become offline/unavailable. | Verified by counterpart repository. | Compatible. |
 | GET | `/` | PI control | UI does not call this route. | Preserved existing route; verified by counterpart repository. | Compatible; not UI-facing. |
-| GET | `/WaterStatus` | PI control | UI calls this path and expects/normalizes `{ liters, openClose }`. | Verified by counterpart repository. | Compatible. |
+| GET | `/WaterStatus` | PI control | UI calls this path and expects/normalizes `{ filledLiters, targetLiters, openClose }`. | Verified by counterpart repository. | Compatible. |
 | GET | `/WaterStatus/` | PI control | UI does not currently call this path, but it is accepted by PI for slash compatibility. | Verified by counterpart repository. | Compatible. |
 | GET | `/Status/` | PI control | UI polls brewing status and normalizes structured/legacy fields; polling stops on terminal states. | Verified by counterpart repository. | Compatible; initial empty `Status` remains open if not covered by structured/default status. |
 | GET | `/temperatur/0` | PI control | UI uses this as current-temperature fallback and returns `0` on failure. | Current route verified by counterpart repository; long-term route stability remains open. | Compatible now; stability Needs verification. |
@@ -40,7 +40,7 @@ The UI-facing availability endpoint is `GET /Available/`; PI control also preser
 | POST | `/Command/TurnOn:""` | PI control | UI does not call this value-bearing alias. | Preserved by PI; verified by counterpart repository. | Compatible as backwards-compatible route. |
 | POST | `/Command/TurnOff:""` | PI control | UI does not call this value-bearing alias. | Preserved by PI; verified by counterpart repository. | Compatible as backwards-compatible route. |
 | POST | `/Command/StartBrewing:""` | PI control | UI calls this after accepted recipe; body ignored; HTTP 200 starts status polling. | Verified by counterpart repository. | Compatible. |
-| POST | `/Command/FillWaterAutomatic:{liters}` | PI control | UI sends liters in the path and expects HTTP 200. | Verified by counterpart repository for route support; exact operational meaning of liters remains open. | Compatible; `WaterStatus.liters` meaning Needs verification. |
+| POST | `/Command/FillWaterAutomatic:{liters}` | PI control | UI sends liters in the path and expects HTTP 200. | Verified by counterpart repository for route support; `liters` is the requested amount sent to the controller. | Compatible. |
 | POST | `/Command/Speed:{speed}` | PI control | UI sends numeric speed in the path and expects HTTP 200. | Verified by counterpart repository. | Compatible. |
 | POST | `/Command/AgitatorInterval:""` | PI control | UI sends command in path and real settings in JSON body. | Verified by counterpart repository. | Compatible. |
 | POST | `/Confirm/Iodine` | PI control | UI sends only for `IODINE_TEST`. | Verified by counterpart repository. | Compatible. |
@@ -56,7 +56,8 @@ The UI-facing availability endpoint is `GET /Available/`; PI control also preser
 
 | Field | Type | Owner | Meaning | UI usage | Breaking change rule |
 |---|---|---|---|---|---|
-| `WaterStatus.liters` | number | PI control | Water status display/control value; exact operational semantics remain open. | UI displays water level/gauge and normalizes missing/non-number to `0`. | Keep name/type stable; clarify semantics before changing behavior. |
+| `WaterStatus.filledLiters` | number | PI control | Current filled amount for the active fill operation; each new fill starts at `0`. | UI uses this for tank height, current liter text, gauge pointer, completion storage. | Keep name/type stable. |
+| `WaterStatus.targetLiters` | number | PI control | Requested target amount for the active fill operation. | UI uses this only for gauge target marker/target text, not as current fill. | Keep name/type stable. |
 | `WaterStatus.openClose` | boolean | PI control | Water-fill open/running state. | UI polling logic treats values other than `true` as not open/running. | Keep boolean and polarity stable. |
 | `elapsedTime` | number | PI control | Elapsed process seconds. | UI displays Laufzeit, uses as progress numerator, timeline value, and collected brew data. | Keep seconds unit and numeric type stable. |
 | `currentTime` | number | PI control | Unix timestamp seconds from `time.time()`; may be `0`. | UI may collect/preserve it but must not use it as duration, countdown, elapsed time, or progress. | Do not redefine as duration without coordinated UI/docs change. |
@@ -91,7 +92,6 @@ The UI maps only concrete PI waiting reasons to those command values. If the UI 
 
 Only these items remain unresolved in this repository:
 
-1. Exact operational meaning of `WaterStatus.liters` beyond being the UI display/control value: Needs verification.
 2. Long-term stability of `GET /temperatur/0` as the temperature read route: Needs verification.
 3. Socket.io `overheat` payload shape and whether the UI parsing path matches the emitted payload: Needs verification.
 4. Initial empty `Status`: Needs verification unless PI control guarantees a complete structured/default status object before the first brew update.
@@ -102,7 +102,7 @@ Resolved items that should no longer be treated as open: `/Available/`, `/WaterS
 
 - Preserve `GET /Available/` as the UI-facing availability endpoint; preserve `GET /` as an existing PI route unless all clients migrate.
 - Preserve both `GET /WaterStatus` and `GET /WaterStatus/` and keep successful responses object-shaped.
-- Keep the default WaterStatus shape `{ "liters": 0, "openClose": false }`.
+- Keep the default WaterStatus shape `{ "filledLiters": 0, "targetLiters": 0, "openClose": false }`.
 - Keep UI defensive handling for null, malformed, failed, or non-200 WaterStatus responses.
 - Preserve no-value heater command aliases `POST /Command/TurnOn` and `POST /Command/TurnOff`.
 - Preserve value-bearing command routes `POST /Command/TurnOn:""`, `POST /Command/TurnOff:""`, `POST /Command/StartBrewing:""`, and `POST /Command/AgitatorInterval:""` for compatibility.
@@ -117,5 +117,5 @@ Resolved items that should no longer be treated as open: `/Available/`, `/WaterS
 
 - Confirmed compatible areas: availability, water status routes/shape/default, heater commands, value-bearing command compatibility, concrete confirmations, `currentTime` semantics, status timing fields, recipe submission, start brewing, agitator interval, next-step, and temperature fallback.
 - Resolved mismatches: `/Available/` uncertainty, `/WaterStatus` trailing slash mismatch, WaterStatus startup shape, no-value `TurnOn`/`TurnOff`, `/Confirm/Wait`, and UI misuse of `currentTime` as duration/progress.
-- Remaining open questions: `WaterStatus.liters` operational meaning, long-term `/temperatur/0` stability, socket.io `overheat` payload shape, and initial empty `Status` behavior.
+- Remaining open questions: long-term `/temperatur/0` stability, socket.io `overheat` payload shape, and initial empty `Status` behavior.
 - Compatibility conclusion: UI and PI control are compatible now for the finalized REST/status contracts documented above; only the listed open questions remain for future verification.

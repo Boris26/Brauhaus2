@@ -98,7 +98,7 @@ Before changing control output, check whether the UI uses it for:
 - `waiting.canConfirm`
 - `error.code`
 - `error.details`
-- `WaterStatus.liters`
+- `WaterStatus.filledLiters / WaterStatus.targetLiters`
 - `WaterStatus.openClose`
 
 ## Known compatibility conflicts
@@ -126,7 +126,7 @@ Use `elapsedTime`, `currentStep.duration`, and `currentStep.remainingTime` for p
 
 ### `WaterStatus`
 
-- UI expects `{ liters, openClose }`.
+- UI expects `{ filledLiters, targetLiters, openClose }`.
 - PI control API now guarantees an object shape from startup and supports both `/WaterStatus` and `/WaterStatus/`.
 
 UI should still keep defensive handling for null, undefined, or failed HTTP responses.

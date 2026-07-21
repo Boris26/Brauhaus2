@@ -41,7 +41,7 @@ export const initialProductionState: ProductionReducerState = {
     brewingStatus: undefined,
     confirmState: undefined,
     isBackenAvailable:  false,
-    waterStatus: { liters: 0, openClose: false },
+    waterStatus: { filledLiters: 0, targetLiters: 0, openClose: false },
     isPollingRunning: false,
     overHeat: false
 };

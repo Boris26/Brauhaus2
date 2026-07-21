@@ -4,7 +4,7 @@ import WaterControl from './WaterControl';
 import {VesselContentType} from '../../../model/VesselContentType';
 
 const renderWaterControl = (contentType: VesselContentType, agitatorState = false) => render(
-    <WaterControl liters={35} label="Füllstand" agitatorState={agitatorState} agitatorSpeed={10} contentType={contentType} />
+    <WaterControl filledLiters={35} label="Füllstand" agitatorState={agitatorState} agitatorSpeed={10} contentType={contentType} />
 );
 
 describe('WaterControl vessel content display', () => {
@@ -33,9 +33,26 @@ describe('WaterControl vessel content display', () => {
             const {container, unmount} = renderWaterControl(contentType);
             expect(container.querySelector('.water-gauge__scale')).not.toBeNull();
             expect(container.querySelector('.water-gauge__agitator')).not.toBeNull();
-            expect(screen.getByText('35.0 L')).toBeInTheDocument();
+            expect(screen.getByText('35,0 L')).toBeInTheDocument();
             expect(container.querySelector('.water-gauge__fill')).toHaveStyle({height: '50%'});
             unmount();
         });
+    });
+});
+
+
+describe('WaterControl fill level', () => {
+    const getFillHeight = (aFilledLiters: number): string => {
+        const {container} = render(<WaterControl filledLiters={aFilledLiters} label="Aktuell" agitatorState={false} agitatorSpeed={10} contentType={VesselContentType.WATER} />);
+        return (container.querySelector('.water-gauge__fill') as HTMLElement).style.height;
+    };
+
+    it('uses filledLiters for tank height and caps only the visual level at vessel capacity', () => {
+        expect(getFillHeight(0)).toBe('0%');
+        expect(getFillHeight(0.0286)).toBe(`${(0.0286 / 70) * 100}%`);
+        expect(getFillHeight(16.6)).toBe(`${(16.6 / 70) * 100}%`);
+        expect(getFillHeight(80)).toBe('100%');
+        expect(getFillHeight(-1)).toBe('0%');
+        expect(getFillHeight(Number.NaN)).toBe('0%');
     });
 });

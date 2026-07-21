@@ -356,7 +356,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
             this.setState({waterSwitchState: false, activeFillWasOpened: false});
             return;
         }
-        const completedLiters = this.getSafeWaterStatusLiters();
+        const completedLiters = this.getSafeWaterStatusFilledLiters();
         this.setState({
             waterSwitchState: false,
             activeFillWasOpened: false,
@@ -422,9 +422,9 @@ export class Production extends React.Component<ProductionProps, ProductionState
         this.props.startWaterFilling(volume);
     }
 
-    getSafeWaterStatusLiters = (): number => {
-        const waterStatusLiters = Number(this.props.waterStatus?.liters);
-        return Number.isFinite(waterStatusLiters) ? waterStatusLiters : 0;
+    getSafeWaterStatusFilledLiters = (): number => {
+        const waterStatusFilledLiters = Number(this.props.waterStatus?.filledLiters);
+        return Number.isFinite(waterStatusFilledLiters) ? waterStatusFilledLiters : 0;
     }
 
     getCurrentWaterFillLiters = (): number => {
@@ -432,12 +432,24 @@ export class Production extends React.Component<ProductionProps, ProductionState
             return this.state.currentFillLiters;
         }
         if (this.state.activeFillType !== undefined || this.props.waterStatus?.openClose === true) {
-            return this.getSafeWaterStatusLiters();
+            return this.getSafeWaterStatusFilledLiters();
         }
         if (this.state.mashState === 'COMPLETED') {
             return this.state.completedMashLiters;
         }
         return this.state.currentFillLiters;
+    }
+
+
+    getCurrentWaterFillTargetLiters = (): number => {
+        if (this.state.activeFillType !== undefined || this.props.waterStatus?.openClose === true) {
+            const rawTargetLiters = Number(this.props.waterStatus?.targetLiters);
+            if (Number.isFinite(rawTargetLiters) && rawTargetLiters > 0) {
+                return rawTargetLiters;
+            }
+        }
+        const rawRecipeLiters = Number(this.state.liters);
+        return Number.isFinite(rawRecipeLiters) ? Math.max(0, rawRecipeLiters) : 0;
     }
 
     getDisplayedWaterLiters = (): number => {
@@ -722,13 +734,12 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     renderAgitator() {
         const infinitySymbol = '\u221E';
-        const {liters} = this.state;
         const {currentAgitatorSpeed, agitatorSpeed} = this.props;
         // Werte absichern
         const gaugeValue = isNaN(Number(agitatorSpeed)) ? 0 : Number(agitatorSpeed);
         const gaugeTarget = isNaN(Number(currentAgitatorSpeed)) ? 0 : Number(currentAgitatorSpeed);
-        const waterValue = this.getDisplayedWaterLiters();
-        const waterTarget = isNaN(Number(liters)) ? 0 : Number(liters);
+        const currentFillLiters = this.getDisplayedWaterLiters();
+        const currentTargetLiters = this.getCurrentWaterFillTargetLiters();
         return (<div className="Agitator">
 
             <div className="GaugeContainer">
@@ -737,7 +748,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
                        maxValue={this.MAX_AGITATOR_SPEED} label={infinitySymbol}/>
             </div>
             <div className="GaugeContainer">
-                <Gauge showAreas={false} value={waterValue} targetValue={waterTarget} height={200}
+                <Gauge showAreas={false} value={currentFillLiters} targetValue={currentTargetLiters} height={200}
                        offset={0.5} minValue={0} maxValue={this.MAX_WATER_LEVEL} label={"Liter"}/>
             </div>
         </div>);
@@ -750,7 +761,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
         return (
 
             <div className="Water">
-                <WaterControl liters={displayedWaterLiters} label={this.getDisplayedWaterLabel()} agitatorSpeed={currentAgitatorSpeed}
+                <WaterControl filledLiters={displayedWaterLiters} label={this.getDisplayedWaterLabel()} agitatorSpeed={currentAgitatorSpeed}
                               agitatorState={brewingStatus?.hardware?.agitator === "ON"}
                               contentType={getVesselContentType(brewingStatus)}></WaterControl>
 

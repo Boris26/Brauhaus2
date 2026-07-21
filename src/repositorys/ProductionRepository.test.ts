@@ -67,7 +67,7 @@ describe('ProductionRepository API method/path usage', () => {
   });
 
   it('keeps safe reads on GET', async () => {
-    mockedAxios.get.mockResolvedValueOnce({ status: 200, data: { liters: 3, openClose: true }, statusText: 'OK' } as any);
+    mockedAxios.get.mockResolvedValueOnce({ status: 200, data: { filledLiters: 3, targetLiters: 15, openClose: true }, statusText: 'OK' } as any);
     await ProductionRepository.getWaterStatus();
     await ProductionRepository.getBrewingStatus();
     await ProductionRepository.checkIsBackendAvailable();
@@ -145,12 +145,29 @@ describe('ProductionRepository API method/path usage', () => {
 
   it('normalizes unavailable WaterStatus responses to the safe default object', async () => {
     mockedAxios.get.mockResolvedValueOnce({ status: 200, data: '', statusText: 'OK' } as any);
-    await expect(ProductionRepository.getWaterStatus()).resolves.toEqual({ liters: 0, openClose: false });
+    await expect(ProductionRepository.getWaterStatus()).resolves.toEqual({ filledLiters: 0, targetLiters: 0, openClose: false });
 
     mockedAxios.get.mockRejectedValueOnce(new Error('offline'));
-    await expect(ProductionRepository.getWaterStatus()).resolves.toEqual({ liters: 0, openClose: false });
+    await expect(ProductionRepository.getWaterStatus()).resolves.toEqual({ filledLiters: 0, targetLiters: 0, openClose: false });
   });
 
+
+  it('normalizes the new WaterStatus contract without accepting legacy liters as current fill', async () => {
+    mockedAxios.get.mockResolvedValueOnce({ status: 200, data: { filledLiters: 0.0286, targetLiters: 16.6, openClose: true }, statusText: 'OK' } as any);
+    await expect(ProductionRepository.getWaterStatus()).resolves.toEqual({ filledLiters: 0.0286, targetLiters: 16.6, openClose: true });
+
+    mockedAxios.get.mockResolvedValueOnce({ status: 200, data: { filledLiters: 'invalid', targetLiters: 16.6, openClose: true }, statusText: 'OK' } as any);
+    await expect(ProductionRepository.getWaterStatus()).resolves.toEqual({ filledLiters: 0, targetLiters: 16.6, openClose: true });
+
+    mockedAxios.get.mockResolvedValueOnce({ status: 200, data: { filledLiters: 0.0286, targetLiters: 'invalid', openClose: true }, statusText: 'OK' } as any);
+    await expect(ProductionRepository.getWaterStatus()).resolves.toEqual({ filledLiters: 0.0286, targetLiters: 0, openClose: true });
+
+    mockedAxios.get.mockResolvedValueOnce({ status: 200, data: { filledLiters: -1, targetLiters: -2 }, statusText: 'OK' } as any);
+    await expect(ProductionRepository.getWaterStatus()).resolves.toEqual({ filledLiters: 0, targetLiters: 0, openClose: false });
+
+    mockedAxios.get.mockResolvedValueOnce({ status: 200, data: { liters: 16.6, openClose: true }, statusText: 'OK' } as any);
+    await expect(ProductionRepository.getWaterStatus()).resolves.toEqual({ filledLiters: 0, targetLiters: 0, openClose: true });
+  });
 
   it('can reject WaterStatus failures when polling needs a controlled failure action', async () => {
     mockedAxios.get.mockRejectedValueOnce(new Error('timeout'));

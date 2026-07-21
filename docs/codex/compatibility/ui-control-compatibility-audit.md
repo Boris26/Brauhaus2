@@ -7,7 +7,7 @@ This audit verifies the current React UI behavior against the confirmed PI contr
 ## Executive Summary
 
 - `GET /Available/` is confirmed as the UI-facing availability endpoint and remains the UI availability check.
-- `GET /WaterStatus` is used by the UI; PI control also supports `GET /WaterStatus/`. The UI now normalizes failed, null, or malformed responses to `{ liters: 0, openClose: false }`.
+- `GET /WaterStatus` is used by the UI; PI control also supports `GET /WaterStatus/`. The UI now normalizes failed, null, or malformed responses to `{ filledLiters: 0, targetLiters: 0, openClose: false }`.
 - `POST /Command/TurnOn` and `POST /Command/TurnOff` remain no-value command endpoints; the UI does not add artificial `:""` values to them.
 - `POST /Command/StartBrewing:""` and `POST /Command/AgitatorInterval:""` are preserved. `AgitatorInterval` sends command selection in the URL and actual mixer configuration in the JSON body.
 - `Wait` is a status, not a valid confirmation command. The UI must not and no longer does generate `POST /Confirm/Wait`.
@@ -18,7 +18,7 @@ This audit verifies the current React UI behavior against the confirmed PI contr
 | Area | Confirmed behavior | UI alignment |
 |---|---|---|
 | Availability | `GET /Available/` returns HTTP 200 when reachable. | UI polls this endpoint and treats failures as unavailable. |
-| Water status | `GET /WaterStatus` and `GET /WaterStatus/` return `{ liters, openClose }`. | UI calls `GET /WaterStatus` and normalizes to a safe object. |
+| Water status | `GET /WaterStatus` and `GET /WaterStatus/` return `{ filledLiters, targetLiters, openClose }`. | UI calls `GET /WaterStatus` and normalizes to a safe object. |
 | Status | `GET /Status/` returns structured status. | UI normalizes structured and legacy fallback fields. |
 | Recipe | `POST /Recipe/` returns HTTP 201 on accepted recipe. | UI expects 201 and only starts brewing after success. |
 | Heater | `POST /Command/TurnOn` and `/Command/TurnOff` are supported no-value aliases. | UI uses no-value aliases. |
@@ -35,7 +35,7 @@ See `docs/codex/compatibility/ui-control-url-audit.md` for exact final URL strin
 | Method | Path | UI expectation | Verified? | Notes |
 |---|---|---|---|---|
 | GET | `/Available/` | 200 means available; body ignored. | Yes | UI-facing endpoint confirmed. |
-| GET | `/WaterStatus` | 200 object `{ liters, openClose }`; failures normalize to default object. | Yes | `/WaterStatus/` is also supported by control. |
+| GET | `/WaterStatus` | 200 object `{ filledLiters, targetLiters, openClose }`; failures normalize to default object. | Yes | `/WaterStatus/` is also supported by control. |
 | GET | `/Status/` | 200 structured or legacy status. | Yes | Polling stops on `FINISHED`, `ABORTED`, or `ERROR`. |
 | GET | `/temperatur/0` | 200 numeric body; failure returns 0. | Partially | Stable route name remains Needs verification in PI control repository. |
 | POST | `/Recipe/` | 201 accepted; body ignored. | Yes | Uses `BrewingData`. |
@@ -62,7 +62,7 @@ See `docs/codex/compatibility/ui-control-url-audit.md` for exact final URL strin
 | `currentStep.duration` | Desktop/mobile target time and progress denominator. | Seconds duration. | Missing value yields safe `----`/0% progress. | Confirmed seconds-based field. |
 | `currentStep.remainingTime` | Countdown selector value. | Seconds remaining. | Wrong units break countdown. | Confirmed seconds-based field. |
 | `currentStep.elapsedTime` | Hop reminder timing during cooking. | Seconds elapsed in current step. | Wrong units break hop reminders. | Confirmed seconds-based field. |
-| `WaterStatus.liters` | Water gauge/visualization. | Number. | Non-number could show NaN without normalization. | UI normalizes to number/default 0. |
+| `WaterStatus.filledLiters / WaterStatus.targetLiters` | Water gauge/visualization. | Number. | Non-number could show NaN without normalization. | UI normalizes to number/default 0. |
 | `WaterStatus.openClose` | Water polling stop condition. | Boolean. | Wrong polarity changes polling stop behavior. | Object shape confirmed; polarity semantics Needs verification in PI control repository. |
 | `waiting.waitingFor` | Dialog label and concrete confirm endpoint mapping. | Waiting enum. | Unknown/generic waiting must not send invalid command. | UI only confirms concrete valid values. |
 | `waiting.canConfirm` | Confirm action enablement. | Boolean. | Incorrect value can disable/enable confirmation. | Confirmed UI dependency. |
@@ -75,7 +75,7 @@ The UI calls `GET /Available/` through `ProductionRepository.checkIsBackendAvail
 
 ### `WaterStatus`
 
-The UI expects an object `{ liters, openClose }`. The confirmed PI control API returns this object from both `/WaterStatus` and `/WaterStatus/`. The UI still keeps defensive normalization for null, undefined, malformed responses, non-200 responses, and caught HTTP failures, returning `{ liters: 0, openClose: false }` to avoid `NaN` or broken rendering.
+The UI expects an object `{ filledLiters, targetLiters, openClose }`. The confirmed PI control API returns this object from both `/WaterStatus` and `/WaterStatus/`. The UI still keeps defensive normalization for null, undefined, malformed responses, non-200 responses, and caught HTTP failures, returning `{ filledLiters: 0, targetLiters: 0, openClose: false }` to avoid `NaN` or broken rendering.
 
 ### `Wait` and confirmation commands
 
@@ -96,7 +96,7 @@ The UI preserves `POST /Command/StartBrewing:""` and `POST /Command/AgitatorInte
 ## Breaking Change Rules for Control App
 
 - Keep `/Available/`, `/Status/`, `/Recipe/`, `/WaterStatus`, `/WaterStatus/`, `/next`, and `/temperatur/0` backward compatible unless UI and docs are updated together.
-- Keep `WaterStatus` as an object with numeric `liters` and boolean `openClose` from startup.
+- Keep `WaterStatus` as an object with numeric `filledLiters`, numeric `targetLiters`, and boolean `openClose` from startup.
 - Keep `TurnOn` and `TurnOff` no-value command aliases.
 - Keep existing value-bearing command syntax for `StartBrewing:""` and `AgitatorInterval:""`.
 - Do not require or accept UI use of `/Confirm/Wait`; concrete confirmation endpoints must remain stable.
@@ -105,7 +105,7 @@ The UI preserves `POST /Command/StartBrewing:""` and `POST /Command/AgitatorInte
 
 ## Open Questions for PI Control Repository
 
-- What is the exact operational meaning of `WaterStatus.liters` beyond the UI display value?
+- What is the exact operational meaning of `WaterStatus.filledLiters` and `WaterStatus.targetLiters` beyond the UI/controller contract?
 - Is `GET /temperatur/0` the intended long-term stable temperature read route?
 - What exact socket.io `overheat` payload shape is emitted?
 
@@ -122,4 +122,4 @@ Additional final confirmations:
 - `GET /` remains preserved by PI control as an existing root route, but `/Available/` is the UI-facing availability endpoint.
 - PI control supports both no-value heater aliases (`/Command/TurnOn`, `/Command/TurnOff`) and preserved value-bearing aliases (`/Command/TurnOn:""`, `/Command/TurnOff:""`). The UI uses the no-value aliases.
 - PI control rejects `POST /Confirm/Wait` with a controlled error; UI does not generate this call.
-- The only remaining open items are `WaterStatus.liters` operational meaning, `/temperatur/0` long-term stability, socket.io `overheat` payload shape, and initial empty `Status` behavior.
+- The only remaining open items are `WaterStatus.filledLiters / WaterStatus.targetLiters` operational meaning, `/temperatur/0` long-term stability, socket.io `overheat` payload shape, and initial empty `Status` behavior.
