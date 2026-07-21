@@ -66,7 +66,7 @@ export const getBrewingStatusLabel = (aStatus?: BrewingStatus) => {
     if (aMode === ProcessMode.WAITING && aPhase === ProcessPhase.MASHING_IN && aWaitingFor === WaitingFor.MASHING_IN_CONFIRMATION) return 'Einmaischen: bitte bestätigen';
     if (aMode === ProcessMode.WAITING && aPhase === ProcessPhase.RAST && aWaitingFor === WaitingFor.IODINE_TEST) return 'Warten auf Iodine-Test';
     if (aMode === ProcessMode.WAITING && aPhase === ProcessPhase.RAST && aWaitingFor === WaitingFor.DECOCTION_CONFIRMATION) return 'Warten auf Dickmaische-Bestätigung';
-    if (aMode === ProcessMode.WAITING && aPhase === ProcessPhase.MASHING_OUT && aWaitingFor === WaitingFor.MASHING_OUT_CONFIRMATION) return 'Abmaischen: Bestätigung nötig';
+    if (aMode === ProcessMode.WAITING && aPhase === ProcessPhase.MASHING_OUT && aWaitingFor === WaitingFor.MASHING_OUT_CONFIRMATION) return 'Abmaischen und Nachguss abgeschlossen?';
     if (aMode === ProcessMode.WAITING && aPhase === ProcessPhase.COOKING && aWaitingFor === WaitingFor.BOILING_CONFIRMATION) return 'Warten auf Siedepunkt-Bestätigung';
     if (aPhase === ProcessPhase.MASHING_IN && aMode === ProcessMode.HEATING) return 'Einmaischen: Aufheizen läuft';
     if (aPhase === ProcessPhase.RAST && aMode === ProcessMode.HEATING) return 'Rast: Aufheizen auf Solltemperatur';

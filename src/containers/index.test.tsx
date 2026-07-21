@@ -52,7 +52,7 @@ describe('Index waiting confirmation dialog', () => {
         renderIndex(makeStatus());
 
         expect(screen.getByRole('dialog')).toBeInTheDocument();
-        expect(screen.getByText('Abmaischen: Bestätigung nötig')).toBeInTheDocument();
+        expect(screen.getByText('Abmaischen und Nachguss abgeschlossen?')).toBeInTheDocument();
     });
 
     it('sends exactly one Mashup confirmation when the Abmaischen dialog is confirmed', () => {

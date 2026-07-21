@@ -17,7 +17,7 @@ import QuantityPicker from '../../components/Controlls/QuantityPicker/QuantityPi
 import {BrewingData} from "../../model/BrewingData";
 import {mapBeerToBrewingData} from "../../utils/productionRecipe";
 import {HeatingStates} from "../../model/BrewingStatus";
-import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState} from "../../model/brewingStatus.types";
+import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from "../../model/brewingStatus.types";
 import {TimeFormatter} from "../../utils/TimeFormatter";
 import ModalDialog, {DialogType} from "../../components/ModalDialog/ModalDialog";
 import {ProgressBar} from "react-bootstrap";
@@ -50,7 +50,7 @@ export interface ProductionProps {
     brewingStatus?: BrewingStatus;
     startPolling: () => void;
     stopPolling: () => void;
-    isBackenAvailable: BackendAvailable;
+    isBackenAvailable: BackendAvailable | boolean;
     waterStatus: WaterStatus;
     addFinishedBrew: (finishedBrew: FinishedBrew) => void;
     nextProcedureStep: () => void;
@@ -58,7 +58,9 @@ export interface ProductionProps {
 }
 
 type RecipeWaterFill = 'mash' | 'sparge';
-type RecipeWaterFillResetState = Pick<ProductionState, 'completedMashWaterFill' | 'completedSpargeWaterFill' | 'pendingRecipeWaterFill' | 'waterFillHasStarted'>;
+type WaterFillType = 'SPARGE' | 'MASH';
+type WaterFillState = 'IDLE' | 'FILLING' | 'COMPLETED' | 'ERROR';
+type RecipeWaterFillResetState = Pick<ProductionState, 'activeFillType' | 'spargeState' | 'mashState' | 'completedSpargeLiters' | 'completedMashLiters' | 'currentFillLiters' | 'activeFillWasOpened' | 'isSpargeIncluded'>;
 
 interface ProductionState {
     agitatorState: ToggleState;
@@ -84,10 +86,14 @@ interface ProductionState {
     indexOfCurrentStep: number;
     brewingIsRunning: boolean;
     announcedHopTimes: number[];
-    completedMashWaterFill: boolean;
-    completedSpargeWaterFill: boolean;
-    pendingRecipeWaterFill: RecipeWaterFill | undefined;
-    waterFillHasStarted: boolean;
+    activeFillType: WaterFillType | undefined;
+    spargeState: WaterFillState;
+    mashState: WaterFillState;
+    completedSpargeLiters: number;
+    completedMashLiters: number;
+    currentFillLiters: number;
+    activeFillWasOpened: boolean;
+    isSpargeIncluded: boolean;
 }
 
 export class Production extends React.Component<ProductionProps, ProductionState> {
@@ -128,10 +134,14 @@ export class Production extends React.Component<ProductionProps, ProductionState
             indexOfCurrentStep: 0,
             brewingIsRunning: false,
             announcedHopTimes: [],
-            completedMashWaterFill: false,
-            completedSpargeWaterFill: false,
-            pendingRecipeWaterFill: undefined,
-            waterFillHasStarted: false
+            activeFillType: undefined,
+            spargeState: 'IDLE',
+            mashState: 'IDLE',
+            completedSpargeLiters: 0,
+            completedMashLiters: 0,
+            currentFillLiters: 0,
+            activeFillWasOpened: false,
+            isSpargeIncluded: false
         }
     }
 
@@ -145,7 +155,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
 
     componentDidUpdate(prevProps: Readonly<ProductionProps>, prevState: Readonly<ProductionState>) {
-        const {toggleAgitator, brewingStatus,isBackenAvailable,temperature,isToggleAgitatorSuccess,isWaterFillingSuccessful, waterStatus} = this.props;
+        const {toggleAgitator, brewingStatus,isToggleAgitatorSuccess,isWaterFillingSuccessful, waterStatus} = this.props;
         const {intervalSwitchState, mainSwitchState, waterSwitchState,heatingAndStirringSwitchState,showHopsDialog,showFinishDialog, indexOfCurrentStep} = this.state;
 
 
@@ -164,12 +174,16 @@ export class Production extends React.Component<ProductionProps, ProductionState
             this.setState({brewingIsRunning: false});
         }
 
-        if (waterStatus?.openClose === true && !prevProps.waterStatus?.openClose) {
-            this.setState({waterFillHasStarted: true});
+        if (this.state.activeFillType !== undefined && waterStatus?.openClose === true && !prevProps.waterStatus?.openClose) {
+            this.setState({activeFillWasOpened: true});
         }
 
         if (prevProps.waterStatus?.openClose === true && waterStatus?.openClose === false) {
             this.completePendingRecipeWaterFill();
+        }
+
+        if (!this.state.isSpargeIncluded && this.shouldIncludeSpargeAfterMashingOut(prevProps.brewingStatus, brewingStatus)) {
+            this.setState({isSpargeIncluded: true});
         }
 
 
@@ -191,7 +205,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
         if (!isWaterFillingSuccessful && waterSwitchState) {
             const delay = 300;
             setTimeout(() => {
-                this.setState({waterSwitchState: false, waterFillingError: true});
+                this.failActiveRecipeWaterFill();
             }, delay);
         }
         if (brewingStatus && brewingStatus.currentStep?.mode !== prevProps?.brewingStatus?.currentStep?.mode) {
@@ -323,26 +337,47 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     resetRecipeWaterFillState = (aAdditionalState?: Pick<ProductionState, 'indexOfCurrentStep'>): void => {
         const resetState: RecipeWaterFillResetState = {
-            completedMashWaterFill: false,
-            completedSpargeWaterFill: false,
-            pendingRecipeWaterFill: undefined,
-            waterFillHasStarted: false
+            activeFillType: undefined,
+            spargeState: 'IDLE',
+            mashState: 'IDLE',
+            completedSpargeLiters: 0,
+            completedMashLiters: 0,
+            currentFillLiters: 0,
+            activeFillWasOpened: false,
+            isSpargeIncluded: false
         };
         this.setState(aAdditionalState === undefined ? resetState : {...resetState, ...aAdditionalState});
     }
 
     completePendingRecipeWaterFill = (): void => {
-        const {pendingRecipeWaterFill, waterFillHasStarted} = this.state;
-        if (!waterFillHasStarted || pendingRecipeWaterFill === undefined) {
-            this.setState({waterSwitchState: false, waterFillHasStarted: false});
+        const {activeFillType, activeFillWasOpened} = this.state;
+        if (!activeFillWasOpened || activeFillType === undefined) {
+            this.setState({waterSwitchState: false, activeFillWasOpened: false});
             return;
         }
+        const completedLiters = this.getSafeWaterStatusLiters();
         this.setState({
             waterSwitchState: false,
-            waterFillHasStarted: false,
-            pendingRecipeWaterFill: undefined,
-            completedMashWaterFill: pendingRecipeWaterFill === 'mash' ? true : this.state.completedMashWaterFill,
-            completedSpargeWaterFill: pendingRecipeWaterFill === 'sparge' ? true : this.state.completedSpargeWaterFill
+            activeFillWasOpened: false,
+            activeFillType: undefined,
+            currentFillLiters: completedLiters,
+            completedMashLiters: activeFillType === 'MASH' ? completedLiters : this.state.completedMashLiters,
+            completedSpargeLiters: activeFillType === 'SPARGE' ? completedLiters : this.state.completedSpargeLiters,
+            mashState: activeFillType === 'MASH' ? 'COMPLETED' : this.state.mashState,
+            spargeState: activeFillType === 'SPARGE' ? 'COMPLETED' : this.state.spargeState
+        });
+    }
+
+    failActiveRecipeWaterFill = (): void => {
+        const {activeFillType} = this.state;
+        this.setState({
+            waterSwitchState: false,
+            waterFillingError: true,
+            activeFillType: undefined,
+            activeFillWasOpened: false,
+            currentFillLiters: 0,
+            spargeState: activeFillType === 'SPARGE' ? 'ERROR' : this.state.spargeState,
+            mashState: activeFillType === 'MASH' ? 'ERROR' : this.state.mashState
         });
     }
 
@@ -356,21 +391,104 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     isWaterFillingActive = (): boolean => {
-        return this.state.waterSwitchState || this.props.waterStatus?.openClose === true;
+        return this.state.waterSwitchState || this.state.activeFillType !== undefined || this.props.waterStatus?.openClose === true;
+    }
+
+    isControllerAvailable = (): boolean => {
+        const {isBackenAvailable} = this.props;
+        if (typeof isBackenAvailable === 'boolean') {
+            return isBackenAvailable;
+        }
+        return isBackenAvailable?.isBackenAvailable === true;
     }
 
     startRecipeWaterFilling = (aRecipeWaterFill: RecipeWaterFill): void => {
         const volume = this.getRecipeWaterVolume(aRecipeWaterFill);
-        if (volume === undefined || this.isWaterFillingActive()) {
+        if (volume === undefined || this.isRecipeWaterButtonDisabled(aRecipeWaterFill)) {
             return;
         }
+        const activeFillType: WaterFillType = aRecipeWaterFill === 'mash' ? 'MASH' : 'SPARGE';
         this.setState({
             waterSwitchState: true,
             liters: volume,
-            pendingRecipeWaterFill: aRecipeWaterFill,
-            waterFillHasStarted: false
+            activeFillType,
+            currentFillLiters: 0,
+            activeFillWasOpened: false,
+            waterFillingError: false,
+            mashState: activeFillType === 'MASH' ? 'FILLING' : this.state.mashState,
+            spargeState: activeFillType === 'SPARGE' ? 'FILLING' : this.state.spargeState
         });
         this.props.startWaterFilling(volume);
+    }
+
+    getSafeWaterStatusLiters = (): number => {
+        const waterStatusLiters = Number(this.props.waterStatus?.liters);
+        return Number.isFinite(waterStatusLiters) ? waterStatusLiters : 0;
+    }
+
+    getCurrentWaterFillLiters = (): number => {
+        if (this.state.activeFillType !== undefined && !this.state.activeFillWasOpened) {
+            return this.state.currentFillLiters;
+        }
+        if (this.state.activeFillType !== undefined || this.props.waterStatus?.openClose === true) {
+            return this.getSafeWaterStatusLiters();
+        }
+        if (this.state.mashState === 'COMPLETED') {
+            return this.state.completedMashLiters;
+        }
+        return this.state.currentFillLiters;
+    }
+
+    getDisplayedWaterLiters = (): number => {
+        return this.state.isSpargeIncluded
+            ? this.state.completedMashLiters + this.state.completedSpargeLiters
+            : this.getCurrentWaterFillLiters();
+    }
+
+    getDisplayedWaterLabel = (): string => {
+        if (this.state.isSpargeIncluded) {
+            return 'Brauwasser gesamt';
+        }
+        if (this.state.activeFillType === 'SPARGE' || (this.state.spargeState === 'COMPLETED' && this.state.mashState === 'IDLE')) {
+            return 'Nachguss';
+        }
+        if (this.state.activeFillType === 'MASH' || this.state.mashState === 'COMPLETED') {
+            return 'Hauptguss';
+        }
+        return 'Aktueller Füllvorgang';
+    }
+
+    shouldIncludeSpargeAfterMashingOut = (aPreviousStatus?: BrewingStatus, aCurrentStatus?: BrewingStatus): boolean => {
+        if (this.state.spargeState !== 'COMPLETED' || this.state.mashState !== 'COMPLETED') {
+            return false;
+        }
+        const previousWaitingFor = aPreviousStatus?.waiting?.waitingFor;
+        const currentPhase = aCurrentStatus?.currentStep?.phase;
+        const currentProcessState = aCurrentStatus?.process?.state;
+        const wasWaitingForMashingOut = previousWaitingFor === WaitingFor.MASHING_OUT_CONFIRMATION;
+        const isAfterMashingOutPhase = currentPhase === ProcessPhase.COOKING || currentPhase === ProcessPhase.COOLING || currentPhase === ProcessPhase.FINISHED || currentProcessState === ProcessState.FINISHED;
+        return wasWaitingForMashingOut && isAfterMashingOutPhase;
+    }
+
+    isRecipeWaterButtonDisabled = (aRecipeWaterFill: RecipeWaterFill): boolean => {
+        const volume = this.getRecipeWaterVolume(aRecipeWaterFill);
+        if (volume === undefined || !this.isControllerAvailable() || this.isWaterFillingActive()) {
+            return true;
+        }
+        if (aRecipeWaterFill === 'sparge') {
+            return this.state.spargeState === 'COMPLETED' || this.state.mashState !== 'IDLE';
+        }
+        return this.state.spargeState !== 'COMPLETED' || this.state.mashState === 'COMPLETED';
+    }
+
+    getRecipeWaterButtonLabel = (aRecipeWaterFill: RecipeWaterFill): string => {
+        if (aRecipeWaterFill === 'sparge' && this.state.spargeState === 'COMPLETED') {
+            return '✓ Nachguss fertig';
+        }
+        if (aRecipeWaterFill === 'mash' && this.state.mashState === 'COMPLETED') {
+            return '✓ Hauptguss fertig';
+        }
+        return aRecipeWaterFill === 'sparge' ? 'Nachguss' : 'Hauptguss';
     }
 
     startMashWaterFilling = (): void => {
@@ -406,9 +524,9 @@ export class Production extends React.Component<ProductionProps, ProductionState
         if (this.isStartButtonDisabled()) {
             return;
         }
+        this.resetRecipeWaterFillState();
         this.isBrewingStartRequestPending = true;
         dataCollector.reset();
-        this.resetRecipeWaterFillState();
         console.log('Starting brewing with data:', sendBrewingData);
         const result = mapBeerToBrewingData(selectedBeer);
         console.log('Starting brewing with data:', result);
@@ -534,16 +652,10 @@ export class Production extends React.Component<ProductionProps, ProductionState
             intervalSwitchState,
             heatingAndStirringSwitchState,
             waterSwitchState,
-            liters,
-            waterFillingError,
-            mainAgitatorError
+            liters
         } = this.state;
-        const {currentAgitatorSpeed, agitatorIsRunning, agitatorSpeed, waterStatus,selectedBeer} = this.props;
-        const waterFillingActive = this.isWaterFillingActive();
-        const mashWaterVolume = this.getRecipeWaterVolume('mash');
-        const spargeWaterVolume = this.getRecipeWaterVolume('sparge');
-        const mashWaterDisabled = waterFillingActive || this.state.completedMashWaterFill || mashWaterVolume === undefined;
-        const spargeWaterDisabled = waterFillingActive || this.state.completedSpargeWaterFill || spargeWaterVolume === undefined;
+        const mashWaterDisabled = this.isRecipeWaterButtonDisabled('mash');
+        const spargeWaterDisabled = this.isRecipeWaterButtonDisabled('sparge');
         return (
             <div className="Settings">
                 <h3>Settings</h3>
@@ -593,8 +705,8 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
                 </div>
                 <div className="recipeWaterButtons">
-                    <button className="recipeWaterBtn" disabled={mashWaterDisabled} onClick={this.startMashWaterFilling}>Hauptguss</button>
-                    <button className="recipeWaterBtn" disabled={spargeWaterDisabled} onClick={this.startSpargeWaterFilling}>Nachguss</button>
+                    <button className="recipeWaterBtn" disabled={spargeWaterDisabled} onClick={this.startSpargeWaterFilling}>{this.getRecipeWaterButtonLabel('sparge')}</button>
+                    <button className="recipeWaterBtn" disabled={mashWaterDisabled} onClick={this.startMashWaterFilling}>{this.getRecipeWaterButtonLabel('mash')}</button>
                 </div>
                 <div className="startBtnDiv">
                     <button className="startBtn" disabled={this.isStartButtonDisabled()} onClick={this.startBrewing}>Start</button>
@@ -610,11 +722,11 @@ export class Production extends React.Component<ProductionProps, ProductionState
     renderAgitator() {
         const infinitySymbol = '\u221E';
         const {liters} = this.state;
-        const {currentAgitatorSpeed, agitatorIsRunning, agitatorSpeed, waterStatus} = this.props;
+        const {currentAgitatorSpeed, agitatorSpeed} = this.props;
         // Werte absichern
         const gaugeValue = isNaN(Number(agitatorSpeed)) ? 0 : Number(agitatorSpeed);
         const gaugeTarget = isNaN(Number(currentAgitatorSpeed)) ? 0 : Number(currentAgitatorSpeed);
-        const waterValue = isNaN(Number(waterStatus?.liters)) ? 0 : Number(waterStatus?.liters);
+        const waterValue = this.getDisplayedWaterLiters();
         const waterTarget = isNaN(Number(liters)) ? 0 : Number(liters);
         return (<div className="Agitator">
 
@@ -631,12 +743,13 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     renderWater() {
-        const {currentAgitatorSpeed, agitatorIsRunning, brewingStatus, waterStatus} = this.props;
+        const {currentAgitatorSpeed, brewingStatus} = this.props;
+        const displayedWaterLiters = this.getDisplayedWaterLiters();
 
         return (
 
             <div className="Water">
-                <WaterControl liters={waterStatus.liters} agitatorSpeed={currentAgitatorSpeed}
+                <WaterControl liters={displayedWaterLiters} label={this.getDisplayedWaterLabel()} agitatorSpeed={currentAgitatorSpeed}
                               agitatorState={brewingStatus?.hardware?.agitator === "ON"}></WaterControl>
 
             </div>);
@@ -734,7 +847,8 @@ export class Production extends React.Component<ProductionProps, ProductionState
     renderErrorDialog() {
         const {showErrorDialog, errorDialogContent} = this.state
         const {isBackenAvailable} = this.props
-        const contentText = errorDialogContent || ('Die Brau-Steuerung ist nicht erreichbar\n\n' + isBackenAvailable.statusText)
+        const statusText = typeof isBackenAvailable === 'boolean' ? '' : isBackenAvailable.statusText;
+        const contentText = errorDialogContent || ('Die Brau-Steuerung ist nicht erreichbar\n\n' + statusText)
         return (<div>
             <ModalDialog onConfirm={this.confirmErrorDialog} type={DialogType.ERROR} open={showErrorDialog}
                          content={contentText} header={"Fehler!"}></ModalDialog>
