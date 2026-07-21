@@ -81,7 +81,7 @@ describe('startWaterFillingEpic$', () => {
 
   it('polls and dispatches every water status while water filling is still open', async (): Promise<void> => {
     mockedProductionRepository.fillWaterAutomatic.mockResolvedValue(true);
-    mockedProductionRepository.getWaterStatus.mockResolvedValue({ liters: 1, openClose: true });
+    mockedProductionRepository.getWaterStatus.mockResolvedValue({ filledLiters: 1, targetLiters: 24.8, openClose: true });
 
     const action$ = new Subject<ProductionActions.StartWaterFilling>();
     const emittedActions: ProductionActions.AllProductionActions[] = [];
@@ -98,9 +98,9 @@ describe('startWaterFillingEpic$', () => {
 
     expect(mockedProductionRepository.getWaterStatus).toHaveBeenCalledTimes(3);
     expect(emittedActions).toEqual([
-      ProductionActions.setWaterStatus({ liters: 1, openClose: true }),
-      ProductionActions.setWaterStatus({ liters: 1, openClose: true }),
-      ProductionActions.setWaterStatus({ liters: 1, openClose: true }),
+      ProductionActions.setWaterStatus({ filledLiters: 1, targetLiters: 24.8, openClose: true }),
+      ProductionActions.setWaterStatus({ filledLiters: 1, targetLiters: 24.8, openClose: true }),
+      ProductionActions.setWaterStatus({ filledLiters: 1, targetLiters: 24.8, openClose: true }),
     ]);
 
     subscription.unsubscribe();
@@ -108,7 +108,7 @@ describe('startWaterFillingEpic$', () => {
 
   it('does not start another water status request while the previous one is still running', async (): Promise<void> => {
     mockedProductionRepository.fillWaterAutomatic.mockResolvedValue(true);
-    const aDeferredStatus = createDeferred<{ liters: number; openClose: boolean }>();
+    const aDeferredStatus = createDeferred<{ filledLiters: number; targetLiters: number; openClose: boolean }>();
     mockedProductionRepository.getWaterStatus.mockReturnValue(aDeferredStatus.promise);
 
     const action$ = new Subject<ProductionActions.StartWaterFilling>();
@@ -122,7 +122,7 @@ describe('startWaterFillingEpic$', () => {
     expect(mockedProductionRepository.getWaterStatus).toHaveBeenCalledTimes(1);
     expect(mockedProductionRepository.getWaterStatus).toHaveBeenCalledWith(WATER_STATUS_REQUEST_TIMEOUT, true);
 
-    aDeferredStatus.resolve({liters: 1, openClose: true});
+    aDeferredStatus.resolve({filledLiters: 1, targetLiters: 24.8, openClose: true});
     await flushPromises();
     jest.advanceTimersByTime(1000);
     await flushPromises();
@@ -134,9 +134,9 @@ describe('startWaterFillingEpic$', () => {
   it('dispatches the final closed water status before stopping polling', async (): Promise<void> => {
     mockedProductionRepository.fillWaterAutomatic.mockResolvedValue(true);
     mockedProductionRepository.getWaterStatus
-      .mockResolvedValueOnce({ liters: 1, openClose: true })
-      .mockResolvedValueOnce({ liters: 10, openClose: true })
-      .mockResolvedValueOnce({ liters: 24.8, openClose: false });
+      .mockResolvedValueOnce({ filledLiters: 1, targetLiters: 24.8, openClose: true })
+      .mockResolvedValueOnce({ filledLiters: 10, targetLiters: 24.8, openClose: true })
+      .mockResolvedValueOnce({ filledLiters: 24.8, targetLiters: 24.8, openClose: false });
 
     const action$ = new Subject<ProductionActions.StartWaterFilling>();
     const emittedActions: ProductionActions.AllProductionActions[] = [];
@@ -155,9 +155,9 @@ describe('startWaterFillingEpic$', () => {
 
     expect(mockedProductionRepository.getWaterStatus).toHaveBeenCalledTimes(3);
     expect(emittedActions).toEqual([
-      ProductionActions.setWaterStatus({ liters: 1, openClose: true }),
-      ProductionActions.setWaterStatus({ liters: 10, openClose: true }),
-      ProductionActions.setWaterStatus({ liters: 24.8, openClose: false }),
+      ProductionActions.setWaterStatus({ filledLiters: 1, targetLiters: 24.8, openClose: true }),
+      ProductionActions.setWaterStatus({ filledLiters: 10, targetLiters: 24.8, openClose: true }),
+      ProductionActions.setWaterStatus({ filledLiters: 24.8, targetLiters: 24.8, openClose: false }),
     ]);
 
     subscription.unsubscribe();
@@ -165,7 +165,7 @@ describe('startWaterFillingEpic$', () => {
 
   it('dispatches a water filling failure when the maximum filling duration is exceeded', async (): Promise<void> => {
     mockedProductionRepository.fillWaterAutomatic.mockResolvedValue(true);
-    mockedProductionRepository.getWaterStatus.mockResolvedValue({ liters: 1, openClose: true });
+    mockedProductionRepository.getWaterStatus.mockResolvedValue({ filledLiters: 1, targetLiters: 24.8, openClose: true });
 
     const action$ = new Subject<ProductionActions.StartWaterFilling>();
     const emittedActions: ProductionActions.AllProductionActions[] = [];

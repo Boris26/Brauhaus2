@@ -36,7 +36,7 @@ Base URL: `BaseURL` (`/api/controller`), `CommandsURL` (`/api/controller/Command
 |---|---|---|---|
 | GET | `/` | Preserved PI root route, not UI-facing availability | `200`, empty JSON body |
 | GET | `temperatur/0` | Current temperature fallback | `200`, numeric body |
-| GET | `WaterStatus` | Water fill status | `200`, `{ liters, openClose }`; PI control also supports `WaterStatus/` |
+| GET | `WaterStatus` | Water fill status | `200`, `{ filledLiters, targetLiters, openClose }`; PI control also supports `WaterStatus/` |
 | GET | `Status/` | Runtime brewing status | `200`, structured or legacy status |
 | GET | `Available/` | Availability heartbeat | `200` means available |
 | POST | `Recipe/` | Send `BrewingData` | `201` |

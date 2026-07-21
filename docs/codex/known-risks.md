@@ -18,12 +18,12 @@
 
 - `Wait` is a control status, not a confirmation command. The UI must not call `POST /Confirm/Wait`; only concrete confirmation endpoints (`Iodine`, `Mashup`, `Cooking`, `Boiling`, `Decoction`) are valid.
 - `currentTime` is not a UI duration/countdown/progress field. UI progress should use explicit seconds-based fields such as `elapsedTime`, `currentStep.duration`, and `currentStep.remainingTime`.
-- `WaterStatus` is expected as an object `{ liters, openClose }`; keep defensive defaults for null, undefined, or failed HTTP responses to avoid broken rendering.
+- `WaterStatus` is expected as an object `{ filledLiters, targetLiters, openClose }`; keep defensive defaults for null, undefined, or failed HTTP responses to avoid broken rendering.
 
 
 ## Remaining PI control verification items
 
-- Exact operational meaning of `WaterStatus.liters` beyond the UI display/control value remains Needs verification.
+- Exact operational meaning of `WaterStatus.filledLiters / WaterStatus.targetLiters` beyond the UI display/control value remains Needs verification.
 - Long-term stability of `GET /temperatur/0` remains Needs verification.
 - Socket.io `overheat` payload shape remains Needs verification.
 - Initial empty `Status` behavior remains Needs verification unless PI control guarantees a complete structured/default status object.

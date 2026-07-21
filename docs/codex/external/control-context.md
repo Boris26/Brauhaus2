@@ -16,7 +16,7 @@ The PI control service owns brewing runtime state, machine commands, water fill 
 
 - `GET /Available/` is the confirmed UI-facing availability endpoint; `GET /` remains preserved as an existing root route.
 - `currentTime` is a Unix timestamp/status update time and may be `0`; UI must not use it as duration/countdown/progress.
-- `GET /WaterStatus` and `GET /WaterStatus/` are both supported and return an object `{ liters, openClose }` from startup.
+- `GET /WaterStatus` and `GET /WaterStatus/` are both supported and return an object `{ filledLiters, targetLiters, openClose }` from startup.
 - UI should keep legacy status normalization until structured control status is guaranteed.
 
 ---
@@ -37,7 +37,7 @@ Potentially visible values:
 - Hardware indicators: `hardware.heater`, `hardware.agitator`.
 - Confirmation state: `waiting.waitingFor`, `waiting.canConfirm`.
 - Error display: `error.code`, `error.details`.
-- Water status: `liters`, `openClose`.
+- Water status: `filledLiters`, `targetLiters`, `openClose`.
 - Raw temperature endpoint value from `GET /temperatur/<alter>`.
 
 ## UI-sensitive behavior
@@ -77,7 +77,7 @@ See `docs/codex/interfaces.md` for full JSON shape. Important values:
 
 ## Water output
 
-`GET /WaterStatus` and `GET /WaterStatus/` return `{'liters': <number>, 'openClose': <bool>}`. The default/initial value is `{'liters': 0, 'openClose': false}`. Exact `liters` semantics beyond the UI display value are **Needs verification**.
+`GET /WaterStatus` and `GET /WaterStatus/` return `{'filledLiters': <number>, 'targetLiters': <number>, 'openClose': <bool>}`. `filledLiters` is the current amount filled in the active fill operation; `targetLiters` is the requested target for that same operation; each new fill operation starts at `filledLiters = 0`. The default/initial value is `{'filledLiters': 0, 'targetLiters': 0, 'openClose': false}`.
 
 ## Temperature output
 
@@ -120,7 +120,8 @@ Before changing these fields or their semantics, verify backend and UI consumers
 - `waiting.canConfirm`
 - `error.code`
 - `error.details`
-- `WaterStatus.liters`
+- `WaterStatus.filledLiters`
+- `WaterStatus.targetLiters`
 - `WaterStatus.openClose`
 
 ## Highest-risk input/command fields
@@ -230,7 +231,7 @@ No unique event ID or monotonic sequence number is generated for statuses. `curr
 - Runtime status via `GET /Status/` returning structured `BrewingStatus` or legacy fallback fields.
 - Availability via `GET /Available/` returning HTTP 200 when reachable; `GET /` remains preserved but is not the UI-facing availability route.
 - Temperature fallback via `GET /temperatur/0` returning a number.
-- Water status via `GET /WaterStatus` or `GET /WaterStatus/` returning `{ liters, openClose }`.
+- Water status via `GET /WaterStatus` or `GET /WaterStatus/` returning `{ filledLiters, targetLiters, openClose }`.
 - Hardware commands for water, heater, agitator speed, and agitator interval.
 - Confirm endpoints for concrete waiting states only; `Wait` is display/status text, not `/Confirm/Wait`.
 
@@ -248,4 +249,4 @@ No unique event ID or monotonic sequence number is generated for statuses. `curr
 - `waiting.canConfirm` tells whether the UI should enable confirmation.
 - `hardware.heater === 'ON'` and `hardware.agitator === 'ON'` are meaningful for display.
 
-Needs verification in control repository: socket.io event shape, exact operational meaning of `WaterStatus.liters`, initial empty `Status` behavior, and whether `/temperatur/0` is the intended long-term stable temperature read route.
+Needs verification in control repository: socket.io event shape, initial empty `Status` behavior, and whether `/temperatur/0` is the intended long-term stable temperature read route.

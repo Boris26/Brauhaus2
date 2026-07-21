@@ -12,7 +12,7 @@ import {WaterStatus} from "../components/Controlls/WaterControll/WaterControl";
 import {BackendAvailable} from "../reducers/productionReducer";
 import {IDiagnosticResponse, normalizeDiagnosticVersion} from "../model/DiagnosticResponse";
 
-const DEFAULT_WATER_STATUS: WaterStatus = { liters: 0, openClose: false };
+const DEFAULT_WATER_STATUS: WaterStatus = { filledLiters: 0, targetLiters: 0, openClose: false };
 const DEFAULT_CONTROL_REQUEST_TIMEOUT = 8000;
 
 interface ControlRequestConfig {
@@ -45,10 +45,14 @@ const clearRequestTimeout = (aRequestConfig: ControlRequestConfig): void => {
 const normalizeWaterStatus = (aValue: unknown): WaterStatus => {
     if (typeof aValue === 'object' && aValue !== null) {
         const raw = aValue as Partial<WaterStatus>;
-        const liters = Number(raw.liters);
+        const rawFilledLiters = Number(raw.filledLiters);
+        const rawTargetLiters = Number(raw.targetLiters);
+        const filledLiters = Number.isFinite(rawFilledLiters) ? Math.max(0, rawFilledLiters) : DEFAULT_WATER_STATUS.filledLiters;
+        const targetLiters = Number.isFinite(rawTargetLiters) ? Math.max(0, rawTargetLiters) : DEFAULT_WATER_STATUS.targetLiters;
         return {
-            liters: Number.isFinite(liters) ? liters : DEFAULT_WATER_STATUS.liters,
-            openClose: typeof raw.openClose === 'boolean' ? raw.openClose : DEFAULT_WATER_STATUS.openClose,
+            filledLiters,
+            targetLiters,
+            openClose: raw.openClose === true,
         };
     }
     return DEFAULT_WATER_STATUS;

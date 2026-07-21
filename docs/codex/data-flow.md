@@ -40,7 +40,7 @@ Needs verification: backend ordering of `GET beers`, because the UI treats the l
 
 - User selects liters and toggles water switch.
 - UI posts `Command/FillWaterAutomatic:{liters}`.
-- On success, an RxJS interval polls `GET WaterStatus` every 1000 ms and stores normalized `{ liters, openClose }`; the confirmed control API also supports `GET WaterStatus/` and always returns an object shape.
+- On success, an RxJS interval polls `GET WaterStatus` every 1000 ms and stores normalized `{ filledLiters, targetLiters, openClose }`; the confirmed control API also supports `GET WaterStatus/` and always returns an object shape.
 - Needs verification: current `takeUntil` code uses a one-shot `from(ProductionRepository.getWaterStatus())`; confirm intended continuous stop behavior.
 
 ## Confirm/waiting flow

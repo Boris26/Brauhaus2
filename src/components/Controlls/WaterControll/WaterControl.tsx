@@ -3,11 +3,12 @@ import './WaterControll.css';
 import {VesselContentType} from '../../../model/VesselContentType';
 
 export interface WaterStatus {
-    liters: number
+    filledLiters: number
+    targetLiters: number
     openClose: boolean
 }
 interface WaterControllProps {
-    liters: number;
+    filledLiters: number;
     label?: string;
     agitatorState: boolean;
     contentType: VesselContentType;
@@ -19,8 +20,8 @@ class WaterControl extends React.Component<WaterControllProps> {
     private readonly MIN_AGITATOR_DURATION_SECONDS = 1.5;
     private readonly MAX_AGITATOR_DURATION_SECONDS = 30;
 
-    private getWaterLevel(liters: number): { numericLiters: number; waterLevel: number } {
-        const numericLiters = Number.isFinite(liters) ? liters : 0;
+    private getWaterLevel(filledLiters: number): { numericLiters: number; waterLevel: number } {
+        const numericLiters = Number.isFinite(filledLiters) ? Math.max(0, filledLiters) : 0;
         const waterLevel = Math.max(
             0,
             Math.min(100, (numericLiters / this.MAX_WATER_LITERS) * 100),
@@ -83,8 +84,8 @@ class WaterControl extends React.Component<WaterControllProps> {
     }
 
     render() {
-        const { liters, label = 'Aktuell', agitatorState, contentType } = this.props;
-        const { numericLiters, waterLevel } = this.getWaterLevel(liters);
+        const { filledLiters, label = 'Aktuell', agitatorState, contentType } = this.props;
+        const { numericLiters, waterLevel } = this.getWaterLevel(filledLiters);
         const agitatorAnimationDuration = this.getAgitatorAnimationDuration();
         const agitatorImageClassName = agitatorState
             ? 'water-gauge__agitator-image water-gauge__agitator-image--running'
@@ -120,7 +121,7 @@ class WaterControl extends React.Component<WaterControllProps> {
                 <div className="water-gauge__reading">
                     <span>{label}</span>
                     <span className="water-gauge__content-label">Inhalt: {this.getContentLabel(contentType)}</span>
-                    <strong>{numericLiters.toFixed(1)} L</strong>
+                    <strong>{numericLiters.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 2 })} L</strong>
                 </div>
             </div>
         );
