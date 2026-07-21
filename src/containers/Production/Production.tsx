@@ -32,6 +32,7 @@ import {BackendAvailable} from "../../reducers/productionReducer";
 import {ProcessList, createProcessSteps} from "./ProcessList/ProcessList";
 import { dataCollector } from '../../utils/DataCollector/dataCollector';
 import {getBrewingStatusLabel, isBrewingProcessActive, isProcessActive} from "../../utils/brewingStatus/selectors";
+import {getVesselContentType} from "../../utils/brewingStatus/vesselContent";
 
 export interface ProductionProps {
     selectedBeer: Beer;
@@ -750,7 +751,8 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
             <div className="Water">
                 <WaterControl liters={displayedWaterLiters} label={this.getDisplayedWaterLabel()} agitatorSpeed={currentAgitatorSpeed}
-                              agitatorState={brewingStatus?.hardware?.agitator === "ON"}></WaterControl>
+                              agitatorState={brewingStatus?.hardware?.agitator === "ON"}
+                              contentType={getVesselContentType(brewingStatus)}></WaterControl>
 
             </div>);
     }

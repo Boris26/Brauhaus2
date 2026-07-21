@@ -1,5 +1,6 @@
 import React from 'react';
 import './WaterControll.css';
+import {VesselContentType} from '../../../model/VesselContentType';
 
 export interface WaterStatus {
     liters: number
@@ -9,6 +10,7 @@ interface WaterControllProps {
     liters: number;
     label?: string;
     agitatorState: boolean;
+    contentType: VesselContentType;
     agitatorSpeed: number;
 }
 
@@ -68,18 +70,34 @@ class WaterControl extends React.Component<WaterControllProps> {
         return scaleMarks;
     }
 
+    private getContentLabel(aContentType: VesselContentType): string {
+        switch (aContentType) {
+            case VesselContentType.MASH:
+                return 'Maische';
+            case VesselContentType.WORT:
+                return 'Würze';
+            case VesselContentType.WATER:
+            default:
+                return 'Wasser';
+        }
+    }
+
     render() {
-        const { liters, label = 'Aktuell', agitatorState } = this.props;
+        const { liters, label = 'Aktuell', agitatorState, contentType } = this.props;
         const { numericLiters, waterLevel } = this.getWaterLevel(liters);
         const agitatorAnimationDuration = this.getAgitatorAnimationDuration();
         const agitatorImageClassName = agitatorState
             ? 'water-gauge__agitator-image water-gauge__agitator-image--running'
             : 'water-gauge__agitator-image';
 
+        const contentClassName = `water-gauge--${contentType.toLowerCase()}`;
+        const agitatorClassName = agitatorState ? 'water-gauge--agitator-running' : '';
+
         return (
-            <div className="water-gauge">
+            <div className={['water-gauge', contentClassName, agitatorClassName].filter(Boolean).join(' ')}>
                 <div className="water-gauge__tank">
                     <div className="water-gauge__fill" style={{ height: `${waterLevel}%` }}>
+                        <div className="water-gauge__particles" aria-hidden="true" />
                         <div className="water-gauge__surface" />
                     </div>
 
@@ -101,6 +119,7 @@ class WaterControl extends React.Component<WaterControllProps> {
 
                 <div className="water-gauge__reading">
                     <span>{label}</span>
+                    <span className="water-gauge__content-label">Inhalt: {this.getContentLabel(contentType)}</span>
                     <strong>{numericLiters.toFixed(1)} L</strong>
                 </div>
             </div>

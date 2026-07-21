@@ -411,3 +411,30 @@ describe('Production layout structure', () => {
         expect(screen.getByText('Zielzeit')).toBeInTheDocument();
     });
 });
+
+describe('Production vessel content mapping', () => {
+    const makePhaseStatus = (aPhase: ProcessPhase, aWaitingFor = WaitingFor.NONE): BrewingStatus => {
+        const status = createBrewingStatus(ProcessState.ACTIVE);
+        status.currentStep.phase = aPhase;
+        status.waiting = {waitingFor: aWaitingFor, canConfirm: aWaitingFor !== WaitingFor.NONE};
+        return status;
+    };
+
+    it('renders water before successful mashing-in and while waiting for mashing-in confirmation', () => {
+        expect(renderProduction({brewingStatus: makePhaseStatus(ProcessPhase.NONE)}).container.querySelector('.water-gauge--water')).not.toBeNull();
+        expect(renderProduction({brewingStatus: makePhaseStatus(ProcessPhase.MASHING_IN)}).container.querySelector('.water-gauge--water')).not.toBeNull();
+        expect(renderProduction({brewingStatus: makePhaseStatus(ProcessPhase.MASHING_IN, WaitingFor.MASHING_IN_CONFIRMATION)}).container.querySelector('.water-gauge--water')).not.toBeNull();
+    });
+
+    it('renders mash during rests, mashing-out, and pending mashing-out confirmation', () => {
+        expect(renderProduction({brewingStatus: makePhaseStatus(ProcessPhase.RAST)}).container.querySelector('.water-gauge--mash')).not.toBeNull();
+        expect(renderProduction({brewingStatus: makePhaseStatus(ProcessPhase.MASHING_OUT)}).container.querySelector('.water-gauge--mash')).not.toBeNull();
+        expect(renderProduction({brewingStatus: makePhaseStatus(ProcessPhase.MASHING_OUT, WaitingFor.MASHING_OUT_CONFIRMATION)}).container.querySelector('.water-gauge--mash')).not.toBeNull();
+    });
+
+    it('renders wort after mashing-out has been confirmed and the process moved on', () => {
+        expect(renderProduction({brewingStatus: makePhaseStatus(ProcessPhase.COOKING)}).container.querySelector('.water-gauge--wort')).not.toBeNull();
+        expect(renderProduction({brewingStatus: makePhaseStatus(ProcessPhase.COOLING)}).container.querySelector('.water-gauge--wort')).not.toBeNull();
+        expect(renderProduction({brewingStatus: makePhaseStatus(ProcessPhase.FINISHED)}).container.querySelector('.water-gauge--wort')).not.toBeNull();
+    });
+});
