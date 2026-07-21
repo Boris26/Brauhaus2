@@ -145,17 +145,6 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
                         </div>
                     </>
                 )}
-
-                {/* Test-Button zum Durchsteppen */}
-                <div className="test-step-btn-container">
-                    <button
-                        className="testStepBtn"
-                        onClick={this.stepTestForward}
-                        title="Test: Schritt weiterschalten (nur UI)"
-                    >
-                        Test: Step++
-                    </button>
-                </div>
             </div>
         );
     }

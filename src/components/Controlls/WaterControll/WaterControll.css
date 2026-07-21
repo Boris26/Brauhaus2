@@ -19,25 +19,25 @@
     box-sizing: border-box;
 
     background:
-        linear-gradient(
-            90deg,
-            #c7cdd1 0%,
-            #e8ecef 8%,
-            var(--color-white) 34%,
-            #f8fafb 55%,
-            #dce1e4 84%,
-            #b9c0c5 100%
-        );
+            linear-gradient(
+                    90deg,
+                    #c7cdd1 0%,
+                    #e8ecef 8%,
+                    var(--color-white) 34%,
+                    #f8fafb 55%,
+                    #dce1e4 84%,
+                    #b9c0c5 100%
+            );
 
     border: 3px solid var(--color-border-strong);
     border-radius: 16px;
 
     box-shadow:
-        inset 10px 0 16px rgb(0 0 0 / 10%),
-        inset -10px 0 16px rgb(0 0 0 / 14%),
-        inset 0 2px 3px rgb(255 255 255 / 85%),
-        inset 0 -6px 10px rgb(0 0 0 / 12%),
-        0 10px 22px rgb(0 0 0 / 30%);
+            inset 10px 0 16px rgb(0 0 0 / 10%),
+            inset -10px 0 16px rgb(0 0 0 / 14%),
+            inset 0 2px 3px rgb(255 255 255 / 85%),
+            inset 0 -6px 10px rgb(0 0 0 / 12%),
+            0 10px 22px rgb(0 0 0 / 30%);
 }
 
 .water-gauge__tank::before {
@@ -50,16 +50,18 @@
     height: 1.45rem;
     pointer-events: none;
     border-radius: 50% 50% 12px 12px;
+
     background:
-        radial-gradient(
-            ellipse at center,
-            rgb(255 255 255 / 28%) 0%,
-            rgb(255 255 255 / 10%) 42%,
-            rgb(0 0 0 / 16%) 100%
-        );
+            radial-gradient(
+                    ellipse at center,
+                    rgb(255 255 255 / 28%) 0%,
+                    rgb(255 255 255 / 10%) 42%,
+                    rgb(0 0 0 / 16%) 100%
+            );
+
     box-shadow:
-        inset 0 2px 4px rgb(255 255 255 / 32%),
-        inset 0 -3px 5px rgb(0 0 0 / 16%);
+            inset 0 2px 4px rgb(255 255 255 / 32%),
+            inset 0 -3px 5px rgb(0 0 0 / 16%);
 }
 
 .water-gauge__tank::after {
@@ -69,10 +71,11 @@
     z-index: 4;
     pointer-events: none;
     border-radius: 13px;
+
     box-shadow:
-        inset 3px 0 0 rgb(255 255 255 / 38%),
-        inset -3px 0 0 rgb(0 0 0 / 10%),
-        inset 0 0 0 1px rgb(255 255 255 / 22%);
+            inset 3px 0 0 rgb(255 255 255 / 38%),
+            inset -3px 0 0 rgb(0 0 0 / 10%),
+            inset 0 0 0 1px rgb(255 255 255 / 22%);
 }
 
 .water-gauge__fill {
@@ -85,20 +88,20 @@
     border-radius: 0 0 11px 11px;
 
     background:
-        linear-gradient(
-            90deg,
-            rgb(0 0 0 / 18%) 0%,
-            transparent 18%,
-            rgb(255 255 255 / 18%) 48%,
-            transparent 76%,
-            rgb(0 0 0 / 14%) 100%
-        ),
-        linear-gradient(
-            180deg,
-            var(--color-water-light) 0%,
-            var(--color-water-blue) 35%,
-            var(--color-water-deep) 100%
-        );
+            linear-gradient(
+                    90deg,
+                    rgb(0 0 0 / 18%) 0%,
+                    transparent 18%,
+                    rgb(255 255 255 / 18%) 48%,
+                    transparent 76%,
+                    rgb(0 0 0 / 14%) 100%
+            ),
+            linear-gradient(
+                    180deg,
+                    var(--color-water-light) 0%,
+                    var(--color-water-blue) 35%,
+                    var(--color-water-deep) 100%
+            );
 
     transition: height 500ms ease;
 }
@@ -107,23 +110,23 @@
     position: absolute;
     top: 0;
     left: -10%;
+    z-index: 3;
     width: 120%;
     height: 1.1rem;
     overflow: hidden;
-    z-index: 3;
     border-radius: 50%;
 
     background:
-        linear-gradient(
-            180deg,
-            rgb(255 255 255 / 42%),
-            rgb(106 181 235 / 82%) 48%,
-            rgb(47 124 215 / 95%) 100%
-        );
+            linear-gradient(
+                    180deg,
+                    rgb(255 255 255 / 42%),
+                    rgb(106 181 235 / 82%) 48%,
+                    rgb(47 124 215 / 95%) 100%
+            );
 
     box-shadow:
-        inset 0 2px 2px rgb(255 255 255 / 35%),
-        0 2px 5px rgb(0 72 135 / 22%);
+            inset 0 2px 2px rgb(255 255 255 / 35%),
+            0 2px 5px rgb(0 72 135 / 22%);
 }
 
 .water-gauge__surface::before,
@@ -133,8 +136,8 @@
     top: 0.12rem;
     width: 62%;
     height: 0.42rem;
-    border-radius: 50%;
     pointer-events: none;
+    border-radius: 50%;
     background: rgb(255 255 255 / 24%);
     transform: translateX(-8%);
     animation: water-surface-drift 6.5s ease-in-out infinite alternate;
@@ -159,18 +162,18 @@
     border-radius: 12px;
 
     background:
-        linear-gradient(
-            105deg,
-            rgb(255 255 255 / 26%) 0%,
-            rgb(255 255 255 / 8%) 24%,
-            transparent 43%,
-            transparent 72%,
-            rgb(255 255 255 / 10%) 100%
-        );
+            linear-gradient(
+                    105deg,
+                    rgb(255 255 255 / 26%) 0%,
+                    rgb(255 255 255 / 8%) 24%,
+                    transparent 43%,
+                    transparent 72%,
+                    rgb(255 255 255 / 10%) 100%
+            );
 
     box-shadow:
-        inset 1px 0 rgb(255 255 255 / 55%),
-        inset -1px 0 rgb(0 0 0 / 12%);
+            inset 1px 0 rgb(255 255 255 / 55%),
+            inset -1px 0 rgb(0 0 0 / 12%);
 }
 
 .water-gauge__scale {
@@ -217,32 +220,68 @@
     min-width: 1.15rem;
 }
 
+/*
+ * Rührwerk
+ *
+ * Das zugeschnittene PNG behält sein natürliches Seitenverhältnis.
+ * Der Container ist nur für Positionierung und Perspektive zuständig.
+ */
 .water-gauge__agitator {
     position: absolute;
-    bottom: 0.9rem;
+    bottom: 0.25rem;
     left: 50%;
     z-index: 6;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: clamp(3.8rem, 48%, 5rem);
+
+    width: clamp(5rem, 68%, 7rem);
+
     pointer-events: none;
     transform: translateX(-50%);
+
+    perspective: 10rem;
+    perspective-origin: center;
 }
 
 .water-gauge__agitator-image {
     display: block;
+
     width: 100%;
     height: auto;
+    max-width: none;
+
+    object-fit: contain;
+
+    /*
+     * Bei rotateY verläuft die Drehachse senkrecht
+     * durch die horizontale Bildmitte.
+     */
+    transform: rotateY(0deg);
     transform-origin: 50% 50%;
-    animation-name: agitator-spin;
+
+    animation-name: agitator-turn;
+    animation-duration: 2.5s;
     animation-timing-function: linear;
     animation-iteration-count: infinite;
     animation-play-state: paused;
+
+    backface-visibility: visible;
+    will-change: transform;
+
+    user-select: none;
+    pointer-events: none;
 }
 
 .water-gauge__agitator-image--running {
     animation-play-state: running;
+}
+
+@keyframes agitator-turn {
+    from {
+        transform: rotateY(0deg);
+    }
+
+    to {
+        transform: rotateY(360deg);
+    }
 }
 
 .water-gauge__reading {
@@ -264,99 +303,118 @@
     letter-spacing: 0.01em;
 }
 
-@keyframes water-surface-drift {
-    0% {
-        transform: translateX(-8%);
-    }
-
-    100% {
-        transform: translateX(10%);
-    }
+.water-gauge__content-label {
+    opacity: 0.9;
 }
 
-@keyframes agitator-spin {
-    0% {
-        transform: rotate(0deg);
-    }
-
-    100% {
-        transform: rotate(360deg);
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .water-gauge__fill {
-        transition: none;
-    }
-
-    .water-gauge__particles,
-    .water-gauge__surface::before,
-    .water-gauge__surface::after,
-    .water-gauge__agitator-image {
-        animation: none;
-    }
-}
-
-@media (max-width: 1280px) {
-    .water-gauge__tank {
-        min-height: 16rem;
-    }
-}
-
+/*
+ * Wasser
+ */
 .water-gauge--water .water-gauge__fill {
     background:
-        linear-gradient(
-            90deg,
-            rgb(19 84 145 / 35%) 0%,
-            transparent 20%,
-            rgb(255 255 255 / 18%) 48%,
-            transparent 72%,
-            rgb(12 65 120 / 28%) 100%
-        ),
-        linear-gradient(
-            180deg,
-            var(--color-water-light) 0%,
-            var(--color-water-blue) 35%,
-            var(--color-water-deep) 100%
-        );
+            linear-gradient(
+                    90deg,
+                    rgb(19 84 145 / 35%) 0%,
+                    transparent 20%,
+                    rgb(255 255 255 / 18%) 48%,
+                    transparent 72%,
+                    rgb(12 65 120 / 28%) 100%
+            ),
+            linear-gradient(
+                    180deg,
+                    var(--color-water-light) 0%,
+                    var(--color-water-blue) 35%,
+                    var(--color-water-deep) 100%
+            );
 }
 
+.water-gauge--water .water-gauge__surface {
+    background:
+            linear-gradient(
+                    180deg,
+                    rgb(255 255 255 / 42%),
+                    rgb(106 181 235 / 82%) 48%,
+                    rgb(47 124 215 / 95%) 100%
+            );
+
+    box-shadow:
+            inset 0 2px 2px rgb(255 255 255 / 35%),
+            0 2px 5px rgb(0 72 135 / 22%);
+}
+
+/*
+ * Maische
+ */
 .water-gauge--mash .water-gauge__fill {
     background:
-        linear-gradient(
-            90deg,
-            rgb(73 39 13 / 38%) 0%,
-            transparent 22%,
-            rgb(255 224 158 / 20%) 48%,
-            transparent 74%,
-            rgb(66 34 10 / 32%) 100%
-        ),
-        linear-gradient(
-            180deg,
-            #d2a15d 0%,
-            #bd8140 42%,
-            #975a27 100%
-        );
+            linear-gradient(
+                    90deg,
+                    rgb(73 39 13 / 38%) 0%,
+                    transparent 22%,
+                    rgb(255 224 158 / 20%) 48%,
+                    transparent 74%,
+                    rgb(66 34 10 / 32%) 100%
+            ),
+            linear-gradient(
+                    180deg,
+                    #d2a15d 0%,
+                    #bd8140 42%,
+                    #975a27 100%
+            );
 }
 
+.water-gauge--mash .water-gauge__surface {
+    background:
+            linear-gradient(
+                    180deg,
+                    rgb(255 246 213 / 48%),
+                    rgb(218 166 83 / 86%) 48%,
+                    rgb(153 90 39 / 94%) 100%
+            );
+
+    box-shadow:
+            inset 0 2px 2px rgb(255 255 255 / 28%),
+            0 2px 5px rgb(111 63 24 / 22%);
+}
+
+/*
+ * Würze
+ */
 .water-gauge--wort .water-gauge__fill {
     background:
-        linear-gradient(
-            90deg,
-            rgb(86 45 7 / 34%) 0%,
-            transparent 22%,
-            rgb(255 226 137 / 24%) 48%,
-            transparent 74%,
-            rgb(72 35 4 / 30%) 100%
-        ),
-        linear-gradient(
-            180deg,
-            #e3ae43 0%,
-            #c8821e 48%,
-            #9e5913 100%
-        );
+            linear-gradient(
+                    90deg,
+                    rgb(86 45 7 / 34%) 0%,
+                    transparent 22%,
+                    rgb(255 226 137 / 24%) 48%,
+                    transparent 74%,
+                    rgb(72 35 4 / 30%) 100%
+            ),
+            linear-gradient(
+                    180deg,
+                    #e3ae43 0%,
+                    #c8821e 48%,
+                    #9e5913 100%
+            );
 }
 
+.water-gauge--wort .water-gauge__surface {
+    background:
+            linear-gradient(
+                    180deg,
+                    rgb(255 245 196 / 48%),
+                    rgb(228 174 67 / 86%) 48%,
+                    rgb(180 103 25 / 94%) 100%
+            );
+
+    box-shadow:
+            inset 0 2px 2px rgb(255 255 255 / 30%),
+            0 2px 5px rgb(125 70 12 / 20%);
+}
+
+/*
+ * Partikel
+ */
 .water-gauge__particles {
     position: absolute;
     top: 0;
@@ -364,21 +422,38 @@
     bottom: -2rem;
     left: 0;
     z-index: 2;
+
     opacity: 0;
     overflow: hidden;
     pointer-events: none;
+
     background-image:
-        radial-gradient(circle, rgb(91 55 21 / 75%) 0 2px, transparent 3px),
-        radial-gradient(circle, rgb(164 105 43 / 70%) 0 1.5px, transparent 2.5px),
-        radial-gradient(circle, rgb(74 42 16 / 60%) 0 1px, transparent 2px);
+            radial-gradient(
+                    circle,
+                    rgb(91 55 21 / 75%) 0 2px,
+                    transparent 3px
+            ),
+            radial-gradient(
+                    circle,
+                    rgb(164 105 43 / 70%) 0 1.5px,
+                    transparent 2.5px
+            ),
+            radial-gradient(
+                    circle,
+                    rgb(74 42 16 / 60%) 0 1px,
+                    transparent 2px
+            );
+
     background-position:
-        4px 8px,
-        17px 22px,
-        31px 11px;
+            4px 8px,
+            17px 22px,
+            31px 11px;
+
     background-size:
-        31px 37px,
-        43px 29px,
-        23px 41px;
+            31px 37px,
+            43px 29px,
+            23px 41px;
+
     transform: translate3d(0, 0, 0);
 }
 
@@ -386,42 +461,27 @@
     opacity: 0.55;
 }
 
-.water-gauge--wort .water-gauge__particles,
-.water-gauge--water .water-gauge__particles {
+.water-gauge--water .water-gauge__particles,
+.water-gauge--wort .water-gauge__particles {
     opacity: 0;
 }
 
-.water-gauge--mash.water-gauge--agitator-running .water-gauge__particles {
+.water-gauge--mash.water-gauge--agitator-running
+.water-gauge__particles {
     animation: mash-particle-drift 12s linear infinite;
 }
 
-.water-gauge--water .water-gauge__surface {
-    background:
-        linear-gradient(
-            180deg,
-            rgb(255 255 255 / 42%),
-            rgb(106 181 235 / 82%) 48%,
-            rgb(47 124 215 / 95%) 100%
-        );
-    box-shadow:
-        inset 0 2px 2px rgb(255 255 255 / 35%),
-        0 2px 5px rgb(0 72 135 / 22%);
-}
+/*
+ * Animationen
+ */
+@keyframes water-surface-drift {
+    from {
+        transform: translateX(-8%);
+    }
 
-.water-gauge--mash .water-gauge__surface {
-    background:
-        linear-gradient(180deg, rgb(255 246 213 / 48%), rgb(218 166 83 / 86%) 48%, rgb(153 90 39 / 94%) 100%);
-    box-shadow: inset 0 2px 2px rgb(255 255 255 / 28%), 0 2px 5px rgb(111 63 24 / 22%);
-}
-
-.water-gauge--wort .water-gauge__surface {
-    background:
-        linear-gradient(180deg, rgb(255 245 196 / 48%), rgb(228 174 67 / 86%) 48%, rgb(180 103 25 / 94%) 100%);
-    box-shadow: inset 0 2px 2px rgb(255 255 255 / 30%), 0 2px 5px rgb(125 70 12 / 20%);
-}
-
-.water-gauge__content-label {
-    opacity: 0.9;
+    to {
+        transform: translateX(10%);
+    }
 }
 
 @keyframes mash-particle-drift {
@@ -434,10 +494,32 @@
     }
 }
 
+/*
+ * Kleinere Bildschirmgrößen
+ */
+@media (max-width: 1280px) {
+    .water-gauge__tank {
+        min-height: 16rem;
+    }
+}
+
+/*
+ * Bewegungsreduzierung
+ *
+ * Das Rührwerk bleibt als Statusanzeige aktiv, dreht sich aber langsamer.
+ */
 @media (prefers-reduced-motion: reduce) {
+    .water-gauge__fill {
+        transition: none;
+    }
+
     .water-gauge__particles,
     .water-gauge__surface::before,
     .water-gauge__surface::after {
         animation: none;
+    }
+
+    .water-gauge__agitator-image {
+        animation-duration: 6s !important;
     }
 }

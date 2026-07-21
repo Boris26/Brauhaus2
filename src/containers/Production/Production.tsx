@@ -597,7 +597,6 @@ export class Production extends React.Component<ProductionProps, ProductionState
                         <Flame/>
                         <Flame/>
                         <Flame/>
-                        <Flame/>
                     </div>
               )}
             </div>
