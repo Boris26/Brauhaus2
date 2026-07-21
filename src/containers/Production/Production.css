@@ -75,7 +75,8 @@
 }
 .HeaderText {
     color: var(--color-light-text);
-    font-size: 2rem;
+    font-size: 1.5rem;
+    line-height: 1.1;
     font-weight: bold;
     margin-left: 0.7rem;
 }
