@@ -7,6 +7,7 @@ export interface WaterStatus {
 }
 interface WaterControllProps {
     liters: number;
+    label?: string;
     agitatorState: boolean;
     agitatorSpeed: number;
 }
@@ -68,7 +69,7 @@ class WaterControl extends React.Component<WaterControllProps> {
     }
 
     render() {
-        const { liters, agitatorState } = this.props;
+        const { liters, label = 'Aktuell', agitatorState } = this.props;
         const { numericLiters, waterLevel } = this.getWaterLevel(liters);
         const agitatorAnimationDuration = this.getAgitatorAnimationDuration();
         const agitatorImageClassName = agitatorState
@@ -99,7 +100,7 @@ class WaterControl extends React.Component<WaterControllProps> {
                 </div>
 
                 <div className="water-gauge__reading">
-                    <span>Aktuell</span>
+                    <span>{label}</span>
                     <strong>{numericLiters.toFixed(1)} L</strong>
                 </div>
             </div>

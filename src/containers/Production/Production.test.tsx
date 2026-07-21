@@ -213,74 +213,154 @@ describe('Production next button', () => {
 });
 
 describe('Production recipe water filling', () => {
-    it('sends the recipe mash water volume when Hauptguss is clicked', () => {
-        const {props} = renderProduction({selectedBeer: createBeer(21, 9)});
-        fireEvent.click(screen.getByRole('button', {name: 'Hauptguss'}));
-        expect(props.startWaterFilling).toHaveBeenCalledWith(21);
+    const getSpargeButton = () => screen.getByRole('button', {name: /Nachguss/});
+    const getMashButton = () => screen.getByRole('button', {name: /Hauptguss/});
+
+    it('starts with Nachguss enabled and Hauptguss disabled', () => {
+        renderProduction({selectedBeer: createBeer(21, 9)});
+        expect(getSpargeButton()).not.toBeDisabled();
+        expect(getMashButton()).toBeDisabled();
+        expect(screen.getByText('Aktueller Füllvorgang')).toBeInTheDocument();
+        expect(screen.getByText('0.0 L')).toBeInTheDocument();
     });
 
-    it('sends the recipe sparge water volume when Nachguss is clicked', () => {
+    it('does not allow Hauptguss before Nachguss completed', () => {
         const {props} = renderProduction({selectedBeer: createBeer(21, 9)});
-        fireEvent.click(screen.getByRole('button', {name: 'Nachguss'}));
+        fireEvent.click(getMashButton());
+        expect(props.startWaterFilling).not.toHaveBeenCalled();
+    });
+
+    it('starts Nachguss from the recipe sparge water volume and guards fast double clicks', () => {
+        const {props} = renderProduction({selectedBeer: createBeer(21, 9)});
+        fireEvent.click(getSpargeButton());
+        fireEvent.click(getSpargeButton());
+        expect(props.startWaterFilling).toHaveBeenCalledTimes(1);
         expect(props.startWaterFilling).toHaveBeenCalledWith(9);
+        expect(getSpargeButton()).toBeDisabled();
+        expect(getMashButton()).toBeDisabled();
+        expect(screen.getAllByText('Nachguss').length).toBeGreaterThan(0);
+        expect(screen.getByText('0.0 L')).toBeInTheDocument();
     });
 
-    it('disables both recipe water buttons while water filling is active', () => {
-        renderProduction({waterStatus: {liters: 3, openClose: true}});
-        expect(screen.getByRole('button', {name: 'Hauptguss'})).toBeDisabled();
-        expect(screen.getByRole('button', {name: 'Nachguss'})).toBeDisabled();
+    it('does not complete Nachguss from the initial openClose false status', () => {
+        renderProduction({selectedBeer: createBeer(21, 9), waterStatus: {liters: 0, openClose: false}});
+        expect(getSpargeButton()).not.toBeDisabled();
+        expect(getMashButton()).toBeDisabled();
+        expect(screen.queryByRole('button', {name: '✓ Nachguss fertig'})).not.toBeInTheDocument();
     });
 
-    it('keeps Hauptguss disabled after completed mash water filling and leaves Nachguss available', () => {
+    it('marks Nachguss completed only after openClose was true and then false', () => {
         const {rerender, props} = renderProduction({selectedBeer: createBeer(21, 9), waterStatus: {liters: 0, openClose: false}});
-        fireEvent.click(screen.getByRole('button', {name: 'Hauptguss'}));
+        fireEvent.click(getSpargeButton());
         rerender(<Production {...props} waterStatus={{liters: 2, openClose: true}} />);
-        rerender(<Production {...props} waterStatus={{liters: 21, openClose: false}} />);
-        expect(screen.getByRole('button', {name: 'Hauptguss'})).toBeDisabled();
-        expect(screen.getByRole('button', {name: 'Nachguss'})).not.toBeDisabled();
-    });
-
-    it('keeps Nachguss disabled after completed sparge water filling and leaves Hauptguss available', () => {
-        const {rerender, props} = renderProduction({selectedBeer: createBeer(21, 9), waterStatus: {liters: 0, openClose: false}});
-        fireEvent.click(screen.getByRole('button', {name: 'Nachguss'}));
-        rerender(<Production {...props} waterStatus={{liters: 2, openClose: true}} />);
+        expect(getSpargeButton()).toBeDisabled();
+        expect(getMashButton()).toBeDisabled();
+        expect(screen.getByText('2.0 L')).toBeInTheDocument();
         rerender(<Production {...props} waterStatus={{liters: 9, openClose: false}} />);
-        expect(screen.getByRole('button', {name: 'Nachguss'})).toBeDisabled();
-        expect(screen.getByRole('button', {name: 'Hauptguss'})).not.toBeDisabled();
+        expect(screen.getByRole('button', {name: '✓ Nachguss fertig'})).toBeDisabled();
+        expect(getMashButton()).not.toBeDisabled();
+        expect(screen.getAllByText('Nachguss').length).toBeGreaterThan(0);
+        expect(screen.getByText('9.0 L')).toBeInTheDocument();
+    });
+
+    it('starts Hauptguss only after completed Nachguss and visibly resets the fill display to 0', () => {
+        const {rerender, props} = renderProduction({selectedBeer: createBeer(21, 9), waterStatus: {liters: 0, openClose: false}});
+        fireEvent.click(getSpargeButton());
+        rerender(<Production {...props} waterStatus={{liters: 9, openClose: true}} />);
+        rerender(<Production {...props} waterStatus={{liters: 9, openClose: false}} />);
+        fireEvent.click(getMashButton());
+        expect(props.startWaterFilling).toHaveBeenLastCalledWith(21);
+        expect(screen.getAllByText('Hauptguss').length).toBeGreaterThan(0);
+        expect(screen.getByText('0.0 L')).toBeInTheDocument();
+        expect(screen.queryByText('9.0 L')).not.toBeInTheDocument();
+    });
+
+    it('shows only Hauptguss during and after Hauptguss until Abmaischen is confirmed', () => {
+        const {rerender, props} = renderProduction({selectedBeer: createBeer(21, 9), waterStatus: {liters: 0, openClose: false}});
+        fireEvent.click(getSpargeButton());
+        rerender(<Production {...props} waterStatus={{liters: 9, openClose: true}} />);
+        rerender(<Production {...props} waterStatus={{liters: 9, openClose: false}} />);
+        fireEvent.click(getMashButton());
+        rerender(<Production {...props} waterStatus={{liters: 12, openClose: true}} />);
+        expect(screen.getByText('12.0 L')).toBeInTheDocument();
+        rerender(<Production {...props} waterStatus={{liters: 21, openClose: false}} />);
+        expect(screen.getByRole('button', {name: '✓ Nachguss fertig'})).toBeDisabled();
+        expect(screen.getByRole('button', {name: '✓ Hauptguss fertig'})).toBeDisabled();
+        expect(screen.getAllByText('Hauptguss').length).toBeGreaterThan(0);
+        expect(screen.getByText('21.0 L')).toBeInTheDocument();
+        expect(screen.queryByText('30.0 L')).not.toBeInTheDocument();
+    });
+
+    it('adds Nachguss exactly once after the process leaves MASHING_OUT_CONFIRMATION for a later phase', () => {
+        const waitingForMashingOut = createBrewingStatus(ProcessState.ACTIVE);
+        waitingForMashingOut.currentStep.phase = ProcessPhase.MASHING_OUT;
+        waitingForMashingOut.currentStep.mode = ProcessMode.WAITING;
+        waitingForMashingOut.waiting = {waitingFor: WaitingFor.MASHING_OUT_CONFIRMATION, canConfirm: true};
+        const cooking = createBrewingStatus(ProcessState.ACTIVE);
+        cooking.currentStep.phase = ProcessPhase.COOKING;
+        cooking.currentStep.mode = ProcessMode.HEATING;
+        const {rerender, props} = renderProduction({selectedBeer: createBeer(21, 9), waterStatus: {liters: 0, openClose: false}, brewingStatus: waitingForMashingOut});
+        fireEvent.click(getSpargeButton());
+        rerender(<Production {...props} brewingStatus={waitingForMashingOut} waterStatus={{liters: 9, openClose: true}} />);
+        rerender(<Production {...props} brewingStatus={waitingForMashingOut} waterStatus={{liters: 9, openClose: false}} />);
+        fireEvent.click(getMashButton());
+        rerender(<Production {...props} brewingStatus={waitingForMashingOut} waterStatus={{liters: 21, openClose: true}} />);
+        rerender(<Production {...props} brewingStatus={waitingForMashingOut} waterStatus={{liters: 21, openClose: false}} />);
+        expect(screen.queryByText('30.0 L')).not.toBeInTheDocument();
+        rerender(<Production {...props} brewingStatus={cooking} waterStatus={{liters: 21, openClose: false}} />);
+        expect(screen.getByText('Brauwasser gesamt')).toBeInTheDocument();
+        expect(screen.getByText('30.0 L')).toBeInTheDocument();
+        rerender(<Production {...props} brewingStatus={cooking} waterStatus={{liters: 21, openClose: false}} />);
+        expect(screen.getByText('30.0 L')).toBeInTheDocument();
+        expect(screen.queryByText('39.0 L')).not.toBeInTheDocument();
     });
 
     it('disables recipe water buttons with missing or invalid volumes', () => {
         renderProduction({selectedBeer: createBeer(0, -1)});
-        expect(screen.getByRole('button', {name: 'Hauptguss'})).toBeDisabled();
-        expect(screen.getByRole('button', {name: 'Nachguss'})).toBeDisabled();
+        expect(getSpargeButton()).toBeDisabled();
+        expect(getMashButton()).toBeDisabled();
     });
 
-    it('does not mark recipe water filling complete when the request fails before water starts', async () => {
+    it('does not mark recipe water filling complete when the request fails before water starts and allows a retry', async () => {
         const {rerender, props} = renderProduction({selectedBeer: createBeer(21, 9), waterStatus: {liters: 0, openClose: false}});
-        fireEvent.click(screen.getByRole('button', {name: 'Hauptguss'}));
+        fireEvent.click(getSpargeButton());
         rerender(<Production {...props} isWaterFillingSuccessful={false} waterStatus={{liters: 0, openClose: false}} />);
-        await waitFor(() => expect(screen.getByRole('button', {name: 'Hauptguss'})).not.toBeDisabled());
+        await waitFor(() => expect(getSpargeButton()).not.toBeDisabled());
+        expect(getMashButton()).toBeDisabled();
+        expect(screen.queryByRole('button', {name: '✓ Nachguss fertig'})).not.toBeInTheDocument();
+    });
+
+    it('keeps Nachguss completed and allows Hauptguss retry after a Hauptguss failure', async () => {
+        const {rerender, props} = renderProduction({selectedBeer: createBeer(21, 9), waterStatus: {liters: 0, openClose: false}});
+        fireEvent.click(getSpargeButton());
+        rerender(<Production {...props} waterStatus={{liters: 9, openClose: true}} />);
+        rerender(<Production {...props} waterStatus={{liters: 9, openClose: false}} />);
+        fireEvent.click(getMashButton());
+        rerender(<Production {...props} isWaterFillingSuccessful={false} waterStatus={{liters: 0, openClose: false}} />);
+        await waitFor(() => expect(screen.getByRole('button', {name: '✓ Nachguss fertig'})).toBeDisabled());
+        expect(getMashButton()).not.toBeDisabled();
     });
 
     it('resets completed recipe water filling when the recipe changes', () => {
         const {rerender, props} = renderProduction({selectedBeer: createBeer(21, 9, '1'), waterStatus: {liters: 0, openClose: false}});
-        fireEvent.click(screen.getByRole('button', {name: 'Hauptguss'}));
-        rerender(<Production {...props} waterStatus={{liters: 2, openClose: true}} />);
-        rerender(<Production {...props} waterStatus={{liters: 21, openClose: false}} />);
-        expect(screen.getByRole('button', {name: 'Hauptguss'})).toBeDisabled();
+        fireEvent.click(getSpargeButton());
+        rerender(<Production {...props} waterStatus={{liters: 9, openClose: true}} />);
+        rerender(<Production {...props} waterStatus={{liters: 9, openClose: false}} />);
+        expect(screen.getByRole('button', {name: '✓ Nachguss fertig'})).toBeDisabled();
         rerender(<Production {...props} selectedBeer={createBeer(22, 10, '2')} waterStatus={{liters: 0, openClose: false}} />);
-        expect(screen.getByRole('button', {name: 'Hauptguss'})).not.toBeDisabled();
+        expect(screen.getByRole('button', {name: 'Nachguss'})).not.toBeDisabled();
+        expect(screen.getByRole('button', {name: 'Hauptguss'})).toBeDisabled();
     });
-
 
     it('resets completed recipe water filling when a new brew starts', () => {
         const {rerender, props} = renderProduction({selectedBeer: createBeer(21, 9), waterStatus: {liters: 0, openClose: false}});
-        fireEvent.click(screen.getByRole('button', {name: 'Hauptguss'}));
-        rerender(<Production {...props} waterStatus={{liters: 2, openClose: true}} />);
-        rerender(<Production {...props} waterStatus={{liters: 21, openClose: false}} />);
-        expect(screen.getByRole('button', {name: 'Hauptguss'})).toBeDisabled();
+        fireEvent.click(getSpargeButton());
+        rerender(<Production {...props} waterStatus={{liters: 9, openClose: true}} />);
+        rerender(<Production {...props} waterStatus={{liters: 9, openClose: false}} />);
+        expect(screen.getByRole('button', {name: '✓ Nachguss fertig'})).toBeDisabled();
         fireEvent.click(screen.getByRole('button', {name: 'Start'}));
-        expect(screen.getByRole('button', {name: 'Hauptguss'})).not.toBeDisabled();
+        expect(screen.getByRole('button', {name: 'Nachguss'})).not.toBeDisabled();
+        expect(screen.getByRole('button', {name: 'Hauptguss'})).toBeDisabled();
     });
 
     it('keeps the existing manual water filling control unchanged', () => {
