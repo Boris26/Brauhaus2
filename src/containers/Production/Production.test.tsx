@@ -438,3 +438,85 @@ describe('Production vessel content mapping', () => {
         expect(renderProduction({brewingStatus: makePhaseStatus(ProcessPhase.FINISHED)}).container.querySelector('.water-gauge--wort')).not.toBeNull();
     });
 });
+
+describe('Production process overview countdown', () => {
+    beforeEach(() => {
+        jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+        jest.useRealTimers();
+    });
+
+
+    const createProcessBeer = (): Beer => ({
+        ...createBeer(),
+        cookingTime: 60,
+        cookingTemperatur: 99,
+        fermentation: [
+            {type: 'Einmaischen', temperature: 57},
+            {type: 'Rast 1', temperature: 63, time: 1200},
+            {type: 'Rast 2', temperature: 72, time: 1800},
+            {type: 'Abmaischen', temperature: 78}
+        ]
+    });
+
+    const createActiveTimedStatus = (remainingTime: number, index = 2): BrewingStatus => ({
+        ...createBrewingStatus(ProcessState.ACTIVE),
+        currentStep: {
+            index,
+            count: 4,
+            phase: ProcessPhase.RAST,
+            mode: ProcessMode.TIMER_RUNNING,
+            name: 'Rast 1',
+            duration: 1200,
+            elapsedTime: 1200 - remainingTime,
+            remainingTime
+        },
+        temperature: {target: 63},
+        waiting: {waitingFor: WaitingFor.NONE, canConfirm: false}
+    });
+
+    it('counts the remaining time down locally between controller status updates', () => {
+        renderProduction({selectedBeer: createProcessBeer(), brewingStatus: createActiveTimedStatus(120)});
+
+        expect(screen.getByText('Restzeit 00:02:00')).toBeInTheDocument();
+        jest.advanceTimersByTime(1000);
+        expect(screen.getByText('Restzeit 00:01:59')).toBeInTheDocument();
+    });
+
+    it('never displays a negative remaining time', () => {
+        renderProduction({selectedBeer: createProcessBeer(), brewingStatus: createActiveTimedStatus(0)});
+
+        expect(screen.getByText('Restzeit 00:00:00')).toBeInTheDocument();
+        jest.advanceTimersByTime(2000);
+        expect(screen.getByText('Restzeit 00:00:00')).toBeInTheDocument();
+    });
+
+    it('resynchronizes the countdown when a new controller status arrives', () => {
+        const {rerender, props} = renderProduction({selectedBeer: createProcessBeer(), brewingStatus: createActiveTimedStatus(120)});
+        jest.advanceTimersByTime(1000);
+        expect(screen.getByText('Restzeit 00:01:59')).toBeInTheDocument();
+
+        rerender(<Production {...props} brewingStatus={createActiveTimedStatus(90)} />);
+        expect(screen.getByText('Restzeit 00:01:30')).toBeInTheDocument();
+    });
+
+    it('updates the active process card and remaining list on step changes', () => {
+        const {rerender, props} = renderProduction({selectedBeer: createProcessBeer(), brewingStatus: createActiveTimedStatus(120, 2)});
+        expect(screen.getAllByText('Rast 1').length).toBeGreaterThan(0);
+        expect(screen.getByText('4 / 11')).toBeInTheDocument();
+
+        rerender(<Production {...props} brewingStatus={createActiveTimedStatus(600, 3)} />);
+        expect(screen.getAllByText('Rast 2').length).toBeGreaterThan(0);
+        expect(screen.getByText('6 / 11')).toBeInTheDocument();
+    });
+
+    it('leaves the lower info bar free of runtime and target time labels', () => {
+        const {container} = renderProduction({selectedBeer: createProcessBeer(), brewingStatus: createActiveTimedStatus(120)});
+
+        expect(container.querySelector('.Info--empty')).toBeInTheDocument();
+        expect(screen.queryByText('Laufzeit')).not.toBeInTheDocument();
+        expect(screen.queryByText('Zielzeit')).not.toBeInTheDocument();
+    });
+});
