@@ -38,6 +38,14 @@
     white-space: nowrap;
 }
 
+.current-process-label {
+    color: var(--color-accent);
+    font-size: 0.82rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+    flex: 0 0 auto;
+}
+
 .current-process-step {
     background: linear-gradient(135deg, rgba(255, 153, 0, 0.18), rgba(255, 153, 0, 0.05));
     border-left: 0.35rem solid var(--color-accent);
@@ -45,6 +53,13 @@
     padding: 0.9rem 1rem;
     box-shadow: 0 2px 12px var(--shadow-secondary);
     flex: 0 0 auto;
+}
+
+.current-step-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
 }
 
 .current-process-step h4,
@@ -68,10 +83,11 @@
 .current-step-meta {
     display: flex;
     align-items: baseline;
-    justify-content: space-between;
+    justify-content: flex-end;
     flex-wrap: wrap;
     gap: 0.75rem;
-    margin-top: 0.95rem;
+    margin-top: 0;
+    text-align: right;
 }
 
 .current-step-temperature {
@@ -84,6 +100,35 @@
     font-size: 1.05rem;
     color: var(--color-light-text);
     white-space: nowrap;
+}
+
+.current-step-progress {
+    border-top: 1px solid rgba(255, 255, 255, 0.10);
+    margin-top: 0.9rem;
+    padding-top: 0.65rem;
+}
+
+.current-step-progress-header {
+    display: flex;
+    justify-content: space-between;
+    color: var(--color-accent);
+    font-size: 0.78rem;
+    font-weight: 700;
+    margin-bottom: 0.35rem;
+}
+
+.current-step-progress-track {
+    background: rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    height: 0.5rem;
+    overflow: hidden;
+}
+
+.current-step-progress-fill {
+    background: var(--color-accent);
+    border-radius: inherit;
+    height: 100%;
+    transition: width 0.25s ease;
 }
 
 .upcoming-process {
@@ -205,4 +250,16 @@
 .process-list-scroll,
 .process-list-legacy {
     display: none;
+}
+
+@media (max-width: 520px) {
+    .current-step-heading {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .current-step-meta {
+        justify-content: flex-start;
+        text-align: left;
+    }
 }

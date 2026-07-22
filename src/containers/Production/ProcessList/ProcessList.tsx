@@ -159,6 +159,45 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
         return <div className="current-step-meta">{metaItems}</div>;
     }
 
+
+    getStepProgressPercent(): number | undefined {
+        const {brewingStatus, remainingSeconds} = this.props;
+        const duration = Number(brewingStatus?.currentStep?.duration);
+        if (!Number.isFinite(duration) || duration <= 0) {
+            return undefined;
+        }
+
+        const elapsedFromRemaining = typeof remainingSeconds === 'number'
+            ? duration - remainingSeconds
+            : Number(brewingStatus?.currentStep?.elapsedTime);
+        if (!Number.isFinite(elapsedFromRemaining)) {
+            return undefined;
+        }
+
+        return Math.min(100, Math.max(0, Math.round(elapsedFromRemaining * 100 / duration)));
+    }
+
+    renderCurrentProgress(isProcessStarted: boolean): React.ReactNode {
+        if (!isProcessStarted) {
+            return null;
+        }
+        const progressPercent = this.getStepProgressPercent();
+        if (progressPercent === undefined) {
+            return null;
+        }
+
+        return (
+            <div className="current-step-progress" aria-label={`Fortschritt ${progressPercent}%`}>
+                <div className="current-step-progress-header">
+                    <span>Fortschritt</span>
+                    <span>{progressPercent} %</span>
+                </div>
+                <div className="current-step-progress-track">
+                    <div className="current-step-progress-fill" style={{width: `${progressPercent}%`}} />
+                </div>
+            </div>
+        );
+    }
     render() {
         const { selectedBeer, onNextStep, isNextStepDisabled = false, brewingStatus } = this.props;
         const steps = createProcessSteps(selectedBeer);
@@ -192,12 +231,16 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
                     <div className="process-empty-state">Kein Bier für den Brauvorgang ausgewählt.</div>
                 ) : (
                     <>
+                        <div className="current-process-label">Aktueller Schritt</div>
                         <section className="current-process-step" aria-label="Aktueller Prozessschritt">
-                            <div>
-                                <h4>{isProcessStarted ? this.getCurrentStepTitle(activeStep) : 'Noch kein Brauvorgang gestartet'}</h4>
-                                <span className="current-step-badge">{isProcessStarted ? 'Aktiver Schritt' : 'Geplanter Ablauf'}</span>
+                            <div className="current-step-heading">
+                                <div>
+                                    <h4>{isProcessStarted ? this.getCurrentStepTitle(activeStep) : 'Noch kein Brauvorgang gestartet'}</h4>
+                                    <span className="current-step-badge">{isProcessStarted ? 'Aktiver Schritt' : 'Geplanter Ablauf'}</span>
+                                </div>
+                                {this.getCurrentStepMeta(activeStep, isProcessStarted)}
                             </div>
-                            {this.getCurrentStepMeta(activeStep, isProcessStarted)}
+                            {this.renderCurrentProgress(isProcessStarted)}
                         </section>
 
                         <section className="upcoming-process" aria-label="Weiterer Ablauf">
