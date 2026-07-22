@@ -226,10 +226,20 @@ describe('ProcessList compact production overview', () => {
         expect(screen.getByText('Keine weiteren Schritte.')).toBeInTheDocument();
     });
 
-    it('shows an empty state without an active brewing process', () => {
+    it('shows the selected beer process before an active brewing process starts', () => {
         render(<ProcessList selectedBeer={selectedBeer} currentStepIndex={0} />);
 
-        expect(screen.getByText('Noch kein Brauvorgang gestartet.')).toBeInTheDocument();
+        expect(screen.getByText('Noch kein Brauvorgang gestartet')).toBeInTheDocument();
+        expect(screen.getByText('Geplanter Ablauf')).toBeInTheDocument();
+        expect(screen.getByText('Bereit zum Start')).toBeInTheDocument();
+        expect(screen.getAllByText('Aufheizen für Einmaischen').length).toBeGreaterThan(0);
+        expect(screen.queryByText(/\d+ \/ \d+/)).not.toBeInTheDocument();
+    });
+
+    it('shows a clear empty state if no recipe process is available', () => {
+        render(<ProcessList selectedBeer={{...selectedBeer, fermentation: []} as Beer} currentStepIndex={0} />);
+
+        expect(screen.getByText('Kein Bier für den Brauvorgang ausgewählt.')).toBeInTheDocument();
         expect(screen.queryByText(/\d+ \/ \d+/)).not.toBeInTheDocument();
     });
 

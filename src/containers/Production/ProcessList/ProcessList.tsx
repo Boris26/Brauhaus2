@@ -1,6 +1,4 @@
 import React from "react";
-import SimpleBar from 'simplebar-react';
-import 'simplebar-react/dist/simplebar.min.css';
 import './ProcessList.css';
 import {Beer, FermentationSteps} from "../../../model/Beer";
 import {RestExecutionMode} from "../../../enums/eRestExecutionMode";
@@ -131,13 +129,18 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
         return activeStep?.name ?? this.props.currentStep?.name ?? 'Kein aktiver Prozessschritt';
     }
 
-    getCurrentStepMeta(activeStep: ProcessListStep | undefined): React.ReactNode {
+    getCurrentStepMeta(activeStep: ProcessListStep | undefined, isProcessStarted: boolean): React.ReactNode {
         const {brewingStatus, remainingSeconds} = this.props;
         const targetTemperature = brewingStatus?.temperature?.target ?? activeStep?.detail?.temperature;
         const isFinished = brewingStatus?.process?.state === ProcessState.FINISHED;
         const hasDuration = typeof brewingStatus?.currentStep?.duration === 'number' && brewingStatus.currentStep.duration > 0;
         const isWaiting = brewingStatus?.currentStep?.mode === ProcessMode.WAITING || (brewingStatus?.waiting?.waitingFor !== undefined && brewingStatus.waiting.waitingFor !== WaitingFor.NONE);
         const metaItems: React.ReactNode[] = [];
+
+        if (!isProcessStarted) {
+            metaItems.push(<span key="ready" className="current-step-time">Bereit zum Start</span>);
+            return <div className="current-step-meta">{metaItems}</div>;
+        }
 
         if (typeof targetTemperature === 'number' && Number.isFinite(targetTemperature) && targetTemperature > 0) {
             metaItems.push(<span key="temperature" className="current-step-temperature">{targetTemperature} °C</span>);
@@ -159,10 +162,11 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
     render() {
         const { selectedBeer, onNextStep, isNextStepDisabled = false, brewingStatus } = this.props;
         const steps = createProcessSteps(selectedBeer);
-        const isIdle = brewingStatus === undefined || brewingStatus.process?.state === ProcessState.IDLE || steps.length === 0;
-        const stepIndex = isIdle ? -1 : this.effectiveStepIndex;
+        const hasRecipeProcess = steps.length > 0;
+        const isProcessStarted = brewingStatus !== undefined && brewingStatus.process?.state !== ProcessState.IDLE;
+        const stepIndex = isProcessStarted && hasRecipeProcess ? this.effectiveStepIndex : -1;
         const activeStep = stepIndex >= 0 ? steps[stepIndex] : undefined;
-        const upcomingSteps = stepIndex >= 0 ? steps.slice(stepIndex + 1) : [];
+        const upcomingSteps = stepIndex >= 0 ? steps.slice(stepIndex + 1) : steps;
         const progressLabel = stepIndex >= 0 ? `${stepIndex + 1} / ${steps.length}` : '';
 
         return (
@@ -184,16 +188,16 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
                     ))}
                 </ul>
 
-                {isIdle ? (
-                    <div className="process-empty-state">Noch kein Brauvorgang gestartet.</div>
+                {!hasRecipeProcess ? (
+                    <div className="process-empty-state">Kein Bier für den Brauvorgang ausgewählt.</div>
                 ) : (
                     <>
                         <section className="current-process-step" aria-label="Aktueller Prozessschritt">
                             <div>
-                                <h4>{this.getCurrentStepTitle(activeStep)}</h4>
-                                <span className="current-step-badge">Aktiver Schritt</span>
+                                <h4>{isProcessStarted ? this.getCurrentStepTitle(activeStep) : 'Noch kein Brauvorgang gestartet'}</h4>
+                                <span className="current-step-badge">{isProcessStarted ? 'Aktiver Schritt' : 'Geplanter Ablauf'}</span>
                             </div>
-                            {this.getCurrentStepMeta(activeStep)}
+                            {this.getCurrentStepMeta(activeStep, isProcessStarted)}
                         </section>
 
                         <section className="upcoming-process" aria-label="Weiterer Ablauf">
