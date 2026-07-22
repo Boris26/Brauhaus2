@@ -146,33 +146,109 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
         return <div className="current-step-meta">{metaItems}</div>;
     }
 
-    getRemainingTimeText(): string {
-        const {brewingStatus, remainingSeconds} = this.props;
-        const isFinished = brewingStatus?.process?.state === ProcessState.FINISHED;
-        const hasDuration = typeof brewingStatus?.currentStep?.duration === 'number' && brewingStatus.currentStep.duration > 0;
-        const isWaiting = brewingStatus?.currentStep?.mode === ProcessMode.WAITING || (brewingStatus?.waiting?.waitingFor !== undefined && brewingStatus.waiting.waitingFor !== WaitingFor.NONE);
-
-        if (isFinished) {
-            return TimeFormatter.formatSecondsToHMS(0);
-        }
-        if (isWaiting) {
-            return 'Wartet auf Bestätigung';
-        }
-        if (hasDuration && typeof remainingSeconds === 'number') {
-            return TimeFormatter.formatSecondsToHMS(remainingSeconds);
-        }
-        return 'Keine feste Dauer';
+    isHeatingStatus(): boolean {
+        return this.props.brewingStatus?.currentStep?.mode === ProcessMode.HEATING;
     }
 
-    renderRemainingTimeSection(isProcessStarted: boolean): React.ReactNode {
-        if (!isProcessStarted) {
+    isWaitingStatus(): boolean {
+        const waitingFor = this.props.brewingStatus?.waiting?.waitingFor;
+        return this.props.brewingStatus?.currentStep?.mode === ProcessMode.WAITING || (waitingFor !== undefined && waitingFor !== WaitingFor.NONE);
+    }
+
+    isTimedStatus(): boolean {
+        const duration = Number(this.props.brewingStatus?.currentStep?.duration);
+        return this.props.brewingStatus?.process?.state === ProcessState.ACTIVE
+            && this.props.brewingStatus.currentStep?.mode === ProcessMode.TIMER_RUNNING
+            && Number.isFinite(duration)
+            && duration > 0;
+    }
+
+    formatTemperature(value: number): string {
+        return value.toLocaleString('de-DE', {maximumFractionDigits: 1});
+    }
+
+    renderTemperatureProgress(): React.ReactNode {
+        const currentTemperature = Number(this.props.brewingStatus?.temperature?.current);
+        const targetTemperature = Number(this.props.brewingStatus?.temperature?.target);
+        if (!Number.isFinite(currentTemperature) || currentTemperature <= 0 || !Number.isFinite(targetTemperature) || targetTemperature <= 0) {
             return null;
         }
 
+        return <span className="current-step-status-detail">{this.formatTemperature(currentTemperature)} °C von {this.formatTemperature(targetTemperature)} °C</span>;
+    }
+
+    getRemainingTimeText(): string | undefined {
+        const {remainingSeconds} = this.props;
+        if (!this.isTimedStatus() || typeof remainingSeconds !== 'number') {
+            return undefined;
+        }
+        return TimeFormatter.formatSecondsToHMS(Math.max(0, remainingSeconds));
+    }
+
+    renderStatusSection(isProcessStarted: boolean): React.ReactNode {
+        if (!isProcessStarted) {
+            return <div className="current-step-status current-step-status--reserved" aria-label="Statusbereich" />;
+        }
+        if (this.props.brewingStatus?.process?.state === ProcessState.FINISHED) {
+            return (
+                <div className="current-step-status" aria-label="Statusbereich">
+                    <span className="current-step-status-label">Status</span>
+                    <span className="current-step-status-value">Brauvorgang abgeschlossen</span>
+                </div>
+            );
+        }
+        if (this.isHeatingStatus()) {
+            return (
+                <div className="current-step-status" aria-label="Statusbereich">
+                    <span className="current-step-status-label">Status</span>
+                    <span className="current-step-status-value">Zieltemperatur wird erreicht</span>
+                    {this.renderTemperatureProgress()}
+                </div>
+            );
+        }
+        if (this.isWaitingStatus()) {
+            return (
+                <div className="current-step-status" aria-label="Statusbereich">
+                    <span className="current-step-status-label">Status</span>
+                    <span className="current-step-status-value">Wartet auf Bestätigung</span>
+                </div>
+            );
+        }
+        if (!this.isTimedStatus()) {
+            return (
+                <div className="current-step-status" aria-label="Statusbereich">
+                    <span className="current-step-status-label">Status</span>
+                    <span className="current-step-status-value">Schritt wird ausgeführt</span>
+                </div>
+            );
+        }
+
+        const progressPercent = this.getStepProgressPercent();
+        const remainingTimeText = this.getRemainingTimeText();
+        if (progressPercent === undefined || remainingTimeText === undefined) {
+            return (
+                <div className="current-step-status" aria-label="Statusbereich">
+                    <span className="current-step-status-label">Status</span>
+                    <span className="current-step-status-value">Schritt wird ausgeführt</span>
+                </div>
+            );
+        }
+
         return (
-            <div className="current-step-remaining" aria-label="Verbleibende Laufzeit">
-                <span className="current-step-remaining-label">Verbleibende Laufzeit</span>
-                <span className="current-step-remaining-value">Restzeit {this.getRemainingTimeText()}</span>
+            <div className="current-step-status" aria-label="Statusbereich">
+                <div className="current-step-progress" aria-label={`Fortschritt ${progressPercent}%`}>
+                    <div className="current-step-progress-header">
+                        <span>Fortschritt</span>
+                        <span>{progressPercent} %</span>
+                    </div>
+                    <div className="current-step-progress-track">
+                        <div className="current-step-progress-fill" style={{width: `${progressPercent}%`}} />
+                    </div>
+                </div>
+                <div className="current-step-remaining" aria-label="Restzeit">
+                    <span className="current-step-remaining-label">Restzeit</span>
+                    <span className="current-step-remaining-value">{remainingTimeText}</span>
+                </div>
             </div>
         );
     }
@@ -195,27 +271,6 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
         return Math.min(100, Math.max(0, Math.round(elapsedFromRemaining * 100 / duration)));
     }
 
-    renderCurrentProgress(isProcessStarted: boolean): React.ReactNode {
-        if (!isProcessStarted) {
-            return null;
-        }
-        const progressPercent = this.getStepProgressPercent();
-        if (progressPercent === undefined) {
-            return null;
-        }
-
-        return (
-            <div className="current-step-progress" aria-label={`Fortschritt ${progressPercent}%`}>
-                <div className="current-step-progress-header">
-                    <span>Fortschritt</span>
-                    <span>{progressPercent} %</span>
-                </div>
-                <div className="current-step-progress-track">
-                    <div className="current-step-progress-fill" style={{width: `${progressPercent}%`}} />
-                </div>
-            </div>
-        );
-    }
     render() {
         const { selectedBeer, onNextStep, isNextStepDisabled = false, brewingStatus } = this.props;
         const steps = createProcessSteps(selectedBeer);
@@ -258,8 +313,7 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
                                 </div>
                                 {this.getCurrentStepMeta(activeStep, isProcessStarted)}
                             </div>
-                            {this.renderCurrentProgress(isProcessStarted)}
-                            {this.renderRemainingTimeSection(isProcessStarted)}
+                            {this.renderStatusSection(isProcessStarted)}
                         </section>
 
                         <section className="upcoming-process" aria-label="Weiterer Ablauf">

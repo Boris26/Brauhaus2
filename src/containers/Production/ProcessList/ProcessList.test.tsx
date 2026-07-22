@@ -191,13 +191,37 @@ describe('ProcessList compact production overview', () => {
     it('renders the remaining time as a single countdown value', () => {
         render(<ProcessList selectedBeer={selectedBeer} currentStepIndex={3} currentStep={{index: 3, phase: ProcessPhase.RAST, mode: ProcessMode.TIMER_RUNNING}} brewingStatus={activeStatus(3)} remainingSeconds={1176} />);
 
-        expect(screen.getByText('Restzeit 00:19:36')).toBeInTheDocument();
-        expect(screen.getByText('Verbleibende Laufzeit')).toBeInTheDocument();
-        expect(screen.getByLabelText('Verbleibende Laufzeit')).toHaveClass('current-step-remaining');
+        expect(screen.getByText('Restzeit')).toBeInTheDocument();
+        expect(screen.getByText('00:19:36')).toBeInTheDocument();
+        expect(screen.getByLabelText('Restzeit')).toHaveClass('current-step-remaining');
         expect(screen.getByText('Fortschritt')).toBeInTheDocument();
         expect(screen.getByText('35 %')).toBeInTheDocument();
+        expect(screen.queryByText('Verbleibende Laufzeit')).not.toBeInTheDocument();
         expect(screen.queryByText('Laufzeit')).not.toBeInTheDocument();
         expect(screen.queryByText('Zielzeit')).not.toBeInTheDocument();
+    });
+
+    it('shows heating status without progress or remaining time', () => {
+        const heatingStatus = activeStatus(3, ProcessMode.HEATING);
+        heatingStatus.temperature = {current: 32.8, target: 68};
+        render(<ProcessList selectedBeer={selectedBeer} currentStepIndex={3} currentStep={{index: 3, phase: ProcessPhase.RAST, mode: ProcessMode.HEATING}} brewingStatus={heatingStatus} remainingSeconds={1176} />);
+
+        expect(screen.getByText('Zieltemperatur wird erreicht')).toBeInTheDocument();
+        expect(screen.getByText('32,8 °C von 68 °C')).toBeInTheDocument();
+        expect(screen.queryByText('Fortschritt')).not.toBeInTheDocument();
+        expect(screen.queryByText('Restzeit')).not.toBeInTheDocument();
+        expect(screen.queryByText(/00:19:36/)).not.toBeInTheDocument();
+    });
+
+    it('does not show heating temperature progress without reliable values', () => {
+        const heatingStatus = activeStatus(3, ProcessMode.HEATING);
+        heatingStatus.temperature = {target: 68};
+        render(<ProcessList selectedBeer={selectedBeer} currentStepIndex={3} currentStep={{index: 3, phase: ProcessPhase.RAST, mode: ProcessMode.HEATING}} brewingStatus={heatingStatus} />);
+
+        expect(screen.getByText('Zieltemperatur wird erreicht')).toBeInTheDocument();
+        expect(screen.queryByText(/von 68 °C/)).not.toBeInTheDocument();
+        expect(screen.queryByText('undefined')).not.toBeInTheDocument();
+        expect(screen.queryByText('NaN')).not.toBeInTheDocument();
     });
 
     it('does not invent countdowns for waiting or durationless steps', () => {
@@ -205,12 +229,15 @@ describe('ProcessList compact production overview', () => {
         waitingStatus.waiting = {waitingFor: WaitingFor.IODINE_TEST, canConfirm: true};
         const {rerender} = render(<ProcessList selectedBeer={selectedBeer} currentStepIndex={3} currentStep={{index: 3, phase: ProcessPhase.RAST, mode: ProcessMode.WAITING}} brewingStatus={waitingStatus} remainingSeconds={1176} />);
         expect(screen.getByText('Wartet auf Bestätigung')).toBeInTheDocument();
+        expect(screen.queryByText('Fortschritt')).not.toBeInTheDocument();
+        expect(screen.queryByText('Restzeit')).not.toBeInTheDocument();
 
-        const durationlessStatus = activeStatus(3, ProcessMode.HEATING);
+        const durationlessStatus = activeStatus(3, ProcessMode.HOLDING);
         durationlessStatus.currentStep.duration = 0;
         durationlessStatus.waiting = {waitingFor: WaitingFor.NONE, canConfirm: false};
-        rerender(<ProcessList selectedBeer={selectedBeer} currentStepIndex={3} currentStep={{index: 3, phase: ProcessPhase.RAST, mode: ProcessMode.HEATING}} brewingStatus={durationlessStatus} />);
-        expect(screen.getByText('Keine feste Dauer')).toBeInTheDocument();
+        rerender(<ProcessList selectedBeer={selectedBeer} currentStepIndex={3} currentStep={{index: 3, phase: ProcessPhase.RAST, mode: ProcessMode.HOLDING}} brewingStatus={durationlessStatus} />);
+        expect(screen.getByText('Schritt wird ausgeführt')).toBeInTheDocument();
+        expect(screen.queryByText('Restzeit')).not.toBeInTheDocument();
     });
 
     it('handles missing optional temperature and duration values without placeholders', () => {
@@ -226,7 +253,8 @@ describe('ProcessList compact production overview', () => {
         finishedStatus.process.state = ProcessState.FINISHED;
         render(<ProcessList selectedBeer={selectedBeer} currentStepIndex={6} currentStep={{index: 6, phase: ProcessPhase.COOKING, mode: ProcessMode.TIMER_RUNNING}} brewingStatus={finishedStatus} remainingSeconds={0} />);
 
-        expect(screen.getByText('Restzeit 00:00:00')).toBeInTheDocument();
+        expect(screen.getByText('Brauvorgang abgeschlossen')).toBeInTheDocument();
+        expect(screen.queryByText('Restzeit')).not.toBeInTheDocument();
         expect(screen.getByText('Keine weiteren Schritte.')).toBeInTheDocument();
     });
 
@@ -245,6 +273,17 @@ describe('ProcessList compact production overview', () => {
 
         expect(screen.getByText('Kein Bier für den Brauvorgang ausgewählt.')).toBeInTheDocument();
         expect(screen.queryByText(/\d+ \/ \d+/)).not.toBeInTheDocument();
+    });
+
+    it('uses the same reserved status area for heating and timed rests', () => {
+        const heatingStatus = activeStatus(3, ProcessMode.HEATING);
+        const {container, rerender} = render(<ProcessList selectedBeer={selectedBeer} currentStepIndex={3} currentStep={{index: 3, phase: ProcessPhase.RAST, mode: ProcessMode.HEATING}} brewingStatus={heatingStatus} />);
+        expect(container.querySelector('.current-step-status')).toBeInTheDocument();
+        expect(container.querySelector('.upcoming-process-scroll')).toBeInTheDocument();
+
+        rerender(<ProcessList selectedBeer={selectedBeer} currentStepIndex={3} currentStep={{index: 3, phase: ProcessPhase.RAST, mode: ProcessMode.TIMER_RUNNING}} brewingStatus={activeStatus(3)} remainingSeconds={1176} />);
+        expect(container.querySelector('.current-step-status')).toBeInTheDocument();
+        expect(container.querySelector('.upcoming-process-scroll')).toBeInTheDocument();
     });
 
     it('keeps only the following steps in the scrollable area', () => {

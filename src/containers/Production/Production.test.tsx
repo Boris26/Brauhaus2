@@ -480,26 +480,26 @@ describe('Production process overview countdown', () => {
     it('counts the remaining time down locally between controller status updates', () => {
         renderProduction({selectedBeer: createProcessBeer(), brewingStatus: createActiveTimedStatus(120)});
 
-        expect(screen.getByText('Restzeit 00:02:00')).toBeInTheDocument();
+        expect(screen.getByText('00:02:00')).toBeInTheDocument();
         jest.advanceTimersByTime(1000);
-        expect(screen.getByText('Restzeit 00:01:59')).toBeInTheDocument();
+        expect(screen.getByText('00:01:59')).toBeInTheDocument();
     });
 
     it('never displays a negative remaining time', () => {
         renderProduction({selectedBeer: createProcessBeer(), brewingStatus: createActiveTimedStatus(0)});
 
-        expect(screen.getByText('Restzeit 00:00:00')).toBeInTheDocument();
+        expect(screen.getByText('00:00:00')).toBeInTheDocument();
         jest.advanceTimersByTime(2000);
-        expect(screen.getByText('Restzeit 00:00:00')).toBeInTheDocument();
+        expect(screen.getByText('00:00:00')).toBeInTheDocument();
     });
 
     it('resynchronizes the countdown when a new controller status arrives', () => {
         const {rerender, props} = renderProduction({selectedBeer: createProcessBeer(), brewingStatus: createActiveTimedStatus(120)});
         jest.advanceTimersByTime(1000);
-        expect(screen.getByText('Restzeit 00:01:59')).toBeInTheDocument();
+        expect(screen.getByText('00:01:59')).toBeInTheDocument();
 
         rerender(<Production {...props} brewingStatus={createActiveTimedStatus(90)} />);
-        expect(screen.getByText('Restzeit 00:01:30')).toBeInTheDocument();
+        expect(screen.getByText('00:01:30')).toBeInTheDocument();
     });
 
     it('updates the active process card and remaining list on step changes', () => {

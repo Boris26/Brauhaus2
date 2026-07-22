@@ -104,7 +104,6 @@
 }
 
 .current-step-remaining {
-    border-top: 1px solid rgba(255, 255, 255, 0.10);
     display: flex;
     justify-content: space-between;
     align-items: baseline;
@@ -125,10 +124,39 @@
     white-space: nowrap;
 }
 
-.current-step-progress {
+.current-step-status {
     border-top: 1px solid rgba(255, 255, 255, 0.10);
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
     margin-top: 0.9rem;
+    min-height: clamp(5.6rem, 9vh, 7rem);
     padding-top: 0.65rem;
+}
+
+.current-step-status--reserved {
+    visibility: hidden;
+}
+
+.current-step-status-label,
+.current-step-status-detail {
+    color: var(--color-accent);
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.current-step-status-value {
+    color: var(--color-light-text);
+    font-size: 1.02rem;
+}
+
+.current-step-status-detail {
+    color: rgba(255, 255, 255, 0.78);
+    font-weight: 500;
+}
+
+.current-step-progress {
+    margin-top: 0;
 }
 
 .current-step-progress-header {
@@ -291,5 +319,9 @@
         align-items: flex-start;
         flex-direction: column;
         gap: 0.25rem;
+    }
+
+    .current-step-status {
+        min-height: 6.75rem;
     }
 }

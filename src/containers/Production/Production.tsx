@@ -279,7 +279,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     shouldCountdownLocally = (aBrewingStatus?: BrewingStatus): boolean => {
         return aBrewingStatus?.process?.state === ProcessState.ACTIVE
-            && aBrewingStatus.currentStep?.mode !== ProcessMode.WAITING
+            && aBrewingStatus.currentStep?.mode === ProcessMode.TIMER_RUNNING
             && typeof aBrewingStatus.currentStep?.duration === 'number'
             && aBrewingStatus.currentStep.duration > 0;
     }
