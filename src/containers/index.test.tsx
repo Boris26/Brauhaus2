@@ -5,6 +5,8 @@ import {Views} from '../enums/eViews';
 import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../model/brewingStatus.types';
 import {ConfirmStates} from '../enums/eConfirmStates';
 
+jest.mock('./Dashboard/DashboardPage', () => () => <div><h1>Dashboard</h1></div>);
+
 const makeStatus = (overrides: Partial<BrewingStatus> = {}): BrewingStatus => ({
     elapsedTime: 23,
     currentTime: 1783885211,
@@ -26,10 +28,10 @@ const makeStatus = (overrides: Partial<BrewingStatus> = {}): BrewingStatus => ({
     ...overrides,
 });
 
-const renderIndex = (brewingStatus: BrewingStatus, confirm = jest.fn()) => {
+const renderIndex = (brewingStatus: BrewingStatus, confirm = jest.fn(), viewState = Views.VERSION) => {
     const result = render(
         <Index
-            viewState={Views.VERSION}
+            viewState={viewState}
             brewingStatus={brewingStatus}
             confirm={confirm}
             checkIsBackenAvailable={jest.fn()}
@@ -40,6 +42,12 @@ const renderIndex = (brewingStatus: BrewingStatus, confirm = jest.fn()) => {
 };
 
 describe('Index view routing', () => {
+    it('points the dashboard view to the dashboard page', (): void => {
+        renderIndex(makeStatus({process: {state: ProcessState.IDLE}, currentStep: {phase: ProcessPhase.NONE, mode: ProcessMode.NONE}, waiting: {waitingFor: WaitingFor.NONE, canConfirm: false}}), jest.fn(), Views.DASHBOARD);
+
+        expect(screen.getByRole('heading', {name: 'Dashboard'})).toBeInTheDocument();
+    });
+
     it('points the version view to the version page', (): void => {
         renderIndex(makeStatus({process: {state: ProcessState.IDLE}, currentStep: {phase: ProcessPhase.NONE, mode: ProcessMode.NONE}, waiting: {waitingFor: WaitingFor.NONE, canConfirm: false}}));
 

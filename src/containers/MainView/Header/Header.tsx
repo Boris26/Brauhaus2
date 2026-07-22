@@ -5,6 +5,7 @@ import {Views} from "../../../enums/eViews";
 import {ApplicationActions} from "../../../actions/actions";
 import setViewState = ApplicationActions.setViewState;
 import StatusDisplay from './StatusDisplay';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 
 
 
@@ -71,6 +72,15 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
         return (
             <div className="Header">
                 <div className="icons-container">
+                    <button
+                        type="button"
+                        className={this.getTabClassName(Views.DASHBOARD)}
+                        onClick={() => this.handleIconClick(Views.DASHBOARD)}
+                        title="Dashboard"
+                        aria-label="Dashboard"
+                    >
+                        <DashboardIcon fontSize="inherit" />
+                    </button>
                     <img
                         src="beer.png"
                         alt="Icon 1"

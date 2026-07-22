@@ -11,6 +11,7 @@ import {FinishedBrew} from "../model/FinishedBrew";
 import {BackendAvailable} from "../reducers/productionReducer";
 import {scalingValues} from "../utils/BeerScaler/ScalingBeerRecipe";
 import { ThemeName, setTheme as applyAndStoreTheme } from "../utils/theme";
+import { pushViewPath } from "../utils/viewRoutes";
 
 export namespace BeerActions {
 
@@ -488,6 +489,7 @@ export namespace ApplicationActions {
         SetTheme;
 
     export function setViewState(aView: Views): SetView {
+        pushViewPath(aView);
         return {
             type: ActionTypes.SET_VIEW,
             payload: {view: aView},

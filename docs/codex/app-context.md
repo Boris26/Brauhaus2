@@ -7,13 +7,14 @@ This repository is a Create React App TypeScript UI named `test1`. It presents b
 ## Entry points and shell
 
 - `src/index.tsx` imports global color CSS, creates the React tree, wraps `App` in the Redux `Provider`, dispatches the initial theme, and registers `public/service-worker.js` through `process.env.PUBLIC_URL`.
-- `src/containers/App.tsx` switches between a mobile-only UI and the desktop UI based on `window.innerWidth < 768`. There is no React Router in the code inspected; navigation is Redux view-state driven.
+- `src/containers/App.tsx` switches between a mobile-only UI and the desktop UI based on `window.innerWidth < 768`. There is no React Router in the code inspected; navigation is Redux view-state driven, with lightweight browser path synchronization in `src/utils/viewRoutes.ts` for direct links such as `/dashboard`.
 - Desktop shell renders `Header` plus `containers/index.tsx`. Mobile shell renders `MobileProductionView` directly.
 
 ## Navigation/routing model
 
 The app does not use URL routes. Navigation is an enum in `src/enums/eViews.ts` and the active view is stored at `applicationReducer.view`:
 
+- `DASHBOARD`: compact overview for recipes, finished brews, ingredient usage, history, and current production status.
 - `MAIN`: recipe table and details.
 - `PRODUCTION`: active brewing controls and status.
 - `DATABASE`: beer recipe form.

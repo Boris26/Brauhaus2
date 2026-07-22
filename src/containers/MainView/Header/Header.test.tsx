@@ -16,9 +16,11 @@ describe('Header navigation', () => {
             />
         );
 
+        fireEvent.click(screen.getByLabelText('Dashboard'));
         fireEvent.click(screen.getByLabelText('Einstellungen'));
         fireEvent.click(screen.getByLabelText('Version'));
 
+        expect(setViewState).toHaveBeenCalledWith(Views.DASHBOARD);
         expect(setViewState).toHaveBeenCalledWith(Views.SETTINGS);
         expect(setViewState).toHaveBeenCalledWith(Views.VERSION);
     });
@@ -35,6 +37,8 @@ describe('Header navigation', () => {
         );
 
         expect(screen.queryByRole('heading', {name: 'Brauhaus'})).not.toBeInTheDocument();
+        expect(screen.getByTitle('Dashboard')).toBeInTheDocument();
+        expect(screen.getByTitle('Dashboard').querySelector('svg')).toBeInTheDocument();
         expect(screen.getByTitle('Hauptansicht').parentElement).toHaveClass('icons-container');
         expect(screen.getByText(/Backend:/)).toBeInTheDocument();
     });

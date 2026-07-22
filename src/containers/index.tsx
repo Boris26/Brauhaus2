@@ -14,6 +14,7 @@ import BrewingCalculations from "./BrewingCalculations/BrewingCalculations";
 import IngredientsFormPage from "./DatabaseOverview/IngredientsFormPage";
 import SettingsPage from "./Settings/SettingsPage";
 import VersionPage from "./Version/VersionPage";
+import DashboardPage from "./Dashboard/DashboardPage";
 import {getBrewingStatusLabel, getConfirmationType, shouldShowConfirmButton, shouldShowWaitingDialog} from "../utils/brewingStatus/selectors";
 
 interface indexMainProps {
@@ -83,6 +84,7 @@ export class Index extends React.Component<indexMainProps> {
             <div className="IndexContent">
                 {this.showDialog()}
                 <SimpleBar style={{maxHeight: '100%', overflowY: 'auto'}}>
+                    {viewState === Views.DASHBOARD && <DashboardPage />}
                     {viewState === Views.MAIN && <Main/>}
                 </SimpleBar>
                 {viewState === Views.PRODUCTION && <Production/>}
