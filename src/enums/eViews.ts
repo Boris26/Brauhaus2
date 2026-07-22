@@ -1,5 +1,5 @@
 export enum Views {
-    MAIN ,
+    MAIN,
     PRODUCTION = 1,
     DATABASE = 2,
     FINISHED_BREWS = 3,
@@ -7,4 +7,5 @@ export enum Views {
     INGREDIENTS = 5,
     SETTINGS = 6,
     VERSION = 7,
+    DASHBOARD = 8,
 }

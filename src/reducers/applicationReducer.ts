@@ -1,6 +1,7 @@
 import {ApplicationActions} from '../actions/actions';
 import {Views} from '../enums/eViews';
 import { ThemeName, resolveInitialTheme } from '../utils/theme';
+import { resolveInitialView } from '../utils/viewRoutes';
 import AllApplicationActions = ApplicationActions.AllApplicationActions;
 import ActionTypes = ApplicationActions.ActionTypes;
 
@@ -16,7 +17,7 @@ export interface ApplicationReducerState {
 }
 
 export const initialApplicationState: ApplicationReducerState = {
-    view: Views.MAIN,
+    view: resolveInitialView(),
     errorDialogHeader: '',
     errorDialogMessage: '',
     errorDialogOpen: false,

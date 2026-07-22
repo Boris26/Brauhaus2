@@ -6,8 +6,9 @@ import MobileProductionView from './Mobile/MobileStatusView/MobileProductionView
 
 const App: React.FC = () => {
     const isMobile = window.innerWidth < 768;
+    const isDashboardRoute = window.location.pathname === '/dashboard';
 
-    if (isMobile) {
+    if (isMobile && !isDashboardRoute) {
         return (
             <div className="AppContainer">
                 <MobileProductionView/>
