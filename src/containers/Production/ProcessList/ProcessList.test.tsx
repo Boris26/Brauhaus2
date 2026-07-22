@@ -192,6 +192,8 @@ describe('ProcessList compact production overview', () => {
         render(<ProcessList selectedBeer={selectedBeer} currentStepIndex={3} currentStep={{index: 3, phase: ProcessPhase.RAST, mode: ProcessMode.TIMER_RUNNING}} brewingStatus={activeStatus(3)} remainingSeconds={1176} />);
 
         expect(screen.getByText('Restzeit 00:19:36')).toBeInTheDocument();
+        expect(screen.getByText('Verbleibende Laufzeit')).toBeInTheDocument();
+        expect(screen.getByLabelText('Verbleibende Laufzeit')).toHaveClass('current-step-remaining');
         expect(screen.getByText('Fortschritt')).toBeInTheDocument();
         expect(screen.getByText('35 %')).toBeInTheDocument();
         expect(screen.queryByText('Laufzeit')).not.toBeInTheDocument();

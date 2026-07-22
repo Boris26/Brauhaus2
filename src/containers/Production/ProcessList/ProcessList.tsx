@@ -130,11 +130,8 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
     }
 
     getCurrentStepMeta(activeStep: ProcessListStep | undefined, isProcessStarted: boolean): React.ReactNode {
-        const {brewingStatus, remainingSeconds} = this.props;
+        const {brewingStatus} = this.props;
         const targetTemperature = brewingStatus?.temperature?.target ?? activeStep?.detail?.temperature;
-        const isFinished = brewingStatus?.process?.state === ProcessState.FINISHED;
-        const hasDuration = typeof brewingStatus?.currentStep?.duration === 'number' && brewingStatus.currentStep.duration > 0;
-        const isWaiting = brewingStatus?.currentStep?.mode === ProcessMode.WAITING || (brewingStatus?.waiting?.waitingFor !== undefined && brewingStatus.waiting.waitingFor !== WaitingFor.NONE);
         const metaItems: React.ReactNode[] = [];
 
         if (!isProcessStarted) {
@@ -146,17 +143,38 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
             metaItems.push(<span key="temperature" className="current-step-temperature">{targetTemperature} °C</span>);
         }
 
+        return <div className="current-step-meta">{metaItems}</div>;
+    }
+
+    getRemainingTimeText(): string {
+        const {brewingStatus, remainingSeconds} = this.props;
+        const isFinished = brewingStatus?.process?.state === ProcessState.FINISHED;
+        const hasDuration = typeof brewingStatus?.currentStep?.duration === 'number' && brewingStatus.currentStep.duration > 0;
+        const isWaiting = brewingStatus?.currentStep?.mode === ProcessMode.WAITING || (brewingStatus?.waiting?.waitingFor !== undefined && brewingStatus.waiting.waitingFor !== WaitingFor.NONE);
+
         if (isFinished) {
-            metaItems.push(<span key="remaining" className="current-step-time">Restzeit {TimeFormatter.formatSecondsToHMS(0)}</span>);
-        } else if (isWaiting) {
-            metaItems.push(<span key="waiting" className="current-step-time">Wartet auf Bestätigung</span>);
-        } else if (hasDuration && typeof remainingSeconds === 'number') {
-            metaItems.push(<span key="remaining" className="current-step-time">Restzeit {TimeFormatter.formatSecondsToHMS(remainingSeconds)}</span>);
-        } else {
-            metaItems.push(<span key="no-duration" className="current-step-time">Keine feste Dauer</span>);
+            return TimeFormatter.formatSecondsToHMS(0);
+        }
+        if (isWaiting) {
+            return 'Wartet auf Bestätigung';
+        }
+        if (hasDuration && typeof remainingSeconds === 'number') {
+            return TimeFormatter.formatSecondsToHMS(remainingSeconds);
+        }
+        return 'Keine feste Dauer';
+    }
+
+    renderRemainingTimeSection(isProcessStarted: boolean): React.ReactNode {
+        if (!isProcessStarted) {
+            return null;
         }
 
-        return <div className="current-step-meta">{metaItems}</div>;
+        return (
+            <div className="current-step-remaining" aria-label="Verbleibende Laufzeit">
+                <span className="current-step-remaining-label">Verbleibende Laufzeit</span>
+                <span className="current-step-remaining-value">Restzeit {this.getRemainingTimeText()}</span>
+            </div>
+        );
     }
 
 
@@ -241,6 +259,7 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
                                 {this.getCurrentStepMeta(activeStep, isProcessStarted)}
                             </div>
                             {this.renderCurrentProgress(isProcessStarted)}
+                            {this.renderRemainingTimeSection(isProcessStarted)}
                         </section>
 
                         <section className="upcoming-process" aria-label="Weiterer Ablauf">
