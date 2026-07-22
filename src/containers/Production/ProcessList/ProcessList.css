@@ -47,11 +47,12 @@
 }
 
 .current-process-step {
-    background: linear-gradient(135deg, rgba(255, 153, 0, 0.18), rgba(255, 153, 0, 0.05));
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.018));
+    border: 1px solid rgba(255, 255, 255, 0.09);
     border-left: 0.35rem solid var(--color-accent);
     border-radius: 0.8rem;
     padding: 0.9rem 1rem;
-    box-shadow: 0 2px 12px var(--shadow-secondary);
+    box-shadow: inset 0 0 0 1px rgba(255, 153, 0, 0.06), 0 2px 12px var(--shadow-secondary);
     flex: 0 0 auto;
 }
 
@@ -125,7 +126,7 @@
 }
 
 .current-step-progress-fill {
-    background: var(--color-accent);
+    background: linear-gradient(90deg, var(--color-accent), rgba(255, 153, 0, 0.78));
     border-radius: inherit;
     height: 100%;
     transition: width 0.25s ease;
