@@ -102,12 +102,23 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background: var(--color-error-strong);
+    background: var(--color-surface-strong);
     border-radius: 0 0 12px 12px;
     box-shadow: 0 2px 8px var(--shadow-error-soft);
     overflow: visible;
     min-height: 4.25rem;
     padding: var(--spacing-xs) 0;
+}
+
+.flame-strip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.5rem, 3vw, 2rem);
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    transform: translate(-0.75rem, -0.35rem);
 }
 
 /* Agitator und Temperatur mittig */
