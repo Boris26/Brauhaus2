@@ -95,6 +95,7 @@ interface ProductionState {
     currentFillLiters: number;
     activeFillWasOpened: boolean;
     isSpargeIncluded: boolean;
+    displayedRemainingSeconds: number | undefined;
 }
 
 export class Production extends React.Component<ProductionProps, ProductionState> {
@@ -108,6 +109,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
     private readonly MIN_INTERVAL_TIME = 10;
     private readonly MAX_BREAK_TIME = 10;
     private readonly MAX_RUNNING_TIME = 10;
+    private remainingTimeInterval: NodeJS.Timeout | null = null;
 
     constructor(props: ProductionProps) {
         super(props);
@@ -142,7 +144,8 @@ export class Production extends React.Component<ProductionProps, ProductionState
             completedMashLiters: 0,
             currentFillLiters: 0,
             activeFillWasOpened: false,
-            isSpargeIncluded: false
+            isSpargeIncluded: false,
+            displayedRemainingSeconds: undefined
         }
     }
 
@@ -152,6 +155,15 @@ export class Production extends React.Component<ProductionProps, ProductionState
             this.calculateTheHopTimes();
         }
         getTemperatures();
+        this.syncRemainingTimeFromStatus();
+        this.remainingTimeInterval = setInterval(this.tickRemainingTime, 1000);
+    }
+
+    componentWillUnmount() {
+        if (this.remainingTimeInterval !== null) {
+            clearInterval(this.remainingTimeInterval);
+            this.remainingTimeInterval = null;
+        }
     }
 
 
@@ -159,6 +171,10 @@ export class Production extends React.Component<ProductionProps, ProductionState
         const {toggleAgitator, brewingStatus,isToggleAgitatorSuccess,isWaterFillingSuccessful, waterStatus} = this.props;
         const {intervalSwitchState, mainSwitchState, waterSwitchState,heatingAndStirringSwitchState,showHopsDialog,showFinishDialog, indexOfCurrentStep} = this.state;
 
+
+        if (prevProps.brewingStatus !== brewingStatus) {
+            this.syncRemainingTimeFromStatus();
+        }
 
         if (prevProps.selectedBeer !== this.props.selectedBeer) {
             this.resetRecipeWaterFillState({indexOfCurrentStep: 0});
@@ -240,6 +256,53 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     }
 
+
+    syncRemainingTimeFromStatus = (): void => {
+        const remainingSeconds = this.getRemainingSecondsFromStatus();
+        if (remainingSeconds !== this.state.displayedRemainingSeconds) {
+            this.setState({displayedRemainingSeconds: remainingSeconds});
+        }
+    }
+
+    tickRemainingTime = (): void => {
+        const {brewingStatus} = this.props;
+        if (!this.shouldCountdownLocally(brewingStatus)) {
+            return;
+        }
+        this.setState((prevState) => {
+            if (typeof prevState.displayedRemainingSeconds !== 'number') {
+                return null;
+            }
+            return {displayedRemainingSeconds: Math.max(0, prevState.displayedRemainingSeconds - 1)};
+        });
+    }
+
+    shouldCountdownLocally = (aBrewingStatus?: BrewingStatus): boolean => {
+        return aBrewingStatus?.process?.state === ProcessState.ACTIVE
+            && aBrewingStatus.currentStep?.mode === ProcessMode.TIMER_RUNNING
+            && typeof aBrewingStatus.currentStep?.duration === 'number'
+            && aBrewingStatus.currentStep.duration > 0;
+    }
+
+    getRemainingSecondsFromStatus = (): number | undefined => {
+        const {brewingStatus} = this.props;
+        if (brewingStatus?.process?.state === ProcessState.FINISHED) {
+            return 0;
+        }
+        if (!this.shouldCountdownLocally(brewingStatus)) {
+            return undefined;
+        }
+        const statusRemainingTime = Number(brewingStatus?.currentStep?.remainingTime);
+        if (Number.isFinite(statusRemainingTime) && statusRemainingTime >= 0) {
+            return Math.max(0, Math.floor(statusRemainingTime));
+        }
+        const duration = Number(brewingStatus?.currentStep?.duration);
+        const elapsed = Number(brewingStatus?.currentStep?.elapsedTime);
+        if (Number.isFinite(duration) && Number.isFinite(elapsed)) {
+            return Math.max(0, Math.floor(duration - elapsed));
+        }
+        return undefined;
+    }
     checkForHopAddition() {
         const {hopsTimes, announcedHopTimes} = this.state;
         const {brewingStatus} = this.props;
@@ -604,42 +667,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     renderInfo() {
-        const {brewingStatus} = this.props;
-        let elapsedTime = '----';
-        let targetTime = '----';
-       const currentElapsedTime = brewingStatus?.elapsedTime;
-       if(typeof currentElapsedTime === 'number' && !isNaN(currentElapsedTime))
-       {
-           elapsedTime = this.formatTime(currentElapsedTime);
-       }
-       const stepDuration = Number(brewingStatus?.currentStep?.duration);
-       if(Number.isFinite(stepDuration) && stepDuration > 0)
-       {
-           targetTime = this.formatTime(stepDuration);
-       }
-
-        if(targetTime )
-        return (
-            <div className="Info">
-                <div className="timeContainer">
-                    <div className="frame">
-                        <span className="label">Laufzeit</span>
-                        <span className="time">{elapsedTime}</span>
-                    </div>
-                </div>
-                <div className="timeContainer">
-                    <div className="frame">
-                        <span className="label">Zielzeit</span>
-                        <span className="time">{targetTime}</span>
-                    </div>
-                </div>
-                <div>
-                    {this.renderProgressBar()}
-                </div>
-                <div>
-
-                </div>
-            </div>);
+        return <div className="Info Info--empty" aria-label="Freier Produktionsbereich" />;
     }
 
     renderTemperature() {
@@ -878,7 +906,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
     renderProcessList() {
         const { selectedBeer, brewingStatus } = this.props;
         return (
-            <ProcessList selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} onNextStep={this.handleNextProcedureStep} isNextStepDisabled={!this.isNextProcedureStepAvailable()} />
+            <ProcessList selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} remainingSeconds={this.state.displayedRemainingSeconds} onNextStep={this.handleNextProcedureStep} isNextStepDisabled={!this.isNextProcedureStepAvailable()} />
         );
     }
 
