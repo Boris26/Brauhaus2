@@ -31,9 +31,9 @@ interface BeerFormProps {
     hops: Hop[];
     yeasts: Yeast[];
     additionalIngredients: AdditionalIngredient[];
-    isSubmitSuccessful: boolean;
-    messageType: string;
-    message: string;
+    isSubmitSuccessful?: boolean;
+    messageType?: string;
+    message?: string;
     beerFormState?: any;
     beers: Beer[];
     importBeer: (file: File) => void;
@@ -62,7 +62,7 @@ interface BeerFormState {
     hopsDTO: HopDTO[];
     yeastsDTO: YeastDTO[];
     additionalIngredientsDTO: AdditionalIngredientDTO[];
-    isSubmitSuccessful: boolean;
+    isSubmitSuccessful?: boolean;
     missingMalts?: string[];
     missingHops?: string[];
     missingYeasts?: string[];
@@ -103,7 +103,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             hopsDTO: [{ id: '', name: '', quantity: undefined as any, time: 0, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES }],
             yeastsDTO: [{ id: '', name: '', quantity: undefined as any }],
             additionalIngredientsDTO: [],
-            isSubmitSuccessful: false,
+            isSubmitSuccessful: undefined,
             showValidationDialog: false,
             validationDialogMessage: '',
             validationErrors: {},
@@ -144,8 +144,8 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
     componentDidUpdate(prevProps: Readonly<BeerFormProps>, prevState: Readonly<BeerFormState>, snapshot?: any) {
         const {isSubmitSuccessful, importedBeer} = this.props;
-        if (!isEqual(this.state.isSubmitSuccessful,prevState.isSubmitSuccessful)) {
-            this.setState({isSubmitSuccessful:isSubmitSuccessful});
+        if (!isEqual(isSubmitSuccessful, prevProps.isSubmitSuccessful)) {
+            this.setState({isSubmitSuccessful});
         }
 
         // Wenn importedBeer gesetzt ist und sich geändert hat, Formular mit importierten Daten füllen
@@ -172,7 +172,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 yeastsDTO: importedBeer.fermentationMaturation && importedBeer.fermentationMaturation.yeast ? importedBeer.fermentationMaturation.yeast.map(y => ({ id: y.id, name: y.name, quantity: y.quantity })) : [],
                 // Alte Rezepte ohne additionalIngredients bleiben kompatibel und werden als leere Liste geführt.
                 additionalIngredientsDTO: importedBeer.additionalIngredients ? importedBeer.additionalIngredients.map(aIngredient => this.normalizeAdditionalIngredient(aIngredient)) : [],
-                isSubmitSuccessful: false,
+                isSubmitSuccessful: undefined,
             }, () => {
                 this.props.saveBeerFormState(this.state);
             });
@@ -378,9 +378,37 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
 
 
+    validateRequiredRecipeFields = () => {
+        const validationErrors: Record<string, string> = {};
+        const requiredTextError = 'Bitte ausfüllen.';
+        const requiredNumberError = 'Bitte einen gültigen Wert größer als 0 eingeben.';
+
+        if (!this.state.name.trim()) validationErrors.name = requiredTextError;
+        if (!this.state.type.trim()) validationErrors.type = requiredTextError;
+
+        ['bitterness', 'alcohol', 'originalwort', 'mashVolume', 'spargeVolume', 'cookingTime', 'cookingTemperatur'].forEach((field) => {
+            const value = this.state[field as keyof BeerFormState];
+            const parsed = Number(value);
+            if (!Number.isFinite(parsed) || parsed <= 0) {
+                validationErrors[field] = requiredNumberError;
+            }
+        });
+
+        const expandedSections = { ...this.state.expandedSections };
+        if (validationErrors.name || validationErrors.type) expandedSections.basic = true;
+        if (validationErrors.bitterness || validationErrors.alcohol || validationErrors.originalwort) expandedSections.basic = true;
+        if (validationErrors.mashVolume || validationErrors.spargeVolume || validationErrors.cookingTime || validationErrors.cookingTemperatur) expandedSections.brewing = true;
+
+        this.setState((prevState) => ({validationErrors: {...prevState.validationErrors, ...validationErrors}, expandedSections}));
+        return validationErrors;
+    };
+
+    renderInputError = (aKey: string) => this.renderFieldError(aKey);
+
     handleSubmit = (e: FormEvent) => {
-        const {malts,hops,yeasts} = this.props;
+        const {malts,hops,yeasts, isSavingBeer} = this.props;
         e.preventDefault();
+        if (isSavingBeer) return;
         const {
             id,
             name,
@@ -402,6 +430,11 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             additionalIngredientsDTO,
         } = this.state;
         const quantityValidationErrors = this.validateIngredientQuantities();
+        const requiredValidationErrors = this.validateRequiredRecipeFields();
+        if (Object.keys(requiredValidationErrors).length > 0) {
+            this.openValidationDialog('Bitte korrigiere die markierten Pflichtfelder.');
+            return;
+        }
         if (Object.keys(quantityValidationErrors).length > 0) {
             this.openValidationDialog('Bitte korrigiere die markierten Mengenfelder. Mengen sind erforderlich und müssen größer als 0 sein.');
             return;
@@ -480,7 +513,6 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 .map((aIngredient) => ({...aIngredient, quantity: Number(aIngredient.quantity)}))
         };
 
-        console.log(beer);
         this.props.onSubmitBeer(beer);
     };
 
@@ -642,7 +674,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 yeastsDTO: selectedBeer.fermentationMaturation && selectedBeer.fermentationMaturation.yeast ? selectedBeer.fermentationMaturation.yeast.map(y => ({ id: y.id, name: y.name, quantity: y.quantity })) : [],
                 // Für alte DB-Einträge ohne Feld wird bewusst [] gesetzt.
                 additionalIngredientsDTO: selectedBeer.additionalIngredients ? selectedBeer.additionalIngredients.map(aIngredient => this.normalizeAdditionalIngredient(aIngredient)) : [],
-                isSubmitSuccessful: false,
+                isSubmitSuccessful: undefined,
             }, () => {
                 this.props.saveBeerFormState(this.state);
             });
@@ -712,19 +744,19 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         let info: string = "";
         if (isEqual(isSubmitSuccessful, true)) {
-            info = "Beer created successfully";
+            info = this.props.message || "Beer saved successfully";
         } else if (isSubmitSuccessful === false) {
-            info = "Beer creation failed";
+            info = this.props.message || "Beer creation failed";
         }
 
         const basicContent = (
             <div className="beer-form-grid">
-                <label>Name:<input type="text" name="name" className="field-name" value={name} onChange={this.handleChange} required={true} maxLength={15} /></label>
-                <label>Typ:<input type="text" name="type" className="field-type" value={type} onChange={this.handleChange} required={true} maxLength={10} /></label>
+                <label>Name:<input type="text" name="name" className="field-name" value={name} onChange={this.handleChange} required={true} maxLength={15} />{this.renderInputError('name')}</label>
+                <label>Typ:<input type="text" name="type" className="field-type" value={type} onChange={this.handleChange} required={true} maxLength={10} />{this.renderInputError('type')}</label>
                 <label>Farbe:<input type="text" name="color" className="field-color" value={color} onChange={this.handleChange} maxLength={4} /></label>
-                <label>Bitterkeit:<input type="number" name="bitterness" className="field-number-small" value={bitterness} min={0} step={0.1} onChange={this.handleChange} required={true} max={99} /></label>
-                <label>Alkoholgehalt:<input type="number" name="alcohol" className="field-number-small" value={alcohol} min={0} step={0.1} onChange={this.handleChange} required={true} max={99} /></label>
-                <label>Stammwürze:<input type="number" name="originalwort" className="field-number-small" value={originalwort} min={0} step={0.1} onChange={this.handleChange} required={true} max={99} /></label>
+                <label>Bitterkeit:<input type="number" name="bitterness" className="field-number-small" value={bitterness} min={0} step={0.1} onChange={this.handleChange} required={true} max={99} />{this.renderInputError('bitterness')}</label>
+                <label>Alkoholgehalt:<input type="number" name="alcohol" className="field-number-small" value={alcohol} min={0} step={0.1} onChange={this.handleChange} required={true} max={99} />{this.renderInputError('alcohol')}</label>
+                <label>Stammwürze:<input type="number" name="originalwort" className="field-number-small" value={originalwort} min={0} step={0.1} onChange={this.handleChange} required={true} max={99} />{this.renderInputError('originalwort')}</label>
                 <label>Bewertung:<input type="number" name="rating" className="field-number-small" value={rating} min={0} max={5} onChange={this.handleChange} /></label>
                 <label className="full-width">Beschreibung:<textarea name="description" className="beer-description" value={description} onChange={this.handleChange} /></label>
             </div>
@@ -732,10 +764,10 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         const brewingContent = (
             <div className="beer-form-grid brewing-data-grid">
-                <label>Hauptguss (l):<input type="number" name="mashVolume" className="field-number-small" min={0} value={mashVolume} step={0.1} onChange={this.handleChange} required={true} max={99} /></label>
-                <label>Nachguss (l):<input type="number" name="spargeVolume" className="field-number-small" min={0} step={0.1} value={spargeVolume} onChange={this.handleChange} required={true} max={99} /></label>
-                <label>Kochzeit (min):<input type="number" name="cookingTime" className="field-number-medium" min={0} value={cookingTime} onChange={this.handleChange} required={true} max={999} /></label>
-                <label>Kochtemperatur:<input type="number" name="cookingTemperatur" className="field-number-small" min={1} value={cookingTemperatur} onChange={this.handleChange} required={true} max={99} /></label>
+                <label>Hauptguss (l):<input type="number" name="mashVolume" className="field-number-small" min={0} value={mashVolume} step={0.1} onChange={this.handleChange} required={true} max={99} />{this.renderInputError('mashVolume')}</label>
+                <label>Nachguss (l):<input type="number" name="spargeVolume" className="field-number-small" min={0} step={0.1} value={spargeVolume} onChange={this.handleChange} required={true} max={99} />{this.renderInputError('spargeVolume')}</label>
+                <label>Kochzeit (min):<input type="number" name="cookingTime" className="field-number-medium" min={0} value={cookingTime} onChange={this.handleChange} required={true} max={999} />{this.renderInputError('cookingTime')}</label>
+                <label>Kochtemperatur:<input type="number" name="cookingTemperatur" className="field-number-small" min={1} value={cookingTemperatur} onChange={this.handleChange} required={true} max={99} />{this.renderInputError('cookingTemperatur')}</label>
             </div>
         );
 
@@ -795,7 +827,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         );
 
         return (
-            <form id="beer-recipe-form" className="beer-form" onSubmit={this.handleSubmit}>
+            <form id="beer-recipe-form" className="beer-form" onSubmit={this.handleSubmit} noValidate>
                 <input type="file" accept="application/json" className="visually-hidden-file" ref={ref => this.fileInput = ref} onChange={this.handleImportBeerJson} />
                 <div className="beer-form-toolbar">
                     <div className="beer-form-toolbar-title">Rezept</div>
@@ -850,7 +882,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                         <span>Bier</span>
                         <div className="beer-form-panel-actions">
                             <button type="button" className="add-button brauhaus-button brauhaus-button-secondary secondary-action" onClick={this.resetForm}>Abbrechen / Zurücksetzen</button>
-                            <button className="finish-btn brauhaus-button brauhaus-button-primary submit-button primary-action" type="submit" form="beer-recipe-form" disabled={this.props.isSavingBeer}>💾 Rezept speichern</button>
+                            <button className="finish-btn brauhaus-button brauhaus-button-primary submit-button primary-action" type="submit" form="beer-recipe-form" disabled={this.props.isSavingBeer}>{this.props.isSavingBeer ? '⏳ Speichern...' : '💾 Rezept speichern'}</button>
                         </div>
                     </div>
                     <div className="beer-form-scroll">{this.renderCreateBeerForm()}</div>
