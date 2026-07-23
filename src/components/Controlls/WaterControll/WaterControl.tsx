@@ -187,21 +187,23 @@ class WaterControl extends React.Component<WaterControlProps> {
         return (
             <div className={waterGaugeClassName}>
                 <div className="water-gauge__tank">
-                    <div
-                        className="water-gauge__fill"
-                        style={{
-                            height: `${waterLevel}%`,
-                        }}
-                    >
+                    <div className="water-gauge__usable-area">
                         <div
-                            className="water-gauge__particles"
-                            aria-hidden="true"
-                        />
+                            className="water-gauge__fill"
+                            style={{
+                                height: `${waterLevel}%`,
+                            }}
+                        >
+                            <div
+                                className="water-gauge__particles"
+                                aria-hidden="true"
+                            />
 
-                        <div
-                            className="water-gauge__surface"
-                            aria-hidden="true"
-                        />
+                            <div
+                                className="water-gauge__surface"
+                                aria-hidden="true"
+                            />
+                        </div>
                     </div>
 
                     <div
