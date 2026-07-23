@@ -196,7 +196,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
         }
 
         if (prevProps.waterStatus?.openClose === true && waterStatus?.openClose === false) {
-            this.completePendingRecipeWaterFill();
+            this.completePendingRecipeWaterFill(prevProps.waterStatus?.filledLiters);
         }
 
         if (!this.state.isSpargeIncluded && this.shouldIncludeSpargeAfterMashingOut(prevProps.brewingStatus, brewingStatus)) {
@@ -413,13 +413,17 @@ export class Production extends React.Component<ProductionProps, ProductionState
         this.setState(aAdditionalState === undefined ? resetState : {...resetState, ...aAdditionalState});
     }
 
-    completePendingRecipeWaterFill = (): void => {
+    completePendingRecipeWaterFill = (aPreviousFilledLiters?: number): void => {
         const {activeFillType, activeFillWasOpened} = this.state;
-        if (!activeFillWasOpened || activeFillType === undefined) {
+        if ((!activeFillWasOpened && aPreviousFilledLiters === undefined) || activeFillType === undefined) {
             this.setState({waterSwitchState: false, activeFillWasOpened: false});
             return;
         }
-        const completedLiters = this.getSafeWaterStatusFilledLiters();
+        const currentFilledLiters = this.getSafeWaterStatusFilledLiters();
+        const previousFilledLiters = Number(aPreviousFilledLiters);
+        const completedLiters = currentFilledLiters > 0 || !Number.isFinite(previousFilledLiters)
+            ? currentFilledLiters
+            : previousFilledLiters;
         this.setState({
             waterSwitchState: false,
             activeFillWasOpened: false,
@@ -564,7 +568,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
         if (aRecipeWaterFill === 'mash' && this.state.mashState === 'COMPLETED') {
             return '✓ Hauptguss fertig';
         }
-        return aRecipeWaterFill === 'sparge' ? 'Nachguss' : 'Hauptguss';
+        return aRecipeWaterFill === 'sparge' ? 'Nachguss einfüllen' : 'Hauptguss einfüllen';
     }
 
     startMashWaterFilling = (): void => {
