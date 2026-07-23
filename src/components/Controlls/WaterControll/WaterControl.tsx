@@ -1,6 +1,7 @@
 import React from 'react';
 import './WaterControll.css';
 import { VesselContentType } from '../../../model/VesselContentType';
+import { formatLiters } from '../../../utils/format/liters';
 
 export interface WaterStatus {
     filledLiters: number;
@@ -240,11 +241,7 @@ class WaterControl extends React.Component<WaterControlProps> {
                     </span>
 
                     <strong>
-                        {numericLiters.toLocaleString('de-DE', {
-                            minimumFractionDigits: 1,
-                            maximumFractionDigits: 2,
-                        })}{' '}
-                        L
+                        {formatLiters(numericLiters)}
                     </strong>
                 </div>
             </div>
