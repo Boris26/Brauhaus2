@@ -42,6 +42,18 @@ describe('WaterControl vessel content display', () => {
             unmount();
         });
     });
+
+    it('shows the gauge liter value with exactly one decimal place', () => {
+        const {rerender} = render(<WaterControl filledLiters={2} label="Aktuell" agitatorState={false} agitatorSpeed={10} contentType={VesselContentType.WATER} />);
+
+        expect(screen.getByText('2,0 l')).toBeInTheDocument();
+
+        rerender(<WaterControl filledLiters={2.04} label="Aktuell" agitatorState={false} agitatorSpeed={10} contentType={VesselContentType.WATER} />);
+        expect(screen.getByText('2,0 l')).toBeInTheDocument();
+
+        rerender(<WaterControl filledLiters={2.05} label="Aktuell" agitatorState={false} agitatorSpeed={10} contentType={VesselContentType.WATER} />);
+        expect(screen.getByText('2,1 l')).toBeInTheDocument();
+    });
 });
 
 
