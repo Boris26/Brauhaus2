@@ -31,12 +31,28 @@ describe('WaterControl vessel content display', () => {
     it('keeps scale, liter value, agitator, and fill height in all states', () => {
         [VesselContentType.WATER, VesselContentType.MASH, VesselContentType.WORT].forEach((contentType) => {
             const {container, unmount} = renderWaterControl(contentType);
+            const usableArea = container.querySelector('.water-gauge__usable-area');
+            const fill = container.querySelector('.water-gauge__fill');
             expect(container.querySelector('.water-gauge__scale')).not.toBeNull();
             expect(container.querySelector('.water-gauge__agitator')).not.toBeNull();
-            expect(screen.getByText('35,0 L')).toBeInTheDocument();
-            expect(container.querySelector('.water-gauge__fill')).toHaveStyle({height: '50%'});
+            expect(screen.getByText('35,0 l')).toBeInTheDocument();
+            expect(usableArea).not.toBeNull();
+            expect(usableArea?.contains(fill)).toBe(true);
+            expect(fill).toHaveStyle({height: '50%'});
             unmount();
         });
+    });
+
+    it('shows the gauge liter value with exactly one decimal place', () => {
+        const {rerender} = render(<WaterControl filledLiters={2} label="Aktuell" agitatorState={false} agitatorSpeed={10} contentType={VesselContentType.WATER} />);
+
+        expect(screen.getByText('2,0 l')).toBeInTheDocument();
+
+        rerender(<WaterControl filledLiters={2.04} label="Aktuell" agitatorState={false} agitatorSpeed={10} contentType={VesselContentType.WATER} />);
+        expect(screen.getByText('2,0 l')).toBeInTheDocument();
+
+        rerender(<WaterControl filledLiters={2.05} label="Aktuell" agitatorState={false} agitatorSpeed={10} contentType={VesselContentType.WATER} />);
+        expect(screen.getByText('2,1 l')).toBeInTheDocument();
     });
 });
 
@@ -49,6 +65,8 @@ describe('WaterControl fill level', () => {
 
     it('uses filledLiters for tank height and caps only the visual level at vessel capacity', () => {
         expect(getFillHeight(0)).toBe('0%');
+        expect(getFillHeight(2)).toBe(`${(2 / 70) * 100}%`);
+        expect(getFillHeight(10)).toBe(`${(10 / 70) * 100}%`);
         expect(getFillHeight(0.0286)).toBe(`${(0.0286 / 70) * 100}%`);
         expect(getFillHeight(16.6)).toBe(`${(16.6 / 70) * 100}%`);
         expect(getFillHeight(80)).toBe('100%');

@@ -11,6 +11,8 @@
 }
 
 .water-gauge__tank {
+    --water-gauge-vertical-inset: 0.85rem;
+
     position: relative;
     width: clamp(8rem, 76%, 11rem);
     height: min(100%, 34rem);
@@ -76,6 +78,14 @@
             inset 3px 0 0 rgb(255 255 255 / 38%),
             inset -3px 0 0 rgb(0 0 0 / 10%),
             inset 0 0 0 1px rgb(255 255 255 / 22%);
+}
+
+.water-gauge__usable-area {
+    position: absolute;
+    inset: var(--water-gauge-vertical-inset) 0;
+    z-index: 1;
+    overflow: hidden;
+    pointer-events: none;
 }
 
 .water-gauge__fill {
@@ -178,7 +188,7 @@
 
 .water-gauge__scale {
     position: absolute;
-    inset: 0.85rem 0.7rem 0.85rem 0.55rem;
+    inset: var(--water-gauge-vertical-inset) 0.7rem var(--water-gauge-vertical-inset) 0.55rem;
     z-index: 5;
     pointer-events: none;
 }

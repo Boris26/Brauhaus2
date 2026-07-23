@@ -13,6 +13,8 @@ interface GaugeProps {
 }
 
 
+type GaugeCellValue = number | { v: number; f: string };
+
 interface GaugeState {
     value: number;
     redFrom: number;
@@ -48,6 +50,22 @@ class Gauge extends React.Component<GaugeProps,GaugeState> {
         }
     }
 
+
+    private formatGaugeValue(aValue: number): GaugeCellValue {
+        const numericValue = Number.isFinite(aValue) ? aValue : 0;
+
+        if (this.props.label !== 'Liter') {
+            return numericValue;
+        }
+
+        return {
+            v: numericValue,
+            f: numericValue.toLocaleString('de-DE', {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1,
+            }),
+        };
+    }
 
     calculateAreas() {
         const { value, targetValue, offset, minValue, maxValue } = this.props;
@@ -111,7 +129,7 @@ class Gauge extends React.Component<GaugeProps,GaugeState> {
                     loader={<div></div>}
                     data={[
                         ["Label", "Value"],
-                        [label, Number(value)]
+                        [label, this.formatGaugeValue(Number(value))]
                     ]}
                     options={chartOptions}
                 />
