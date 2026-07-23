@@ -5,7 +5,7 @@ import Gauge from './Gauge';
 const chartMock = jest.fn(() => <div data-testid="chart" />);
 
 jest.mock('react-google-charts', () => ({
-    Chart: (props: any) => chartMock(props),
+    Chart: (props: any) => chartMock(),
 }));
 
 describe('Gauge value formatting', () => {
