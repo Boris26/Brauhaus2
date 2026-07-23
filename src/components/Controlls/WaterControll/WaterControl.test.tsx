@@ -35,7 +35,7 @@ describe('WaterControl vessel content display', () => {
             const fill = container.querySelector('.water-gauge__fill');
             expect(container.querySelector('.water-gauge__scale')).not.toBeNull();
             expect(container.querySelector('.water-gauge__agitator')).not.toBeNull();
-            expect(screen.getByText('35,0 l')).toBeInTheDocument();
+            expect(screen.getByText('35,0 L')).toBeInTheDocument();
             expect(usableArea).not.toBeNull();
             expect(usableArea?.contains(fill)).toBe(true);
             expect(fill).toHaveStyle({height: '50%'});
