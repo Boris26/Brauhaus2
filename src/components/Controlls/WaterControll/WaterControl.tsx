@@ -21,9 +21,9 @@ interface WaterControlProps {
     agitatorSpeed: number;
 }
 
-interface WaterLevel {
+interface WaterGeometry {
     numericLiters: number;
-    waterLevel: number;
+    visibleWaterHeightPercent: number;
 }
 
 class WaterControl extends React.Component<WaterControlProps> {
@@ -44,22 +44,19 @@ class WaterControl extends React.Component<WaterControlProps> {
      */
     private readonly DEFAULT_AGITATOR_DURATION_SECONDS = 2.5;
 
-    private getWaterLevel(aFilledLiters: number): WaterLevel {
+    private getWaterGeometry(aFilledLiters: number): WaterGeometry {
         const numericLiters = Number.isFinite(aFilledLiters)
             ? Math.max(0, aFilledLiters)
             : 0;
 
-        const waterLevel = Math.max(
-            0,
-            Math.min(
-                100,
-                (numericLiters / this.MAX_WATER_LITERS) * 100,
-            ),
+        const normalizedFillLevel = Math.min(
+            Math.max(numericLiters / this.MAX_WATER_LITERS, 0),
+            1,
         );
 
         return {
             numericLiters,
-            waterLevel,
+            visibleWaterHeightPercent: normalizedFillLevel * 100,
         };
     }
 
@@ -90,8 +87,11 @@ class WaterControl extends React.Component<WaterControlProps> {
             liters += 5
         ) {
             const isMajorMark = liters % 10 === 0;
-            const markPosition =
-                (liters / this.MAX_WATER_LITERS) * 100;
+            const normalizedScalePosition = Math.min(
+                Math.max(liters / this.MAX_WATER_LITERS, 0),
+                1,
+            );
+            const markPosition = normalizedScalePosition * 100;
 
             const markClassName = isMajorMark
                 ? 'water-gauge__mark water-gauge__mark--major'
@@ -159,8 +159,8 @@ class WaterControl extends React.Component<WaterControlProps> {
 
         const {
             numericLiters,
-            waterLevel,
-        } = this.getWaterLevel(filledLiters);
+            visibleWaterHeightPercent,
+        } = this.getWaterGeometry(filledLiters);
 
         const agitatorAnimationDuration =
             this.getAgitatorAnimationDuration();
@@ -191,7 +191,7 @@ class WaterControl extends React.Component<WaterControlProps> {
                         <div
                             className="water-gauge__fill"
                             style={{
-                                height: `${waterLevel}%`,
+                                height: `${visibleWaterHeightPercent}%`,
                             }}
                         >
                             <div

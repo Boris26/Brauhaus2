@@ -43,6 +43,23 @@ describe('WaterControl vessel content display', () => {
         });
     });
 
+    it('places the scale zero and fill on the same shared inner bottom reference', () => {
+        const {container} = render(<WaterControl filledLiters={2} label="Aktuell" agitatorState={false} agitatorSpeed={10} contentType={VesselContentType.WATER} />);
+        const usableArea = container.querySelector('.water-gauge__usable-area');
+        const fill = container.querySelector('.water-gauge__fill') as HTMLElement;
+        const scale = container.querySelector('.water-gauge__scale');
+        const scaleMarks = Array.from(container.querySelectorAll('.water-gauge__mark')) as HTMLElement[];
+        const zeroMark = scaleMarks.find((mark) => mark.textContent === '0');
+        const tenLiterMark = scaleMarks.find((mark) => mark.textContent === '10');
+
+        expect(usableArea).not.toBeNull();
+        expect(scale).not.toBeNull();
+        expect(zeroMark).toHaveStyle({bottom: '0%'});
+        expect(tenLiterMark).toHaveStyle({bottom: `${(10 / 70) * 100}%`});
+        expect(usableArea?.contains(fill)).toBe(true);
+        expect(fill).toHaveStyle({height: `${(2 / 70) * 100}%`});
+    });
+
     it('shows the gauge liter value with exactly one decimal place', () => {
         const {rerender} = render(<WaterControl filledLiters={2} label="Aktuell" agitatorState={false} agitatorSpeed={10} contentType={VesselContentType.WATER} />);
 
