@@ -1,6 +1,12 @@
 import {BrewingStatus, ProcessPhase, ProcessState, WaitingFor} from '../../../model/brewingStatus.types';
 import {RecipeWaterFill, RecipeWaterFillStatus, WaterStatusSnapshot} from './recipeWaterFill.types';
 
+type BrewingStatusTransitionSnapshot = {
+    process?: Partial<BrewingStatus['process']>;
+    currentStep?: Partial<BrewingStatus['currentStep']>;
+    waiting?: Partial<BrewingStatus['waiting']>;
+};
+
 export const sanitizeLiters = (aValue: unknown): number => {
     const numericValue = Number(aValue);
     return Number.isFinite(numericValue) && numericValue > 0 ? numericValue : 0;
@@ -45,7 +51,7 @@ export const isRecipeWaterButtonDisabled = (aFill: RecipeWaterFill, aStatus: Rec
     return aStatus.spargeState !== 'COMPLETED' || aStatus.mashState === 'COMPLETED';
 };
 
-export const shouldIncludeSpargeAfterMashingOut = (aStatus: RecipeWaterFillStatus, aPreviousStatus?: BrewingStatus, aCurrentStatus?: BrewingStatus): boolean => {
+export const shouldIncludeSpargeAfterMashingOut = (aStatus: RecipeWaterFillStatus, aPreviousStatus?: BrewingStatusTransitionSnapshot, aCurrentStatus?: BrewingStatusTransitionSnapshot): boolean => {
     if (aStatus.isSpargeIncluded || aStatus.spargeState !== 'COMPLETED' || aStatus.mashState !== 'COMPLETED') return false;
     const currentPhase = aCurrentStatus?.currentStep?.phase;
     return aPreviousStatus?.waiting?.waitingFor === WaitingFor.MASHING_OUT_CONFIRMATION
