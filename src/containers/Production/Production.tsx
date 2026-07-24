@@ -706,8 +706,9 @@ export class Production extends React.Component<ProductionProps, ProductionState
         if (selectedBeer === undefined) {
             return null;
         }
+        const isNextStepDisabled = !this.isControllerAvailable() || !this.isNextProcedureStepAvailable();
         return (
-            <ProcessList selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} remainingSeconds={this.state.displayedRemainingSeconds} onNextStep={this.handleNextProcedureStep} isNextStepDisabled={!this.isNextProcedureStepAvailable()} />
+            <ProcessList selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} remainingSeconds={this.state.displayedRemainingSeconds} onNextStep={this.handleNextProcedureStep} isNextStepDisabled={isNextStepDisabled} />
         );
     }
 

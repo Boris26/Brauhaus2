@@ -298,6 +298,11 @@
     width: 100%;
 }
 
+.nextStepBtn:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
 .process-list-scroll,
 .process-list-legacy {
     display: none;

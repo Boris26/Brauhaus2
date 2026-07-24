@@ -347,7 +347,8 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
                                 className="nextStepBtn"
                                 onClick={onNextStep}
                                 disabled={isNextStepDisabled}
-                                title="Nächster Prozessschritt"
+                                aria-disabled={isNextStepDisabled}
+                                title={isNextStepDisabled ? "Nächster Prozessschritt ist nicht verfügbar" : "Nächster Prozessschritt"}
                             >
                                 Nächster Schritt
                             </button>
