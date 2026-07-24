@@ -30,7 +30,7 @@
 }
 
 .Header .time {
-  color: var(--color-header-text);
+  color: var(--color-text-secondary);
   text-align: center;
   font-size: var(--font-size-normal);
   position: static;
@@ -58,17 +58,17 @@
   min-width: var(--touch-target-min);
   height: var(--touch-target-min);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: background 0.2s, border-color 0.2s, color 0.2s, transform 0.1s, box-shadow 0.2s;
   padding: var(--spacing-xs) var(--spacing-sm);
   border-radius: var(--border-radius-medium);
-  background: linear-gradient(180deg, var(--color-primary) 60%, var(--color-primary-hover) 100%);
-  border: 2px solid var(--color-orange-dark);
-  box-shadow: 0 3px 8px var(--shadow-orange-strong), 0 2px 0 var(--color-orange-light) inset, 0 2px 0 var(--color-orange-dark);
+  background: var(--color-panel-raised);
+  border: 1px solid var(--color-border-soft);
+  box-shadow: 0 1px 3px var(--shadow-secondary);
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-orange-dark);
+  color: var(--color-text-secondary);
   box-sizing: border-box;
   flex: 0 0 auto;
 }
@@ -80,22 +80,23 @@
 }
 
 .icon:hover {
-  background: linear-gradient(180deg, var(--color-primary-hover) 60%, var(--color-orange-deep) 100%);
-  border-color: var(--color-orange-main);
-  box-shadow: 0 4px 12px var(--shadow-orange-strong);
+  background: var(--color-panel-highlight);
+  border-color: var(--color-accent-border);
+  color: var(--color-text);
+  box-shadow: 0 0 0 2px var(--color-accent-subtle);
 }
 
 .icon.active {
-  background: linear-gradient(180deg, var(--color-orange-main) 60%, var(--color-primary-active) 100%);
-  border: 2px inset var(--color-orange-dark);
-  box-shadow: 0 1px 2px var(--color-orange-dark) inset, 0 1.5px 0 var(--color-white);
-  color: var(--color-white);
-  transform: translateY(2px) scale(0.98);
+  background: var(--color-accent-subtle);
+  border-color: var(--color-accent-border);
+  box-shadow: inset 0 -3px 0 var(--color-accent), 0 0 0 2px var(--color-accent-subtle);
+  color: var(--color-text);
+  transform: translateY(1px);
   z-index: 2;
 }
 
 .icon:not(.active) {
-  color: var(--color-orange-dark);
+  color: var(--color-text-secondary);
   filter: none;
 }
 
@@ -123,4 +124,9 @@
 
 .icons-container button.icon {
   appearance: none;
+}
+
+.icon:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
 }

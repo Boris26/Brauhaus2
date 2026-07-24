@@ -6,7 +6,7 @@
     margin: 0;
     padding: 0;
     font-family: sans-serif;
-    background: var(--color-dark-bg);
+    background: var(--color-app-bg);
 }
 
 .AppContainer {
@@ -17,7 +17,7 @@
     flex-direction: column;
     min-height: 0;
     overflow: hidden;
-    background: var(--color-dark-bg);
+    background: var(--color-app-bg);
 }
 
 .AppHeader {
@@ -25,7 +25,9 @@
     top: 0;
     min-height: var(--desktop-header-height);
     width: 100%;
-    background: var(--color-accent);
+    background: var(--color-nav-bg);
+    border-bottom: 1px solid var(--color-accent-border);
+    box-shadow: 0 2px 14px var(--shadow-secondary);
     z-index: 999;
 }
 

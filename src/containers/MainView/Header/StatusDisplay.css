@@ -4,11 +4,11 @@
   justify-content: flex-start;
   align-items: flex-start;
   font-size: 0.92rem;
-  color: var(--color-dark-bg);
-  background: linear-gradient(180deg, var(--color-orange-main) 60%, var(--color-orange-strong) 100%);
-  border: 2px inset var(--color-orange-dark);
+  color: var(--color-text-secondary);
+  background: var(--color-panel-raised);
+  border: 1px solid var(--color-border-soft);
   border-radius: 0.6rem;
-  box-shadow: 0 1px 2px var(--color-orange-dark) inset, 0 1.5px 0 var(--color-white);
+  box-shadow: 0 1px 3px var(--shadow-secondary);
   padding-left: 8px;
   padding-top: 4px;
   min-height: 3.35rem;
@@ -28,17 +28,17 @@
   font-size: 0.95rem;
   line-height: 1.1;
   padding: 0 0 0.05rem 0;
-  text-shadow: 0 1px 2px var(--color-orange-strong);
+  text-shadow: none;
 }
 
 .backend-status.Online {
-  color: var(--color-success-bright);
-  text-shadow: 0 1px 2px var(--color-success-dark);
+  color: var(--color-success);
+  text-shadow: none;
 }
 
 .backend-status.Offline {
-  color: var(--color-error-highlight);
-  text-shadow: 0 1px 2px var(--color-error-deep);
+  color: var(--color-error);
+  text-shadow: none;
 }
 
 .backend-status-row {
@@ -47,7 +47,7 @@
   width: 100%;
   gap: 0.3rem;
   justify-content: space-between;
-  border-bottom: 1px solid var(--color-orange-dark);
+  border-bottom: 1px solid var(--color-border-soft);
   padding-bottom: 0.1rem;
   margin-bottom: 0.1rem;
   padding-left: 0;
@@ -62,16 +62,16 @@
   font-size: 1.1rem;
   font-weight: bold;
   color: var(--color-white);
-  background: var(--color-orange-strong);
+  background: var(--color-panel-highlight);
   border-radius: 50%;
-  border: 1.5px solid var(--color-orange-dark);
+  border: 1.5px solid var(--color-border-soft);
   cursor: pointer;
   margin-right: 3px;
   transition: background 0.2s, color 0.2s;
 }
 
 .close-x:hover {
-  background: var(--color-orange-main);
+  background: var(--color-accent-subtle-hover);
   color: var(--color-white);
 }
 
@@ -91,7 +91,7 @@
 }
 
 .message {
-  color: var(--color-header-text);
+  color: var(--color-text-secondary);
   font-size: 0.92rem;
   margin-bottom: 0.03rem;
   border-radius: 0.3rem;
