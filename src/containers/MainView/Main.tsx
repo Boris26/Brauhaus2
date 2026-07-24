@@ -1,13 +1,10 @@
 import React from 'react';
 
-import Details from "./Details/Details";
-import {connect} from "react-redux";
+import Details from "./Details/Details.connect";
 import SimpleBar from 'simplebar-react';
 import 'simplebar/dist/simplebar.min.css';
-import BeerTable from "./BeerRecipes/Table";
+import BeerTable from "./BeerRecipes/Table.connect";
 import {Beer} from "../../model/Beer";
-import {BeerActions} from "../../actions/actions";
-import getBeers = BeerActions.getBeers;
 
 interface MainProps {
 beers: Beer[]
@@ -18,7 +15,7 @@ interface MainState
 {
     maxHeight:number;
 }
-class Main extends React.Component<MainProps,MainState> {
+export class Main extends React.Component<MainProps,MainState> {
     constructor(props: MainProps) {
         super(props);
         this.state={
@@ -70,12 +67,3 @@ class Main extends React.Component<MainProps,MainState> {
         );
     }
 }
-const mapStateToProps = (state: any) => ({beers: state.beerDataReducer.beers});
-const mapDispatchToProps =
-    (dispatch: any) => ({
-        getBeers: (isFetching: boolean) => dispatch(getBeers(isFetching))
-    });
-
-
-
-export default connect(mapStateToProps,mapDispatchToProps)(Main);

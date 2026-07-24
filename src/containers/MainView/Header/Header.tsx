@@ -1,9 +1,6 @@
 import React from 'react';
-import { connect } from 'react-redux';
 import './Header.css';
 import {Views} from "../../../enums/eViews";
-import {ApplicationActions} from "../../../actions/actions";
-import setViewState = ApplicationActions.setViewState;
 import StatusDisplay from './StatusDisplay';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 
@@ -156,16 +153,3 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
         );
     }
 }
-
-const mapStateToProps = (state: any) => ({
-    currentView: state.applicationReducer.view,
-    messages: state.applicationReducer.message,
-    backendStatus: state.productionReducer.isBackenAvailable,
-});
-
-const mapDispatchToProps = (dispatch: any) => ({
-    setViewState: (viewState: Views) => dispatch(setViewState(viewState)),
-    removeAllMessages: () => dispatch(ApplicationActions.removeMessage()),
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(Header);

@@ -4,9 +4,6 @@ import SimpleBar from 'simplebar-react';
 import 'simplebar/dist/simplebar.min.css';
 import './FinishedBrewsTable.css';
 import {FinishedBrew} from "../../../model/FinishedBrew";
-import {connect} from "react-redux";
-import {finishedBrewsTestData} from "../../../model/finishedBrewsTestData";
-import {BeerActions} from "../../../actions/actions";
 import {isNil} from "lodash";
 import { v4 as uuidv4 } from 'uuid';
 import { eBrewState, BrewStateGerman } from '../../../enums/eBrewState';
@@ -40,7 +37,7 @@ const calcAlcohol = (w1: number, w2: number | null) => {
     return (((w1 - w2) * 0.5).toFixed(2) + ' %');
 };
 
-class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, FinishedBrewsTableState> {
+export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, FinishedBrewsTableState> {
     constructor(props: FinishedBrewsTableProps) {
         super(props);
         this.state = { editRows: {}, filterYear: '', showOnlyActive: false, filterOutActive: false, clickedFinishBtn: {}, panelBrewId: null };
@@ -541,25 +538,3 @@ class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, Finish
         );
     }
 }
-
-const mapStateToProps = (state: any) => ({
-    brews: state.beerDataReducer.finishedBrews || finishedBrewsTestData,
-    beers: state.beerDataReducer.beers
-});
-
-const mapDispatchToProps = (dispatch: any) => ({
-    onSave: (brew: FinishedBrew) => {
-        dispatch(BeerActions.updateActiveBeer(brew));
-    },
-    exportPdf: (brews: FinishedBrew[]) => {
-        dispatch(BeerActions.generateFinishedBrewsPdf(brews));
-    },
-    getFinishedBrews: (isFetching: boolean) => {
-        dispatch(BeerActions.getFinishedBeers(isFetching));
-    },
-    onDelete: (id: string) => {
-        dispatch(BeerActions.deleteFinishedBeer(id));
-    }
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(FinishedBrewsTable);

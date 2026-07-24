@@ -1,8 +1,6 @@
 import React from 'react';
 import {isUndefined} from 'lodash';
 import {Beer} from "../../model/Beer";
-import {connect} from "react-redux";
-import {Dispatch} from "redux";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {v4 as uuidv4} from 'uuid';
 import '@fortawesome/fontawesome-free/css/all.css'; // Stile
@@ -10,7 +8,6 @@ import './Production.css'
 
 import WaterControl, {WaterStatus} from "../../components/Controlls/WaterControll/WaterControl";
 import Flame from "../../components/Flame/Flame";
-import {BeerActions, ProductionActions} from "../../actions/actions";
 import Gauge from "../../components/Controlls/Gauge/Gauge";
 import {ToggleState} from "../../enums/eToggleState";
 import {MashAgitatorStates} from "../../model/MashAgitator";
@@ -29,7 +26,6 @@ import {IconProp} from "@fortawesome/fontawesome-svg-core";
 import {FinishedBrew} from "../../model/FinishedBrew";
 import {eBrewState} from "../../enums/eBrewState";
 import {BackendAvailable} from "../../reducers/productionReducer";
-import {RootState} from "../../reducers/rootReducer";
 import {ProcessList} from "./ProcessList/ProcessList";
 import { dataCollector } from '../../utils/DataCollector/dataCollector';
 import {isBrewingProcessActive, isProcessActive} from "../../utils/brewingStatus/selectors";
@@ -725,51 +721,3 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
 
 }
-
-const mapDispatchToProps = (dispatch: Dispatch) => ({
-    getTemperatures: () => {
-        dispatch(ProductionActions.getTemperatures())
-    },
-    toggleAgitator: (agitatorState: MashAgitatorStates) => {
-        dispatch(ProductionActions.toggleAgitator(agitatorState))
-    },
-    startWaterFilling: (liters: number) => {
-        dispatch(ProductionActions.startWaterFilling(liters))
-    },
-    setAgitatorSpeed: (agitatorSpeed: number) => {
-        dispatch(ProductionActions.setAgitatorSpeed(agitatorSpeed))
-    },
-    sendBrewingData: (brewingData: BrewingData) => {
-        dispatch(ProductionActions.sendBrewingData(brewingData))
-    },
-    startPolling: () => {
-        dispatch(ProductionActions.startPolling())
-    },
-    stopPolling: () => {
-        dispatch(ProductionActions.stopPolling())
-    },
-
-    addFinishedBrew: (finishedBrew: FinishedBrew) => {
-        dispatch(BeerActions.addFinishedBrew(finishedBrew))
-    },
-    nextProcedureStep: () => {
-        dispatch(ProductionActions.nextProcedureStep())
-    }
-});
-const mapStateToProps = (state: RootState) => (
-    {
-        selectedBeer: state.beerDataReducer.beerToBrew,
-        temperature: state.productionReducer.temperature,
-        currentAgitatorState: state.productionReducer.currentAgitatorState,
-        currentAgitatorSpeed: state.productionReducer.currentAgitatorSpeed,
-        agitatorIsRunning: state.productionReducer.agitatorIsRunning,
-        agitatorSpeed: state.productionReducer.agitatorSpeed,
-        isWaterFillingSuccessful: state.productionReducer.isWaterFillingSuccessful,
-        isToggleAgitatorSuccess: state.productionReducer.isToggleAgitatorSuccess,
-        brewingStatus: state.productionReducer.brewingStatus,
-        isBackenAvailable: state.productionReducer.isBackenAvailable,
-        waterStatus: state.productionReducer.waterStatus,
-        isPollingRunning: state.productionReducer.isPollingRunning
-
-    });
-export default connect(mapStateToProps, mapDispatchToProps)(Production);
