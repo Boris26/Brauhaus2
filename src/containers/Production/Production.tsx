@@ -536,7 +536,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     renderInfo() {
         return (
-            <div className="Info" aria-label="Temperatur-Timeline Produktionsbereich">
+            <div className="info production-temperature-timeline-card" aria-label="Temperatur-Timeline Produktionsbereich">
                 <ProductionTemperatureTimeline
                     selectedBeer={this.props.selectedBeer}
                     brewingStatus={this.props.brewingStatus}

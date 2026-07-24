@@ -160,11 +160,19 @@
     margin-top: 0;
     display: flex;
     flex-wrap: nowrap;
-    align-items: center;
+    align-items: stretch;
     gap: 1rem;
+    width: 100%;
     min-height: 0;
     min-width: 0;
     overflow: hidden;
+}
+
+.production-temperature-timeline-card {
+    grid-area: info;
+    width: 100%;
+    min-width: 0;
+    min-height: 0;
 }
 
 /* Zeit- und Label-Anzeigen */
@@ -201,7 +209,7 @@
     color: var(--color-light-text);
 }
 
-.Info .container {
+.info .container {
     width: 100%;
     max-width: none;
     margin: 0 !important;

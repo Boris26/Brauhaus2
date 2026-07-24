@@ -147,12 +147,12 @@ export class ProductionTemperatureTimeline extends React.Component<ProductionTem
         return (
             <section className="temperatureTimeline" aria-label="Temperatur-Timeline">
                 <div className="temperatureTimeline__header">
-                    <div>
-                        <h3>Temperatur-Timeline</h3>
-                        <p>Isttemperatur, Zieltemperatur und Prozessschritte über den gesamten Brautag.</p>
+                    <div className="temperatureTimeline__titleArea">
+                        <h3 className="temperatureTimeline__title">Temperaturverlauf</h3>
+                        <p className="temperatureTimeline__description">Isttemperatur, Zieltemperatur und Prozessschritte über den gesamten Brautag.</p>
                     </div>
                     <div className="temperatureTimeline__progress" aria-label={`Braufortschritt ${Math.round(progressPercent)} Prozent`}>
-                        <span>{Math.round(progressPercent)}%</span>
+                        <span>Fortschritt: {Math.round(progressPercent)}%</span>
                         <div className="temperatureTimeline__progressTrack">
                             <div className="temperatureTimeline__progressBar" style={{width: `${progressPercent}%`}} />
                         </div>
