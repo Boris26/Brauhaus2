@@ -160,4 +160,4 @@ export class MobileProductionView extends React.Component<MobileProductionViewPr
     }
 }
 
-const MobileActiveFinishedBrewViewLazy = React.lazy(() => import('../MobileActiveFinishedBrewView/MobileActiveFinishedBrewView'));
+const MobileActiveFinishedBrewViewLazy = React.lazy(() => import('../MobileActiveFinishedBrewView/MobileActiveFinishedBrewView.connect'));
