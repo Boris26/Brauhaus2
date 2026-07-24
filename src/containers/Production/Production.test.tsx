@@ -202,6 +202,18 @@ describe('Production next button', () => {
         expect(props.nextProcedureStep).toHaveBeenCalledTimes(1);
     });
 
+    it('disables the next button while the controller is offline and does not dispatch next', () => {
+        const {props} = renderProduction({
+            brewingStatus: createBrewingStatus(ProcessState.ACTIVE),
+            isBackenAvailable: {isBackenAvailable: false, statusText: 'Offline'}
+        });
+        const nextButton = getNextButton();
+
+        expect(nextButton).toBeDisabled();
+        fireEvent.click(nextButton);
+        expect(props.nextProcedureStep).not.toHaveBeenCalled();
+    });
+
     it('disables the next button again when the process is finished, aborted, or reset to idle', () => {
         const {rerender, props} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.ACTIVE)});
         expect(getNextButton()).not.toBeDisabled();
@@ -408,6 +420,20 @@ describe('Production recipe water filling', () => {
         const manualWaterSwitch = container.querySelector('.settingsRowWater input') as HTMLInputElement;
         fireEvent.click(manualWaterSwitch);
         expect(props.startWaterFilling).toHaveBeenCalledWith(0);
+    });
+
+    it('disables production settings controls while the controller is offline', () => {
+        const {container} = renderProduction({
+            selectedBeer: createBeer(21, 9),
+            isBackenAvailable: {isBackenAvailable: false, statusText: 'Offline'}
+        });
+
+        expect(container.querySelector('.Settings')).toHaveClass('Settings--disabled');
+        expect(screen.getByRole('button', {name: 'Start'})).toBeDisabled();
+        expect(container.querySelector('.startPollingBtn')).toBeDisabled();
+        expect(screen.getByRole('button', {name: /Nachguss/})).toBeDisabled();
+        expect(screen.getByRole('button', {name: /Hauptguss/})).toBeDisabled();
+        expect(container.querySelectorAll('.Settings .quantity-picker-content button:not(:disabled)')).toHaveLength(0);
     });
 });
 

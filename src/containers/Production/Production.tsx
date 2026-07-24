@@ -287,6 +287,9 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     toggleAgitator = () => {
+        if (!this.isControllerAvailable()) {
+            return;
+        }
         const {toggleAgitator} = this.props;
         const {mainSwitchState} = this.state;
         if (!mainSwitchState) {
@@ -299,6 +302,9 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     toggleInterval = () => {
+        if (!this.isControllerAvailable()) {
+            return;
+        }
         const {intervalSwitchState} = this.state;
 
         if (!intervalSwitchState) {
@@ -309,6 +315,9 @@ export class Production extends React.Component<ProductionProps, ProductionState
         }
     }
     toggleHeatingAndStirring = () => {
+        if (!this.isControllerAvailable()) {
+            return;
+        }
         const {heatingAndStirringSwitchState} = this.state;
         if (!heatingAndStirringSwitchState) {
             this.setState({heatingAndStirringSwitchState: true});
@@ -317,20 +326,32 @@ export class Production extends React.Component<ProductionProps, ProductionState
         }
     }
     onAgitatorSpeedChange = (value: number) => {
+        if (!this.isControllerAvailable()) {
+            return;
+        }
         const {setAgitatorSpeed} = this.props
         this.setState({agitatorSpeed: value});
         setAgitatorSpeed(value);
     }
 
     onIntervalChangeBreakTime = (value: number) => {
+        if (!this.isControllerAvailable()) {
+            return;
+        }
         this.setState({breakTime: value});
     }
 
     onIntervalChangeRunningTime = (value: number) => {
+        if (!this.isControllerAvailable()) {
+            return;
+        }
         this.setState({runningTime: value});
     }
 
     onSetWaterChangeQuantity = (value: number) => {
+        if (!this.isControllerAvailable()) {
+            return;
+        }
         this.setState({liters: value});
     }
 
@@ -437,6 +458,9 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     toggleWaterSwitchState = () => {
+        if (!this.isControllerAvailable()) {
+            return;
+        }
         const {waterSwitchState, liters,} = this.state;
         const {startWaterFilling} = this.props;
         if (!waterSwitchState) {
@@ -453,7 +477,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     isStartButtonDisabled = (): boolean => {
         const {selectedBeer} = this.props;
-        return isUndefined(selectedBeer) || this.state.brewingIsRunning || this.isBrewingStartRequestPending || !this.isControlBrewingStartAvailable();
+        return isUndefined(selectedBeer) || !this.isControllerAvailable() || this.state.brewingIsRunning || this.isBrewingStartRequestPending || !this.isControlBrewingStartAvailable();
     }
 
     startBrewing = (): void => {
@@ -479,7 +503,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     isNextProcedureStepAvailable = (): boolean => {
-        return isBrewingProcessActive(this.props.brewingStatus);
+        return this.isControllerAvailable() && isBrewingProcessActive(this.props.brewingStatus);
     }
 
     handleNextProcedureStep = (): void => {
@@ -536,8 +560,9 @@ export class Production extends React.Component<ProductionProps, ProductionState
             heatingAndStirringSwitchState,
             waterSwitchState
         } = this.state;
-        const mashWaterDisabled = this.isRecipeWaterButtonDisabled('mash');
-        const spargeWaterDisabled = this.isRecipeWaterButtonDisabled('sparge');
+        const settingsDisabled = !this.isControllerAvailable();
+        const mashWaterDisabled = settingsDisabled || this.isRecipeWaterButtonDisabled('mash');
+        const spargeWaterDisabled = settingsDisabled || this.isRecipeWaterButtonDisabled('sparge');
         return (
             <div className="settings">
                 <h3>Settings</h3>
@@ -546,29 +571,29 @@ export class Production extends React.Component<ProductionProps, ProductionState
                       <label>
                         <span>Hauptschalter Rührwerk</span>
                         </label>
-                        <Switch onChange={this.toggleAgitator} checked={mainSwitchState} height={40} width={100} />
+                        <Switch onChange={this.toggleAgitator} checked={mainSwitchState} height={40} width={100} disabled={settingsDisabled} />
                         <label>
                         <span>Interval</span>
                         </label>
-                        <Switch onChange={this.toggleInterval} checked={intervalSwitchState} height={40} width={100}/>
+                        <Switch onChange={this.toggleInterval} checked={intervalSwitchState} height={40} width={100} disabled={settingsDisabled}/>
                         <label>
                         <span>Heizphase</span>
                         </label>
-                        <Switch onChange={this.toggleHeatingAndStirring} checked={heatingAndStirringSwitchState} height={40} width={100} />
+                        <Switch onChange={this.toggleHeatingAndStirring} checked={heatingAndStirringSwitchState} height={40} width={100} disabled={settingsDisabled} />
                     </div>
                     <div className="rightAligned" id="quantityPicker">
                         <QuantityPicker initialValue={1} min={1} max={this.MAX_AGITATOR_SPEED} onChange={this.onAgitatorSpeedChange}
-                                        isDisabled={false} label="Geschwindigkeit" labelPosition="above"/>
+                                        isDisabled={settingsDisabled} label="Geschwindigkeit" labelPosition="above"/>
                         <div className="quantityPickerItem">
 
                         </div>
                         <QuantityPicker initialValue={1} min={1} max={this.MAX_BREAK_TIME} onChange={this.onIntervalChangeBreakTime}
-                                        isDisabled={false} label="Pausenzeit" labelPosition="above"/>
+                                        isDisabled={settingsDisabled} label="Pausenzeit" labelPosition="above"/>
                         <div className="quantityPickerItem">
 
                         </div>
                         <QuantityPicker initialValue={1} min={1} max={this.MAX_RUNNING_TIME} onChange={this.onIntervalChangeRunningTime}
-                                        isDisabled={false} label="Laufzeit" labelPosition="above"/>
+                                        isDisabled={settingsDisabled} label="Laufzeit" labelPosition="above"/>
                     </div>
                 </div>
 
@@ -577,11 +602,11 @@ export class Production extends React.Component<ProductionProps, ProductionState
                     <label>
                         <span>Wasser</span>
                     </label>
-                    <Switch onChange={this.toggleWaterSwitchState} checked={waterSwitchState} height={40} width={100} />
+                    <Switch onChange={this.toggleWaterSwitchState} checked={waterSwitchState} height={40} width={100} disabled={settingsDisabled} />
                     </div>
                     <div className="rightAligned">
                         <QuantityPicker initialValue={1} min={1} max={this.MAX_WATER_LEVEL} onChange={this.onSetWaterChangeQuantity}
-                                        isDisabled={waterSwitchState} label="Liter" labelPosition="above"/>
+                                        isDisabled={settingsDisabled || waterSwitchState} label="Liter" labelPosition="above"/>
                     </div>
 
 
@@ -594,7 +619,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
                     <button className="startBtn" disabled={this.isStartButtonDisabled()} onClick={this.startBrewing}>Start</button>
                 </div>
                 <div className="startPollingBtnDiv">
-                    <button className="startPollingBtn" disabled={this.props.isPollingRunning} onClick={this.startPolling}>
+                    <button className="startPollingBtn" disabled={settingsDisabled || this.props.isPollingRunning} onClick={this.startPolling}>
                         <FontAwesomeIcon icon={faRepeat as IconProp} />
                     </button>
                 </div>
@@ -681,8 +706,9 @@ export class Production extends React.Component<ProductionProps, ProductionState
         if (selectedBeer === undefined) {
             return null;
         }
+        const isNextStepDisabled = !this.isControllerAvailable() || !this.isNextProcedureStepAvailable();
         return (
-            <ProcessList selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} remainingSeconds={this.state.displayedRemainingSeconds} onNextStep={this.handleNextProcedureStep} isNextStepDisabled={!this.isNextProcedureStepAvailable()} />
+            <ProcessList selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} remainingSeconds={this.state.displayedRemainingSeconds} onNextStep={this.handleNextProcedureStep} isNextStepDisabled={isNextStepDisabled} />
         );
     }
 
