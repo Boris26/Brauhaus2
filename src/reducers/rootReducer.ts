@@ -18,5 +18,6 @@ export const rootReducer = combineReducers({
 
 });
 
+export type RootState = ReturnType<typeof rootReducer>;
 export type { ApplicationReducerState, BeerDataReducerState, ProductionReducerState, HopsReducerState, MaltsReducerState, YeastReducerState, AdditionalIngredientsReducerState };
 export { initialApplicationState, initialBeerState, initialProductionState ,initialHopsState, initialMaltsState, initialYeastState, initialAdditionalIngredientsState};
