@@ -539,7 +539,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
         const mashWaterDisabled = this.isRecipeWaterButtonDisabled('mash');
         const spargeWaterDisabled = this.isRecipeWaterButtonDisabled('sparge');
         return (
-            <div className="Settings">
+            <div className="settings">
                 <h3>Settings</h3>
                 <div className="settingsRow">
                     <div className="leftAligned" id="formControl">
@@ -700,14 +700,14 @@ export class Production extends React.Component<ProductionProps, ProductionState
                 />
 
                 {this.renderHeader()}
-                <div className="Left">
+                <div className="left">
                     {this.renderWater()}
                     {this.renderFlames()}
                 </div>
-                <div className="List">
+                <div className="list">
                     {this.renderProcessList()}  {/* Hier deine List-Renderfunktion */}
                 </div>
-                <div className="Meters">
+                <div className="meters">
                     {this.renderAgitator()}
                     {this.renderTemperature()}
                 </div>
