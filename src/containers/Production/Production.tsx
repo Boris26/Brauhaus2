@@ -83,8 +83,6 @@ interface ProductionState {
     hopSchedule: HopAddition[]
     hopName: string
     showHopsDialog: boolean
-    showErrorDialog: boolean
-    errorDialogContent: string
     showFinishDialog: boolean
     brewingFinished: boolean
     indexOfCurrentStep: number;
@@ -123,8 +121,6 @@ export class Production extends React.Component<ProductionProps, ProductionState
             hopSchedule: [],
             hopName: '',
             showHopsDialog: false,
-            showErrorDialog: false,
-            errorDialogContent: '',
             showFinishDialog: false,
             brewingFinished: false,
             indexOfCurrentStep: 0,
@@ -475,10 +471,6 @@ export class Production extends React.Component<ProductionProps, ProductionState
         const result = mapBeerToBrewingData(selectedBeer);
         if (!result.ok || !result.brewingData) {
             this.isBrewingStartRequestPending = false;
-            this.setState({
-                showErrorDialog: true,
-                errorDialogContent: result.error ?? 'Rezeptdaten sind für den Start ungültig.'
-            });
             return;
         }
         this.setState({brewingIsRunning: true});
@@ -663,10 +655,6 @@ export class Production extends React.Component<ProductionProps, ProductionState
         this.setState({showHopsDialog: false});
     }
 
-    confirmErrorDialog = () => {
-        this.setState({showErrorDialog: false, errorDialogContent: ''});
-    }
-
 
     confirmFinishDialog = async () => {
         const { stopPolling, selectedBeer, addFinishedBrew } = this.props;
@@ -692,14 +680,6 @@ export class Production extends React.Component<ProductionProps, ProductionState
             addFinishedBrew(finishedBrew);
         }
     };
-    getErrorDialogContent = (): string => {
-        const {errorDialogContent} = this.state;
-        const {isBackenAvailable} = this.props;
-        const statusText = typeof isBackenAvailable === 'boolean' ? '' : isBackenAvailable.statusText;
-        return errorDialogContent || ('Die Brau-Steuerung ist nicht erreichbar\n\n' + statusText);
-    }
-
-
     renderProcessList() {
         const { selectedBeer, brewingStatus } = this.props;
         if (selectedBeer === undefined) {
@@ -718,11 +698,8 @@ export class Production extends React.Component<ProductionProps, ProductionState
                 <ProductionDialogs
                     showHopsDialog={showHopsDialog}
                     hopName={this.state.hopName}
-                    showErrorDialog={this.state.showErrorDialog || !this.isControllerAvailable()}
-                    errorContent={this.getErrorDialogContent()}
                     showFinishDialog={showFinishDialog}
                     onConfirmHop={this.confirmHopDialog}
-                    onConfirmError={this.confirmErrorDialog}
                     onConfirmFinish={this.confirmFinishDialog}
                 />
 

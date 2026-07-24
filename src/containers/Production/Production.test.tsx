@@ -157,6 +157,16 @@ describe('Production start button', () => {
 });
 
 
+describe('Production controller availability dialog', () => {
+    it('does not show the controller unavailable error dialog when the controller is offline', () => {
+        renderProduction({isBackenAvailable: {isBackenAvailable: false, statusText: 'Fehler beim Backend-Check'}});
+
+        expect(screen.queryByText('Die Brau-Steuerung ist nicht erreichbar')).not.toBeInTheDocument();
+        expect(screen.queryByText('Fehler beim Backend-Check')).not.toBeInTheDocument();
+    });
+});
+
+
 describe('Production next button', () => {
     const getNextButton = () => screen.getByRole('button', {name: 'Nächster Schritt'});
 
