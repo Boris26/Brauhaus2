@@ -1,13 +1,10 @@
 import * as React from 'react';
 import {ChangeEvent, FormEvent} from 'react';
-import {BeerActions} from "../../../actions/actions";
-import {connect} from "react-redux";
 import {isEqual} from "lodash";
 import {Yeasts} from "../../../model/Yeasts";
 import {YeastEVG, YeastType} from "../../../enums/eYeastType";
 import '../BeerForm.css'
 import ModalDialog, {DialogType} from "../../../components/ModalDialog/ModalDialog";
-import {YeastActions} from "../../../actions/yeast.actions";
 
 interface MaltFormState {
     id: string;
@@ -25,7 +22,7 @@ interface MaltFormProps {
     isSuccessful: boolean;
 }
 
-class YeastForm extends React.Component<MaltFormProps,MaltFormState> {
+export class YeastForm extends React.Component<MaltFormProps,MaltFormState> {
     constructor(props: MaltFormProps) {
         super(props);
         this.state = {
@@ -138,13 +135,3 @@ class YeastForm extends React.Component<MaltFormProps,MaltFormState> {
 
 
 }
-
-
-const mapStateToProps = (state: any) => ({
-    isSuccessful: state.yeastReducer.isSubmitYeastSuccessful
-});
-const mapDispatchToProps = (dispatch: any) => ({
-    onSubmitMalt: (yeast: Yeasts) => dispatch(YeastActions.submitNewYeast(yeast)),
-
-});
-export default connect(mapStateToProps,mapDispatchToProps)(YeastForm);

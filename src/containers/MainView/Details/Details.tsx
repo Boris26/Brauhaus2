@@ -1,5 +1,4 @@
 import React from 'react';
-import { connect } from 'react-redux';
 import './Details.css';
 import { Beer } from "../../../model/Beer";
 import SimpleBar from 'simplebar-react';
@@ -18,7 +17,6 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {scalingValues} from "../../../utils/BeerScaler/ScalingBeerRecipe";
-import {BeerActions} from "../../../actions/actions";
 import {COLOR_ACCENT, COLOR_BREW_BG} from "../../../colors";
 
 interface DetailsProps {
@@ -32,7 +30,7 @@ interface DetailsState {
     brewhouseEfficiency: number;
 }
 
-class Details extends React.Component<DetailsProps, DetailsState> {
+export class Details extends React.Component<DetailsProps, DetailsState> {
 
     constructor(props: DetailsProps) {
         super(props);
@@ -480,15 +478,3 @@ class Details extends React.Component<DetailsProps, DetailsState> {
         );
     }
 }
-
-const mapStateToProps = (state: any) => ({
-    selectedBeer: state.beerDataReducer.selectedBeer,
-});
-
-const mapDispatchToProps = (dispatch: any) => ({
-    updateRecipeScaling: (aScalingValues: scalingValues) =>
-        dispatch(BeerActions.updateRecipeScaling(aScalingValues)),
-});
-
-
-export default connect(mapStateToProps, mapDispatchToProps)(Details);

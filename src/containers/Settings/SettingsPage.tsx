@@ -1,8 +1,6 @@
 import React from 'react';
-import { connect } from 'react-redux';
 import './SettingsPage.css';
 import { ThemeName } from '../../utils/theme';
-import { ApplicationActions } from '../../actions/actions';
 import { PushService, getPermissionState, isPushSupported } from '../../utils/pushService';
 
 interface SettingsPageProps {
@@ -22,7 +20,7 @@ interface SettingsPageState {
     pushError: string | null;
 }
 
-class SettingsPage extends React.Component<SettingsPageProps, SettingsPageState> {
+export class SettingsPage extends React.Component<SettingsPageProps, SettingsPageState> {
     constructor(props: SettingsPageProps) {
         super(props);
 
@@ -317,13 +315,3 @@ class SettingsPage extends React.Component<SettingsPageProps, SettingsPageState>
         );
     }
 }
-
-const mapStateToProps = (state: any) => ({
-    theme: state.applicationReducer.theme as ThemeName,
-});
-
-const mapDispatchToProps = (dispatch: any) => ({
-    setTheme: (theme: ThemeName) => dispatch(ApplicationActions.setTheme(theme)),
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(SettingsPage);

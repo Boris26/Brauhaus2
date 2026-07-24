@@ -1,8 +1,8 @@
 import React from 'react';
-import Header from './MainView/Header/Header';
+import Header from './MainView/Header/Header.connect';
 import './App.css';
-import Index from "./index";
-import MobileProductionView from './Mobile/MobileStatusView/MobileProductionView';
+import Index from "./index.connect";
+import MobileProductionView from './Mobile/MobileStatusView/MobileProductionView.connect';
 
 const App: React.FC = () => {
     const isMobile = window.innerWidth < 768;

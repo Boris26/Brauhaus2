@@ -1,20 +1,18 @@
 import React from 'react';
-import {connect} from "react-redux";
 import {Views} from '../enums/eViews';
-import Main from "./MainView/Main";
-import Production from "./Production/Production";
-import DatabaseOverview from "./DatabaseOverview/BeerForm";
+import Main from "./MainView/Main.connect";
+import Production from "./Production/Production.connect";
+import DatabaseOverview from "./DatabaseOverview/BeerForm.connect";
 import SimpleBar from "simplebar-react";
 import ModalDialog, {DialogType} from "../components/ModalDialog/ModalDialog";
 import {BrewingStatus} from "../model/brewingStatus.types";
-import {ProductionActions} from "../actions/actions";
 import {ConfirmStates} from "../enums/eConfirmStates";
-import FinishedBrewsTable from "./MainView/FinishBrewsBeers/FinishedBrewsTable";
+import FinishedBrewsTable from "./MainView/FinishBrewsBeers/FinishedBrewsTable.connect";
 import BrewingCalculations from "./BrewingCalculations/BrewingCalculations";
-import IngredientsFormPage from "./DatabaseOverview/IngredientsFormPage";
-import SettingsPage from "./Settings/SettingsPage";
+import IngredientsFormPage from "./DatabaseOverview/IngredientsFormPage.connect";
+import SettingsPage from "./Settings/SettingsPage.connect";
 import VersionPage from "./Version/VersionPage";
-import DashboardPage from "./Dashboard/DashboardPage";
+import DashboardPage from "./Dashboard/DashboardPage.connect";
 import {getBrewingStatusLabel, getConfirmationType, shouldShowConfirmButton, shouldShowWaitingDialog} from "../utils/brewingStatus/selectors";
 
 interface indexMainProps {
@@ -103,28 +101,3 @@ export class Index extends React.Component<indexMainProps> {
         );
     }
 }
-
-const mapStateToProps = (state: any) => ({
-    viewState: state.applicationReducer.view as Views,
-    brewingStatus: state.productionReducer.brewingStatus,
-});
-
-const mapDispatchToProps = (dispatch: any) => ({
-    confirm: (confirmState: ConfirmStates) => {
-        dispatch(ProductionActions.confirm(confirmState))
-    },
-
-    checkIsBackenAvailable: () => {
-        dispatch(ProductionActions.checkIsBackenAvailable())
-    },
-
-    webSocketConnect: () => {
-        dispatch(ProductionActions.webSocketConnect());
-    }
-
-
-
-})
-
-
-export default connect(mapStateToProps, mapDispatchToProps)(Index);

@@ -1,9 +1,6 @@
 import React from 'react';
-import { connect } from 'react-redux';
 import { FinishedBrew } from '../../../model/FinishedBrew';
 import '../MobileStatusView/MobileProductionView.css';
-import { finishedBrewsTestData } from '../../../model/finishedBrewsTestData';
-import { BeerActions } from '../../../actions/actions';
 
 interface Props {
     finishedBrews?: FinishedBrew[];
@@ -17,7 +14,7 @@ interface State {
     editedBrew: FinishedBrew | undefined;
 }
 
-class MobileActiveFinishedBrewView extends React.Component<Props, State> {
+export class MobileActiveFinishedBrewView extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
         this.state = {
@@ -234,19 +231,3 @@ class MobileActiveFinishedBrewView extends React.Component<Props, State> {
         );
     }
 }
-
-const mapStateToProps = (state: any) => ({
-    finishedBrews: state.beerDataReducer?.finishedBrews?.filter((brew: FinishedBrew) => brew.active) || finishedBrewsTestData.filter((brew: FinishedBrew) => brew.active)
-});
-
-const mapDispatchToProps = (dispatch: any) => ({
-    getFinishedBrews: (isFetching: boolean) => {
-        dispatch(BeerActions.getFinishedBeers(isFetching));
-    },
-    saveFinishedBrew: (brew: FinishedBrew) => {
-        dispatch(BeerActions.updateActiveBeer(brew));
-    }
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(MobileActiveFinishedBrewView);
-

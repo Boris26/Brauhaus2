@@ -1,23 +1,16 @@
 import React from 'react';
-import { connect } from 'react-redux';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import LocalDrinkIcon from '@mui/icons-material/LocalDrink';
 import ScienceIcon from '@mui/icons-material/Science';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import { BeerActions } from '../../actions/actions';
 import { Beer } from '../../model/Beer';
 import { FinishedBrew } from '../../model/FinishedBrew';
 import { BrewingStatus, ProcessMode, ProcessState } from '../../model/brewingStatus.types';
-import { BeerDataReducerState, ProductionReducerState } from '../../reducers/rootReducer';
 import { getBrewingStatusLabel, isProcessActive } from '../../utils/brewingStatus/selectors';
 import { buildActiveBrewRows, calculateCareHints, calculateDashboardKpis, calculateIngredientSummary, calculateMonthlyStats, formatDashboardQuantity, safeNumber } from '../../utils/Dashboard/dashboardCalculations';
 import { DashboardIngredientUsage, DashboardYeastUsage } from '../../utils/Dashboard/dashboardTypes';
 import './DashboardPage.css';
 
-interface DashboardRootState {
-  beerDataReducer: BeerDataReducerState;
-  productionReducer: ProductionReducerState;
-}
 
 interface DashboardPageProps {
   beers?: Beer[];
@@ -224,19 +217,3 @@ export class DashboardPage extends React.Component<DashboardPageProps> {
     );
   }
 }
-
-const mapStateToProps = (state: DashboardRootState) => ({
-  beers: state.beerDataReducer.beers,
-  finishedBrews: state.beerDataReducer.finishedBrews,
-  isFetching: state.beerDataReducer.isFetching,
-  beerToBrew: state.beerDataReducer.beerToBrew,
-  brewingStatus: state.productionReducer.brewingStatus,
-  isBackendAvailable: state.productionReducer.isBackenAvailable,
-});
-
-const mapDispatchToProps = (dispatch: (action: BeerActions.AllBeerActions) => void) => ({
-  getBeers: (isFetching: boolean) => dispatch(BeerActions.getBeers(isFetching)),
-  getFinishedBrews: (isFetching: boolean) => dispatch(BeerActions.getFinishedBeers(isFetching)),
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(DashboardPage);

@@ -1,12 +1,10 @@
 import React from 'react';
-import { connect } from 'react-redux';
 import './MobileProductionView.css';
 import { BrewingStatus } from '../../../model/brewingStatus.types';
-import { ProductionActions } from '../../../actions/actions';
 import { TimeFormatter } from "../../../utils/TimeFormatter";
 import MobileBrewingCalculationsView from '../MobileBrewingCalculationsView/MobileBrewingCalculationsView';
 import {getBrewingStatusLabel, getStatusChangeKey, isStepWaiting} from '../../../utils/brewingStatus/selectors';
-import SettingsPage from '../../Settings/SettingsPage';
+import SettingsPage from '../../Settings/SettingsPage.connect';
 
 interface MobileProductionViewProps {
     temperature: number;
@@ -162,17 +160,4 @@ export class MobileProductionView extends React.Component<MobileProductionViewPr
     }
 }
 
-const MobileActiveFinishedBrewViewLazy = React.lazy(() => import('../MobileActiveFinishedBrewView/MobileActiveFinishedBrewView'));
-
-const mapStateToProps = (state: any) => ({
-    temperature: state.productionReducer.temperature,
-    brewingStatus: state.productionReducer.brewingStatus,
-    isPollingRunning: state.productionReducer.isPollingRunning
-});
-
-const mapDispatchToProps = (dispatch: any) => ({
-    startPolling: () => dispatch(ProductionActions.startPolling()),
-    stopPolling: () => dispatch(ProductionActions.stopPolling())
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(MobileProductionView);
+const MobileActiveFinishedBrewViewLazy = React.lazy(() => import('../MobileActiveFinishedBrewView/MobileActiveFinishedBrewView.connect'));

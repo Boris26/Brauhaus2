@@ -5,7 +5,7 @@ import {Views} from '../enums/eViews';
 import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../model/brewingStatus.types';
 import {ConfirmStates} from '../enums/eConfirmStates';
 
-jest.mock('./Dashboard/DashboardPage', () => () => <div><h1>Dashboard</h1></div>);
+jest.mock('./Dashboard/DashboardPage.connect', () => () => <div><h1>Dashboard</h1></div>);
 
 const makeStatus = (overrides: Partial<BrewingStatus> = {}): BrewingStatus => ({
     elapsedTime: 23,

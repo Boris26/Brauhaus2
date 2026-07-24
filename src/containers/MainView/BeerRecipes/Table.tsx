@@ -2,12 +2,9 @@ import React from 'react';
 import {Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel} from '@mui/material';
 import './Table.css';
 import {Beer} from "../../../model/Beer";
-import {connect} from "react-redux";
-import {BeerActions} from "../../../actions/actions";
 import {WaterHeatingTimeCalculator, cookingTimeOptions} from "../../../utils/WaterHeatingTimeCalculator";
 import {MashingType} from "../../../enums/eMashingType";
 import ModalDialog, {DialogType} from "../../../components/ModalDialog/ModalDialog";
-import setSelectedBeer = BeerActions.setSelectedBeer;
 
 export interface BeerTableProps {
     beers: Beer[];
@@ -260,20 +257,3 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
         return <div className="Table">No data</div>;
     }
 }
-
-
-const mapStateToProps = (state: any) => ({
-    beerToBrew: state.beerDataReducer.beerToBrew,
-    isPollingRunning: state.productionReducer.isPollingRunning,
-    beers: state.beerDataReducer.beers ?? [],
-    selectedBeer: state.beerDataReducer.selectedBeer
-});
-
-const mapDispatchToProps = (dispatch: any) => ({
-    setSelectedBeer: (beer: Beer) => dispatch(setSelectedBeer(beer)),
-    setBeerToBrew: (beer: Beer | undefined ) => dispatch(BeerActions.setBeerToBrew(beer)),
-    exportShoppingListPdf: (beer: Beer) => dispatch(BeerActions.generateShoppingListPdf(beer)),
-    deleteBeer: (aBeerId: string) => dispatch(BeerActions.deleteBeer(aBeerId)),
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(BeerTableComponent);
