@@ -12,7 +12,7 @@
         minmax(360px, 1.05fr)
         minmax(440px, 1.25fr)
         minmax(500px, 1.45fr);
-    grid-template-rows: minmax(0, 1fr) clamp(6rem, 9.5vh, 6.875rem);
+    grid-template-rows: minmax(0, 1fr) clamp(13rem, 24vh, 16rem);
     grid-template-areas:
         "left list meters settings"
         "info info info info";

@@ -1,0 +1,66 @@
+.temperatureTimeline {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    color: var(--color-light-text);
+}
+
+.temperatureTimeline__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.temperatureTimeline__header h3 {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.1;
+}
+
+.temperatureTimeline__header p {
+    margin: 0.2rem 0 0;
+    font-size: 0.78rem;
+    opacity: 0.78;
+}
+
+.temperatureTimeline__progress {
+    min-width: 10rem;
+    text-align: right;
+    font-weight: bold;
+}
+
+.temperatureTimeline__progressTrack {
+    height: 0.5rem;
+    margin-top: 0.25rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+}
+
+.temperatureTimeline__progressBar {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--color-accent);
+    transition: width 0.2s ease;
+}
+
+.temperatureTimeline__chart {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.temperatureTimeline__empty {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    color: var(--color-light-text);
+    opacity: 0.75;
+    text-align: center;
+}

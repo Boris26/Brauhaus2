@@ -36,6 +36,7 @@ import {isAgitatorActive, isControllerAvailable as getIsControllerAvailable, isH
 import {RecipeWaterFill, RecipeWaterFillStatus} from "./waterFill/recipeWaterFill.types";
 import {completeWaterFill, createInitialRecipeWaterFillStatus, failWaterFill, markValveOpened, resetWaterFill, startWaterFill} from "./waterFill/recipeWaterFillState";
 import {ProductionDialogs} from "./components/ProductionDialogs";
+import {ProductionTemperatureTimeline} from "./TemperatureTimeline/ProductionTemperatureTimeline";
 import {getDisplayedWaterLiters as selectDisplayedWaterLiters, getWaterLabel, getWaterTargetLiters, isRecipeWaterButtonDisabled as selectRecipeWaterButtonDisabled, isWaterFillingActive as selectWaterFillingActive, shouldIncludeSpargeAfterMashingOut as selectShouldIncludeSpargeAfterMashingOut, sanitizeLiters} from "./waterFill/recipeWaterFillSelectors";
 
 export interface ProductionProps {
@@ -534,7 +535,16 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     renderInfo() {
-        return <div className="Info Info--empty" aria-label="Freier Produktionsbereich" />;
+        return (
+            <div className="Info" aria-label="Temperatur-Timeline Produktionsbereich">
+                <ProductionTemperatureTimeline
+                    selectedBeer={this.props.selectedBeer}
+                    brewingStatus={this.props.brewingStatus}
+                    measurements={dataCollector.getTimelineMeasurements()}
+                    fallbackTemperature={this.props.temperature}
+                />
+            </div>
+        );
     }
 
     renderTemperature() {

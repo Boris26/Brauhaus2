@@ -1,7 +1,7 @@
 import { BrewingStatus } from '../../model/brewingStatus.types';
 import { getStatusChangeKey } from '../brewingStatus/selectors';
 
-interface BrewingStatusMeasurement {
+export interface TimelineMeasurement {
   elapsedTime: number;
   currentTime: number;
   Temperature: number;
@@ -9,7 +9,7 @@ interface BrewingStatusMeasurement {
 }
 
 type BrewingStatusGrouped = {
-  [statusKey: string]: BrewingStatusMeasurement[];
+  [statusKey: string]: TimelineMeasurement[];
 };
 
 export const MAX_MEASUREMENTS_PER_STATUS_GROUP = 1000;
@@ -21,7 +21,7 @@ class DataCollector {
 
   setBrewingStatus(aStatus: BrewingStatus): void {
     const aStatusKey = getStatusChangeKey(aStatus);
-    const aCurrentMeasurement: BrewingStatusMeasurement = {
+    const aCurrentMeasurement: TimelineMeasurement = {
       elapsedTime: aStatus.elapsedTime,
       currentTime: aStatus.currentTime,
       // Compatibility output for existing charts and exports.
@@ -34,7 +34,7 @@ class DataCollector {
     }
 
     const aLastStored = this.groupedData[aStatusKey].at(-1);
-    if (!aLastStored || aLastStored.Temperature !== aCurrentMeasurement.Temperature) {
+    if (!aLastStored || aLastStored.Temperature !== aCurrentMeasurement.Temperature || aLastStored.TargetTemperature !== aCurrentMeasurement.TargetTemperature || aLastStored.elapsedTime !== aCurrentMeasurement.elapsedTime) {
       this.groupedData[aStatusKey].push(aCurrentMeasurement);
       this.trimStatusGroup(aStatusKey);
     }
@@ -58,6 +58,10 @@ class DataCollector {
     if (aStatusGroup.length > MAX_MEASUREMENTS_PER_STATUS_GROUP) {
       aStatusGroup.splice(0, aStatusGroup.length - MAX_MEASUREMENTS_PER_STATUS_GROUP);
     }
+  }
+
+  getTimelineMeasurements(): TimelineMeasurement[] {
+    return Object.values(this.groupedData).flat().map((measurement) => ({ ...measurement }));
   }
 
   getAllDataAsBlob(): Blob {
