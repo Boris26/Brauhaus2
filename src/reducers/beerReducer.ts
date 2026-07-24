@@ -1,6 +1,6 @@
 import { BeerActions } from '../actions/actions';
 import AllBeerActions = BeerActions.AllBeerActions;
-import {Beer, Yeast} from "../model/Beer";
+import {Beer} from "../model/Beer";
 import {BeerDTO} from "../model/BeerDTO";
 import {FinishedBrew} from "../model/FinishedBrew";
 import {BeerRecipeScaler} from "../utils/BeerScaler/ScalingBeerRecipe";

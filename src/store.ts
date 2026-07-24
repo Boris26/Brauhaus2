@@ -1,4 +1,4 @@
-import { configureStore, Middleware, Dispatch } from '@reduxjs/toolkit';
+import { configureStore } from '@reduxjs/toolkit';
 import thunk, { ThunkMiddleware } from 'redux-thunk';
 import { createEpicMiddleware, combineEpics } from 'redux-observable';
 import { rootReducer } from './reducers/rootReducer';

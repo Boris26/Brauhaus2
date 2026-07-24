@@ -1,7 +1,6 @@
 import {Malts} from "../model/Malt";
 import {MaltsActions} from "../actions/malt.actions";
 import AllMaltsActions = MaltsActions.AllMaltsActions;
-import {BeerActions} from "../actions/actions";
 
 export interface MaltsReducerState {
     malts: Malts[] | undefined

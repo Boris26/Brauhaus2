@@ -112,7 +112,7 @@ export class ProductionRepository {
     private static async _doConfirm(aConfirmState: ConfirmStates) {
         try {
             const response = await axios.post(ConfirmURL + aConfirmState);
-            if (response.status == 200) {
+            if (response.status === 200) {
                 console.log(response.data);
             } else {
                 console.log(response.data);
@@ -126,7 +126,7 @@ export class ProductionRepository {
     private static async _doGetTemperature(): Promise<number> {
         try {
             const response = await axios.get(`${BaseURL}/temperatur/0`);
-            if (response.status == 200) {
+            if (response.status === 200) {
                 return response.data;
             } else {
                 return 0;
@@ -142,7 +142,7 @@ export class ProductionRepository {
         const aConfig = createRequestConfig(aTimeoutMs);
         try {
             const response = await axios.get(`${BaseURL}/WaterStatus`, aConfig.config);
-            if (response.status == 200) {
+            if (response.status === 200) {
                 return normalizeWaterStatus(response.data);
 
             } else {
@@ -161,8 +161,8 @@ export class ProductionRepository {
 
     private static async _doStartBrewing() {
         try {
-            const response = await axios.post(CommandsURL + 'StartBrewing:\"\"');
-            return response.status == 200;
+            const response = await axios.post(CommandsURL + `StartBrewing:""`);
+            return response.status === 200;
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);
         }
@@ -172,7 +172,7 @@ export class ProductionRepository {
         const aConfig = createRequestConfig(aTimeoutMs);
         try {
             const response = await axios.get(`${BaseURL}/Status/`, aConfig.config);
-            if (response.status == 200) {
+            if (response.status === 200) {
                 const available: BackendAvailable = {
                     isBackenAvailable: true, statusText: response.statusText
                 };
@@ -210,7 +210,7 @@ export class ProductionRepository {
         try {
             const response = await axios.post(`${BaseURL}/Recipe/`, aBrewingData);
 
-            return response.status == 201;
+            return response.status === 201;
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);
             return false;
@@ -221,7 +221,7 @@ export class ProductionRepository {
     private static async _doFillWaterAutomatic(aLiters: number): Promise<boolean> {
         try {
             const response = await axios.post(CommandsURL + 'FillWaterAutomatic:' + aLiters.toString());
-            return response.status == 200;
+            return response.status === 200;
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);
             return false;
@@ -236,7 +236,7 @@ export class ProductionRepository {
             } else {
                 response = await axios.post(CommandsURL + 'TurnOff');
             }
-            if (response.status == 200) {
+            if (response.status === 200) {
                 store.dispatch(ProductionActions.toggleAgitatorSuccess(false));
             } else {
                 store.dispatch(ProductionActions.toggleAgitatorSuccess(false));
@@ -250,7 +250,7 @@ export class ProductionRepository {
     private static async _doSetAgitatorSpeed(speed: number): Promise<boolean> {
         try {
             const response = await axios.post(CommandsURL + 'Speed:' + speed.toString());
-            return response.status == 200;
+            return response.status === 200;
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);
             return false;
@@ -261,7 +261,7 @@ export class ProductionRepository {
         try {
             let response: AxiosResponse<any, any>;
 
-            response = await axios.post(CommandsURL + 'AgitatorInterval:\"\"', aMashAgitatorStates);
+            response = await axios.post(CommandsURL + `AgitatorInterval:""`, aMashAgitatorStates);
             return response.status === 200;
 
         } catch (error) {

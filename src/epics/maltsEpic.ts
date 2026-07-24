@@ -1,7 +1,7 @@
 import {ofType} from "redux-observable";
-import {ApplicationActions, BeerActions} from "../actions/actions";
+import {ApplicationActions} from "../actions/actions";
 import {catchError, map, mergeMap} from "rxjs/operators";
-import {from, of} from "rxjs";
+import {from} from "rxjs";
 import {MaltsActions} from "../actions/malt.actions";
 import {Malts} from "../model/Malt";
 import {MaltRepository} from "../repositorys/MaltRepository";

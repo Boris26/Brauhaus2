@@ -1,12 +1,10 @@
 import {connect} from "react-redux";
-import {Beer, Hop, Malt, Yeast} from "../../model/Beer";
 import {BeerDTO} from "../../model/BeerDTO";
 import {BeerActions} from "../../actions/actions";
 import {MaltsActions} from "../../actions/malt.actions";
 import {HopsActions} from "../../actions/hops.actions";
 import {YeastActions} from "../../actions/yeast.actions";
 import {AdditionalIngredientsActions} from "../../actions/additionalIngredients.actions";
-import {AdditionalIngredient} from "../../model/AdditionalIngredient";
 import {BeerForm} from './BeerForm';
 
 const mapStateToProps = (state: any) => ({

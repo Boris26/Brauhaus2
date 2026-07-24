@@ -1,5 +1,4 @@
 import { ProductionActions } from '../actions/actions';
-import { ProductionRepository } from '../repositorys/ProductionRepository';
 import AllProductionActions = ProductionActions.AllProductionActions;
 import { ToggleState } from '../enums/eToggleState';
 import { BrewingStatus } from '../model/BrewingStatus';

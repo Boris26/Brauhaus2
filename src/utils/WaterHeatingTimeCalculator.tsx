@@ -25,24 +25,22 @@ export class WaterHeatingTimeCalculator {
             case MashingType.RAST: {
                 const kJMalt = this.calculateWithMalt()
                 const kJWater = this.calculateOnlyWithWater()
-                const time = (((kJWater +kJMalt) * (this.options.targetTemperature - this.options.currentTemperature)) / DEFAULT_W)*60;
-                break;
+                return (((kJWater +kJMalt) * (this.options.targetTemperature - this.options.currentTemperature)) / DEFAULT_W)*60;
             }
             case MashingType.IN: {
                 const kJWater = this.calculateOnlyWithWater()
-                const time = ((kJWater * (this.options.targetTemperature - this.options.currentTemperature)) / DEFAULT_W)*60;
-                break;
+                return ((kJWater * (this.options.targetTemperature - this.options.currentTemperature)) / DEFAULT_W)*60;
             }
             case MashingType.DOWN: {
                 const kJMalt = this.calculateWithMalt()
                 const kJWater = this.calculateOnlyWithWater()
-                const time = (((kJWater +kJMalt) * (this.options.targetTemperature - this.options.currentTemperature)) / DEFAULT_W)*60;
-                break;
+                return (((kJWater +kJMalt) * (this.options.targetTemperature - this.options.currentTemperature)) / DEFAULT_W)*60;
             }
             default: {
             }
 
         }
+        return 0;
     }
 
 

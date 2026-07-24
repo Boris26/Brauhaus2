@@ -1,7 +1,6 @@
 import {Yeast} from "../model/Beer";
 import {YeastActions} from "../actions/yeast.actions";
 import AllYeastActions = YeastActions.AllYeastActions;
-import {MaltsActions} from "../actions/malt.actions";
 
 export interface YeastReducerState {
     yeasts: Yeast[] | undefined

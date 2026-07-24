@@ -225,7 +225,7 @@
 .dashboard-history-chart {
   min-height: 14rem;
   display: flex;
-  align-items: end;
+  align-items: flex-end;
   gap: var(--spacing-sm);
   padding-top: var(--spacing-md);
 }
@@ -241,7 +241,7 @@
 
 .dashboard-history-track {
   display: flex;
-  align-items: end;
+  align-items: flex-end;
   min-height: 10rem;
 }
 

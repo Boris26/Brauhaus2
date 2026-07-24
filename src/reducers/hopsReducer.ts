@@ -1,9 +1,6 @@
-import {Malts} from "../model/Malt";
-import {MaltsActions} from "../actions/malt.actions";
 import {Hops} from "../model/Hops";
 import {HopsActions} from "../actions/hops.actions";
 import AllHopsActions = HopsActions.AllHopsActions;
-import {BeerActions} from "../actions/actions";
 
 export interface HopsReducerState {
     hops: Hops[] | undefined
