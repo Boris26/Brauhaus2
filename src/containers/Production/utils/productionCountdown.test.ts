@@ -1,11 +1,11 @@
-import {BrewingStatus, ProcessMode, ProcessState, WaitingFor} from '../../../model/brewingStatus.types';
+import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../../model/brewingStatus.types';
 import {getRemainingSecondsFromStatus, shouldCountdownLocally, tickRemainingSeconds} from './productionCountdown';
 
 const status = (mode: ProcessMode, remainingTime: number): BrewingStatus => ({
     elapsedTime: 0,
     currentTime: 0,
     process: {state: ProcessState.ACTIVE},
-    currentStep: {mode, duration: 10, elapsedTime: 10 - remainingTime, remainingTime},
+    currentStep: {phase: ProcessPhase.RAST, mode, duration: 10, elapsedTime: 10 - remainingTime, remainingTime},
     temperature: {},
     hardware: {},
     waiting: {waitingFor: WaitingFor.NONE, canConfirm: false},
