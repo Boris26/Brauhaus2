@@ -1,6 +1,28 @@
 // Automatisch generierte Farbcodes – Werte werden ausschließlich in colors.css gepflegt
 // und hier als CSS-Variablen referenziert, damit die Farbdefinition nur einmal existiert.
 
+export const COLOR_APP_BG = 'var(--color-app-bg)';
+export const COLOR_NAV_BG = 'var(--color-nav-bg)';
+export const COLOR_PANEL_RAISED = 'var(--color-panel-raised)';
+export const COLOR_PANEL_HIGHLIGHT = 'var(--color-panel-highlight)';
+export const COLOR_TABLE_HEADER_BG = 'var(--color-table-header-bg)';
+export const COLOR_TABLE_ROW = 'var(--color-table-row)';
+export const COLOR_TABLE_ROW_ALT = 'var(--color-table-row-alt)';
+export const COLOR_TEXT_MUTED = 'var(--color-text-muted)';
+export const COLOR_ACCENT_HOVER = 'var(--color-accent-hover)';
+export const COLOR_ACCENT_ACTIVE = 'var(--color-accent-active)';
+export const COLOR_ACCENT_BORDER = 'var(--color-accent-border)';
+export const COLOR_ACCENT_SUBTLE = 'var(--color-accent-subtle)';
+export const COLOR_ACCENT_SUBTLE_HOVER = 'var(--color-accent-subtle-hover)';
+export const COLOR_SUCCESS_SUBTLE = 'var(--color-success-subtle)';
+export const COLOR_ERROR = 'var(--color-error)';
+export const COLOR_ERROR_SUBTLE = 'var(--color-error-subtle)';
+export const COLOR_WARNING = 'var(--color-warning)';
+export const COLOR_WARNING_SUBTLE = 'var(--color-warning-subtle)';
+export const COLOR_INFO = 'var(--color-info)';
+export const COLOR_DISABLED_BG = 'var(--color-disabled-bg)';
+export const COLOR_DISABLED_BORDER = 'var(--color-disabled-border)';
+export const COLOR_DISABLED_TEXT = 'var(--color-disabled-text)';
 export const COLOR_DARK_BG = 'var(--color-dark-bg)';
 export const COLOR_PANEL_BG = 'var(--color-panel-bg)';
 export const COLOR_WHITE = 'var(--color-white)';
