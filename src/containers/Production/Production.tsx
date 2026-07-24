@@ -1,12 +1,13 @@
 import React from 'react';
-import _, {isUndefined} from 'lodash';
+import {isUndefined} from 'lodash';
 import {Beer} from "../../model/Beer";
 import {connect} from "react-redux";
+import {Dispatch} from "redux";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {v4 as uuidv4} from 'uuid';
 import '@fortawesome/fontawesome-free/css/all.css'; // Stile
 import './Production.css'
-import Timeline, {TimelineData} from "./Timeline/Timeline";
+
 import WaterControl, {WaterStatus} from "../../components/Controlls/WaterControll/WaterControl";
 import Flame from "../../components/Flame/Flame";
 import {BeerActions, ProductionActions} from "../../actions/actions";
@@ -16,12 +17,11 @@ import {MashAgitatorStates} from "../../model/MashAgitator";
 import QuantityPicker from '../../components/Controlls/QuantityPicker/QuantityPicker';
 import {BrewingData} from "../../model/BrewingData";
 import {mapBeerToBrewingData} from "../../utils/productionRecipe";
-import {HeatingStates} from "../../model/BrewingStatus";
-import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from "../../model/brewingStatus.types";
+
+import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState} from "../../model/brewingStatus.types";
 import {TimeFormatter} from "../../utils/TimeFormatter";
-import ModalDialog, {DialogType} from "../../components/ModalDialog/ModalDialog";
-import {ProgressBar} from "react-bootstrap";
-import {MashingType} from "../../enums/eMashingType";
+
+
 import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faRepeat} from '@fortawesome/free-solid-svg-icons';
 import Switch from "react-switch";
@@ -29,10 +29,18 @@ import {IconProp} from "@fortawesome/fontawesome-svg-core";
 import {FinishedBrew} from "../../model/FinishedBrew";
 import {eBrewState} from "../../enums/eBrewState";
 import {BackendAvailable} from "../../reducers/productionReducer";
-import {ProcessList, createProcessSteps} from "./ProcessList/ProcessList";
+import {RootState} from "../../reducers/rootReducer";
+import {ProcessList} from "./ProcessList/ProcessList";
 import { dataCollector } from '../../utils/DataCollector/dataCollector';
-import {getBrewingStatusLabel, isBrewingProcessActive, isProcessActive} from "../../utils/brewingStatus/selectors";
+import {isBrewingProcessActive, isProcessActive} from "../../utils/brewingStatus/selectors";
 import {getVesselContentType} from "../../utils/brewingStatus/vesselContent";
+import {calculateHopSchedule, getDueHopAddition, HopAddition} from "./utils/hopSchedule";
+import {getRemainingSecondsFromStatus, shouldCountdownLocally, tickRemainingSeconds} from "./utils/productionCountdown";
+import {isAgitatorActive, isControllerAvailable as getIsControllerAvailable, isHeaterActive} from "./utils/productionStatus";
+import {RecipeWaterFill, RecipeWaterFillStatus} from "./waterFill/recipeWaterFill.types";
+import {completeWaterFill, createInitialRecipeWaterFillStatus, failWaterFill, markValveOpened, resetWaterFill, startWaterFill} from "./waterFill/recipeWaterFillState";
+import {ProductionDialogs} from "./components/ProductionDialogs";
+import {getDisplayedWaterLiters as selectDisplayedWaterLiters, getWaterLabel, getWaterTargetLiters, isRecipeWaterButtonDisabled as selectRecipeWaterButtonDisabled, isWaterFillingActive as selectWaterFillingActive, shouldIncludeSpargeAfterMashingOut as selectShouldIncludeSpargeAfterMashingOut, sanitizeLiters} from "./waterFill/recipeWaterFillSelectors";
 
 export interface ProductionProps {
     selectedBeer: Beer;
@@ -58,11 +66,6 @@ export interface ProductionProps {
     isPollingRunning: boolean;
 }
 
-type RecipeWaterFill = 'mash' | 'sparge';
-type WaterFillType = 'SPARGE' | 'MASH';
-type WaterFillState = 'IDLE' | 'FILLING' | 'COMPLETED' | 'ERROR';
-type RecipeWaterFillResetState = Pick<ProductionState, 'activeFillType' | 'spargeState' | 'mashState' | 'completedSpargeLiters' | 'completedMashLiters' | 'currentFillLiters' | 'activeFillWasOpened' | 'isSpargeIncluded'>;
-
 interface ProductionState {
     agitatorState: ToggleState;
     agitatorSpeed: number;
@@ -77,7 +80,7 @@ interface ProductionState {
     mainAgitatorError: boolean
     isWaterSwitchBlinking: boolean
     isMainSwitchBlinking: boolean
-    hopsTimes: Record<number, string>
+    hopSchedule: HopAddition[]
     hopName: string
     showHopsDialog: boolean
     showErrorDialog: boolean
@@ -87,29 +90,19 @@ interface ProductionState {
     indexOfCurrentStep: number;
     brewingIsRunning: boolean;
     announcedHopTimes: number[];
-    activeFillType: WaterFillType | undefined;
-    spargeState: WaterFillState;
-    mashState: WaterFillState;
-    completedSpargeLiters: number;
-    completedMashLiters: number;
-    currentFillLiters: number;
-    activeFillWasOpened: boolean;
-    isSpargeIncluded: boolean;
+    recipeWaterFill: RecipeWaterFillStatus;
     displayedRemainingSeconds: number | undefined;
 }
 
 export class Production extends React.Component<ProductionProps, ProductionState> {
-    private blinkIntervalMainSwitch: NodeJS.Timeout | null = null;
-    private blinkIntervalWaterSwitch: NodeJS.Timeout | null = null;
-    private timelineData: TimelineData[] = [];
     private isBrewingStartRequestPending = false;
     private readonly MAX_AGITATOR_SPEED = 40;
     private readonly MAX_WATER_LEVEL = 70;
-    private readonly MAX_INTERVAL_TIME = 10;
-    private readonly MIN_INTERVAL_TIME = 10;
     private readonly MAX_BREAK_TIME = 10;
     private readonly MAX_RUNNING_TIME = 10;
     private remainingTimeInterval: NodeJS.Timeout | null = null;
+    private errorTimeouts: NodeJS.Timeout[] = [];
+    private isMountedComponent = false;
 
     constructor(props: ProductionProps) {
         super(props);
@@ -127,7 +120,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
             mainAgitatorError: false,
             isWaterSwitchBlinking: false,
             isMainSwitchBlinking: false,
-            hopsTimes: {},
+            hopSchedule: [],
             hopName: '',
             showHopsDialog: false,
             showErrorDialog: false,
@@ -137,19 +130,13 @@ export class Production extends React.Component<ProductionProps, ProductionState
             indexOfCurrentStep: 0,
             brewingIsRunning: false,
             announcedHopTimes: [],
-            activeFillType: undefined,
-            spargeState: 'IDLE',
-            mashState: 'IDLE',
-            completedSpargeLiters: 0,
-            completedMashLiters: 0,
-            currentFillLiters: 0,
-            activeFillWasOpened: false,
-            isSpargeIncluded: false,
+            recipeWaterFill: createInitialRecipeWaterFillStatus(),
             displayedRemainingSeconds: undefined
         }
     }
 
     componentDidMount() {
+        this.isMountedComponent = true;
         const {getTemperatures, selectedBeer} = this.props;
         if (!isUndefined(selectedBeer)) {
             this.calculateTheHopTimes();
@@ -160,10 +147,13 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     componentWillUnmount() {
+        this.isMountedComponent = false;
         if (this.remainingTimeInterval !== null) {
             clearInterval(this.remainingTimeInterval);
             this.remainingTimeInterval = null;
         }
+        this.errorTimeouts.forEach(clearTimeout);
+        this.errorTimeouts = [];
     }
 
 
@@ -191,55 +181,43 @@ export class Production extends React.Component<ProductionProps, ProductionState
             this.setState({brewingIsRunning: false});
         }
 
-        if (this.state.activeFillType !== undefined && waterStatus?.openClose === true && !prevProps.waterStatus?.openClose) {
-            this.setState({activeFillWasOpened: true});
+        if (this.state.recipeWaterFill.activeFillType !== undefined && waterStatus?.openClose === true && !prevProps.waterStatus?.openClose) {
+            this.setState((prevState) => ({recipeWaterFill: markValveOpened(prevState.recipeWaterFill)}));
         }
 
         if (prevProps.waterStatus?.openClose === true && waterStatus?.openClose === false) {
             this.completePendingRecipeWaterFill(prevProps.waterStatus?.filledLiters);
         }
 
-        if (!this.state.isSpargeIncluded && this.shouldIncludeSpargeAfterMashingOut(prevProps.brewingStatus, brewingStatus)) {
-            this.setState({isSpargeIncluded: true});
+        if (!this.state.recipeWaterFill.isSpargeIncluded && this.shouldIncludeSpargeAfterMashingOut(prevProps.brewingStatus, brewingStatus)) {
+            this.setState((prevState) => ({recipeWaterFill: {...prevState.recipeWaterFill, isSpargeIncluded: true}}));
         }
 
 
         if (!isToggleAgitatorSuccess && mainSwitchState) {
-            const delay = 300;
-            setTimeout(() => {
-                this.setState({mainSwitchState: false, mainAgitatorError: true});
-            }, delay);
+            const timeoutId = setTimeout(() => {
+                if (this.isMountedComponent) {
+                    this.setState({mainSwitchState: false, mainAgitatorError: true});
+                }
+            }, 300);
+            this.errorTimeouts.push(timeoutId);
         }
 
-        if (prevState.intervalSwitchState == !intervalSwitchState && mainSwitchState) {
+        if (prevState.intervalSwitchState !== intervalSwitchState && mainSwitchState) {
             toggleAgitator(this.setAgitatorStates(mainSwitchState));
         }
 
-        if (prevState.heatingAndStirringSwitchState == !heatingAndStirringSwitchState && mainSwitchState) {
+        if (prevState.heatingAndStirringSwitchState !== heatingAndStirringSwitchState && mainSwitchState) {
             toggleAgitator(this.setAgitatorStates(mainSwitchState));
         }
 
         if (!isWaterFillingSuccessful && waterSwitchState) {
-            const delay = 300;
-            setTimeout(() => {
-                this.failActiveRecipeWaterFill();
-            }, delay);
-        }
-        if (brewingStatus && brewingStatus.currentStep?.mode !== prevProps?.brewingStatus?.currentStep?.mode) {
-            let timelineData: TimelineData | undefined;
-            if (brewingStatus.currentStep.mode === ProcessMode.HEATING) {
-                timelineData = {
-                    type: 'heating', elapsed: brewingStatus.elapsedTime
+            const timeoutId = setTimeout(() => {
+                if (this.isMountedComponent) {
+                    this.failActiveRecipeWaterFill();
                 }
-            } else {
-                timelineData = {
-                    type: 'rast', elapsed: brewingStatus.elapsedTime
-                }
-            }
-            if (timelineData !== undefined) {
-                this.timelineData.push(timelineData);
-            }
-
+            }, 300);
+            this.errorTimeouts.push(timeoutId);
         }
         if (typeof brewingStatus?.currentStep?.index === "number" && brewingStatus.currentStep.index !== prevProps?.brewingStatus?.currentStep?.index) {
             this.setState({indexOfCurrentStep: brewingStatus.currentStep.index});
@@ -249,7 +227,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
         if (brewingStatus?.currentStep?.phase === ProcessPhase.COOKING && !showHopsDialog) {
             this.checkForHopAddition()
         }
-        if(brewingStatus?.process?.state === ProcessState.FINISHED && ! showFinishDialog ! && !this.state.brewingFinished)
+        if (brewingStatus?.process?.state === ProcessState.FINISHED && !showFinishDialog && !this.state.brewingFinished)
         {
             this.setState({showFinishDialog: true})
         }
@@ -273,69 +251,33 @@ export class Production extends React.Component<ProductionProps, ProductionState
             if (typeof prevState.displayedRemainingSeconds !== 'number') {
                 return null;
             }
-            return {displayedRemainingSeconds: Math.max(0, prevState.displayedRemainingSeconds - 1)};
+            return {displayedRemainingSeconds: tickRemainingSeconds(prevState.displayedRemainingSeconds)};
         });
     }
 
     shouldCountdownLocally = (aBrewingStatus?: BrewingStatus): boolean => {
-        return aBrewingStatus?.process?.state === ProcessState.ACTIVE
-            && aBrewingStatus.currentStep?.mode === ProcessMode.TIMER_RUNNING
-            && typeof aBrewingStatus.currentStep?.duration === 'number'
-            && aBrewingStatus.currentStep.duration > 0;
+        return shouldCountdownLocally(aBrewingStatus);
     }
 
     getRemainingSecondsFromStatus = (): number | undefined => {
-        const {brewingStatus} = this.props;
-        if (brewingStatus?.process?.state === ProcessState.FINISHED) {
-            return 0;
-        }
-        if (!this.shouldCountdownLocally(brewingStatus)) {
-            return undefined;
-        }
-        const statusRemainingTime = Number(brewingStatus?.currentStep?.remainingTime);
-        if (Number.isFinite(statusRemainingTime) && statusRemainingTime >= 0) {
-            return Math.max(0, Math.floor(statusRemainingTime));
-        }
-        const duration = Number(brewingStatus?.currentStep?.duration);
-        const elapsed = Number(brewingStatus?.currentStep?.elapsedTime);
-        if (Number.isFinite(duration) && Number.isFinite(elapsed)) {
-            return Math.max(0, Math.floor(duration - elapsed));
-        }
-        return undefined;
+        return getRemainingSecondsFromStatus(this.props.brewingStatus);
     }
     checkForHopAddition() {
-        const {hopsTimes, announcedHopTimes} = this.state;
-        const {brewingStatus} = this.props;
-
-        // Hop additions must be calculated relative to the cooking phase,
-        // nicht relativ zur gesamten Sudlaufzeit.
-        const aCookingElapsed = Math.floor(brewingStatus?.currentStep?.elapsedTime ?? 0);
-        if (!hopsTimes.hasOwnProperty(aCookingElapsed)) {
+        const {hopSchedule, announcedHopTimes} = this.state;
+        const aCookingElapsed = Math.floor(this.props.brewingStatus?.currentStep?.elapsedTime ?? 0);
+        const dueAddition = getDueHopAddition(hopSchedule, aCookingElapsed, announcedHopTimes);
+        if (dueAddition === undefined) {
             return;
         }
-        if (announcedHopTimes.includes(aCookingElapsed)) {
-            return;
-        }
-
-        const aHopName = hopsTimes[aCookingElapsed];
         this.setState((aPrevState) => ({
             showHopsDialog: true,
-            hopName: aHopName,
-            announcedHopTimes: [...aPrevState.announcedHopTimes, aCookingElapsed]
+            hopName: dueAddition.names.join(', '),
+            announcedHopTimes: [...aPrevState.announcedHopTimes, dueAddition.timeSeconds]
         }));
     }
 
     calculateTheHopTimes() {
-        let hopsDict: Record<number, string> = {};
-        const {selectedBeer} = this.props
-        const totalCookingTime = selectedBeer.cookingTime
-        selectedBeer.wortBoiling.hops.forEach((item) => {
-            const time = totalCookingTime - item.time;
-            const secTime = time * 60;
-            hopsDict[secTime] = item.name;
-
-        })
-        this.setState({hopsTimes: hopsDict, announcedHopTimes: []});
+        this.setState({hopSchedule: calculateHopSchedule(this.props.selectedBeer), announcedHopTimes: []});
     }
 
     setAgitatorStates(mainSwitchState: boolean) {
@@ -400,53 +342,31 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     resetRecipeWaterFillState = (aAdditionalState?: Pick<ProductionState, 'indexOfCurrentStep'>): void => {
-        const resetState: RecipeWaterFillResetState = {
-            activeFillType: undefined,
-            spargeState: 'IDLE',
-            mashState: 'IDLE',
-            completedSpargeLiters: 0,
-            completedMashLiters: 0,
-            currentFillLiters: 0,
-            activeFillWasOpened: false,
-            isSpargeIncluded: false
-        };
+        const resetState = {recipeWaterFill: resetWaterFill()};
         this.setState(aAdditionalState === undefined ? resetState : {...resetState, ...aAdditionalState});
     }
 
     completePendingRecipeWaterFill = (aPreviousFilledLiters?: number): void => {
-        const {activeFillType, activeFillWasOpened} = this.state;
-        if ((!activeFillWasOpened && aPreviousFilledLiters === undefined) || activeFillType === undefined) {
-            this.setState({waterSwitchState: false, activeFillWasOpened: false});
+        const {recipeWaterFill} = this.state;
+        if ((!recipeWaterFill.activeFillWasOpened && aPreviousFilledLiters === undefined) || recipeWaterFill.activeFillType === undefined) {
+            this.setState((prevState) => ({waterSwitchState: false, recipeWaterFill: {...prevState.recipeWaterFill, activeFillWasOpened: false}}));
             return;
         }
         const currentFilledLiters = this.getSafeWaterStatusFilledLiters();
         const previousFilledLiters = Number(aPreviousFilledLiters);
-        const completedLiters = currentFilledLiters > 0 || !Number.isFinite(previousFilledLiters)
-            ? currentFilledLiters
-            : previousFilledLiters;
-        this.setState({
+        const completedLiters = currentFilledLiters > 0 || !Number.isFinite(previousFilledLiters) ? currentFilledLiters : previousFilledLiters;
+        this.setState((prevState) => ({
             waterSwitchState: false,
-            activeFillWasOpened: false,
-            activeFillType: undefined,
-            currentFillLiters: completedLiters,
-            completedMashLiters: activeFillType === 'MASH' ? completedLiters : this.state.completedMashLiters,
-            completedSpargeLiters: activeFillType === 'SPARGE' ? completedLiters : this.state.completedSpargeLiters,
-            mashState: activeFillType === 'MASH' ? 'COMPLETED' : this.state.mashState,
-            spargeState: activeFillType === 'SPARGE' ? 'COMPLETED' : this.state.spargeState
-        });
+            recipeWaterFill: completeWaterFill(prevState.recipeWaterFill, completedLiters)
+        }));
     }
 
     failActiveRecipeWaterFill = (): void => {
-        const {activeFillType} = this.state;
-        this.setState({
+        this.setState((prevState) => ({
             waterSwitchState: false,
             waterFillingError: true,
-            activeFillType: undefined,
-            activeFillWasOpened: false,
-            currentFillLiters: 0,
-            spargeState: activeFillType === 'SPARGE' ? 'ERROR' : this.state.spargeState,
-            mashState: activeFillType === 'MASH' ? 'ERROR' : this.state.mashState
-        });
+            recipeWaterFill: failWaterFill(prevState.recipeWaterFill)
+        }));
     }
 
     getRecipeWaterVolume = (aRecipeWaterFill: RecipeWaterFill): number | undefined => {
@@ -459,15 +379,11 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     isWaterFillingActive = (): boolean => {
-        return this.state.waterSwitchState || this.state.activeFillType !== undefined || this.props.waterStatus?.openClose === true;
+        return selectWaterFillingActive(this.state.recipeWaterFill, this.state.waterSwitchState, this.props.waterStatus);
     }
 
     isControllerAvailable = (): boolean => {
-        const {isBackenAvailable} = this.props;
-        if (typeof isBackenAvailable === 'boolean') {
-            return isBackenAvailable;
-        }
-        return isBackenAvailable?.isBackenAvailable === true;
+        return getIsControllerAvailable(this.props.isBackenAvailable);
     }
 
     startRecipeWaterFilling = (aRecipeWaterFill: RecipeWaterFill): void => {
@@ -475,97 +391,45 @@ export class Production extends React.Component<ProductionProps, ProductionState
         if (volume === undefined || this.isRecipeWaterButtonDisabled(aRecipeWaterFill)) {
             return;
         }
-        const activeFillType: WaterFillType = aRecipeWaterFill === 'mash' ? 'MASH' : 'SPARGE';
-        this.setState({
+        this.setState((prevState) => ({
             waterSwitchState: true,
             liters: volume,
-            activeFillType,
-            currentFillLiters: 0,
-            activeFillWasOpened: false,
             waterFillingError: false,
-            mashState: activeFillType === 'MASH' ? 'FILLING' : this.state.mashState,
-            spargeState: activeFillType === 'SPARGE' ? 'FILLING' : this.state.spargeState
-        });
+            recipeWaterFill: startWaterFill(prevState.recipeWaterFill, aRecipeWaterFill)
+        }));
         this.props.startWaterFilling(volume);
     }
 
     getSafeWaterStatusFilledLiters = (): number => {
-        const waterStatusFilledLiters = Number(this.props.waterStatus?.filledLiters);
-        return Number.isFinite(waterStatusFilledLiters) ? waterStatusFilledLiters : 0;
+        return sanitizeLiters(this.props.waterStatus?.filledLiters);
     }
-
-    getCurrentWaterFillLiters = (): number => {
-        if (this.state.activeFillType !== undefined && !this.state.activeFillWasOpened) {
-            return this.state.currentFillLiters;
-        }
-        if (this.state.activeFillType !== undefined || this.props.waterStatus?.openClose === true) {
-            return this.getSafeWaterStatusFilledLiters();
-        }
-        if (this.state.mashState === 'COMPLETED') {
-            return this.state.completedMashLiters;
-        }
-        return this.state.currentFillLiters;
-    }
-
 
     getCurrentWaterFillTargetLiters = (): number => {
-        if (this.state.activeFillType !== undefined || this.props.waterStatus?.openClose === true) {
-            const rawTargetLiters = Number(this.props.waterStatus?.targetLiters);
-            if (Number.isFinite(rawTargetLiters) && rawTargetLiters > 0) {
-                return rawTargetLiters;
-            }
-        }
-        const rawRecipeLiters = Number(this.state.liters);
-        return Number.isFinite(rawRecipeLiters) ? Math.max(0, rawRecipeLiters) : 0;
+        return getWaterTargetLiters(this.state.recipeWaterFill, this.state.liters, this.props.waterStatus);
     }
 
     getDisplayedWaterLiters = (): number => {
-        return this.state.isSpargeIncluded
-            ? this.state.completedMashLiters + this.state.completedSpargeLiters
-            : this.getCurrentWaterFillLiters();
+        return selectDisplayedWaterLiters(this.state.recipeWaterFill, this.props.waterStatus);
     }
 
     getDisplayedWaterLabel = (): string => {
-        if (this.state.isSpargeIncluded) {
-            return 'Brauwasser gesamt';
-        }
-        if (this.state.activeFillType === 'SPARGE' || (this.state.spargeState === 'COMPLETED' && this.state.mashState === 'IDLE')) {
-            return 'Nachguss';
-        }
-        if (this.state.activeFillType === 'MASH' || this.state.mashState === 'COMPLETED') {
-            return 'Hauptguss';
-        }
-        return 'Aktueller Füllvorgang';
+        return getWaterLabel(this.state.recipeWaterFill);
     }
 
     shouldIncludeSpargeAfterMashingOut = (aPreviousStatus?: BrewingStatus, aCurrentStatus?: BrewingStatus): boolean => {
-        if (this.state.spargeState !== 'COMPLETED' || this.state.mashState !== 'COMPLETED') {
-            return false;
-        }
-        const previousWaitingFor = aPreviousStatus?.waiting?.waitingFor;
-        const currentPhase = aCurrentStatus?.currentStep?.phase;
-        const currentProcessState = aCurrentStatus?.process?.state;
-        const wasWaitingForMashingOut = previousWaitingFor === WaitingFor.MASHING_OUT_CONFIRMATION;
-        const isAfterMashingOutPhase = currentPhase === ProcessPhase.COOKING || currentPhase === ProcessPhase.COOLING || currentPhase === ProcessPhase.FINISHED || currentProcessState === ProcessState.FINISHED;
-        return wasWaitingForMashingOut && isAfterMashingOutPhase;
+        return selectShouldIncludeSpargeAfterMashingOut(this.state.recipeWaterFill, aPreviousStatus, aCurrentStatus);
     }
 
     isRecipeWaterButtonDisabled = (aRecipeWaterFill: RecipeWaterFill): boolean => {
         const volume = this.getRecipeWaterVolume(aRecipeWaterFill);
-        if (volume === undefined || !this.isControllerAvailable() || this.isWaterFillingActive()) {
-            return true;
-        }
-        if (aRecipeWaterFill === 'sparge') {
-            return this.state.spargeState === 'COMPLETED' || this.state.mashState !== 'IDLE';
-        }
-        return this.state.spargeState !== 'COMPLETED' || this.state.mashState === 'COMPLETED';
+        return selectRecipeWaterButtonDisabled(aRecipeWaterFill, this.state.recipeWaterFill, volume, this.isControllerAvailable(), this.isWaterFillingActive());
     }
 
     getRecipeWaterButtonLabel = (aRecipeWaterFill: RecipeWaterFill): string => {
-        if (aRecipeWaterFill === 'sparge' && this.state.spargeState === 'COMPLETED') {
+        if (aRecipeWaterFill === 'sparge' && this.state.recipeWaterFill.spargeState === 'COMPLETED') {
             return '✓ Nachguss fertig';
         }
-        if (aRecipeWaterFill === 'mash' && this.state.mashState === 'COMPLETED') {
+        if (aRecipeWaterFill === 'mash' && this.state.recipeWaterFill.mashState === 'COMPLETED') {
             return '✓ Hauptguss fertig';
         }
         return aRecipeWaterFill === 'sparge' ? 'Nachguss einfüllen' : 'Hauptguss einfüllen';
@@ -607,9 +471,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
         this.resetRecipeWaterFillState();
         this.isBrewingStartRequestPending = true;
         dataCollector.reset();
-        console.log('Starting brewing with data:', sendBrewingData);
         const result = mapBeerToBrewingData(selectedBeer);
-        console.log('Starting brewing with data:', result);
         if (!result.ok || !result.brewingData) {
             this.isBrewingStartRequestPending = false;
             this.setState({
@@ -619,7 +481,6 @@ export class Production extends React.Component<ProductionProps, ProductionState
             return;
         }
         this.setState({brewingIsRunning: true});
-        console.log('Starting brewing with data:', result.brewingData);
         sendBrewingData(result.brewingData);
     }
 
@@ -643,23 +504,12 @@ export class Production extends React.Component<ProductionProps, ProductionState
         return TimeFormatter.formatSecondsToHMS(time);
     }
 
-    createTimelineData() {
-        const {brewingStatus} = this.props;
-
-        if (this.timelineData.length > 0) {
-            const lastObject = _.last(this.timelineData);
-            if (lastObject) {
-                lastObject.elapsed = brewingStatus?.elapsedTime ?? 0;
-            }
-        }
-    }
-
     renderFlames() {
         const {brewingStatus} = this.props;
 
         return (
             <div className='Flame'>
-              {(brewingStatus?.hardware?.heater === HeatingStates.ON || brewingStatus?.currentStep?.mode === ProcessMode.HEATING) && (
+              {isHeaterActive(brewingStatus) && (
                     <div className="flame-strip" aria-label="Heizung aktiv">
                         <Flame/>
                         <Flame/>
@@ -695,8 +545,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
             mainSwitchState,
             intervalSwitchState,
             heatingAndStirringSwitchState,
-            waterSwitchState,
-            liters
+            waterSwitchState
         } = this.state;
         const mashWaterDisabled = this.isRecipeWaterButtonDisabled('mash');
         const spargeWaterDisabled = this.isRecipeWaterButtonDisabled('sparge');
@@ -793,47 +642,10 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
             <div className="Water">
                 <WaterControl filledLiters={displayedWaterLiters} label={this.getDisplayedWaterLabel()} agitatorSpeed={currentAgitatorSpeed}
-                              agitatorState={brewingStatus?.hardware?.agitator === "ON"}
+                              agitatorState={isAgitatorActive(brewingStatus)}
                               contentType={getVesselContentType(brewingStatus)}></WaterControl>
 
             </div>);
-    }
-
-    renderProgressBar() {
-        const {brewingStatus} = this.props;
-        let statusText = '';
-        if (!isUndefined(brewingStatus)) {
-                statusText = getBrewingStatusLabel(brewingStatus);
-
-                if(brewingStatus?.currentStep?.mode === ProcessMode.HEATING){
-                    return (
-                        <div className="container mt-4">
-                            <h3 className='progressLabel'>{brewingStatus.currentStep?.name ?? "-"}</h3>
-                            <p className='progressLabel'>{statusText}</p>
-                        </div>
-                    );
-                }
-                const stepDuration = Number(brewingStatus?.currentStep?.duration);
-                const finishedInPercent = stepDuration > 0 ? Math.min(100, Math.max(0, Math.round((brewingStatus?.elapsedTime ?? 0) * 100 / stepDuration))) : 0;
-
-
-                const progressBarStyle = {
-                    width: '100%',
-                    maxWidth: '43rem',
-                    height: '3rem',
-                    marginLeft: '1rem'
-                };
-                return (
-                    <div className="container mt-4">
-                        <h3 className='progressLabel'>{brewingStatus.currentStep?.name ?? "-"}</h3>
-                        <p className='progressLabel'>{statusText}</p>
-                            <ProgressBar animated striped now={finishedInPercent} label={`${finishedInPercent}%`}
-                                         style={progressBarStyle}/>
-
-                    </div>
-                );
-
-        }
     }
 
     renderHeader() {
@@ -879,33 +691,13 @@ export class Production extends React.Component<ProductionProps, ProductionState
             addFinishedBrew(finishedBrew);
         }
     };
-    renderHopDialog() {
-        const {showHopsDialog,hopName} = this.state;
-        return (<div>
-            <ModalDialog onConfirm={this.confirmHopDialog} type={DialogType.CONFIRM} open={showHopsDialog}
-                         content={'Bitte den ' + hopName + ' Hopfen zufügen!'} header={"Hopfen Zufügen"}></ModalDialog>
-        </div>);
-
-    }
-
-    renderErrorDialog() {
-        const {showErrorDialog, errorDialogContent} = this.state
-        const {isBackenAvailable} = this.props
+    getErrorDialogContent = (): string => {
+        const {errorDialogContent} = this.state;
+        const {isBackenAvailable} = this.props;
         const statusText = typeof isBackenAvailable === 'boolean' ? '' : isBackenAvailable.statusText;
-        const contentText = errorDialogContent || ('Die Brau-Steuerung ist nicht erreichbar\n\n' + statusText)
-        return (<div>
-            <ModalDialog onConfirm={this.confirmErrorDialog} type={DialogType.ERROR} open={showErrorDialog}
-                         content={contentText} header={"Fehler!"}></ModalDialog>
-        </div>);
+        return errorDialogContent || ('Die Brau-Steuerung ist nicht erreichbar\n\n' + statusText);
     }
 
-    renderFinishDialog() {
-        const {showFinishDialog} = this.state
-        return (<div>
-            <ModalDialog onConfirm={this.confirmFinishDialog} type={DialogType.INFO} open={showFinishDialog}
-                         content={'Das Bier ist fertig!'} header={"Fertig!"}></ModalDialog>
-        </div>);
-    }
 
     renderProcessList() {
         const { selectedBeer, brewingStatus } = this.props;
@@ -916,23 +708,19 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
 
     render() {
-        const {isBackenAvailable} = this.props;
-        const {showHopsDialog,showFinishDialog} = this.state;
-        this.createTimelineData();
+        const {showHopsDialog, showFinishDialog} = this.state;
         return (
             <div className="containerProduction ">
-                {
-                    showHopsDialog &&
-                    (this.renderHopDialog())
-                }
-                {
-                    isBackenAvailable &&
-                    (this.renderErrorDialog())
-                }
-                {
-                    showFinishDialog &&
-                    (this.renderFinishDialog())
-                }
+                <ProductionDialogs
+                    showHopsDialog={showHopsDialog}
+                    hopName={this.state.hopName}
+                    showErrorDialog={this.state.showErrorDialog || !this.isControllerAvailable()}
+                    errorContent={this.getErrorDialogContent()}
+                    showFinishDialog={showFinishDialog}
+                    onConfirmHop={this.confirmHopDialog}
+                    onConfirmError={this.confirmErrorDialog}
+                    onConfirmFinish={this.confirmFinishDialog}
+                />
 
                 {this.renderHeader()}
                 <div className="Left">
@@ -957,7 +745,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
 }
 
-const mapDispatchToProps = (dispatch: any) => ({
+const mapDispatchToProps = (dispatch: Dispatch) => ({
     getTemperatures: () => {
         dispatch(ProductionActions.getTemperatures())
     },
@@ -987,12 +775,12 @@ const mapDispatchToProps = (dispatch: any) => ({
         dispatch(ProductionActions.nextProcedureStep())
     }
 });
-const mapStateToProps = (state: any) => (
+const mapStateToProps = (state: RootState) => (
     {
         selectedBeer: state.beerDataReducer.beerToBrew,
         temperature: state.productionReducer.temperature,
-        currentAgitatorState: state.productionReducer.setedAgitatorState,
-        currentAgitatorSpeed: state.productionReducer.setedAgitatorSpeed,
+        currentAgitatorState: state.productionReducer.currentAgitatorState,
+        currentAgitatorSpeed: state.productionReducer.currentAgitatorSpeed,
         agitatorIsRunning: state.productionReducer.agitatorIsRunning,
         agitatorSpeed: state.productionReducer.agitatorSpeed,
         isWaterFillingSuccessful: state.productionReducer.isWaterFillingSuccessful,
