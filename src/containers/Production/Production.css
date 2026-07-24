@@ -14,8 +14,8 @@
         minmax(500px, 1.45fr);
     grid-template-rows: minmax(0, 1fr) clamp(6rem, 9.5vh, 6.875rem);
     grid-template-areas:
-        "Left List Meters Settings"
-        "Info Info Info Info";
+        "left list meters settings"
+        "info info info info";
     column-gap: 1.125rem;
     row-gap: 1rem;
     height: 100%;
@@ -35,24 +35,24 @@
     box-sizing: border-box;
 }
 
-.Left,
-.List,
-.Meters,
-.Settings,
-.Info {
+.left,
+.list,
+.meters,
+.settings,
+.info {
     min-height: 0;
     min-width: 0;
 }
 
-.Left {
-    grid-area: Left;
+.left {
+    grid-area: left;
     display: flex;
     flex-direction: column;
     gap: 0;
 }
 
-.List {
-    grid-area: List;
+.list {
+    grid-area: list;
     background: var(--color-surface-2);
     border-radius: 10px;
     box-shadow: 0 2px 8px var(--shadow-secondary);
@@ -63,8 +63,8 @@
     overflow: hidden;
 }
 
-.Meters {
-    grid-area: Meters;
+.meters {
+    grid-area: meters;
     display: grid;
     grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
     gap: 1rem;
@@ -102,7 +102,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background: var(--color-error-strong);
+    background: var(--color-surface-strong);
     border-radius: 0 0 12px 12px;
     box-shadow: 0 2px 8px var(--shadow-error-soft);
     overflow: visible;
@@ -133,8 +133,8 @@
 }
 
 /* Settings Panel */
-.Settings {
-    grid-area: Settings;
+.settings {
+    grid-area: settings;
     background: var(--color-brew-bg);
     border-radius: 12px;
     padding: 0.9rem 1rem 1rem;
@@ -146,25 +146,14 @@
     overflow: hidden;
 }
 
-
-.Settings--disabled {
-    opacity: 0.65;
-}
-
-.Settings--disabled button,
-.Settings--disabled input,
-.Settings--disabled select {
-    cursor: not-allowed;
-}
-
-.Settings h3 {
+.settings h3 {
     margin: 0;
     font-size: 1.35rem;
     line-height: 1.15;
 }
 
-.Info {
-    grid-area: Info;
+.info {
+    grid-area: info;
     background: var(--color-brew-bg);
     border-radius: 10px;
     padding: 0.75rem 1rem;
@@ -195,7 +184,7 @@
     flex-direction: column;
     align-items: center;
     background-color: var(--color-dark-bg);
-    box-shadow: 0px 0.25rem 0.375rem var(--shadow-secondary);
+    box-shadow: 0 0.25rem 0.375rem var(--shadow-secondary);
 }
 .label {
     color: var(--color-light-text);
@@ -374,14 +363,14 @@
         grid-template-columns: minmax(12rem, 18rem) minmax(12rem, 1fr) minmax(18rem, 1fr);
         grid-template-rows: minmax(24rem, 1fr) minmax(18rem, auto) auto;
         grid-template-areas:
-            "Left List Settings"
-            "Meters Meters Settings"
-            "Info Info Info";
+            "left list settings"
+            "meters meters settings"
+            "info info info";
         height: 100%;
         overflow: auto;
     }
 
-    .Settings {
+    .settings {
         overflow-y: auto;
     }
 }
@@ -391,17 +380,17 @@
         grid-template-columns: 1fr;
         grid-template-rows: auto;
         grid-template-areas:
-            "Left"
-            "List"
-            "Meters"
-            "Settings"
-            "Info";
+            "left"
+            "list"
+            "meters"
+            "settings"
+            "info";
     }
 
-    .Left,
-    .List,
-    .Meters,
-    .Settings {
+    .left,
+    .list,
+    .meters,
+    .settings {
         min-height: 24rem;
     }
 }
