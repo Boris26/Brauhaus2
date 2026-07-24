@@ -1,5 +1,5 @@
 import React, { ChangeEvent, FormEvent } from 'react';
-import {AdditionalIngredientPhase, AdditionalIngredientTimeUnit, Beer, BeerAdditionalIngredient, FermentationSteps, Hop, Malt, Yeast} from "../../model/Beer";
+import {AdditionalIngredientPhase, AdditionalIngredientTimeUnit, Beer, FermentationSteps, Hop, Malt, Yeast} from "../../model/Beer";
 import {AdditionalIngredientDTO, BeerDTO, HopDTO, MaltDTO, YeastDTO} from "../../model/BeerDTO";
 import { HopUsage } from "../../enums/eHopUsage";
 import { HopTimeUnit } from "../../enums/eHopTimeUnit";

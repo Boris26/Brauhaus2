@@ -1,6 +1,5 @@
 import {connect} from "react-redux";
 import {Views} from '../enums/eViews';
-import {BrewingStatus} from "../model/brewingStatus.types";
 import {ProductionActions} from "../actions/actions";
 import {ConfirmStates} from "../enums/eConfirmStates";
 import {Index} from './index';

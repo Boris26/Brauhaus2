@@ -1,4 +1,3 @@
-import { MashingType } from '../enums/eMashingType';
 import { RestExecutionMode } from '../enums/eRestExecutionMode';
 import { HopTimeUnit } from '../enums/eHopTimeUnit';
 import { HopUsage } from '../enums/eHopUsage';

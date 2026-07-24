@@ -1,4 +1,3 @@
-import { brixToPlatoLookup } from './brixPlatoLookup';
 import { eSugarTypes } from "../../enums/eSugerTypes";
 import {BrixPlatoSgEntry, brixPlatoSgTable} from './brix_plato_sg_table';
 

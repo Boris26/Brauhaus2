@@ -15,7 +15,7 @@ import QuantityPicker from '../../components/Controlls/QuantityPicker/QuantityPi
 import {BrewingData} from "../../model/BrewingData";
 import {mapBeerToBrewingData} from "../../utils/productionRecipe";
 
-import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState} from "../../model/brewingStatus.types";
+import {BrewingStatus, ProcessPhase, ProcessState} from "../../model/brewingStatus.types";
 import {TimeFormatter} from "../../utils/TimeFormatter";
 
 
@@ -151,7 +151,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     componentDidUpdate(prevProps: Readonly<ProductionProps>, prevState: Readonly<ProductionState>) {
         const {toggleAgitator, brewingStatus,isToggleAgitatorSuccess,isWaterFillingSuccessful, waterStatus} = this.props;
-        const {intervalSwitchState, mainSwitchState, waterSwitchState,heatingAndStirringSwitchState,showHopsDialog,showFinishDialog, indexOfCurrentStep} = this.state;
+        const {intervalSwitchState, mainSwitchState, waterSwitchState,heatingAndStirringSwitchState,showHopsDialog,showFinishDialog} = this.state;
 
 
         if (prevProps.brewingStatus !== brewingStatus) {
@@ -299,7 +299,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     toggleInterval = () => {
-        const {intervalSwitchState, mainSwitchState, agitatorSpeed} = this.state;
+        const {intervalSwitchState} = this.state;
 
         if (!intervalSwitchState) {
             this.setState({intervalSwitchState: true});

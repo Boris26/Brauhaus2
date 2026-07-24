@@ -1,5 +1,5 @@
 import { ofType } from 'redux-observable';
-import {fromEvent, of, from} from 'rxjs';
+import {of, from} from 'rxjs';
 import { catchError, exhaustMap, map, mergeMap } from 'rxjs/operators';
 import {ApplicationActions, BeerActions} from '../actions/actions';
 import { BeerRepository } from '../repositorys/BeerRepository';

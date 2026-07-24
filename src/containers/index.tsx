@@ -24,10 +24,6 @@ interface indexMainProps {
 }
 
 export class Index extends React.Component<indexMainProps> {
-    constructor(props: indexMainProps) {
-        super(props);
-    }
-
     componentDidMount() {
         const {checkIsBackenAvailable} = this.props;
         checkIsBackenAvailable();

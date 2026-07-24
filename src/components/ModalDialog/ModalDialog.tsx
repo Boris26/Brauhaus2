@@ -1,7 +1,6 @@
 import React from 'react';
 import {Button, Dialog, DialogTitle, DialogContent, DialogActions} from '@mui/material';
 import './ModalDialog.css';
-import {connect} from 'react-redux';
 
 export enum DialogType {
     CONFIRM = "confirm",

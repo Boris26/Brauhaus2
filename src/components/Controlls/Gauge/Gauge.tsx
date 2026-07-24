@@ -68,7 +68,7 @@ class Gauge extends React.Component<GaugeProps,GaugeState> {
     }
 
     calculateAreas() {
-        const { value, targetValue, offset, minValue, maxValue } = this.props;
+        const { targetValue, offset, minValue, maxValue } = this.props;
 
         let greenFrom = Math.max(targetValue - 1, 0);
         let greenTo = Math.min(targetValue + 1, maxValue);
@@ -99,9 +99,7 @@ class Gauge extends React.Component<GaugeProps,GaugeState> {
 
     render() {
         const { redFrom,redTo,yellowFrom,yellowTo,greenFrom,greenTo } = this.state
-        const {value,targetValue,label,minValue,maxValue,height,showAreas} = this.props;
-
-        let gaugeOptions: Gauge;
+        const {value,label,minValue,maxValue,height,showAreas} = this.props;
         const optionsWithArea ={
             greenFrom: greenFrom,
             greenTo: greenTo,

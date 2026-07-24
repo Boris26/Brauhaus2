@@ -1,7 +1,4 @@
 import {BeerDTO} from "../model/BeerDTO";
-import axios from "axios";
-import {DatabaseURL} from "../global";
-import {FinishedBrew} from "../model/FinishedBrew";
 import {Beer} from "../model/Beer";
 import {BaseRepository} from "./BaseRepository";
 import { BeerSubmissionResponse, hasPersistedBeerId, toBeerCreatePayload } from "../utils/beerSubmission";

@@ -1,7 +1,6 @@
 import React from 'react';
 import './Details.css';
 import { Beer } from "../../../model/Beer";
-import SimpleBar from 'simplebar-react';
 import 'simplebar-react/dist/simplebar.min.css';
 
 import {
