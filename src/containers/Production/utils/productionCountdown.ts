@@ -7,7 +7,7 @@ export const shouldCountdownLocally = (aBrewingStatus?: BrewingStatus): boolean 
 
 export const getRemainingSecondsFromStatus = (aBrewingStatus?: BrewingStatus): number | undefined => {
     if (aBrewingStatus?.process?.state === ProcessState.FINISHED) return 0;
-    if (!shouldCountdownLocally(aBrewingStatus)) return undefined;
+    if (aBrewingStatus === undefined || !shouldCountdownLocally(aBrewingStatus)) return undefined;
     const remaining = Number(aBrewingStatus.currentStep?.remainingTime);
     if (Number.isFinite(remaining) && remaining >= 0) return Math.floor(remaining);
     const duration = Number(aBrewingStatus.currentStep?.duration);
