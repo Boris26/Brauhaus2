@@ -102,7 +102,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    background: var(--color-error-strong);
+    background: var(--color-surface-strong);
     border-radius: 0 0 12px 12px;
     box-shadow: 0 2px 8px var(--shadow-error-soft);
     overflow: visible;
