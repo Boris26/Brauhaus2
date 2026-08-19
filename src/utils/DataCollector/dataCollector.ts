@@ -1,4 +1,4 @@
-import { BrewingStatus } from '../../model/brewingStatus.types';
+import { BrewingStatus, ProcessMode, ProcessPhase } from '../../model/brewingStatus.types';
 import { getStatusChangeKey } from '../brewingStatus/selectors';
 
 export interface TimelineMeasurement {
@@ -6,6 +6,11 @@ export interface TimelineMeasurement {
   currentTime: number;
   Temperature: number;
   TargetTemperature: number;
+  stepIndex?: number;
+  stepPhase?: ProcessPhase;
+  stepMode?: ProcessMode;
+  stepName?: string;
+  collectionSequence?: number;
 }
 
 type BrewingStatusGrouped = {
@@ -18,6 +23,7 @@ class DataCollector {
   private brewingStatus: BrewingStatus | null = null;
   private groupedData: BrewingStatusGrouped = {};
   private lastStatusKey: string | null = null;
+  private collectionSequence = 0;
 
   setBrewingStatus(aStatus: BrewingStatus): void {
     const aStatusKey = getStatusChangeKey(aStatus);
@@ -27,6 +33,11 @@ class DataCollector {
       // Compatibility output for existing charts and exports.
       Temperature: Number(aStatus.temperature.current ?? 0),
       TargetTemperature: Number(aStatus.temperature.target ?? 0),
+      stepIndex: aStatus.currentStep.index,
+      stepPhase: aStatus.currentStep.phase,
+      stepMode: aStatus.currentStep.mode,
+      stepName: aStatus.currentStep.name,
+      collectionSequence: this.collectionSequence,
     };
 
     if (!this.groupedData[aStatusKey]) {
@@ -36,6 +47,7 @@ class DataCollector {
     const aLastStored = this.groupedData[aStatusKey].at(-1);
     if (!aLastStored || aLastStored.Temperature !== aCurrentMeasurement.Temperature || aLastStored.TargetTemperature !== aCurrentMeasurement.TargetTemperature || aLastStored.elapsedTime !== aCurrentMeasurement.elapsedTime) {
       this.groupedData[aStatusKey].push(aCurrentMeasurement);
+      this.collectionSequence += 1;
       this.trimStatusGroup(aStatusKey);
     }
 
@@ -47,6 +59,7 @@ class DataCollector {
     this.brewingStatus = null;
     this.groupedData = {};
     this.lastStatusKey = null;
+    this.collectionSequence = 0;
   }
 
   getMeasurementCount(): number {
@@ -61,7 +74,9 @@ class DataCollector {
   }
 
   getTimelineMeasurements(): TimelineMeasurement[] {
-    return Object.values(this.groupedData).flat().map((measurement) => ({ ...measurement }));
+    return Object.values(this.groupedData).flat()
+      .sort((aLeft, aRight) => (aLeft.collectionSequence ?? 0) - (aRight.collectionSequence ?? 0))
+      .map((measurement) => ({ ...measurement }));
   }
 
   getAllDataAsBlob(): Blob {

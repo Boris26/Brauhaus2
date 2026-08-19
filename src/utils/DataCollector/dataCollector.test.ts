@@ -54,3 +54,17 @@ describe('dataCollector', (): void => {
     expect(aMeasurements.at(-1)?.Temperature).toBe(MAX_MEASUREMENTS_PER_STATUS_GROUP + 4);
   });
 });
+
+describe('timeline measurement order', () => {
+  beforeEach(() => dataCollector.reset());
+
+  it('preserves collection order when a previous status group becomes active again', () => {
+    const heating = createStatus(40);
+    const waiting = {...createStatus(41), currentStep: {...createStatus(41).currentStep, mode: ProcessMode.WAITING}};
+    dataCollector.setBrewingStatus(heating);
+    dataCollector.setBrewingStatus(waiting);
+    dataCollector.setBrewingStatus({...heating, elapsedTime: 42, temperature: {...heating.temperature, current: 42}});
+
+    expect(dataCollector.getTimelineMeasurements().map(item => item.Temperature)).toEqual([40, 41, 42]);
+  });
+});
