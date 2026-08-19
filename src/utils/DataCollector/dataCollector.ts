@@ -1,15 +1,20 @@
-import { BrewingStatus } from '../../model/brewingStatus.types';
+import { BrewingStatus, ProcessMode, ProcessPhase } from '../../model/brewingStatus.types';
 import { getStatusChangeKey } from '../brewingStatus/selectors';
 
-interface BrewingStatusMeasurement {
+export interface TimelineMeasurement {
   elapsedTime: number;
   currentTime: number;
   Temperature: number;
   TargetTemperature: number;
+  stepIndex?: number;
+  stepPhase?: ProcessPhase;
+  stepMode?: ProcessMode;
+  stepName?: string;
+  collectionSequence?: number;
 }
 
 type BrewingStatusGrouped = {
-  [statusKey: string]: BrewingStatusMeasurement[];
+  [statusKey: string]: TimelineMeasurement[];
 };
 
 export const MAX_MEASUREMENTS_PER_STATUS_GROUP = 1000;
@@ -18,15 +23,21 @@ class DataCollector {
   private brewingStatus: BrewingStatus | null = null;
   private groupedData: BrewingStatusGrouped = {};
   private lastStatusKey: string | null = null;
+  private collectionSequence = 0;
 
   setBrewingStatus(aStatus: BrewingStatus): void {
     const aStatusKey = getStatusChangeKey(aStatus);
-    const aCurrentMeasurement: BrewingStatusMeasurement = {
+    const aCurrentMeasurement: TimelineMeasurement = {
       elapsedTime: aStatus.elapsedTime,
       currentTime: aStatus.currentTime,
       // Compatibility output for existing charts and exports.
       Temperature: Number(aStatus.temperature.current ?? 0),
       TargetTemperature: Number(aStatus.temperature.target ?? 0),
+      stepIndex: aStatus.currentStep.index,
+      stepPhase: aStatus.currentStep.phase,
+      stepMode: aStatus.currentStep.mode,
+      stepName: aStatus.currentStep.name,
+      collectionSequence: this.collectionSequence,
     };
 
     if (!this.groupedData[aStatusKey]) {
@@ -34,8 +45,9 @@ class DataCollector {
     }
 
     const aLastStored = this.groupedData[aStatusKey].at(-1);
-    if (!aLastStored || aLastStored.Temperature !== aCurrentMeasurement.Temperature) {
+    if (!aLastStored || aLastStored.Temperature !== aCurrentMeasurement.Temperature || aLastStored.TargetTemperature !== aCurrentMeasurement.TargetTemperature || aLastStored.elapsedTime !== aCurrentMeasurement.elapsedTime) {
       this.groupedData[aStatusKey].push(aCurrentMeasurement);
+      this.collectionSequence += 1;
       this.trimStatusGroup(aStatusKey);
     }
 
@@ -47,6 +59,7 @@ class DataCollector {
     this.brewingStatus = null;
     this.groupedData = {};
     this.lastStatusKey = null;
+    this.collectionSequence = 0;
   }
 
   getMeasurementCount(): number {
@@ -56,8 +69,16 @@ class DataCollector {
   private trimStatusGroup(aStatusKey: string): void {
     const aStatusGroup = this.groupedData[aStatusKey];
     if (aStatusGroup.length > MAX_MEASUREMENTS_PER_STATUS_GROUP) {
-      aStatusGroup.splice(0, aStatusGroup.length - MAX_MEASUREMENTS_PER_STATUS_GROUP);
+      // Keep the first sample as the stable process-boundary anchor while
+      // trimming old temperature detail behind it.
+      aStatusGroup.splice(1, aStatusGroup.length - MAX_MEASUREMENTS_PER_STATUS_GROUP);
     }
+  }
+
+  getTimelineMeasurements(): TimelineMeasurement[] {
+    return Object.values(this.groupedData).flat()
+      .sort((aLeft, aRight) => (aLeft.collectionSequence ?? 0) - (aRight.collectionSequence ?? 0))
+      .map((measurement) => ({ ...measurement }));
   }
 
   getAllDataAsBlob(): Blob {

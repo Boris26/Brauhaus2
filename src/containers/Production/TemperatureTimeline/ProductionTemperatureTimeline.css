@@ -1,0 +1,103 @@
+.temperatureTimeline {
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    color: var(--color-light-text);
+}
+
+.temperatureTimeline__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 2rem;
+    flex: 0 0 auto;
+    min-width: 0;
+}
+
+.temperatureTimeline__titleArea {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.temperatureTimeline__title {
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.15;
+    white-space: nowrap;
+    overflow-wrap: normal;
+    word-break: normal;
+}
+
+.temperatureTimeline__description {
+    margin: 0.25rem 0 0;
+    font-size: 0.82rem;
+    line-height: 1.25;
+    opacity: 0.78;
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
+}
+
+.temperatureTimeline__progress {
+    flex: 0 0 clamp(12rem, 18vw, 20rem);
+    min-width: 12rem;
+    text-align: right;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.temperatureTimeline__progressTrack {
+    height: 0.5rem;
+    margin-top: 0.3rem;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.16);
+}
+
+.temperatureTimeline__progressBar {
+    height: 100%;
+    border-radius: inherit;
+    background: var(--color-accent);
+    transition: width 0.2s ease;
+}
+
+.temperatureTimeline__chart {
+    width: 100%;
+    height: clamp(9rem, 15vh, 12rem);
+    min-width: 0;
+    min-height: 9rem;
+    flex: 1 1 auto;
+}
+
+.temperatureTimeline__empty {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 9rem;
+    width: 100%;
+    color: var(--color-light-text);
+    opacity: 0.75;
+    text-align: center;
+}
+
+@media (max-width: 900px) {
+    .temperatureTimeline__header {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .temperatureTimeline__progress {
+        width: 100%;
+        flex-basis: auto;
+        text-align: left;
+    }
+
+    .temperatureTimeline__title {
+        white-space: normal;
+    }
+}
