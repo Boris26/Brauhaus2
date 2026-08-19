@@ -39,7 +39,7 @@ describe('dataCollector', (): void => {
     expect(dataCollector.getAllDataAsJSONString()).toBe(JSON.stringify({groupedData: {}}, null, 2));
   });
 
-  it('keeps the newest measurements when the status group exceeds the configured maximum', (): void => {
+  it('keeps the process boundary and newest measurements when a status group exceeds the maximum', (): void => {
     for (let aIndex = 0; aIndex < MAX_MEASUREMENTS_PER_STATUS_GROUP + 5; aIndex += 1) {
       dataCollector.setBrewingStatus(createStatus(aIndex));
     }
@@ -50,7 +50,8 @@ describe('dataCollector', (): void => {
     const aMeasurements = Object.values(aParsedData.groupedData)[0];
 
     expect(dataCollector.getMeasurementCount()).toBe(MAX_MEASUREMENTS_PER_STATUS_GROUP);
-    expect(aMeasurements[0].Temperature).toBe(5);
+    expect(aMeasurements[0].Temperature).toBe(0);
+    expect(aMeasurements[1].Temperature).toBe(6);
     expect(aMeasurements.at(-1)?.Temperature).toBe(MAX_MEASUREMENTS_PER_STATUS_GROUP + 4);
   });
 });

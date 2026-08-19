@@ -69,7 +69,9 @@ class DataCollector {
   private trimStatusGroup(aStatusKey: string): void {
     const aStatusGroup = this.groupedData[aStatusKey];
     if (aStatusGroup.length > MAX_MEASUREMENTS_PER_STATUS_GROUP) {
-      aStatusGroup.splice(0, aStatusGroup.length - MAX_MEASUREMENTS_PER_STATUS_GROUP);
+      // Keep the first sample as the stable process-boundary anchor while
+      // trimming old temperature detail behind it.
+      aStatusGroup.splice(1, aStatusGroup.length - MAX_MEASUREMENTS_PER_STATUS_GROUP);
     }
   }
 

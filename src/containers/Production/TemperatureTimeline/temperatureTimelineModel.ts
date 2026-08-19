@@ -62,7 +62,11 @@ export const buildTemperatureTimelineModel = (
     measurements: TimelineMeasurement[],
     fallbackTemperature: number
 ): TemperatureTimelineModel => {
-    const processSteps = selectedBeer ? createProcessSteps(selectedBeer) : [];
+    // DISPLAY rows belong to the process overview, but have no independent
+    // thermal duration and must not consume space on the temperature axis.
+    const processSteps = selectedBeer
+        ? createProcessSteps(selectedBeer).filter(step => step.entryType !== ProcessListEntryType.DISPLAY)
+        : [];
     const activeIndex = processSteps.length && brewingStatus
         ? getActiveProcessStepIndex(processSteps, brewingStatus.currentStep.index ?? 0, brewingStatus.currentStep)
         : -1;
@@ -108,7 +112,13 @@ export const buildTemperatureTimelineModel = (
         if (index === activeIndex) endSeconds = Math.max(endSeconds, nowSeconds);
         if (index < activeIndex && nextObservedStart === undefined) endSeconds = Math.max(endSeconds, startSeconds + getPlannedDuration(step));
         endSeconds = Math.max(startSeconds + 1, endSeconds);
-        steps.push({...step, startSeconds, endSeconds, targetTemperature: step.detail?.temperature, showLabel: endSeconds - startSeconds >= MIN_LABEL_SECONDS});
+        steps.push({
+            ...step,
+            startSeconds,
+            endSeconds,
+            targetTemperature: step.detail?.temperature,
+            showLabel: step.entryType !== ProcessListEntryType.HEATING && endSeconds - startSeconds >= MIN_LABEL_SECONDS
+        });
         cursor = endSeconds;
     });
 

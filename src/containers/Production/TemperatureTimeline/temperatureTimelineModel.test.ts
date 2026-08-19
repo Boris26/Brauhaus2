@@ -33,10 +33,10 @@ describe('temperature timeline model', () => {
     it('places a late-started collector in the same process band as the process overview', () => {
         const model = buildTemperatureTimelineModel(beer, status(), [point(120, 6, ProcessPhase.MASHING_OUT, ProcessMode.HEATING)], 0);
 
-        expect(model.steps).toHaveLength(15);
-        expect(model.steps[11].name).toBe('Aufheizen für Abmaischen');
-        expect(model.nowSeconds).toBeGreaterThanOrEqual(model.steps[11].startSeconds);
-        expect(model.nowSeconds).toBeLessThanOrEqual(model.steps[11].endSeconds);
+        expect(model.steps).toHaveLength(14);
+        expect(model.steps[10].name).toBe('Aufheizen für Abmaischen');
+        expect(model.nowSeconds).toBeGreaterThanOrEqual(model.steps[10].startSeconds);
+        expect(model.nowSeconds).toBeLessThanOrEqual(model.steps[10].endSeconds);
         expect(model.points.at(-1)?.elapsedSeconds).toBe(model.nowSeconds);
         expect(model.progressPercent).toBeGreaterThan(50);
     });
@@ -61,5 +61,64 @@ describe('temperature timeline model', () => {
     it('uses 100 percent for a finished brew', () => {
         const model = buildTemperatureTimelineModel(beer, status({process: {state: ProcessState.FINISHED}}), [], 0);
         expect(model.progressPercent).toBe(100);
+    });
+
+    it('shows thermal process rows, hides heating labels and omits display-only rows', () => {
+        const model = buildTemperatureTimelineModel(beer, status(), [], 0);
+        const heating = model.steps.find(step => step.entryType === 'HEATING');
+        const rast = model.steps.find(step => step.name === 'Rast 1');
+
+        expect(heating).toBeDefined();
+        expect(heating?.showLabel).toBe(false);
+        expect(rast?.showLabel).toBe(true);
+        expect(model.steps.some(step => step.entryType === 'DISPLAY')).toBe(false);
+        expect(model.steps.some(step => step.name === 'Jod Probe')).toBe(false);
+    });
+
+    it('does not allocate time or a boundary for a display-only process row', () => {
+        const model = buildTemperatureTimelineModel(beer, undefined, [], 0);
+        const lastRast = model.steps.find(step => step.name === 'Rast 4');
+        const mashOutHeating = model.steps.find(step => step.name === 'Aufheizen für Abmaischen');
+
+        expect(lastRast).toBeDefined();
+        expect(mashOutHeating?.startSeconds).toBe(lastRast?.endSeconds);
+    });
+
+    it('grows an overdue heating phase, shifts only future rows and keeps now inside the active row', () => {
+        const atFiveMinutes = status({
+            elapsedTime: 300,
+            currentStep: {index: 6, phase: ProcessPhase.MASHING_OUT, mode: ProcessMode.HEATING, elapsedTime: 300}
+        });
+        const atSevenMinutes = status({
+            elapsedTime: 420,
+            currentStep: {index: 6, phase: ProcessPhase.MASHING_OUT, mode: ProcessMode.HEATING, elapsedTime: 420}
+        });
+        const fiveMinuteModel = buildTemperatureTimelineModel(beer, atFiveMinutes, [point(300, 6, ProcessPhase.MASHING_OUT, ProcessMode.HEATING)], 0);
+        const sevenMinuteModel = buildTemperatureTimelineModel(beer, atSevenMinutes, [point(420, 6, ProcessPhase.MASHING_OUT, ProcessMode.HEATING)], 0);
+        const activeAtFive = fiveMinuteModel.steps[10];
+        const activeAtSeven = sevenMinuteModel.steps[10];
+
+        expect(activeAtSeven.startSeconds).toBe(activeAtFive.startSeconds);
+        expect(activeAtSeven.endSeconds - activeAtSeven.startSeconds).toBe(420);
+        expect(sevenMinuteModel.steps[9]).toEqual(fiveMinuteModel.steps[9]);
+        expect(sevenMinuteModel.steps[11].startSeconds - fiveMinuteModel.steps[11].startSeconds).toBe(120);
+        expect(sevenMinuteModel.nowSeconds).toBeGreaterThanOrEqual(activeAtSeven.startSeconds);
+        expect(sevenMinuteModel.nowSeconds).toBeLessThanOrEqual(activeAtSeven.endSeconds);
+        expect(sevenMinuteModel.endSeconds - fiveMinuteModel.endSeconds).toBe(120);
+    });
+
+    it('keeps observed boundaries stable when intermediate temperature detail is removed', () => {
+        const fullHistory = [
+            point(0, 1, ProcessPhase.MASHING_IN, ProcessMode.HEATING),
+            point(120, 1, ProcessPhase.MASHING_IN, ProcessMode.HEATING),
+            point(300, 1, ProcessPhase.MASHING_IN, ProcessMode.WAITING),
+            point(360, 2, ProcessPhase.RAST, ProcessMode.HEATING)
+        ];
+        const trimmedHistory = [fullHistory[0], fullHistory[2], fullHistory[3]];
+        const active = status({elapsedTime: 360, currentStep: {index: 2, phase: ProcessPhase.RAST, mode: ProcessMode.HEATING, elapsedTime: 60}});
+        const beforeTrim = buildTemperatureTimelineModel(beer, active, fullHistory, 0);
+        const afterTrim = buildTemperatureTimelineModel(beer, active, trimmedHistory, 0);
+
+        expect(afterTrim.steps.slice(0, 3)).toEqual(beforeTrim.steps.slice(0, 3));
     });
 });
