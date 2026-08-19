@@ -11,9 +11,15 @@ export enum ProcessListEntryType {
     DISPLAY = "DISPLAY"
 }
 
+export enum ProcessListDurationUnit {
+    MINUTES = "MINUTES",
+    SECONDS = "SECONDS"
+}
+
 export interface ProcessStepDetail {
     temperature?: number;
     duration?: number;
+    durationUnit?: ProcessListDurationUnit;
     confirmationRequired?: boolean;
 }
 
@@ -116,7 +122,10 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
             details.push(`${step.detail.temperature} °C`);
         }
         if (typeof step.detail?.duration === 'number' && Number.isFinite(step.detail.duration) && step.detail.duration > 0) {
-            details.push(`${Math.round(step.detail.duration / 60)} min`);
+            const durationMinutes = step.detail.durationUnit === ProcessListDurationUnit.SECONDS
+                ? step.detail.duration / 60
+                : step.detail.duration;
+            details.push(`${Math.round(durationMinutes)} min`);
         }
         if (step.detail?.confirmationRequired) {
             details.push('Bestätigung erforderlich');
@@ -390,7 +399,7 @@ export function createProcessSteps(selectedBeer: Beer): ProcessListStep[] {
         const isConfirmationHold = (step.executionMode ?? RestExecutionMode.TIMED) === RestExecutionMode.CONFIRMATION_HOLD;
         if (isRastName || isConfirmationHold) {
             processSteps.push({ name: `Aufheizen für ${step.type}`, entryType: ProcessListEntryType.HEATING, controlStepIndex, phase: ProcessPhase.RAST, detail: {temperature: step.temperature} });
-            processSteps.push({ name: step.type, entryType: ProcessListEntryType.PROCESS, controlStepIndex, phase: ProcessPhase.RAST, detail: {temperature: step.temperature, duration: step.time, confirmationRequired: isConfirmationHold} });
+            processSteps.push({ name: step.type, entryType: ProcessListEntryType.PROCESS, controlStepIndex, phase: ProcessPhase.RAST, detail: {temperature: step.temperature, duration: step.time, durationUnit: ProcessListDurationUnit.MINUTES, confirmationRequired: isConfirmationHold} });
             controlStepIndex++;
             lastRastIndex = processSteps.length - 1;
         }
@@ -411,7 +420,7 @@ export function createProcessSteps(selectedBeer: Beer): ProcessListStep[] {
 
     // Kochen
     processSteps.push({ name: 'Aufheizen auf Kochen', entryType: ProcessListEntryType.HEATING, controlStepIndex, phase: ProcessPhase.COOKING, detail: {temperature: selectedBeer.cookingTemperatur} });
-    processSteps.push({ name: 'Kochen', entryType: ProcessListEntryType.PROCESS, controlStepIndex, phase: ProcessPhase.COOKING, detail: {temperature: selectedBeer.cookingTemperatur, duration: selectedBeer.cookingTime * 60} });
+    processSteps.push({ name: 'Kochen', entryType: ProcessListEntryType.PROCESS, controlStepIndex, phase: ProcessPhase.COOKING, detail: {temperature: selectedBeer.cookingTemperatur, duration: selectedBeer.cookingTime * 60, durationUnit: ProcessListDurationUnit.SECONDS} });
     controlStepIndex++;
 
     return processSteps;

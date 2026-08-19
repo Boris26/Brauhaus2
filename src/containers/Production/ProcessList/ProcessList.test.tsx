@@ -3,7 +3,7 @@ import {render, screen} from '@testing-library/react';
 import '@testing-library/jest-dom';
 import {Beer} from '../../../model/Beer';
 import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../../model/brewingStatus.types';
-import {createProcessSteps, getActiveProcessStepIndex, ProcessList} from './ProcessList';
+import {createProcessSteps, getActiveProcessStepIndex, ProcessList, ProcessListDurationUnit, ProcessListEntryType} from './ProcessList';
 
 const selectedBeer = {
     id: 'beer-1',
@@ -21,9 +21,9 @@ const selectedBeer = {
     cookingTemperatur: 100,
     fermentation: [
         {type: 'Einmaischen', temperature: 57},
-        {type: 'Rast 1', temperature: 63, time: 900},
-        {type: 'Rast 2', temperature: 68, time: 900},
-        {type: 'Rast 3', temperature: 72, time: 900},
+        {type: 'Rast 1', temperature: 63, time: 20},
+        {type: 'Rast 2', temperature: 68, time: 60},
+        {type: 'Rast 3', temperature: 72, time: 5},
         {type: 'Abmaischen', temperature: 78},
     ],
     malts: [],
@@ -186,6 +186,27 @@ describe('ProcessList compact production overview', () => {
         expect(screen.getAllByText(/72 °C/).length).toBeGreaterThan(0);
         expect(screen.getByText('Bestätigung erforderlich')).toBeInTheDocument();
         expect(screen.getByText('100 °C · 60 min')).toBeInTheDocument();
+    });
+
+    it('shows each configured recipe rest duration in minutes', () => {
+        render(<ProcessList selectedBeer={selectedBeer} currentStepIndex={0} />);
+
+        expect(screen.getByText('63 °C · 20 min')).toBeInTheDocument();
+        expect(screen.getByText('68 °C · 60 min')).toBeInTheDocument();
+        expect(screen.getByText('72 °C · 5 min')).toBeInTheDocument();
+    });
+
+    it('keeps planned durations on process rows only and preserves their unit', () => {
+        const steps = createProcessSteps(selectedBeer);
+        const heatingSteps = steps.filter(step => step.entryType === ProcessListEntryType.HEATING);
+        const rests = steps.filter(step => step.phase === ProcessPhase.RAST && step.entryType === ProcessListEntryType.PROCESS);
+
+        expect(heatingSteps.every(step => step.detail?.duration === undefined)).toBe(true);
+        expect(rests.map(step => [step.name, step.detail?.duration, step.detail?.durationUnit])).toEqual([
+            ['Rast 1', 20, ProcessListDurationUnit.MINUTES],
+            ['Rast 2', 60, ProcessListDurationUnit.MINUTES],
+            ['Rast 3', 5, ProcessListDurationUnit.MINUTES]
+        ]);
     });
 
     it('renders the remaining time as a single countdown value', () => {
