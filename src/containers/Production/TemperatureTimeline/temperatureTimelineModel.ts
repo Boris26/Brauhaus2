@@ -26,6 +26,11 @@ export interface TemperatureTimelineModel {
     progressPercent: number;
 }
 
+export interface TemperatureTimelineModelOptions {
+    /** Skip defensive input sorting only for collectionSequence-ordered snapshots. */
+    measurementsOrderedByCollection?: boolean;
+}
+
 const DEFAULT_UNTIMED_STEP_SECONDS = 5 * 60;
 const MIN_LABEL_SECONDS = 3 * 60;
 const AXIS_TICK_INTERVALS_SECONDS = [5, 10, 15, 30, 60].map(minutes => minutes * 60);
@@ -72,8 +77,9 @@ const getMeasurementStepIndex = (steps: ProcessListStep[], measurement: Timeline
 export const buildTemperatureTimelineModel = (
     selectedBeer: Beer | undefined,
     brewingStatus: BrewingStatus | undefined,
-    measurements: TimelineMeasurement[],
-    fallbackTemperature: number
+    measurements: readonly TimelineMeasurement[],
+    fallbackTemperature: number,
+    options: TemperatureTimelineModelOptions = {}
 ): TemperatureTimelineModel => {
     // DISPLAY rows belong to the process overview, but have no independent
     // thermal duration and must not consume space on the temperature axis.
@@ -91,7 +97,10 @@ export const buildTemperatureTimelineModel = (
         if (index > 0 && raw < previousRaw) offset += previousRaw;
         previousRaw = raw;
         return {...measurement, timelineSeconds: offset + raw};
-    }).sort((left, right) => left.timelineSeconds - right.timelineSeconds);
+    });
+    if (!options.measurementsOrderedByCollection) {
+        normalized.sort((left, right) => left.timelineSeconds - right.timelineSeconds);
+    }
 
     const observedStarts = new Map<number, number>();
     normalized.forEach(measurement => {
@@ -125,23 +134,19 @@ export const buildTemperatureTimelineModel = (
         observedStarts.set(activeIndex, Math.min(nowSeconds, activeStartSeconds));
     }
 
-    const getNextObservedStart = (index: number): number | undefined => {
-        let nextIndex = Number.POSITIVE_INFINITY;
-        let nextStart: number | undefined;
-        observedStarts.forEach((start, observedIndex) => {
-            if (observedIndex > index && observedIndex < nextIndex) {
-                nextIndex = observedIndex;
-                nextStart = start;
-            }
-        });
-        return nextStart;
-    };
+    const nextObservedStartByIndex: Array<number | undefined> = new Array(processSteps.length);
+    let nextObservedStart: number | undefined;
+    for (let index = processSteps.length - 1; index >= 0; index -= 1) {
+        nextObservedStartByIndex[index] = nextObservedStart;
+        const observedStart = observedStarts.get(index);
+        if (observedStart !== undefined) nextObservedStart = observedStart;
+    }
 
     const steps: TimelineStep[] = [];
     let cursor = 0;
     processSteps.forEach((step, index) => {
         const observedStart = observedStarts.get(index);
-        const nextObservedStart = getNextObservedStart(index);
+        const nextObservedStart = nextObservedStartByIndex[index];
         const hardCurrentBoundary = index < activeIndex ? activeStartSeconds : undefined;
         const latestEnd = hardCurrentBoundary === undefined
             ? nextObservedStart
@@ -186,5 +191,7 @@ export const buildTemperatureTimelineModel = (
     const endSeconds = Math.max(nowSeconds, steps.at(-1)?.endSeconds ?? 0, 60);
     const {axisEndSeconds, axisTicks} = buildStableTimeAxis(endSeconds);
     const progressPercent = finished ? 100 : Math.min(100, Math.max(0, nowSeconds * 100 / endSeconds));
-    return {steps, points: Array.from(pointsBySecond.values()).sort((a, b) => a.elapsedSeconds - b.elapsedSeconds), nowSeconds, endSeconds, axisEndSeconds, axisTicks, progressPercent};
+    // normalized is chronological in both paths. Map preserves first insertion
+    // order when the value for an already observed second is replaced.
+    return {steps, points: Array.from(pointsBySecond.values()), nowSeconds, endSeconds, axisEndSeconds, axisTicks, progressPercent};
 };

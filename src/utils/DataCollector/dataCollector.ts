@@ -13,6 +13,12 @@ export interface TimelineMeasurement {
   collectionSequence?: number;
 }
 
+export interface TimelineSnapshot {
+  readonly version: number;
+  /** Measurements are ordered ascending by collectionSequence and are immutable after collection. */
+  readonly measurements: readonly TimelineMeasurement[];
+}
+
 type BrewingStatusGrouped = {
   [statusKey: string]: TimelineMeasurement[];
 };
@@ -24,10 +30,13 @@ class DataCollector {
   private groupedData: BrewingStatusGrouped = {};
   private lastStatusKey: string | null = null;
   private collectionSequence = 0;
+  private timelineMeasurements: TimelineMeasurement[] = [];
+  private timelineVersion = 0;
+  private cachedTimelineSnapshot: TimelineSnapshot | null = null;
 
   setBrewingStatus(aStatus: BrewingStatus): void {
     const aStatusKey = getStatusChangeKey(aStatus);
-    const aCurrentMeasurement: TimelineMeasurement = {
+    const aCurrentMeasurement: TimelineMeasurement = Object.freeze({
       elapsedTime: aStatus.elapsedTime,
       currentTime: aStatus.currentTime,
       // Compatibility output for existing charts and exports.
@@ -38,7 +47,7 @@ class DataCollector {
       stepMode: aStatus.currentStep.mode,
       stepName: aStatus.currentStep.name,
       collectionSequence: this.collectionSequence,
-    };
+    });
 
     if (!this.groupedData[aStatusKey]) {
       this.groupedData[aStatusKey] = [];
@@ -47,8 +56,11 @@ class DataCollector {
     const aLastStored = this.groupedData[aStatusKey].at(-1);
     if (!aLastStored || aLastStored.Temperature !== aCurrentMeasurement.Temperature || aLastStored.TargetTemperature !== aCurrentMeasurement.TargetTemperature || aLastStored.elapsedTime !== aCurrentMeasurement.elapsedTime) {
       this.groupedData[aStatusKey].push(aCurrentMeasurement);
+      this.timelineMeasurements.push(aCurrentMeasurement);
       this.collectionSequence += 1;
       this.trimStatusGroup(aStatusKey);
+      this.timelineVersion += 1;
+      this.cachedTimelineSnapshot = null;
     }
 
     this.lastStatusKey = aStatusKey;
@@ -56,10 +68,16 @@ class DataCollector {
   }
 
   reset(): void {
+    const timelineChanged = this.timelineMeasurements.length > 0;
     this.brewingStatus = null;
     this.groupedData = {};
     this.lastStatusKey = null;
     this.collectionSequence = 0;
+    this.timelineMeasurements = [];
+    if (timelineChanged) {
+      this.timelineVersion += 1;
+      this.cachedTimelineSnapshot = null;
+    }
   }
 
   getMeasurementCount(): number {
@@ -71,14 +89,23 @@ class DataCollector {
     if (aStatusGroup.length > MAX_MEASUREMENTS_PER_STATUS_GROUP) {
       // Keep the first sample as the stable process-boundary anchor while
       // trimming old temperature detail behind it.
-      aStatusGroup.splice(1, aStatusGroup.length - MAX_MEASUREMENTS_PER_STATUS_GROUP);
+      const removedMeasurements = new Set(aStatusGroup.splice(1, aStatusGroup.length - MAX_MEASUREMENTS_PER_STATUS_GROUP));
+      this.timelineMeasurements = this.timelineMeasurements.filter(measurement => !removedMeasurements.has(measurement));
     }
   }
 
-  getTimelineMeasurements(): TimelineMeasurement[] {
-    return Object.values(this.groupedData).flat()
-      .sort((aLeft, aRight) => (aLeft.collectionSequence ?? 0) - (aRight.collectionSequence ?? 0))
-      .map((measurement) => ({ ...measurement }));
+  getTimelineSnapshot(): TimelineSnapshot {
+    if (this.cachedTimelineSnapshot === null) {
+      this.cachedTimelineSnapshot = Object.freeze({
+        version: this.timelineVersion,
+        measurements: Object.freeze(this.timelineMeasurements.slice()),
+      });
+    }
+    return this.cachedTimelineSnapshot;
+  }
+
+  getTimelineMeasurements(): readonly TimelineMeasurement[] {
+    return this.getTimelineSnapshot().measurements;
   }
 
   getAllDataAsBlob(): Blob {

@@ -37,6 +37,20 @@ const expectMonotonicSteps = (model: ReturnType<typeof buildTemperatureTimelineM
 };
 
 describe('temperature timeline model', () => {
+    it.each([500, 2000, 5000])('keeps the ordered fast path equivalent for %i chronological measurements', (measurementCount) => {
+        const measurements = Array.from({length: measurementCount}, (_, index) => ({
+            ...point(index, 1, ProcessPhase.MASHING_IN, ProcessMode.HEATING),
+            collectionSequence: index
+        }));
+        const currentStatus = status({elapsedTime: measurementCount - 1});
+
+        const defensiveModel = buildTemperatureTimelineModel(undefined, currentStatus, measurements, 0);
+        const orderedModel = buildTemperatureTimelineModel(undefined, currentStatus, measurements, 0, {measurementsOrderedByCollection: true});
+
+        expect(orderedModel).toEqual(defensiveModel);
+        expect(orderedModel.points).toHaveLength(measurementCount);
+    });
+
     it('places a late-started collector in the same process band as the process overview', () => {
         const model = buildTemperatureTimelineModel(beer, status(), [point(120, 6, ProcessPhase.MASHING_OUT, ProcessMode.HEATING)], 0);
 

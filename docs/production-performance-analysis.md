@@ -19,16 +19,17 @@ Die Korrektur trennt nun das fachliche `endSeconds` von der sichtbaren Achse. Ab
 1. Das Polling fragt ungefähr einmal pro Sekunde den Status ab, normalisiert ihn, legt ihn im globalen `dataCollector` ab und dispatcht ein neues Statusobjekt.
 2. `connect()` reicht den neuen `brewingStatus` direkt an die Class Component `Production` weiter. `mapStateToProps` erzeugt außerdem bei jedem Store-Vergleich ein neues äußeres Props-Objekt; dessen einzelne Werte bleiben jedoch referenziell stabil, sofern der jeweilige Reducer sie nicht geändert hat.
 3. `Production.render()` baut Wasseranzeige, Flammen, Prozessübersicht, aktuellen Schritt, Gauge, Settings, Dialoge und Timeline erneut als React-Elemente auf. Die untersuchten Child-Komponenten sind nicht durch `React.memo` beziehungsweise `PureComponent` abgeschirmt.
-4. `renderInfo()` flacht die vollständige Messhistorie ab, sortiert und kopiert sie. Die Timeline verarbeitet diese neue Arrayreferenz vollständig und Recharts gleicht den SVG-Chart erneut ab.
+4. `renderInfo()` liest den versionierten, chronologischen Snapshot. Ohne neue Messung bleiben Snapshot- und Arrayreferenz stabil. Nach einer Änderung wird einmal eine neue flache Referenzliste erzeugt; die unveränderlichen Messobjekte selbst werden wiederverwendet.
 5. Zusätzlich kann der lokale Countdown zwischen Status-Polls State-Updates auslösen, wodurch dieselben Bereiche nochmals rendern.
 
 ## Kosten der Timeline und des DataCollectors
 
 Für `n` gespeicherte Messpunkte und `s` Rezept-/Prozessschritte gilt ungefähr:
 
-- `getTimelineMeasurements()`: Zusammenführen aller Statusgruppen O(n), vollständige Sortierung nach `collectionSequence` O(n log n), anschließend O(n) Objektkopien.
-- `buildTemperatureTimelineModel()`: Erzeugen und Filtern der Prozessschritte O(s), Normalisierung plus Sortierung O(n log n), Aufbau und Durchlauf mehrerer Maps O(n), Schrittmodell derzeit näherungsweise O(s²) durch wiederholte Suche nach dem nächsten beobachteten Start, Punktaufbau O(n) und abschließende Punktsortierung O(n log n).
-- Pro Poll entstehen damit neue Arrays, Messobjekte, normalisierte Objekte, Maps, Punkte und Recharts-Datenreferenzen. Die Historie wird im Collector sortiert und im Modell erneut sortiert.
+- Der Collector hält zusätzlich zu den gruppierten Referenzen eine chronologische Referenzliste. Neue Messungen werden in Erfassungsreihenfolge angehängt; beim bestehenden Gruppentrimming werden genau die entfernten Objektinstanzen auch daraus entfernt. Ein Read ohne Änderung liefert den gecachten Snapshot in O(1). Nach einer Änderung kostet die einmalige Snapshot-Arraykopie O(n), erzeugt aber keine Messobjektkopien und keine Sortierung.
+- `buildTemperatureTimelineModel()` nutzt für den Production-Pfad den dokumentiert chronologischen Snapshot: Normalisierung, Maps und Punkteaufbau sind O(n), ohne Eingangssortierung. Die normalisierten Sekunden sind monoton; deshalb kann auch die Einfügereihenfolge der Punkte-Map direkt genutzt werden. Direkte Aufrufer ohne Chronologie-Garantie verwenden weiterhin den defensiven Pfad mit einer Eingangssortierung O(n log n), damit die öffentliche API sicher bleibt.
+- Der nächste reale Prozessanker wird einmal rückwärts für alle `s` Schritte vorberechnet. Die frühere wiederholte Map-Suche von näherungsweise O(s²) ist damit O(s).
+- Das normalisierte Modell und die Recharts-Punkte bleiben kurzlebige Renderdaten. Der Cache hält keine zweite Sammlung kopierter Messobjekte, sondern nur ein flaches Array mit Referenzen auf die im Collector gespeicherten, eingefrorenen Messwerte.
 
 Bei genau einem Sample pro Sekunde wären vor Begrenzung nach 30 Minuten etwa 1.800, nach einer Stunde 3.600 und nach zwei Stunden 7.200 Samples angefallen. Tatsächlich begrenzt der Collector **jede Statusgruppe** auf 1.000 Punkte und bewahrt dabei deren ersten Anker. Eine lange unveränderte Statusgruppe bleibt daher bei 1.000 Punkten; mehrere Schritt-/Modus-/Wartegruppen können jeweils weitere 1.000 Punkte halten. Das Gesamtmaximum ist nicht global begrenzt: Der Gruppenschlüssel enthält Prozesszustand, Schrittindex, Phase, Modus, Name und Wartestatus. Für ein konkretes Rezept ist die Zahl praktisch durch seine Statusübergänge begrenzt, formal aber nicht durch den Collector.
 
@@ -38,7 +39,7 @@ Recharts zeichnet zwei Temperaturpfade ohne Punkt-Symbole. Hinzu kommen bei dem 
 
 | Bereich | Beobachtetes Verhalten | Mögliche Kosten auf dem Raspberry Pi | Priorität | Empfohlener separater Schritt |
 |---|---|---|---|---|
-| Timeline-Historie | Vollständiges Flatten, Sortieren, Kopieren, erneutes Normalisieren und Sortieren pro Poll | Mit mehreren Gruppen wachsender CPU- und Allokationsaufwand; zusätzlich große SVG-Pfade | Hoch | Geordneten, versionierten Timeline-Snapshot im Collector bereitstellen; nur neue Samples inkrementell ergänzen und ein sinnvolles globales Budget/Downsampling prüfen. Prozessanker müssen erhalten bleiben. |
+| Timeline-Historie | Versionierter chronologischer Snapshot beseitigt Vollsortierungen und Messobjektkopien; Snapshot-/Modellarrays werden nach neuen Messungen weiterhin linear aufgebaut | Mit mehreren Gruppen verbleiben O(n)-Allokationen; zusätzlich große SVG-Pfade | Mittel bis hoch | Auf dem Zielgerät messen; erst danach ein sinnvolles Downsampling prüfen. Prozessanker müssen erhalten bleiben. |
 | Gesamte Production-Ansicht | Neues Statusobjekt rendert die komplette Class Component samt fachlich unveränderten Settings und Teilen der Wasser-/Prozessanzeige | Wiederholte React-Reconciliation und Child-Renderarbeit jede Sekunde, zusätzlich durch lokalen Countdown | Hoch | Mit React Profiler auf Zielgerät messen, danach Timeline, Settings und statische Panels an fachlichen Prop-Grenzen als `PureComponent`/`React.memo` trennen; stabile Props sicherstellen. |
 | Recharts | Zwei lange SVG-Pfade sowie Bereiche, Linien, Grid, Achsen und Labels werden mit neuer Datenreferenz aktualisiert | SVG-Pfadaufbau und DOM-Abgleich wachsen mit n; auf Pi potenziell sichtbares Ruckeln | Hoch | Nach Profilierung verlustarmes, pixel-/zeitfensterbezogenes Downsampling der Kurven erwägen; Anker, Extrema und letzter Punkt dürfen nicht verloren gehen. |
 | Gauge | Google-Charts-Gauge erhält pro Production-Render neue `data`- und `options`-Objekte; ein Wertwechsel erzeugt zusätzlich lokalen State und einen zweiten Render | Bibliotheksinterner SVG/DOM-Neuaufbau beziehungsweise Animation ist teurer als ein einfacher React-Text; tatsächliches Animationsverhalten muss im Browser verifiziert werden | Mittel | Prop-Wert direkt verwenden oder State synchronisieren ohne Doppelrender; Daten/Optionen stabilisieren und Google-Chart im Profiler prüfen. |
@@ -52,9 +53,9 @@ Recharts zeichnet zwei Temperaturpfade ohne Punkt-Symbole. Hinzu kommen bei dem 
 ## Empfohlene nächste 5 Maßnahmen
 
 1. Auf dem Raspberry Pi mit React Profiler und Chrome Performance Panel einen 30- bis 60-minütigen beziehungsweise synthetisch wiedergegebenen Verlauf messen.
-2. `getTimelineMeasurements()` und die Modellbildung über einen geordneten, versionierten Snapshot nur bei neuer Collector-Version ausführen; doppelte Vollsortierungen entfernen.
-3. Ein fachlich abgesichertes globales Messpunktbudget oder visuelles Downsampling einführen, das Prozessgrenzen, Min/Max-Werte und den neuesten Punkt bewahrt.
-4. Timeline und statische Settings-/Panelbereiche entlang schmaler, stabiler Props isolieren und erst dann gezielt `PureComponent` oder `React.memo` einsetzen.
-5. Google Gauge und laufende Wasser-/Flammenanimationen auf dem Pi profilieren; insbesondere den doppelten Gauge-Render bei Wertänderung beseitigen, falls er messbar relevant ist.
+2. Als Performance-Stufe 2 die Timeline-Modellberechnung anhand von Snapshot-Version plus Status-/Rezeptidentität cachen und den Chart als gezielte Rendergrenze isolieren. Das nutzt die nun stabilen Snapshot-Referenzen, ohne Messdaten zu verwerfen.
+3. Falls danach die langen SVG-Pfade dominieren, ein fachlich abgesichertes visuelles Downsampling einführen, das Prozessgrenzen, Min/Max-Werte und den neuesten Punkt bewahrt.
+4. Erst anschließend weitere statische Settings-/Panelbereiche entlang schmaler Props isolieren.
+5. Google Gauge und laufende Wasser-/Flammenanimationen separat auf dem Pi profilieren.
 
 Diese Änderung verändert keine API-Pfade, DTOs, IDs, Enumwerte, Zeit-/Temperatureinheiten, Polling- oder Terminalzustände und hat daher keine Cross-Repository-Kompatibilitätsauswirkung.
