@@ -102,16 +102,46 @@ export const buildTemperatureTimelineModel = (
         observedStarts.set(activeIndex, plannedBeforeCurrent);
     }
 
+    // The controller-owned current step is a hard boundary. An observed start is
+    // preferred; otherwise derive it from the step-local elapsed time. Estimates
+    // for completed rows must never move this boundary into the future.
+    const activeStartSeconds = activeIndex >= 0
+        ? Math.max(0, observedStarts.get(activeIndex) ?? nowSeconds - currentStepElapsed)
+        : undefined;
+    if (activeIndex >= 0 && activeStartSeconds !== undefined) {
+        observedStarts.set(activeIndex, Math.min(nowSeconds, activeStartSeconds));
+    }
+
+    const getNextObservedStart = (index: number): number | undefined => {
+        let nextIndex = Number.POSITIVE_INFINITY;
+        let nextStart: number | undefined;
+        observedStarts.forEach((start, observedIndex) => {
+            if (observedIndex > index && observedIndex < nextIndex) {
+                nextIndex = observedIndex;
+                nextStart = start;
+            }
+        });
+        return nextStart;
+    };
+
     const steps: TimelineStep[] = [];
     let cursor = 0;
     processSteps.forEach((step, index) => {
         const observedStart = observedStarts.get(index);
-        const nextObservedStart = observedStarts.get(index + 1);
-        const startSeconds = Math.max(cursor, observedStart ?? cursor);
-        let endSeconds = nextObservedStart ?? startSeconds + getPlannedDuration(step);
+        const nextObservedStart = getNextObservedStart(index);
+        const hardCurrentBoundary = index < activeIndex ? activeStartSeconds : undefined;
+        const latestEnd = hardCurrentBoundary === undefined
+            ? nextObservedStart
+            : Math.min(hardCurrentBoundary, nextObservedStart ?? hardCurrentBoundary);
+        const startSeconds = latestEnd === undefined
+            ? Math.max(cursor, observedStart ?? cursor)
+            : Math.min(latestEnd, Math.max(cursor, observedStart ?? cursor));
+        let endSeconds = observedStarts.get(index + 1) ?? startSeconds + getPlannedDuration(step);
+        if (latestEnd !== undefined) endSeconds = Math.min(endSeconds, latestEnd);
         if (index === activeIndex) endSeconds = Math.max(endSeconds, nowSeconds);
-        if (index < activeIndex && nextObservedStart === undefined) endSeconds = Math.max(endSeconds, startSeconds + getPlannedDuration(step));
-        endSeconds = Math.max(startSeconds + 1, endSeconds);
+        // Completed, unobserved rows may collapse to zero real seconds. Current
+        // and future rows retain their estimates (including active heating).
+        endSeconds = Math.max(startSeconds + (index < activeIndex ? 0 : 1), endSeconds);
         steps.push({
             ...step,
             startSeconds,
