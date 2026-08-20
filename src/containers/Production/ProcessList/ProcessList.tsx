@@ -52,6 +52,7 @@ export interface ProcessListProps {
     isNextStepDisabled?: boolean;
     brewingStatus?: BrewingStatus;
     remainingSeconds?: number;
+    displayMode?: 'combined' | 'overview' | 'current';
 }
 
 interface ProcessListState {
@@ -281,7 +282,7 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
     }
 
     render() {
-        const { selectedBeer, onNextStep, isNextStepDisabled = false, brewingStatus } = this.props;
+        const { selectedBeer, onNextStep, isNextStepDisabled = false, brewingStatus, displayMode = 'combined' } = this.props;
         const steps = createProcessSteps(selectedBeer);
         const hasRecipeProcess = steps.length > 0;
         const isProcessStarted = brewingStatus !== undefined && brewingStatus.process?.state !== ProcessState.IDLE;
@@ -289,6 +290,26 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
         const activeStep = stepIndex >= 0 ? steps[stepIndex] : undefined;
         const upcomingSteps = stepIndex >= 0 ? steps.slice(stepIndex + 1) : steps;
         const progressLabel = stepIndex >= 0 ? `${stepIndex + 1} / ${steps.length}` : '';
+
+        const currentStepCard = hasRecipeProcess ? (
+            <>
+                <div className="current-process-label">Aktueller Schritt</div>
+                <section className="current-process-step" aria-label="Aktueller Prozessschritt">
+                    <div className="current-step-heading">
+                        <div>
+                            <h4>{isProcessStarted ? this.getCurrentStepTitle(activeStep) : 'Noch kein Brauvorgang gestartet'}</h4>
+                            <span className="current-step-badge">{isProcessStarted ? 'Aktiver Schritt' : 'Geplanter Ablauf'}</span>
+                        </div>
+                        {this.getCurrentStepMeta(activeStep, isProcessStarted)}
+                    </div>
+                    {this.renderStatusSection(isProcessStarted)}
+                </section>
+            </>
+        ) : <div className="process-empty-state">Kein Bier für den Brauvorgang ausgewählt.</div>;
+
+        if (displayMode === 'current') {
+            return <div className="current-step-panel">{currentStepCard}</div>;
+        }
 
         return (
             <div className="process-list">
@@ -313,20 +334,10 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
                     <div className="process-empty-state">Kein Bier für den Brauvorgang ausgewählt.</div>
                 ) : (
                     <>
-                        <div className="current-process-label">Aktueller Schritt</div>
-                        <section className="current-process-step" aria-label="Aktueller Prozessschritt">
-                            <div className="current-step-heading">
-                                <div>
-                                    <h4>{isProcessStarted ? this.getCurrentStepTitle(activeStep) : 'Noch kein Brauvorgang gestartet'}</h4>
-                                    <span className="current-step-badge">{isProcessStarted ? 'Aktiver Schritt' : 'Geplanter Ablauf'}</span>
-                                </div>
-                                {this.getCurrentStepMeta(activeStep, isProcessStarted)}
-                            </div>
-                            {this.renderStatusSection(isProcessStarted)}
-                        </section>
+                        {displayMode === 'combined' && currentStepCard}
 
-                        <section className="upcoming-process" aria-label="Weiterer Ablauf">
-                            <h4>Weiterer Ablauf</h4>
+                        <section className="upcoming-process" aria-label="Ablauf">
+                            <h4>Ablauf</h4>
                             <div className="upcoming-process-scroll">
                                 {upcomingSteps.length > 0 ? (
                                     <ul>
