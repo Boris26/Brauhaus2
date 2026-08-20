@@ -21,11 +21,24 @@ export interface TemperatureTimelineModel {
     points: TimelinePoint[];
     nowSeconds: number;
     endSeconds: number;
+    axisEndSeconds: number;
+    axisTicks: number[];
     progressPercent: number;
 }
 
 const DEFAULT_UNTIMED_STEP_SECONDS = 5 * 60;
 const MIN_LABEL_SECONDS = 3 * 60;
+const AXIS_TICK_INTERVALS_SECONDS = [5, 10, 15, 30, 60].map(minutes => minutes * 60);
+const TARGET_AXIS_INTERVAL_COUNT = 4;
+
+const buildStableTimeAxis = (contentEndSeconds: number): {axisEndSeconds: number; axisTicks: number[]} => {
+    const requiredInterval = contentEndSeconds / TARGET_AXIS_INTERVAL_COUNT;
+    const tickInterval = AXIS_TICK_INTERVALS_SECONDS.find(interval => interval >= requiredInterval)
+        ?? AXIS_TICK_INTERVALS_SECONDS.at(-1)!;
+    const axisEndSeconds = Math.max(tickInterval, Math.ceil(contentEndSeconds / tickInterval) * tickInterval);
+    const axisTicks = Array.from({length: Math.floor(axisEndSeconds / tickInterval) + 1}, (_, index) => index * tickInterval);
+    return {axisEndSeconds, axisTicks};
+};
 
 const safeNumber = (value: unknown): number | undefined => {
     const numberValue = Number(value);
@@ -171,6 +184,7 @@ export const buildTemperatureTimelineModel = (
 
     const finished = brewingStatus?.process.state === ProcessState.FINISHED;
     const endSeconds = Math.max(nowSeconds, steps.at(-1)?.endSeconds ?? 0, 60);
+    const {axisEndSeconds, axisTicks} = buildStableTimeAxis(endSeconds);
     const progressPercent = finished ? 100 : Math.min(100, Math.max(0, nowSeconds * 100 / endSeconds));
-    return {steps, points: Array.from(pointsBySecond.values()).sort((a, b) => a.elapsedSeconds - b.elapsedSeconds), nowSeconds, endSeconds, progressPercent};
+    return {steps, points: Array.from(pointsBySecond.values()).sort((a, b) => a.elapsedSeconds - b.elapsedSeconds), nowSeconds, endSeconds, axisEndSeconds, axisTicks, progressPercent};
 };

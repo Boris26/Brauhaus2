@@ -35,7 +35,7 @@ export class ProductionTemperatureTimeline extends React.Component<ProductionTem
 
     render() {
         const model = buildTemperatureTimelineModel(this.props.selectedBeer, this.props.brewingStatus, this.props.measurements, this.props.fallbackTemperature);
-        const {steps, points, nowSeconds, endSeconds, progressPercent} = model;
+        const {steps, points, nowSeconds, axisEndSeconds, axisTicks, progressPercent} = model;
         const hasChartData = steps.length > 0 || points.some((point) => point.actualTemperature !== undefined || point.targetTemperature !== undefined);
 
         return (
@@ -60,7 +60,18 @@ export class ProductionTemperatureTimeline extends React.Component<ProductionTem
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={points} margin={{top: 18, right: 28, bottom: 14, left: 4}}>
                                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.18)" />
-                                <XAxis dataKey="elapsedSeconds" type="number" domain={[0, endSeconds]} tickFormatter={this.formatAxisTime} stroke="var(--color-light-text)" />
+                                <XAxis
+                                    dataKey="elapsedSeconds"
+                                    type="number"
+                                    scale="linear"
+                                    domain={[0, axisEndSeconds]}
+                                    ticks={axisTicks}
+                                    interval={0}
+                                    allowDataOverflow
+                                    minTickGap={12}
+                                    tickFormatter={this.formatAxisTime}
+                                    stroke="var(--color-light-text)"
+                                />
                                 <YAxis domain={[0, 110]} unit="°C" tickCount={6} stroke="var(--color-light-text)" />
                                 <Tooltip labelFormatter={(value) => `Zeit: ${this.formatAxisTime(Number(value))}`} formatter={(value, name) => [`${Number(value).toFixed(1)} °C`, name === 'actualTemperature' ? 'Isttemperatur' : 'Zieltemperatur']} />
                                 {steps.map((step, index) => (
