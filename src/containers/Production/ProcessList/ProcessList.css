@@ -1,7 +1,7 @@
 .process-list {
     width: 100%;
     height: 100%;
-    padding: 0.35rem 0.45rem 3.3rem;
+    padding: 0.25rem 0.35rem 3.1rem;
     position: relative;
     min-height: 0;
     display: flex;
@@ -15,7 +15,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 0.75rem;
-    margin-bottom: 0.85rem;
+    margin-bottom: 0.65rem;
     flex: 0 0 auto;
 }
 
@@ -51,7 +51,7 @@
     border: 1px solid rgba(255, 255, 255, 0.09);
     border-left: 0.35rem solid var(--color-accent);
     border-radius: 0.8rem;
-    padding: 0.9rem 1rem;
+    padding: 0.75rem 0.85rem;
     box-shadow: inset 0 0 0 1px rgba(255, 153, 0, 0.06), 0 2px 12px var(--shadow-secondary);
     flex: 0 0 auto;
 }
@@ -108,8 +108,8 @@
     justify-content: space-between;
     align-items: baseline;
     gap: 1rem;
-    margin-top: 0.75rem;
-    padding-top: 0.65rem;
+    margin-top: 0.6rem;
+    padding-top: 0.5rem;
 }
 
 .current-step-remaining-label {
@@ -128,10 +128,10 @@
     border-top: 1px solid rgba(255, 255, 255, 0.10);
     display: flex;
     flex-direction: column;
-    gap: 0.45rem;
-    margin-top: 0.9rem;
-    min-height: clamp(5.6rem, 9vh, 7rem);
-    padding-top: 0.65rem;
+    gap: 0.35rem;
+    margin-top: 0.65rem;
+    min-height: clamp(5rem, 8vh, 6.25rem);
+    padding-top: 0.5rem;
 }
 
 .current-step-status--reserved {
@@ -187,13 +187,13 @@
     flex: 1 1 auto;
     flex-direction: column;
     min-height: 0;
-    margin-top: 1rem;
+    margin-top: 0.75rem;
 }
 
 .upcoming-process h4 {
     color: var(--color-accent);
     font-size: 0.9rem;
-    margin-bottom: 0.45rem;
+    margin-bottom: 0.35rem;
     flex: 0 0 auto;
 }
 
@@ -235,7 +235,7 @@
     grid-template-columns: 1rem minmax(0, 1fr);
     gap: 0.55rem;
     align-items: start;
-    padding: 0.35rem 0;
+    padding: 0.3rem 0;
     color: var(--color-light-text);
 }
 
@@ -278,7 +278,7 @@
 .next-step-separator {
     border: none;
     border-top: 1px solid rgba(255, 153, 0, 0.4);
-    margin: 0.9rem 0 0 0;
+    margin: 0.7rem 0 0 0;
     width: 100%;
     flex: 0 0 auto;
 }

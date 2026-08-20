@@ -29,6 +29,13 @@ const point = (elapsedTime: number, stepIndex: number, stepPhase: ProcessPhase, 
     stepIndex, stepPhase, stepMode
 });
 
+const expectMonotonicSteps = (model: ReturnType<typeof buildTemperatureTimelineModel>) => {
+    model.steps.forEach((step, index) => {
+        expect(step.endSeconds).toBeGreaterThanOrEqual(step.startSeconds);
+        if (index > 0) expect(step.startSeconds).toBeGreaterThanOrEqual(model.steps[index - 1].endSeconds);
+    });
+};
+
 describe('temperature timeline model', () => {
     it('places a late-started collector in the same process band as the process overview', () => {
         const model = buildTemperatureTimelineModel(beer, status(), [point(120, 6, ProcessPhase.MASHING_OUT, ProcessMode.HEATING)], 0);
@@ -120,5 +127,74 @@ describe('temperature timeline model', () => {
         const afterTrim = buildTemperatureTimelineModel(beer, active, trimmedHistory, 0);
 
         expect(afterTrim.steps.slice(0, 3)).toEqual(beforeTrim.steps.slice(0, 3));
+    });
+
+    it('keeps now in Rast 1 when its heating phase was skipped between polls', () => {
+        const measurements = [
+            point(0, 1, ProcessPhase.MASHING_IN, ProcessMode.WAITING),
+            point(2, 2, ProcessPhase.RAST, ProcessMode.TIMER_RUNNING)
+        ];
+        const active = status({
+            elapsedTime: 2,
+            currentStep: {index: 2, phase: ProcessPhase.RAST, mode: ProcessMode.TIMER_RUNNING, name: 'Rast 1', elapsedTime: 2}
+        });
+        const model = buildTemperatureTimelineModel(beer, active, measurements, 0);
+        const skippedHeating = model.steps[2];
+        const activeRast = model.steps[3];
+
+        expect(activeRast.name).toBe('Rast 1');
+        expect(activeRast.startSeconds).toBeLessThanOrEqual(model.nowSeconds);
+        expect(activeRast.endSeconds).toBeGreaterThanOrEqual(model.nowSeconds);
+        expect(skippedHeating.endSeconds - skippedHeating.startSeconds).toBeLessThan(300);
+        expect(model.steps.slice(0, 3).every(step => step.endSeconds <= activeRast.startSeconds)).toBe(true);
+        expectMonotonicSteps(model);
+    });
+
+    it('derives the active start from current step elapsed time when no current sample exists', () => {
+        const active = status({
+            elapsedTime: 130,
+            currentStep: {index: 2, phase: ProcessPhase.RAST, mode: ProcessMode.TIMER_RUNNING, name: 'Rast 1', elapsedTime: 10}
+        });
+        const model = buildTemperatureTimelineModel(beer, active, [point(100, 1, ProcessPhase.MASHING_IN, ProcessMode.WAITING)], 0);
+        const activeRast = model.steps[3];
+
+        expect(activeRast.startSeconds).toBe(120);
+        expect(activeRast.startSeconds).toBeLessThanOrEqual(model.nowSeconds);
+        expect(activeRast.endSeconds).toBeGreaterThanOrEqual(model.nowSeconds);
+        expectMonotonicSteps(model);
+    });
+
+    it('uses a two-second observed heating window without replacing it with five minutes', () => {
+        const measurements = [
+            point(100, 1, ProcessPhase.MASHING_IN, ProcessMode.WAITING),
+            point(100, 2, ProcessPhase.RAST, ProcessMode.HEATING),
+            point(102, 2, ProcessPhase.RAST, ProcessMode.TIMER_RUNNING)
+        ];
+        const active = status({
+            elapsedTime: 102,
+            currentStep: {index: 2, phase: ProcessPhase.RAST, mode: ProcessMode.TIMER_RUNNING, name: 'Rast 1', elapsedTime: 0}
+        });
+        const model = buildTemperatureTimelineModel(beer, active, measurements, 0);
+
+        expect(model.steps[2].endSeconds - model.steps[2].startSeconds).toBe(2);
+        expectMonotonicSteps(model);
+    });
+
+    it('lets a later non-adjacent anchor bound completed estimates and preserves future plans', () => {
+        const measurements = [
+            point(0, 1, ProcessPhase.MASHING_IN, ProcessMode.WAITING),
+            point(30, 2, ProcessPhase.RAST, ProcessMode.TIMER_RUNNING)
+        ];
+        const active = status({
+            elapsedTime: 30,
+            currentStep: {index: 2, phase: ProcessPhase.RAST, mode: ProcessMode.TIMER_RUNNING, name: 'Rast 1', elapsedTime: 0}
+        });
+        const model = buildTemperatureTimelineModel(beer, active, measurements, 0);
+
+        expect(model.steps[1].endSeconds).toBeLessThanOrEqual(model.steps[3].startSeconds);
+        expect(model.steps[2].endSeconds).toBe(model.steps[3].startSeconds);
+        expect(model.steps[4].endSeconds - model.steps[4].startSeconds).toBe(300);
+        expect(model.steps[5].endSeconds - model.steps[5].startSeconds).toBe(20 * 60);
+        expectMonotonicSteps(model);
     });
 });
