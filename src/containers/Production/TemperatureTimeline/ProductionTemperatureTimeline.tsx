@@ -43,7 +43,10 @@ export class ProductionTemperatureTimeline extends React.Component<ProductionTem
                 <div className="temperatureTimeline__header">
                     <div className="temperatureTimeline__titleArea">
                         <h3 className="temperatureTimeline__title">Temperaturverlauf</h3>
-                        <p className="temperatureTimeline__description">Isttemperatur, Zieltemperatur und Prozessschritte über den gesamten Brautag.</p>
+                        <div className="temperatureTimeline__legend" aria-label="Temperaturkurven">
+                            <span className="temperatureTimeline__legendActual">Isttemperatur</span>
+                            <span className="temperatureTimeline__legendTarget">Zieltemperatur</span>
+                        </div>
                     </div>
                     <div className="temperatureTimeline__progress" aria-label={`Braufortschritt ${Math.round(progressPercent)} Prozent`}>
                         <span>Fortschritt: {Math.round(progressPercent)}%</span>
@@ -67,8 +70,8 @@ export class ProductionTemperatureTimeline extends React.Component<ProductionTem
                                     <ReferenceLine key={`${step.name}-end`} x={step.endSeconds} stroke="rgba(255,255,255,0.24)" strokeDasharray="4 4" />
                                 ))}
                                 <ReferenceLine x={nowSeconds} stroke="var(--color-accent)" strokeWidth={2} label={{value: 'Jetzt', position: 'top', fill: 'var(--color-accent)', fontSize: 12}} />
-                                <Line type="monotone" dataKey="actualTemperature" name="Isttemperatur" stroke="var(--color-warning)" strokeWidth={2} dot={{r: 1.5}} isAnimationActive={false} connectNulls />
-                                <Line type="stepAfter" dataKey="targetTemperature" name="Zieltemperatur" stroke="var(--color-success)" strokeWidth={2} dot={false} isAnimationActive={false} connectNulls />
+                                <Line type="linear" dataKey="actualTemperature" name="Isttemperatur" stroke="var(--color-warning)" strokeWidth={2} dot={false} isAnimationActive={false} connectNulls />
+                                <Line type="stepAfter" dataKey="targetTemperature" name="Zieltemperatur" stroke="var(--color-success)" strokeWidth={1.5} strokeOpacity={0.8} dot={false} isAnimationActive={false} connectNulls />
                             </LineChart>
                         </ResponsiveContainer>
                     </div>

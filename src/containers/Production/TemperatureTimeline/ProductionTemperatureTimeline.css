@@ -32,14 +32,22 @@
     word-break: normal;
 }
 
-.temperatureTimeline__description {
+.temperatureTimeline__legend {
     margin: 0.25rem 0 0;
     font-size: 0.82rem;
     line-height: 1.25;
-    opacity: 0.78;
-    white-space: normal;
-    overflow-wrap: normal;
-    word-break: normal;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    white-space: nowrap;
+}
+
+.temperatureTimeline__legendActual {
+    color: var(--color-warning);
+}
+
+.temperatureTimeline__legendTarget {
+    color: var(--color-success);
 }
 
 .temperatureTimeline__progress {
