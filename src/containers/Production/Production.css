@@ -66,7 +66,7 @@
 .meters {
     grid-area: meters;
     display: grid;
-    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: minmax(12rem, auto) minmax(0, 1fr);
     gap: 1rem;
 }
 
@@ -110,8 +110,7 @@
     padding: var(--spacing-xs) 0;
 }
 
-/* Agitator und Temperatur mittig */
-.Agitator,
+/* Temperaturanzeige mittig */
 .Temp {
     background: var(--color-brew-bg);
     border-radius: 14px;
@@ -121,14 +120,6 @@
     min-height: 0;
     min-width: 0;
     overflow: hidden;
-}
-
-.Agitator {
-    flex-wrap: nowrap;
-    gap: 0.75rem;
-}
-
-.Temp {
     padding: 0 0.75rem;
 }
 

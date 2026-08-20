@@ -10,6 +10,17 @@
     color: var(--color-light-text);
 }
 
+.current-step-panel {
+    width: 100%;
+    min-height: 0;
+    padding: 0.8rem;
+    color: var(--color-light-text);
+    background: var(--color-surface-2);
+    border-radius: 14px;
+    box-shadow: 0 2px 8px var(--shadow-secondary);
+    overflow: hidden;
+}
+
 .process-card-header {
     display: flex;
     align-items: center;
@@ -198,7 +209,7 @@
 }
 
 .upcoming-process-scroll {
-    max-height: clamp(8rem, 32vh, 18rem);
+    flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;

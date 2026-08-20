@@ -636,28 +636,6 @@ export class Production extends React.Component<ProductionProps, ProductionState
             </div>);
     }
 
-    renderAgitator() {
-        const infinitySymbol = '\u221E';
-        const {currentAgitatorSpeed, agitatorSpeed} = this.props;
-        // Werte absichern
-        const gaugeValue = isNaN(Number(agitatorSpeed)) ? 0 : Number(agitatorSpeed);
-        const gaugeTarget = isNaN(Number(currentAgitatorSpeed)) ? 0 : Number(currentAgitatorSpeed);
-        const currentFillLiters = this.getDisplayedWaterLiters();
-        const currentTargetLiters = this.getCurrentWaterFillTargetLiters();
-        return (<div className="Agitator">
-
-            <div className="GaugeContainer">
-                <Gauge showAreas={true} value={gaugeValue} targetValue={gaugeTarget} height={200} offset={1}
-                       minValue={0}
-                       maxValue={this.MAX_AGITATOR_SPEED} label={infinitySymbol}/>
-            </div>
-            <div className="GaugeContainer">
-                <Gauge showAreas={false} value={currentFillLiters} targetValue={currentTargetLiters} height={200}
-                       offset={0.5} minValue={0} maxValue={this.MAX_WATER_LEVEL} label={"Liter"}/>
-            </div>
-        </div>);
-    }
-
     renderWater() {
         const {currentAgitatorSpeed, brewingStatus} = this.props;
         const displayedWaterLiters = this.getDisplayedWaterLiters();
@@ -718,8 +696,16 @@ export class Production extends React.Component<ProductionProps, ProductionState
         }
         const isNextStepDisabled = !this.isControllerAvailable() || !this.isNextProcedureStepAvailable();
         return (
-            <ProcessList selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} remainingSeconds={this.state.displayedRemainingSeconds} onNextStep={this.handleNextProcedureStep} isNextStepDisabled={isNextStepDisabled} />
+            <ProcessList displayMode="overview" selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} remainingSeconds={this.state.displayedRemainingSeconds} onNextStep={this.handleNextProcedureStep} isNextStepDisabled={isNextStepDisabled} />
         );
+    }
+
+    renderCurrentStep() {
+        const {selectedBeer, brewingStatus} = this.props;
+        if (selectedBeer === undefined) {
+            return null;
+        }
+        return <ProcessList displayMode="current" selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} remainingSeconds={this.state.displayedRemainingSeconds} />;
     }
 
 
@@ -744,7 +730,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
                     {this.renderProcessList()}  {/* Hier deine List-Renderfunktion */}
                 </div>
                 <div className="meters">
-                    {this.renderAgitator()}
+                    {this.renderCurrentStep()}
                     {this.renderTemperature()}
                 </div>
                 {this.renderSettings()}

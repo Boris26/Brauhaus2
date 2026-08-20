@@ -78,6 +78,20 @@ const renderProduction = (aOverrides: Partial<React.ComponentProps<typeof Produc
 
 describe('Production start button', () => {
 
+    it('places the current step above the sole temperature gauge and keeps the process column focused on the upcoming flow', () => {
+        const {container} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.IDLE)});
+        const meters = container.querySelector('.meters') as HTMLElement;
+        const processColumn = container.querySelector('.list') as HTMLElement;
+
+        expect(meters.querySelector('.current-step-panel')).toBeInTheDocument();
+        expect(meters.querySelector('.Temp')).toBeInTheDocument();
+        expect(meters.querySelectorAll('.GaugeContainer')).toHaveLength(1);
+        expect(meters.querySelector('[aria-label="Aktueller Prozessschritt"]')).toHaveTextContent('Noch kein Brauvorgang gestartet');
+        expect(processColumn).toHaveTextContent('Ablauf');
+        expect(processColumn.querySelector('.current-process-step')).not.toBeInTheDocument();
+        expect(container.querySelector('.Water')).toHaveTextContent('0,0 l');
+    });
+
     it('keeps the start button enabled when no brew is running', () => {
         renderProduction({brewingStatus: createBrewingStatus(ProcessState.IDLE), isPollingRunning: false});
         expect(screen.getByRole('button', {name: 'Start'})).not.toBeDisabled();
