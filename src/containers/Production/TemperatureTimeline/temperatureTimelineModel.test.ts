@@ -37,6 +37,20 @@ const expectMonotonicSteps = (model: ReturnType<typeof buildTemperatureTimelineM
 };
 
 describe('temperature timeline model', () => {
+    it.each([500, 2000, 5000])('keeps the ordered fast path equivalent for %i chronological measurements', (measurementCount) => {
+        const measurements = Array.from({length: measurementCount}, (_, index) => ({
+            ...point(index, 1, ProcessPhase.MASHING_IN, ProcessMode.HEATING),
+            collectionSequence: index
+        }));
+        const currentStatus = status({elapsedTime: measurementCount - 1});
+
+        const defensiveModel = buildTemperatureTimelineModel(undefined, currentStatus, measurements, 0);
+        const orderedModel = buildTemperatureTimelineModel(undefined, currentStatus, measurements, 0, {measurementsOrderedByCollection: true});
+
+        expect(orderedModel).toEqual(defensiveModel);
+        expect(orderedModel.points).toHaveLength(measurementCount);
+    });
+
     it('places a late-started collector in the same process band as the process overview', () => {
         const model = buildTemperatureTimelineModel(beer, status(), [point(120, 6, ProcessPhase.MASHING_OUT, ProcessMode.HEATING)], 0);
 
@@ -112,6 +126,36 @@ describe('temperature timeline model', () => {
         expect(sevenMinuteModel.nowSeconds).toBeGreaterThanOrEqual(activeAtSeven.startSeconds);
         expect(sevenMinuteModel.nowSeconds).toBeLessThanOrEqual(activeAtSeven.endSeconds);
         expect(sevenMinuteModel.endSeconds - fiveMinuteModel.endSeconds).toBe(120);
+    });
+
+    it('keeps the visible time axis stable across polls inside one rounded boundary', () => {
+        const models = [601, 602, 603, 604].map(elapsedTime => buildTemperatureTimelineModel(
+            undefined,
+            status({elapsedTime, currentStep: {...status().currentStep, index: 0, elapsedTime}}),
+            [point(elapsedTime, 0, ProcessPhase.MASHING_IN, ProcessMode.HEATING)],
+            0
+        ));
+
+        expect(new Set(models.map(model => model.axisEndSeconds))).toHaveSize(1);
+        models.slice(1).forEach(model => expect(model.axisTicks).toEqual(models[0].axisTicks));
+    });
+
+    it('extends the visible time axis only after crossing its rounded boundary', () => {
+        const before = buildTemperatureTimelineModel(undefined, status({elapsedTime: 899}), [], 0);
+        const after = buildTemperatureTimelineModel(undefined, status({elapsedTime: 901}), [], 0);
+
+        expect(before.axisEndSeconds).toBe(900);
+        expect(after.axisEndSeconds).toBe(1200);
+        expect(after.axisTicks.at(-1)).toBe(after.axisEndSeconds);
+    });
+
+    it('lets an overdue process grow while retaining one stable tick grid per boundary', () => {
+        const at601 = buildTemperatureTimelineModel(beer, status({elapsedTime: 601, currentStep: {...status().currentStep, elapsedTime: 601}}), [point(601, 6, ProcessPhase.MASHING_OUT, ProcessMode.HEATING)], 0);
+        const at604 = buildTemperatureTimelineModel(beer, status({elapsedTime: 604, currentStep: {...status().currentStep, elapsedTime: 604}}), [point(604, 6, ProcessPhase.MASHING_OUT, ProcessMode.HEATING)], 0);
+
+        expect(at604.endSeconds).toBeGreaterThan(at601.endSeconds);
+        expect(at604.axisEndSeconds).toBe(at601.axisEndSeconds);
+        expect(at604.axisTicks).toEqual(at601.axisTicks);
     });
 
     it('keeps observed boundaries stable when intermediate temperature detail is removed', () => {

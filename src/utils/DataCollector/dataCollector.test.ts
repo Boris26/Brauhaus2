@@ -68,4 +68,45 @@ describe('timeline measurement order', () => {
 
     expect(dataCollector.getTimelineMeasurements().map(item => item.Temperature)).toEqual([40, 41, 42]);
   });
+
+  it('reuses a versioned snapshot until timeline data changes', () => {
+    dataCollector.setBrewingStatus(createStatus(40));
+    const snapshotA = dataCollector.getTimelineSnapshot();
+    const snapshotB = dataCollector.getTimelineSnapshot();
+
+    expect(snapshotB).toBe(snapshotA);
+    expect(snapshotB.measurements).toBe(snapshotA.measurements);
+
+    // An identical status is not collected and therefore does not invalidate the snapshot.
+    dataCollector.setBrewingStatus(createStatus(40));
+    expect(dataCollector.getTimelineSnapshot()).toBe(snapshotA);
+
+    dataCollector.setBrewingStatus(createStatus(41));
+    const snapshotC = dataCollector.getTimelineSnapshot();
+    expect(snapshotC).not.toBe(snapshotA);
+    expect(snapshotC.measurements).not.toBe(snapshotA.measurements);
+    expect(snapshotC.version).toBe(snapshotA.version + 1);
+    expect(snapshotC.measurements.map(item => item.Temperature)).toEqual([40, 41]);
+  });
+
+  it('keeps the cached snapshot chronological and consistent after trimming', () => {
+    for (let index = 0; index < MAX_MEASUREMENTS_PER_STATUS_GROUP + 5; index += 1) {
+      dataCollector.setBrewingStatus(createStatus(index));
+    }
+    const snapshot = dataCollector.getTimelineSnapshot();
+    const sequences = snapshot.measurements.map(item => item.collectionSequence ?? -1);
+
+    expect(snapshot.measurements).toHaveLength(MAX_MEASUREMENTS_PER_STATUS_GROUP);
+    expect(snapshot.measurements[0].Temperature).toBe(0);
+    expect(snapshot.measurements[1].Temperature).toBe(6);
+    expect(snapshot.measurements.at(-1)?.Temperature).toBe(MAX_MEASUREMENTS_PER_STATUS_GROUP + 4);
+    expect(sequences.every((sequence, index) => index === 0 || sequences[index - 1] <= sequence)).toBe(true);
+
+    const versionBeforeNextTrim = snapshot.version;
+    dataCollector.setBrewingStatus(createStatus(MAX_MEASUREMENTS_PER_STATUS_GROUP + 5));
+    const afterTrim = dataCollector.getTimelineSnapshot();
+    expect(afterTrim.version).toBe(versionBeforeNextTrim + 1);
+    expect(afterTrim.measurements.some(item => item.Temperature === 6)).toBe(false);
+    expect(afterTrim.measurements[0].Temperature).toBe(0);
+  });
 });

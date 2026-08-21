@@ -540,7 +540,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
                 <ProductionTemperatureTimeline
                     selectedBeer={this.props.selectedBeer}
                     brewingStatus={this.props.brewingStatus}
-                    measurements={dataCollector.getTimelineMeasurements()}
+                    measurements={dataCollector.getTimelineSnapshot().measurements}
                     fallbackTemperature={this.props.temperature}
                 />
             </div>
