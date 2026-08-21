@@ -34,7 +34,7 @@ import {calculateHopSchedule, getDueHopAddition, HopAddition} from "./utils/hopS
 import {getRemainingSecondsFromStatus, shouldCountdownLocally, tickRemainingSeconds} from "./utils/productionCountdown";
 import {isAgitatorActive, isControllerAvailable as getIsControllerAvailable, isHeaterActive} from "./utils/productionStatus";
 import {RecipeWaterFill, RecipeWaterFillStatus} from "./waterFill/recipeWaterFill.types";
-import {completeWaterFill, createInitialRecipeWaterFillStatus, failWaterFill, markValveOpened, resetWaterFill, startWaterFill} from "./waterFill/recipeWaterFillState";
+import {completeWaterFill, createInitialRecipeWaterFillStatus, failWaterFill, markValveOpened, resetWaterFill, startManualWaterFill, startWaterFill} from "./waterFill/recipeWaterFillState";
 import {ProductionDialogs} from "./components/ProductionDialogs";
 import {ProductionTemperatureTimeline} from "./TemperatureTimeline/ProductionTemperatureTimeline";
 import {getDisplayedWaterLiters as selectDisplayedWaterLiters, getWaterLabel, getWaterTargetLiters, isRecipeWaterButtonDisabled as selectRecipeWaterButtonDisabled, isWaterFillingActive as selectWaterFillingActive, shouldIncludeSpargeAfterMashingOut as selectShouldIncludeSpargeAfterMashingOut, sanitizeLiters} from "./waterFill/recipeWaterFillSelectors";
@@ -174,7 +174,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
             this.setState({brewingIsRunning: false});
         }
 
-        if (this.state.recipeWaterFill.activeFillType !== undefined && waterStatus?.openClose === true && !prevProps.waterStatus?.openClose) {
+        if (this.state.recipeWaterFill.isFillActive && waterStatus?.openClose === true && !prevProps.waterStatus?.openClose) {
             this.setState((prevState) => ({recipeWaterFill: markValveOpened(prevState.recipeWaterFill)}));
         }
 
@@ -363,7 +363,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     completePendingRecipeWaterFill = (aPreviousFilledLiters?: number): void => {
         const {recipeWaterFill} = this.state;
-        if ((!recipeWaterFill.activeFillWasOpened && aPreviousFilledLiters === undefined) || recipeWaterFill.activeFillType === undefined) {
+        if ((!recipeWaterFill.activeFillWasOpened && aPreviousFilledLiters === undefined) || !recipeWaterFill.isFillActive) {
             this.setState((prevState) => ({waterSwitchState: false, recipeWaterFill: {...prevState.recipeWaterFill, activeFillWasOpened: false}}));
             return;
         }
@@ -465,8 +465,11 @@ export class Production extends React.Component<ProductionProps, ProductionState
         const {waterSwitchState, liters,} = this.state;
         const {startWaterFilling} = this.props;
         if (!waterSwitchState) {
-            this.setState({waterSwitchState: true});
-            startWaterFilling(liters);
+            this.setState((prevState) => ({
+                waterSwitchState: true,
+                waterFillingError: false,
+                recipeWaterFill: startManualWaterFill(prevState.recipeWaterFill)
+            }), () => startWaterFilling(liters));
         } else {
             this.setState({waterSwitchState: false});
         }

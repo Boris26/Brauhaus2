@@ -13,16 +13,10 @@ export const sanitizeLiters = (aValue: unknown): number => {
 };
 
 export const getDisplayedWaterLiters = (aStatus: RecipeWaterFillStatus, aWaterStatus?: WaterStatusSnapshot): number => {
-    if (aStatus.isSpargeIncluded) {
-        return aStatus.completedMashLiters + aStatus.completedSpargeLiters;
+    if (aStatus.isFillActive || aWaterStatus?.openClose === true) {
+        return sanitizeLiters(aStatus.currentWaterLiters) + sanitizeLiters(aWaterStatus?.filledLiters);
     }
-    if (aStatus.activeFillType !== undefined || aWaterStatus?.openClose === true) {
-        return sanitizeLiters(aWaterStatus?.filledLiters);
-    }
-    if (aStatus.mashState === 'COMPLETED') {
-        return aStatus.completedMashLiters;
-    }
-    return sanitizeLiters(aStatus.currentFillLiters);
+    return sanitizeLiters(aStatus.currentWaterLiters);
 };
 
 export const getWaterTargetLiters = (aStatus: RecipeWaterFillStatus, aRecipeLiters: number, aWaterStatus?: WaterStatusSnapshot): number => {
@@ -36,14 +30,13 @@ export const getWaterTargetLiters = (aStatus: RecipeWaterFillStatus, aRecipeLite
 };
 
 export const getWaterLabel = (aStatus: RecipeWaterFillStatus): string => {
-    if (aStatus.isSpargeIncluded) return 'Brauwasser gesamt';
     if (aStatus.activeFillType === 'SPARGE' || (aStatus.spargeState === 'COMPLETED' && aStatus.mashState === 'IDLE')) return 'Nachguss';
     if (aStatus.activeFillType === 'MASH' || aStatus.mashState === 'COMPLETED') return 'Hauptguss';
     return 'Aktueller Füllvorgang';
 };
 
 export const isWaterFillingActive = (aStatus: RecipeWaterFillStatus, aWaterSwitchState: boolean, aWaterStatus?: WaterStatusSnapshot): boolean =>
-    aWaterSwitchState || aStatus.activeFillType !== undefined || aWaterStatus?.openClose === true;
+    aWaterSwitchState || aStatus.isFillActive || aWaterStatus?.openClose === true;
 
 export const isRecipeWaterButtonDisabled = (aFill: RecipeWaterFill, aStatus: RecipeWaterFillStatus, aVolume: number | undefined, aControllerAvailable: boolean, aIsActive: boolean): boolean => {
     if (aVolume === undefined || !aControllerAvailable || aIsActive) return true;

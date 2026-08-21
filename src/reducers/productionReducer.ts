@@ -67,7 +67,7 @@ const productionReducer = (
             return { ...aState, agitatorIsRunning: aAction.payload.agitatorIsRunning };
         }
         case ProductionActions.ActionTypes.START_WATER_FILLING: {
-            return { ...aState, liters: aAction.payload.liters };
+            return { ...aState, liters: aAction.payload.liters, isWaterFillingSuccessful: true };
         }
         case ProductionActions.ActionTypes.START_WATER_FILLING_SUCCESS: {
             return { ...aState, isWaterFillingSuccessful: aAction.payload.isWaterFillingSuccessful };
