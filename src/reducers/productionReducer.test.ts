@@ -13,4 +13,13 @@ describe('productionReducer waterStatus', () => {
 
         expect(nextState.waterStatus).toEqual(waterStatus);
     });
+
+    it('clears a previous request failure when a new water fill starts', () => {
+        const failedState = {...initialProductionState, isWaterFillingSuccessful: false};
+
+        const nextState = productionReducer(failedState, ProductionActions.startWaterFilling(2));
+
+        expect(nextState.liters).toBe(2);
+        expect(nextState.isWaterFillingSuccessful).toBe(true);
+    });
 });

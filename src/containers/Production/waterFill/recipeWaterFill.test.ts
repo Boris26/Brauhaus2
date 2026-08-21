@@ -1,5 +1,5 @@
 import {ProcessPhase, ProcessState, WaitingFor} from '../../../model/brewingStatus.types';
-import {completeWaterFill, createInitialRecipeWaterFillStatus, failWaterFill, markValveOpened, resetWaterFill, startWaterFill} from './recipeWaterFillState';
+import {completeWaterFill, createInitialRecipeWaterFillStatus, failWaterFill, markValveOpened, resetWaterFill, startManualWaterFill, startWaterFill} from './recipeWaterFillState';
 import {getDisplayedWaterLiters, isRecipeWaterButtonDisabled, sanitizeLiters, shouldIncludeSpargeAfterMashingOut} from './recipeWaterFillSelectors';
 
 describe('recipe water fill state', () => {
@@ -38,9 +38,57 @@ describe('recipe water fill state', () => {
         const previousStatus = {waiting: {waitingFor: WaitingFor.MASHING_OUT_CONFIRMATION, canConfirm: true}};
         const currentStatus = {process: {state: ProcessState.ACTIVE}, currentStep: {phase: ProcessPhase.COOKING}};
         expect(shouldIncludeSpargeAfterMashingOut(mashCompleted, previousStatus, currentStatus)).toBe(true);
-        expect(getDisplayedWaterLiters({...mashCompleted, isSpargeIncluded: true})).toBe(30);
+        expect(getDisplayedWaterLiters({...mashCompleted, isSpargeIncluded: true})).toBe(22);
         expect(sanitizeLiters(Number.NaN)).toBe(0);
         expect(sanitizeLiters(undefined)).toBe(0);
         expect(sanitizeLiters(-1)).toBe(0);
+    });
+
+    it('accumulates consecutive manual fills in an initially empty vessel', () => {
+        const first = completeWaterFill(markValveOpened(startManualWaterFill(createInitialRecipeWaterFillStatus())), 2);
+        const second = completeWaterFill(markValveOpened(startManualWaterFill(first)), 2);
+        expect(first.currentWaterLiters).toBe(2);
+        expect(second.currentWaterLiters).toBe(4);
+    });
+
+    it('keeps completed sparge water and accumulates multiple manual additions', () => {
+        const sparge = completeWaterFill(markValveOpened(startWaterFill(createInitialRecipeWaterFillStatus(), 'sparge')), 5);
+        const plusTwo = completeWaterFill(markValveOpened(startManualWaterFill(sparge)), 2);
+        const plusOne = completeWaterFill(markValveOpened(startManualWaterFill(plusTwo)), 1);
+        expect(sparge.currentWaterLiters).toBe(5);
+        expect(plusTwo.currentWaterLiters).toBe(7);
+        expect(plusOne.currentWaterLiters).toBe(8);
+        expect(plusOne.completedSpargeLiters).toBe(5);
+    });
+
+    it('resets the vessel at mash start and does not carry prepared sparge water over', () => {
+        const sparge = completeWaterFill(markValveOpened(startWaterFill(createInitialRecipeWaterFillStatus(), 'sparge')), 5);
+        const supplementedSparge = completeWaterFill(markValveOpened(startManualWaterFill(sparge)), 2);
+        const mashStarted = startWaterFill(supplementedSparge, 'mash');
+        const mashCompleted = completeWaterFill(markValveOpened(mashStarted), 5);
+        expect(supplementedSparge.currentWaterLiters).toBe(7);
+        expect(mashStarted.currentWaterLiters).toBe(0);
+        expect(mashCompleted.currentWaterLiters).toBe(5);
+        expect(mashCompleted.currentWaterLiters).not.toBe(12);
+    });
+
+    it('accumulates manual additions after mash and uses measured rather than requested liters', () => {
+        const mash = completeWaterFill(markValveOpened(startWaterFill(createInitialRecipeWaterFillStatus(), 'mash')), 20);
+        const measuredAddition = completeWaterFill(markValveOpened(startManualWaterFill(mash)), 4.8);
+        const finalAddition = completeWaterFill(markValveOpened(startManualWaterFill(measuredAddition)), 3);
+        expect(measuredAddition.currentWaterLiters).toBe(24.8);
+        expect(finalAddition.currentWaterLiters).toBe(27.8);
+        expect(finalAddition.completedMashLiters).toBe(20);
+    });
+
+    it('shows committed water plus the current measurement without committing poll snapshots', () => {
+        const mash = completeWaterFill(markValveOpened(startWaterFill(createInitialRecipeWaterFillStatus(), 'mash')), 20);
+        const filling = markValveOpened(startManualWaterFill(mash));
+        expect(getDisplayedWaterLiters(filling, {filledLiters: 1.5, targetLiters: 5, openClose: true})).toBe(21.5);
+        expect(getDisplayedWaterLiters(filling, {filledLiters: 2, targetLiters: 5, openClose: true})).toBe(22);
+        expect(filling.currentWaterLiters).toBe(20);
+        const completed = completeWaterFill(filling, 4.8);
+        expect(completed.currentWaterLiters).toBe(24.8);
+        expect(completeWaterFill(completed, 4.8).currentWaterLiters).toBe(24.8);
     });
 });

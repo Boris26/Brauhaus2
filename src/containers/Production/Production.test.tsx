@@ -357,7 +357,7 @@ describe('Production recipe water filling', () => {
         expect(screen.queryByText('30,0 l')).not.toBeInTheDocument();
     });
 
-    it('adds Nachguss exactly once after the process leaves MASHING_OUT_CONFIRMATION for a later phase', () => {
+    it('does not add transferred Nachguss back to the current vessel after mashing out', () => {
         const waitingForMashingOut = createBrewingStatus(ProcessState.ACTIVE);
         waitingForMashingOut.currentStep.phase = ProcessPhase.MASHING_OUT;
         waitingForMashingOut.currentStep.mode = ProcessMode.WAITING;
@@ -374,10 +374,10 @@ describe('Production recipe water filling', () => {
         rerender(<Production {...props} brewingStatus={waitingForMashingOut} waterStatus={{filledLiters: 21, targetLiters: 21, openClose: false}} />);
         expect(screen.queryByText('30,0 l')).not.toBeInTheDocument();
         rerender(<Production {...props} brewingStatus={cooking} waterStatus={{filledLiters: 21, targetLiters: 21, openClose: false}} />);
-        expect(screen.getByText('Brauwasser gesamt')).toBeInTheDocument();
-        expect(screen.getByText('30,0 l')).toBeInTheDocument();
+        expect(screen.getAllByText('Hauptguss').length).toBeGreaterThan(0);
+        expect(screen.getByText('21,0 l')).toBeInTheDocument();
         rerender(<Production {...props} brewingStatus={cooking} waterStatus={{filledLiters: 21, targetLiters: 21, openClose: false}} />);
-        expect(screen.getByText('30,0 l')).toBeInTheDocument();
+        expect(screen.getByText('21,0 l')).toBeInTheDocument();
         expect(screen.queryByText('39,0 l')).not.toBeInTheDocument();
     });
 
