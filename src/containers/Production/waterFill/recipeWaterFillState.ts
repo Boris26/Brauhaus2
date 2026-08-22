@@ -48,6 +48,9 @@ export const completeWaterFill = (aStatus: RecipeWaterFillStatus, aCompletedLite
     if (!aStatus.isFillActive) {
         return {...aStatus, activeFillWasOpened: false};
     }
+    const isManualSpargeAddition = activeFillType === undefined
+        && aStatus.spargeState === 'COMPLETED'
+        && aStatus.mashState === 'IDLE';
     return {
         ...aStatus,
         activeFillType: undefined,
@@ -56,9 +59,22 @@ export const completeWaterFill = (aStatus: RecipeWaterFillStatus, aCompletedLite
         currentFillLiters: completedLiters,
         currentWaterLiters: aStatus.currentWaterLiters + completedLiters,
         completedMashLiters: activeFillType === 'MASH' ? completedLiters : aStatus.completedMashLiters,
-        completedSpargeLiters: activeFillType === 'SPARGE' ? completedLiters : aStatus.completedSpargeLiters,
+        completedSpargeLiters: activeFillType === 'SPARGE'
+            ? completedLiters
+            : aStatus.completedSpargeLiters + (isManualSpargeAddition ? completedLiters : 0),
         mashState: activeFillType === 'MASH' ? 'COMPLETED' : aStatus.mashState,
         spargeState: activeFillType === 'SPARGE' ? 'COMPLETED' : aStatus.spargeState
+    };
+};
+
+export const includePreparedSpargeAfterMashingOut = (aStatus: RecipeWaterFillStatus): RecipeWaterFillStatus => {
+    if (aStatus.isSpargeIncluded || aStatus.spargeState !== 'COMPLETED' || aStatus.mashState !== 'COMPLETED') {
+        return aStatus;
+    }
+    return {
+        ...aStatus,
+        currentWaterLiters: aStatus.currentWaterLiters + aStatus.completedSpargeLiters,
+        isSpargeIncluded: true
     };
 };
 

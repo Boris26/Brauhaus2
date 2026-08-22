@@ -1,5 +1,5 @@
 import {ProcessPhase, ProcessState, WaitingFor} from '../../../model/brewingStatus.types';
-import {completeWaterFill, createInitialRecipeWaterFillStatus, failWaterFill, markValveOpened, resetWaterFill, startManualWaterFill, startWaterFill} from './recipeWaterFillState';
+import {completeWaterFill, createInitialRecipeWaterFillStatus, failWaterFill, includePreparedSpargeAfterMashingOut, markValveOpened, resetWaterFill, startManualWaterFill, startWaterFill} from './recipeWaterFillState';
 import {getDisplayedWaterLiters, isRecipeWaterButtonDisabled, sanitizeLiters, shouldIncludeSpargeAfterMashingOut} from './recipeWaterFillSelectors';
 
 describe('recipe water fill state', () => {
@@ -90,5 +90,88 @@ describe('recipe water fill state', () => {
         const completed = completeWaterFill(filling, 4.8);
         expect(completed.currentWaterLiters).toBe(24.8);
         expect(completeWaterFill(completed, 4.8).currentWaterLiters).toBe(24.8);
+    });
+
+    it('ignores the previous operation status until the new valve-open status is observed', () => {
+        const firstCompleted = completeWaterFill(markValveOpened(startManualWaterFill(createInitialRecipeWaterFillStatus())), 2);
+        const secondStarted = startManualWaterFill(firstCompleted);
+
+        expect(getDisplayedWaterLiters(secondStarted, {filledLiters: 2, targetLiters: 2, openClose: false})).toBe(2);
+
+        const firstNewPoll = markValveOpened(secondStarted);
+        expect(getDisplayedWaterLiters(firstNewPoll, {filledLiters: 0.3, targetLiters: 2, openClose: true})).toBe(2.3);
+    });
+
+    it('keeps the fill base stable across polls and commits the final measurement exactly once', () => {
+        const firstCompleted = completeWaterFill(markValveOpened(startManualWaterFill(createInitialRecipeWaterFillStatus())), 2);
+        const filling = markValveOpened(startManualWaterFill(firstCompleted));
+
+        [0.3, 0.7, 1.2, 1.7, 2].forEach((filledLiters) => {
+            expect(getDisplayedWaterLiters(filling, {filledLiters, targetLiters: 2, openClose: true})).toBeCloseTo(2 + filledLiters);
+            expect(filling.currentWaterLiters).toBe(2);
+        });
+
+        const completed = completeWaterFill(filling, 2);
+        expect(completed.currentWaterLiters).toBe(4);
+        expect(getDisplayedWaterLiters(completed, {filledLiters: 2, targetLiters: 2, openClose: false})).toBe(4);
+    });
+
+    it('preserves a real controller overfill instead of clamping it to the target', () => {
+        const firstCompleted = completeWaterFill(markValveOpened(startManualWaterFill(createInitialRecipeWaterFillStatus())), 2);
+        const filling = markValveOpened(startManualWaterFill(firstCompleted));
+        const completed = completeWaterFill(filling, 2.3);
+
+        expect(getDisplayedWaterLiters(filling, {filledLiters: 2.3, targetLiters: 2, openClose: true})).toBe(4.3);
+        expect(completed.currentWaterLiters).toBe(4.3);
+    });
+
+    describe('brewing start water retention', () => {
+        it('keeps completed mash water and manual additions while mash start still resets transferred sparge', () => {
+            const sparge = completeWaterFill(markValveOpened(startWaterFill(createInitialRecipeWaterFillStatus(), 'sparge')), 6);
+            const mashStarted = startWaterFill(sparge, 'mash');
+            expect(mashStarted.currentWaterLiters).toBe(0);
+            expect(mashStarted.completedSpargeLiters).toBe(6);
+
+            const mash = completeWaterFill(markValveOpened(mashStarted), 20);
+            const supplementedMash = completeWaterFill(markValveOpened(startManualWaterFill(mash)), 2);
+            // Starting brewing is deliberately not a water-state transition.
+            const afterBrewingStart = supplementedMash;
+            expect(afterBrewingStart.currentWaterLiters).toBe(22);
+        });
+    });
+
+    describe('prepared sparge inclusion after confirmed mashing-out', () => {
+        it('stores automatic and manual sparge as the actual prepared amount', () => {
+            const automatic = completeWaterFill(markValveOpened(startWaterFill(createInitialRecipeWaterFillStatus(), 'sparge')), 5);
+            const supplemented = completeWaterFill(markValveOpened(startManualWaterFill(automatic)), 1);
+            expect(supplemented.completedSpargeLiters).toBe(6);
+        });
+
+        it('adds measured prepared sparge exactly once', () => {
+            const status = {...createInitialRecipeWaterFillStatus(), spargeState: 'COMPLETED' as const, mashState: 'COMPLETED' as const, currentWaterLiters: 20, completedSpargeLiters: 6};
+            const included = includePreparedSpargeAfterMashingOut(status);
+            expect(included.currentWaterLiters).toBe(26);
+            expect(includePreparedSpargeAfterMashingOut(included)).toBe(included);
+            expect(included.currentWaterLiters).not.toBe(25);
+        });
+    });
+
+    it('integrates sparge preparation, mash reset, brewing start retention and one-time sparge inclusion', () => {
+        const automaticSparge = completeWaterFill(markValveOpened(startWaterFill(createInitialRecipeWaterFillStatus(), 'sparge')), 5);
+        const preparedSparge = completeWaterFill(markValveOpened(startManualWaterFill(automaticSparge)), 1);
+        expect(preparedSparge.currentWaterLiters).toBe(6);
+        expect(preparedSparge.completedSpargeLiters).toBe(6);
+
+        const mashStarted = startWaterFill(preparedSparge, 'mash');
+        expect(mashStarted.currentWaterLiters).toBe(0);
+        expect(mashStarted.completedSpargeLiters).toBe(6);
+        const mash = completeWaterFill(markValveOpened(mashStarted), 20);
+        const supplementedMash = completeWaterFill(markValveOpened(startManualWaterFill(mash)), 2);
+        const afterBrewingStart = supplementedMash;
+        expect(afterBrewingStart.currentWaterLiters).toBe(22);
+
+        const afterMashingOut = includePreparedSpargeAfterMashingOut(afterBrewingStart);
+        expect(afterMashingOut.currentWaterLiters).toBe(28);
+        expect(includePreparedSpargeAfterMashingOut(afterMashingOut).currentWaterLiters).toBe(28);
     });
 });
