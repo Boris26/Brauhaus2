@@ -13,7 +13,10 @@ export const sanitizeLiters = (aValue: unknown): number => {
 };
 
 export const getDisplayedWaterLiters = (aStatus: RecipeWaterFillStatus, aWaterStatus?: WaterStatusSnapshot): number => {
-    if (aStatus.isFillActive || aWaterStatus?.openClose === true) {
+    // Starting a new request does not synchronously reset the controller's last
+    // WaterStatus.  Only use its measurement once the new operation has actually
+    // been observed open; until then currentWaterLiters is the stable fill base.
+    if ((aStatus.isFillActive && aStatus.activeFillWasOpened) || aWaterStatus?.openClose === true) {
         return sanitizeLiters(aStatus.currentWaterLiters) + sanitizeLiters(aWaterStatus?.filledLiters);
     }
     return sanitizeLiters(aStatus.currentWaterLiters);
