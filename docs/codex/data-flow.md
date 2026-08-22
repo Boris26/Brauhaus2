@@ -45,9 +45,6 @@ Needs verification: backend ordering of `GET beers`, because the UI treats the l
 - The production UI keeps `recipeWaterFill.currentWaterLiters` as the committed vessel-water snapshot for the complete lifetime of a fill operation. Poll values are displayed as that stable base plus `WaterStatus.filledLiters`; they are not committed into the base while the valve is open.
 - A newly dispatched fill does not immediately make the prior, closed `WaterStatus` current. The UI displays only the committed base until it observes `openClose: true` for the new operation. The first such status is displayed immediately, including a legitimate partial value such as `0.3` liters.
 - On the first transition from `openClose: true` to `false`, the final measured `filledLiters` is committed exactly once. A final value above `targetLiters` remains visible and is not clamped because the controller contract defines `filledLiters` as the measured operation amount.
-- Starting the brewing process sends recipe/control data but does not reset the committed vessel-water amount; starting the mash-water fill remains the distinct physical transition that resets the visible vessel after prepared sparge has been transferred out.
-- `completedSpargeLiters` stores the measured automatic sparge fill plus manual additions made after sparge completion and before mash start. Mash start resets only the visible `currentWaterLiters`, retaining this prepared-sparge amount.
-- Prepared sparge is added back to `currentWaterLiters` exactly once when control status leaves the explicit `MASHING_OUT_CONFIRMATION` wait and advances to cooking, cooling, or a finished state. `isSpargeIncluded` guards repeated polls and renders.
 
 ## Confirm/waiting flow
 
