@@ -1,5 +1,5 @@
 import {ProcessPhase, ProcessState, WaitingFor} from '../../../model/brewingStatus.types';
-import {completeWaterFill, createInitialRecipeWaterFillStatus, failWaterFill, markValveOpened, resetWaterFill, startManualWaterFill, startWaterFill} from './recipeWaterFillState';
+import {completeWaterFill, createInitialRecipeWaterFillStatus, failWaterFill, includePreparedSpargeAfterMashingOut, markValveOpened, resetWaterFill, startManualWaterFill, startWaterFill} from './recipeWaterFillState';
 import {getDisplayedWaterLiters, isRecipeWaterButtonDisabled, sanitizeLiters, shouldIncludeSpargeAfterMashingOut} from './recipeWaterFillSelectors';
 
 describe('recipe water fill state', () => {

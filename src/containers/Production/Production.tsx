@@ -34,7 +34,7 @@ import {calculateHopSchedule, getDueHopAddition, HopAddition} from "./utils/hopS
 import {getRemainingSecondsFromStatus, shouldCountdownLocally, tickRemainingSeconds} from "./utils/productionCountdown";
 import {isAgitatorActive, isControllerAvailable as getIsControllerAvailable, isHeaterActive} from "./utils/productionStatus";
 import {RecipeWaterFill, RecipeWaterFillStatus} from "./waterFill/recipeWaterFill.types";
-import {completeWaterFill, createInitialRecipeWaterFillStatus, failWaterFill, markValveOpened, resetWaterFill, startManualWaterFill, startWaterFill} from "./waterFill/recipeWaterFillState";
+import {completeWaterFill, createInitialRecipeWaterFillStatus, failWaterFill, includePreparedSpargeAfterMashingOut, markValveOpened, resetWaterFill, startManualWaterFill, startWaterFill} from "./waterFill/recipeWaterFillState";
 import {ProductionDialogs} from "./components/ProductionDialogs";
 import {ProductionTemperatureTimeline} from "./TemperatureTimeline/ProductionTemperatureTimeline";
 import {getDisplayedWaterLiters as selectDisplayedWaterLiters, getWaterLabel, getWaterTargetLiters, isRecipeWaterButtonDisabled as selectRecipeWaterButtonDisabled, isWaterFillingActive as selectWaterFillingActive, shouldIncludeSpargeAfterMashingOut as selectShouldIncludeSpargeAfterMashingOut, sanitizeLiters} from "./waterFill/recipeWaterFillSelectors";
@@ -183,7 +183,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
         }
 
         if (!this.state.recipeWaterFill.isSpargeIncluded && this.shouldIncludeSpargeAfterMashingOut(prevProps.brewingStatus, brewingStatus)) {
-            this.setState((prevState) => ({recipeWaterFill: {...prevState.recipeWaterFill, isSpargeIncluded: true}}));
+            this.setState((prevState) => ({recipeWaterFill: includePreparedSpargeAfterMashingOut(prevState.recipeWaterFill)}));
         }
 
 
@@ -489,7 +489,6 @@ export class Production extends React.Component<ProductionProps, ProductionState
         if (selectedBeer === undefined || this.isStartButtonDisabled()) {
             return;
         }
-        this.resetRecipeWaterFillState();
         this.isBrewingStartRequestPending = true;
         dataCollector.reset();
         const result = mapBeerToBrewingData(selectedBeer);

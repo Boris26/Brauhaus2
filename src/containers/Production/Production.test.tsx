@@ -418,15 +418,46 @@ describe('Production recipe water filling', () => {
         expect(screen.getByRole('button', {name: 'Hauptguss einfüllen'})).toBeDisabled();
     });
 
-    it('resets completed recipe water filling when a new brew starts', () => {
-        const {rerender, props} = renderProduction({selectedBeer: createBeer(21, 9), waterStatus: {filledLiters: 0, targetLiters: 0, openClose: false}});
+    it('keeps filled mash water at brewing start and includes prepared sparge once after mashing-out confirmation', () => {
+        const waitingForMashingOut = createBrewingStatus(ProcessState.ACTIVE);
+        waitingForMashingOut.currentStep.phase = ProcessPhase.MASHING_OUT;
+        waitingForMashingOut.currentStep.mode = ProcessMode.WAITING;
+        waitingForMashingOut.waiting = {waitingFor: WaitingFor.MASHING_OUT_CONFIRMATION, canConfirm: true};
+        const cooking = createBrewingStatus(ProcessState.ACTIVE);
+        cooking.currentStep.phase = ProcessPhase.COOKING;
+        cooking.currentStep.mode = ProcessMode.HEATING;
+        const {rerender, props, container} = renderProduction({selectedBeer: createBeer(20, 5), waterStatus: {filledLiters: 0, targetLiters: 0, openClose: false}});
+
+        // Prepare 5 l recipe sparge plus a measured 1 l manual addition.
         fireEvent.click(getSpargeButton());
-        rerender(<Production {...props} waterStatus={{filledLiters: 9, targetLiters: 9, openClose: true}} />);
-        rerender(<Production {...props} waterStatus={{filledLiters: 9, targetLiters: 9, openClose: false}} />);
-        expect(screen.getByRole('button', {name: '✓ Nachguss fertig'})).toBeDisabled();
+        rerender(<Production {...props} waterStatus={{filledLiters: 5, targetLiters: 5, openClose: true}} />);
+        rerender(<Production {...props} waterStatus={{filledLiters: 5, targetLiters: 5, openClose: false}} />);
+        const manualWaterSwitch = container.querySelector('.settingsRowWater input') as HTMLInputElement;
+        fireEvent.click(manualWaterSwitch);
+        rerender(<Production {...props} waterStatus={{filledLiters: 1, targetLiters: 1, openClose: true}} />);
+        rerender(<Production {...props} waterStatus={{filledLiters: 1, targetLiters: 1, openClose: false}} />);
+        expect(screen.getByText('6,0 l')).toBeInTheDocument();
+
+        // Mash start still represents transfer of sparge out of the visible vessel.
+        fireEvent.click(getMashButton());
+        expect(screen.getByText('0,0 l')).toBeInTheDocument();
+        rerender(<Production {...props} waterStatus={{filledLiters: 20, targetLiters: 20, openClose: true}} />);
+        rerender(<Production {...props} waterStatus={{filledLiters: 20, targetLiters: 20, openClose: false}} />);
+        fireEvent.click(manualWaterSwitch);
+        rerender(<Production {...props} waterStatus={{filledLiters: 2, targetLiters: 2, openClose: true}} />);
+        rerender(<Production {...props} waterStatus={{filledLiters: 2, targetLiters: 2, openClose: false}} />);
+        expect(screen.getByText('22,0 l')).toBeInTheDocument();
+
+        // Starting the brewing process is not a physical water transition.
         fireEvent.click(screen.getByRole('button', {name: 'Start'}));
-        expect(screen.getByRole('button', {name: 'Nachguss einfüllen'})).not.toBeDisabled();
-        expect(screen.getByRole('button', {name: 'Hauptguss einfüllen'})).toBeDisabled();
+        expect(screen.getByText('22,0 l')).toBeInTheDocument();
+
+        // Leaving the explicit mashing-out confirmation adds actual prepared sparge once.
+        rerender(<Production {...props} brewingStatus={waitingForMashingOut} waterStatus={{filledLiters: 2, targetLiters: 2, openClose: false}} />);
+        rerender(<Production {...props} brewingStatus={cooking} waterStatus={{filledLiters: 2, targetLiters: 2, openClose: false}} />);
+        expect(screen.getByText('28,0 l')).toBeInTheDocument();
+        rerender(<Production {...props} brewingStatus={cooking} waterStatus={{filledLiters: 2, targetLiters: 2, openClose: false}} />);
+        expect(screen.getByText('28,0 l')).toBeInTheDocument();
     });
 
     it('keeps the existing manual water filling control unchanged', () => {
