@@ -24,6 +24,7 @@
 ## Remaining PI control verification items
 
 - Exact operational meaning of `WaterStatus.filledLiters / WaterStatus.targetLiters` beyond the UI display/control value remains Needs verification.
+- The UI can distinguish a stale status/double count from controller overfill, but this repository contains no runtime PI log for a reported physical fill. If a 2-liter request finishes with `filledLiters: 2.3`, the resulting cumulative 4.3 liters is intentional UI behavior; the valve timing, sensor measurement, and water after-run are **Needs verification** in the PI-control repository/logs.
 - Long-term stability of `GET /temperatur/0` remains Needs verification.
 - Socket.io `overheat` payload shape remains Needs verification.
 - Initial empty `Status` behavior remains Needs verification unless PI control guarantees a complete structured/default status object.

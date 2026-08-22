@@ -91,4 +91,37 @@ describe('recipe water fill state', () => {
         expect(completed.currentWaterLiters).toBe(24.8);
         expect(completeWaterFill(completed, 4.8).currentWaterLiters).toBe(24.8);
     });
+
+    it('ignores the previous operation status until the new valve-open status is observed', () => {
+        const firstCompleted = completeWaterFill(markValveOpened(startManualWaterFill(createInitialRecipeWaterFillStatus())), 2);
+        const secondStarted = startManualWaterFill(firstCompleted);
+
+        expect(getDisplayedWaterLiters(secondStarted, {filledLiters: 2, targetLiters: 2, openClose: false})).toBe(2);
+
+        const firstNewPoll = markValveOpened(secondStarted);
+        expect(getDisplayedWaterLiters(firstNewPoll, {filledLiters: 0.3, targetLiters: 2, openClose: true})).toBe(2.3);
+    });
+
+    it('keeps the fill base stable across polls and commits the final measurement exactly once', () => {
+        const firstCompleted = completeWaterFill(markValveOpened(startManualWaterFill(createInitialRecipeWaterFillStatus())), 2);
+        const filling = markValveOpened(startManualWaterFill(firstCompleted));
+
+        [0.3, 0.7, 1.2, 1.7, 2].forEach((filledLiters) => {
+            expect(getDisplayedWaterLiters(filling, {filledLiters, targetLiters: 2, openClose: true})).toBeCloseTo(2 + filledLiters);
+            expect(filling.currentWaterLiters).toBe(2);
+        });
+
+        const completed = completeWaterFill(filling, 2);
+        expect(completed.currentWaterLiters).toBe(4);
+        expect(getDisplayedWaterLiters(completed, {filledLiters: 2, targetLiters: 2, openClose: false})).toBe(4);
+    });
+
+    it('preserves a real controller overfill instead of clamping it to the target', () => {
+        const firstCompleted = completeWaterFill(markValveOpened(startManualWaterFill(createInitialRecipeWaterFillStatus())), 2);
+        const filling = markValveOpened(startManualWaterFill(firstCompleted));
+        const completed = completeWaterFill(filling, 2.3);
+
+        expect(getDisplayedWaterLiters(filling, {filledLiters: 2.3, targetLiters: 2, openClose: true})).toBe(4.3);
+        expect(completed.currentWaterLiters).toBe(4.3);
+    });
 });
