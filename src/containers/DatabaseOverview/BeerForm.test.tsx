@@ -68,6 +68,19 @@ const fillValidRecipe = () => {
     fireEvent.change(yeastQuantity, {target: {value: '1'}});
 };
 
+const expectProcedureTypeOptions = (select: HTMLElement) => {
+    const options = within(select).getAllByRole('option');
+    expect(options).toHaveLength(2);
+    expect(options.map((option) => ({
+        value: (option as HTMLOptionElement).value,
+        label: (option as HTMLOptionElement).label,
+        text: option.textContent,
+    }))).toEqual([
+        {value: ProcedureType.RAST, label: 'Rast', text: 'Rast'},
+        {value: ProcedureType.DECOCTION, label: 'Dekoktion', text: 'Dekoktion'},
+    ]);
+};
+
 describe('BeerForm accordions', () => {
     it('opens basic and brewing data initially while keeping table sections collapsed', () => {
         renderBeerForm();
