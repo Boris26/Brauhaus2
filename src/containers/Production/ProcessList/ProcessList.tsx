@@ -412,7 +412,7 @@ export function createProcessSteps(selectedBeer: Beer): ProcessListStep[] {
         const isFixedStep = ['Einmaischen', 'Abmaischen', 'Kochen'].includes(step.type);
         if (!isFixedStep) {
             const phase = procedureType === ProcedureType.DECOCTION ? ProcessPhase.DECOCTION : ProcessPhase.RAST;
-            processSteps.push({ name: `Aufheizen für ${step.type}`, entryType: ProcessListEntryType.HEATING, controlStepIndex, phase, detail: {temperature: step.temperature} });
+            if (procedureType === ProcedureType.RAST) processSteps.push({ name: `Aufheizen für ${step.type}`, entryType: ProcessListEntryType.HEATING, controlStepIndex, phase, detail: {temperature: step.temperature} });
             processSteps.push({ name: step.type || (phase === ProcessPhase.DECOCTION ? 'Dekoktion' : 'Rast'), entryType: ProcessListEntryType.PROCESS, controlStepIndex, phase, detail: {temperature: step.temperature, duration: step.time, durationUnit: ProcessListDurationUnit.MINUTES, confirmationRequired: procedureType === ProcedureType.DECOCTION} });
             controlStepIndex++;
             lastMashStepIndex = processSteps.length - 1;

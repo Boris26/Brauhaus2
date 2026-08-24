@@ -25,6 +25,14 @@ export function normalizeFermentationStepsForProduction(steps: FermentationSteps
       ? RestExecutionMode.CONFIRMATION_HOLD
       : (step.executionMode ?? RestExecutionMode.TIMED);
 
+    if (fixedProcessStepTypes.has(step.type)) continue;
+
+    if (procedureType === ProcedureType.DECOCTION) {
+      const {time, temperature, ...decoction} = step;
+      normalized.push({...decoction, procedureType, executionMode: RestExecutionMode.CONFIRMATION_HOLD});
+      continue;
+    }
+
     if (!isValidTemperature(step.temperature)) {
       return { ok: false, error: `Ungültige Rasttemperatur bei Schritt "${step.type}".` };
     }
@@ -33,11 +41,6 @@ export function normalizeFermentationStepsForProduction(steps: FermentationSteps
     if (executionMode === RestExecutionMode.CONFIRMATION_HOLD) {
       const { time, ...restWithoutTime } = step;
       normalized.push({ ...restWithoutTime, executionMode, procedureType });
-      continue;
-    }
-
-    // Ein-/Abmaischen/Kochen sind feste Prozessschritte über Top-Level-Felder und dürfen nicht als normale Rasten gesendet werden.
-    if (fixedProcessStepTypes.has(step.type)) {
       continue;
     }
 

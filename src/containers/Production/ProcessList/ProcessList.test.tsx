@@ -80,6 +80,7 @@ describe('ProcessList current-step mapping', () => {
 
         expect(steps[decoctionIndex + 1].name).toBe('Jod Probe');
         expect(steps[getActiveProcessStepIndex(steps, 3, {index: 3, phase: ProcessPhase.DECOCTION, mode: ProcessMode.WAITING})].name).toBe('Kochmaische');
+        expect(steps.some(step => step.name === 'Aufheizen für Kochmaische')).toBe(false);
     });
     it('builds visible process rows with shared control indices for heating and process entries', () => {
         expect(createProcessSteps(selectedBeer).map(step => `${step.controlStepIndex ?? '-'}:${step.name}`)).toEqual([
