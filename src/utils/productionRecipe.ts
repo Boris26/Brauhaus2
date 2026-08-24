@@ -3,8 +3,8 @@ import { BrewingData } from '../model/BrewingData';
 import { RestExecutionMode } from '../enums/eRestExecutionMode';
 import { ProcedureType } from '../enums/eProcedureType';
 
-const isValidTemperature = (value: unknown) => typeof value === 'number' && Number.isFinite(value) && value > 0;
-const isValidTimedDuration = (value: unknown) => typeof value === 'number' && Number.isFinite(value) && value > 0;
+const isValidTemperature = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0;
+const isValidTimedDuration = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0;
 const FALLBACK_COOKING_TEMPERATURE_CELSIUS = 99;
 
 export interface ProductionRecipeNormalizationResult {
@@ -62,8 +62,10 @@ export function normalizeFermentationStepsForProduction(steps: FermentationSteps
 export function mapBeerToBrewingData(beer: Beer): ProductionRecipeNormalizationResult {
   const ein = beer.fermentation.find(item => item.type === 'Einmaischen');
   const aus = beer.fermentation.find(item => item.type === 'Abmaischen');
+  const mashupTemperature = ein?.temperature;
+  const mashdownTemperature = aus?.temperature;
 
-  if (!ein || !aus || !isValidTemperature(ein.temperature) || !isValidTemperature(aus.temperature)) {
+  if (!isValidTemperature(mashupTemperature) || !isValidTemperature(mashdownTemperature)) {
     return { ok: false, error: 'Einmaischen/Abmaischen Temperatur fehlt oder ist ungültig.' };
   }
   if (!isValidTimedDuration(beer.cookingTime)) {
@@ -79,8 +81,8 @@ export function mapBeerToBrewingData(beer: Beer): ProductionRecipeNormalizationR
   return {
     ok: true,
     brewingData: {
-      MashdownTemperature: aus.temperature,
-      MashupTemperature: ein.temperature,
+      MashdownTemperature: mashdownTemperature,
+      MashupTemperature: mashupTemperature,
       CookingTemperature: cookingTemperature,
       CookingTime: beer.cookingTime,
       Rasten: normalizedStepsResult.fermentationSteps ?? []
