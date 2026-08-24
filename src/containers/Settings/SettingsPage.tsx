@@ -2,6 +2,8 @@ import React from 'react';
 import './SettingsPage.css';
 import { ThemeName } from '../../utils/theme';
 import { PushService, getPermissionState, isPushSupported } from '../../utils/pushService';
+import { AudioRepository } from '../../repositorys/AudioRepository';
+import { SOUND_LABELS, SOUND_TYPES, SoundType } from '../../enums/eSoundType';
 
 interface SettingsPageProps {
     theme: ThemeName;
@@ -18,6 +20,8 @@ interface SettingsPageState {
     pushSubscribed: boolean;
     pushLoading: boolean;
     pushError: string | null;
+    soundPlaying: SoundType | null;
+    soundError: string | null;
 }
 
 export class SettingsPage extends React.Component<SettingsPageProps, SettingsPageState> {
@@ -34,8 +38,12 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
             pushSubscribed: false,
             pushLoading: false,
             pushError: null,
+            soundPlaying: null,
+            soundError: null,
         };
     }
+
+    private soundRequestActive = false;
 
     get activeThemeLabel() {
         return this.props.theme === 'dark-alt' ? 'Dunkles Theme' : 'Helles Theme';
@@ -132,6 +140,23 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
         });
     };
 
+    handleSoundTest = async (sound: SoundType) => {
+        if (this.soundRequestActive) {
+            return;
+        }
+
+        this.soundRequestActive = true;
+        this.setState({ soundPlaying: sound, soundError: null });
+        try {
+            await AudioRepository.testSound(sound);
+        } catch (error) {
+            this.setState({ soundError: 'Sound konnte nicht abgespielt werden.' });
+        } finally {
+            this.soundRequestActive = false;
+            this.setState({ soundPlaying: null });
+        }
+    };
+
     handleSave = () => {
         this.setState({ statusMessage: 'Einstellungen gespeichert.' });
     };
@@ -150,7 +175,7 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
 
     render() {
         const { theme } = this.props;
-        const { autoConnect, notificationsEnabled, temperatureUnit, statusMessage, pushSupported, pushSubscribed, pushLoading, pushError, pushPermission } = this.state;
+        const { autoConnect, notificationsEnabled, temperatureUnit, statusMessage, pushSupported, pushSubscribed, pushLoading, pushError, pushPermission, soundPlaying, soundError } = this.state;
 
         return (
             <div className="settings-page">
@@ -223,6 +248,32 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                                 />
                                 <label htmlFor="notifications">{notificationsEnabled ? 'Aktiviert' : 'Deaktiviert'}</label>
                             </div>
+                        </div>
+                    </section>
+
+                    <section className="settings-card">
+                        <div className="settings-card-header">
+                            <h3>Sounds</h3>
+                            <p>Hier können die Signaltöne der Brausteuerung getestet werden.</p>
+                        </div>
+                        {soundError && (
+                            <p className="settings-error" role="alert">{soundError}</p>
+                        )}
+                        <div className="sound-list">
+                            {SOUND_TYPES.map((sound) => (
+                                <div className="sound-row" key={sound}>
+                                    <span className="sound-label">{SOUND_LABELS[sound]}</span>
+                                    <button
+                                        className="settings-secondary sound-test-button"
+                                        type="button"
+                                        onClick={() => this.handleSoundTest(sound)}
+                                        disabled={soundPlaying !== null}
+                                        aria-label={`${SOUND_LABELS[sound]} testen`}
+                                    >
+                                        {soundPlaying === sound ? 'Wird abgespielt…' : '▶ Testen'}
+                                    </button>
+                                </div>
+                            ))}
                         </div>
                     </section>
 
