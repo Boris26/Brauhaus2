@@ -3,7 +3,7 @@ import {render, screen, fireEvent, waitFor} from '@testing-library/react';
 import {Production} from './Production';
 import {Beer} from '../../model/Beer';
 import {ToggleState} from '../../enums/eToggleState';
-import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
+import {AlarmType, BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
 
 const createBeer = (aMashVolume: number | undefined = 18, aSpargeVolume: number | undefined = 12, aId: string = '1'): Beer => ({
     id: aId,
@@ -178,6 +178,45 @@ describe('Production controller availability dialog', () => {
 
         expect(screen.queryByText('Die Brau-Steuerung ist nicht erreichbar')).not.toBeInTheDocument();
         expect(screen.queryByText('Fehler beim Backend-Check')).not.toBeInTheDocument();
+    });
+});
+
+describe('Production equipment alarm dialog', () => {
+    const withEquipmentAlarm = (aStatus: BrewingStatus): BrewingStatus => ({
+        ...aStatus,
+        alarms: [{type: AlarmType.EQUIPMENT_ALARM, active: true}]
+    });
+
+    it('is absent without an alarm and visible immediately for an initially active alarm', () => {
+        const {unmount} = renderProduction();
+        expect(screen.queryByRole('dialog', {name: 'Anlagenalarm'})).not.toBeInTheDocument();
+        unmount();
+        renderProduction({brewingStatus: withEquipmentAlarm(createBrewingStatus(ProcessState.ACTIVE))});
+        expect(screen.getByRole('dialog', {name: 'Anlagenalarm'})).toBeInTheDocument();
+        expect(screen.getByText(/angeschlossene Anlagensteuerung meldet einen Fehler/)).toBeInTheDocument();
+    });
+
+    it('stays dismissed across active polls and reopens for a new alarm cycle', () => {
+        const inactive = createBrewingStatus(ProcessState.ACTIVE);
+        const active = withEquipmentAlarm(inactive);
+        const {rerender, props} = renderProduction({brewingStatus: inactive});
+        rerender(<Production {...props} brewingStatus={active} />);
+        fireEvent.click(screen.getByRole('button', {name: 'Schließen'}));
+        rerender(<Production {...props} brewingStatus={{...active}} />);
+        rerender(<Production {...props} brewingStatus={{...active}} />);
+        expect(screen.queryByRole('dialog', {name: 'Anlagenalarm'})).not.toBeInTheDocument();
+        rerender(<Production {...props} brewingStatus={inactive} />);
+        rerender(<Production {...props} brewingStatus={active} />);
+        expect(screen.getByRole('dialog', {name: 'Anlagenalarm'})).toBeInTheDocument();
+    });
+
+    it('closes automatically without user action when the alarm ends', () => {
+        const inactive = createBrewingStatus(ProcessState.ACTIVE);
+        const active = withEquipmentAlarm(inactive);
+        const {rerender, props} = renderProduction({brewingStatus: active});
+        expect(screen.getByRole('dialog', {name: 'Anlagenalarm'})).toBeInTheDocument();
+        rerender(<Production {...props} brewingStatus={inactive} />);
+        expect(screen.queryByRole('dialog', {name: 'Anlagenalarm'})).not.toBeInTheDocument();
     });
 });
 

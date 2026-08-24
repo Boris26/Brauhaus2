@@ -104,3 +104,8 @@
   align-items: center;
   gap: 0.2rem;
 }
+
+.alarm-message .message {
+  color: var(--color-error);
+  font-weight: bold;
+}

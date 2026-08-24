@@ -38,6 +38,7 @@ import {completeWaterFill, createInitialRecipeWaterFillStatus, failWaterFill, in
 import {ProductionDialogs} from "./components/ProductionDialogs";
 import {ProductionTemperatureTimeline} from "./TemperatureTimeline/ProductionTemperatureTimeline";
 import {getDisplayedWaterLiters as selectDisplayedWaterLiters, getWaterLabel, getWaterTargetLiters, isRecipeWaterButtonDisabled as selectRecipeWaterButtonDisabled, isWaterFillingActive as selectWaterFillingActive, shouldIncludeSpargeAfterMashingOut as selectShouldIncludeSpargeAfterMashingOut, sanitizeLiters} from "./waterFill/recipeWaterFillSelectors";
+import {equipmentAlarmDisplay, isEquipmentAlarmActive} from '../../utils/brewingStatus/alarmDisplay';
 
 export interface ProductionProps {
     selectedBeer?: Beer;
@@ -87,6 +88,7 @@ interface ProductionState {
     announcedHopTimes: number[];
     recipeWaterFill: RecipeWaterFillStatus;
     displayedRemainingSeconds: number | undefined;
+    equipmentAlarmDismissed: boolean;
 }
 
 export class Production extends React.Component<ProductionProps, ProductionState> {
@@ -124,7 +126,8 @@ export class Production extends React.Component<ProductionProps, ProductionState
             brewingIsRunning: false,
             announcedHopTimes: [],
             recipeWaterFill: createInitialRecipeWaterFillStatus(),
-            displayedRemainingSeconds: undefined
+            displayedRemainingSeconds: undefined,
+            equipmentAlarmDismissed: false
         }
     }
 
@@ -157,6 +160,10 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
         if (prevProps.brewingStatus !== brewingStatus) {
             this.syncRemainingTimeFromStatus();
+        }
+
+        if (isEquipmentAlarmActive(prevProps.brewingStatus) && !isEquipmentAlarmActive(brewingStatus)) {
+            this.setState({equipmentAlarmDismissed: false});
         }
 
         if (prevProps.selectedBeer !== this.props.selectedBeer) {
@@ -713,6 +720,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     render() {
         const {showHopsDialog, showFinishDialog} = this.state;
+        const equipmentAlarmActive = isEquipmentAlarmActive(this.props.brewingStatus);
         return (
             <div className="containerProduction ">
                 <ProductionDialogs
@@ -721,6 +729,10 @@ export class Production extends React.Component<ProductionProps, ProductionState
                     showFinishDialog={showFinishDialog}
                     onConfirmHop={this.confirmHopDialog}
                     onConfirmFinish={this.confirmFinishDialog}
+                    showEquipmentAlarmDialog={equipmentAlarmActive && !this.state.equipmentAlarmDismissed}
+                    equipmentAlarmTitle={equipmentAlarmDisplay.title}
+                    equipmentAlarmMessage={equipmentAlarmDisplay.message}
+                    onDismissEquipmentAlarm={() => this.setState({equipmentAlarmDismissed: true})}
                 />
 
                 {this.renderHeader()}

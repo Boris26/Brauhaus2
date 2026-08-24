@@ -8,6 +8,7 @@ const mapStateToProps = (state: any) => ({
     currentView: state.applicationReducer.view,
     messages: state.applicationReducer.message,
     backendStatus: state.productionReducer.isBackenAvailable,
+    brewingStatus: state.productionReducer.brewingStatus,
 });
 
 const mapDispatchToProps = (dispatch: any) => ({

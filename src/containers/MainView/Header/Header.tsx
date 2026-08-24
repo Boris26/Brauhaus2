@@ -3,6 +3,8 @@ import './Header.css';
 import {Views} from "../../../enums/eViews";
 import StatusDisplay from './StatusDisplay';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import {BrewingStatus} from '../../../model/brewingStatus.types';
+import {equipmentAlarmDisplay, isEquipmentAlarmActive} from '../../../utils/brewingStatus/alarmDisplay';
 
 
 
@@ -12,6 +14,7 @@ interface HeaderProps {
     messages?: string[];
     removeAllMessages: () => void;
     backendStatus: boolean;
+    brewingStatus?: BrewingStatus;
 }
 
 interface HeaderState {
@@ -64,7 +67,8 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
     }
 
     render() {
-       const { messages = [] , removeAllMessages, backendStatus } = this.props; // Default-Wert für messages ist ein leeres Array
+       const { messages = [] , removeAllMessages, backendStatus, brewingStatus } = this.props; // Default-Wert für messages ist ein leeres Array
+       const equipmentAlarmText = isEquipmentAlarmActive(brewingStatus) ? equipmentAlarmDisplay.headerText : undefined;
 
         return (
             <div className="Header">
@@ -141,7 +145,7 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
                 </div>
                 <div className="header-status">
                   <div className="status-display-wrapper">
-                    <StatusDisplay backendStatus={backendStatus} messages={messages} disableScrollAnimation={true} removeAllMessages={removeAllMessages}/>
+                    <StatusDisplay backendStatus={backendStatus} messages={messages} priorityMessage={equipmentAlarmText} disableScrollAnimation={true} removeAllMessages={removeAllMessages}/>
                   </div>
                   <div className="time">
                     <span>{this.state.currentDate}</span>
