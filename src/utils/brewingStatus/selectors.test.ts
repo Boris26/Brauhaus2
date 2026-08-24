@@ -39,9 +39,9 @@ describe('brewing selectors', () => {
   });
 
   it('handles decoction waiting label', () => {
-    const s = makeStatus({currentStep:{phase:ProcessPhase.RAST, mode:ProcessMode.WAITING}, waiting:{waitingFor:WaitingFor.DECOCTION_CONFIRMATION, canConfirm:true}});
+    const s = makeStatus({currentStep:{phase:ProcessPhase.DECOCTION, mode:ProcessMode.WAITING}, waiting:{waitingFor:WaitingFor.DECOCTION_CONFIRMATION, canConfirm:true}});
     expect(getConfirmButtonLabel(s)).toBe('Dickmaische bestätigen');
-    expect(getBrewingStatusLabel(s)).toContain('Dickmaische');
+    expect(getBrewingStatusLabel(s)).toContain('Dekoktion');
   });
 
   it('does not enable or show confirmation without a concrete confirm endpoint', () => {

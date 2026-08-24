@@ -69,7 +69,7 @@ interface BrewingStatus {
   currentStep: {
     index?: number;
     count?: number;
-    phase: 'NONE' | 'MASHING_IN' | 'RAST' | 'MASHING_OUT' | 'COOKING' | 'COOLING' | 'FINISHED';
+    phase: 'NONE' | 'MASHING_IN' | 'RAST' | 'DECOCTION' | 'MASHING_OUT' | 'COOKING' | 'COOLING' | 'FINISHED';
     mode: 'NONE' | 'HEATING' | 'HOLDING' | 'TIMER_RUNNING' | 'WAITING' | 'FINISHED' | 'ERROR';
     name?: string;
     duration?: number;
