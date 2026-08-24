@@ -6,9 +6,9 @@ Visible/used fields include:
 
 - Identity/display: `id`, `name`, `type`, `color`, `description`, `rating`.
 - Metrics: `alcohol`, `originalwort`, `bitterness`, `mashVolume`, `spargeVolume`, `cookingTime`, `cookingTemperatur`.
-- Production steps: `fermentation: FermentationSteps[]` where `procedureType` classifies mash steps as `RAST` or `DECOCTION`; legacy `CONFIRMATION_HOLD` steps without it normalize to `DECOCTION`. Step `type` remains the display name.
+- Production steps: `fermentation: FermentationSteps[]` where `procedureType` classifies mash steps as `RAST` or `DECOCTION`; freely configurable steps have a UI-generated stable UUID `stepId`, and every decoction references exactly one normal rest through `relatedRastId`. Legacy `CONFIRMATION_HOLD` steps without a procedure type normalize to `DECOCTION`; missing legacy IDs are generated in the UI model and a missing decoction reference is migrated only to the last preceding RAST. Step `type` remains the display name.
 - Recipe-editor mash plans defensively contain exactly one each of the fixed `Einmaischen`, `Abmaischen`, and `Kochen` steps. `Einmaischen` and `Abmaischen` carry temperature but no UI-generated `time`; whether the database/backend accepts an omitted `time` for these persisted fixed steps is **Needs verification**.
-- Recipe-editor validation requires every normalized `DECOCTION` to have an earlier non-fixed `RAST` in the mash-step order. Fixed steps such as `Einmaischen` do not satisfy this requirement; consecutive decoctions reuse the latest earlier RAST and remain valid.
+- Recipe-editor validation requires every normalized `DECOCTION` to have a `relatedRastId` that resolves to the `stepId` of an existing non-fixed `RAST`. Choosing the relationship repositions the decoction directly after its rest (after already-associated decoctions), while retaining stable IDs and relative decoction order.
 - Ingredients: `malts`, `wortBoiling.hops`, `fermentationMaturation.yeast`, optional `additionalIngredients`.
 
 `BeerDTO` differs from `Beer` for submission: `fermentationSteps` instead of `fermentation`, ingredient DTOs, and nullable `wortBoiling`/`fermentationMaturation`.
@@ -21,7 +21,7 @@ The PI/control payload is:
 - `MashupTemperature`: from recipe step `Einmaischen.temperature`.
 - `CookingTemperature`: from `beer.cookingTemperatur`, with UI fallback `99` °C only when the stored cooking temperature is missing or invalid.
 - `CookingTime`: from `beer.cookingTime`.
-- `Rasten`: normalized fermentation steps excluding fixed process step types `Einmaischen`, `Abmaischen`, and `Kochen`. Normal rests are sent with `procedureType: RAST`; decoctions use `procedureType: DECOCTION` and `executionMode: CONFIRMATION_HOLD` and omit both `temperature` and `time`. The control app derives the main-mash target during decoction.
+- `Rasten`: normalized fermentation steps excluding fixed process step types `Einmaischen`, `Abmaischen`, and `Kochen`. Normal rests are sent with `stepId` and `procedureType: RAST`; decoctions use `stepId`, `relatedRastId`, `procedureType: DECOCTION`, and `executionMode: CONFIRMATION_HOLD` and omit both `temperature` and `time`. Control-side resolution of `relatedRastId` to the referenced RAST temperature **Needs cross-repository update**.
 
 Validation rejects missing/non-positive mash-in, mash-out, and rest temperatures and timed rests without `time > 0`; missing/invalid top-level cooking temperature is not rejected and maps to the UI fallback `99` °C.
 

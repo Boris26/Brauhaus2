@@ -78,16 +78,18 @@ describe('productionRecipe mapping', () => {
   it('keeps CONFIRMATION_HOLD steps in Rasten without requiring time', () => {
     const result = mapBeerToBrewingData(makeBeer({ fermentation: [
       { type: 'Einmaischen', temperature: 52, time: 0 },
+      { type: 'Rast 1', temperature: 64, time: 10 },
       { type: 'Dickmaische führen', temperature: 66, executionMode: RestExecutionMode.CONFIRMATION_HOLD },
       { type: 'Abmaischen', temperature: 78, time: 0 }
     ] }));
 
     expect(result.ok).toBe(true);
     expect(result.brewingData?.Rasten).toEqual([
+      expect.objectContaining({ type: 'Rast 1', procedureType: ProcedureType.RAST }),
       expect.objectContaining({ type: 'Dickmaische führen', executionMode: RestExecutionMode.CONFIRMATION_HOLD })
     ]);
-    expect(result.brewingData?.Rasten[0]).not.toHaveProperty('time');
-    expect(result.brewingData?.Rasten[0]).toMatchObject({
+    expect(result.brewingData?.Rasten[1]).not.toHaveProperty('time');
+    expect(result.brewingData?.Rasten[1]).toMatchObject({
       procedureType: ProcedureType.DECOCTION,
       executionMode: RestExecutionMode.CONFIRMATION_HOLD
     });
@@ -105,14 +107,13 @@ describe('productionRecipe mapping', () => {
 
   it('enforces confirmation hold for a newly classified decoction', () => {
     const result = normalizeFermentationStepsForProduction([
-      {type: '1. Dekoktion', temperature: 67, procedureType: ProcedureType.DECOCTION}
+      {stepId: 'rast-id', type: 'Rast 1', temperature: 64, time: 10, procedureType: ProcedureType.RAST},
+      {stepId: 'decoction-id', relatedRastId: 'rast-id', type: '1. Dekoktion', temperature: 67, procedureType: ProcedureType.DECOCTION}
     ]);
 
-    expect(result.fermentationSteps).toEqual([
-      expect.objectContaining({procedureType: ProcedureType.DECOCTION, executionMode: RestExecutionMode.CONFIRMATION_HOLD})
-    ]);
-    expect(result.fermentationSteps?.[0]).not.toHaveProperty('time');
-    expect(result.fermentationSteps?.[0]).not.toHaveProperty('temperature');
+    expect(result.fermentationSteps?.[1]).toEqual(expect.objectContaining({stepId: 'decoction-id', relatedRastId: 'rast-id', procedureType: ProcedureType.DECOCTION, executionMode: RestExecutionMode.CONFIRMATION_HOLD}));
+    expect(result.fermentationSteps?.[1]).not.toHaveProperty('time');
+    expect(result.fermentationSteps?.[1]).not.toHaveProperty('temperature');
   });
 
   it('does not infer DECOCTION from an explicit confirmation-hold RAST', () => {
@@ -150,15 +151,17 @@ describe('productionRecipe mapping', () => {
     }));
 
     expect(result.ok).toBe(true);
-    expect(result.brewingData).toEqual({
+    expect(result.brewingData).toMatchObject({
       MashupTemperature: 48,
       MashdownTemperature: 78,
       CookingTime: 70,
       CookingTemperature: 100,
       Rasten: [
-        { type: 'Rast1', temperature: 63, time: 40, procedureType: ProcedureType.RAST, executionMode: RestExecutionMode.TIMED },
-        { type: 'Dickmaische', procedureType: ProcedureType.DECOCTION, executionMode: RestExecutionMode.CONFIRMATION_HOLD }
+        expect.objectContaining({ type: 'Rast1', temperature: 63, time: 40, procedureType: ProcedureType.RAST, executionMode: RestExecutionMode.TIMED }),
+        expect.objectContaining({ type: 'Dickmaische', procedureType: ProcedureType.DECOCTION, executionMode: RestExecutionMode.CONFIRMATION_HOLD })
       ]
     });
+    expect(result.brewingData?.Rasten[0].stepId).toBeTruthy();
+    expect(result.brewingData?.Rasten[1].relatedRastId).toBe(result.brewingData?.Rasten[0].stepId);
   });
 });

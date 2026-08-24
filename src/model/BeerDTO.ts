@@ -5,6 +5,8 @@ import { HopUsage } from '../enums/eHopUsage';
 import {AdditionalIngredientPhase, AdditionalIngredientTimeUnit} from "./Beer";
 import { ProcedureType } from '../enums/eProcedureType';
 export interface FermentationStepsDTO {
+    stepId?: string;
+    relatedRastId?: string;
     type: string;
     temperature?: number;
     time?: number;
