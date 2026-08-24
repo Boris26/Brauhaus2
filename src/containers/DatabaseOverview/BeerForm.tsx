@@ -422,7 +422,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             spargeVolume,
             cookingTime,
             cookingTemperatur,
-            fermentationSteps: fermentationSteps.map((step) => normalizeFermentationStep(step)),
+            fermentationSteps,
             maltsDTO,
             hopsDTO,
             yeastsDTO,
