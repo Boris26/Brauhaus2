@@ -2,7 +2,7 @@
 
 ## Repository role
 
-This repository is a Create React App TypeScript UI named `test1`. It presents beer recipes, ingredient/database maintenance, finished brews, brewing calculations, settings, and production/control screens for a Brauhaus brewing setup. The UI talks to Caddy-routed relative API paths on the current origin: `/api/database` for the database/backend service and `/api/controller` for the brewing-control service. In local CRA development, `src/setupProxy.js` forwards `/api/*` to the Caddy HTTPS origin for development only.
+This repository is a Create React App TypeScript UI named `test1`. It presents beer recipes, ingredient/database maintenance, finished brews, brewing calculations, settings, and production/control screens for a Brauhaus brewing setup. The UI talks to Caddy-routed relative API paths on the current origin: `/api/database` for the database/backend service, `/api/controller` for the brewing-control service, and `/api/audio` for controller sound tests. In local CRA development, `src/setupProxy.js` forwards every method below `/api/*` to the Caddy HTTPS origin, without a path rewrite, for development only. Caddy must provide the matching downstream route; otherwise its upstream response (for example HTTP 405) is returned unchanged to the browser.
 
 ## Entry points and shell
 
