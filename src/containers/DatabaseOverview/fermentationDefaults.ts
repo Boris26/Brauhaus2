@@ -3,6 +3,9 @@ import { FermentationSteps } from '../../model/Beer';
 import { ProcedureType } from '../../enums/eProcedureType';
 
 const allowedExecutionModes = [RestExecutionMode.TIMED, RestExecutionMode.CONFIRMATION_HOLD];
+const fixedProcedureTypes = ['Einmaischen', 'Abmaischen', 'Kochen'];
+
+export const decoctionRequiresPreviousRastError = 'Dekoktion benötigt eine vorherige Rast.';
 
 export const normalizeFermentationStep = (step: Partial<FermentationSteps>): FermentationSteps => {
     // Altrezepte ohne executionMode bleiben kompatibel und werden als TIMED behandelt.
@@ -44,4 +47,25 @@ export const numberMashSteps = (steps: FermentationSteps[]): FermentationSteps[]
 
 export const isValidExecutionMode = (value: unknown): value is RestExecutionMode => {
     return allowedExecutionModes.includes(value as RestExecutionMode);
+};
+
+export const getFermentationStepValidationErrors = (steps: FermentationSteps[]): Record<string, string> => {
+    const errors: Record<string, string> = {};
+    let hasPreviousRast = false;
+
+    steps.forEach((step, index) => {
+        if (fixedProcedureTypes.includes(step.type)) return;
+
+        const normalized = normalizeFermentationStep(step);
+        if (normalized.procedureType === ProcedureType.DECOCTION) {
+            if (!hasPreviousRast) {
+                errors[`fermentationSteps.${index}.procedureType`] = decoctionRequiresPreviousRastError;
+            }
+            return;
+        }
+
+        hasPreviousRast = true;
+    });
+
+    return errors;
 };

@@ -1,5 +1,5 @@
 import { RestExecutionMode } from '../../enums/eRestExecutionMode';
-import { normalizeFermentationStep, isValidExecutionMode, numberMashSteps } from './fermentationDefaults';
+import { decoctionRequiresPreviousRastError, getFermentationStepValidationErrors, normalizeFermentationStep, isValidExecutionMode, numberMashSteps } from './fermentationDefaults';
 import {ProcedureType} from '../../enums/eProcedureType';
 
 describe('fermentationDefaults', () => {
@@ -54,5 +54,36 @@ describe('fermentationDefaults', () => {
             {type: 'd', procedureType: ProcedureType.DECOCTION},
             {type: 'e', temperature: 72, procedureType: ProcedureType.RAST},
         ]).map(step => step.type)).toEqual(['Rast 1', 'Dekoktion', 'Rast 2', 'Dekoktion', 'Rast 3']);
+    });
+});
+
+describe('getFermentationStepValidationErrors', () => {
+    const rast = (executionMode: RestExecutionMode = RestExecutionMode.TIMED) => ({
+        type: 'Rast', temperature: 65, time: executionMode === RestExecutionMode.TIMED ? 10 : undefined,
+        procedureType: ProcedureType.RAST, executionMode,
+    });
+    const decoction = () => ({type: 'Dekoktion', procedureType: ProcedureType.DECOCTION, executionMode: RestExecutionMode.CONFIRMATION_HOLD});
+
+    test.each([
+        ['decoction before a rast', [decoction(), rast()], 0],
+        ['fixed mash-in before decoction', [{type: 'Einmaischen', temperature: 55}, decoction(), rast()], 1],
+    ])('rejects %s', (_name, steps, invalidIndex) => {
+        expect(getFermentationStepValidationErrors(steps as any)).toEqual({
+            [`fermentationSteps.${invalidIndex}.procedureType`]: decoctionRequiresPreviousRastError,
+        });
+    });
+
+    test.each([
+        ['rast, decoction, rast', [rast(), decoction(), rast()]],
+        ['multiple decoctions after a rast', [rast(), decoction(), decoction(), rast()]],
+        ['confirmation-hold rast before decoction', [rast(RestExecutionMode.CONFIRMATION_HOLD), decoction()]],
+    ])('accepts %s', (_name, steps) => {
+        expect(getFermentationStepValidationErrors(steps as any)).toEqual({});
+    });
+
+    test('normalizes legacy confirmation-hold steps before checking their order', () => {
+        const legacyDecoction = {type: 'Kochmaische', executionMode: RestExecutionMode.CONFIRMATION_HOLD};
+        expect(getFermentationStepValidationErrors([legacyDecoction, rast()] as any)).toHaveProperty('fermentationSteps.0.procedureType');
+        expect(getFermentationStepValidationErrors([rast(), legacyDecoction] as any)).toEqual({});
     });
 });
