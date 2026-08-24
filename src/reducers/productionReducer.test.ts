@@ -1,6 +1,7 @@
 import {ProductionActions} from '../actions/actions';
 import {initialProductionState, productionReducer} from './productionReducer';
 import {AlarmType, BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../model/brewingStatus.types';
+import {ToggleState} from '../enums/eToggleState';
 
 const statusWithAlarms = (alarms: BrewingStatus['alarms']): BrewingStatus => ({
     elapsedTime: 0,
@@ -46,5 +47,22 @@ describe('productionReducer brewingStatus alarms', () => {
 
         const clearedState = productionReducer(alarmState, ProductionActions.setBrewingStatus(statusWithAlarms([])));
         expect(clearedState.brewingStatus?.alarms).toEqual([]);
+    });
+});
+
+describe('productionReducer agitator state', () => {
+    it('stores the toggle state represented by the agitator command', () => {
+        const agitatorCommand = {
+            isTurnOn: true,
+            rotationsPerMinute: 30,
+            runningTime: 60,
+            breakTime: 15,
+            isIntervalTurnOn: false,
+            isHeatingAndStirringTurnOn: false,
+        };
+
+        const nextState = productionReducer(initialProductionState, ProductionActions.toggleAgitator(agitatorCommand));
+
+        expect(nextState.currentAgitatorState).toBe(ToggleState.ON);
     });
 });

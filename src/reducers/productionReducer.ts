@@ -48,14 +48,17 @@ export const initialProductionState: ProductionReducerState = {
 const productionReducer = (
     aState: ProductionReducerState = initialProductionState,
     aAction: AllProductionActions
-) => {
+): ProductionReducerState => {
     switch (aAction.type) {
 
         case ProductionActions.ActionTypes.SET_TEMPERATURE: {
             return { ...aState, temperature: aAction.payload.temperature };
         }
         case ProductionActions.ActionTypes.TOGGLE_AGITATOR: {
-            return { ...aState, currentAgitatorState: aAction.payload.agitatorState };
+            return {
+                ...aState,
+                currentAgitatorState: aAction.payload.agitatorState.isTurnOn ? ToggleState.ON : ToggleState.OFF
+            };
         }
         case ProductionActions.ActionTypes.TOGGLE_AGITATOR_SUCCESS: {
             return { ...aState, isToggleAgitatorSuccess: aAction.payload.isToggleAgitatorSuccess };
