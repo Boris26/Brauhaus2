@@ -4,7 +4,7 @@ import {AdditionalIngredientDTO, BeerDTO, HopDTO, MaltDTO, YeastDTO} from "../..
 import { HopUsage } from "../../enums/eHopUsage";
 import { HopTimeUnit } from "../../enums/eHopTimeUnit";
 import { normalizeHopDto, updateHopUsage, validateHopDto } from "./hopDefaults";
-import { isValidExecutionMode, normalizeFermentationStep, numberMashSteps } from "./fermentationDefaults";
+import { decoctionRequiresPreviousRastError, getFermentationStepValidationErrors, isValidExecutionMode, normalizeFermentationStep, numberMashSteps } from "./fermentationDefaults";
 import { ProcedureType } from "../../enums/eProcedureType";
 import {isEqual} from "lodash";
 
@@ -36,6 +36,11 @@ interface BeerFormProps {
 }
 
 type BeerFormSection = 'basic' | 'brewing' | 'mash' | 'malts' | 'hops' | 'yeast' | 'additional';
+
+const procedureTypeOptions = [
+    {value: ProcedureType.RAST, label: 'Rast'},
+    {value: ProcedureType.DECOCTION, label: 'Dekoktion'},
+];
 
 interface BeerFormState {
     id: string;
@@ -113,12 +118,17 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         };
 
         // Wenn ein gespeicherter Formularstatus existiert, verwenden wir diesen, ansonsten den Standardstatus.
+        const fermentationSteps = props.beerFormState?.fermentationSteps
+            ? numberMashSteps(props.beerFormState.fermentationSteps)
+            : defaultState.fermentationSteps;
         this.state = {
             ...defaultState,
             ...(props.beerFormState || {}),
-            fermentationSteps: props.beerFormState?.fermentationSteps
-                ? numberMashSteps(props.beerFormState.fermentationSteps)
-                : defaultState.fermentationSteps,
+            fermentationSteps,
+            validationErrors: {
+                ...(props.beerFormState?.validationErrors || {}),
+                ...getFermentationStepValidationErrors(fermentationSteps),
+            },
             expandedSections: props.beerFormState?.expandedSections || defaultState.expandedSections,
         };
     }
@@ -171,6 +181,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 additionalIngredientsDTO: importedBeer.additionalIngredients ? importedBeer.additionalIngredients.map(aIngredient => this.normalizeAdditionalIngredient(aIngredient)) : [],
                 isSubmitSuccessful: undefined,
             }, () => {
+                this.updateFermentationStepValidationErrors(this.state.fermentationSteps);
                 this.props.saveBeerFormState(this.state);
             });
         }
@@ -213,6 +224,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
           }
           return { fermentationSteps };
        }, () => {
+            this.updateFermentationStepValidationErrors(this.state.fermentationSteps);
             // Nach jeder Statusänderung den aktuellen Formularstatus speichern
             this.props.saveBeerFormState(this.state);
        });
@@ -232,7 +244,17 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             if (step.temperature === undefined || Number(step.temperature) <= 0) return false;
             if (mode === RestExecutionMode.TIMED && (step.time === undefined || Number(step.time) <= 0)) return false;
         }
-        return true;
+        return Object.keys(getFermentationStepValidationErrors(steps)).length === 0;
+    };
+
+    updateFermentationStepValidationErrors = (steps: FermentationSteps[]) => {
+        const stepErrors = getFermentationStepValidationErrors(steps);
+        this.setState((prevState) => {
+            const validationErrors = Object.fromEntries(
+                Object.entries(prevState.validationErrors).filter(([key]) => !key.startsWith('fermentationSteps.'))
+            );
+            return {validationErrors: {...validationErrors, ...stepErrors}};
+        });
     };
 
     handleMaltChange = (value: string, name: string, index: number) => {
@@ -446,7 +468,14 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             return;
         }
         if (!this.validateFermentationSteps(fermentationSteps)) {
-            this.openValidationDialog('Bitte prüfe den Maischeplan: Zeitgesteuerte Rasten benötigen Zeit > 0, Halte-Rasten nur Temperatur.');
+            const orderErrors = getFermentationStepValidationErrors(fermentationSteps);
+            this.setState((prevState) => ({
+                validationErrors: {...prevState.validationErrors, ...orderErrors},
+                expandedSections: {...prevState.expandedSections, mash: true},
+            }));
+            this.openValidationDialog(Object.keys(orderErrors).length > 0
+                ? `Bitte prüfe den Maischeplan: ${decoctionRequiresPreviousRastError}`
+                : 'Bitte prüfe den Maischeplan: Zeitgesteuerte Rasten benötigen Zeit > 0, Halte-Rasten nur Temperatur.');
             return;
         }
         const normalizedFermentationSteps = fermentationSteps.map((step) => normalizeFermentationStep(step));
@@ -615,7 +644,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             const fermentationSteps = [...prevState.fermentationSteps];
             fermentationSteps.splice(index, 1);
             return { fermentationSteps: numberMashSteps(fermentationSteps) };
-        });
+        }, () => this.updateFermentationStepValidationErrors(this.state.fermentationSteps));
     };
 
     removeMalts = (index: number) => {
@@ -683,6 +712,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 additionalIngredientsDTO: selectedBeer.additionalIngredients ? selectedBeer.additionalIngredients.map(aIngredient => this.normalizeAdditionalIngredient(aIngredient)) : [],
                 isSubmitSuccessful: undefined,
             }, () => {
+                this.updateFermentationStepValidationErrors(this.state.fermentationSteps);
                 this.props.saveBeerFormState(this.state);
             });
         }
@@ -714,6 +744,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         if (section === 'hops') return errorKeys.some((key) => key.startsWith('hopsDTO.'));
         if (section === 'yeast') return errorKeys.some((key) => key.startsWith('yeastsDTO.'));
         if (section === 'additional') return errorKeys.some((key) => key.startsWith('additionalIngredientsDTO.'));
+        if (section === 'mash') return errorKeys.some((key) => key.startsWith('fermentationSteps.'));
         return false;
     };
 
@@ -787,8 +818,9 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                             const isFixed = this.fixedTypes.includes(step.type);
                             const executionMode = this.getExecutionMode(step);
                             const procedureType = normalizeFermentationStep(step).procedureType;
-                            return <tr key={index}>
-                                <td>{isFixed ? <span className="readonly-table-value">{step.type}</span> : <select aria-label={`Typ ${index + 1}`} name="procedureType" value={procedureType} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value={ProcedureType.RAST}>{step.type}</option><option value={ProcedureType.DECOCTION}>Dekoktion</option></select>}</td>
+                            const procedureTypeErrorKey = `fermentationSteps.${index}.procedureType`;
+                            return <tr key={index} className={this.state.validationErrors[procedureTypeErrorKey] ? 'validation-error-row' : ''}>
+                                <td>{isFixed ? <span className="readonly-table-value">{step.type}</span> : <><select aria-label={`Typ ${index + 1}`} aria-invalid={Boolean(this.state.validationErrors[procedureTypeErrorKey])} name="procedureType" value={procedureType} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}>{procedureTypeOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select>{this.renderFieldError(procedureTypeErrorKey)}</>}</td>
                                 <td>{isFixed ? <span className="muted-table-value">–</span> : <select aria-label={`Modus ${index + 1}`} name="executionMode" value={executionMode} disabled={procedureType === ProcedureType.DECOCTION} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value={RestExecutionMode.TIMED}>Zeitgesteuert</option><option value={RestExecutionMode.CONFIRMATION_HOLD}>Bis Bestätigung</option></select>}</td>
                                 <td>{procedureType === ProcedureType.DECOCTION ? <span className="muted-table-value">–</span> : <input type="number" name="temperature" value={step.temperature ?? ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />}</td>
                                 <td>{procedureType !== ProcedureType.DECOCTION && executionMode === RestExecutionMode.TIMED ? <input type="number" name="time" min={isFixed ? 0 : 1} value={step.time ?? ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={!isFixed} /> : <span className="muted-table-value">–</span>}</td>

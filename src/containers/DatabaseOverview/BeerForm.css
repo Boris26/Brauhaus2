@@ -325,6 +325,14 @@
     overflow-wrap: anywhere;
 }
 
+.ingredient-table tr.validation-error-row td {
+    background-color: color-mix(in srgb, var(--color-error-highlight) 12%, transparent);
+}
+
+.ingredient-table [aria-invalid="true"] {
+    border-color: var(--color-error-highlight);
+}
+
 .missing-ingredients-warning,
 .beer-form-info,
 .empty-section-note {
