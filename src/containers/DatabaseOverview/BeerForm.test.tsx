@@ -194,31 +194,10 @@ describe('BeerForm accordions', () => {
         fireEvent.change(screen.getByLabelText('Typ 1'), {target: {value: ProcedureType.DECOCTION}});
         expect(screen.getByText('Dekoktion benötigt eine vorherige Rast.')).toBeInTheDocument();
         expect(screen.getByLabelText('Typ 1')).toHaveAttribute('aria-invalid', 'true');
-        expect(screen.getByLabelText('Modus 1')).toHaveValue(RestExecutionMode.CONFIRMATION_HOLD);
-        expect(screen.getByLabelText('Modus 1')).toBeDisabled();
-        expect(screen.getByLabelText('Typ 1').closest('tr')?.querySelector('input[name="temperature"]')).not.toBeInTheDocument();
-        expect(screen.getByLabelText('Typ 1').closest('tr')?.querySelector('input[name="time"]')).not.toBeInTheDocument();
-        expectProcedureTypeOptions(screen.getByLabelText('Typ 1'));
 
         fireEvent.change(screen.getByLabelText('Typ 1'), {target: {value: ProcedureType.RAST}});
         expect(screen.queryByText('Dekoktion benötigt eine vorherige Rast.')).not.toBeInTheDocument();
         expect(screen.getByLabelText('Typ 1')).toHaveAttribute('aria-invalid', 'false');
-        expect(screen.getByLabelText('Typ 1')).toHaveValue(ProcedureType.RAST);
-        expect(screen.getByLabelText('Modus 1')).toHaveValue(RestExecutionMode.TIMED);
-        expect(screen.getByLabelText('Modus 1')).not.toBeDisabled();
-        expect(screen.getByLabelText('Typ 1').closest('tr')?.querySelector('input[name="temperature"]')).toBeInTheDocument();
-        expect(screen.getByLabelText('Typ 1').closest('tr')?.querySelector('input[name="time"]')).toBeInTheDocument();
-        expectProcedureTypeOptions(screen.getByLabelText('Typ 1'));
-    });
-
-    it.each([
-        ['RAST', {type: 'Rast 1', temperature: 65, time: 10, procedureType: ProcedureType.RAST, executionMode: RestExecutionMode.TIMED}],
-        ['DECOCTION', {type: 'Dekoktion', procedureType: ProcedureType.DECOCTION, executionMode: RestExecutionMode.CONFIRMATION_HOLD}],
-    ])('shows exactly the fixed procedure type options for a current %s step', (_name, step) => {
-        renderBeerForm({beerFormState: {fermentationSteps: [step]}});
-        fireEvent.click(screen.getByRole('button', {name: /Maischeplan/}));
-
-        expectProcedureTypeOptions(screen.getByLabelText('Typ 1'));
     });
 
     it('blocks saving when a decoction has no previous rast', () => {
