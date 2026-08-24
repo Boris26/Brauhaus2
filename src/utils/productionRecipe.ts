@@ -2,6 +2,7 @@ import { Beer, FermentationSteps } from '../model/Beer';
 import { BrewingData } from '../model/BrewingData';
 import { RestExecutionMode } from '../enums/eRestExecutionMode';
 import { ProcedureType } from '../enums/eProcedureType';
+import { normalizeMashPlan } from '../containers/DatabaseOverview/fermentationDefaults';
 
 const isValidTemperature = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0;
 const isValidTimedDuration = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0;
@@ -17,8 +18,12 @@ export interface ProductionRecipeNormalizationResult {
 export function normalizeFermentationStepsForProduction(steps: FermentationSteps[]): ProductionRecipeNormalizationResult {
   const normalized: FermentationSteps[] = [];
   const fixedProcessStepTypes = new Set(['Einmaischen', 'Abmaischen', 'Kochen']);
+  const mashPlan = normalizeMashPlan(steps ?? []);
+  const rastIds = new Set(mashPlan
+    .filter((step) => !fixedProcessStepTypes.has(step.type) && step.procedureType === ProcedureType.RAST)
+    .map((step) => step.stepId));
 
-  for (const step of steps ?? []) {
+  for (const step of mashPlan) {
     const procedureType = step.procedureType
       ?? (step.executionMode === RestExecutionMode.CONFIRMATION_HOLD ? ProcedureType.DECOCTION : ProcedureType.RAST);
     const executionMode = procedureType === ProcedureType.DECOCTION
@@ -28,6 +33,9 @@ export function normalizeFermentationStepsForProduction(steps: FermentationSteps
     if (fixedProcessStepTypes.has(step.type)) continue;
 
     if (procedureType === ProcedureType.DECOCTION) {
+      if (!step.relatedRastId || !rastIds.has(step.relatedRastId)) {
+        return {ok: false, error: `Dekoktion "${step.type}" benötigt eine gültige zugehörige Rast.`};
+      }
       const {time, temperature, ...decoction} = step;
       normalized.push({...decoction, procedureType, executionMode: RestExecutionMode.CONFIRMATION_HOLD});
       continue;

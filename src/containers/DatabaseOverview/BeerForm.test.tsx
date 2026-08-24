@@ -237,23 +237,23 @@ describe('BeerForm accordions', () => {
         expect(screen.getAllByRole('button', {name: /Malz löschen/})).toHaveLength(1);
     });
 
-    it('shows and clears the decoction order error immediately after procedure type changes', () => {
+    it('shows and clears the decoction assignment error immediately after procedure type changes', () => {
         renderBeerForm({beerFormState: {fermentationSteps: [
             {type: 'Rast 1', temperature: 65, time: 10, procedureType: ProcedureType.RAST, executionMode: RestExecutionMode.TIMED},
             {type: 'Rast 2', temperature: 68, time: 10, procedureType: ProcedureType.RAST, executionMode: RestExecutionMode.TIMED},
         ]}});
         fireEvent.click(screen.getByRole('button', {name: /Maischeplan/}));
 
-        fireEvent.change(screen.getByLabelText('Typ 1'), {target: {value: ProcedureType.DECOCTION}});
-        expect(screen.getByText('Dekoktion benötigt eine vorherige Rast.')).toBeInTheDocument();
-        expect(screen.getByLabelText('Typ 1')).toHaveAttribute('aria-invalid', 'true');
+        fireEvent.change(screen.getByLabelText('Typ 2'), {target: {value: ProcedureType.DECOCTION}});
+        expect(screen.getByText('Bitte ordne der Dekoktion eine Rast zu.')).toBeInTheDocument();
+        expect(screen.getByLabelText('Zugehörige Rast 2')).toHaveAttribute('aria-invalid', 'true');
 
-        fireEvent.change(screen.getByLabelText('Typ 1'), {target: {value: ProcedureType.RAST}});
-        expect(screen.queryByText('Dekoktion benötigt eine vorherige Rast.')).not.toBeInTheDocument();
-        expect(screen.getByLabelText('Typ 1')).toHaveAttribute('aria-invalid', 'false');
+        fireEvent.change(screen.getByLabelText('Typ 2'), {target: {value: ProcedureType.RAST}});
+        expect(screen.queryByText('Bitte ordne der Dekoktion eine Rast zu.')).not.toBeInTheDocument();
+        expect(screen.getByLabelText('Typ 2')).toHaveAttribute('aria-invalid', 'false');
     });
 
-    it('blocks saving when a decoction has no previous rast', () => {
+    it('blocks saving when a decoction has no assigned rast', () => {
         const {props} = renderBeerForm({beerFormState: {fermentationSteps: [
             {type: 'Dekoktion', procedureType: ProcedureType.DECOCTION, executionMode: RestExecutionMode.CONFIRMATION_HOLD},
             {type: 'Rast 1', temperature: 65, time: 10, procedureType: ProcedureType.RAST, executionMode: RestExecutionMode.TIMED},
@@ -262,7 +262,7 @@ describe('BeerForm accordions', () => {
 
         fireEvent.click(screen.getByRole('button', {name: /Rezept speichern/}));
 
-        expect(screen.getByText(/Bitte prüfe den Maischeplan: Dekoktion benötigt eine vorherige Rast/)).toBeInTheDocument();
+        expect(screen.getByText(/Bitte prüfe den Maischeplan: Bitte ordne der Dekoktion eine Rast zu/)).toBeInTheDocument();
         expect(props.onSubmitBeer).not.toHaveBeenCalled();
     });
 });

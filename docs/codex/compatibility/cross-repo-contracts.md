@@ -50,6 +50,8 @@ Before changing any database/backend field or endpoint, check whether the UI use
 - `Beer.fermentation[].time`
 - `Beer.fermentation[].executionMode`
 - `Beer.fermentation[].procedureType` (`RAST` or `DECOCTION`); missing plus `CONFIRMATION_HOLD` remains a supported legacy decoction
+- `Beer.fermentation[].stepId` (stable UI-generated UUID for configurable mash steps)
+- `Beer.fermentation[].relatedRastId` (DECOCTION reference to a RAST `stepId`)
 - `Beer.wortBoiling.hops[].name`
 - `Beer.wortBoiling.hops[].time`
 - `FinishedBrew.id`
@@ -62,11 +64,15 @@ Before changing any database/backend field or endpoint, check whether the UI use
 
 The recipe editor now omits `time` when serializing the fixed `Einmaischen` and `Abmaischen` steps because those phases have no recipe duration. The TypeScript contract already permits this field to be absent, but database/backend persistence tolerance is **Needs verification**; the UI does not synthesize a compatibility value.
 
+The UI now persists `stepId` and `relatedRastId` in recipe mash steps. Database/backend DTO validation, storage, and read-back of both fields **Needs cross-repository update**; dropping either field would break stable decoction relationships.
+
 ## UI ↔ PI control
 
 The PI control app produces runtime/control data that the UI displays and uses for workflow behavior.
 
 The UI accepts `currentStep.phase: DECOCTION` as a public sequential mash phase and sends new decoction recipe steps with `procedureType: DECOCTION` plus `executionMode: CONFIRMATION_HOLD`. Database persistence of the new optional field is **Needs verification** in the database/backend repository.
+
+Production `Rasten` now retain `stepId`, and decoctions retain `relatedRastId` without copying the referenced temperature. PI/control lookup of `relatedRastId -> RAST.stepId -> temperature` **Needs cross-repository update**.
 
 An explicit `procedureType: RAST` with `executionMode: CONFIRMATION_HOLD` remains a RAST and is not routed to `Confirm/Decoction`. A general confirmation endpoint/status for this combination is not documented by the current control contract and is **Needs verification** in the PI/control repository.
 

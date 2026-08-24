@@ -4,7 +4,7 @@ import {AdditionalIngredientDTO, BeerDTO, HopDTO, MaltDTO, YeastDTO} from "../..
 import { HopUsage } from "../../enums/eHopUsage";
 import { HopTimeUnit } from "../../enums/eHopTimeUnit";
 import { normalizeHopDto, updateHopUsage, validateHopDto } from "./hopDefaults";
-import { createDefaultFermentationSteps, decoctionRequiresPreviousRastError, fixedProcedureTypes, getFermentationStepValidationErrors, isValidExecutionMode, normalizeFermentationStep, numberMashSteps } from "./fermentationDefaults";
+import { createDefaultFermentationSteps, createMashStepId, decoctionRequiresRastError, fixedProcedureTypes, getFermentationStepValidationErrors, isValidExecutionMode, normalizeFermentationStep, normalizeMashPlan, numberMashSteps, positionDecoctionAfterRast } from "./fermentationDefaults";
 import { ProcedureType } from "../../enums/eProcedureType";
 import {isEqual} from "lodash";
 
@@ -115,7 +115,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         // Wenn ein gespeicherter Formularstatus existiert, verwenden wir diesen, ansonsten den Standardstatus.
         const fermentationSteps = props.beerFormState?.fermentationSteps
-            ? numberMashSteps(props.beerFormState.fermentationSteps)
+            ? normalizeMashPlan(props.beerFormState.fermentationSteps)
             : defaultState.fermentationSteps;
         this.state = {
             ...defaultState,
@@ -168,7 +168,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 cookingTime: importedBeer.cookingTime || 0,
                 cookingTemperatur: importedBeer.cookingTemperatur || 0,
                 // Importierte Rasten werden defensiv normalisiert (Altformat ohne executionMode => TIMED).
-                fermentationSteps: numberMashSteps(importedBeer.fermentation || []),
+                fermentationSteps: normalizeMashPlan(importedBeer.fermentation || []),
                 maltsDTO: importedBeer.malts ? importedBeer.malts.map(m => ({ id: m.id, name: m.name, quantity: m.quantity })) : [],
                 // Altrezepte ohne usage/timeUnit bleiben kompatibel und werden auf BOIL/MINUTES normiert.
                 hopsDTO: importedBeer.wortBoiling && importedBeer.wortBoiling.hops ? importedBeer.wortBoiling.hops.map(aHop => normalizeHopDto(aHop)) : [],
@@ -192,16 +192,26 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
     }
 
     handleFermentationStepChange = (value: string, name: string, index: number) => {
+       const currentStep = this.state.fermentationSteps[index];
+       if (name === 'procedureType' && value === ProcedureType.DECOCTION && currentStep.stepId
+           && this.state.fermentationSteps.some((step) => step.procedureType === ProcedureType.DECOCTION && step.relatedRastId === currentStep.stepId)) {
+           this.openValidationDialog('Dieser Rast sind noch Dekoktionen zugeordnet. Bitte ändere zuerst deren Zuordnung.');
+           return;
+       }
        this.setState((prevState) => {
           const fermentationSteps = [...prevState.fermentationSteps];
           const step = fermentationSteps[index];
           if (name === "procedureType") {
               if (value === ProcedureType.DECOCTION) {
-                  fermentationSteps[index] = {type: 'Dekoktion', procedureType: ProcedureType.DECOCTION, executionMode: RestExecutionMode.CONFIRMATION_HOLD};
+                  fermentationSteps[index] = {stepId: step.stepId || createMashStepId(), type: 'Dekoktion', procedureType: ProcedureType.DECOCTION, executionMode: RestExecutionMode.CONFIRMATION_HOLD};
               } else {
-                  fermentationSteps[index] = {type: step.type, procedureType: ProcedureType.RAST, executionMode: RestExecutionMode.TIMED, temperature: 1, time: 1};
+                  fermentationSteps[index] = {stepId: step.stepId || createMashStepId(), type: step.type, procedureType: ProcedureType.RAST, executionMode: RestExecutionMode.TIMED, temperature: 1, time: 1};
               }
               return {fermentationSteps: numberMashSteps(fermentationSteps)};
+          }
+          if (name === 'relatedRastId') {
+              step.relatedRastId = value || undefined;
+              return {fermentationSteps: positionDecoctionAfterRast(fermentationSteps, step.stepId!)};
           }
           if (name === "executionMode") {
               step.executionMode = value as RestExecutionMode;
@@ -474,7 +484,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 expandedSections: {...prevState.expandedSections, mash: true},
             }));
             this.openValidationDialog(Object.keys(orderErrors).length > 0
-                ? `Bitte prüfe den Maischeplan: ${decoctionRequiresPreviousRastError}`
+                ? `Bitte prüfe den Maischeplan: ${decoctionRequiresRastError}`
                 : 'Bitte prüfe den Maischeplan: Zeitgesteuerte Rasten benötigen Zeit > 0, Halte-Rasten nur Temperatur.');
             return;
         }
@@ -619,7 +629,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             spargeVolume: selectedBeer.spargeVolume || 0,
             cookingTime: selectedBeer.cookingTime || 0,
             cookingTemperatur: selectedBeer.cookingTemperatur || 0,
-            fermentationSteps: numberMashSteps(selectedBeer.fermentation || []),
+            fermentationSteps: normalizeMashPlan(selectedBeer.fermentation || []),
             maltsDTO: selectedBeer.malts.map((malt) => ({id: malt.id, name: malt.name, quantity: malt.quantity})),
             hopsDTO: selectedBeer.wortBoiling?.hops.map((hop) => normalizeHopDto(hop)) || [],
             yeastsDTO: selectedBeer.fermentationMaturation?.yeast.map((yeast) => ({id: yeast.id, name: yeast.name, quantity: yeast.quantity})) || [],
@@ -637,7 +647,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             return {
                 fermentationSteps: [
                     ...prevState.fermentationSteps,
-                    { type: `Rast ${rastCount}`, temperature: 0, time: 1, executionMode: RestExecutionMode.TIMED, procedureType: ProcedureType.RAST }
+                    { stepId: createMashStepId(), type: `Rast ${rastCount}`, temperature: 0, time: 1, executionMode: RestExecutionMode.TIMED, procedureType: ProcedureType.RAST }
                 ],
             };
         });
@@ -675,6 +685,12 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
     }
 
     removeFermentationStep = (index: number) => {
+        const step = this.state.fermentationSteps[index];
+        if (step.stepId && step.procedureType === ProcedureType.RAST
+            && this.state.fermentationSteps.some((candidate) => candidate.procedureType === ProcedureType.DECOCTION && candidate.relatedRastId === step.stepId)) {
+            this.openValidationDialog('Dieser Rast sind noch Dekoktionen zugeordnet. Bitte ordne diese zuerst einer anderen Rast zu oder lösche sie.');
+            return;
+        }
         this.setState((prevState) => {
             const fermentationSteps = [...prevState.fermentationSteps];
             fermentationSteps.splice(index, 1);
@@ -738,7 +754,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 spargeVolume: selectedBeer.spargeVolume || 0,
                 cookingTime: selectedBeer.cookingTime || 0,
                 cookingTemperatur: selectedBeer.cookingTemperatur || 0,
-                fermentationSteps: numberMashSteps(selectedBeer.fermentation || []),
+                fermentationSteps: normalizeMashPlan(selectedBeer.fermentation || []),
                 maltsDTO: selectedBeer.malts ? selectedBeer.malts.map(m => ({ id: m.id, name: m.name, quantity: m.quantity })) : [],
                 // Bestehende Rezepte ohne neue Felder werden im UI als Kochhopfen in Minuten dargestellt.
                 hopsDTO: selectedBeer.wortBoiling && selectedBeer.wortBoiling.hops ? selectedBeer.wortBoiling.hops.map(aHop => normalizeHopDto(aHop)) : [],
@@ -848,15 +864,18 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             <>
                 <div className="table-wrapper">
                     <table className="ingredient-table">
-                        <thead><tr><th>Typ</th><th>Modus</th><th>Temp (°C)</th><th>Zeit (min)</th><th className="action-column">Aktion</th></tr></thead>
+                        <thead><tr><th>Typ</th><th>Zugehörige Rast</th><th>Modus</th><th>Temp (°C)</th><th>Zeit (min)</th><th className="action-column">Aktion</th></tr></thead>
                         <tbody>{fermentationSteps?.map((step, index) => {
                             const isFixed = this.fixedTypes.includes(step.type);
                             const executionMode = this.getExecutionMode(step);
                             const procedureType = normalizeFermentationStep(step).procedureType;
                             const procedureTypeErrorKey = `fermentationSteps.${index}.procedureType`;
+                            const relatedRastErrorKey = `fermentationSteps.${index}.relatedRastId`;
+                            const rastOptions = fermentationSteps.filter((candidate) => !this.fixedTypes.includes(candidate.type) && normalizeFermentationStep(candidate).procedureType === ProcedureType.RAST);
                             const hasEditableTime = step.type === 'Kochen' || !isFixed;
-                            return <tr key={index} className={this.state.validationErrors[procedureTypeErrorKey] ? 'validation-error-row' : ''}>
+                            return <tr key={step.stepId || step.type} className={this.state.validationErrors[procedureTypeErrorKey] || this.state.validationErrors[relatedRastErrorKey] ? 'validation-error-row' : ''}>
                                 <td>{isFixed ? <span className="readonly-table-value">{step.type}</span> : <><select aria-label={`Typ ${index + 1}`} aria-invalid={Boolean(this.state.validationErrors[procedureTypeErrorKey])} name="procedureType" value={procedureType} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value={ProcedureType.RAST}>{step.type}</option><option value={ProcedureType.DECOCTION}>Dekoktion</option></select>{this.renderFieldError(procedureTypeErrorKey)}</>}</td>
+                                <td>{procedureType === ProcedureType.DECOCTION ? <><select aria-label={`Zugehörige Rast ${index + 1}`} aria-invalid={Boolean(this.state.validationErrors[relatedRastErrorKey])} name="relatedRastId" value={step.relatedRastId || ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value="">Bitte Rast auswählen</option>{rastOptions.map((rast) => <option key={rast.stepId} value={rast.stepId}>{rast.type} – {rast.temperature} °C</option>)}</select>{this.renderFieldError(relatedRastErrorKey)}</> : <span className="muted-table-value">–</span>}</td>
                                 <td>{isFixed ? <span className="muted-table-value">–</span> : <select aria-label={`Modus ${index + 1}`} name="executionMode" value={executionMode} disabled={procedureType === ProcedureType.DECOCTION} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value={RestExecutionMode.TIMED}>Zeitgesteuert</option><option value={RestExecutionMode.CONFIRMATION_HOLD}>Bis Bestätigung</option></select>}</td>
                                 <td>{procedureType === ProcedureType.DECOCTION ? <span className="muted-table-value">–</span> : <input type="number" name="temperature" value={step.temperature ?? ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />}</td>
                                 <td>{hasEditableTime && procedureType !== ProcedureType.DECOCTION && executionMode === RestExecutionMode.TIMED ? <input type="number" name="time" min={isFixed ? 0 : 1} value={step.time ?? ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={!isFixed} /> : <span className="muted-table-value">–</span>}</td>

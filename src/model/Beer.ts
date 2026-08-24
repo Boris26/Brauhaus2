@@ -3,6 +3,8 @@ import { HopTimeUnit } from '../enums/eHopTimeUnit';
 import { HopUsage } from '../enums/eHopUsage';
 import { ProcedureType } from '../enums/eProcedureType';
 export interface FermentationSteps {
+    stepId?: string;
+    relatedRastId?: string;
     type: string;
     temperature?: number;
     time?: number;
