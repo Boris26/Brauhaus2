@@ -12,13 +12,34 @@ export const normalizeFermentationStep = (step: Partial<FermentationSteps>): Fer
         ? RestExecutionMode.CONFIRMATION_HOLD
         : (step.executionMode ?? RestExecutionMode.TIMED);
 
+    if (procedureType === ProcedureType.DECOCTION) {
+        return {
+            type: step.type || 'Dekoktion',
+            executionMode: RestExecutionMode.CONFIRMATION_HOLD,
+            procedureType,
+        };
+    }
+
     return {
         type: step.type ?? '',
-        temperature: Number(step.temperature ?? 0),
+        temperature: step.temperature === undefined || step.temperature === null ? undefined : Number(step.temperature),
         time: step.time,
         executionMode,
         procedureType,
     };
+};
+
+export const numberMashSteps = (steps: FermentationSteps[]): FermentationSteps[] => {
+    let rastNumber = 0;
+    return steps.map((step) => {
+        if (["Einmaischen", "Abmaischen", "Kochen"].includes(step.type)) return step;
+        const normalized = normalizeFermentationStep(step);
+        if (normalized.procedureType === ProcedureType.DECOCTION) {
+            return {...normalized, type: 'Dekoktion'};
+        }
+        rastNumber += 1;
+        return {...normalized, type: `Rast ${rastNumber}`};
+    });
 };
 
 export const isValidExecutionMode = (value: unknown): value is RestExecutionMode => {

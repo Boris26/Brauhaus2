@@ -4,7 +4,7 @@ import { HopUsage } from '../enums/eHopUsage';
 import { ProcedureType } from '../enums/eProcedureType';
 export interface FermentationSteps {
     type: string;
-    temperature: number;
+    temperature?: number;
     time?: number;
     executionMode?: RestExecutionMode;
     procedureType?: ProcedureType;
