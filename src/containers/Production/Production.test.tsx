@@ -45,7 +45,8 @@ const createBrewingStatus = (aProcessState: ProcessState = ProcessState.IDLE): B
     temperature: {},
     hardware: {},
     waiting: {waitingFor: WaitingFor.NONE, canConfirm: false},
-    error: {}
+    error: {},
+    alarms: [],
 });
 
 const renderProduction = (aOverrides: Partial<React.ComponentProps<typeof Production>> = {}) => {

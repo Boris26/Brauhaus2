@@ -6,7 +6,7 @@ const makeStatus = (aPart: Partial<BrewingStatus>): BrewingStatus => ({
   elapsedTime: 0, currentTime: 0,
   process: {state: ProcessState.ACTIVE},
   currentStep: {phase: ProcessPhase.NONE, mode: ProcessMode.NONE},
-  temperature: {}, hardware: {}, waiting: {waitingFor: WaitingFor.NONE, canConfirm: false}, error: {},
+  temperature: {}, hardware: {}, waiting: {waitingFor: WaitingFor.NONE, canConfirm: false}, error: {}, alarms: [],
   ...aPart
 });
 

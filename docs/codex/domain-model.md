@@ -27,6 +27,8 @@ Validation rejects missing/non-positive mash-in, mash-out, and rest temperatures
 
 Runtime status is normalized into process state, current step, temperature, hardware, waiting, and error groups. UI behavior depends on:
 
+- `alarms`: a normalized list of `{ type, active }` control alarms. A missing legacy field becomes `[]`; alarms are stored only and are not evaluated or displayed yet.
+
 - `process.state`: controls active/finished/aborted/error labels and polling termination.
 - `currentStep.phase`: drives labels, hop reminders, mobile type display, and process display.
 - `currentStep.mode`: distinguishes heating, holding, timer, waiting, finished/error.
@@ -53,4 +55,3 @@ Fields: `id`, `name`, `startDate`, optional `endDate`, `liters`, `originalwort`,
 - `AdditionalIngredient`: `id`, `name`, optional `description`; recipe additional ingredient has `quantity`, `unit`, `phase`, optional `time`, `timeUnit`, `description`.
 
 Needs verification: backend/database canonical casing for malt `ebc` vs recipe malt `EBC`, yeast `evg` vs recipe yeast `EVG`, and hop `alpha` string vs number.
-

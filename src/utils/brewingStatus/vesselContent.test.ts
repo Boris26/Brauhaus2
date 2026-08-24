@@ -10,7 +10,8 @@ const makeStatus = (aPhase: ProcessPhase = ProcessPhase.NONE, aWaitingFor = Wait
     temperature: {},
     hardware: {},
     waiting: {waitingFor: aWaitingFor, canConfirm: aWaitingFor !== WaitingFor.NONE},
-    error: {}
+    error: {},
+    alarms: [],
 });
 
 describe('getVesselContentType', () => {

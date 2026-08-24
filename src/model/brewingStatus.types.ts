@@ -39,6 +39,17 @@ export enum WaitingFor {
 
 export type WaitingState = WaitingFor | string;
 
+export enum AlarmType {
+    EQUIPMENT_ALARM = "EQUIPMENT_ALARM"
+}
+
+export type AlarmTypeValue = AlarmType | string;
+
+export interface Alarm {
+    type: AlarmTypeValue;
+    active: boolean;
+}
+
 export interface BrewingStatus {
     elapsedTime: number;
     currentTime: number;
@@ -72,6 +83,7 @@ export interface BrewingStatus {
         code?: string | null;
         details?: string | null;
     };
+    alarms: Alarm[];
 }
 
 export type LegacyBrewingStatus = {

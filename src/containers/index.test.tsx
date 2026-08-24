@@ -25,6 +25,7 @@ const makeStatus = (overrides: Partial<BrewingStatus> = {}): BrewingStatus => ({
     hardware: {heater: 'ON', agitator: 'OFF'},
     waiting: {waitingFor: WaitingFor.MASHING_OUT_CONFIRMATION, canConfirm: true},
     error: {code: null, details: null},
+    alarms: [],
     ...overrides,
 });
 

@@ -21,6 +21,7 @@ const createStatus = (aTemperature: number): BrewingStatus => ({
     canConfirm: false,
   },
   error: {},
+  alarms: [],
 });
 
 describe('dataCollector', (): void => {

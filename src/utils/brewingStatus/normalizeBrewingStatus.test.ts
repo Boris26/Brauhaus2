@@ -1,5 +1,5 @@
 import {normalizeBrewingStatus} from './normalizeBrewingStatus';
-import {ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
+import {AlarmType, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
 
 describe('normalizeBrewingStatus', () => {
   it('uses structured payload', () => {
@@ -27,5 +27,19 @@ describe('normalizeBrewingStatus', () => {
   it('preserves unknown waitingFor values for central confirmation mapping warnings', () => {
     const s = normalizeBrewingStatus({waiting:{waitingFor:'future_confirmation', canConfirm:true}});
     expect(s.waiting.waitingFor).toBe('FUTURE_CONFIRMATION');
+  });
+
+  it('defaults alarms to an empty list for an older backend response', () => {
+    expect(normalizeBrewingStatus({process: {}}).alarms).toEqual([]);
+  });
+
+  it('transports empty, active, multiple, and future alarm entries', () => {
+    expect(normalizeBrewingStatus({alarms: []}).alarms).toEqual([]);
+
+    const alarms = [
+      {type: AlarmType.EQUIPMENT_ALARM, active: true},
+      {type: 'FUTURE_ALARM', active: false},
+    ];
+    expect(normalizeBrewingStatus({alarms}).alarms).toEqual(alarms);
   });
 });

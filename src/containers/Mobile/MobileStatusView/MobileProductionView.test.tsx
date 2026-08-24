@@ -27,6 +27,7 @@ const makeStatus = (): BrewingStatus => ({
     hardware: {heater: 'ON', agitator: 'OFF'},
     waiting: {waitingFor: WaitingFor.NONE, canConfirm: false},
     error: {code: null, details: null},
+    alarms: [],
 });
 
 const renderMobileView = (overrides: Partial<React.ComponentProps<typeof MobileProductionView>> = {}) => {
