@@ -280,6 +280,29 @@
   cursor: pointer;
 }
 
+.sound-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.sound-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--color-input-border);
+}
+
+.sound-label {
+  font-weight: 700;
+}
+
+.sound-test-button {
+  min-width: 9.5rem;
+  padding: 0.5rem 0.75rem;
+}
+
 .settings-primary:disabled,
 .settings-secondary:disabled {
   cursor: not-allowed;

@@ -49,6 +49,10 @@ Base URL: `BaseURL` (`/api/controller`), `CommandsURL` (`/api/controller/Command
 | POST | `next` | Advance process step | `200` |
 | POST | `Confirm/{confirmState}` | Confirm concrete waiting state only (`Iodine`, `Mashup`, `Cooking`, `Boiling`, `Decoction`) | `200`; UI must not send `Confirm/Wait`; PI rejects `Confirm/Wait` with a controlled error |
 
+## Audio REST endpoint
+
+The Settings UI tests the control system's existing logical sounds through `POST /api/audio/test` with JSON `{ "sound": SoundType }`. Supported values are exactly `ALARM`, `WARNING`, `CONFIRMATION`, `REST_FINISHED`, `BREW_FINISHED`, and `SUCCESS`. HTTP 200 returns `{ "success": true, "sound": SoundType }`; invalid input returns HTTP 400 and playback errors return HTTP 500 with `{ "success": false, "error": string }`.
+
 ## Socket.io
 
 - URL is derived from `BaseURL` by replacing leading `http` with `ws`.

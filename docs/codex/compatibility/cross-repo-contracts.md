@@ -70,6 +70,8 @@ The UI now persists `stepId` and `relatedRastId` in recipe mash steps. Database/
 
 The PI control app produces runtime/control data that the UI displays and uses for workflow behavior.
 
+The Settings UI also consumes the existing `POST /api/audio/test` contract. Its `sound` request field is restricted to the logical values `ALARM`, `WARNING`, `CONFIRMATION`, `REST_FINISHED`, `BREW_FINISHED`, and `SUCCESS`; UI labels do not alter these values and the UI never sends WAV filenames. The routed `/api/audio` ownership and deployment mapping are **Needs verification** outside this repository.
+
 The UI accepts `currentStep.phase: DECOCTION` as a public sequential mash phase and sends new decoction recipe steps with `procedureType: DECOCTION` plus `executionMode: CONFIRMATION_HOLD`. Database persistence of the new optional field is **Needs verification** in the database/backend repository.
 
 Production `Rasten` now retain `stepId`, and decoctions retain `relatedRastId` without copying the referenced temperature. PI/control lookup of `relatedRastId -> RAST.stepId -> temperature` **Needs cross-repository update**.
