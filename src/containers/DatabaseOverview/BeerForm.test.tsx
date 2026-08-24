@@ -3,6 +3,8 @@ import {fireEvent, render, screen} from '@testing-library/react';
 import {BeerForm} from './BeerForm';
 import {HopUsage} from '../../enums/eHopUsage';
 import {HopTimeUnit} from '../../enums/eHopTimeUnit';
+import {ProcedureType} from '../../enums/eProcedureType';
+import {RestExecutionMode} from '../../enums/eRestExecutionMode';
 
 const baseProps: React.ComponentProps<typeof BeerForm> = {
     onSubmitBeer: jest.fn(),
@@ -167,5 +169,34 @@ describe('BeerForm accordions', () => {
         expect(screen.getAllByRole('button', {name: /Malz löschen/})).toHaveLength(2);
         fireEvent.click(screen.getAllByRole('button', {name: /Malz löschen/})[0]);
         expect(screen.getAllByRole('button', {name: /Malz löschen/})).toHaveLength(1);
+    });
+
+    it('shows and clears the decoction order error immediately after procedure type changes', () => {
+        renderBeerForm({beerFormState: {fermentationSteps: [
+            {type: 'Rast 1', temperature: 65, time: 10, procedureType: ProcedureType.RAST, executionMode: RestExecutionMode.TIMED},
+            {type: 'Rast 2', temperature: 68, time: 10, procedureType: ProcedureType.RAST, executionMode: RestExecutionMode.TIMED},
+        ]}});
+        fireEvent.click(screen.getByRole('button', {name: /Maischeplan/}));
+
+        fireEvent.change(screen.getByLabelText('Typ 1'), {target: {value: ProcedureType.DECOCTION}});
+        expect(screen.getByText('Dekoktion benötigt eine vorherige Rast.')).toBeInTheDocument();
+        expect(screen.getByLabelText('Typ 1')).toHaveAttribute('aria-invalid', 'true');
+
+        fireEvent.change(screen.getByLabelText('Typ 1'), {target: {value: ProcedureType.RAST}});
+        expect(screen.queryByText('Dekoktion benötigt eine vorherige Rast.')).not.toBeInTheDocument();
+        expect(screen.getByLabelText('Typ 1')).toHaveAttribute('aria-invalid', 'false');
+    });
+
+    it('blocks saving when a decoction has no previous rast', () => {
+        const {props} = renderBeerForm({beerFormState: {fermentationSteps: [
+            {type: 'Dekoktion', procedureType: ProcedureType.DECOCTION, executionMode: RestExecutionMode.CONFIRMATION_HOLD},
+            {type: 'Rast 1', temperature: 65, time: 10, procedureType: ProcedureType.RAST, executionMode: RestExecutionMode.TIMED},
+        ]}});
+        fillValidRecipe();
+
+        fireEvent.click(screen.getByRole('button', {name: /Rezept speichern/}));
+
+        expect(screen.getByText(/Bitte prüfe den Maischeplan: Dekoktion benötigt eine vorherige Rast/)).toBeInTheDocument();
+        expect(props.onSubmitBeer).not.toHaveBeenCalled();
     });
 });

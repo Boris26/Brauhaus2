@@ -7,6 +7,7 @@ Visible/used fields include:
 - Identity/display: `id`, `name`, `type`, `color`, `description`, `rating`.
 - Metrics: `alcohol`, `originalwort`, `bitterness`, `mashVolume`, `spargeVolume`, `cookingTime`, `cookingTemperatur`.
 - Production steps: `fermentation: FermentationSteps[]` where `procedureType` classifies mash steps as `RAST` or `DECOCTION`; legacy `CONFIRMATION_HOLD` steps without it normalize to `DECOCTION`. Step `type` remains the display name.
+- Recipe-editor validation requires every normalized `DECOCTION` to have an earlier non-fixed `RAST` in the mash-step order. Fixed steps such as `Einmaischen` do not satisfy this requirement; consecutive decoctions reuse the latest earlier RAST and remain valid.
 - Ingredients: `malts`, `wortBoiling.hops`, `fermentationMaturation.yeast`, optional `additionalIngredients`.
 
 `BeerDTO` differs from `Beer` for submission: `fermentationSteps` instead of `fermentation`, ingredient DTOs, and nullable `wortBoiling`/`fermentationMaturation`.
