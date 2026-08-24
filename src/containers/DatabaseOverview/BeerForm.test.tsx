@@ -52,6 +52,10 @@ const fillValidRecipe = () => {
     fireEvent.change(screen.getByLabelText(/Kochzeit/), {target: {value: '60'}});
     fireEvent.change(screen.getByLabelText(/Kochtemperatur/), {target: {value: '99'}});
 
+    fireEvent.click(screen.getByRole('button', {name: /Maischeplan/}));
+    fireEvent.change(within(screen.getByText('Einmaischen').closest('tr')!).getByRole('spinbutton'), {target: {value: '57'}});
+    fireEvent.change(within(screen.getByText('Abmaischen').closest('tr')!).getByRole('spinbutton'), {target: {value: '78'}});
+
     fireEvent.click(screen.getByRole('button', {name: /Malze/}));
     fireEvent.change(screen.getByDisplayValue('Malz'), {target: {value: 'Pilsner Malz'}});
     fireEvent.change(screen.getAllByRole('spinbutton').find((input) => input.getAttribute('name') === 'quantity')!, {target: {value: '4000'}});
@@ -82,6 +86,34 @@ const expectProcedureTypeOptions = (select: HTMLElement) => {
 };
 
 describe('BeerForm accordions', () => {
+    it('always renders fixed steps and no time inputs for mash-in and mash-out', () => {
+        renderBeerForm({beerFormState: {fermentationSteps: []}});
+        fireEvent.click(screen.getByRole('button', {name: /Maischeplan/}));
+
+        for (const type of ['Einmaischen', 'Abmaischen', 'Kochen']) {
+            expect(screen.getByText(type)).toBeInTheDocument();
+        }
+        const mashInRow = screen.getByText('Einmaischen').closest('tr')!;
+        const mashOutRow = screen.getByText('Abmaischen').closest('tr')!;
+        expect(within(mashInRow).getAllByText('–')).toHaveLength(2);
+        expect(within(mashOutRow).getAllByText('–')).toHaveLength(2);
+        expect(within(mashInRow).getAllByRole('spinbutton')).toHaveLength(1);
+        expect(within(mashOutRow).getAllByRole('spinbutton')).toHaveLength(1);
+    });
+
+    it('reset keeps one copy of every fixed step after configurable mash steps were added', () => {
+        renderBeerForm();
+        fireEvent.click(screen.getByRole('button', {name: /Maischeplan/}));
+        fireEvent.click(screen.getByRole('button', {name: /Rast hinzufügen/}));
+        fireEvent.click(screen.getByRole('button', {name: /Abbrechen \/ Zurücksetzen/}));
+        fireEvent.click(screen.getByRole('button', {name: /Abbrechen \/ Zurücksetzen/}));
+
+        expect(screen.getAllByText('Einmaischen')).toHaveLength(1);
+        expect(screen.getAllByText('Abmaischen')).toHaveLength(1);
+        expect(screen.getAllByText('Kochen')).toHaveLength(1);
+        expect(screen.queryByLabelText(/Typ/)).not.toBeInTheDocument();
+    });
+
     it('opens basic and brewing data initially while keeping table sections collapsed', () => {
         renderBeerForm();
 
@@ -159,6 +191,27 @@ describe('BeerForm accordions', () => {
 
         expect(props.onSubmitBeer).toHaveBeenCalledTimes(1);
         expect(props.onSubmitBeer).toHaveBeenCalledWith(expect.objectContaining({id: 'beer-1', name: 'Altbier'}));
+    });
+
+    it('restores saved fixed steps when cancelling edits to an existing recipe', () => {
+        const existingBeer: React.ComponentProps<typeof BeerForm>['beers'][number] = {
+            id: 'beer-1', name: 'Alt', type: 'Ale', color: 'amber', alcohol: 5, originalwort: 12, bitterness: 30, description: '', rating: 3,
+            mashVolume: 18, spargeVolume: 8, cookingTime: 60, cookingTemperatur: 99,
+            fermentation: [{type: 'Einmaischen', temperature: 57}, {type: 'Abmaischen', temperature: 78}, {type: 'Kochen', temperature: 99, time: 60}],
+            malts: [], wortBoiling: {totalTime: 60, hops: []},
+            fermentationMaturation: {fermentationTemperature: 18, carbonation: 5, yeast: []},
+        };
+        renderBeerForm({beers: [existingBeer]});
+        fireEvent.change(screen.getByLabelText(/Bier auswählen/), {target: {value: 'beer-1'}});
+        fireEvent.click(screen.getByRole('button', {name: /Maischeplan/}));
+        fireEvent.change(within(screen.getByText('Einmaischen').closest('tr')!).getByRole('spinbutton'), {target: {value: '65'}});
+
+        fireEvent.click(screen.getByRole('button', {name: /Abbrechen \/ Zurücksetzen/}));
+
+        expect(within(screen.getByText('Einmaischen').closest('tr')!).getByRole('spinbutton')).toHaveValue(57);
+        expect(screen.getAllByText('Einmaischen')).toHaveLength(1);
+        expect(screen.getAllByText('Abmaischen')).toHaveLength(1);
+        expect(screen.getAllByText('Kochen')).toHaveLength(1);
     });
 
     it('keeps the submit button disabled while saving to prevent duplicate submits', () => {
