@@ -1,5 +1,6 @@
 import { mapBeerToBrewingData } from './productionRecipe';
 import { RestExecutionMode } from '../enums/eRestExecutionMode';
+import {ProcedureType} from '../enums/eProcedureType';
 import { Beer } from '../model/Beer';
 
 const makeBeer = (overrides?: Partial<Beer>): Beer => ({
@@ -86,6 +87,31 @@ describe('productionRecipe mapping', () => {
       expect.objectContaining({ type: 'Dickmaische führen', executionMode: RestExecutionMode.CONFIRMATION_HOLD })
     ]);
     expect(result.brewingData?.Rasten[0]).not.toHaveProperty('time');
+    expect(result.brewingData?.Rasten[0]).toMatchObject({
+      procedureType: ProcedureType.DECOCTION,
+      executionMode: RestExecutionMode.CONFIRMATION_HOLD
+    });
+  });
+
+  it('serializes normal rests with an explicit RAST procedure type', () => {
+    const result = normalizeFermentationStepsForProduction([
+      {type: 'Rast 1', temperature: 64, time: 20, executionMode: RestExecutionMode.TIMED}
+    ]);
+
+    expect(result.fermentationSteps).toEqual([
+      expect.objectContaining({procedureType: ProcedureType.RAST, executionMode: RestExecutionMode.TIMED})
+    ]);
+  });
+
+  it('enforces confirmation hold for a newly classified decoction', () => {
+    const result = normalizeFermentationStepsForProduction([
+      {type: '1. Dekoktion', temperature: 67, procedureType: ProcedureType.DECOCTION}
+    ]);
+
+    expect(result.fermentationSteps).toEqual([
+      expect.objectContaining({procedureType: ProcedureType.DECOCTION, executionMode: RestExecutionMode.CONFIRMATION_HOLD})
+    ]);
+    expect(result.fermentationSteps?.[0]).not.toHaveProperty('time');
   });
 
   it('uses 99 °C as fallback for missing or invalid cooking temperature only', () => {

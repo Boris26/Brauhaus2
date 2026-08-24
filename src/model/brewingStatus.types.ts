@@ -10,6 +10,7 @@ export enum ProcessPhase {
     NONE = "NONE",
     MASHING_IN = "MASHING_IN",
     RAST = "RAST",
+    DECOCTION = "DECOCTION",
     MASHING_OUT = "MASHING_OUT",
     COOKING = "COOKING",
     COOLING = "COOLING",

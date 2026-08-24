@@ -2,6 +2,10 @@ import {normalizeBrewingStatus} from './normalizeBrewingStatus';
 import {AlarmType, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
 
 describe('normalizeBrewingStatus', () => {
+  it('accepts the public DECOCTION runtime phase', () => {
+    const s = normalizeBrewingStatus({currentStep: {phase: 'DECOCTION', mode: 'WAITING'}});
+    expect(s.currentStep.phase).toBe(ProcessPhase.DECOCTION);
+  });
   it('uses structured payload', () => {
     const s = normalizeBrewingStatus({process:{state:'ACTIVE'}, currentStep:{phase:'RAST', mode:'TIMER_RUNNING', remainingTime:12}, waiting:{waitingFor:'NONE', canConfirm:false}, temperature:{current:60,target:63}});
     expect(s.process.state).toBe(ProcessState.ACTIVE);
