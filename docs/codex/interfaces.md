@@ -62,6 +62,7 @@ Preferred structured schema:
 
 ```ts
 interface BrewingStatus {
+  alarms: Array<{ type: string; active: boolean }>;
   elapsedTime: number;
   currentTime: number; // Unix timestamp from PI control; UI must not treat it as duration/countdown
   process: { state: 'IDLE' | 'ACTIVE' | 'FINISHED' | 'ABORTED' | 'ERROR' };
@@ -82,6 +83,8 @@ interface BrewingStatus {
   error: { code?: string | null; details?: string | null };
 }
 ```
+
+`alarms` is part of every normalized polling status. The UI defaults a missing node from an older control backend to `[]`; it currently knows `EQUIPMENT_ALARM` and preserves unknown future string types without evaluating them.
 
 Legacy fallback fields still accepted by `normalizeBrewingStatus`: `Temperature`, `TargetTemperature`, `StatusText`, `HeatingStates`, `Name`, `Type`, `WaitingStatus`, `HeatUpStatus`, `AgitatorStatus`, `index`, `elapsedTime`, and `currentTime`.
 

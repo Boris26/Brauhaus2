@@ -77,6 +77,15 @@ describe('ProductionRepository API method/path usage', () => {
     expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining('/Available/'));
   });
 
+  it('normalizes alarms from the brewing status response', async () => {
+    const alarms = [{type: 'EQUIPMENT_ALARM', active: true}];
+    mockedAxios.get.mockResolvedValueOnce({status: 200, data: {alarms}, statusText: 'OK'} as any);
+
+    const result = await ProductionRepository.getBrewingStatus();
+
+    expect(result.brewingStatus?.alarms).toEqual(alarms);
+  });
+
   it('uses canonical GET /temperatur/<alter> for temperature reads', async () => {
     mockedAxios.get.mockResolvedValueOnce({ status: 200, data: 67 } as any);
 

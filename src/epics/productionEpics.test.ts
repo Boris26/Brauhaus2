@@ -54,6 +54,7 @@ const createBrewingStatus = (aProcessState: ProcessState): BrewingStatus => ({
     canConfirm: false,
   },
   error: {},
+  alarms: [],
 });
 
 const createStatusResponse = (aProcessState: ProcessState): { available: BackendAvailable; brewingStatus: BrewingStatus } => ({

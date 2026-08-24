@@ -161,7 +161,8 @@ describe('ProcessList compact production overview', () => {
         temperature: {target: 68},
         hardware: {},
         waiting: {waitingFor: WaitingFor.NONE, canConfirm: false},
-        error: {}
+        error: {},
+        alarms: [],
     });
 
     it('shows current visible step position and total visible steps', () => {

@@ -20,7 +20,7 @@ const status = (overrides: Partial<BrewingStatus> = {}): BrewingStatus => ({
     process: {state: ProcessState.ACTIVE},
     currentStep: {index: 6, count: 7, phase: ProcessPhase.MASHING_OUT, mode: ProcessMode.HEATING, name: 'Aufheizen für Abmaischen', elapsedTime: 120},
     temperature: {current: 34, target: 45},
-    hardware: {}, waiting: {waitingFor: WaitingFor.NONE, canConfirm: false}, error: {},
+    hardware: {}, waiting: {waitingFor: WaitingFor.NONE, canConfirm: false}, error: {}, alarms: [],
     ...overrides
 });
 

@@ -9,7 +9,8 @@ const status = (mode: ProcessMode, remainingTime: number): BrewingStatus => ({
     temperature: {},
     hardware: {},
     waiting: {waitingFor: WaitingFor.NONE, canConfirm: false},
-    error: {}
+    error: {},
+    alarms: [],
 });
 
 describe('production countdown', () => {

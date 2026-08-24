@@ -27,6 +27,7 @@ Needs verification: backend ordering of `GET beers`, because the UI treats the l
 
 - Poll interval is 1000 ms after start brewing.
 - Each `GET Status/` response is passed through `normalizeBrewingStatus`.
+- The normalizer carries the response's `alarms` list into `BrewingStatus.alarms` and defaults a missing legacy node to `[]`.
 - Normalized status is stored in `productionReducer.brewingStatus` and in `dataCollector`.
 - Polling stops when normalized process state is `FINISHED`, `ABORTED`, or `ERROR`.
 

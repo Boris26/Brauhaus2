@@ -98,6 +98,8 @@ Before changing control output, check whether the UI uses it for:
 - `waiting.canConfirm`
 - `error.code`
 - `error.details`
+- `alarms[].type`
+- `alarms[].active`
 - `WaterStatus.filledLiters / WaterStatus.targetLiters`
 - `WaterStatus.openClose`
 

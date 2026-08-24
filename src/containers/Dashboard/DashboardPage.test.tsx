@@ -49,6 +49,7 @@ const activeStatus: BrewingStatus = {
   hardware: { heater: 'ON', agitator: 'ON' },
   waiting: { waitingFor: WaitingFor.NONE, canConfirm: false },
   error: { code: null, details: null },
+  alarms: [],
 };
 
 const renderDashboard = (overrides: Partial<React.ComponentProps<typeof DashboardPage>> = {}) => render(
