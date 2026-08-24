@@ -1,4 +1,4 @@
-import { mapBeerToBrewingData } from './productionRecipe';
+import {mapBeerToBrewingData, normalizeFermentationStepsForProduction} from './productionRecipe';
 import { RestExecutionMode } from '../enums/eRestExecutionMode';
 import {ProcedureType} from '../enums/eProcedureType';
 import { Beer } from '../model/Beer';
