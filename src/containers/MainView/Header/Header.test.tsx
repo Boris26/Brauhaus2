@@ -2,6 +2,14 @@ import React from 'react';
 import {render, screen, fireEvent} from '@testing-library/react';
 import {Header} from './Header';
 import {Views} from '../../../enums/eViews';
+import {AlarmType, BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../../model/brewingStatus.types';
+
+const brewingStatus = (activeAlarm: boolean): BrewingStatus => ({
+    elapsedTime: 0, currentTime: 0, process: {state: ProcessState.ACTIVE},
+    currentStep: {phase: ProcessPhase.RAST, mode: ProcessMode.HEATING}, temperature: {}, hardware: {},
+    waiting: {waitingFor: WaitingFor.NONE, canConfirm: false}, error: {},
+    alarms: activeAlarm ? [{type: AlarmType.EQUIPMENT_ALARM, active: true}] : []
+});
 
 describe('Header navigation', () => {
     it('keeps existing settings navigation and adds version navigation', (): void => {
@@ -41,5 +49,17 @@ describe('Header navigation', () => {
         expect(screen.getByTitle('Dashboard').querySelector('svg')).toBeInTheDocument();
         expect(screen.getByTitle('Hauptansicht').parentElement).toHaveClass('icons-container');
         expect(screen.getByText(/Backend:/)).toBeInTheDocument();
+    });
+
+    it('prioritizes the equipment alarm and restores existing status messages after it ends', (): void => {
+        const props = {setViewState: jest.fn(), currentView: Views.PRODUCTION, removeAllMessages: jest.fn(), backendStatus: true, messages: ['Aufheizen']};
+        const {rerender} = render(<Header {...props} brewingStatus={brewingStatus(false)} />);
+        expect(screen.getByText('Aufheizen')).toBeInTheDocument();
+        rerender(<Header {...props} brewingStatus={brewingStatus(true)} />);
+        expect(screen.getByRole('alert')).toHaveTextContent('ANLAGENALARM – Anlage prüfen');
+        expect(screen.queryByText('Aufheizen')).not.toBeInTheDocument();
+        rerender(<Header {...props} brewingStatus={brewingStatus(false)} />);
+        expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+        expect(screen.getByText('Aufheizen')).toBeInTheDocument();
     });
 });

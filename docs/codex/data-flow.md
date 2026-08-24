@@ -28,6 +28,7 @@ Needs verification: backend ordering of `GET beers`, because the UI treats the l
 - Poll interval is 1000 ms after start brewing.
 - Each `GET Status/` response is passed through `normalizeBrewingStatus`.
 - The normalizer carries the response's `alarms` list into `BrewingStatus.alarms` and defaults a missing legacy node to `[]`.
+- The desktop production UI derives an active equipment alarm from `alarms` and displays it through the existing production modal and header status components. Dismissing the modal is local presentation state for the current continuous alarm cycle and does not dispatch an action or call an API.
 - Normalized status is stored in `productionReducer.brewingStatus` and in `dataCollector`.
 - Polling stops when normalized process state is `FINISHED`, `ABORTED`, or `ERROR`.
 

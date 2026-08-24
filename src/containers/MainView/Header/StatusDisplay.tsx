@@ -6,6 +6,7 @@ interface StatusDisplayProps {
   messages?: string[];
   disableScrollAnimation?: boolean;
   removeAllMessages: () => void;
+  priorityMessage?: string;
 }
 
 interface StatusDisplayState {}
@@ -61,7 +62,7 @@ class StatusDisplay extends React.Component<StatusDisplayProps, StatusDisplaySta
   };
 
   render() {
-    const { backendStatus, messages, removeAllMessages } = this.props;
+    const { backendStatus, messages, removeAllMessages, priorityMessage } = this.props;
 
     const backendClass = backendStatus ? 'Online' : 'Offline';
     return (
@@ -72,7 +73,13 @@ class StatusDisplay extends React.Component<StatusDisplayProps, StatusDisplaySta
             ×
           </span>
         </div>
-        {messages && messages.length > 0 && (
+        {priorityMessage ? (
+          <div className="messages alarm-message" role="alert">
+            <div className="message-row">
+              <span className="message">{priorityMessage}</span>
+            </div>
+          </div>
+        ) : messages && messages.length > 0 && (
           <div className="messages" ref={this.messagesRef}>
             {messages.map((msg, idx) => (
               <div className="message-row" key={idx}>

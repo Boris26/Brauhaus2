@@ -27,7 +27,7 @@ Validation rejects missing/non-positive mash-in, mash-out, and rest temperatures
 
 Runtime status is normalized into process state, current step, temperature, hardware, waiting, and error groups. UI behavior depends on:
 
-- `alarms`: a normalized list of `{ type, active }` control alarms. A missing legacy field becomes `[]`; alarms are stored only and are not evaluated or displayed yet.
+- `alarms`: a normalized list of `{ type, active }` control alarms. A missing legacy field becomes `[]`. The desktop production UI evaluates only an explicitly active `EQUIPMENT_ALARM`, shows it in the existing modal system, and prioritizes its text in the existing header status display; unknown alarm types remain ignored.
 
 - `process.state`: controls active/finished/aborted/error labels and polling termination.
 - `currentStep.phase`: drives labels, hop reminders, mobile type display, and process display.

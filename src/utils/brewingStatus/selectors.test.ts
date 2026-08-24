@@ -1,6 +1,7 @@
 import {getBrewingStatusLabel, getConfirmButtonLabel, getConfirmationType, getCountdownValue, isBrewingProcessActive, shouldShowConfirmButton, shouldShowCountdown, shouldShowWaitingDialog} from './selectors';
-import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
+import {AlarmType, BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
 import {ConfirmStates} from '../../enums/eConfirmStates';
+import {isEquipmentAlarmActive} from './alarmDisplay';
 
 const makeStatus = (aPart: Partial<BrewingStatus>): BrewingStatus => ({
   elapsedTime: 0, currentTime: 0,
@@ -11,6 +12,12 @@ const makeStatus = (aPart: Partial<BrewingStatus>): BrewingStatus => ({
 });
 
 describe('brewing selectors', () => {
+  it('recognizes only an explicitly active equipment alarm in the alarm list', () => {
+    expect(isEquipmentAlarmActive(makeStatus({}))).toBe(false);
+    expect(isEquipmentAlarmActive(makeStatus({alarms: [{type: 'FUTURE_ALARM', active: true}]}))).toBe(false);
+    expect(isEquipmentAlarmActive(makeStatus({alarms: [{type: AlarmType.EQUIPMENT_ALARM, active: false}]}))).toBe(false);
+    expect(isEquipmentAlarmActive(makeStatus({alarms: [{type: AlarmType.EQUIPMENT_ALARM, active: true}]}))).toBe(true);
+  });
   it('derives an active brewing process from process.state ACTIVE only', () => {
     expect(isBrewingProcessActive(undefined)).toBe(false);
     expect(isBrewingProcessActive(makeStatus({process:{state:ProcessState.IDLE}}))).toBe(false);
