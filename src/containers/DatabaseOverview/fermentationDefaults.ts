@@ -3,7 +3,20 @@ import { FermentationSteps } from '../../model/Beer';
 import { ProcedureType } from '../../enums/eProcedureType';
 
 const allowedExecutionModes = [RestExecutionMode.TIMED, RestExecutionMode.CONFIRMATION_HOLD];
-const fixedProcedureTypes = ['Einmaischen', 'Abmaischen', 'Kochen'];
+export const fixedProcedureTypes = ['Einmaischen', 'Abmaischen', 'Kochen'] as const;
+
+export const createDefaultFermentationSteps = (): FermentationSteps[] => [
+    {type: 'Einmaischen', temperature: 0},
+    {type: 'Abmaischen', temperature: 0},
+    {type: 'Kochen', temperature: 0, time: 0},
+];
+
+const normalizeFixedStep = (step: FermentationSteps): FermentationSteps => {
+    if (step.type === 'Einmaischen' || step.type === 'Abmaischen') {
+        return {type: step.type, temperature: step.temperature};
+    }
+    return {...step};
+};
 
 export const decoctionRequiresPreviousRastError = 'Dekoktion benötigt eine vorherige Rast.';
 
@@ -34,15 +47,30 @@ export const normalizeFermentationStep = (step: Partial<FermentationSteps>): Fer
 
 export const numberMashSteps = (steps: FermentationSteps[]): FermentationSteps[] => {
     let rastNumber = 0;
-    return steps.map((step) => {
-        if (["Einmaischen", "Abmaischen", "Kochen"].includes(step.type)) return step;
+    const fixedSteps = new Map<string, FermentationSteps>();
+    const mashSteps = steps.flatMap((step) => {
+        if (fixedProcedureTypes.some((type) => type === step.type)) {
+            if (!fixedSteps.has(step.type)) fixedSteps.set(step.type, normalizeFixedStep(step));
+            return [];
+        }
         const normalized = normalizeFermentationStep(step);
         if (normalized.procedureType === ProcedureType.DECOCTION) {
-            return {...normalized, type: 'Dekoktion'};
+            return [{...normalized, type: 'Dekoktion'}];
         }
         rastNumber += 1;
-        return {...normalized, type: `Rast ${rastNumber}`};
+        return [{...normalized, type: `Rast ${rastNumber}`}];
     });
+
+    createDefaultFermentationSteps().forEach((step) => {
+        if (!fixedSteps.has(step.type)) fixedSteps.set(step.type, step);
+    });
+
+    return [
+        fixedSteps.get('Einmaischen')!,
+        ...mashSteps,
+        fixedSteps.get('Abmaischen')!,
+        fixedSteps.get('Kochen')!,
+    ];
 };
 
 export const isValidExecutionMode = (value: unknown): value is RestExecutionMode => {
@@ -54,7 +82,7 @@ export const getFermentationStepValidationErrors = (steps: FermentationSteps[]):
     let hasPreviousRast = false;
 
     steps.forEach((step, index) => {
-        if (fixedProcedureTypes.includes(step.type)) return;
+        if (fixedProcedureTypes.some((type) => type === step.type)) return;
 
         const normalized = normalizeFermentationStep(step);
         if (normalized.procedureType === ProcedureType.DECOCTION) {

@@ -60,6 +60,8 @@ Before changing any database/backend field or endpoint, check whether the UI use
 - `FinishedBrew.startDate`
 - `FinishedBrew.endDate`
 
+The recipe editor now omits `time` when serializing the fixed `Einmaischen` and `Abmaischen` steps because those phases have no recipe duration. The TypeScript contract already permits this field to be absent, but database/backend persistence tolerance is **Needs verification**; the UI does not synthesize a compatibility value.
+
 ## UI ↔ PI control
 
 The PI control app produces runtime/control data that the UI displays and uses for workflow behavior.

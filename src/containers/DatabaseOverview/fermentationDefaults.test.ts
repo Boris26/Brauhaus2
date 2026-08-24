@@ -1,5 +1,5 @@
 import { RestExecutionMode } from '../../enums/eRestExecutionMode';
-import { decoctionRequiresPreviousRastError, getFermentationStepValidationErrors, normalizeFermentationStep, isValidExecutionMode, numberMashSteps } from './fermentationDefaults';
+import { createDefaultFermentationSteps, decoctionRequiresPreviousRastError, getFermentationStepValidationErrors, normalizeFermentationStep, isValidExecutionMode, numberMashSteps } from './fermentationDefaults';
 import {ProcedureType} from '../../enums/eProcedureType';
 
 describe('fermentationDefaults', () => {
@@ -53,7 +53,36 @@ describe('fermentationDefaults', () => {
             {type: 'c', temperature: 68, procedureType: ProcedureType.RAST},
             {type: 'd', procedureType: ProcedureType.DECOCTION},
             {type: 'e', temperature: 72, procedureType: ProcedureType.RAST},
-        ]).map(step => step.type)).toEqual(['Rast 1', 'Dekoktion', 'Rast 2', 'Dekoktion', 'Rast 3']);
+        ]).map(step => step.type)).toEqual(['Einmaischen', 'Rast 1', 'Dekoktion', 'Rast 2', 'Dekoktion', 'Rast 3', 'Abmaischen', 'Kochen']);
+    });
+
+    test('default mash plan contains each fixed process step once and no fake mash-in/out time', () => {
+        expect(createDefaultFermentationSteps()).toEqual([
+            {type: 'Einmaischen', temperature: 0},
+            {type: 'Abmaischen', temperature: 0},
+            {type: 'Kochen', temperature: 0, time: 0},
+        ]);
+    });
+
+    test('normalization restores missing fixed steps, removes duplicates and preserves saved values', () => {
+        const normalized = numberMashSteps([
+            {type: 'Einmaischen', temperature: 57, time: 12},
+            {type: 'Einmaischen', temperature: 60},
+            {type: 'Rast', temperature: 63, time: 30},
+            {type: 'Abmaischen', temperature: 78, time: 5},
+        ]);
+
+        expect(normalized.map((step) => step.type)).toEqual(['Einmaischen', 'Rast 1', 'Abmaischen', 'Kochen']);
+        expect(normalized[0]).toEqual({type: 'Einmaischen', temperature: 57});
+        expect(normalized[2]).toEqual({type: 'Abmaischen', temperature: 78});
+    });
+
+    test('repeated normalization never duplicates fixed steps', () => {
+        const once = numberMashSteps([]);
+        const twice = numberMashSteps(once);
+        expect(twice.filter((step) => step.type === 'Einmaischen')).toHaveLength(1);
+        expect(twice.filter((step) => step.type === 'Abmaischen')).toHaveLength(1);
+        expect(twice.filter((step) => step.type === 'Kochen')).toHaveLength(1);
     });
 });
 
