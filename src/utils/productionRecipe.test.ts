@@ -112,6 +112,15 @@ describe('productionRecipe mapping', () => {
       expect.objectContaining({procedureType: ProcedureType.DECOCTION, executionMode: RestExecutionMode.CONFIRMATION_HOLD})
     ]);
     expect(result.fermentationSteps?.[0]).not.toHaveProperty('time');
+    expect(result.fermentationSteps?.[0]).not.toHaveProperty('temperature');
+  });
+
+  it('does not infer DECOCTION from an explicit confirmation-hold RAST', () => {
+    const result = normalizeFermentationStepsForProduction([
+      {type: 'Rast 1', temperature: 68, procedureType: ProcedureType.RAST, executionMode: RestExecutionMode.CONFIRMATION_HOLD}
+    ]);
+    expect(result.fermentationSteps?.[0]).toMatchObject({procedureType: ProcedureType.RAST, executionMode: RestExecutionMode.CONFIRMATION_HOLD, temperature: 68});
+    expect(result.fermentationSteps?.[0]).not.toHaveProperty('time');
   });
 
   it('uses 99 °C as fallback for missing or invalid cooking temperature only', () => {
@@ -147,8 +156,8 @@ describe('productionRecipe mapping', () => {
       CookingTime: 70,
       CookingTemperature: 100,
       Rasten: [
-        { type: 'Rast1', temperature: 63, time: 40, executionMode: RestExecutionMode.TIMED },
-        { type: 'Dickmaische', temperature: 68, executionMode: RestExecutionMode.CONFIRMATION_HOLD }
+        { type: 'Rast1', temperature: 63, time: 40, procedureType: ProcedureType.RAST, executionMode: RestExecutionMode.TIMED },
+        { type: 'Dickmaische', procedureType: ProcedureType.DECOCTION, executionMode: RestExecutionMode.CONFIRMATION_HOLD }
       ]
     });
   });

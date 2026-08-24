@@ -6,7 +6,7 @@ import {AdditionalIngredientPhase, AdditionalIngredientTimeUnit} from "./Beer";
 import { ProcedureType } from '../enums/eProcedureType';
 export interface FermentationStepsDTO {
     type: string;
-    temperature: number;
+    temperature?: number;
     time?: number;
     executionMode?: RestExecutionMode;
     procedureType?: ProcedureType;

@@ -3,8 +3,8 @@ import { BrewingData } from '../model/BrewingData';
 import { RestExecutionMode } from '../enums/eRestExecutionMode';
 import { ProcedureType } from '../enums/eProcedureType';
 
-const isValidTemperature = (value: unknown) => typeof value === 'number' && Number.isFinite(value) && value > 0;
-const isValidTimedDuration = (value: unknown) => typeof value === 'number' && Number.isFinite(value) && value > 0;
+const isValidTemperature = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0;
+const isValidTimedDuration = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0;
 const FALLBACK_COOKING_TEMPERATURE_CELSIUS = 99;
 
 export interface ProductionRecipeNormalizationResult {
@@ -25,6 +25,14 @@ export function normalizeFermentationStepsForProduction(steps: FermentationSteps
       ? RestExecutionMode.CONFIRMATION_HOLD
       : (step.executionMode ?? RestExecutionMode.TIMED);
 
+    if (fixedProcessStepTypes.has(step.type)) continue;
+
+    if (procedureType === ProcedureType.DECOCTION) {
+      const {time, temperature, ...decoction} = step;
+      normalized.push({...decoction, procedureType, executionMode: RestExecutionMode.CONFIRMATION_HOLD});
+      continue;
+    }
+
     if (!isValidTemperature(step.temperature)) {
       return { ok: false, error: `Ungültige Rasttemperatur bei Schritt "${step.type}".` };
     }
@@ -33,11 +41,6 @@ export function normalizeFermentationStepsForProduction(steps: FermentationSteps
     if (executionMode === RestExecutionMode.CONFIRMATION_HOLD) {
       const { time, ...restWithoutTime } = step;
       normalized.push({ ...restWithoutTime, executionMode, procedureType });
-      continue;
-    }
-
-    // Ein-/Abmaischen/Kochen sind feste Prozessschritte über Top-Level-Felder und dürfen nicht als normale Rasten gesendet werden.
-    if (fixedProcessStepTypes.has(step.type)) {
       continue;
     }
 
@@ -59,8 +62,10 @@ export function normalizeFermentationStepsForProduction(steps: FermentationSteps
 export function mapBeerToBrewingData(beer: Beer): ProductionRecipeNormalizationResult {
   const ein = beer.fermentation.find(item => item.type === 'Einmaischen');
   const aus = beer.fermentation.find(item => item.type === 'Abmaischen');
+  const mashupTemperature = ein?.temperature;
+  const mashdownTemperature = aus?.temperature;
 
-  if (!ein || !aus || !isValidTemperature(ein.temperature) || !isValidTemperature(aus.temperature)) {
+  if (!isValidTemperature(mashupTemperature) || !isValidTemperature(mashdownTemperature)) {
     return { ok: false, error: 'Einmaischen/Abmaischen Temperatur fehlt oder ist ungültig.' };
   }
   if (!isValidTimedDuration(beer.cookingTime)) {
@@ -76,8 +81,8 @@ export function mapBeerToBrewingData(beer: Beer): ProductionRecipeNormalizationR
   return {
     ok: true,
     brewingData: {
-      MashdownTemperature: aus.temperature,
-      MashupTemperature: ein.temperature,
+      MashdownTemperature: mashdownTemperature,
+      MashupTemperature: mashupTemperature,
       CookingTemperature: cookingTemperature,
       CookingTime: beer.cookingTime,
       Rasten: normalizedStepsResult.fermentationSteps ?? []
