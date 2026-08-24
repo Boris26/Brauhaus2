@@ -37,6 +37,11 @@ interface BeerFormProps {
 
 type BeerFormSection = 'basic' | 'brewing' | 'mash' | 'malts' | 'hops' | 'yeast' | 'additional';
 
+const procedureTypeOptions = [
+    {value: ProcedureType.RAST, label: 'Rast'},
+    {value: ProcedureType.DECOCTION, label: 'Dekoktion'},
+];
+
 interface BeerFormState {
     id: string;
     name: string;
