@@ -9,9 +9,12 @@ Brauhaus uses relative API routes. The actual target applications are configured
 ```text
 /api/database
 /api/controller
+/api/audio
 ```
 
 No fixed server address is required in the production build.
+
+In CRA development, `src/setupProxy.js` proxies every method below `/api` to the configured reverse-proxy origin and performs no path rewrite. Production must provide equivalent reverse-proxy routing.
 
 ## Database API
 
@@ -67,6 +70,20 @@ Base route:
 | `POST` | `/push/subscriptions` | Store a push subscription |
 | `DELETE` | `/push/subscriptions` | Remove a push subscription |
 | `POST` | `/push/test` | Send a test notification |
+
+## Audio API
+
+Base route:
+
+```text
+/api/audio
+```
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| `POST` | `/test` | Play one logical controller sound |
+
+The JSON request is `{ "sound": "ALARM" }`, where `sound` is one of the documented logical `SoundType` values. The browser-facing path remains `/api/audio/test`; it is not rewritten to `/audio/test` by the UI development proxy.
 
 ## Process Commands
 

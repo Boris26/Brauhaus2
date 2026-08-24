@@ -29,6 +29,7 @@ The web server must:
 - Serve the static files from `build/`
 - Forward `/api/database` to the database backend
 - Forward `/api/controller` to the brewing controller
+- Forward `/api/audio` to the controller service that owns the audio API
 - Route browser requests for React pages back to `index.html`
 - Serve the manifest and service worker from the same origin when PWA features are used
 
@@ -41,9 +42,12 @@ Brauhaus uses relative API routes:
 /api/controller
 /api/controller/Command/
 /api/controller/Confirm/
+/api/audio
 ```
 
 The actual targets are configured outside the React build.
+
+The development server forwards the complete `/api` namespace, without a path rewrite, to the HTTPS reverse proxy configured in `src/setupProxy.js`. Consequently, a response such as HTTP 405 for `/api/audio/test` is an upstream response: the CRA development server does not handle that route itself. The reverse proxy must preserve `/api/audio/test` and route it to the service that implements `POST /api/audio/test`.
 
 This avoids embedding installation-specific server addresses in the application.
 

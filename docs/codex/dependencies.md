@@ -21,8 +21,11 @@ Needs verification: the app mixes Material UI v4 and MUI v5 packages, which can 
 - `BaseURL = '/api/controller'`
 - `CommandsURL = '/api/controller/Command/'`
 - `ConfirmURL = '/api/controller/Confirm/'`
+- `AudioURL = '/api/audio'`
 
 No environment override is used for API origins. In local CRA development only, `src/setupProxy.js` proxies `/api/*` to `https://192.168.178.72/api/*` without path rewriting. `PUBLIC_URL` is used only for CRA public assets/service worker.
+
+The development proxy is method-agnostic: GET, POST, PUT, and DELETE requests under `/api` use the same middleware. Reverse-proxy routing for `/api/audio` must therefore be configured at the target Caddy installation, just like `/api/controller` and `/api/database`.
 
 ## Scripts
 
@@ -45,4 +48,3 @@ Jest/React Testing Library setup uses CRA defaults plus `src/setupTests.ts`. Exi
 - Brewing status normalization/selectors.
 - Production recipe mapping.
 - Fermentation and hop defaults.
-
