@@ -3,6 +3,7 @@ import './ProcessList.css';
 import {Beer, FermentationSteps} from "../../../model/Beer";
 import {RestExecutionMode} from "../../../enums/eRestExecutionMode";
 import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from "../../../model/brewingStatus.types";
+import {ProcedureType} from "../../../enums/eProcedureType";
 import {TimeFormatter} from "../../../utils/TimeFormatter";
 
 export enum ProcessListEntryType {
@@ -402,23 +403,25 @@ export function createProcessSteps(selectedBeer: Beer): ProcessListStep[] {
         controlStepIndex++;
     }
 
-    let lastRastIndex = -1;
+    let lastMashStepIndex = -1;
 
-    // Rasten
+    // Sequenzielle Maischeschritte (Rasten und Dekoktionen)
     fermentation.forEach((step: FermentationSteps) => {
-        const isRastName = /^Rast\s*\d+$/i.test(step.type);
         const isConfirmationHold = (step.executionMode ?? RestExecutionMode.TIMED) === RestExecutionMode.CONFIRMATION_HOLD;
-        if (isRastName || isConfirmationHold) {
-            processSteps.push({ name: `Aufheizen für ${step.type}`, entryType: ProcessListEntryType.HEATING, controlStepIndex, phase: ProcessPhase.RAST, detail: {temperature: step.temperature} });
-            processSteps.push({ name: step.type, entryType: ProcessListEntryType.PROCESS, controlStepIndex, phase: ProcessPhase.RAST, detail: {temperature: step.temperature, duration: step.time, durationUnit: ProcessListDurationUnit.MINUTES, confirmationRequired: isConfirmationHold} });
+        const procedureType = step.procedureType ?? (isConfirmationHold ? ProcedureType.DECOCTION : ProcedureType.RAST);
+        const isFixedStep = ['Einmaischen', 'Abmaischen', 'Kochen'].includes(step.type);
+        if (!isFixedStep) {
+            const phase = procedureType === ProcedureType.DECOCTION ? ProcessPhase.DECOCTION : ProcessPhase.RAST;
+            processSteps.push({ name: `Aufheizen für ${step.type}`, entryType: ProcessListEntryType.HEATING, controlStepIndex, phase, detail: {temperature: step.temperature} });
+            processSteps.push({ name: step.type || (phase === ProcessPhase.DECOCTION ? 'Dekoktion' : 'Rast'), entryType: ProcessListEntryType.PROCESS, controlStepIndex, phase, detail: {temperature: step.temperature, duration: step.time, durationUnit: ProcessListDurationUnit.MINUTES, confirmationRequired: procedureType === ProcedureType.DECOCTION} });
             controlStepIndex++;
-            lastRastIndex = processSteps.length - 1;
+            lastMashStepIndex = processSteps.length - 1;
         }
     });
 
-    // Jod-Probe nach letzter Rast
-    if (lastRastIndex !== -1) {
-        processSteps.splice(lastRastIndex + 1, 0, { name: 'Jod Probe', entryType: ProcessListEntryType.DISPLAY, detail: {confirmationRequired: true} });
+    // Jod-Probe nach letztem Maischeschritt (Rast oder Dekoktion)
+    if (lastMashStepIndex !== -1) {
+        processSteps.splice(lastMashStepIndex + 1, 0, { name: 'Jod Probe', entryType: ProcessListEntryType.DISPLAY, detail: {confirmationRequired: true} });
     }
 
     // Abmaischen

@@ -49,6 +49,7 @@ Before changing any database/backend field or endpoint, check whether the UI use
 - `Beer.fermentation[].temperature`
 - `Beer.fermentation[].time`
 - `Beer.fermentation[].executionMode`
+- `Beer.fermentation[].procedureType` (`RAST` or `DECOCTION`); missing plus `CONFIRMATION_HOLD` remains a supported legacy decoction
 - `Beer.wortBoiling.hops[].name`
 - `Beer.wortBoiling.hops[].time`
 - `FinishedBrew.id`
@@ -62,6 +63,8 @@ Before changing any database/backend field or endpoint, check whether the UI use
 ## UI ↔ PI control
 
 The PI control app produces runtime/control data that the UI displays and uses for workflow behavior.
+
+The UI accepts `currentStep.phase: DECOCTION` as a public sequential mash phase and sends new decoction recipe steps with `procedureType: DECOCTION` plus `executionMode: CONFIRMATION_HOLD`. Database persistence of the new optional field is **Needs verification** in the database/backend repository.
 
 Before changing control output, check whether the UI uses it for:
 

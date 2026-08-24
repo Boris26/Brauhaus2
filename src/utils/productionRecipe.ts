@@ -1,6 +1,7 @@
 import { Beer, FermentationSteps } from '../model/Beer';
 import { BrewingData } from '../model/BrewingData';
 import { RestExecutionMode } from '../enums/eRestExecutionMode';
+import { ProcedureType } from '../enums/eProcedureType';
 
 const isValidTemperature = (value: unknown) => typeof value === 'number' && Number.isFinite(value) && value > 0;
 const isValidTimedDuration = (value: unknown) => typeof value === 'number' && Number.isFinite(value) && value > 0;
@@ -18,7 +19,11 @@ export function normalizeFermentationStepsForProduction(steps: FermentationSteps
   const fixedProcessStepTypes = new Set(['Einmaischen', 'Abmaischen', 'Kochen']);
 
   for (const step of steps ?? []) {
-    const executionMode = step.executionMode ?? RestExecutionMode.TIMED;
+    const procedureType = step.procedureType
+      ?? (step.executionMode === RestExecutionMode.CONFIRMATION_HOLD ? ProcedureType.DECOCTION : ProcedureType.RAST);
+    const executionMode = procedureType === ProcedureType.DECOCTION
+      ? RestExecutionMode.CONFIRMATION_HOLD
+      : (step.executionMode ?? RestExecutionMode.TIMED);
 
     if (!isValidTemperature(step.temperature)) {
       return { ok: false, error: `Ungültige Rasttemperatur bei Schritt "${step.type}".` };
@@ -27,7 +32,7 @@ export function normalizeFermentationStepsForProduction(steps: FermentationSteps
     // Wichtig: executionMode steuert die Logik. time=0 markiert NICHT CONFIRMATION_HOLD.
     if (executionMode === RestExecutionMode.CONFIRMATION_HOLD) {
       const { time, ...restWithoutTime } = step;
-      normalized.push({ ...restWithoutTime, executionMode });
+      normalized.push({ ...restWithoutTime, executionMode, procedureType });
       continue;
     }
 
@@ -43,6 +48,7 @@ export function normalizeFermentationStepsForProduction(steps: FermentationSteps
     normalized.push({
       ...step,
       executionMode,
+      procedureType,
       time: step.time
     });
   }

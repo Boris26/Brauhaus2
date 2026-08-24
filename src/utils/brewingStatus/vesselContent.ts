@@ -9,7 +9,7 @@ export function getVesselContentType(aBrewingStatus: BrewingStatus | undefined):
         return VesselContentType.MASH;
     }
 
-    if (phase === ProcessPhase.RAST || phase === ProcessPhase.MASHING_OUT) {
+    if (phase === ProcessPhase.RAST || phase === ProcessPhase.DECOCTION || phase === ProcessPhase.MASHING_OUT) {
         return VesselContentType.MASH;
     }
 

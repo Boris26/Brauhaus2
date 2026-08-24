@@ -4,6 +4,8 @@ import '@testing-library/jest-dom';
 import {Beer} from '../../../model/Beer';
 import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../../model/brewingStatus.types';
 import {createProcessSteps, getActiveProcessStepIndex, ProcessList, ProcessListDurationUnit, ProcessListEntryType} from './ProcessList';
+import {ProcedureType} from '../../../enums/eProcedureType';
+import {RestExecutionMode} from '../../../enums/eRestExecutionMode';
 
 const selectedBeer = {
     id: 'beer-1',
@@ -37,6 +39,48 @@ const getActiveStepText = (controlStepIndex: number) => {
 };
 
 describe('ProcessList current-step mapping', () => {
+    it.each([
+        [['RAST', 'RAST']],
+        [['RAST', 'DECOCTION', 'RAST']],
+        [['RAST', 'DECOCTION', 'RAST', 'DECOCTION', 'RAST']],
+        [['DECOCTION', 'DECOCTION', 'RAST']],
+    ])('preserves every mash-step order and index for %j', (types) => {
+        const beer = {
+            ...selectedBeer,
+            fermentation: [
+                selectedBeer.fermentation[0],
+                ...types.map((type, index) => ({
+                    type: type === 'DECOCTION' ? `Dekoktion ${index + 1}` : `Rast ${index + 1}`,
+                    temperature: 64 + index,
+                    time: type === 'RAST' ? 10 : undefined,
+                    procedureType: type as ProcedureType,
+                    executionMode: type === 'DECOCTION' ? RestExecutionMode.CONFIRMATION_HOLD : RestExecutionMode.TIMED
+                })),
+                selectedBeer.fermentation.at(-1)!
+            ]
+        } as Beer;
+
+        const mashSteps = createProcessSteps(beer).filter(step =>
+            step.entryType === ProcessListEntryType.PROCESS &&
+            [ProcessPhase.RAST, ProcessPhase.DECOCTION].includes(step.phase!)
+        );
+        expect(mashSteps.map(step => step.phase)).toEqual(types.map(type => type as ProcessPhase));
+        expect(mashSteps.map(step => step.controlStepIndex)).toEqual(types.map((_, index) => index + 2));
+    });
+
+    it('places the iodine test after a final decoction and highlights that decoction', () => {
+        const beer = {...selectedBeer, fermentation: [
+            selectedBeer.fermentation[0],
+            {type: 'Rast 1', temperature: 64, time: 10, procedureType: ProcedureType.RAST},
+            {type: 'Kochmaische', temperature: 68, procedureType: ProcedureType.DECOCTION, executionMode: RestExecutionMode.CONFIRMATION_HOLD},
+            selectedBeer.fermentation.at(-1)!
+        ]} as Beer;
+        const steps = createProcessSteps(beer);
+        const decoctionIndex = steps.findIndex(step => step.name === 'Kochmaische' && step.entryType === ProcessListEntryType.PROCESS);
+
+        expect(steps[decoctionIndex + 1].name).toBe('Jod Probe');
+        expect(steps[getActiveProcessStepIndex(steps, 3, {index: 3, phase: ProcessPhase.DECOCTION, mode: ProcessMode.WAITING})].name).toBe('Kochmaische');
+    });
     it('builds visible process rows with shared control indices for heating and process entries', () => {
         expect(createProcessSteps(selectedBeer).map(step => `${step.controlStepIndex ?? '-'}:${step.name}`)).toEqual([
             '1:Aufheizen für Einmaischen',

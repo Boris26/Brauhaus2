@@ -6,7 +6,7 @@ Visible/used fields include:
 
 - Identity/display: `id`, `name`, `type`, `color`, `description`, `rating`.
 - Metrics: `alcohol`, `originalwort`, `bitterness`, `mashVolume`, `spargeVolume`, `cookingTime`, `cookingTemperatur`.
-- Production steps: `fermentation: FermentationSteps[]` where step `type` names `Einmaischen`, `Abmaischen`, and regular rests are significant.
+- Production steps: `fermentation: FermentationSteps[]` where `procedureType` classifies mash steps as `RAST` or `DECOCTION`; legacy `CONFIRMATION_HOLD` steps without it normalize to `DECOCTION`. Step `type` remains the display name.
 - Ingredients: `malts`, `wortBoiling.hops`, `fermentationMaturation.yeast`, optional `additionalIngredients`.
 
 `BeerDTO` differs from `Beer` for submission: `fermentationSteps` instead of `fermentation`, ingredient DTOs, and nullable `wortBoiling`/`fermentationMaturation`.
@@ -19,7 +19,7 @@ The PI/control payload is:
 - `MashupTemperature`: from recipe step `Einmaischen.temperature`.
 - `CookingTemperature`: from `beer.cookingTemperatur`, with UI fallback `99` °C only when the stored cooking temperature is missing or invalid.
 - `CookingTime`: from `beer.cookingTime`.
-- `Rasten`: normalized fermentation steps excluding fixed process step types `Einmaischen`, `Abmaischen`, and `Kochen`, unless a step uses `executionMode: CONFIRMATION_HOLD`.
+- `Rasten`: normalized fermentation steps excluding fixed process step types `Einmaischen`, `Abmaischen`, and `Kochen`. Normal rests are sent with `procedureType: RAST`; decoctions use `procedureType: DECOCTION` and `executionMode: CONFIRMATION_HOLD`.
 
 Validation rejects missing/non-positive mash-in, mash-out, and rest temperatures and timed rests without `time > 0`; missing/invalid top-level cooking temperature is not rejected and maps to the UI fallback `99` °C.
 

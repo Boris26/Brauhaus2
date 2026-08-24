@@ -1,11 +1,13 @@
 import { RestExecutionMode } from '../enums/eRestExecutionMode';
 import { HopTimeUnit } from '../enums/eHopTimeUnit';
 import { HopUsage } from '../enums/eHopUsage';
+import { ProcedureType } from '../enums/eProcedureType';
 export interface FermentationSteps {
     type: string;
     temperature: number;
     time?: number;
     executionMode?: RestExecutionMode;
+    procedureType?: ProcedureType;
 }
 
 export interface Malt {

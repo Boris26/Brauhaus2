@@ -1,10 +1,18 @@
 import { RestExecutionMode } from '../../enums/eRestExecutionMode';
 import { normalizeFermentationStep, isValidExecutionMode } from './fermentationDefaults';
+import {ProcedureType} from '../../enums/eProcedureType';
 
 describe('fermentationDefaults', () => {
     test('imported step without executionMode defaults to TIMED', () => {
         const step = normalizeFermentationStep({ type: 'Rast 1', temperature: 64, time: 40 });
         expect(step.executionMode).toBe(RestExecutionMode.TIMED);
+        expect(step.procedureType).toBe(ProcedureType.RAST);
+    });
+
+    test('legacy confirmation hold is normalized to DECOCTION without using its display name', () => {
+        const step = normalizeFermentationStep({type: 'Kochmaische', temperature: 66, executionMode: RestExecutionMode.CONFIRMATION_HOLD});
+
+        expect(step.procedureType).toBe(ProcedureType.DECOCTION);
     });
 
     test('imported CONFIRMATION_HOLD without time remains CONFIRMATION_HOLD', () => {

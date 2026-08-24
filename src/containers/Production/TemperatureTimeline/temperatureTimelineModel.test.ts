@@ -3,6 +3,7 @@ import {Beer} from '../../../model/Beer';
 import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../../model/brewingStatus.types';
 import {TimelineMeasurement} from '../../../utils/DataCollector/dataCollector';
 import {buildTemperatureTimelineModel} from './temperatureTimelineModel';
+import {ProcedureType} from '../../../enums/eProcedureType';
 
 const beer = {
     cookingTime: 60,
@@ -37,6 +38,25 @@ const expectMonotonicSteps = (model: ReturnType<typeof buildTemperatureTimelineM
 };
 
 describe('temperature timeline model', () => {
+    it('keeps multiple and consecutive decoctions as independent fallback-duration bands', () => {
+        const decoctionBeer = {...beer, fermentation: [
+            {type: 'Einmaischen', temperature: 57},
+            {type: 'Dekoktion 1', temperature: 64, executionMode: RestExecutionMode.CONFIRMATION_HOLD, procedureType: ProcedureType.DECOCTION},
+            {type: 'Dekoktion 2', temperature: 66, executionMode: RestExecutionMode.CONFIRMATION_HOLD, procedureType: ProcedureType.DECOCTION},
+            {type: 'Rast 1', temperature: 68, time: 20, executionMode: RestExecutionMode.TIMED, procedureType: ProcedureType.RAST},
+            {type: 'Abmaischen', temperature: 78}
+        ]} as Beer;
+        const active = status({currentStep: {index: 3, phase: ProcessPhase.DECOCTION, mode: ProcessMode.WAITING, name: 'Dekoktion 2', elapsedTime: 0}});
+        const model = buildTemperatureTimelineModel(decoctionBeer, active, [], 20);
+        const mashBands = model.steps.filter(step => step.entryType === 'PROCESS' && [ProcessPhase.RAST, ProcessPhase.DECOCTION].includes(step.phase!));
+
+        expect(mashBands.map(step => [step.name, step.phase])).toEqual([
+            ['Dekoktion 1', ProcessPhase.DECOCTION],
+            ['Dekoktion 2', ProcessPhase.DECOCTION],
+            ['Rast 1', ProcessPhase.RAST]
+        ]);
+        expect(mashBands.every(step => step.endSeconds > step.startSeconds)).toBe(true);
+    });
     it.each([500, 2000, 5000])('keeps the ordered fast path equivalent for %i chronological measurements', (measurementCount) => {
         const measurements = Array.from({length: measurementCount}, (_, index) => ({
             ...point(index, 1, ProcessPhase.MASHING_IN, ProcessMode.HEATING),
