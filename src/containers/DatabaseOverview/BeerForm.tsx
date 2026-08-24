@@ -442,6 +442,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             this.openValidationDialog('Bitte prüfe den Maischeplan: Zeitgesteuerte Rasten benötigen Zeit > 0, Halte-Rasten nur Temperatur.');
             return;
         }
+        const normalizedFermentationSteps = fermentationSteps.map((step) => normalizeFermentationStep(step));
 
         const malts_DTO = maltsDTO
             .map((aMalt) => {
@@ -501,7 +502,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             rating,
             mashVolume,
             spargeVolume,
-            fermentationSteps,
+            fermentationSteps: normalizedFermentationSteps,
             cookingTime,
             cookingTemperatur,
             malts: malts_DTO,
