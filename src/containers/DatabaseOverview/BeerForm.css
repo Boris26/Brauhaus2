@@ -251,8 +251,8 @@
 .ingredient-table input,
 .ingredient-table select,
 .readonly-table-value {
-    height: 38px;
-    min-height: 38px;
+    height: 33px;
+    min-height: 33px;
     padding-top: 4px;
     padding-bottom: 4px;
     font-size: 0.95rem;
@@ -293,6 +293,7 @@
     border: 1px solid var(--color-orange-dark);
     color: var(--color-text-on-primary);
     box-shadow: 0 3px 8px var(--shadow-orange-bold);
+    height: 25px;
 }
 
 .add-button:hover:not(:disabled),
