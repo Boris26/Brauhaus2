@@ -295,7 +295,8 @@ describe('ProcessList compact production overview', () => {
         const waitingStatus = activeStatus(3, ProcessMode.WAITING);
         waitingStatus.waiting = {waitingFor: WaitingFor.IODINE_TEST, canConfirm: true};
         const {rerender} = render(<ProcessList selectedBeer={selectedBeer} currentStepIndex={3} currentStep={{index: 3, phase: ProcessPhase.RAST, mode: ProcessMode.WAITING}} brewingStatus={waitingStatus} remainingSeconds={1176} />);
-        expect(screen.getByText('Wartet auf Bestätigung')).toBeInTheDocument();
+        expect(screen.getByLabelText('Aktion erforderlich')).toHaveTextContent('Jodprobe durchführen');
+        expect(screen.queryByText('Wartet auf Bestätigung')).not.toBeInTheDocument();
         expect(screen.queryByText('Fortschritt')).not.toBeInTheDocument();
         expect(screen.queryByText('Restzeit')).not.toBeInTheDocument();
 

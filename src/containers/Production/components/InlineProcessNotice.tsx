@@ -1,23 +1,44 @@
 import React from 'react';
 import {ConfirmationRequestViewModel} from '../../../utils/brewingStatus/selectors';
+import {WaitingFor} from '../../../model/brewingStatus.types';
 import './InlineProcessNotice.css';
 
 interface ControlConfirmationNoticeProps {
     request: ConfirmationRequestViewModel;
     pending: boolean;
     onConfirm?: () => void;
+    heldMashTemperature?: number;
 }
 
-export const ControlConfirmationNotice: React.FC<ControlConfirmationNoticeProps> = ({request, pending, onConfirm}) => (
+const compactCopyByWaitingState: Partial<Record<WaitingFor, {title: string; buttonLabel?: string}>> = {
+    [WaitingFor.MASHING_IN_CONFIRMATION]: {title: 'Einmaischen abschließen'},
+    [WaitingFor.IODINE_TEST]: {title: 'Jodprobe durchführen'},
+    [WaitingFor.DECOCTION_CONFIRMATION]: {title: 'Dekoktion abschließen'},
+    [WaitingFor.MASHING_OUT_CONFIRMATION]: {title: 'Abmaischen abschließen'},
+    [WaitingFor.COOKING_CONFIRMATION]: {title: 'Kochen bestätigen'},
+    [WaitingFor.BOILING_CONFIRMATION]: {title: 'Siedepunkt bestätigen', buttonLabel: 'Siedepunkt erreicht'},
+};
+
+export const ControlConfirmationNotice: React.FC<ControlConfirmationNoticeProps> = ({request, pending, onConfirm, heldMashTemperature}) => (
     <section className="inline-process-notice inline-process-notice--action" aria-label="Aktion erforderlich" aria-live="polite">
-        <span className="inline-process-notice__eyebrow">Aktion erforderlich</span>
-        <h5>{request.title}</h5>
-        <p>{pending ? 'Bestätigung wird verarbeitet …' : request.message}</p>
-        {request.canConfirm && request.confirmState && onConfirm && (
-            <button type="button" className="inline-process-notice__button" disabled={pending} onClick={onConfirm}>
-                {pending ? 'Wird verarbeitet …' : request.buttonLabel}
-            </button>
-        )}
+        <div className="inline-process-notice__content">
+            <div className="inline-process-notice__heading">
+                <span className="inline-process-notice__alert" aria-hidden="true">!</span>
+                <span className="inline-process-notice__eyebrow">Aktion erforderlich</span>
+            </div>
+            <div className="inline-process-notice__action-row">
+                <h5>{compactCopyByWaitingState[request.waitingFor as WaitingFor]?.title ?? request.title}</h5>
+                {request.canConfirm && request.confirmState && onConfirm && (
+                    <button type="button" className="inline-process-notice__button" disabled={pending} onClick={onConfirm}>
+                        {pending ? 'Wird verarbeitet …' : (compactCopyByWaitingState[request.waitingFor as WaitingFor]?.buttonLabel ?? request.buttonLabel)}
+                    </button>
+                )}
+            </div>
+            {request.waitingFor === WaitingFor.DECOCTION_CONFIRMATION && typeof heldMashTemperature === 'number' && (
+                <p className="inline-process-notice__detail">Hauptmaische wird weiterhin auf {heldMashTemperature.toLocaleString('de-DE', {maximumFractionDigits: 1})} °C gehalten.</p>
+            )}
+            {!request.canConfirm && <p className="inline-process-notice__detail">{request.message}</p>}
+        </div>
     </section>
 );
 

@@ -1,20 +1,24 @@
 .inline-process-notice {
-    border: 1px solid color-mix(in srgb, var(--color-accent) 72%, transparent);
-    border-left: 0.35rem solid var(--color-accent);
-    border-radius: 0.7rem;
-    margin-top: 0.65rem;
-    padding: 0.7rem 0.8rem;
-    background: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface-2));
+    border-top: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+    margin-top: 0.5rem;
+    padding: 0.45rem 0 0;
     color: var(--color-light-text);
 }
 
 .inline-process-notice--action {
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 16%, transparent);
+    min-height: 3.75rem;
 }
 
 .inline-process-notice--reminder {
     background: color-mix(in srgb, var(--color-accent) 6%, var(--color-surface-2));
+    border: 1px solid color-mix(in srgb, var(--color-accent) 72%, transparent);
+    border-left: 0.35rem solid var(--color-accent);
+    border-radius: 0.7rem;
+    padding: 0.7rem 0.8rem;
 }
+
+.inline-process-notice--reminder .inline-process-notice__button { margin-top: 0.65rem; }
+.inline-process-notice--reminder p { line-height: 1.35; margin: 0.35rem 0 0; }
 
 .inline-process-notice__eyebrow {
     color: var(--color-accent);
@@ -25,15 +29,51 @@
     text-transform: uppercase;
 }
 
+.inline-process-notice__content {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.inline-process-notice__heading {
+    align-items: center;
+    display: flex;
+    gap: 0.4rem;
+}
+
+.inline-process-notice__alert {
+    align-items: center;
+    animation: confirmation-alert-pulse 1.3s ease-in-out infinite;
+    border: 2px solid var(--color-accent);
+    border-radius: 50%;
+    color: var(--color-accent);
+    display: inline-flex;
+    font-size: 0.78rem;
+    font-weight: 900;
+    height: 1.25rem;
+    justify-content: center;
+    line-height: 1;
+    width: 1.25rem;
+}
+
+.inline-process-notice__action-row {
+    align-items: center;
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    margin-top: 0.2rem;
+}
+
 .inline-process-notice h5 {
     color: inherit;
     font-size: 1.02rem;
     margin: 0.2rem 0 0;
 }
 
-.inline-process-notice p {
+.inline-process-notice__detail {
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.82rem;
     line-height: 1.35;
-    margin: 0.35rem 0 0;
+    margin: 0.25rem 0 0 1.65rem;
 }
 
 .inline-process-notice__button {
@@ -43,10 +83,24 @@
     color: var(--color-white);
     cursor: pointer;
     font-weight: 800;
-    margin-top: 0.65rem;
-    min-height: 2.6rem;
-    padding: 0.55rem 1rem;
-    width: 100%;
+    flex: 0 1 16rem;
+    min-height: 2.5rem;
+    padding: 0.45rem 0.9rem;
+    width: clamp(13.75rem, 22vw, 17.5rem);
+}
+
+@keyframes confirmation-alert-pulse {
+    0%, 100% { opacity: 0.55; transform: scale(0.94); }
+    50% { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .inline-process-notice__alert { animation: none; }
+}
+
+@media (max-width: 700px) {
+    .inline-process-notice__action-row { align-items: stretch; flex-direction: column; gap: 0.4rem; }
+    .inline-process-notice__button { flex-basis: auto; max-width: 100%; width: 100%; }
 }
 
 .inline-process-notice__button--secondary {

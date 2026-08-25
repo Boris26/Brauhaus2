@@ -287,7 +287,10 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
     renderInlineNotice(): React.ReactNode {
         const confirmationRequest = getConfirmationRequestViewModel(this.props.brewingStatus);
         if (confirmationRequest) {
-            return <ControlConfirmationNotice request={confirmationRequest} pending={this.props.confirmationPending === true} onConfirm={this.props.onConfirmWaiting} />;
+            const heldMashTemperature = this.props.brewingStatus?.currentStep?.phase === ProcessPhase.DECOCTION
+                ? this.props.brewingStatus?.temperature?.target ?? this.getRelatedRastTemperature(undefined)
+                : undefined;
+            return <ControlConfirmationNotice request={confirmationRequest} pending={this.props.confirmationPending === true} onConfirm={this.props.onConfirmWaiting} heldMashTemperature={heldMashTemperature} />;
         }
         if (this.props.hopReminderName && this.props.onCompleteHopReminder) {
             return <HopReminderNotice hopName={this.props.hopReminderName} onDone={this.props.onCompleteHopReminder} />;
@@ -322,11 +325,12 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
         const activeStep = stepIndex >= 0 ? steps[stepIndex] : undefined;
         const upcomingSteps = stepIndex >= 0 ? steps.slice(stepIndex + 1) : steps;
         const progressLabel = stepIndex >= 0 ? `${stepIndex + 1} / ${steps.length}` : '';
+        const confirmationRequest = getConfirmationRequestViewModel(brewingStatus);
 
         const currentStepCard = hasRecipeProcess ? (
             <>
                 <div className="current-process-label">Aktueller Schritt</div>
-                <section className={`current-process-step${getConfirmationRequestViewModel(brewingStatus) ? ' current-process-step--action-required' : ''}`} aria-label="Aktueller Prozessschritt">
+                <section className={`current-process-step${confirmationRequest ? ' current-process-step--action-required' : ''}`} aria-label="Aktueller Prozessschritt">
                     <div className="current-step-heading">
                         <div>
                             <h4>{isProcessStarted ? this.getCurrentStepTitle(activeStep) : 'Noch kein Brauvorgang gestartet'}</h4>
@@ -334,7 +338,7 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
                         </div>
                         {this.getCurrentStepMeta(activeStep, isProcessStarted)}
                     </div>
-                    {this.renderStatusSection(isProcessStarted)}
+                    {!confirmationRequest && this.renderStatusSection(isProcessStarted)}
                     {this.renderInlineNotice()}
                 </section>
             </>
