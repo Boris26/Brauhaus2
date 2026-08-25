@@ -60,7 +60,7 @@ describe('fermentationDefaults', () => {
         expect(createDefaultFermentationSteps()).toEqual([
             {type: 'Einmaischen', temperature: 0},
             {type: 'Abmaischen', temperature: 0},
-            {type: 'Kochen', time: 0},
+            {type: 'Kochen'},
         ]);
     });
 

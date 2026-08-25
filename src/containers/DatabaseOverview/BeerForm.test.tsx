@@ -99,20 +99,16 @@ describe('BeerForm accordions', () => {
         expect(within(mashOutRow).getAllByRole('spinbutton')).toHaveLength(1);
     });
 
-    it('uses one editable cooking temperature source for the brewing data and mash plan', () => {
+    it('shows cooking values only in the brew process and keeps temperature read-only', () => {
         renderBeerForm();
+        expect(screen.queryByLabelText(/Kochtemperatur:/)).not.toBeInTheDocument();
+        expect(screen.queryByLabelText(/Kochzeit \(min\):/)).not.toBeInTheDocument();
 
-        const brewingTemperature = screen.getByLabelText(/Kochtemperatur:/);
-        expect(brewingTemperature).toHaveValue(100);
-
-        fireEvent.click(screen.getByRole('button', {name: /Maischeplan/}));
+        fireEvent.click(screen.getByRole('button', {name: /Brauprozess/}));
         const cookingRow = screen.getByText('Kochen').closest('tr')!;
-        const mashPlanTemperature = within(cookingRow).getByLabelText('Kochtemperatur im Maischeplan');
-        expect(mashPlanTemperature).toHaveValue(100);
-        expect(mashPlanTemperature).toHaveAttribute('readonly');
-
-        fireEvent.change(brewingTemperature, {target: {value: '99'}});
-        expect(mashPlanTemperature).toHaveValue(99);
+        expect(within(cookingRow).getByLabelText('Kochtemperatur im Brauprozess')).toHaveValue(100);
+        expect(within(cookingRow).getByLabelText('Kochtemperatur im Brauprozess')).toHaveAttribute('readonly');
+        expect(within(cookingRow).getByLabelText('Kochzeit im Brauprozess')).not.toHaveAttribute('readonly');
     });
 
     it('preserves an existing cooking temperature while showing it read-only in the mash plan', () => {
@@ -126,10 +122,10 @@ describe('BeerForm accordions', () => {
         renderBeerForm({beers: [existingBeer]});
 
         fireEvent.change(screen.getByLabelText(/Bier auswählen/), {target: {value: 'beer-99'}});
-        fireEvent.click(screen.getByRole('button', {name: /Maischeplan/}));
+        fireEvent.click(screen.getByRole('button', {name: /Brauprozess/}));
 
-        expect(screen.getByLabelText(/Kochtemperatur:/)).toHaveValue(99);
-        expect(screen.getByLabelText('Kochtemperatur im Maischeplan')).toHaveValue(99);
+        expect(screen.queryByLabelText(/Kochtemperatur:/)).not.toBeInTheDocument();
+        expect(screen.getByLabelText('Kochtemperatur im Brauprozess')).toHaveValue(99);
     });
 
     it('reset keeps one copy of every fixed step after configurable mash steps were added', () => {
