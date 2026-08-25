@@ -186,7 +186,7 @@ describe('Production inline confirmations', () => {
         [WaitingFor.IODINE_TEST, ProcessPhase.RAST, 'Jodprobe abgeschlossen', ConfirmStates.IODINE],
         [WaitingFor.MASHING_IN_CONFIRMATION, ProcessPhase.MASHING_IN, 'Einmaischen abgeschlossen', ConfirmStates.MASHUP],
         [WaitingFor.MASHING_OUT_CONFIRMATION, ProcessPhase.MASHING_OUT, 'Abmaischen abgeschlossen', ConfirmStates.MASHUP],
-        [WaitingFor.BOILING_CONFIRMATION, ProcessPhase.COOKING, 'Siedepunkt bestätigen', ConfirmStates.BOILING],
+        [WaitingFor.BOILING_CONFIRMATION, ProcessPhase.COOKING, 'Siedepunkt erreicht', ConfirmStates.BOILING],
         [WaitingFor.COOKING_CONFIRMATION, ProcessPhase.COOKING, 'Kochen bestätigen', ConfirmStates.COOKING],
     ] as const)('renders %s inline and dispatches the existing confirm state', (waitingFor, phase, buttonLabel, confirmState) => {
         const confirm = jest.fn();
@@ -210,6 +210,7 @@ describe('Production inline confirmations', () => {
         renderProduction({brewingStatus: waitingStatus(WaitingFor.DECOCTION_CONFIRMATION, ProcessPhase.DECOCTION)});
         expect(screen.getByText('Hauptmaische · gehaltene Rasttemperatur')).toBeInTheDocument();
         expect(screen.getByText('66 °C')).toBeInTheDocument();
+        expect(screen.getByText('Hauptmaische wird weiterhin auf 66 °C gehalten.')).toBeInTheDocument();
     });
 
     it('uses the related rest temperature when the controller has no target for a decoction', () => {
