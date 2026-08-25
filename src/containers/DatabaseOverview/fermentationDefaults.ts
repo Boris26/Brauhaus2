@@ -8,16 +8,16 @@ export const fixedProcedureTypes = ['Einmaischen', 'Abmaischen', 'Kochen'] as co
 export const createDefaultFermentationSteps = (): FermentationSteps[] => [
     {type: 'Einmaischen', temperature: 0},
     {type: 'Abmaischen', temperature: 0},
-    {type: 'Kochen', time: 0},
+    {type: 'Kochen'},
 ];
 
 const normalizeFixedStep = (step: FermentationSteps): FermentationSteps => {
     if (step.type === 'Einmaischen' || step.type === 'Abmaischen') {
         return {type: step.type, temperature: step.temperature};
     }
-    const cookingStep = {...step};
-    delete cookingStep.temperature;
-    return cookingStep;
+    // Kochzeit und -temperatur liegen im Formular ausschließlich auf dem Rezept.
+    // Der feste Schritt wird erst beim Serialisieren daraus befüllt.
+    return {type: 'Kochen'};
 };
 
 export const decoctionRequiresRastError = 'Bitte ordne der Dekoktion eine Rast zu.';
