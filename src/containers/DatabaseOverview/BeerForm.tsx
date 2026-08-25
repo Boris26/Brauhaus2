@@ -863,7 +863,15 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         const mashContent = (
             <>
                 <div className="table-wrapper">
-                    <table className="ingredient-table">
+                    <table className="ingredient-table mash-plan-table">
+                        <colgroup>
+                            <col className="mash-column-type" />
+                            <col className="mash-column-related" />
+                            <col className="mash-column-mode" />
+                            <col className="mash-column-temperature" />
+                            <col className="mash-column-time" />
+                            <col className="mash-column-action" />
+                        </colgroup>
                         <thead><tr><th>Typ</th><th>Zugehörige Rast</th><th>Modus</th><th>Temp (°C)</th><th>Zeit (min)</th><th className="action-column">Aktion</th></tr></thead>
                         <tbody>{fermentationSteps?.map((step, index) => {
                             const isFixed = this.fixedTypes.includes(step.type);

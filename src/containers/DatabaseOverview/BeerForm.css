@@ -1,6 +1,6 @@
 .containerBeerForm {
-    height: calc(100% - (2 * var(--spacing-lg)));
-    margin: var(--spacing-lg);
+    height: calc(100% - 24px);
+    margin: 12px;
     display: flex;
     flex-direction: column;
     min-height: 0;
@@ -23,27 +23,27 @@
 .beer-form-panel-header {
     background-color: var(--color-accent);
     color: var(--color-white);
-    padding: var(--spacing-md) var(--spacing-lg);
+    min-height: 48px;
+    padding: 4px 12px;
+    box-sizing: border-box;
     border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
     font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--spacing-md);
-    flex-wrap: wrap;
+    gap: 12px;
 }
 
 .beer-form-panel-actions {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: var(--spacing-md);
-    flex-wrap: wrap;
+    gap: 8px;
 }
 
 .beer-form-scroll {
     flex: 1 1 auto;
-    padding: var(--spacing-lg);
+    padding: 12px;
     min-height: 0;
     min-width: 0;
     overflow-y: auto;
@@ -54,16 +54,16 @@
 .beer-form {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-lg);
+    gap: 12px;
     min-width: 0;
 }
 
 .beer-form-toolbar {
     display: grid;
     grid-template-columns: auto minmax(14rem, 1fr) auto auto;
-    gap: var(--spacing-md);
+    gap: 10px;
     align-items: end;
-    padding: var(--spacing-lg);
+    padding: 10px 12px;
     border-radius: var(--border-radius-large);
     background: var(--color-surface-strong);
     border: 1px solid var(--color-border-strong);
@@ -83,7 +83,7 @@
     font-weight: 600;
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-sm);
+    gap: 6px;
     min-width: 0;
 }
 
@@ -92,9 +92,10 @@
 .beer-form textarea,
 .readonly-table-value {
     width: 100%;
-    min-height: var(--control-height);
+    height: 40px;
+    min-height: 40px;
     box-sizing: border-box;
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: 6px 10px;
     border: 1px solid var(--color-border-mid);
     border-radius: var(--border-radius-medium);
     font: inherit;
@@ -113,19 +114,20 @@
 }
 
 .beer-description {
-    min-height: 110px;
+    height: auto;
+    min-height: 72px;
     resize: vertical;
 }
 
 .beer-form-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--spacing-lg) var(--spacing-xl);
+    gap: 10px 16px;
     min-width: 0;
 }
 
 .brewing-data-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .full-width {
@@ -135,7 +137,7 @@
 .beer-form-sections {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: 10px;
     min-width: 0;
 }
 
@@ -147,7 +149,7 @@
 }
 
 .beer-accordion.expanded {
-    box-shadow: 0 2px 10px var(--shadow-secondary);
+    box-shadow: 0 1px 5px var(--shadow-secondary);
 }
 
 .beer-accordion.has-error {
@@ -156,15 +158,16 @@
 
 .beer-accordion-header {
     width: 100%;
-    min-height: var(--control-height-large);
+    height: 40px;
+    min-height: 40px;
     border: none;
     background: var(--color-accent);
     color: var(--color-black);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: var(--spacing-md);
-    padding: var(--spacing-md) var(--spacing-lg);
+    gap: 10px;
+    padding: 4px 12px;
     cursor: pointer;
     font: inherit;
     font-weight: 700;
@@ -181,7 +184,7 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: var(--spacing-md);
+    gap: 10px;
     color: var(--color-dark-bg);
     font-weight: 600;
     flex-wrap: wrap;
@@ -195,7 +198,7 @@
 }
 
 .beer-accordion-content {
-    padding: var(--spacing-lg);
+    padding: 10px 12px 12px;
     min-width: 0;
 }
 
@@ -204,9 +207,9 @@
     min-width: 0;
     overflow-x: auto;
     overflow-y: visible;
-    margin-bottom: var(--spacing-md);
-    border: 1px solid var(--color-border-strong);
-    border-radius: var(--border-radius-medium);
+    margin-bottom: 8px;
+    border: 0;
+    border-radius: 0;
     box-sizing: border-box;
 }
 
@@ -222,16 +225,18 @@
 .ingredient-table th {
     background-color: var(--color-border-strong);
     color: var(--color-white);
-    padding: var(--spacing-md);
+    height: 34px;
+    padding: 5px 8px;
+    box-sizing: border-box;
     text-align: left;
     font-weight: bold;
     overflow-wrap: anywhere;
 }
 
 .ingredient-table td {
-    padding: var(--spacing-sm) var(--spacing-md);
-    min-height: 44px;
-    vertical-align: top;
+    padding: 4px 8px;
+    height: 48px;
+    vertical-align: middle;
     overflow-wrap: anywhere;
 }
 
@@ -246,22 +251,37 @@
 .ingredient-table input,
 .ingredient-table select,
 .readonly-table-value {
-    min-height: var(--control-height);
+    height: 38px;
+    min-height: 38px;
+    padding-top: 4px;
+    padding-bottom: 4px;
     font-size: 0.95rem;
 }
 
 .action-column {
-    width: 4.25rem;
-    min-width: 4.25rem;
+    width: 4.75rem;
+    min-width: 4.75rem;
     text-align: center;
+    white-space: nowrap;
 }
+
+.mash-plan-table {
+    table-layout: fixed;
+}
+
+.mash-plan-table .mash-column-type { width: 18%; }
+.mash-plan-table .mash-column-related { width: 25%; }
+.mash-plan-table .mash-column-mode { width: 20%; }
+.mash-plan-table .mash-column-temperature { width: 14%; }
+.mash-plan-table .mash-column-time { width: 14%; }
+.mash-plan-table .mash-column-action { width: 9%; }
 
 .add-button,
 .finish-btn {
-    min-height: var(--control-height);
+    min-height: 40px;
     border: none;
     border-radius: var(--border-radius-medium);
-    padding: var(--spacing-sm) var(--spacing-lg);
+    padding: 6px 12px;
     font-size: 1rem;
     font-weight: 700;
     cursor: pointer;
@@ -285,9 +305,9 @@
 }
 
 .cancel-btn {
-    min-width: var(--touch-target-min);
-    width: var(--touch-target-min);
-    height: var(--touch-target-min);
+    min-width: 40px;
+    width: 40px;
+    height: 40px;
     padding: 0;
     display: inline-flex;
     align-items: center;
@@ -314,7 +334,7 @@
     opacity: 0.75;
     display: inline-flex;
     align-items: center;
-    min-height: var(--control-height);
+    min-height: 38px;
     color: var(--color-white);
 }
 
@@ -344,7 +364,7 @@
     color: var(--color-waiting-orange);
     border: 1px solid var(--color-waiting-orange);
     border-radius: var(--border-radius-medium);
-    padding: var(--spacing-md) var(--spacing-lg);
+    padding: 8px 12px;
 }
 
 
@@ -368,14 +388,14 @@
 .beer-form-overview {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--spacing-md);
+    gap: 10px;
 }
 
 .beer-form-overview-item {
     background: var(--color-surface-raised);
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius-medium);
-    padding: var(--spacing-md);
+    padding: 8px 10px;
     color: var(--color-text);
     min-width: 0;
 }
@@ -411,6 +431,10 @@
     .beer-form-overview {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+
+    .brewing-data-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 @media (max-width: 720px) {
@@ -429,5 +453,16 @@
     .secondary-action {
         width: 100%;
         margin-left: 0;
+    }
+
+    .containerBeerForm {
+        height: calc(100% - 16px);
+        margin: 8px;
+    }
+
+    .beer-form-panel-header {
+        height: auto;
+        min-height: 48px;
+        flex-wrap: wrap;
     }
 }
