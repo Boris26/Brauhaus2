@@ -49,10 +49,8 @@ const fillValidRecipe = () => {
     fireEvent.change(screen.getByLabelText(/Stammwürze:/), {target: {value: '12.5'}});
     fireEvent.change(screen.getByLabelText(/Hauptguss/), {target: {value: '20'}});
     fireEvent.change(screen.getByLabelText(/Nachguss/), {target: {value: '10'}});
-    fireEvent.change(screen.getByLabelText(/Kochzeit/), {target: {value: '60'}});
-    fireEvent.change(screen.getByLabelText(/Kochtemperatur/), {target: {value: '99'}});
-
-    fireEvent.click(screen.getByRole('button', {name: /Maischeplan/}));
+    fireEvent.click(screen.getByRole('button', {name: /Brauprozess/}));
+    fireEvent.change(screen.getByLabelText('Kochzeit im Brauprozess'), {target: {value: '60'}});
     fireEvent.change(within(screen.getByText('Einmaischen').closest('tr')!).getByRole('spinbutton'), {target: {value: '57'}});
     fireEvent.change(within(screen.getByText('Abmaischen').closest('tr')!).getByRole('spinbutton'), {target: {value: '78'}});
 
@@ -88,7 +86,7 @@ const expectProcedureTypeOptions = (select: HTMLElement) => {
 describe('BeerForm accordions', () => {
     it('always renders fixed steps and no time inputs for mash-in and mash-out', () => {
         renderBeerForm({beerFormState: {fermentationSteps: []}});
-        fireEvent.click(screen.getByRole('button', {name: /Maischeplan/}));
+        fireEvent.click(screen.getByRole('button', {name: /Brauprozess/}));
 
         for (const type of ['Einmaischen', 'Abmaischen', 'Kochen']) {
             expect(screen.getByText(type)).toBeInTheDocument();
@@ -101,9 +99,45 @@ describe('BeerForm accordions', () => {
         expect(within(mashOutRow).getAllByRole('spinbutton')).toHaveLength(1);
     });
 
+    it('shows cooking values only in the brewing process with a read-only temperature', () => {
+        renderBeerForm();
+
+        expect(screen.queryByLabelText(/Kochtemperatur:/)).not.toBeInTheDocument();
+        expect(screen.queryByLabelText(/Kochzeit \(min\):/)).not.toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', {name: /Brauprozess/}));
+
+        const cookingRow = screen.getByText('Kochen').closest('tr')!;
+        const processTemperature = within(cookingRow).getByLabelText('Kochtemperatur im Brauprozess');
+        const processTime = within(cookingRow).getByLabelText('Kochzeit im Brauprozess');
+        expect(processTemperature).toHaveValue(100);
+        expect(processTemperature).toHaveAttribute('readonly');
+        expect(processTime).toHaveValue(0);
+
+        fireEvent.change(processTime, {target: {value: '60'}});
+        expect(processTime).toHaveValue(60);
+    });
+
+    it('preserves an existing cooking temperature while showing it read-only in the mash plan', () => {
+        const existingBeer: React.ComponentProps<typeof BeerForm>['beers'][number] = {
+            id: 'beer-99', name: 'Alt', type: 'Ale', color: 'amber', alcohol: 5, originalwort: 12, bitterness: 30, description: '', rating: 3,
+            mashVolume: 18, spargeVolume: 8, cookingTime: 60, cookingTemperatur: 99,
+            fermentation: [{type: 'Einmaischen', temperature: 65}, {type: 'Abmaischen', temperature: 78}, {type: 'Kochen', temperature: 100, time: 60}],
+            malts: [], wortBoiling: {totalTime: 60, hops: []},
+            fermentationMaturation: {fermentationTemperature: 18, carbonation: 5, yeast: []},
+        };
+        renderBeerForm({beers: [existingBeer]});
+
+        fireEvent.change(screen.getByLabelText(/Bier auswählen/), {target: {value: 'beer-99'}});
+        fireEvent.click(screen.getByRole('button', {name: /Brauprozess/}));
+
+        expect(screen.queryByLabelText(/Kochtemperatur:/)).not.toBeInTheDocument();
+        expect(screen.getByLabelText('Kochtemperatur im Brauprozess')).toHaveValue(99);
+        expect(screen.getByLabelText('Kochzeit im Brauprozess')).toHaveValue(60);
+    });
+
     it('reset keeps one copy of every fixed step after configurable mash steps were added', () => {
         renderBeerForm();
-        fireEvent.click(screen.getByRole('button', {name: /Maischeplan/}));
+        fireEvent.click(screen.getByRole('button', {name: /Brauprozess/}));
         fireEvent.click(screen.getByRole('button', {name: /Rast hinzufügen/}));
         fireEvent.click(screen.getByRole('button', {name: /Abbrechen \/ Zurücksetzen/}));
         fireEvent.click(screen.getByRole('button', {name: /Abbrechen \/ Zurücksetzen/}));
@@ -118,8 +152,8 @@ describe('BeerForm accordions', () => {
         renderBeerForm();
 
         expect(screen.getByRole('button', {name: /Grunddaten/})).toHaveAttribute('aria-expanded', 'true');
-        expect(screen.getByRole('button', {name: /Braudaten/})).toHaveAttribute('aria-expanded', 'true');
-        expect(screen.getByRole('button', {name: /Maischeplan/})).toHaveAttribute('aria-expanded', 'false');
+        expect(screen.getByRole('button', {name: /Brauwasser/})).toHaveAttribute('aria-expanded', 'true');
+        expect(screen.getByRole('button', {name: /Brauprozess/})).toHaveAttribute('aria-expanded', 'false');
         expect(screen.getByRole('button', {name: /Malze/})).toHaveAttribute('aria-expanded', 'false');
     });
 
@@ -166,7 +200,8 @@ describe('BeerForm accordions', () => {
             mashVolume: 20,
             spargeVolume: 10,
             cookingTime: 60,
-            cookingTemperatur: 99,
+            cookingTemperatur: 100,
+            fermentationSteps: expect.arrayContaining([expect.objectContaining({type: 'Kochen', temperature: 100, time: 60})]),
             malts: [{id: 'm1', name: 'Pilsner Malz', quantity: 4000}],
             wortBoiling: {totalTime: 0, hops: [{id: 'h1', name: 'Hallertauer Mittelfrüh', quantity: 50, time: 60, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES}]},
             fermentationMaturation: {fermentationTemperature: 0, carbonation: 0, yeast: [{id: 'y1', name: 'SafAle US-05', quantity: 1}]},
@@ -203,7 +238,7 @@ describe('BeerForm accordions', () => {
         };
         renderBeerForm({beers: [existingBeer]});
         fireEvent.change(screen.getByLabelText(/Bier auswählen/), {target: {value: 'beer-1'}});
-        fireEvent.click(screen.getByRole('button', {name: /Maischeplan/}));
+        fireEvent.click(screen.getByRole('button', {name: /Brauprozess/}));
         fireEvent.change(within(screen.getByText('Einmaischen').closest('tr')!).getByRole('spinbutton'), {target: {value: '65'}});
 
         fireEvent.click(screen.getByRole('button', {name: /Abbrechen \/ Zurücksetzen/}));
@@ -242,7 +277,7 @@ describe('BeerForm accordions', () => {
             {type: 'Rast 1', temperature: 65, time: 10, procedureType: ProcedureType.RAST, executionMode: RestExecutionMode.TIMED},
             {type: 'Rast 2', temperature: 68, time: 10, procedureType: ProcedureType.RAST, executionMode: RestExecutionMode.TIMED},
         ]}});
-        fireEvent.click(screen.getByRole('button', {name: /Maischeplan/}));
+        fireEvent.click(screen.getByRole('button', {name: /Brauprozess/}));
 
         fireEvent.change(screen.getByLabelText('Typ 2'), {target: {value: ProcedureType.DECOCTION}});
         expect(screen.getByText('Bitte ordne der Dekoktion eine Rast zu.')).toBeInTheDocument();
@@ -262,7 +297,7 @@ describe('BeerForm accordions', () => {
 
         fireEvent.click(screen.getByRole('button', {name: /Rezept speichern/}));
 
-        expect(screen.getByText(/Bitte prüfe den Maischeplan: Bitte ordne der Dekoktion eine Rast zu/)).toBeInTheDocument();
+        expect(screen.getByText(/Bitte prüfe den Brauprozess: Bitte ordne der Dekoktion eine Rast zu/)).toBeInTheDocument();
         expect(props.onSubmitBeer).not.toHaveBeenCalled();
     });
 });

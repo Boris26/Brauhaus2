@@ -92,7 +92,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             mashVolume: 0,
             spargeVolume: 0,
             cookingTime: 0,
-            cookingTemperatur: 0,
+            cookingTemperatur: 100,
             fermentationSteps: createDefaultFermentationSteps(),
             maltsDTO: [{ id: '', name: '', quantity: undefined as any }],
             hopsDTO: [{ id: '', name: '', quantity: undefined as any, time: 0, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES }],
@@ -435,7 +435,8 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         const expandedSections = { ...this.state.expandedSections };
         if (validationErrors.name || validationErrors.type) expandedSections.basic = true;
         if (validationErrors.bitterness || validationErrors.alcohol || validationErrors.originalwort) expandedSections.basic = true;
-        if (validationErrors.mashVolume || validationErrors.spargeVolume || validationErrors.cookingTime || validationErrors.cookingTemperatur) expandedSections.brewing = true;
+        if (validationErrors.mashVolume || validationErrors.spargeVolume) expandedSections.brewing = true;
+        if (validationErrors.cookingTime || validationErrors.cookingTemperatur) expandedSections.mash = true;
 
         this.setState((prevState) => ({validationErrors: {...prevState.validationErrors, ...validationErrors}, expandedSections}));
         return validationErrors;
@@ -484,13 +485,14 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 expandedSections: {...prevState.expandedSections, mash: true},
             }));
             this.openValidationDialog(Object.keys(orderErrors).length > 0
-                ? `Bitte prüfe den Maischeplan: ${decoctionRequiresRastError}`
-                : 'Bitte prüfe den Maischeplan: Zeitgesteuerte Rasten benötigen Zeit > 0, Halte-Rasten nur Temperatur.');
+                ? `Bitte prüfe den Brauprozess: ${decoctionRequiresRastError}`
+                : 'Bitte prüfe den Brauprozess: Zeitgesteuerte Rasten benötigen Zeit > 0, Halte-Rasten nur Temperatur.');
             return;
         }
-        const normalizedFermentationSteps = numberMashSteps(fermentationSteps).map((step) =>
-            this.fixedTypes.includes(step.type) ? step : normalizeFermentationStep(step)
-        );
+        const normalizedFermentationSteps = numberMashSteps(fermentationSteps).map((step) => {
+            if (step.type === 'Kochen') return {...step, temperature: Number(cookingTemperatur), time: Number(cookingTime)};
+            return this.fixedTypes.includes(step.type) ? step : normalizeFermentationStep(step);
+        });
 
         const malts_DTO = maltsDTO
             .map((aMalt) => {
@@ -586,7 +588,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             mashVolume: 0,
             spargeVolume: 0,
             cookingTime: 0,
-            cookingTemperatur: 0,
+            cookingTemperatur: 100,
             fermentationSteps: createDefaultFermentationSteps(),
             maltsDTO: [],
             hopsDTO: [],
@@ -855,8 +857,6 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             <div className="beer-form-grid brewing-data-grid">
                 <label>Hauptguss (l):<input type="number" name="mashVolume" className="field-number-small" min={0} value={mashVolume} step={0.1} onChange={this.handleChange} required={true} max={99} />{this.renderInputError('mashVolume')}</label>
                 <label>Nachguss (l):<input type="number" name="spargeVolume" className="field-number-small" min={0} step={0.1} value={spargeVolume} onChange={this.handleChange} required={true} max={99} />{this.renderInputError('spargeVolume')}</label>
-                <label>Kochzeit (min):<input type="number" name="cookingTime" className="field-number-medium" min={0} value={cookingTime} onChange={this.handleChange} required={true} max={999} />{this.renderInputError('cookingTime')}</label>
-                <label>Kochtemperatur:<input type="number" name="cookingTemperatur" className="field-number-small" min={1} value={cookingTemperatur} onChange={this.handleChange} required={true} max={99} />{this.renderInputError('cookingTemperatur')}</label>
             </div>
         );
 
@@ -885,8 +885,8 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                 <td>{isFixed ? <span className="readonly-table-value">{step.type}</span> : <><select aria-label={`Typ ${index + 1}`} aria-invalid={Boolean(this.state.validationErrors[procedureTypeErrorKey])} name="procedureType" value={procedureType} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value={ProcedureType.RAST}>{step.type}</option><option value={ProcedureType.DECOCTION}>Dekoktion</option></select>{this.renderFieldError(procedureTypeErrorKey)}</>}</td>
                                 <td>{procedureType === ProcedureType.DECOCTION ? <><select aria-label={`Zugehörige Rast ${index + 1}`} aria-invalid={Boolean(this.state.validationErrors[relatedRastErrorKey])} name="relatedRastId" value={step.relatedRastId || ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value="">Bitte Rast auswählen</option>{rastOptions.map((rast) => <option key={rast.stepId} value={rast.stepId}>{rast.type} – {rast.temperature} °C</option>)}</select>{this.renderFieldError(relatedRastErrorKey)}</> : <span className="muted-table-value">–</span>}</td>
                                 <td>{isFixed ? <span className="muted-table-value">–</span> : <select aria-label={`Modus ${index + 1}`} name="executionMode" value={executionMode} disabled={procedureType === ProcedureType.DECOCTION} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value={RestExecutionMode.TIMED}>Zeitgesteuert</option><option value={RestExecutionMode.CONFIRMATION_HOLD}>Bis Bestätigung</option></select>}</td>
-                                <td>{procedureType === ProcedureType.DECOCTION ? <span className="muted-table-value">–</span> : <input type="number" name="temperature" value={step.temperature ?? ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />}</td>
-                                <td>{hasEditableTime && procedureType !== ProcedureType.DECOCTION && executionMode === RestExecutionMode.TIMED ? <input type="number" name="time" min={isFixed ? 0 : 1} value={step.time ?? ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={!isFixed} /> : <span className="muted-table-value">–</span>}</td>
+                                <td>{procedureType === ProcedureType.DECOCTION ? <span className="muted-table-value">–</span> : step.type === 'Kochen' ? <input type="number" value={cookingTemperatur} readOnly={true} className="readonly-cooking-temperature" title="Rezeptwert – die Kochphase wird nicht temperaturgeregelt." aria-label="Kochtemperatur im Brauprozess" /> : <input type="number" name="temperature" value={step.temperature ?? ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />}</td>
+                                <td>{step.type === 'Kochen' ? <><input type="number" name="cookingTime" min={1} max={999} value={cookingTime} onChange={this.handleChange} required={true} aria-label="Kochzeit im Brauprozess" />{this.renderInputError('cookingTime')}</> : hasEditableTime && procedureType !== ProcedureType.DECOCTION && executionMode === RestExecutionMode.TIMED ? <input type="number" name="time" min={1} value={step.time ?? ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} /> : <span className="muted-table-value">–</span>}</td>
                                 <td className="action-column">{index > 0 && !isFixed && <button type="button" className="cancel-btn brauhaus-button brauhaus-button-danger brauhaus-icon-button" onClick={() => this.removeFermentationStep(index)} title="Rast löschen" aria-label="Rast löschen">🗑️</button>}</td>
                             </tr>;
                         })}</tbody>
@@ -940,15 +940,15 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 <div className="beer-form-overview" aria-label="Rezeptübersicht">
                     <div className="beer-form-overview-item"><span>Name</span><strong>{name || 'Neues Bier'}</strong></div>
                     <div className="beer-form-overview-item"><span>Typ</span><strong>{type || '–'}</strong></div>
-                    <div className="beer-form-overview-item"><span>Braudaten</span><strong>{mashVolume || 0} l / {spargeVolume || 0} l</strong></div>
+                    <div className="beer-form-overview-item"><span>Brauwasser</span><strong>{mashVolume || 0} l / {spargeVolume || 0} l</strong></div>
                     <div className="beer-form-overview-item"><span>Zutaten</span><strong>{maltsDTO.length + hopsDTO.length + yeastsDTO.length + additionalIngredientsDTO.length}</strong></div>
                 </div>
                 {(missingMalts.length > 0 || missingHops.length > 0 || missingYeasts.length > 0) && <div className="missing-ingredients-warning">{missingMalts.length > 0 && <div>Fehlende Malze: {missingMalts.join(', ')}</div>}{missingHops.length > 0 && <div>Fehlende Hopfen: {missingHops.join(', ')}</div>}{missingYeasts.length > 0 && <div>Fehlende Hefen: {missingYeasts.join(', ')}</div>}</div>}
                 {info && <div className="beer-form-info">{info}</div>}
                 <div className="beer-form-sections">
                     {this.renderAccordionSection('basic', 'Grunddaten', '', basicContent)}
-                    {this.renderAccordionSection('brewing', 'Braudaten', '', brewingContent)}
-                    {this.renderAccordionSection('mash', 'Maischeplan', `${fermentationSteps.length} Rasten`, mashContent)}
+                    {this.renderAccordionSection('brewing', 'Brauwasser', '', brewingContent)}
+                    {this.renderAccordionSection('mash', 'Brauprozess', `${fermentationSteps.length} Rasten`, mashContent)}
                     {this.renderAccordionSection('malts', 'Malze', `${maltsDTO.length} Einträge`, maltsContent)}
                     {this.renderAccordionSection('hops', 'Hopfen', `${hopsDTO.length} Einträge`, hopsContent)}
                     {this.renderAccordionSection('yeast', 'Hefe', `${yeastsDTO.length} Einträge`, yeastContent)}
