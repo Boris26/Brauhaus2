@@ -8,14 +8,16 @@ export const fixedProcedureTypes = ['Einmaischen', 'Abmaischen', 'Kochen'] as co
 export const createDefaultFermentationSteps = (): FermentationSteps[] => [
     {type: 'Einmaischen', temperature: 0},
     {type: 'Abmaischen', temperature: 0},
-    {type: 'Kochen', temperature: 0, time: 0},
+    {type: 'Kochen', time: 0},
 ];
 
 const normalizeFixedStep = (step: FermentationSteps): FermentationSteps => {
     if (step.type === 'Einmaischen' || step.type === 'Abmaischen') {
         return {type: step.type, temperature: step.temperature};
     }
-    return {...step};
+    const cookingStep = {...step};
+    delete cookingStep.temperature;
+    return cookingStep;
 };
 
 export const decoctionRequiresRastError = 'Bitte ordne der Dekoktion eine Rast zu.';

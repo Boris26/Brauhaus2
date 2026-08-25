@@ -92,7 +92,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             mashVolume: 0,
             spargeVolume: 0,
             cookingTime: 0,
-            cookingTemperatur: 0,
+            cookingTemperatur: 100,
             fermentationSteps: createDefaultFermentationSteps(),
             maltsDTO: [{ id: '', name: '', quantity: undefined as any }],
             hopsDTO: [{ id: '', name: '', quantity: undefined as any, time: 0, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES }],
@@ -488,9 +488,10 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 : 'Bitte prüfe den Maischeplan: Zeitgesteuerte Rasten benötigen Zeit > 0, Halte-Rasten nur Temperatur.');
             return;
         }
-        const normalizedFermentationSteps = numberMashSteps(fermentationSteps).map((step) =>
-            this.fixedTypes.includes(step.type) ? step : normalizeFermentationStep(step)
-        );
+        const normalizedFermentationSteps = numberMashSteps(fermentationSteps).map((step) => {
+            if (step.type === 'Kochen') return {...step, temperature: Number(cookingTemperatur)};
+            return this.fixedTypes.includes(step.type) ? step : normalizeFermentationStep(step);
+        });
 
         const malts_DTO = maltsDTO
             .map((aMalt) => {
@@ -586,7 +587,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             mashVolume: 0,
             spargeVolume: 0,
             cookingTime: 0,
-            cookingTemperatur: 0,
+            cookingTemperatur: 100,
             fermentationSteps: createDefaultFermentationSteps(),
             maltsDTO: [],
             hopsDTO: [],
@@ -856,7 +857,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 <label>Hauptguss (l):<input type="number" name="mashVolume" className="field-number-small" min={0} value={mashVolume} step={0.1} onChange={this.handleChange} required={true} max={99} />{this.renderInputError('mashVolume')}</label>
                 <label>Nachguss (l):<input type="number" name="spargeVolume" className="field-number-small" min={0} step={0.1} value={spargeVolume} onChange={this.handleChange} required={true} max={99} />{this.renderInputError('spargeVolume')}</label>
                 <label>Kochzeit (min):<input type="number" name="cookingTime" className="field-number-medium" min={0} value={cookingTime} onChange={this.handleChange} required={true} max={999} />{this.renderInputError('cookingTime')}</label>
-                <label>Kochtemperatur:<input type="number" name="cookingTemperatur" className="field-number-small" min={1} value={cookingTemperatur} onChange={this.handleChange} required={true} max={99} />{this.renderInputError('cookingTemperatur')}</label>
+                <label>Kochtemperatur:<input type="number" name="cookingTemperatur" className="field-number-small" min={1} value={cookingTemperatur} onChange={this.handleChange} required={true} max={100} />{this.renderInputError('cookingTemperatur')}</label>
             </div>
         );
 
@@ -885,7 +886,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                 <td>{isFixed ? <span className="readonly-table-value">{step.type}</span> : <><select aria-label={`Typ ${index + 1}`} aria-invalid={Boolean(this.state.validationErrors[procedureTypeErrorKey])} name="procedureType" value={procedureType} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value={ProcedureType.RAST}>{step.type}</option><option value={ProcedureType.DECOCTION}>Dekoktion</option></select>{this.renderFieldError(procedureTypeErrorKey)}</>}</td>
                                 <td>{procedureType === ProcedureType.DECOCTION ? <><select aria-label={`Zugehörige Rast ${index + 1}`} aria-invalid={Boolean(this.state.validationErrors[relatedRastErrorKey])} name="relatedRastId" value={step.relatedRastId || ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value="">Bitte Rast auswählen</option>{rastOptions.map((rast) => <option key={rast.stepId} value={rast.stepId}>{rast.type} – {rast.temperature} °C</option>)}</select>{this.renderFieldError(relatedRastErrorKey)}</> : <span className="muted-table-value">–</span>}</td>
                                 <td>{isFixed ? <span className="muted-table-value">–</span> : <select aria-label={`Modus ${index + 1}`} name="executionMode" value={executionMode} disabled={procedureType === ProcedureType.DECOCTION} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value={RestExecutionMode.TIMED}>Zeitgesteuert</option><option value={RestExecutionMode.CONFIRMATION_HOLD}>Bis Bestätigung</option></select>}</td>
-                                <td>{procedureType === ProcedureType.DECOCTION ? <span className="muted-table-value">–</span> : <input type="number" name="temperature" value={step.temperature ?? ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />}</td>
+                                <td>{procedureType === ProcedureType.DECOCTION ? <span className="muted-table-value">–</span> : step.type === 'Kochen' ? <input type="number" value={cookingTemperatur} readOnly={true} className="readonly-cooking-temperature" title="Rezeptwert – die Kochphase wird nicht temperaturgeregelt." aria-label="Kochtemperatur im Maischeplan" /> : <input type="number" name="temperature" value={step.temperature ?? ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />}</td>
                                 <td>{hasEditableTime && procedureType !== ProcedureType.DECOCTION && executionMode === RestExecutionMode.TIMED ? <input type="number" name="time" min={isFixed ? 0 : 1} value={step.time ?? ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={!isFixed} /> : <span className="muted-table-value">–</span>}</td>
                                 <td className="action-column">{index > 0 && !isFixed && <button type="button" className="cancel-btn brauhaus-button brauhaus-button-danger brauhaus-icon-button" onClick={() => this.removeFermentationStep(index)} title="Rast löschen" aria-label="Rast löschen">🗑️</button>}</td>
                             </tr>;
