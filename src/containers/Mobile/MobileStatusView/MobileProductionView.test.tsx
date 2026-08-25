@@ -6,6 +6,7 @@ import {MobileProductionView} from './MobileProductionView';
 import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../../model/brewingStatus.types';
 import {rootReducer} from '../../../reducers/rootReducer';
 import * as pushService from '../../../utils/pushService';
+import {ConfirmStates} from '../../../enums/eConfirmStates';
 
 jest.mock('../MobileBrewingCalculationsView/MobileBrewingCalculationsView', () => () => <div>Berechnungen Mock</div>);
 
@@ -38,6 +39,7 @@ const renderMobileView = (overrides: Partial<React.ComponentProps<typeof MobileP
         startPolling: jest.fn(),
         stopPolling: jest.fn(),
         isPollingRunning: false,
+        confirm: jest.fn(),
         ...overrides,
     };
     return {props, ...render(
@@ -80,6 +82,22 @@ describe('MobileProductionView navigation', () => {
         fireEvent.click(screen.getByRole('button', {name: 'Status'}));
 
         expect(screen.queryByRole('heading', {name: 'Brauhaus Mobile'})).not.toBeInTheDocument();
+    });
+});
+
+describe('MobileProductionView confirmations', () => {
+    it('confirms a valid waiting state through the shared mapping and prevents repeated clicks', () => {
+        const status = makeStatus();
+        status.currentStep.mode = ProcessMode.WAITING;
+        status.waiting = {waitingFor: WaitingFor.IODINE_TEST, canConfirm: true};
+        const confirm = jest.fn();
+        renderMobileView({brewingStatus: status, confirm});
+
+        fireEvent.click(screen.getByRole('button', {name: 'Jodprobe abgeschlossen'}));
+        expect(confirm).toHaveBeenCalledWith(ConfirmStates.IODINE);
+        expect(screen.getByRole('button', {name: 'Wird verarbeitet …'})).toBeDisabled();
+        expect(screen.getByText('24 °C')).toBeInTheDocument();
+        expect(screen.getByText('65 °C')).toBeInTheDocument();
     });
 });
 

@@ -4,6 +4,7 @@ import {Production} from './Production';
 import {Beer} from '../../model/Beer';
 import {ToggleState} from '../../enums/eToggleState';
 import {AlarmType, BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
+import {ConfirmStates} from '../../enums/eConfirmStates';
 
 const createBeer = (aMashVolume: number | undefined = 18, aSpargeVolume: number | undefined = 12, aId: string = '1'): Beer => ({
     id: aId,
@@ -72,6 +73,7 @@ const renderProduction = (aOverrides: Partial<React.ComponentProps<typeof Produc
         waterStatus: {filledLiters: 0, targetLiters: 0, openClose: false},
         addFinishedBrew: jest.fn(),
         nextProcedureStep: jest.fn(),
+        confirm: jest.fn(),
         ...aOverrides
     };
     return {props, ...render(<Production {...props} />)};
@@ -169,6 +171,81 @@ describe('Production start button', () => {
         expect(startPollingButton).toBeDisabled();
     });
 
+});
+
+describe('Production inline confirmations', () => {
+    const waitingStatus = (waitingFor: WaitingFor, phase: ProcessPhase): BrewingStatus => ({
+        ...createBrewingStatus(ProcessState.ACTIVE),
+        currentStep: {index: 1, phase, mode: ProcessMode.WAITING, name: phase},
+        temperature: {current: 64, target: 66},
+        waiting: {waitingFor, canConfirm: true},
+    });
+
+    it.each([
+        [WaitingFor.DECOCTION_CONFIRMATION, ProcessPhase.DECOCTION, 'Dekoktion abgeschlossen', ConfirmStates.DECOCTION],
+        [WaitingFor.IODINE_TEST, ProcessPhase.RAST, 'Jodprobe abgeschlossen', ConfirmStates.IODINE],
+        [WaitingFor.MASHING_IN_CONFIRMATION, ProcessPhase.MASHING_IN, 'Einmaischen abgeschlossen', ConfirmStates.MASHUP],
+        [WaitingFor.MASHING_OUT_CONFIRMATION, ProcessPhase.MASHING_OUT, 'Abmaischen abgeschlossen', ConfirmStates.MASHUP],
+        [WaitingFor.BOILING_CONFIRMATION, ProcessPhase.COOKING, 'Siedepunkt bestätigen', ConfirmStates.BOILING],
+        [WaitingFor.COOKING_CONFIRMATION, ProcessPhase.COOKING, 'Kochen bestätigen', ConfirmStates.COOKING],
+    ] as const)('renders %s inline and dispatches the existing confirm state', (waitingFor, phase, buttonLabel, confirmState) => {
+        const confirm = jest.fn();
+        const {container} = renderProduction({brewingStatus: waitingStatus(waitingFor, phase), confirm});
+
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        expect(screen.getByLabelText('Aktion erforderlich')).toBeInTheDocument();
+        expect(container.querySelector('.Temp')).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', {name: buttonLabel}));
+        expect(confirm).toHaveBeenCalledWith(confirmState);
+        expect(screen.getByRole('button', {name: 'Wird verarbeitet …'})).toBeDisabled();
+    });
+
+    it('shows an unsupported user confirmation without inventing a button', () => {
+        renderProduction({brewingStatus: waitingStatus(WaitingFor.USER_CONFIRMATION, ProcessPhase.RAST)});
+        expect(screen.getByText('Wartet auf Benutzeraktion')).toBeInTheDocument();
+        expect(screen.getByLabelText('Aktion erforderlich').querySelector('button')).toBeNull();
+    });
+
+    it('labels the decoction target as the held main-mash rest temperature', () => {
+        renderProduction({brewingStatus: waitingStatus(WaitingFor.DECOCTION_CONFIRMATION, ProcessPhase.DECOCTION)});
+        expect(screen.getByText('Hauptmaische · gehaltene Rasttemperatur')).toBeInTheDocument();
+        expect(screen.getByText('66 °C')).toBeInTheDocument();
+    });
+
+    it('uses the related rest temperature when the controller has no target for a decoction', () => {
+        const beer = {
+            ...createBeer(),
+            fermentation: [
+                {type: 'Einmaischen', temperature: 60},
+                {stepId: 'rast-1', type: 'Rast 1', temperature: 67, procedureType: 'RAST'},
+                {stepId: 'decoction-1', relatedRastId: 'rast-1', type: 'Dekoktion 1', procedureType: 'DECOCTION'},
+                {type: 'Abmaischen', temperature: 78},
+            ],
+        } as Beer;
+        const status = waitingStatus(WaitingFor.DECOCTION_CONFIRMATION, ProcessPhase.DECOCTION);
+        status.currentStep.name = 'Dekoktion 1';
+        status.temperature = {current: 64};
+        renderProduction({selectedBeer: beer, brewingStatus: status});
+
+        expect(screen.getByText('Hauptmaische · gehaltene Rasttemperatur')).toBeInTheDocument();
+        expect(screen.getByText('67 °C')).toBeInTheDocument();
+    });
+
+    it('renders hop additions as a non-blocking reminder and dismisses only the reminder', () => {
+        const beer = {...createBeer(), wortBoiling: {totalTime: 60, hops: [{id: 'h1', name: 'Cascade', description: '', alpha: 5, quantity: 10, time: 60}]}};
+        const beforeCooking = createBrewingStatus(ProcessState.ACTIVE);
+        const cooking = createBrewingStatus(ProcessState.ACTIVE);
+        cooking.currentStep = {index: 3, phase: ProcessPhase.COOKING, mode: ProcessMode.TIMER_RUNNING, elapsedTime: 1, duration: 3600};
+        const {rerender, props} = renderProduction({selectedBeer: beer, brewingStatus: beforeCooking});
+        rerender(<Production {...props} selectedBeer={beer} brewingStatus={cooking} />);
+
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        expect(screen.getByLabelText('Hopfengabe')).toHaveTextContent('Cascade zugeben');
+        expect(screen.getByLabelText('Hopfengabe')).toHaveTextContent('Der Kochprozess läuft weiter.');
+        fireEvent.click(screen.getByRole('button', {name: 'Erledigt'}));
+        expect(screen.queryByLabelText('Hopfengabe')).not.toBeInTheDocument();
+        expect(screen.getByText('Schritt wird ausgeführt')).toBeInTheDocument();
+    });
 });
 
 

@@ -1,4 +1,4 @@
-import {getBrewingStatusLabel, getConfirmButtonLabel, getConfirmationType, getCountdownValue, isBrewingProcessActive, shouldShowConfirmButton, shouldShowCountdown, shouldShowWaitingDialog} from './selectors';
+import {getBrewingStatusLabel, getConfirmButtonLabel, getConfirmationRequestViewModel, getConfirmationType, getCountdownValue, isBrewingProcessActive, shouldShowConfirmButton, shouldShowCountdown, shouldShowWaitingDialog} from './selectors';
 import {AlarmType, BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
 import {ConfirmStates} from '../../enums/eConfirmStates';
 import {isEquipmentAlarmActive} from './alarmDisplay';
@@ -60,6 +60,24 @@ describe('brewing selectors', () => {
   it('requires canConfirm to show the confirmation dialog', () => {
     const s = makeStatus({currentStep:{phase:ProcessPhase.MASHING_OUT, mode:ProcessMode.WAITING}, waiting:{waitingFor:WaitingFor.MASHING_OUT_CONFIRMATION, canConfirm:false}});
     expect(shouldShowWaitingDialog(s)).toBe(false);
+  });
+
+  it.each([
+    [WaitingFor.MASHING_IN_CONFIRMATION, ConfirmStates.MASHUP, 'Einmaischen bestätigen'],
+    [WaitingFor.IODINE_TEST, ConfirmStates.IODINE, 'Jodprobe durchführen'],
+    [WaitingFor.DECOCTION_CONFIRMATION, ConfirmStates.DECOCTION, 'Dekoktion'],
+    [WaitingFor.MASHING_OUT_CONFIRMATION, ConfirmStates.MASHUP, 'Abmaischen bestätigen'],
+    [WaitingFor.COOKING_CONFIRMATION, ConfirmStates.COOKING, 'Kochen bestätigen'],
+    [WaitingFor.BOILING_CONFIRMATION, ConfirmStates.BOILING, 'Siedepunkt bestätigen'],
+  ] as const)('builds one central view model for %s', (waitingFor, confirmState, title) => {
+    const status = makeStatus({currentStep:{phase:ProcessPhase.RAST, mode:ProcessMode.WAITING}, waiting:{waitingFor, canConfirm:true}});
+    expect(getConfirmationRequestViewModel(status)).toMatchObject({waitingFor, confirmState, title, canConfirm: true, requiresAction: true});
+  });
+
+  it('represents unsupported waiting states without a confirmation command', () => {
+    const status = makeStatus({currentStep:{phase:ProcessPhase.RAST, mode:ProcessMode.WAITING}, waiting:{waitingFor:WaitingFor.USER_CONFIRMATION, canConfirm:true}});
+    expect(getConfirmationRequestViewModel(status)).toMatchObject({title: 'Wartet auf Benutzeraktion', canConfirm: false, requiresAction: true});
+    expect(getConfirmationRequestViewModel(status)?.confirmState).toBeUndefined();
   });
 
   it('countdown shown only for timer running', () => {

@@ -17,6 +17,7 @@
 ## PI control confirmation and timing contracts
 
 - `Wait` is a control status, not a confirmation command. The UI must not call `POST /Confirm/Wait`; only concrete confirmation endpoints (`Iodine`, `Mashup`, `Cooking`, `Boiling`, `Decoction`) are valid.
+- Regular process confirmations are inline and therefore cannot be triggered by closing a modal. The shared `ModalDialog` still treats backdrop/Escape `onClose` as `onConfirm` when no cancel button is configured; this remains relevant to the finish workflow and other non-process-confirmation dialogs and must not be changed globally without auditing every consumer.
 - `currentTime` is not a UI duration/countdown/progress field. UI progress should use explicit seconds-based fields such as `elapsedTime`, `currentStep.duration`, and `currentStep.remainingTime`.
 - `WaterStatus` is expected as an object `{ filledLiters, targetLiters, openClose }`; keep defensive defaults for null, undefined, or failed HTTP responses to avoid broken rendering.
 
