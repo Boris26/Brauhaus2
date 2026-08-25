@@ -55,6 +55,69 @@ export const getConfirmButtonLabel = (aStatus?: BrewingStatus) => {
         default: return 'Bestätigen';
     }
 };
+
+export interface ConfirmationRequestViewModel {
+    waitingFor: WaitingState;
+    title: string;
+    message: string;
+    buttonLabel?: string;
+    confirmState?: ConfirmStates;
+    canConfirm: boolean;
+    requiresAction: boolean;
+}
+
+const confirmationCopyByWaitingState: Partial<Record<WaitingState, Pick<ConfirmationRequestViewModel, 'title' | 'message' | 'buttonLabel'>>> = {
+    [WaitingFor.MASHING_IN_CONFIRMATION]: {
+        title: 'Einmaischen bestätigen',
+        message: 'Bitte das Einmaischen abschließen und anschließend bestätigen.',
+        buttonLabel: 'Einmaischen abgeschlossen',
+    },
+    [WaitingFor.IODINE_TEST]: {
+        title: 'Jodprobe durchführen',
+        message: 'Bitte die Jodprobe durchführen und das Ergebnis anschließend bestätigen.',
+        buttonLabel: 'Jodprobe abgeschlossen',
+    },
+    [WaitingFor.DECOCTION_CONFIRMATION]: {
+        title: 'Dekoktion',
+        message: 'Die Dekoktion läuft. Die Hauptmaische wird weiterhin auf der Temperatur der zugehörigen Rast gehalten.',
+        buttonLabel: 'Dekoktion abgeschlossen',
+    },
+    [WaitingFor.MASHING_OUT_CONFIRMATION]: {
+        title: 'Abmaischen bestätigen',
+        message: 'Bitte Abmaischen und Nachguss abschließen und anschließend bestätigen.',
+        buttonLabel: 'Abmaischen abgeschlossen',
+    },
+    [WaitingFor.COOKING_CONFIRMATION]: {
+        title: 'Kochen bestätigen',
+        message: 'Bestätigung für den Kochvorgang erforderlich.',
+        buttonLabel: 'Kochen bestätigen',
+    },
+    [WaitingFor.BOILING_CONFIRMATION]: {
+        title: 'Siedepunkt bestätigen',
+        message: 'Bitte bestätigen, dass der Siedepunkt erreicht ist.',
+        buttonLabel: 'Siedepunkt bestätigen',
+    },
+};
+
+/** Zentrales, darstellungsfertiges Modell für blockierende und unbekannte Wartezustände. */
+export const getConfirmationRequestViewModel = (aStatus?: BrewingStatus): ConfirmationRequestViewModel | undefined => {
+    if (!aStatus || !isProcessActive(aStatus) || !isStepWaiting(aStatus)) return undefined;
+
+    const waitingFor = aStatus.waiting.waitingFor;
+    const confirmState = getConfirmationTypeForWaitingState(waitingFor);
+    const copy = confirmationCopyByWaitingState[waitingFor];
+    const canConfirm = aStatus.waiting.canConfirm === true && confirmState !== undefined;
+
+    return {
+        waitingFor,
+        title: copy?.title ?? 'Wartet auf Benutzeraktion',
+        message: copy?.message ?? 'Der Brauprozess wartet auf eine Benutzeraktion. Für diesen Zustand ist keine Bestätigung in der UI verfügbar.',
+        buttonLabel: canConfirm ? (copy?.buttonLabel ?? getConfirmButtonLabel(aStatus)) : undefined,
+        confirmState,
+        canConfirm,
+        requiresAction: true,
+    };
+};
 /** WAITING ist ein Prozess-Blocker. HOLDING ist dagegen nur Temperaturhalten und kein Blocker. */
 export const getBrewingStatusLabel = (aStatus?: BrewingStatus) => {
     if (!aStatus) return 'Bereit / kein Brauvorgang aktiv';
@@ -68,6 +131,7 @@ export const getBrewingStatusLabel = (aStatus?: BrewingStatus) => {
     if (aMode === ProcessMode.WAITING && aPhase === ProcessPhase.DECOCTION && aWaitingFor === WaitingFor.DECOCTION_CONFIRMATION) return 'Dekoktion: bitte bestätigen';
     if (aMode === ProcessMode.WAITING && aPhase === ProcessPhase.MASHING_OUT && aWaitingFor === WaitingFor.MASHING_OUT_CONFIRMATION) return 'Abmaischen und Nachguss abgeschlossen?';
     if (aMode === ProcessMode.WAITING && aPhase === ProcessPhase.COOKING && aWaitingFor === WaitingFor.BOILING_CONFIRMATION) return 'Warten auf Siedepunkt-Bestätigung';
+    if (aMode === ProcessMode.WAITING && aWaitingFor === WaitingFor.COOKING_CONFIRMATION) return 'Bestätigung für den Kochvorgang erforderlich';
     if (aPhase === ProcessPhase.MASHING_IN && aMode === ProcessMode.HEATING) return 'Einmaischen: Aufheizen läuft';
     if (aPhase === ProcessPhase.RAST && aMode === ProcessMode.HEATING) return 'Rast: Aufheizen auf Solltemperatur';
     if (aPhase === ProcessPhase.RAST && aMode === ProcessMode.HOLDING) return 'Rasttemperatur wird gehalten';

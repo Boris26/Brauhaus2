@@ -6,6 +6,7 @@ import {BrewingData} from "../../model/BrewingData";
 import {FinishedBrew} from "../../model/FinishedBrew";
 import {RootState} from "../../reducers/rootReducer";
 import {Production} from './Production';
+import {ConfirmStates} from '../../enums/eConfirmStates';
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
     getTemperatures: () => {
@@ -35,6 +36,9 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
     },
     nextProcedureStep: () => {
         dispatch(ProductionActions.nextProcedureStep())
+    },
+    confirm: (confirmState: ConfirmStates) => {
+        dispatch(ProductionActions.confirm(confirmState))
     }
 });
 const mapStateToProps = (state: RootState) => (

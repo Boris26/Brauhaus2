@@ -6,7 +6,7 @@ Visible/used fields include:
 
 - Identity/display: `id`, `name`, `type`, `color`, `description`, `rating`.
 - Metrics: `alcohol`, `originalwort`, `bitterness`, `mashVolume`, `spargeVolume`, `cookingTime`, `cookingTemperatur`.
-- New recipes initialize `cookingTemperatur` to `100` °C in the recipe UI. Existing and imported cooking values are preserved. The editor presents water volumes under `Brauwasser`; cooking temperature (read-only) and cooking time (editable) appear only in the `Brauprozess` row. Both derive from the top-level form values, and the persisted fixed step is synchronized from them only when the existing recipe DTO is submitted.
+- New recipes initialize `cookingTemperatur` to `100` °C in the recipe UI. Existing and imported values are preserved. The read-only `Kochen` row derives its display from this top-level form value; the persisted fixed step is synchronized from it only when the existing recipe DTO is submitted.
 - Production steps: `fermentation: FermentationSteps[]` where `procedureType` classifies mash steps as `RAST` or `DECOCTION`; freely configurable steps have a UI-generated stable UUID `stepId`, and every decoction references exactly one normal rest through `relatedRastId`. Legacy `CONFIRMATION_HOLD` steps without a procedure type normalize to `DECOCTION`; missing legacy IDs are generated in the UI model and a missing decoction reference is migrated only to the last preceding RAST. Step `type` remains the display name.
 - Recipe-editor mash plans defensively contain exactly one each of the fixed `Einmaischen`, `Abmaischen`, and `Kochen` steps. `Einmaischen` and `Abmaischen` carry temperature but no UI-generated `time`; whether the database/backend accepts an omitted `time` for these persisted fixed steps is **Needs verification**.
 - Recipe-editor validation requires every normalized `DECOCTION` to have a `relatedRastId` that resolves to the `stepId` of an existing non-fixed `RAST`. Choosing the relationship repositions the decoction directly after its rest (after already-associated decoctions), while retaining stable IDs and relative decoction order.
@@ -41,7 +41,7 @@ Runtime status is normalized into process state, current step, temperature, hard
 - `currentStep.duration`, `currentStep.elapsedTime`, and `currentStep.remainingTime`: duration/progress/countdown values in seconds. `currentTime` is preserved in collected status data but must not be used as a duration/countdown unless the PI control contract changes.
 - `temperature.current`/`target`: gauges and mobile display.
 - `hardware.heater`/`agitator`: flames, water-control agitator visual, mobile agitator display.
-- `waiting.waitingFor`/`canConfirm`: modal content and confirm endpoint mapping. `MASHING_OUT_CONFIRMATION` uses the existing `Confirm/Mashup` control confirmation value.
+- `waiting.waitingFor`/`canConfirm`: central inline confirmation content and confirm endpoint mapping for desktop and mobile. `MASHING_OUT_CONFIRMATION` uses the existing `Confirm/Mashup` control confirmation value. Generic or unknown waiting values are displayed without an action button.
 
 ## Finished brew (`FinishedBrew`)
 

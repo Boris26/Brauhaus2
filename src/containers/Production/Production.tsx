@@ -39,6 +39,8 @@ import {ProductionDialogs} from "./components/ProductionDialogs";
 import {ProductionTemperatureTimeline} from "./TemperatureTimeline/ProductionTemperatureTimeline";
 import {getDisplayedWaterLiters as selectDisplayedWaterLiters, getWaterLabel, getWaterTargetLiters, isRecipeWaterButtonDisabled as selectRecipeWaterButtonDisabled, isWaterFillingActive as selectWaterFillingActive, shouldIncludeSpargeAfterMashingOut as selectShouldIncludeSpargeAfterMashingOut, sanitizeLiters} from "./waterFill/recipeWaterFillSelectors";
 import {equipmentAlarmDisplay, isEquipmentAlarmActive} from '../../utils/brewingStatus/alarmDisplay';
+import {getConfirmationRequestViewModel} from '../../utils/brewingStatus/selectors';
+import {ConfirmStates} from '../../enums/eConfirmStates';
 
 export interface ProductionProps {
     selectedBeer?: Beer;
@@ -62,6 +64,7 @@ export interface ProductionProps {
     addFinishedBrew: (finishedBrew: FinishedBrew) => void;
     nextProcedureStep: () => void;
     isPollingRunning: boolean;
+    confirm: (confirmState: ConfirmStates) => void;
 }
 
 interface ProductionState {
@@ -89,6 +92,7 @@ interface ProductionState {
     recipeWaterFill: RecipeWaterFillStatus;
     displayedRemainingSeconds: number | undefined;
     equipmentAlarmDismissed: boolean;
+    confirmationPendingFor?: string;
 }
 
 export class Production extends React.Component<ProductionProps, ProductionState> {
@@ -127,7 +131,8 @@ export class Production extends React.Component<ProductionProps, ProductionState
             announcedHopTimes: [],
             recipeWaterFill: createInitialRecipeWaterFillStatus(),
             displayedRemainingSeconds: undefined,
-            equipmentAlarmDismissed: false
+            equipmentAlarmDismissed: false,
+            confirmationPendingFor: undefined
         }
     }
 
@@ -160,6 +165,12 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
         if (prevProps.brewingStatus !== brewingStatus) {
             this.syncRemainingTimeFromStatus();
+        }
+
+        const previousWaitingFor = prevProps.brewingStatus?.waiting?.waitingFor;
+        const currentWaitingFor = brewingStatus?.waiting?.waitingFor;
+        if (this.state.confirmationPendingFor && (currentWaitingFor !== previousWaitingFor || brewingStatus?.currentStep?.mode !== prevProps.brewingStatus?.currentStep?.mode)) {
+            this.setState({confirmationPendingFor: undefined});
         }
 
         if (isEquipmentAlarmActive(prevProps.brewingStatus) && !isEquipmentAlarmActive(brewingStatus)) {
@@ -673,6 +684,13 @@ export class Production extends React.Component<ProductionProps, ProductionState
         this.setState({showHopsDialog: false});
     }
 
+    confirmCurrentWaitingState = () => {
+        const request = getConfirmationRequestViewModel(this.props.brewingStatus);
+        if (!request?.canConfirm || !request.confirmState || this.state.confirmationPendingFor) return;
+        this.setState({confirmationPendingFor: String(request.waitingFor)});
+        this.props.confirm(request.confirmState);
+    }
+
 
     confirmFinishDialog = async () => {
         const { stopPolling, selectedBeer, addFinishedBrew } = this.props;
@@ -714,20 +732,17 @@ export class Production extends React.Component<ProductionProps, ProductionState
         if (selectedBeer === undefined) {
             return null;
         }
-        return <ProcessList displayMode="current" selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} remainingSeconds={this.state.displayedRemainingSeconds} />;
+        return <ProcessList displayMode="current" selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} remainingSeconds={this.state.displayedRemainingSeconds} confirmationPending={Boolean(this.state.confirmationPendingFor)} onConfirmWaiting={this.confirmCurrentWaitingState} hopReminderName={this.state.showHopsDialog ? this.state.hopName : undefined} onCompleteHopReminder={this.confirmHopDialog} />;
     }
 
 
     render() {
-        const {showHopsDialog, showFinishDialog} = this.state;
+        const {showFinishDialog} = this.state;
         const equipmentAlarmActive = isEquipmentAlarmActive(this.props.brewingStatus);
         return (
             <div className="containerProduction ">
                 <ProductionDialogs
-                    showHopsDialog={showHopsDialog}
-                    hopName={this.state.hopName}
                     showFinishDialog={showFinishDialog}
-                    onConfirmHop={this.confirmHopDialog}
                     onConfirmFinish={this.confirmFinishDialog}
                     showEquipmentAlarmDialog={equipmentAlarmActive && !this.state.equipmentAlarmDismissed}
                     equipmentAlarmTitle={equipmentAlarmDisplay.title}

@@ -5,6 +5,8 @@ import {RestExecutionMode} from "../../../enums/eRestExecutionMode";
 import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from "../../../model/brewingStatus.types";
 import {ProcedureType} from "../../../enums/eProcedureType";
 import {TimeFormatter} from "../../../utils/TimeFormatter";
+import {getConfirmationRequestViewModel} from "../../../utils/brewingStatus/selectors";
+import {ControlConfirmationNotice, HopReminderNotice} from "../components/InlineProcessNotice";
 
 export enum ProcessListEntryType {
     HEATING = "HEATING",
@@ -54,6 +56,10 @@ export interface ProcessListProps {
     brewingStatus?: BrewingStatus;
     remainingSeconds?: number;
     displayMode?: 'combined' | 'overview' | 'current';
+    confirmationPending?: boolean;
+    onConfirmWaiting?: () => void;
+    hopReminderName?: string;
+    onCompleteHopReminder?: () => void;
 }
 
 interface ProcessListState {
@@ -142,7 +148,7 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
 
     getCurrentStepMeta(activeStep: ProcessListStep | undefined, isProcessStarted: boolean): React.ReactNode {
         const {brewingStatus} = this.props;
-        const targetTemperature = brewingStatus?.temperature?.target ?? activeStep?.detail?.temperature;
+        const targetTemperature = brewingStatus?.temperature?.target ?? this.getRelatedRastTemperature(activeStep) ?? activeStep?.detail?.temperature;
         const metaItems: React.ReactNode[] = [];
 
         if (!isProcessStarted) {
@@ -151,10 +157,24 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
         }
 
         if (typeof targetTemperature === 'number' && Number.isFinite(targetTemperature) && targetTemperature > 0) {
-            metaItems.push(<span key="temperature" className="current-step-temperature">{targetTemperature} °C</span>);
+            const isDecoction = brewingStatus?.currentStep?.phase === ProcessPhase.DECOCTION;
+            metaItems.push(
+                <span key="temperature" className="current-step-temperature">
+                    {isDecoction && <small>Hauptmaische · gehaltene Rasttemperatur</small>}
+                    {targetTemperature} °C
+                </span>
+            );
         }
 
         return <div className="current-step-meta">{metaItems}</div>;
+    }
+
+    getRelatedRastTemperature(activeStep: ProcessListStep | undefined): number | undefined {
+        if (this.props.brewingStatus?.currentStep?.phase !== ProcessPhase.DECOCTION) return undefined;
+        const decoctionName = this.props.brewingStatus.currentStep.name ?? activeStep?.name;
+        const decoction = this.props.selectedBeer.fermentation.find((step) => step.procedureType === ProcedureType.DECOCTION && step.type === decoctionName);
+        if (!decoction?.relatedRastId) return undefined;
+        return this.props.selectedBeer.fermentation.find((step) => step.stepId === decoction.relatedRastId && step.procedureType !== ProcedureType.DECOCTION)?.temperature;
     }
 
     isHeatingStatus(): boolean {
@@ -264,6 +284,17 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
         );
     }
 
+    renderInlineNotice(): React.ReactNode {
+        const confirmationRequest = getConfirmationRequestViewModel(this.props.brewingStatus);
+        if (confirmationRequest) {
+            return <ControlConfirmationNotice request={confirmationRequest} pending={this.props.confirmationPending === true} onConfirm={this.props.onConfirmWaiting} />;
+        }
+        if (this.props.hopReminderName && this.props.onCompleteHopReminder) {
+            return <HopReminderNotice hopName={this.props.hopReminderName} onDone={this.props.onCompleteHopReminder} />;
+        }
+        return null;
+    }
+
 
     getStepProgressPercent(): number | undefined {
         const {brewingStatus, remainingSeconds} = this.props;
@@ -295,7 +326,7 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
         const currentStepCard = hasRecipeProcess ? (
             <>
                 <div className="current-process-label">Aktueller Schritt</div>
-                <section className="current-process-step" aria-label="Aktueller Prozessschritt">
+                <section className={`current-process-step${getConfirmationRequestViewModel(brewingStatus) ? ' current-process-step--action-required' : ''}`} aria-label="Aktueller Prozessschritt">
                     <div className="current-step-heading">
                         <div>
                             <h4>{isProcessStarted ? this.getCurrentStepTitle(activeStep) : 'Noch kein Brauvorgang gestartet'}</h4>
@@ -304,6 +335,7 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
                         {this.getCurrentStepMeta(activeStep, isProcessStarted)}
                     </div>
                     {this.renderStatusSection(isProcessStarted)}
+                    {this.renderInlineNotice()}
                 </section>
             </>
         ) : <div className="process-empty-state">Kein Bier für den Brauvorgang ausgewählt.</div>;

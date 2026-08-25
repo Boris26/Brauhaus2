@@ -1,6 +1,7 @@
 import { connect } from 'react-redux';
 import { ProductionActions } from '../../../actions/actions';
 import {MobileProductionView} from './MobileProductionView';
+import {ConfirmStates} from '../../../enums/eConfirmStates';
 
 const mapStateToProps = (state: any) => ({
     temperature: state.productionReducer.temperature,
@@ -10,7 +11,8 @@ const mapStateToProps = (state: any) => ({
 
 const mapDispatchToProps = (dispatch: any) => ({
     startPolling: () => dispatch(ProductionActions.startPolling()),
-    stopPolling: () => dispatch(ProductionActions.stopPolling())
+    stopPolling: () => dispatch(ProductionActions.stopPolling()),
+    confirm: (confirmState: ConfirmStates) => dispatch(ProductionActions.confirm(confirmState))
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(MobileProductionView);

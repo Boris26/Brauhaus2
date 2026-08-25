@@ -50,7 +50,7 @@ Needs verification: backend ordering of `GET beers`, because the UI treats the l
 
 ## Confirm/waiting flow
 
-- Normalized status fields `process.state`, `currentStep.mode`, `waiting.waitingFor`, and `waiting.canConfirm` determine whether a modal appears.
+- Normalized status fields `process.state`, `currentStep.mode`, `waiting.waitingFor`, and `waiting.canConfirm` feed a central confirmation view model. On desktop it is rendered inline in `Aktueller Schritt`; on mobile the same model provides the inline action and confirm button. Regular control confirmations no longer open a modal.
 - UI maps only concrete waiting reasons to confirm endpoints:
   - `IODINE_TEST` -> `Confirm/Iodine`
   - `MASHING_IN_CONFIRMATION` -> `Confirm/Mashup`
@@ -59,11 +59,12 @@ Needs verification: backend ordering of `GET beers`, because the UI treats the l
   - `COOKING_CONFIRMATION` -> `Confirm/Cooking`
   - `DECOCTION_CONFIRMATION` -> `Confirm/Decoction`
   - `USER_CONFIRMATION`, `NONE`, or unknown waiting reasons do not send a confirm command. `Wait` may be displayed as a status, but the UI must not call `Confirm/Wait`.
+- `USER_CONFIRMATION` and unknown waiting reasons remain visibly marked as waiting inline but do not render a confirmation button.
 
 ## Hop reminder flow
 
 - Production view computes reminder times from selected recipe hops as `(selectedBeer.cookingTime - hop.time) * 60`.
-- During `COOKING`, it compares `brewingStatus.currentStep.elapsedTime` to those second offsets and shows a modal with the hop name once per offset.
+- During `COOKING`, it compares `brewingStatus.currentStep.elapsedTime` to those second offsets and shows a non-blocking inline reminder with the hop name once per offset. Control waiting confirmations have priority over this reminder.
 - This means `hop.time` is assumed to be minutes before the end of boil, and `currentStep.elapsedTime` is assumed to be seconds elapsed in the cooking phase. Needs verification.
 
 ## Finished-brew completion flow

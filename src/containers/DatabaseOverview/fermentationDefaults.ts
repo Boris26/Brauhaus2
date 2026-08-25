@@ -8,7 +8,7 @@ export const fixedProcedureTypes = ['Einmaischen', 'Abmaischen', 'Kochen'] as co
 export const createDefaultFermentationSteps = (): FermentationSteps[] => [
     {type: 'Einmaischen', temperature: 0},
     {type: 'Abmaischen', temperature: 0},
-    {type: 'Kochen'},
+    {type: 'Kochen', time: 0},
 ];
 
 const normalizeFixedStep = (step: FermentationSteps): FermentationSteps => {
@@ -17,7 +17,6 @@ const normalizeFixedStep = (step: FermentationSteps): FermentationSteps => {
     }
     const cookingStep = {...step};
     delete cookingStep.temperature;
-    delete cookingStep.time;
     return cookingStep;
 };
 
