@@ -331,6 +331,13 @@
     justify-content: flex-start;
 }
 
+.beer-form input.readonly-cooking-temperature {
+    background: var(--color-disabled-bg);
+    border-color: var(--color-disabled-border);
+    color: var(--color-disabled-text);
+    cursor: default;
+}
+
 .muted-table-value {
     opacity: 0.75;
     display: inline-flex;

@@ -101,6 +101,39 @@ describe('BeerForm accordions', () => {
         expect(within(mashOutRow).getAllByRole('spinbutton')).toHaveLength(1);
     });
 
+    it('uses one editable cooking temperature source for the brewing data and mash plan', () => {
+        renderBeerForm();
+
+        const brewingTemperature = screen.getByLabelText(/Kochtemperatur:/);
+        expect(brewingTemperature).toHaveValue(100);
+
+        fireEvent.click(screen.getByRole('button', {name: /Maischeplan/}));
+        const cookingRow = screen.getByText('Kochen').closest('tr')!;
+        const mashPlanTemperature = within(cookingRow).getByLabelText('Kochtemperatur im Maischeplan');
+        expect(mashPlanTemperature).toHaveValue(100);
+        expect(mashPlanTemperature).toHaveAttribute('readonly');
+
+        fireEvent.change(brewingTemperature, {target: {value: '99'}});
+        expect(mashPlanTemperature).toHaveValue(99);
+    });
+
+    it('preserves an existing cooking temperature while showing it read-only in the mash plan', () => {
+        const existingBeer: React.ComponentProps<typeof BeerForm>['beers'][number] = {
+            id: 'beer-99', name: 'Alt', type: 'Ale', color: 'amber', alcohol: 5, originalwort: 12, bitterness: 30, description: '', rating: 3,
+            mashVolume: 18, spargeVolume: 8, cookingTime: 60, cookingTemperatur: 99,
+            fermentation: [{type: 'Einmaischen', temperature: 65}, {type: 'Abmaischen', temperature: 78}, {type: 'Kochen', temperature: 100, time: 60}],
+            malts: [], wortBoiling: {totalTime: 60, hops: []},
+            fermentationMaturation: {fermentationTemperature: 18, carbonation: 5, yeast: []},
+        };
+        renderBeerForm({beers: [existingBeer]});
+
+        fireEvent.change(screen.getByLabelText(/Bier auswählen/), {target: {value: 'beer-99'}});
+        fireEvent.click(screen.getByRole('button', {name: /Maischeplan/}));
+
+        expect(screen.getByLabelText(/Kochtemperatur:/)).toHaveValue(99);
+        expect(screen.getByLabelText('Kochtemperatur im Maischeplan')).toHaveValue(99);
+    });
+
     it('reset keeps one copy of every fixed step after configurable mash steps were added', () => {
         renderBeerForm();
         fireEvent.click(screen.getByRole('button', {name: /Maischeplan/}));
