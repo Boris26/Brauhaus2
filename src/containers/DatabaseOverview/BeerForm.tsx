@@ -435,7 +435,8 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         const expandedSections = { ...this.state.expandedSections };
         if (validationErrors.name || validationErrors.type) expandedSections.basic = true;
         if (validationErrors.bitterness || validationErrors.alcohol || validationErrors.originalwort) expandedSections.basic = true;
-        if (validationErrors.mashVolume || validationErrors.spargeVolume || validationErrors.cookingTime || validationErrors.cookingTemperatur) expandedSections.brewing = true;
+        if (validationErrors.mashVolume || validationErrors.spargeVolume) expandedSections.brewing = true;
+        if (validationErrors.cookingTime || validationErrors.cookingTemperatur) expandedSections.mash = true;
 
         this.setState((prevState) => ({validationErrors: {...prevState.validationErrors, ...validationErrors}, expandedSections}));
         return validationErrors;
@@ -484,8 +485,8 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 expandedSections: {...prevState.expandedSections, mash: true},
             }));
             this.openValidationDialog(Object.keys(orderErrors).length > 0
-                ? `Bitte prüfe den Maischeplan: ${decoctionRequiresRastError}`
-                : 'Bitte prüfe den Maischeplan: Zeitgesteuerte Rasten benötigen Zeit > 0, Halte-Rasten nur Temperatur.');
+                ? `Bitte prüfe den Brauprozess: ${decoctionRequiresRastError}`
+                : 'Bitte prüfe den Brauprozess: Zeitgesteuerte Rasten benötigen Zeit > 0, Halte-Rasten nur Temperatur.');
             return;
         }
         const normalizedFermentationSteps = numberMashSteps(fermentationSteps).map((step) => {
@@ -941,15 +942,15 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 <div className="beer-form-overview" aria-label="Rezeptübersicht">
                     <div className="beer-form-overview-item"><span>Name</span><strong>{name || 'Neues Bier'}</strong></div>
                     <div className="beer-form-overview-item"><span>Typ</span><strong>{type || '–'}</strong></div>
-                    <div className="beer-form-overview-item"><span>Braudaten</span><strong>{mashVolume || 0} l / {spargeVolume || 0} l</strong></div>
+                    <div className="beer-form-overview-item"><span>Brauwasser</span><strong>{mashVolume || 0} l / {spargeVolume || 0} l</strong></div>
                     <div className="beer-form-overview-item"><span>Zutaten</span><strong>{maltsDTO.length + hopsDTO.length + yeastsDTO.length + additionalIngredientsDTO.length}</strong></div>
                 </div>
                 {(missingMalts.length > 0 || missingHops.length > 0 || missingYeasts.length > 0) && <div className="missing-ingredients-warning">{missingMalts.length > 0 && <div>Fehlende Malze: {missingMalts.join(', ')}</div>}{missingHops.length > 0 && <div>Fehlende Hopfen: {missingHops.join(', ')}</div>}{missingYeasts.length > 0 && <div>Fehlende Hefen: {missingYeasts.join(', ')}</div>}</div>}
                 {info && <div className="beer-form-info">{info}</div>}
                 <div className="beer-form-sections">
                     {this.renderAccordionSection('basic', 'Grunddaten', '', basicContent)}
-                    {this.renderAccordionSection('brewing', 'Braudaten', '', brewingContent)}
-                    {this.renderAccordionSection('mash', 'Maischeplan', `${fermentationSteps.length} Rasten`, mashContent)}
+                    {this.renderAccordionSection('brewing', 'Brauwasser', '', brewingContent)}
+                    {this.renderAccordionSection('mash', 'Brauprozess', `${fermentationSteps.length} Rasten`, mashContent)}
                     {this.renderAccordionSection('malts', 'Malze', `${maltsDTO.length} Einträge`, maltsContent)}
                     {this.renderAccordionSection('hops', 'Hopfen', `${hopsDTO.length} Einträge`, hopsContent)}
                     {this.renderAccordionSection('yeast', 'Hefe', `${yeastsDTO.length} Einträge`, yeastContent)}
