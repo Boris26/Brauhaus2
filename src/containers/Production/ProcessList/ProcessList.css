@@ -103,9 +103,24 @@
 }
 
 .current-step-temperature {
+    display: flex;
+    flex-direction: column;
     font-size: 1.2rem;
     font-weight: 700;
     color: var(--color-light-text);
+}
+
+.current-step-temperature small {
+    color: var(--color-accent);
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1.25;
+    max-width: 15rem;
+}
+
+.current-process-step--action-required {
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 18%, transparent);
 }
 
 .current-step-time {

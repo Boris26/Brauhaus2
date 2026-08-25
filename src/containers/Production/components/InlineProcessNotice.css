@@ -1,0 +1,60 @@
+.inline-process-notice {
+    border: 1px solid color-mix(in srgb, var(--color-accent) 72%, transparent);
+    border-left: 0.35rem solid var(--color-accent);
+    border-radius: 0.7rem;
+    margin-top: 0.65rem;
+    padding: 0.7rem 0.8rem;
+    background: color-mix(in srgb, var(--color-accent) 10%, var(--color-surface-2));
+    color: var(--color-light-text);
+}
+
+.inline-process-notice--action {
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-accent) 16%, transparent);
+}
+
+.inline-process-notice--reminder {
+    background: color-mix(in srgb, var(--color-accent) 6%, var(--color-surface-2));
+}
+
+.inline-process-notice__eyebrow {
+    color: var(--color-accent);
+    display: block;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.inline-process-notice h5 {
+    color: inherit;
+    font-size: 1.02rem;
+    margin: 0.2rem 0 0;
+}
+
+.inline-process-notice p {
+    line-height: 1.35;
+    margin: 0.35rem 0 0;
+}
+
+.inline-process-notice__button {
+    background: var(--color-accent);
+    border: 1px solid var(--color-accent);
+    border-radius: 0.45rem;
+    color: var(--color-white);
+    cursor: pointer;
+    font-weight: 800;
+    margin-top: 0.65rem;
+    min-height: 2.6rem;
+    padding: 0.55rem 1rem;
+    width: 100%;
+}
+
+.inline-process-notice__button--secondary {
+    background: transparent;
+    color: var(--color-accent);
+}
+
+.inline-process-notice__button:disabled {
+    cursor: wait;
+    opacity: 0.65;
+}

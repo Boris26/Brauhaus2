@@ -1,7 +1,6 @@
 import {connect} from "react-redux";
 import {Views} from '../enums/eViews';
 import {ProductionActions} from "../actions/actions";
-import {ConfirmStates} from "../enums/eConfirmStates";
 import {Index} from './index';
 
 const mapStateToProps = (state: any) => ({
@@ -10,10 +9,6 @@ const mapStateToProps = (state: any) => ({
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
-    confirm: (confirmState: ConfirmStates) => {
-        dispatch(ProductionActions.confirm(confirmState))
-    },
-
     checkIsBackenAvailable: () => {
         dispatch(ProductionActions.checkIsBackenAvailable())
     },

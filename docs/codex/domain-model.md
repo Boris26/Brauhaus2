@@ -40,7 +40,7 @@ Runtime status is normalized into process state, current step, temperature, hard
 - `currentStep.duration`, `currentStep.elapsedTime`, and `currentStep.remainingTime`: duration/progress/countdown values in seconds. `currentTime` is preserved in collected status data but must not be used as a duration/countdown unless the PI control contract changes.
 - `temperature.current`/`target`: gauges and mobile display.
 - `hardware.heater`/`agitator`: flames, water-control agitator visual, mobile agitator display.
-- `waiting.waitingFor`/`canConfirm`: modal content and confirm endpoint mapping. `MASHING_OUT_CONFIRMATION` uses the existing `Confirm/Mashup` control confirmation value.
+- `waiting.waitingFor`/`canConfirm`: central inline confirmation content and confirm endpoint mapping for desktop and mobile. `MASHING_OUT_CONFIRMATION` uses the existing `Confirm/Mashup` control confirmation value. Generic or unknown waiting values are displayed without an action button.
 
 ## Finished brew (`FinishedBrew`)
 
