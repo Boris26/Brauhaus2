@@ -1,5 +1,5 @@
 import React from 'react';
-import {Button, Dialog, DialogTitle, DialogContent, DialogActions} from '@mui/material';
+import {Button, ButtonProps, Dialog, DialogTitle, DialogContent, DialogActions} from '@mui/material';
 import './ModalDialog.css';
 
 export enum DialogType {
@@ -18,6 +18,8 @@ interface ModalDialogProps {
     confirmLabel?: string;
     cancelLabel?: string;
     showCancelButton?: boolean;
+    confirmColor?: ButtonProps['color'];
+    confirmVariant?: ButtonProps['variant'];
 };
 
 interface ModalDialogState {
@@ -53,7 +55,7 @@ class ModalDialog extends React.Component<ModalDialogProps, ModalDialogState> {
         }
     };
     render() {
-        const {content, header, open, type, confirmLabel, cancelLabel, showCancelButton} = this.props;
+        const {content, header, open, type, confirmLabel, cancelLabel, showCancelButton, confirmColor, confirmVariant} = this.props;
 
         return (
             <Dialog open={open} maxWidth={'md'} onClose={showCancelButton ? this.handleCancel : this.handleClose}>
@@ -69,7 +71,7 @@ class ModalDialog extends React.Component<ModalDialogProps, ModalDialogState> {
                             {cancelLabel ?? "Abbrechen"}
                         </Button>
                     )}
-                    <Button onClick={this.handleClose} color="primary">
+                    <Button onClick={this.handleClose} color={confirmColor ?? "primary"} variant={confirmVariant ?? "text"}>
                         {confirmLabel ?? "Ok"}
                     </Button>
                 </DialogActions>

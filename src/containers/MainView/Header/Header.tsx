@@ -3,11 +3,14 @@ import './Header.css';
 import {Views} from "../../../enums/eViews";
 import StatusDisplay from './StatusDisplay';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
 import {BrewingStatus} from '../../../model/brewingStatus.types';
 import {equipmentAlarmDisplay, isEquipmentAlarmActive} from '../../../utils/brewingStatus/alarmDisplay';
+import {isProcessActive} from '../../../utils/brewingStatus/selectors';
 import {getUiMode} from '../../../utils/uiMode';
 import {getNavigationViews} from '../../../utils/viewConfig';
 import {UiMode} from '../../../enums/eUiMode';
+import ModalDialog, {DialogType} from '../../../components/ModalDialog/ModalDialog';
 
 
 
@@ -23,6 +26,7 @@ interface HeaderProps {
 interface HeaderState {
     currentTime: string;
     currentDate: string;
+    showShutdownDialog: boolean;
 }
 
 export class Header extends React.Component<HeaderProps, HeaderState> {
@@ -33,6 +37,7 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
             this.state = {
                 currentTime: this.getCurrentTimeString(),
                 currentDate: this.getCurrentDateString(),
+                showShutdownDialog: false,
             };
     }
 
@@ -64,6 +69,11 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
         setViewState(viewState);
     }
 
+    handleShutdownConfirmed = () => {
+        // Placeholder for the future POST /api/system/shutdown integration.
+        this.setState({showShutdownDialog: false});
+    }
+
     // Hilfsfunktion, um die aktiven Tab-Klassen zu bestimmen
     getTabClassName = (view: Views) => {
         return `icon ${this.props.currentView === view ? 'active' : ''}`;
@@ -75,6 +85,9 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
        const uiMode = getUiMode();
        const navigationViews = getNavigationViews(uiMode);
        const isVisible = (view: Views) => navigationViews.includes(view);
+       const shutdownMessage = isProcessActive(brewingStatus)
+           ? 'Die Steuerung und der Raspberry Pi werden beendet.\n\n⚠ Ein Brauvorgang läuft gerade. Beim Herunterfahren wird die Steuerung beendet.'
+           : 'Die Steuerung und der Raspberry Pi werden beendet.';
 
         return (
             <div className="Header">
@@ -157,7 +170,29 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
                     <span>{this.state.currentDate}</span>
                     <span>{this.state.currentTime}</span>
                   </div>
+                  <button
+                    type="button"
+                    className="icon shutdown-button"
+                    onClick={() => this.setState({showShutdownDialog: true})}
+                    title="Brauhaus herunterfahren"
+                    aria-label="Brauhaus herunterfahren"
+                  >
+                    <PowerSettingsNewIcon fontSize="inherit" />
+                  </button>
                 </div>
+                <ModalDialog
+                  type={DialogType.INFO}
+                  open={this.state.showShutdownDialog}
+                  header="Brauhaus herunterfahren?"
+                  content={shutdownMessage}
+                  showCancelButton={true}
+                  cancelLabel="Abbrechen"
+                  confirmLabel="Herunterfahren"
+                  confirmColor="error"
+                  confirmVariant="contained"
+                  onCancel={() => this.setState({showShutdownDialog: false})}
+                  onConfirm={this.handleShutdownConfirmed}
+                />
             </div>
 
         );

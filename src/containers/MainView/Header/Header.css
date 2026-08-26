@@ -79,6 +79,14 @@
   color: inherit;
 }
 
+.shutdown-button {
+  flex: 0 0 auto;
+}
+
+.shutdown-button:hover {
+  color: var(--color-text);
+}
+
 .icon:hover {
   background: var(--color-panel-highlight);
   border-color: var(--color-accent-border);
