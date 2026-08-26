@@ -44,7 +44,7 @@ export const initialBeerState: BeerDataReducerState =
 const beerDataReducer = (
   aState: BeerDataReducerState = initialBeerState,
   aAction: AllBeerActions
-) => {
+): BeerDataReducerState => {
   switch (aAction.type) {
     case BeerActions.ActionTypes.SUBMIT_BEER: {
       return { ...aState, isSavingBeer: true, isSubmitSuccessful: undefined, message: undefined, type: undefined };
@@ -123,7 +123,7 @@ const beerDataReducer = (
       return { ...aState, isFetching: aAction.payload.isFetching };
     }
     case BeerActions.ActionTypes.GET_FINISHED_BEERS_SUCCESS: {
-      return { ...aState, finishedBrews: aAction.payload.finishedBeers };
+      return { ...aState, finishedBrews: aAction.payload.finishedBeers ?? undefined };
     }
     case BeerActions.ActionTypes.UPDATE_ACTIVE_BEER: {
       return { ...aState };
