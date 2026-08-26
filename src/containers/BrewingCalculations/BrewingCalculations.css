@@ -1,34 +1,32 @@
 /* Stil für die Seite Bierbrau-Berechnungen */
 
 /* Farben und Kontraste für Dark Mode */
-.Paper-root, .MuiPaper-root {
+.BrewingCalculations-outer .Paper-root,
+.BrewingCalculations-outer .MuiPaper-root {
     background-color: var(--color-brew-bg) !important; /* Dunkler Hintergrund */
     color: var(--color-white) !important;
 }
 
-.MuiTypography-root, .MuiInputBase-root, .MuiFormLabel-root {
+.BrewingCalculations-outer .MuiTypography-root,
+.BrewingCalculations-outer .MuiInputBase-root,
+.BrewingCalculations-outer .MuiFormLabel-root {
     color: var(--color-white) !important;
 }
 
-.MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+.BrewingCalculations-outer .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
     border-color: var(--color-accent) !important;
 }
 
-.MuiTextField-root {
+.BrewingCalculations-outer .MuiTextField-root {
     margin-bottom: 1.2rem;
 }
 
-.header-container h1 {
+.BrewingCalculations-outer .header-container h1 {
     color: var(--color-accent);
 }
 
-.icon {
-    /* filter: brightness(0) invert(1); */
-    /* Entfernt, damit Icons wieder originalfarbig sind */
-}
-
 /* Beispiel: Abstand zwischen Boxen */
-.MuiBox-root {
+.BrewingCalculations-outer .MuiBox-root {
     background: var(--color-brew-bg);
     border-radius: 10px;
     padding: 1.5rem;
@@ -37,13 +35,13 @@
 }
 
 /* Buttons, falls benötigt */
-.MuiButton-root {
+.BrewingCalculations-outer .MuiButton-root {
     background: var(--color-accent);
 
 }
 
 /* Orange für Labels und Akzente */
-.MuiTypography-subtitle2 {
+.BrewingCalculations-outer .MuiTypography-subtitle2 {
     color: var(--color-accent) !important;
 }
 
@@ -73,20 +71,13 @@
     overflow: hidden;
 }
 
-body, html, #root {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-}
-
 /* Spin-Buttons bei number-Inputs entfernen */
-input[type=number]::-webkit-inner-spin-button,
-input[type=number]::-webkit-outer-spin-button {
+.BrewingCalculations-outer input[type=number]::-webkit-inner-spin-button,
+.BrewingCalculations-outer input[type=number]::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
-input[type=number] {
+.BrewingCalculations-outer input[type=number] {
     -moz-appearance: textfield;
 }
 

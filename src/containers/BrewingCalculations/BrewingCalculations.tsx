@@ -1,6 +1,5 @@
 import React from 'react';
 import SimpleBar from 'simplebar-react';
-import 'simplebar/dist/simplebar.min.css';
 import { Paper, TextField, Typography, Box, Grid } from '@mui/material';
 import './BrewingCalculations.css';
 import {
