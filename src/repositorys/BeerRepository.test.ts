@@ -1,7 +1,7 @@
 import {api} from './BaseRepository';
 import {BeerRepository} from './BeerRepository';
 import {BeerDTO} from '../model/BeerDTO';
-import {RecipeImportSource} from '../model/RecipeImport';
+import {RecipeImportFormat} from '../model/RecipeImport';
 import {Beer} from '../model/Beer';
 
 jest.mock('./BaseRepository', () => {
@@ -10,8 +10,8 @@ jest.mock('./BaseRepository', () => {
     return {
         api: {post, put},
         BaseRepository: class {
-            protected static async post<T>(aUrl: string, aBody: any): Promise<T> {
-                const response = await post(aUrl, aBody);
+            protected static async post<T>(aUrl: string, aBody: any, config?: object): Promise<T> {
+                const response = await post(aUrl, aBody, config);
                 return response.data;
             }
             protected static async put<T>(aUrl: string, aBody: any): Promise<T> {
@@ -56,7 +56,7 @@ describe('BeerRepository.submitBeer', () => {
         const result = await BeerRepository.submitBeer(makeBeer(''));
 
         expect(result.id).toBe('generated-id');
-        expect(mockedApi.post).toHaveBeenCalledWith('beer', expect.not.objectContaining({id: expect.anything()}));
+        expect(mockedApi.post).toHaveBeenCalledWith('beer', expect.not.objectContaining({id: expect.anything()}), undefined);
         expect(mockedApi.put).not.toHaveBeenCalled();
     });
 
@@ -75,17 +75,20 @@ describe('BeerRepository.importBeer', () => {
     it('posts the typed source and untouched recipe as JSON', async () => {
         const recipe = {NAME: 'Extern', AMOUNT: '20 l'};
         const importedBeer = {id: 'imported-id', name: 'Extern'} as Beer;
-        mockedApi.post.mockResolvedValueOnce({data: importedBeer});
+        const importResult = {recipe: importedBeer, warnings: [], ingredientMappings: [], createdMasterData: [], replayed: false};
+        mockedApi.post.mockResolvedValueOnce({data: importResult});
 
         const result = await BeerRepository.importBeer({
-            source: RecipeImportSource.MAISCHE_MALZ_UND_MEHR,
+            format: RecipeImportFormat.MMUM,
             recipe,
+            idempotencyKey: 'import-key',
         });
 
         expect(mockedApi.post).toHaveBeenCalledWith('importbeer', {
-            source: RecipeImportSource.MAISCHE_MALZ_UND_MEHR,
+            format: RecipeImportFormat.MMUM,
             recipe,
-        });
-        expect(result).toBe(importedBeer);
+            idempotencyKey: 'import-key',
+        }, {headers: {'Content-Type': 'application/json'}});
+        expect(result).toBe(importResult);
     });
 });

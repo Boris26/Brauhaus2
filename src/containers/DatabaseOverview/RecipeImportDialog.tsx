@@ -1,84 +1,102 @@
 import React from 'react';
-import {Button, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent} from '@mui/material';
-import {RecipeImportRequest, RecipeImportSource} from '../../model/RecipeImport';
+import {Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent} from '@mui/material';
+import {JsonObject, RecipeImportFormat, RecipeImportRequest} from '../../model/RecipeImport';
+import {createImportIdempotencyKey} from '../../utils/recipeImport';
 
 interface RecipeImportDialogProps {
     open: boolean;
+    loading?: boolean;
+    backendError?: string;
     onCancel: () => void;
     onImport: (request: RecipeImportRequest) => void;
 }
 
-export const RecipeImportDialog: React.FC<RecipeImportDialogProps> = ({open, onCancel, onImport}) => {
-    const [source, setSource] = React.useState<RecipeImportSource | ''>('');
-    const [file, setFile] = React.useState<File>();
-    const [error, setError] = React.useState('');
+export const RecipeImportDialog: React.FC<RecipeImportDialogProps> = ({open, loading = false, backendError, onCancel, onImport}) => {
+    const [format, setFormat] = React.useState<RecipeImportFormat | ''>('');
+    const [fileName, setFileName] = React.useState('');
+    const [recipe, setRecipe] = React.useState<JsonObject>();
+    const [idempotencyKey, setIdempotencyKey] = React.useState('');
+    const [parseError, setParseError] = React.useState('');
+    const [submitted, setSubmitted] = React.useState(false);
+    const wasOpen = React.useRef(open);
+
+    React.useEffect(() => {
+        if (open && !wasOpen.current) {
+            setFormat('');
+            setFileName('');
+            setRecipe(undefined);
+            setIdempotencyKey('');
+            setParseError('');
+            setSubmitted(false);
+        }
+        wasOpen.current = open;
+    }, [open]);
 
     const resetAndCancel = () => {
-        setSource('');
-        setFile(undefined);
-        setError('');
+        setFormat('');
+        setFileName('');
+        setRecipe(undefined);
+        setIdempotencyKey('');
+        setParseError('');
+        setSubmitted(false);
         onCancel();
     };
 
-    const handleImport = async () => {
-        if (!source) {
-            setError('Bitte wählen Sie eine Rezeptquelle aus.');
-            return;
-        }
-        if (!file) {
-            setError('Bitte wählen Sie eine JSON-Datei aus.');
-            return;
-        }
-
+    const readFile = async (file?: File) => {
+        setFileName(file?.name || '');
+        setRecipe(undefined);
+        setIdempotencyKey('');
+        setParseError('');
+        setSubmitted(false);
+        if (!file) return;
         try {
-            const recipe: unknown = JSON.parse(await file.text());
-            onImport({source, recipe});
-            setSource('');
-            setFile(undefined);
-            setError('');
+            const parsed: unknown = JSON.parse(await file.text());
+            if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+                setParseError('Die JSON-Datei muss ein Objekt enthalten.');
+                return;
+            }
+            setRecipe(parsed as JsonObject);
+            setIdempotencyKey(createImportIdempotencyKey());
         } catch (_error) {
-            setError('Die ausgewählte Datei enthält kein gültiges JSON.');
+            setParseError('Die ausgewählte Datei enthält kein gültiges JSON.');
         }
     };
 
+    const canImport = Boolean(format && recipe && idempotencyKey && !parseError && !loading);
+
     return (
-        <Dialog open={open} onClose={resetAndCancel} maxWidth="sm" fullWidth>
+        <Dialog open={open} onClose={loading ? undefined : resetAndCancel} maxWidth="sm" fullWidth>
             <DialogTitle>Rezept importieren</DialogTitle>
             <DialogContent>
                 <FormControl fullWidth margin="normal">
-                    <InputLabel id="recipe-import-source-label">Quelle</InputLabel>
-                    <Select
-                        labelId="recipe-import-source-label"
-                        label="Quelle"
-                        value={source}
+                    <InputLabel id="recipe-import-format-label">Importformat</InputLabel>
+                    <Select labelId="recipe-import-format-label" label="Importformat" value={format} disabled={loading}
                         onChange={(event: SelectChangeEvent) => {
-                            setSource(event.target.value as RecipeImportSource);
-                            setError('');
-                        }}
-                    >
-                        <MenuItem value={RecipeImportSource.MAISCHE_MALZ_UND_MEHR}>MaischeMalzundMehr</MenuItem>
-                        <MenuItem value={RecipeImportSource.BRAUREKA}>BräuReKa / Müggelland</MenuItem>
-                        <MenuItem value={RecipeImportSource.BRAUHAUS}>Brauhaus</MenuItem>
+                            setFormat(event.target.value as RecipeImportFormat);
+                            if (recipe) setIdempotencyKey(createImportIdempotencyKey());
+                        }}>
+                        <MenuItem value={RecipeImportFormat.BRAUHAUS}>Brauhaus</MenuItem>
+                        <MenuItem value={RecipeImportFormat.MMUM}>MaischeMalzundMehr (MMuM)</MenuItem>
                     </Select>
                 </FormControl>
-                <Button component="label" variant="outlined" fullWidth>
-                    {file ? file.name : 'JSON-Datei auswählen'}
-                    <input
-                        hidden
-                        type="file"
-                        accept="application/json,.json"
-                        onChange={(event) => {
-                            setFile(event.target.files?.[0]);
-                            setError('');
-                            event.target.value = '';
-                        }}
-                    />
+                <Button component="label" variant="outlined" fullWidth disabled={loading}>
+                    {fileName || 'Datei auswählen'}
+                    <input hidden type="file" accept=".json,application/json"
+                        onChange={(event) => { void readFile(event.target.files?.[0]); event.target.value = ''; }} />
                 </Button>
-                {error && <p role="alert">{error}</p>}
+                {parseError && <p role="alert">{parseError}</p>}
+                {backendError && submitted && <p role="alert">{backendError}</p>}
             </DialogContent>
             <DialogActions>
-                <Button onClick={resetAndCancel}>Abbrechen</Button>
-                <Button onClick={handleImport} variant="contained">Import starten</Button>
+                <Button onClick={resetAndCancel} disabled={loading}>Abbrechen</Button>
+                <Button onClick={() => {
+                    if (format && recipe && idempotencyKey) {
+                        setSubmitted(true);
+                        onImport({format, recipe, idempotencyKey});
+                    }
+                }} variant="contained" disabled={!canImport}>
+                    {loading ? <><CircularProgress size={18} />&nbsp;Importieren…</> : 'Importieren'}
+                </Button>
             </DialogActions>
         </Dialog>
     );

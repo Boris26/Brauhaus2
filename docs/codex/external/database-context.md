@@ -53,13 +53,9 @@ Important compatibility assumptions:
 - `GET /beer/<beer_id>` -> recipe object or `404 { "error": "Beer not found" }`.
 - `POST /beer` -> create recipe from JSON; success currently returns `200 { "message": "Beer added successfully" }`.
 - `DELETE /beer/<beer_id>` -> success returns `{ "message": "Beer deleted successfully", "id": beer_id }`.
-- `POST /importbeer` -> multipart field `file`; success returns full created recipe object.
+- `POST /importbeer` is the BeerDatabase 2.x Recipe Import V2 route. It accepts only JSON `{ format, recipe, idempotencyKey? }` and returns `RecipeImportResult` with `recipe`, `warnings`, `ingredientMappings`, `createdMasterData`, and `replayed`. Multipart is rejected with HTTP 415 / `INVALID_IMPORT_REQUEST`.
 
-UI compatibility note: the UI now expects to replace the multipart request with
-`POST /importbeer` JSON `{ source, recipe }`, where `source` is
-`MAISCHE_MALZ_UND_MEHR`, `BRAUREKA`, or `BRAUHAUS`. Backend implementation of that request is
-**Needs cross-repository update**; this section otherwise documents the last known
-backend behavior.
+UI compatibility note: this UI requires BeerDatabase 2.x, sends a UUID idempotency key for every prepared import, and has no legacy multipart fallback.
 
 Recipe object response shape:
 

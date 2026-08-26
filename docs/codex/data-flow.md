@@ -2,16 +2,9 @@
 
 ## Recipe import
 
-The recipe editor opens a source/file dialog. After the user selects
-`MAISCHE_MALZ_UND_MEHR`, `BRAUREKA`, or `BRAUHAUS`, the UI reads the selected file as text and
-uses `JSON.parse` only for syntax checking. It sends the resulting value unchanged
-as `recipe` together with the selected `source` to `POST /api/database/importbeer`
-as JSON. The backend remains responsible for format-specific validation,
-normalization, mapping, and persistence. The successful `Beer` response continues
-through `ADD_IMPORTED_BEER` into the recipe list and editor.
+The recipe editor opens a format/file dialog. The user selects `BRAUHAUS` or `MMUM`; `BRAUREKA` is not offered. The UI reads the file with `File.text()`, accepts only a syntactically valid JSON object, and passes that object unchanged as `recipe` in `{ format, recipe, idempotencyKey }` to `POST /api/database/importbeer`. The backend owns all source interpretation and persistence. The `RecipeImportResult.recipe` response flows through `ADD_IMPORTED_BEER` into the list/editor, while warnings, non-exact mappings, and created master data remain available for a user notice. Structured errors keep the dialog open. See `recipe-import-v2.md` for the audit.
 
-Needs cross-repository update: BeerDatabase must accept this JSON request contract;
-the previously documented backend contract accepts multipart field `file`.
+BeerDatabase 2.x returns `RecipeImportResult`, including `replayed`; a replay is handled as a successful, non-duplicating import.
 
 ## Startup flow
 

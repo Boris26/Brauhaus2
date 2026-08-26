@@ -5,6 +5,7 @@ import {HopUsage} from '../../enums/eHopUsage';
 import {HopTimeUnit} from '../../enums/eHopTimeUnit';
 import {ProcedureType} from '../../enums/eProcedureType';
 import {RestExecutionMode} from '../../enums/eRestExecutionMode';
+import {Beer} from '../../model/Beer';
 
 const baseProps: React.ComponentProps<typeof BeerForm> = {
     onSubmitBeer: jest.fn(),
@@ -293,4 +294,17 @@ describe('BeerForm accordions', () => {
         expect(screen.getByText(/Bitte prüfe den Brauprozess: Bitte ordne der Dekoktion eine Rast zu/)).toBeInTheDocument();
         expect(props.onSubmitBeer).not.toHaveBeenCalled();
     });
+    it('shows replay, warning, mapping and created-master-data import information', () => {
+        renderBeerForm({importResult: {
+            recipe: {id: 'beer-1', name: 'Import'} as Beer,
+            warnings: [{code: 'SOURCE_INFORMATION_IGNORED', message: 'Eine Quellenangabe wurde ignoriert.'}],
+            ingredientMappings: [{sourceName: 'Pilsner Malt', resolvedName: 'Pilsener Malz', ingredientId: 'm1', ingredientType: 'MALT', matchType: 'ALIAS'}],
+            createdMasterData: [{ingredientId: 'h1', ingredientType: 'HOP', name: 'Hopfen XYZ'}],
+            replayed: true,
+        }});
+        expect(screen.getByText(/bereits verarbeitet/)).toHaveTextContent('Pilsner Malt');
+        expect(screen.getByText(/bereits verarbeitet/)).toHaveTextContent('Hopfen XYZ');
+        expect(screen.getByText(/bereits verarbeitet/)).toHaveTextContent('Eine Quellenangabe wurde ignoriert.');
+    });
+
 });

@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, {AxiosRequestConfig} from "axios";
 import {DatabaseURL} from "../global";
 
 export const api = axios.create({
@@ -17,9 +17,9 @@ export class BaseRepository {
         }
     }
 
-    protected static async post<T>(aUrl: string, aBody: any): Promise<T> {
+    protected static async post<T>(aUrl: string, aBody: any, config?: AxiosRequestConfig): Promise<T> {
         try {
-            const aResponse = await api.post<T>(aUrl, aBody);
+            const aResponse = await api.post<T>(aUrl, aBody, config);
             return aResponse.data;
         } catch (aError) {
             console.error(`POST ${aUrl} fehlgeschlagen`, aError);
@@ -45,19 +45,5 @@ export class BaseRepository {
             throw aError;
         }
     }
-
-    protected static async postFile<T>(aUrl: string, aFile: File): Promise<T> {
-        const formData = new FormData();
-        formData.append("file", aFile);
-
-        try {
-            const aResponse = await api.post<T>(aUrl, formData);
-            return aResponse.data;
-        } catch (aError) {
-            console.error(`POST-FILE ${aUrl} fehlgeschlagen`, aError);
-            throw aError;
-        }
-    }
-
 
 }

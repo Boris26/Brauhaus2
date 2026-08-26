@@ -7,9 +7,9 @@
 - `POST beer` accepts `BeerDTO` with `fermentationSteps`, not `fermentation`.
 - `POST finishedbeer` handles both create and update.
 - `GET finishedbeers` returns records compatible with `FinishedBrew` TypeScript shape.
-- Import endpoint accepts multipart field name `file`.
+- BeerDatabase 2.x `POST importbeer` accepts Recipe Import V2 JSON `{ format, recipe, idempotencyKey }` and returns `RecipeImportResult`; multipart is not supported.
 
-Needs verification: sorting/order guarantees, update semantics, import response shape, ID types, date formats.
+Needs verification: sorting/order guarantees, finished-beer update semantics, ID types, and date formats.
 
 ## PI/control assumptions
 
