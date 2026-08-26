@@ -42,14 +42,11 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
     componentDidUpdate(prevProps: Readonly<DetailsProps>, prevState: Readonly<DetailsState>, snapshot?: any) {
         const {batchSize, brewhouseEfficiency} = this.state
         const {selectedBeer} = this.props
-        if(selectedBeer && prevProps.selectedBeer)
+        if(selectedBeer && selectedBeer.id !== prevProps.selectedBeer?.id)
         {
-            if(selectedBeer?.id !== prevProps?.selectedBeer.id)
-            {
-                this.setState({
-                    batchSize: BeerRecipeScaler.getReferenceVolume(selectedBeer),
-                    brewhouseEfficiency: BeerRecipeScaler.getReferenceEfficiency(selectedBeer)});
-            }
+            this.setState({
+                batchSize: BeerRecipeScaler.getReferenceVolume(selectedBeer),
+                brewhouseEfficiency: BeerRecipeScaler.getReferenceEfficiency(selectedBeer)});
         }
 
 
@@ -466,6 +463,8 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
     // MAIN RENDER
     // -------------------------------------------------------------
     render() {
+        if (!this.props.selectedBeer) return null;
+
         return (
             <div className="detailsContainer" >
 
