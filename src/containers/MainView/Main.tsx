@@ -2,7 +2,6 @@ import React from 'react';
 
 import Details from "./Details/Details.connect";
 import SimpleBar from 'simplebar-react';
-import 'simplebar/dist/simplebar.min.css';
 import BeerTable from "./BeerRecipes/Table.connect";
 import {Beer} from "../../model/Beer";
 

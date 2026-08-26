@@ -1,7 +1,6 @@
 import React from 'react';
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@mui/material';
 import SimpleBar from 'simplebar-react';
-import 'simplebar/dist/simplebar.min.css';
 import './FinishedBrewsTable.css';
 import {FinishedBrew} from "../../../model/FinishedBrew";
 import {isNil} from "lodash";
