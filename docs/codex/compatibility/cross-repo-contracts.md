@@ -60,6 +60,8 @@ Before changing any database/backend field or endpoint, check whether the UI use
 - `Beer.fermentation[].relatedRastId` (DECOCTION reference to a RAST `stepId`)
 - `Beer.wortBoiling.hops[].name`
 - `Beer.wortBoiling.hops[].time`
+- `Beer.wortBoiling.hops[].usage` (`FIRST_WORT`, `BOIL`, `WHIRLPOOL`, or `DRY_HOP`; missing legacy value defaults to `BOIL`)
+- `Beer.wortBoiling.hops[].timeUnit` (`MINUTES`, `HOURS`, or `DAYS` when optional `time` is present)
 - `FinishedBrew.id`
 - `FinishedBrew.beer_id`
 - `FinishedBrew.name`

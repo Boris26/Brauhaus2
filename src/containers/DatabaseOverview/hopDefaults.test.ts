@@ -1,49 +1,70 @@
 import { HopTimeUnit } from '../../enums/eHopTimeUnit';
 import { HopUsage } from '../../enums/eHopUsage';
+import { HopDTO } from '../../model/BeerDTO';
 import { normalizeHopDto, updateHopUsage, validateHopDto } from './hopDefaults';
 
+const hop = (overrides: Partial<HopDTO> = {}): HopDTO => ({
+    id: '1', name: 'Cascade', quantity: 10, usage: HopUsage.BOIL, ...overrides,
+});
+
 describe('hopDefaults', () => {
-    test('old hop without usage/timeUnit defaults to BOIL/MINUTES', () => {
-        const hop = normalizeHopDto({ id: '1', name: 'Cascade', quantity: 10, time: 15 });
-        expect(hop.usage).toBe(HopUsage.BOIL);
-        expect(hop.timeUnit).toBe(HopTimeUnit.MINUTES);
+    test.each(Object.values(HopUsage))('%s is accepted', (usage) => {
+        expect(validateHopDto(hop({ usage }))).toBe(true);
     });
 
-    test('BOIL hop stays BOIL/MINUTES in payload-relevant shape', () => {
-        const hop = normalizeHopDto({ id: '1', name: 'Cascade', quantity: 10, time: 15, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.DAYS });
-        expect(hop.usage).toBe(HopUsage.BOIL);
-        expect(hop.timeUnit).toBe(HopTimeUnit.MINUTES);
+    test.each([HopUsage.FIRST_WORT, HopUsage.WHIRLPOOL])('%s without time is valid', (usage) => {
+        expect(validateHopDto(hop({ usage }))).toBe(true);
     });
 
-    test('DRY_HOP defaults to DAYS when no valid unit is set', () => {
-        const hop = normalizeHopDto({ id: '1', name: 'Cascade', quantity: 10, time: 5, usage: HopUsage.DRY_HOP });
-        expect(hop.usage).toBe(HopUsage.DRY_HOP);
-        expect(hop.timeUnit).toBe(HopTimeUnit.DAYS);
+    test.each([
+        [HopUsage.BOIL, 0, HopTimeUnit.MINUTES],
+        [HopUsage.BOIL, 60, HopTimeUnit.MINUTES],
+        [HopUsage.DRY_HOP, 3, HopTimeUnit.DAYS],
+    ])('%s with time %s and %s is valid', (usage, time, timeUnit) => {
+        expect(validateHopDto(hop({ usage: usage as HopUsage, time: time as number, timeUnit: timeUnit as HopTimeUnit }))).toBe(true);
     });
 
-    test('switch BOIL -> DRY_HOP does not set time to 0', () => {
-        const original = normalizeHopDto({ id: '1', name: 'Cascade', quantity: 10, time: 7, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES });
-        const updated = updateHopUsage(original, HopUsage.DRY_HOP);
-        expect(updated.usage).toBe(HopUsage.DRY_HOP);
-        expect(updated.time).toBe(7);
-        expect(updated.timeUnit).toBe(HopTimeUnit.DAYS);
+    test('quantity <= 0 is invalid', () => {
+        expect(validateHopDto(hop({ quantity: 0 }))).toBe(false);
+        expect(validateHopDto(hop({ quantity: -1 }))).toBe(false);
     });
 
-    test('switch DRY_HOP -> BOIL sets MINUTES', () => {
-        const original = normalizeHopDto({ id: '1', name: 'Cascade', quantity: 10, time: 7, usage: HopUsage.DRY_HOP, timeUnit: HopTimeUnit.HOURS });
-        const updated = updateHopUsage(original, HopUsage.BOIL);
-        expect(updated.usage).toBe(HopUsage.BOIL);
-        expect(updated.timeUnit).toBe(HopTimeUnit.MINUTES);
+    test('time without timeUnit is invalid', () => {
+        expect(validateHopDto(hop({ time: 10 }))).toBe(false);
     });
 
-    test('loaded recipe with usage/timeUnit preserves those fields', () => {
-        const hop = normalizeHopDto({ id: '1', name: 'Cascade', quantity: 10, time: 2, usage: HopUsage.DRY_HOP, timeUnit: HopTimeUnit.HOURS });
-        expect(hop.usage).toBe(HopUsage.DRY_HOP);
-        expect(hop.timeUnit).toBe(HopTimeUnit.HOURS);
+    test('timeUnit without time is invalid', () => {
+        expect(validateHopDto(hop({ timeUnit: HopTimeUnit.MINUTES }))).toBe(false);
     });
 
-    test('invalid usage/timeUnit combination is rejected by validation', () => {
-        const invalid = { id: '1', name: 'Cascade', quantity: 10, time: 30, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.DAYS };
-        expect(validateHopDto(invalid)).toBe(false);
+    test.each([HopUsage.FIRST_WORT, HopUsage.WHIRLPOOL])('%s with a time but no unit remains invalid', (usage) => {
+        expect(validateHopDto(normalizeHopDto(hop({ usage, time: 10 })))).toBe(false);
+    });
+
+    test.each([HopUsage.FIRST_WORT, HopUsage.WHIRLPOOL])('normalization preserves %s without inventing time data', (usage) => {
+        const normalized = normalizeHopDto(hop({ usage }));
+        expect(normalized.usage).toBe(usage);
+        expect(normalized.time).toBeUndefined();
+        expect(normalized.timeUnit).toBeUndefined();
+    });
+
+    test.each([HopUsage.FIRST_WORT, HopUsage.WHIRLPOOL])('usage update preserves selected %s', (usage) => {
+        expect(updateHopUsage(hop(), usage).usage).toBe(usage);
+    });
+
+    test('import-style normalization preserves all four usages', () => {
+        const usages = Object.values(HopUsage);
+        expect(usages.map((usage) => normalizeHopDto(hop({ usage })).usage)).toEqual(usages);
+    });
+
+    test('legacy hop without usage remains BOIL and timed legacy data gets MINUTES', () => {
+        const normalized = normalizeHopDto({ id: '1', name: 'Cascade', quantity: 10, time: 15 });
+        expect(normalized.usage).toBe(HopUsage.BOIL);
+        expect(normalized.timeUnit).toBe(HopTimeUnit.MINUTES);
+    });
+
+    test('existing usage and unit are preserved without usage-specific coercion', () => {
+        const normalized = normalizeHopDto(hop({ usage: HopUsage.BOIL, time: 2, timeUnit: HopTimeUnit.DAYS }));
+        expect(normalized).toMatchObject({ usage: HopUsage.BOIL, time: 2, timeUnit: HopTimeUnit.DAYS });
     });
 });

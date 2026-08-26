@@ -26,7 +26,7 @@ export interface Hop {
     description: string;
     alpha: number;
     quantity: number;
-    time: number;
+    time?: number;
     usage?: HopUsage;
     timeUnit?: HopTimeUnit;
 }
