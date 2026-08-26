@@ -13,7 +13,7 @@ import './BeerForm.css'
 import {AdditionalIngredient} from "../../model/AdditionalIngredient";
 import ModalDialog, {DialogType} from "../../components/ModalDialog/ModalDialog";
 import { isRequiredPositiveQuantity } from "../../utils/beerSubmission";
-import {RecipeImportRequest} from '../../model/RecipeImport';
+import {RecipeImportRequest, RecipeImportResult} from '../../model/RecipeImport';
 import {RecipeImportDialog} from './RecipeImportDialog';
 
 interface BeerFormProps {
@@ -35,6 +35,9 @@ interface BeerFormProps {
     importBeer: (request: RecipeImportRequest) => void;
     importedBeer?: Beer;
     isSavingBeer?: boolean;
+    isImportingBeer?: boolean;
+    importResult?: RecipeImportResult;
+    importError?: string;
 }
 
 type BeerFormSection = 'basic' | 'brewing' | 'mash' | 'malts' | 'hops' | 'yeast' | 'additional';
@@ -159,6 +162,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         // Wenn importedBeer gesetzt ist und sich geändert hat, Formular mit importierten Daten füllen
         if (importedBeer && importedBeer !== prevProps.importedBeer) {
             this.setState({
+                showImportDialog: false,
                 id: importedBeer.id || '',
                 name: importedBeer.name || '',
                 type: importedBeer.type || '',
@@ -833,15 +837,29 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         );
     };
 
+    getImportInfo = (): string => {
+        const result = this.props.importResult;
+        if (!result) return '';
+        const headline = result.replayed
+            ? 'Der Import wurde bereits verarbeitet. Das vorhandene Rezept wurde geladen.'
+            : 'Rezept erfolgreich importiert.';
+        const warnings = result.warnings.map(warning => warning.message);
+        const mappings = result.ingredientMappings
+            .filter(mapping => mapping.matchType !== 'EXACT')
+            .map(mapping => `„${mapping.sourceName}“ wurde „${mapping.resolvedName}“ zugeordnet (${mapping.matchType}).`);
+        const created = result.createdMasterData.map(ingredient => `Neue Zutat angelegt: „${ingredient.name}“ (${ingredient.ingredientType}).`);
+        return [headline, ...warnings, ...mappings, ...created].join(' ');
+    };
+
     renderCreateBeerForm() {
         const {maltsDTO, hopsDTO, yeastsDTO, additionalIngredientsDTO, isSubmitSuccessful, name, type, color, alcohol, originalwort, bitterness, description, rating, mashVolume, spargeVolume, fermentationSteps, cookingTime, cookingTemperatur} = this.state;
         const { malts = [], hops = [], yeasts = [], additionalIngredients = [], beers = [] } = this.props;
         const { missingMalts = [], missingHops = [], missingYeasts = [] } = this.state;
 
-        let info: string = "";
-        if (isEqual(isSubmitSuccessful, true)) {
+        let info: string = this.getImportInfo();
+        if (!info && isEqual(isSubmitSuccessful, true)) {
             info = this.props.message || "Beer saved successfully";
-        } else if (isSubmitSuccessful === false) {
+        } else if (!info && isSubmitSuccessful === false) {
             info = this.props.message || "Beer creation failed";
         }
 
@@ -975,11 +993,10 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 />
                 <RecipeImportDialog
                     open={showImportDialog}
+                    loading={this.props.isImportingBeer}
+                    backendError={this.props.importError}
                     onCancel={() => this.setState({showImportDialog: false})}
-                    onImport={(request) => {
-                        this.props.importBeer(request);
-                        this.setState({showImportDialog: false});
-                    }}
+                    onImport={this.props.importBeer}
                 />
                 <div className="beer-form-panel">
                     <div className="beer-form-panel-header">

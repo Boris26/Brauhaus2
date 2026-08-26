@@ -1,71 +1,74 @@
 import React from 'react';
 import {fireEvent, render, screen, waitFor} from '@testing-library/react';
 import {RecipeImportDialog} from './RecipeImportDialog';
-import {RecipeImportSource} from '../../model/RecipeImport';
+import {RecipeImportFormat} from '../../model/RecipeImport';
 
-const jsonFile = (content: string) => ({
-    name: 'recipe.json',
-    text: jest.fn().mockResolvedValue(content),
-}) as unknown as File;
+jest.mock('../../utils/recipeImport', () => ({createImportIdempotencyKey: jest.fn()}));
+import {createImportIdempotencyKey} from '../../utils/recipeImport';
 
-const selectSource = (label: string) => {
-    fireEvent.mouseDown(screen.getByLabelText('Quelle'));
-    fireEvent.click(screen.getByRole('option', {name: label}));
-};
-
-const selectFile = (file: File) => {
-    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
-    fireEvent.change(input, {target: {files: [file]}});
-};
+const jsonFile = (content: string) => ({name: 'recipe.json', text: jest.fn().mockResolvedValue(content)}) as unknown as File;
+const selectFormat = (label: string) => { fireEvent.mouseDown(screen.getByLabelText('Importformat')); fireEvent.click(screen.getByRole('option', {name: label})); };
+const selectFile = (file: File) => fireEvent.change(document.querySelector('input[type="file"]') as HTMLInputElement, {target: {files: [file]}});
 
 describe('RecipeImportDialog', () => {
+    beforeEach(() => (createImportIdempotencyKey as jest.Mock).mockReset().mockReturnValue('key-a'));
+
     it.each([
-        ['MaischeMalzundMehr', RecipeImportSource.MAISCHE_MALZ_UND_MEHR],
-        ['BräuReKa / Müggelland', RecipeImportSource.BRAUREKA],
-        ['Brauhaus', RecipeImportSource.BRAUHAUS],
-    ])('sends valid JSON unchanged for source %s', async (label, source) => {
+        ['Brauhaus', RecipeImportFormat.BRAUHAUS],
+        ['MaischeMalzundMehr (MMuM)', RecipeImportFormat.MMUM],
+    ])('sends valid JSON unchanged for format %s', async (label, format) => {
         const onImport = jest.fn();
-        const recipe = {name: 'Extern', nested: {value: 7}, values: [1, '2', null]};
+        const recipe = {name: 'Extern', Malz1_Menge: '5 kg', Hopfen_1_Kochzeit: '70', nested: {value: 7}};
         render(<RecipeImportDialog open onCancel={jest.fn()} onImport={onImport} />);
-
-        selectSource(label as string);
-        selectFile(jsonFile(JSON.stringify(recipe)));
-        fireEvent.click(screen.getByRole('button', {name: 'Import starten'}));
-
-        await waitFor(() => expect(onImport).toHaveBeenCalledWith({source, recipe}));
+        selectFormat(label as string); selectFile(jsonFile(JSON.stringify(recipe)));
+        await waitFor(() => expect(screen.getByRole('button', {name: 'Importieren'})).toBeEnabled());
+        fireEvent.click(screen.getByRole('button', {name: 'Importieren'}));
+        expect(onImport).toHaveBeenCalledWith({format, recipe, idempotencyKey: 'key-a'});
     });
 
-    it('does not import without a source', async () => {
+    it.each([['', 'Die ausgewählte Datei enthält kein gültiges JSON.'], ['{invalid', 'Die ausgewählte Datei enthält kein gültiges JSON.'], ['[]', 'Die JSON-Datei muss ein Objekt enthalten.']])('rejects invalid input %#', async (content, message) => {
         const onImport = jest.fn();
         render(<RecipeImportDialog open onCancel={jest.fn()} onImport={onImport} />);
+        selectFormat('Brauhaus'); selectFile(jsonFile(content));
+        expect(await screen.findByRole('alert')).toHaveTextContent(message);
+        expect(screen.getByRole('button', {name: 'Importieren'})).toBeDisabled();
+        expect(onImport).not.toHaveBeenCalled();
+    });
+
+    it('does not offer BRAUREKA and disables interaction while loading', () => {
+        render(<RecipeImportDialog open loading onCancel={jest.fn()} onImport={jest.fn()} />);
+        expect(screen.queryByText(/BräuReKa/)).not.toBeInTheDocument();
+        expect(screen.getByRole('button', {name: /Importieren/})).toBeDisabled();
+        expect(screen.getByRole('button', {name: 'Abbrechen'})).toBeDisabled();
+    });
+
+    it('shows a structured backend error without closing the dialog', async () => {
+        const props = {open: true, onCancel: jest.fn(), onImport: jest.fn()};
+        const {rerender} = render(<RecipeImportDialog {...props} />);
+        selectFormat('Brauhaus');
         selectFile(jsonFile('{"name":"Extern"}'));
-
-        fireEvent.click(screen.getByRole('button', {name: 'Import starten'}));
-
-        expect(await screen.findByRole('alert')).toHaveTextContent('Bitte wählen Sie eine Rezeptquelle aus.');
-        expect(onImport).not.toHaveBeenCalled();
+        await waitFor(() => expect(screen.getByRole('button', {name: 'Importieren'})).toBeEnabled());
+        fireEvent.click(screen.getByRole('button', {name: 'Importieren'}));
+        rerender(<RecipeImportDialog {...props} backendError="Quelldaten ungültig. Betroffenes Feld: recipe.Malze[2].Menge" />);
+        expect(screen.getByRole('alert')).toHaveTextContent('Betroffenes Feld');
+        expect(screen.getByRole('dialog')).toBeVisible();
     });
 
-    it('does not import without a file', async () => {
+    it('retains the key for another send of the same request and creates a new key for a new file', async () => {
+        (createImportIdempotencyKey as jest.Mock).mockReturnValueOnce('key-a').mockReturnValueOnce('key-b');
         const onImport = jest.fn();
-        render(<RecipeImportDialog open onCancel={jest.fn()} onImport={onImport} />);
-        selectSource('MaischeMalzundMehr');
+        render(<RecipeImportDialog open backendError="Netzwerkfehler" onCancel={jest.fn()} onImport={onImport} />);
+        selectFormat('Brauhaus');
+        selectFile(jsonFile('{"name":"first"}'));
+        await waitFor(() => expect(screen.getByRole('button', {name: 'Importieren'})).toBeEnabled());
+        fireEvent.click(screen.getByRole('button', {name: 'Importieren'}));
+        fireEvent.click(screen.getByRole('button', {name: 'Importieren'}));
+        expect(onImport.mock.calls[0][0].idempotencyKey).toBe('key-a');
+        expect(onImport.mock.calls[1][0].idempotencyKey).toBe('key-a');
 
-        fireEvent.click(screen.getByRole('button', {name: 'Import starten'}));
-
-        expect(await screen.findByRole('alert')).toHaveTextContent('Bitte wählen Sie eine JSON-Datei aus.');
-        expect(onImport).not.toHaveBeenCalled();
-    });
-
-    it('rejects invalid JSON without importing', async () => {
-        const onImport = jest.fn();
-        render(<RecipeImportDialog open onCancel={jest.fn()} onImport={onImport} />);
-        selectSource('BräuReKa / Müggelland');
-        selectFile(jsonFile('{invalid'));
-
-        fireEvent.click(screen.getByRole('button', {name: 'Import starten'}));
-
-        expect(await screen.findByRole('alert')).toHaveTextContent('Die ausgewählte Datei enthält kein gültiges JSON.');
-        expect(onImport).not.toHaveBeenCalled();
+        selectFile(jsonFile('{"name":"second"}'));
+        await waitFor(() => expect(screen.getByRole('button', {name: 'Importieren'})).toBeEnabled());
+        fireEvent.click(screen.getByRole('button', {name: 'Importieren'}));
+        expect(onImport.mock.calls[2][0].idempotencyKey).toBe('key-b');
     });
 });

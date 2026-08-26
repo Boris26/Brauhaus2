@@ -20,6 +20,9 @@ const mapStateToProps = (state: any) => ({
     beers: state.beerDataReducer.beers,
     importedBeer: state.beerDataReducer.importedBeer,
     isSavingBeer: state.beerDataReducer.isSavingBeer,
+    isImportingBeer: state.beerDataReducer.isImportingBeer,
+    importResult: state.beerDataReducer.importResult,
+    importError: state.beerDataReducer.importError,
 });
 
 const mapDispatchToProps = (dispatch: any) => ({

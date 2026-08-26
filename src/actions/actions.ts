@@ -10,7 +10,7 @@ import {WaterStatus} from "../components/Controlls/WaterControll/WaterControl";
 import {FinishedBrew} from "../model/FinishedBrew";
 import {BackendAvailable} from "../reducers/productionReducer";
 import {scalingValues} from "../utils/BeerScaler/ScalingBeerRecipe";
-import {RecipeImportRequest} from '../model/RecipeImport';
+import {RecipeImportRequest, RecipeImportResult} from '../model/RecipeImport';
 import { ThemeName, setTheme as applyAndStoreTheme } from "../utils/theme";
 import { pushViewPath } from "../utils/viewRoutes";
 
@@ -41,6 +41,7 @@ export namespace BeerActions {
         GENERATE_SHOPPING_LIST_PDF_FAILURE = 'BeerActions.GENERATE_SHOPPING_LIST_PDF_FAILURE',
         IMPORT_BEER = 'BeerActions.IMPORT_BEER',
         ADD_IMPORTED_BEER = 'BeerActions.ADD_IMPORTED_BEER',
+        IMPORT_BEER_FAILED = 'BeerActions.IMPORT_BEER_FAILED',
         UPDATE_RECIPE_SCALING = 'BeerActions.UPDATE_RECIPE_SCALING',
         DELETE_BEER = 'BeerActions.DELETE_BEER',
         DELETE_BEER_SUCCESS = 'BeerActions.DELETE_BEER_SUCCESS'
@@ -195,9 +196,12 @@ export namespace BeerActions {
 
     export interface AddImportedBeer {
         readonly type: ActionTypes.ADD_IMPORTED_BEER;
-        payload: {
-            importedBeer: Beer;
-        }
+        payload: { result: RecipeImportResult; }
+    }
+
+    export interface ImportBeerFailed {
+        readonly type: ActionTypes.IMPORT_BEER_FAILED;
+        payload: { message: string; }
     }
 
     export interface UpdateRecipeScaling {
@@ -244,7 +248,9 @@ export namespace BeerActions {
         GenerateShoppingListPdf |
         GenerateShoppingListPdfSuccess |
         GenerateShoppingListPdfFailure |
+        ImportBeer |
         AddImportedBeer |
+        ImportBeerFailed |
         UpdateRecipeScaling |
         DeleteBeer |
         DeleteBeerSuccess
@@ -402,11 +408,12 @@ export namespace BeerActions {
         };
     }
 
-    export function addImportedBeer(aImportedBeer: Beer): AddImportedBeer {
-        return {
-            type: ActionTypes.ADD_IMPORTED_BEER,
-            payload: {importedBeer: aImportedBeer}
-        }
+    export function addImportedBeer(result: RecipeImportResult): AddImportedBeer {
+        return {type: ActionTypes.ADD_IMPORTED_BEER, payload: {result}};
+    }
+
+    export function importBeerFailed(message: string): ImportBeerFailed {
+        return {type: ActionTypes.IMPORT_BEER_FAILED, payload: {message}};
     }
 
     export function updateRecipeScaling(aScalingValues: scalingValues){

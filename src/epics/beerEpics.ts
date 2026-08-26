@@ -11,6 +11,7 @@ import {PdfGenerator} from "../utils/pdf/PdfGenerator";
 import { BeerPdfStrategy } from '../utils/pdf/shoppingListPdfStrategy';
 import {FinishedBeerRepository} from "../repositorys/FinishedBeerRepository";
 import {dataCollector} from "../utils/DataCollector/dataCollector";
+import {getRecipeImportErrorMessage} from '../utils/recipeImport';
 
 /**
  * Epic to handle the GET_BEERS action.
@@ -169,14 +170,8 @@ export const importBeerEpic = (aAction$: any) =>
         ofType(BeerActions.ActionTypes.IMPORT_BEER),
         mergeMap((aAction: any) =>
             from(BeerRepository.importBeer(aAction.payload.request)).pipe(
-                map((aResponse) => BeerActions.addImportedBeer(aResponse)),
-                catchError((aError: Error) =>
-                    of(ApplicationActions.openErrorDialog(
-                        true,
-                        "Import Fehler",
-                        (aError as any)?.response?.data?.message ?? (aError as any)?.response?.data?.error ?? aError.message
-                    ))
-                )
+                map((result) => BeerActions.addImportedBeer(result)),
+                catchError((aError) => of(BeerActions.importBeerFailed(getRecipeImportErrorMessage(aError))))
             )
         )
     );

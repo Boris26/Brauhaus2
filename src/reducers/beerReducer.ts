@@ -4,6 +4,7 @@ import {Beer} from "../model/Beer";
 import {BeerDTO} from "../model/BeerDTO";
 import {FinishedBrew} from "../model/FinishedBrew";
 import {BeerRecipeScaler} from "../utils/BeerScaler/ScalingBeerRecipe";
+import {RecipeImportResult} from '../model/RecipeImport';
 
 
 export interface BeerDataReducerState {
@@ -21,6 +22,9 @@ export interface BeerDataReducerState {
     beerFormState?: any
     importedBeer?: Beer | undefined
     isSavingBeer?: boolean
+    isImportingBeer?: boolean
+    importResult?: RecipeImportResult
+    importError?: string
 }
 
 export const initialBeerState: BeerDataReducerState =
@@ -34,6 +38,7 @@ export const initialBeerState: BeerDataReducerState =
         type: undefined,
         importedBeer: undefined,
         isSavingBeer: false,
+        isImportingBeer: false,
     }
 
 const beerDataReducer = (
@@ -154,17 +159,27 @@ const beerDataReducer = (
       return { ...aState, beerFormState: aAction.payload.formState };
     }
     case BeerActions.ActionTypes.ADD_IMPORTED_BEER: {
-        const importedBeer =  aAction.payload.importedBeer;
-        const aNewList = aState.beers
-            ? [...aState.beers, importedBeer]
-            : [importedBeer];
+        const result = aAction.payload.result;
+        const importedBeer = result.recipe;
+        const beers = aState.beers ?? [];
+        const alreadyStored = beers.some(beer => beer.id === importedBeer.id);
+        const aNewList = alreadyStored
+            ? beers.map(beer => beer.id === importedBeer.id ? importedBeer : beer)
+            : [...beers, importedBeer];
       return {
           ...aState,
           beers: aNewList,
-          importedBeer: importedBeer
+          importedBeer,
+          importResult: result,
+          importError: undefined,
+          isImportingBeer: false,
 
       };
     }
+    case BeerActions.ActionTypes.IMPORT_BEER:
+      return {...aState, isImportingBeer: true, importError: undefined, importResult: undefined};
+    case BeerActions.ActionTypes.IMPORT_BEER_FAILED:
+      return {...aState, isImportingBeer: false, importError: aAction.payload.message};
 
       case BeerActions.ActionTypes.UPDATE_RECIPE_SCALING: {
           const { scalingValues: aValues } = aAction.payload;
