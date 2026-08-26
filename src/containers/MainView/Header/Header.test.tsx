@@ -62,4 +62,42 @@ describe('Header navigation', () => {
         expect(screen.queryByRole('alert')).not.toBeInTheDocument();
         expect(screen.getByText('Aufheizen')).toBeInTheDocument();
     });
+
+    it('asks for confirmation without performing a shutdown action', (): void => {
+        render(
+            <Header
+                setViewState={jest.fn()}
+                currentView={Views.MAIN}
+                removeAllMessages={jest.fn()}
+                backendStatus={true}
+                messages={[]}
+            />
+        );
+
+        fireEvent.click(screen.getByLabelText('Brauhaus herunterfahren'));
+        expect(screen.getByText('Brauhaus herunterfahren?')).toBeInTheDocument();
+        expect(screen.getByText('Die Steuerung und der Raspberry Pi werden beendet.')).toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', {name: 'Abbrechen'}));
+        expect(screen.queryByText('Brauhaus herunterfahren?')).not.toBeInTheDocument();
+    });
+
+    it('warns explicitly when a brewing process is active', (): void => {
+        render(
+            <Header
+                setViewState={jest.fn()}
+                currentView={Views.PRODUCTION}
+                removeAllMessages={jest.fn()}
+                backendStatus={true}
+                messages={[]}
+                brewingStatus={brewingStatus(false)}
+            />
+        );
+
+        fireEvent.click(screen.getByLabelText('Brauhaus herunterfahren'));
+        expect(screen.getByText(/Ein Brauvorgang läuft gerade/)).toBeInTheDocument();
+
+        fireEvent.click(screen.getByRole('button', {name: 'Herunterfahren'}));
+        expect(screen.queryByText('Brauhaus herunterfahren?')).not.toBeInTheDocument();
+    });
 });
