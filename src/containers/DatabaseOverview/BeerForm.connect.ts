@@ -6,6 +6,7 @@ import {HopsActions} from "../../actions/hops.actions";
 import {YeastActions} from "../../actions/yeast.actions";
 import {AdditionalIngredientsActions} from "../../actions/additionalIngredients.actions";
 import {BeerForm} from './BeerForm';
+import {RecipeImportRequest} from '../../model/RecipeImport';
 
 const mapStateToProps = (state: any) => ({
     malts: state.maltsReducer.malts,
@@ -28,7 +29,7 @@ const mapDispatchToProps = (dispatch: any) => ({
     getYeast: (isFetching: boolean) => dispatch(YeastActions.getYeasts(isFetching)),
     getAdditionalIngredients: (isFetching: boolean) => dispatch(AdditionalIngredientsActions.getAdditionalIngredients(isFetching)),
     saveBeerFormState: (formState: any) => dispatch(BeerActions.saveBeerFormState(formState)),
-    importBeer: (file: File) => dispatch(BeerActions.importBeer(file)),
+    importBeer: (request: RecipeImportRequest) => dispatch(BeerActions.importBeer(request)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(BeerForm);

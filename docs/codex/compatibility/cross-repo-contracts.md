@@ -8,6 +8,16 @@ Codex must check this file before changing API-facing, UI-visible, database-faci
 
 ## UI ↔ Database/backend
 
+### Recipe import request
+
+The UI sends `POST /importbeer` with `Content-Type: application/json` and body
+`{ source, recipe }`. `source` is exactly `MAISCHE_MALZ_UND_MEHR`, `BRAUREKA`, or `BRAUHAUS`,
+and `recipe` is the syntactically parsed external JSON without conversion to the
+UI `Beer` or `BeerDTO` models. A successful response must remain a full `Beer`.
+BeerDatabase support for this request, including validation/error response shapes,
+is **Needs cross-repository update**; the old multipart `file` request is no longer
+sent by this UI.
+
 The React UI consumes database/backend data for:
 
 - beer recipes,

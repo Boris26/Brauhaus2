@@ -1,5 +1,18 @@
 # Data flow
 
+## Recipe import
+
+The recipe editor opens a source/file dialog. After the user selects
+`MAISCHE_MALZ_UND_MEHR`, `BRAUREKA`, or `BRAUHAUS`, the UI reads the selected file as text and
+uses `JSON.parse` only for syntax checking. It sends the resulting value unchanged
+as `recipe` together with the selected `source` to `POST /api/database/importbeer`
+as JSON. The backend remains responsible for format-specific validation,
+normalization, mapping, and persistence. The successful `Beer` response continues
+through `ADD_IMPORTED_BEER` into the recipe list and editor.
+
+Needs cross-repository update: BeerDatabase must accept this JSON request contract;
+the previously documented backend contract accepts multipart field `file`.
+
 ## Startup flow
 
 - `src/index.tsx` dispatches `ApplicationActions.setTheme(resolveInitialTheme())` before rendering.

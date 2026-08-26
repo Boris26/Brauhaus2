@@ -48,7 +48,7 @@ This document reflects the **current React frontend implementation** after align
 |---|---|---|---|---|---|---|
 | GET | `beers` (`DatabaseURL`) | Load beer recipes | Safe Read | `BeerRepository.getBeers` | none | No |
 | POST | `beer` (`DatabaseURL`) | Create/submit beer recipe | Workflow Prepare | `BeerRepository.submitBeer` | `BeerDTO` JSON | No |
-| POST | `importbeer` (`DatabaseURL`) | Import beer from file | Workflow Prepare | `BeerRepository.importBeer` | `FormData(file)` | Medium (response type `any`) |
+| POST | `importbeer` (`DatabaseURL`) | Import external recipe JSON | Workflow Prepare | `BeerRepository.importBeer` | `{ source, recipe }` JSON | Backend contract update required |
 | GET | `finishedbeers` (`DatabaseURL`) | Load finished brews | Safe Read | `FinishedBeerRepository.getFinishedBeers` | none | No |
 | POST | `finishedbeer` (`DatabaseURL`) | Add finished brew | Workflow Prepare | `FinishedBeerRepository.sendNewFinishedBeer` | `FinishedBrew` JSON | No |
 | POST | `finishedbeer` (`DatabaseURL`) | Update finished brew | Workflow Control | `FinishedBeerRepository.updateFinishedBeer` | `FinishedBrew` JSON | Medium (POST used for update) |
@@ -93,7 +93,7 @@ This document reflects the **current React frontend implementation** after align
 ### 2) Recipe/workflow preparation
 
 - POST `DatabaseURL + beer`
-- POST `DatabaseURL + importbeer` (multipart file)
+- POST `DatabaseURL + importbeer` (`{ source, recipe }` JSON)
 - POST `DatabaseURL + hop`
 - POST `DatabaseURL + malt`
 - POST `DatabaseURL + yeast`

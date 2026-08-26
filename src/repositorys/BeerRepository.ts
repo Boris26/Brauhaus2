@@ -2,6 +2,7 @@ import {BeerDTO} from "../model/BeerDTO";
 import {Beer} from "../model/Beer";
 import {BaseRepository} from "./BaseRepository";
 import { BeerSubmissionResponse, hasPersistedBeerId, toBeerCreatePayload } from "../utils/beerSubmission";
+import {RecipeImportRequest} from '../model/RecipeImport';
 
 export class BeerRepository extends BaseRepository {
 
@@ -17,16 +18,14 @@ export class BeerRepository extends BaseRepository {
         return this.post<BeerSubmissionResponse>("beer", toBeerCreatePayload(aBeer));
     }
 
-    static async importBeer(aFile: File): Promise<any> {
-        console.log(aFile)
-        return this.postFile<any>("importbeer", aFile);
+    static async importBeer(request: RecipeImportRequest): Promise<Beer> {
+        return this.post<Beer>("importbeer", request);
     }
 
     static async deleteBeer(aBeerId: string): Promise<void> {
         return this.delete(`beer/${aBeerId}`);
     }
 }
-
 
 
 

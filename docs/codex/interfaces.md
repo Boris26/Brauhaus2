@@ -10,7 +10,7 @@ Base URL: `DatabaseURL` (`/api/database`).
 | POST | `beer` | Create recipe | `BeerDTO` without `id`, returns `{ id, message, beer: { id } }` |
 | PUT | `beer/{id}` | Update recipe | `BeerDTO` with matching `id` or no body id, returns `{ id, message, beer: { id } }`; unknown id returns `404 BEER_NOT_FOUND` |
 | DELETE | `beer/{id}` | Delete recipe | no body |
-| POST | `importbeer` | Import recipe file | multipart `file`, response `any`/imported beer |
+| POST | `importbeer` | Import recipe JSON | `{ source: 'MAISCHE_MALZ_UND_MEHR' \| 'BRAUREKA' \| 'BRAUHAUS', recipe: unknown }`, returns imported `Beer` |
 | GET | `finishedbeers` | Load finished brews | `FinishedBrew[]` |
 | POST | `finishedbeer` | Create finished brew | `FinishedBrew`, returns `FinishedBrew` |
 | POST | `finishedbeer` | Update finished brew | `FinishedBrew`, returns `FinishedBrew`; create/update distinction is backend-owned |
