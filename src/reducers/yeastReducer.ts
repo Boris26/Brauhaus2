@@ -1,9 +1,9 @@
-import {Yeast} from "../model/Beer";
+import {Yeasts} from "../model/Yeasts";
 import {YeastActions} from "../actions/yeast.actions";
 import AllYeastActions = YeastActions.AllYeastActions;
 
 export interface YeastReducerState {
-    yeasts: Yeast[] | undefined
+    yeasts: Yeasts[] | undefined
     isFetching: boolean,
     isSubmitYeastSuccessful: boolean | undefined,
     isUpdating: boolean,
