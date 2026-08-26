@@ -1,16 +1,19 @@
-import React from 'react';
+import React, {Suspense} from 'react';
 import {Views} from '../enums/eViews';
-import Main from "./MainView/Main.connect";
-import Production from "./Production/Production.connect";
-import DatabaseOverview from "./DatabaseOverview/BeerForm.connect";
 import SimpleBar from "simplebar-react";
 import {BrewingStatus} from "../model/brewingStatus.types";
-import FinishedBrewsTable from "./MainView/FinishBrewsBeers/FinishedBrewsTable.connect";
-import BrewingCalculations from "./BrewingCalculations/BrewingCalculations";
-import IngredientsFormPage from "./DatabaseOverview/IngredientsFormPage.connect";
-import SettingsPage from "./Settings/SettingsPage.connect";
-import VersionPage from "./Version/VersionPage";
-import DashboardPage from "./Dashboard/DashboardPage.connect";
+import {getUiMode} from '../utils/uiMode';
+import {CONTROLLER_HOME_VIEW, isViewAllowed} from '../utils/viewConfig';
+
+const Main = React.lazy(() => import('./MainView/Main.connect'));
+const Production = React.lazy(() => import('./Production/Production.connect'));
+const DatabaseOverview = React.lazy(() => import('./DatabaseOverview/BeerForm.connect'));
+const FinishedBrewsTable = React.lazy(() => import('./MainView/FinishBrewsBeers/FinishedBrewsTable.connect'));
+const BrewingCalculations = React.lazy(() => import('./BrewingCalculations/BrewingCalculations'));
+const IngredientsFormPage = React.lazy(() => import('./DatabaseOverview/IngredientsFormPage.connect'));
+const SettingsPage = React.lazy(() => import('./Settings/SettingsPage.connect'));
+const VersionPage = React.lazy(() => import('./Version/VersionPage'));
+const DashboardPage = React.lazy(() => import('./Dashboard/DashboardPage.connect'));
 
 interface indexMainProps {
     viewState: Views;
@@ -35,26 +38,30 @@ export class Index extends React.Component<indexMainProps> {
 
     render() {
         const {viewState} = this.props;
+        const mode = getUiMode();
+        const activeView = isViewAllowed(viewState, mode) ? viewState : CONTROLLER_HOME_VIEW;
 
         return (
 
+            <Suspense fallback={<div className="view-loading" role="status">Lade Ansicht…</div>}>
             <div className="IndexContent">
                 <SimpleBar style={{maxHeight: '100%', overflowY: 'auto'}}>
-                    {viewState === Views.DASHBOARD && <DashboardPage />}
-                    {viewState === Views.MAIN && <Main/>}
+                    {activeView === Views.DASHBOARD && <DashboardPage />}
+                    {activeView === Views.MAIN && <Main/>}
                 </SimpleBar>
-                {viewState === Views.PRODUCTION && <Production/>}
-                {viewState === Views.DATABASE && <DatabaseOverview></DatabaseOverview>}
+                {activeView === Views.PRODUCTION && <Production/>}
+                {activeView === Views.DATABASE && <DatabaseOverview></DatabaseOverview>}
                 <div className="ingredients-wrapper">
-                    {viewState === Views.INGREDIENTS && <IngredientsFormPage />}
+                    {activeView === Views.INGREDIENTS && <IngredientsFormPage />}
                 </div>
-                {viewState === Views.SETTINGS && <SettingsPage />}
+                {activeView === Views.SETTINGS && <SettingsPage />}
                 <SimpleBar style={{maxHeight: '100%', overflowY: 'auto'}}>
-                    {viewState === Views.FINISHED_BREWS && <FinishedBrewsTable></FinishedBrewsTable>}
+                    {activeView === Views.FINISHED_BREWS && <FinishedBrewsTable></FinishedBrewsTable>}
                 </SimpleBar>
-                {viewState === Views.BREWING_CALCULATIONS && <BrewingCalculations />}
-                {viewState === Views.VERSION && <VersionPage />}
+                {activeView === Views.BREWING_CALCULATIONS && <BrewingCalculations />}
+                {activeView === Views.VERSION && <VersionPage />}
             </div>
+            </Suspense>
 
         );
     }

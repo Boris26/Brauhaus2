@@ -5,6 +5,9 @@ import StatusDisplay from './StatusDisplay';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import {BrewingStatus} from '../../../model/brewingStatus.types';
 import {equipmentAlarmDisplay, isEquipmentAlarmActive} from '../../../utils/brewingStatus/alarmDisplay';
+import {getUiMode} from '../../../utils/uiMode';
+import {getNavigationViews} from '../../../utils/viewConfig';
+import {UiMode} from '../../../enums/eUiMode';
 
 
 
@@ -69,11 +72,14 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
     render() {
        const { messages = [] , removeAllMessages, backendStatus, brewingStatus } = this.props; // Default-Wert für messages ist ein leeres Array
        const equipmentAlarmText = isEquipmentAlarmActive(brewingStatus) ? equipmentAlarmDisplay.headerText : undefined;
+       const uiMode = getUiMode();
+       const navigationViews = getNavigationViews(uiMode);
+       const isVisible = (view: Views) => navigationViews.includes(view);
 
         return (
             <div className="Header">
                 <div className="icons-container">
-                    <button
+                    {isVisible(Views.DASHBOARD) && <button
                         type="button"
                         className={this.getTabClassName(Views.DASHBOARD)}
                         onClick={() => this.handleIconClick(Views.DASHBOARD)}
@@ -81,50 +87,50 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
                         aria-label="Dashboard"
                     >
                         <DashboardIcon fontSize="inherit" />
-                    </button>
-                    <img
+                    </button>}
+                    {isVisible(Views.MAIN) && <img
                         src="beer.png"
-                        alt="Icon 1"
+                        alt={uiMode === UiMode.CONTROLLER ? 'Bierliste' : 'Icon 1'}
                         className={this.getTabClassName(Views.MAIN)}
                         onClick={() => this.handleIconClick(Views.MAIN)}
-                        title="Hauptansicht"
-                    />
-                    <img
+                        title={uiMode === UiMode.CONTROLLER ? 'Bierliste' : 'Hauptansicht'}
+                    />}
+                    {isVisible(Views.PRODUCTION) && <img
                         src="brewing.png"
                         alt="Icon 2"
                         className={this.getTabClassName(Views.PRODUCTION)}
                         onClick={() => this.handleIconClick(Views.PRODUCTION)}
                         title="Produktion"
-                    />
-                    <img
+                    />}
+                    {isVisible(Views.DATABASE) && <img
                         src="bar.png"
                         alt="Icon 3"
                         className={this.getTabClassName(Views.DATABASE)}
                         onClick={() => this.handleIconClick(Views.DATABASE)}
                         title="Datenbank"
-                    />
-                    <img
+                    />}
+                    {isVisible(Views.FINISHED_BREWS) && <img
                         src="beer-55.gif"
                         alt="Fertige Sude"
                         className={this.getTabClassName(Views.FINISHED_BREWS)}
                         onClick={() => this.handleIconClick(Views.FINISHED_BREWS)}
                         title="Fertige Sude"
-                    />
-                    <img
+                    />}
+                    {isVisible(Views.BREWING_CALCULATIONS) && <img
                         src="brewing.png" // Korrektur des Pfades, "/" entfernt
                         alt="Berechnungen"
                         className={this.getTabClassName(Views.BREWING_CALCULATIONS)}
                         onClick={() => this.handleIconClick(Views.BREWING_CALCULATIONS)}
                         title="Bierbrau-Berechnungen"
-                    />
-                    <img
+                    />}
+                    {isVisible(Views.INGREDIENTS) && <img
                         src="brewery.png"
                         alt="Zutaten"
                         className={this.getTabClassName(Views.INGREDIENTS)}
                         onClick={() => this.handleIconClick(Views.INGREDIENTS)}
                         title="Zutaten verwalten"
-                    />
-                    <img
+                    />}
+                    {isVisible(Views.SETTINGS) && <img
                         src="settings.png"
                         alt="Einstellungen"
                         className={this.getTabClassName(Views.SETTINGS)}
@@ -132,8 +138,8 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
                         title="Einstellungen"
                         role="button"
                         aria-label="Einstellungen"
-                    />
-                    <button
+                    />}
+                    {isVisible(Views.VERSION) && <button
                         type="button"
                         className={this.getTabClassName(Views.VERSION)}
                         onClick={() => this.handleIconClick(Views.VERSION)}
@@ -141,7 +147,7 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
                         aria-label="Version"
                     >
                         i
-                    </button>
+                    </button>}
                 </div>
                 <div className="header-status">
                   <div className="status-display-wrapper">

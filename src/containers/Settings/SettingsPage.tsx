@@ -4,6 +4,8 @@ import { ThemeName } from '../../utils/theme';
 import { PushService, getPermissionState, isPushSupported } from '../../utils/pushService';
 import { AudioRepository } from '../../repositorys/AudioRepository';
 import { SOUND_LABELS, SOUND_TYPES, SoundType } from '../../enums/eSoundType';
+import { UiMode } from '../../enums/eUiMode';
+import { getUiMode, setUiMode } from '../../utils/uiMode';
 
 interface SettingsPageProps {
     theme: ThemeName;
@@ -140,6 +142,12 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
         });
     };
 
+    handleUiModeChange = (nextMode: UiMode) => {
+        if (nextMode === getUiMode()) return;
+        setUiMode(nextMode);
+        window.location.reload();
+    };
+
     handleSoundTest = async (sound: SoundType) => {
         if (this.soundRequestActive) {
             return;
@@ -200,6 +208,39 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                 )}
 
                 <div className="settings-grid">
+                    <section className="settings-card">
+                        <div className="settings-card-header">
+                            <h3>Oberfläche</h3>
+                            <p>Lege fest, welche Bereiche auf diesem Browser bereitstehen.</p>
+                        </div>
+                        <div className="setting-row">
+                            <div className="setting-label-group">
+                                <label>UI-Modus</label>
+                                <span className="setting-description">
+                                    Desktop: Vollständige Oberfläche zum Planen, Bearbeiten und Verwalten.
+                                </span>
+                                <span className="setting-description">
+                                    Brausteuerung: Reduzierte Oberfläche für Produktion, Bierübersicht und lokale Einstellungen.
+                                </span>
+                            </div>
+                            <div className="setting-options">
+                                <button
+                                    className={`settings-chip ${getUiMode() === UiMode.DESKTOP ? 'active' : ''}`}
+                                    type="button"
+                                    onClick={() => this.handleUiModeChange(UiMode.DESKTOP)}
+                                >
+                                    Desktop
+                                </button>
+                                <button
+                                    className={`settings-chip ${getUiMode() === UiMode.CONTROLLER ? 'active' : ''}`}
+                                    type="button"
+                                    onClick={() => this.handleUiModeChange(UiMode.CONTROLLER)}
+                                >
+                                    Brausteuerung
+                                </button>
+                            </div>
+                        </div>
+                    </section>
                     <section className="settings-card">
                         <div className="settings-card-header">
                             <h3>Darstellung</h3>

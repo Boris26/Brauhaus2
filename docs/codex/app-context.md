@@ -74,7 +74,7 @@ See `interfaces.md` and `docs/frontend-api-usage.md` for endpoint details.
 
 ## LocalStorage and browser APIs
 
-- Only explicit `localStorage` usage found is theme persistence under key `theme` in `src/utils/theme.ts`.
+- Theme persistence uses key `theme` in `src/utils/theme.ts`. The browser-local UI role uses `brauhaus.uiMode`, accepts `desktop` and `controller`, and safely defaults to `desktop` when storage is missing, invalid, or unavailable.
 - Initial theme falls back to `window.matchMedia('(prefers-color-scheme: dark)')`.
 - Mobile status view uses `navigator.vibrate` when status identity changes.
 - Service worker registration occurs on window `load`.

@@ -1,4 +1,7 @@
 import { Views } from '../enums/eViews';
+import { UiMode } from '../enums/eUiMode';
+import { getUiMode } from './uiMode';
+import { CONTROLLER_HOME_VIEW, isViewAllowed } from './viewConfig';
 
 const viewToPath: Record<Views, string> = {
   [Views.DASHBOARD]: '/dashboard',
@@ -14,20 +17,38 @@ const viewToPath: Record<Views, string> = {
 
 export const getPathForView = (view: Views): string => viewToPath[view];
 
-export const getViewForPath = (path: string): Views => {
+export const getViewForPath = (path: string, mode: UiMode = getUiMode()): Views => {
   const normalized = path.toLowerCase().replace(/\/$/, '') || '/';
+  if (mode === UiMode.CONTROLLER && normalized === '/beers') return Views.MAIN;
   const match = (Object.entries(viewToPath) as Array<[string, string]>).find(([, route]) => route === normalized);
-  return match ? Number(match[0]) as Views : Views.MAIN;
+  const matchedView = match ? Number(match[0]) as Views : undefined;
+  if (mode === UiMode.CONTROLLER) {
+    if (normalized === '/') return CONTROLLER_HOME_VIEW;
+    return matchedView !== undefined && isViewAllowed(matchedView, mode)
+      ? matchedView
+      : CONTROLLER_HOME_VIEW;
+  }
+  return matchedView ?? Views.MAIN;
 };
 
 export const resolveInitialView = (): Views => {
-  if (typeof window === 'undefined') return Views.MAIN;
-  return getViewForPath(window.location.pathname);
+  const mode = getUiMode();
+  if (typeof window === 'undefined') return mode === UiMode.CONTROLLER ? CONTROLLER_HOME_VIEW : Views.MAIN;
+  const view = getViewForPath(window.location.pathname, mode);
+  const resolvedPath = mode === UiMode.CONTROLLER && view === Views.MAIN ? '/beers' : getPathForView(view);
+  if (mode === UiMode.CONTROLLER && window.location.pathname !== resolvedPath) {
+    window.history?.replaceState?.(null, '', resolvedPath);
+  }
+  return view;
 };
 
 export const pushViewPath = (view: Views): void => {
   if (typeof window === 'undefined' || !window.history?.pushState) return;
-  const nextPath = getPathForView(view);
+  const mode = getUiMode();
+  const allowedView = isViewAllowed(view, mode) ? view : CONTROLLER_HOME_VIEW;
+  const nextPath = mode === UiMode.CONTROLLER && allowedView === Views.MAIN
+    ? '/beers'
+    : getPathForView(allowedView);
   if (window.location.pathname !== nextPath) {
     window.history.pushState(null, '', nextPath);
   }
