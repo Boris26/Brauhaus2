@@ -24,7 +24,7 @@ export interface HopDTO {
     name: string;
     id: string;
     quantity: number;
-    time: number;
+    time?: number;
     usage?: HopUsage;
     timeUnit?: HopTimeUnit;
 }

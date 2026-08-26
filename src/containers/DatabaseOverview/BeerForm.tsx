@@ -102,7 +102,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             cookingTemperatur: DEFAULT_COOKING_TEMPERATURE,
             fermentationSteps: createDefaultFermentationSteps(),
             maltsDTO: [{ id: '', name: '', quantity: undefined as any }],
-            hopsDTO: [{ id: '', name: '', quantity: undefined as any, time: 0, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES }],
+            hopsDTO: [{ id: '', name: '', quantity: undefined as any, usage: HopUsage.BOIL }],
             yeastsDTO: [{ id: '', name: '', quantity: undefined as any }],
             additionalIngredientsDTO: [],
             isSubmitSuccessful: undefined,
@@ -302,7 +302,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 // @ts-ignore
                 step[aName] = aValue === '' ? undefined : (isNaN(parsed) ? aValue : parsed);
             } else if (aName === "timeUnit") {
-                step.timeUnit = aValue as HopTimeUnit;
+                step.timeUnit = aValue === '' ? undefined : aValue as HopTimeUnit;
             } else {
                 // @ts-ignore
                 step[aName] = aValue;
@@ -514,7 +514,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         const normalizedHops = hopsDTO.map((aHop) => normalizeHopDto(aHop));
         if (!normalizedHops.every((aHop) => validateHopDto(aHop))) {
-            this.openValidationDialog('Bitte prüfe die Hopfengaben: Menge und Zeit müssen > 0 sein. Kochhopfen nutzt Minuten, Hopfen stopfen Stunden oder Tage.');
+            this.openValidationDialog('Bitte prüfe die Hopfengaben. Die Menge muss größer als 0 sein. Eine Zeitangabe ist optional; wenn eine Zeit angegeben wird, muss auch eine Einheit gewählt sein.');
             return;
         }
 
@@ -672,7 +672,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
     addHops = () => {
         this.setState((prevState) => ({
-            hopsDTO: [...prevState.hopsDTO, { id: '', name: '', quantity: undefined as any, time: 0, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES }],
+            hopsDTO: [...prevState.hopsDTO, { id: '', name: '', quantity: undefined as any, usage: HopUsage.BOIL }],
         }));
     }
 
@@ -921,7 +921,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         const hopsContent = (
             <>
-                <div className="table-wrapper"><table className="ingredient-table"><thead><tr><th>Name</th><th>Menge (g)</th><th>Verwendung</th><th>Zeitangabe</th><th>Einheit</th><th className="action-column">Aktion</th></tr></thead><tbody>{hopsDTO?.map((step, index) => <tr key={index}><td><select name="name" value={step.name} onChange={(e) => this.handleHopChange(e.target.value, "name", index)} required={true}><option value="">Hopfen</option>{hops.map((hop) => <option key={hop.id} value={hop.name}>{hop.name}</option>)}</select></td><td><input type="number" name="quantity" min={0} value={step.quantity} onChange={(e) => this.handleHopChange(e.target.value, "quantity", index)} required={true} />{this.renderFieldError(`hopsDTO.${index}.quantity`)}</td><td><select name="usage" value={step.usage ?? HopUsage.BOIL} onChange={(e) => this.handleHopChange(e.target.value, "usage", index)} required={true}><option value={HopUsage.BOIL}>Kochhopfen</option><option value={HopUsage.DRY_HOP}>Hopfen stopfen</option></select></td><td><input type="number" name="time" min={1} value={step.time} onChange={(e) => this.handleHopChange(e.target.value, "time", index)} required={true} /></td><td>{step.usage === HopUsage.DRY_HOP ? <select name="timeUnit" value={step.timeUnit ?? HopTimeUnit.DAYS} onChange={(e) => this.handleHopChange(e.target.value, "timeUnit", index)}><option value={HopTimeUnit.HOURS}>Stunden</option><option value={HopTimeUnit.DAYS}>Tage</option></select> : <span className="muted-table-value">Minuten</span>}</td><td className="action-column"><button type="button" className="cancel-btn brauhaus-button brauhaus-button-danger brauhaus-icon-button" onClick={() => this.removeHops(index)} title="Hopfen löschen" aria-label="Hopfen löschen">🗑️</button></td></tr>)}</tbody></table></div>
+                <div className="table-wrapper"><table className="ingredient-table"><thead><tr><th>Name</th><th>Menge (g)</th><th>Verwendung</th><th>Zeitangabe</th><th>Einheit</th><th className="action-column">Aktion</th></tr></thead><tbody>{hopsDTO?.map((step, index) => <tr key={index}><td><select name="name" value={step.name} onChange={(e) => this.handleHopChange(e.target.value, "name", index)} required={true}><option value="">Hopfen</option>{hops.map((hop) => <option key={hop.id} value={hop.name}>{hop.name}</option>)}</select></td><td><input type="number" name="quantity" min={0} value={step.quantity} onChange={(e) => this.handleHopChange(e.target.value, "quantity", index)} required={true} />{this.renderFieldError(`hopsDTO.${index}.quantity`)}</td><td><select name="usage" value={step.usage ?? HopUsage.BOIL} onChange={(e) => this.handleHopChange(e.target.value, "usage", index)} required={true}><option value={HopUsage.FIRST_WORT}>Vorderwürze</option><option value={HopUsage.BOIL}>Kochhopfen</option><option value={HopUsage.WHIRLPOOL}>Whirlpool</option><option value={HopUsage.DRY_HOP}>Hopfen stopfen</option></select></td><td><input type="number" name="time" min={0} value={step.time ?? ''} onChange={(e) => this.handleHopChange(e.target.value, "time", index)} /></td><td><select name="timeUnit" value={step.timeUnit ?? ''} onChange={(e) => this.handleHopChange(e.target.value, "timeUnit", index)}><option value="">Keine Einheit</option><option value={HopTimeUnit.MINUTES}>Minuten</option><option value={HopTimeUnit.HOURS}>Stunden</option><option value={HopTimeUnit.DAYS}>Tage</option></select></td><td className="action-column"><button type="button" className="cancel-btn brauhaus-button brauhaus-button-danger brauhaus-icon-button" onClick={() => this.removeHops(index)} title="Hopfen löschen" aria-label="Hopfen löschen">🗑️</button></td></tr>)}</tbody></table></div>
                 {hopsDTO.length === 0 && <p className="empty-section-note">Noch kein Hopfen hinzugefügt.</p>}
                 <button type="button" className="add-button brauhaus-button brauhaus-button-secondary section-add-button" onClick={this.addHops}>+ Hopfen hinzufügen</button>
             </>

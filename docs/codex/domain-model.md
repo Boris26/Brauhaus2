@@ -52,7 +52,7 @@ Fields: `id`, `name`, `startDate`, optional `endDate`, `liters`, `originalwort`,
 ## Ingredients
 
 - `Hops`: `id`, `name`, `type`, `alpha`, `description`.
-- Recipe hop entries: `id`, `name`, `description`, numeric `alpha`, `quantity`, `time`, optional `usage`, optional `timeUnit`.
+- Recipe hop entries: `id`, `name`, `description`, numeric `alpha`, `quantity`, optional `time`, optional `usage`, optional `timeUnit`. BRAUHAUS-v1 hop usage values are `FIRST_WORT`, `BOIL`, `WHIRLPOOL`, and `DRY_HOP`; a supplied time requires one of `MINUTES`, `HOURS`, or `DAYS`, while an untimed addition has no unit. Missing legacy `usage` remains `BOIL`.
 - `Malts`: `id`, `name`, `description`, `ebc`; recipe malt uses uppercase `EBC` and `quantity`.
 - `Yeasts`: `id`, `name`, `description`, `temperature`, `type`, `evg`; recipe yeast uses `EVG`, `temperature`, `type`, and `quantity`.
 - `AdditionalIngredient`: `id`, `name`, optional `description`; recipe additional ingredient has `quantity`, `unit`, `phase`, optional `time`, `timeUnit`, `description`.
