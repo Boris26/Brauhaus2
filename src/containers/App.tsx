@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import Header from './MainView/Header/Header.connect';
 import './App.css';
 import Index from "./index.connect";
-import MobileProductionView from './Mobile/MobileStatusView/MobileProductionView.connect';
+
+const MobileProductionView = React.lazy(() => import('./Mobile/MobileStatusView/MobileProductionView.connect'));
 
 const App: React.FC = () => {
     const isMobile = window.innerWidth < 768;
@@ -11,7 +12,9 @@ const App: React.FC = () => {
     if (isMobile && !isDashboardRoute) {
         return (
             <div className="AppContainer">
-                <MobileProductionView/>
+                <Suspense fallback={<div className="view-loading" role="status">Lade Ansicht…</div>}>
+                    <MobileProductionView/>
+                </Suspense>
             </div>
         );
     }
