@@ -18,7 +18,7 @@ import {BeerRecipeScaler, scalingValues} from "../../../utils/BeerScaler/Scaling
 import {COLOR_ACCENT, COLOR_BREW_BG} from "../../../colors";
 
 interface DetailsProps {
-    selectedBeer: Beer;
+    selectedBeer?: Beer;
     updateRecipeScaling: (aScalingValues: scalingValues) => void;
 }
 
@@ -103,6 +103,8 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
     // -------------------------------------------------------------
     renderBatchSettings() {
         const {selectedBeer} = this.props;
+        if (!selectedBeer) return null;
+
         const hasRecipeReference = Boolean(
             selectedBeer.referenceVolume && selectedBeer.referenceVolume > 0 &&
             selectedBeer.referenceBrewhouseEfficiency && selectedBeer.referenceBrewhouseEfficiency > 0
