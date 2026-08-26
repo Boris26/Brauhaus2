@@ -840,15 +840,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
     getImportInfo = (): string => {
         const result = this.props.importResult;
         if (!result) return '';
-        const headline = result.replayed
-            ? 'Der Import wurde bereits verarbeitet. Das vorhandene Rezept wurde geladen.'
-            : 'Rezept erfolgreich importiert.';
-        const warnings = result.warnings.map(warning => warning.message);
-        const mappings = result.ingredientMappings
-            .filter(mapping => mapping.matchType !== 'EXACT')
-            .map(mapping => `„${mapping.sourceName}“ wurde „${mapping.resolvedName}“ zugeordnet (${mapping.matchType}).`);
-        const created = result.createdMasterData.map(ingredient => `Neue Zutat angelegt: „${ingredient.name}“ (${ingredient.ingredientType}).`);
-        return [headline, ...warnings, ...mappings, ...created].join(' ');
+        return 'Rezept erfolgreich importiert.';
     };
 
     renderCreateBeerForm() {
