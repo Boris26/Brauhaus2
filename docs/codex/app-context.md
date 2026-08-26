@@ -34,6 +34,7 @@ The repository is mostly class-component React with Redux `connect(...)`. Functi
 - `src/containers/DatabaseOverview/`: recipe and ingredient forms.
 - `src/containers/Mobile/`: mobile status, active finished brew, calculations.
 - `src/components/`: reusable controls, modal, gauge, flame, water visual.
+- The desktop header's explicitly confirmed shutdown action uses `SystemRepository` to send one `POST /api/system/shutdown`. It blocks duplicate requests and leaves the UI in a terminal state after HTTP success.
 - `src/utils/`: calculations, recipe mapping, status normalization/selectors, PDF, theme, data collection.
 
 ## State management

@@ -59,6 +59,10 @@ Base URL: `BaseURL` (`/api/controller`), `CommandsURL` (`/api/controller/Command
 
 The Settings UI tests the control system's existing logical sounds through `POST /api/audio/test` with JSON `{ "sound": SoundType }`. Supported values are exactly `ALARM`, `WARNING`, `CONFIRMATION`, `REST_FINISHED`, `BREW_FINISHED`, and `SUCCESS`. HTTP 200 returns `{ "success": true, "sound": SoundType }`; invalid input returns HTTP 400 and playback errors return HTTP 500 with `{ "success": false, "error": string }`.
 
+## System REST endpoint
+
+The desktop header sends `POST /api/system/shutdown` without a request body only after explicit confirmation. Any successful HTTP response transitions the UI into its terminal shutdown state; the response message is not used as a control signal. The request is never retried or polled.
+
 ## Socket.io
 
 - URL is derived from `BaseURL` by replacing leading `http` with `ws`.

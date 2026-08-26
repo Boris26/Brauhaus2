@@ -22,6 +22,7 @@ Needs verification: the app mixes Material UI v4 and MUI v5 packages, which can 
 - `CommandsURL = '/api/controller/Command/'`
 - `ConfirmURL = '/api/controller/Confirm/'`
 - `AudioURL = '/api/audio'`
+- `SystemURL = '/api/system'`
 
 No environment override is used for API origins. In local CRA development only, `src/setupProxy.js` proxies `/api/*` to `https://192.168.178.72/api/*` without path rewriting. `PUBLIC_URL` is used only for CRA public assets/service worker.
 

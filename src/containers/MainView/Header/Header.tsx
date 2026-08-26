@@ -11,6 +11,7 @@ import {getUiMode} from '../../../utils/uiMode';
 import {getNavigationViews} from '../../../utils/viewConfig';
 import {UiMode} from '../../../enums/eUiMode';
 import ModalDialog, {DialogType} from '../../../components/ModalDialog/ModalDialog';
+import {SystemRepository} from '../../../repositorys/SystemRepository';
 
 
 
@@ -27,10 +28,12 @@ interface HeaderState {
     currentTime: string;
     currentDate: string;
     showShutdownDialog: boolean;
+    shutdownState: 'idle' | 'pending' | 'success' | 'error';
 }
 
 export class Header extends React.Component<HeaderProps, HeaderState> {
     private timer: NodeJS.Timer | undefined;
+    private shutdownRequestPending = false;
 
     constructor(props: HeaderProps) {
         super(props);
@@ -38,6 +41,7 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
                 currentTime: this.getCurrentTimeString(),
                 currentDate: this.getCurrentDateString(),
                 showShutdownDialog: false,
+                shutdownState: 'idle',
             };
     }
 
@@ -69,9 +73,31 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
         setViewState(viewState);
     }
 
-    handleShutdownConfirmed = () => {
-        // Placeholder for the future POST /api/system/shutdown integration.
-        this.setState({showShutdownDialog: false});
+    handleShutdownConfirmed = async () => {
+        if (this.shutdownRequestPending || this.state.shutdownState === 'success') return;
+
+        this.shutdownRequestPending = true;
+        this.setState({shutdownState: 'pending'});
+        try {
+            await SystemRepository.shutdown();
+            this.setState({shutdownState: 'success'});
+        } catch (error) {
+            console.error('Herunterfahren des Brauhauses fehlgeschlagen', error);
+            this.shutdownRequestPending = false;
+            this.setState({shutdownState: 'error'});
+        }
+    }
+
+    openShutdownDialog = () => {
+        if (!this.shutdownRequestPending && this.state.shutdownState !== 'success') {
+            this.setState({showShutdownDialog: true, shutdownState: 'idle'});
+        }
+    }
+
+    closeShutdownDialog = () => {
+        if (!this.shutdownRequestPending) {
+            this.setState({showShutdownDialog: false, shutdownState: 'idle'});
+        }
     }
 
     // Hilfsfunktion, um die aktiven Tab-Klassen zu bestimmen
@@ -88,6 +114,13 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
        const shutdownMessage = isProcessActive(brewingStatus)
            ? 'Die Steuerung und der Raspberry Pi werden beendet.\n\n⚠ Ein Brauvorgang läuft gerade. Beim Herunterfahren wird die Steuerung beendet.'
            : 'Die Steuerung und der Raspberry Pi werden beendet.';
+       const shutdownDialogContent = this.state.shutdownState === 'success'
+           ? 'Brauhaus wird heruntergefahren …'
+           : this.state.shutdownState === 'error'
+               ? 'Das System konnte nicht heruntergefahren werden.'
+               : this.state.shutdownState === 'pending'
+                   ? 'Herunterfahren wird gestartet …'
+                   : shutdownMessage;
 
         return (
             <div className="Header">
@@ -173,7 +206,8 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
                   <button
                     type="button"
                     className="icon shutdown-button"
-                    onClick={() => this.setState({showShutdownDialog: true})}
+                    onClick={this.openShutdownDialog}
+                    disabled={this.state.shutdownState === 'pending' || this.state.shutdownState === 'success'}
                     title="Brauhaus herunterfahren"
                     aria-label="Brauhaus herunterfahren"
                   >
@@ -181,17 +215,20 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
                   </button>
                 </div>
                 <ModalDialog
-                  type={DialogType.INFO}
+                  type={this.state.shutdownState === 'error' ? DialogType.ERROR : DialogType.INFO}
                   open={this.state.showShutdownDialog}
                   header="Brauhaus herunterfahren?"
-                  content={shutdownMessage}
-                  showCancelButton={true}
+                  content={shutdownDialogContent}
+                  showCancelButton={this.state.shutdownState === 'idle' || this.state.shutdownState === 'pending'}
                   cancelLabel="Abbrechen"
-                  confirmLabel="Herunterfahren"
+                  confirmLabel={this.state.shutdownState === 'error' ? 'Schließen' : 'Herunterfahren'}
                   confirmColor="error"
                   confirmVariant="contained"
-                  onCancel={() => this.setState({showShutdownDialog: false})}
-                  onConfirm={this.handleShutdownConfirmed}
+                  actionsDisabled={this.state.shutdownState === 'pending'}
+                  showConfirmButton={this.state.shutdownState !== 'success'}
+                  disableClose={this.state.shutdownState === 'pending' || this.state.shutdownState === 'success'}
+                  onCancel={this.closeShutdownDialog}
+                  onConfirm={this.state.shutdownState === 'error' ? this.closeShutdownDialog : this.handleShutdownConfirmed}
                 />
             </div>
 

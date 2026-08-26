@@ -82,6 +82,8 @@ The recipe editor restricts hop time-unit choices by usage as a UI-only rule: `F
 
 ## UI ↔ PI control
 
+The desktop UI invokes the Caddy-routed system shutdown contract with `POST /api/system/shutdown`, without a request body, exclusively after explicit user confirmation. A successful HTTP status is sufficient; the UI does not depend on the exact response message, retry, poll, or repeat the request. Ownership and deployment routing of `/api/system` outside this repository are **Needs verification**.
+
 The PI control app produces runtime/control data that the UI displays and uses for workflow behavior.
 
 The Settings UI also consumes the existing `POST /api/audio/test` contract. Its `sound` request field is restricted to the logical values `ALARM`, `WARNING`, `CONFIRMATION`, `REST_FINISHED`, `BREW_FINISHED`, and `SUCCESS`; UI labels do not alter these values and the UI never sends WAV filenames. The routed `/api/audio` ownership and deployment mapping are **Needs verification** outside this repository.

@@ -1,8 +1,13 @@
 import React from 'react';
-import {render, screen, fireEvent} from '@testing-library/react';
+import {render, screen, fireEvent, waitFor} from '@testing-library/react';
 import {Header} from './Header';
 import {Views} from '../../../enums/eViews';
 import {AlarmType, BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../../model/brewingStatus.types';
+import {SystemRepository} from '../../../repositorys/SystemRepository';
+
+jest.mock('../../../repositorys/SystemRepository');
+
+const mockedShutdown = SystemRepository.shutdown as jest.MockedFunction<typeof SystemRepository.shutdown>;
 
 const brewingStatus = (activeAlarm: boolean): BrewingStatus => ({
     elapsedTime: 0, currentTime: 0, process: {state: ProcessState.ACTIVE},
@@ -12,6 +17,10 @@ const brewingStatus = (activeAlarm: boolean): BrewingStatus => ({
 });
 
 describe('Header navigation', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        mockedShutdown.mockResolvedValue();
+    });
     it('keeps existing settings navigation and adds version navigation', (): void => {
         const setViewState = jest.fn();
         render(
@@ -77,9 +86,11 @@ describe('Header navigation', () => {
         fireEvent.click(screen.getByLabelText('Brauhaus herunterfahren'));
         expect(screen.getByText('Brauhaus herunterfahren?')).toBeInTheDocument();
         expect(screen.getByText('Die Steuerung und der Raspberry Pi werden beendet.')).toBeInTheDocument();
+        expect(mockedShutdown).not.toHaveBeenCalled();
 
         fireEvent.click(screen.getByRole('button', {name: 'Abbrechen'}));
         expect(screen.queryByText('Brauhaus herunterfahren?')).not.toBeInTheDocument();
+        expect(mockedShutdown).not.toHaveBeenCalled();
     });
 
     it('warns explicitly when a brewing process is active', (): void => {
@@ -97,7 +108,47 @@ describe('Header navigation', () => {
         fireEvent.click(screen.getByLabelText('Brauhaus herunterfahren'));
         expect(screen.getByText(/Ein Brauvorgang läuft gerade/)).toBeInTheDocument();
 
+    });
+
+    it('sends one request, blocks duplicate confirmation, and shows the terminal state', async (): Promise<void> => {
+        let resolveShutdown!: () => void;
+        mockedShutdown.mockImplementationOnce(() => new Promise<void>(resolve => { resolveShutdown = resolve; }));
+        render(
+            <Header setViewState={jest.fn()} currentView={Views.MAIN} removeAllMessages={jest.fn()}
+                backendStatus={true} messages={[]} />
+        );
+
+        fireEvent.click(screen.getByLabelText('Brauhaus herunterfahren'));
+        const confirmButton = screen.getByRole('button', {name: 'Herunterfahren'});
+        fireEvent.click(confirmButton);
+        fireEvent.click(confirmButton);
+
+        expect(mockedShutdown).toHaveBeenCalledTimes(1);
+        expect(screen.getByText('Herunterfahren wird gestartet …')).toBeInTheDocument();
+        expect(confirmButton).toBeDisabled();
+
+        resolveShutdown();
+        await waitFor(() => expect(screen.getByText('Brauhaus wird heruntergefahren …')).toBeInTheDocument());
+        expect(screen.queryByRole('button', {name: 'Herunterfahren'})).not.toBeInTheDocument();
+        expect(screen.getByLabelText('Brauhaus herunterfahren')).toBeDisabled();
+    });
+
+    it('shows a useful error and makes shutdown available again after failure', async (): Promise<void> => {
+        const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+        mockedShutdown.mockRejectedValueOnce(new Error('offline'));
+        render(
+            <Header setViewState={jest.fn()} currentView={Views.MAIN} removeAllMessages={jest.fn()}
+                backendStatus={true} messages={[]} />
+        );
+
+        fireEvent.click(screen.getByLabelText('Brauhaus herunterfahren'));
         fireEvent.click(screen.getByRole('button', {name: 'Herunterfahren'}));
-        expect(screen.queryByText('Brauhaus herunterfahren?')).not.toBeInTheDocument();
+
+        await waitFor(() => expect(screen.getByText('Das System konnte nicht heruntergefahren werden.')).toBeInTheDocument());
+        expect(screen.getByRole('button', {name: 'Schließen'})).toBeEnabled();
+        fireEvent.click(screen.getByRole('button', {name: 'Schließen'}));
+        expect(screen.getByLabelText('Brauhaus herunterfahren')).toBeEnabled();
+        expect(consoleError).toHaveBeenCalledWith('Herunterfahren des Brauhauses fehlgeschlagen', expect.any(Error));
+        consoleError.mockRestore();
     });
 });

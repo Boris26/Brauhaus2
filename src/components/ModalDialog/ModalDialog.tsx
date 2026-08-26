@@ -20,6 +20,9 @@ interface ModalDialogProps {
     showCancelButton?: boolean;
     confirmColor?: ButtonProps['color'];
     confirmVariant?: ButtonProps['variant'];
+    actionsDisabled?: boolean;
+    showConfirmButton?: boolean;
+    disableClose?: boolean;
 };
 
 interface ModalDialogState {
@@ -55,10 +58,11 @@ class ModalDialog extends React.Component<ModalDialogProps, ModalDialogState> {
         }
     };
     render() {
-        const {content, header, open, type, confirmLabel, cancelLabel, showCancelButton, confirmColor, confirmVariant} = this.props;
+        const {content, header, open, type, confirmLabel, cancelLabel, showCancelButton, confirmColor, confirmVariant,
+            actionsDisabled, showConfirmButton = true, disableClose} = this.props;
 
         return (
-            <Dialog open={open} maxWidth={'md'} onClose={showCancelButton ? this.handleCancel : this.handleClose}>
+            <Dialog open={open} maxWidth={'md'} onClose={disableClose ? undefined : (showCancelButton ? this.handleCancel : this.handleClose)}>
                 <DialogTitle className={type}>
                     {header}
                 </DialogTitle>
@@ -67,13 +71,13 @@ class ModalDialog extends React.Component<ModalDialogProps, ModalDialogState> {
                 </DialogContent>
                 <DialogActions>
                     {showCancelButton && (
-                        <Button onClick={this.handleCancel} color="primary">
+                        <Button onClick={this.handleCancel} color="primary" disabled={actionsDisabled}>
                             {cancelLabel ?? "Abbrechen"}
                         </Button>
                     )}
-                    <Button onClick={this.handleClose} color={confirmColor ?? "primary"} variant={confirmVariant ?? "text"}>
+                    {showConfirmButton && <Button onClick={this.handleClose} color={confirmColor ?? "primary"} variant={confirmVariant ?? "text"} disabled={actionsDisabled}>
                         {confirmLabel ?? "Ok"}
-                    </Button>
+                    </Button>}
                 </DialogActions>
 
             </Dialog>
