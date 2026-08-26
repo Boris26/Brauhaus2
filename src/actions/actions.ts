@@ -10,6 +10,7 @@ import {WaterStatus} from "../components/Controlls/WaterControll/WaterControl";
 import {FinishedBrew} from "../model/FinishedBrew";
 import {BackendAvailable} from "../reducers/productionReducer";
 import {scalingValues} from "../utils/BeerScaler/ScalingBeerRecipe";
+import {RecipeImportRequest} from '../model/RecipeImport';
 import { ThemeName, setTheme as applyAndStoreTheme } from "../utils/theme";
 import { pushViewPath } from "../utils/viewRoutes";
 
@@ -188,7 +189,7 @@ export namespace BeerActions {
     export interface ImportBeer {
         readonly type: ActionTypes.IMPORT_BEER;
         payload: {
-            file: File;
+            request: RecipeImportRequest;
         }
     }
 
@@ -394,11 +395,10 @@ export namespace BeerActions {
         }
     }
 
-    export function importBeer(file: File): ImportBeer {
-        console.log(file);
+    export function importBeer(request: RecipeImportRequest): ImportBeer {
         return {
             type: ActionTypes.IMPORT_BEER,
-            payload: {file}
+            payload: {request}
         };
     }
 

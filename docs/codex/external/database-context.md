@@ -55,6 +55,12 @@ Important compatibility assumptions:
 - `DELETE /beer/<beer_id>` -> success returns `{ "message": "Beer deleted successfully", "id": beer_id }`.
 - `POST /importbeer` -> multipart field `file`; success returns full created recipe object.
 
+UI compatibility note: the UI now expects to replace the multipart request with
+`POST /importbeer` JSON `{ source, recipe }`, where `source` is
+`MAISCHE_MALZ_UND_MEHR`, `BRAUREKA`, or `BRAUHAUS`. Backend implementation of that request is
+**Needs cross-repository update**; this section otherwise documents the last known
+backend behavior.
+
 Recipe object response shape:
 
 ```json

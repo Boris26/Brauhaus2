@@ -1,6 +1,8 @@
 import {api} from './BaseRepository';
 import {BeerRepository} from './BeerRepository';
 import {BeerDTO} from '../model/BeerDTO';
+import {RecipeImportSource} from '../model/RecipeImport';
+import {Beer} from '../model/Beer';
 
 jest.mock('./BaseRepository', () => {
     const post = jest.fn();
@@ -66,5 +68,24 @@ describe('BeerRepository.submitBeer', () => {
 
         expect(mockedApi.put).toHaveBeenCalledWith('beer/existing-id', expect.objectContaining({id: 'existing-id'}));
         expect(mockedApi.post).not.toHaveBeenCalled();
+    });
+});
+
+describe('BeerRepository.importBeer', () => {
+    it('posts the typed source and untouched recipe as JSON', async () => {
+        const recipe = {NAME: 'Extern', AMOUNT: '20 l'};
+        const importedBeer = {id: 'imported-id', name: 'Extern'} as Beer;
+        mockedApi.post.mockResolvedValueOnce({data: importedBeer});
+
+        const result = await BeerRepository.importBeer({
+            source: RecipeImportSource.MAISCHE_MALZ_UND_MEHR,
+            recipe,
+        });
+
+        expect(mockedApi.post).toHaveBeenCalledWith('importbeer', {
+            source: RecipeImportSource.MAISCHE_MALZ_UND_MEHR,
+            recipe,
+        });
+        expect(result).toBe(importedBeer);
     });
 });

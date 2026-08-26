@@ -168,13 +168,13 @@ export const importBeerEpic = (aAction$: any) =>
     aAction$.pipe(
         ofType(BeerActions.ActionTypes.IMPORT_BEER),
         mergeMap((aAction: any) =>
-            from(BeerRepository.importBeer(aAction.payload.file)).pipe(
+            from(BeerRepository.importBeer(aAction.payload.request)).pipe(
                 map((aResponse) => BeerActions.addImportedBeer(aResponse)),
                 catchError((aError: Error) =>
                     of(ApplicationActions.openErrorDialog(
                         true,
                         "Import Fehler",
-                        aError.message
+                        (aError as any)?.response?.data?.message ?? (aError as any)?.response?.data?.error ?? aError.message
                     ))
                 )
             )

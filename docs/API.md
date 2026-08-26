@@ -30,7 +30,7 @@ Base route:
 | `POST` | `/beer` | Create a beer recipe |
 | `PUT` | `/beer/{id}` | Update a beer recipe |
 | `DELETE` | `/beer/{id}` | Delete a beer recipe |
-| `POST` | `/importbeer` | Import a recipe file |
+| `POST` | `/importbeer` | Import recipe JSON with `{ source, recipe }` |
 | `GET` | `/finishedbeers` | Load completed brews |
 | `POST` | `/finishedbeer` | Save a completed brew |
 | `DELETE` | `/finishedbeer/{id}` | Delete a completed brew |

@@ -13,6 +13,8 @@ import './BeerForm.css'
 import {AdditionalIngredient} from "../../model/AdditionalIngredient";
 import ModalDialog, {DialogType} from "../../components/ModalDialog/ModalDialog";
 import { isRequiredPositiveQuantity } from "../../utils/beerSubmission";
+import {RecipeImportRequest} from '../../model/RecipeImport';
+import {RecipeImportDialog} from './RecipeImportDialog';
 
 interface BeerFormProps {
     onSubmitBeer: (beer: BeerDTO) => void;
@@ -30,7 +32,7 @@ interface BeerFormProps {
     message?: string;
     beerFormState?: any;
     beers: Beer[];
-    importBeer: (file: File) => void;
+    importBeer: (request: RecipeImportRequest) => void;
     importedBeer?: Beer;
     isSavingBeer?: boolean;
 }
@@ -71,10 +73,10 @@ interface BeerFormState {
     validationDialogMessage: string;
     validationErrors: Record<string, string>;
     expandedSections: Record<BeerFormSection, boolean>;
+    showImportDialog: boolean;
 }
 
 export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
-    private fileInput: HTMLInputElement | null | undefined;
     private fixedTypes: readonly string[] = fixedProcedureTypes;
     constructor(props: BeerFormProps) {
 
@@ -104,6 +106,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             showValidationDialog: false,
             validationDialogMessage: '',
             validationErrors: {},
+            showImportDialog: false,
             expandedSections: {
                 basic: true,
                 brewing: true,
@@ -932,12 +935,11 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         return (
             <form id="beer-recipe-form" className="beer-form" onSubmit={this.handleSubmit} noValidate>
-                <input type="file" accept="application/json" className="visually-hidden-file" ref={ref => this.fileInput = ref} onChange={this.handleImportBeerJson} />
                 <div className="beer-form-toolbar">
                     <div className="beer-form-toolbar-title">Rezept</div>
                     <label className="beer-select-label">Bier auswählen:<select onChange={this.handleBeerSelect} value={beers.find(b => b.name === name)?.id || ''}><option value="">Neues Bier anlegen</option>{beers.map(beer => <option key={beer.id} value={beer.id}>{beer.name}</option>)}</select></label>
                     <button type="button" className="add-button brauhaus-button brauhaus-button-secondary toolbar-button" onClick={this.resetForm}>Neues Bier</button>
-                    <button type="button" className="add-button brauhaus-button brauhaus-button-secondary toolbar-button" onClick={() => this.fileInput && this.fileInput.click()}>Importieren</button>
+                    <button type="button" className="add-button brauhaus-button brauhaus-button-secondary toolbar-button" onClick={() => this.setState({showImportDialog: true})}>Importieren</button>
                 </div>
                 <div className="beer-form-overview" aria-label="Rezeptübersicht">
                     <div className="beer-form-overview-item"><span>Name</span><strong>{name || 'Neues Bier'}</strong></div>
@@ -960,18 +962,8 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         );
     }
 
-    handleImportBeerJson = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const { importBeer } = this.props;
-        const file = event.target.files && event.target.files[0];
-        if (file) {
-            importBeer(file);
-        }
-        // Damit auch dieselbe Datei erneut ein onChange-Event auslöst.
-        event.target.value = '';
-    };
-
     render() {
-        const {showValidationDialog, validationDialogMessage} = this.state;
+        const {showValidationDialog, validationDialogMessage, showImportDialog} = this.state;
         return (
             <div className='containerBeerForm'>
                 <ModalDialog
@@ -980,6 +972,14 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                     content={validationDialogMessage}
                     header={"Validierungsfehler"}
                     onConfirm={this.closeValidationDialog}
+                />
+                <RecipeImportDialog
+                    open={showImportDialog}
+                    onCancel={() => this.setState({showImportDialog: false})}
+                    onImport={(request) => {
+                        this.props.importBeer(request);
+                        this.setState({showImportDialog: false});
+                    }}
                 />
                 <div className="beer-form-panel">
                     <div className="beer-form-panel-header">
