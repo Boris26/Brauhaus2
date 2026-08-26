@@ -29,6 +29,35 @@ describe('BeerRecipeScaler', () => {
         expect(scaled.plannedBrewhouseEfficiency).toBe(80);
     });
 
+    it('immediately scales a 30 l / 72 % recipe to the 52 % equipment plan', () => {
+        const original = recipe({referenceVolume: 30, referenceBrewhouseEfficiency: 72});
+        const scaled = BeerRecipeScaler.scale({
+            beer: original,
+            volume: 30,
+            brewhouseEfficiency: BeerRecipeScaler.DEFAULT_PLANNED_BREWHOUSE_EFFICIENCY,
+        });
+
+        expect(scaled.malts[0].quantity).toBe(8307.69);
+        expect(scaled.plannedVolume).toBe(30);
+        expect(scaled.plannedBrewhouseEfficiency).toBe(52);
+        expect(original.malts[0].quantity).toBe(6000);
+        expect(original.referenceVolume).toBe(30);
+        expect(original.referenceBrewhouseEfficiency).toBe(72);
+    });
+
+    it('restores exact ingredient quantities at recipe efficiency and additionally scales volume', () => {
+        const original = recipe({referenceVolume: 30, referenceBrewhouseEfficiency: 72});
+        const referencePlan = BeerRecipeScaler.scale({beer: original, volume: 30, brewhouseEfficiency: 72});
+        const doublePlan = BeerRecipeScaler.scale({beer: original, volume: 60, brewhouseEfficiency: 72});
+
+        expect(referencePlan.malts[0].quantity).toBe(6000);
+        expect(referencePlan.wortBoiling.hops[0].quantity).toBe(60);
+        expect(referencePlan.fermentationMaturation.yeast[0].quantity).toBe(3);
+        expect(referencePlan.additionalIngredients?.[0].quantity).toBe(300);
+        expect(doublePlan.malts[0].quantity).toBe(12000);
+        expect(doublePlan.wortBoiling.hops[0].quantity).toBe(120);
+    });
+
     it('keeps a compatible fallback only for legacy recipes without reference fields', () => {
         const scaled = BeerRecipeScaler.scale({beer: recipe(), volume: 20, brewhouseEfficiency: 52});
         expect(scaled.malts[0].quantity).toBe(12000);
