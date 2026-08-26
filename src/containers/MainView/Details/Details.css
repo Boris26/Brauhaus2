@@ -39,7 +39,7 @@
 .batch-settings .settings-row {
     display: flex;
     align-items: center;
-    gap: 40px; /* etwas weiter auseinander */
+    gap: 24px;
 }
 
 .batch-settings label {
@@ -82,10 +82,22 @@
     color: white;
 }
 
-/* Number input: Entferne die Spinners (Chrome) */
-.batch-input::-webkit-inner-spin-button,
-.batch-input::-webkit-outer-spin-button {
-    opacity: 1; /* 1 = sichtbar, 0 = unsichtbar, choose your style */
+/* Sudhausausbeute bleibt numerisch editierbar, ohne Browser-Spinner. */
+.brewhouse-efficiency-input::-webkit-inner-spin-button,
+.brewhouse-efficiency-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.brewhouse-efficiency-input {
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.recipe-reference {
+    color: var(--color-gray-light);
+    font-size: 12px;
+    white-space: nowrap;
 }
 
 

@@ -19,6 +19,7 @@ BeerDatabase 2.x returns `RecipeImportResult`, including `replayed`; a replay is
 - `beerDataReducer.GET_BEERS_SUCCESS` stores the list and selects the last returned recipe as `selectedBeer`.
 - Table sorting is client-side on `name`, `type`, `color`, or `alcohol`.
 - Selecting a row stores `selectedBeer`; clicking brew stores `beerToBrew`.
+- Recipe-detail scaling derives volume from `targetVolume / referenceVolume` and malt efficiency from `referenceBrewhouseEfficiency / targetBrewhouseEfficiency`. The scaled copy remains only in `selectedBeer`; the persisted entry in `beers` is unchanged. Clicking brew for that selected row stores this scaled copy as `beerToBrew`, so production and shopping-list consumers use the planned quantities rather than the original recipe.
 
 Needs verification: backend ordering of `GET beers`, because the UI treats the last item as default selection.
 

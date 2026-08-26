@@ -90,6 +90,13 @@ export interface Beer {
     rating: number;
     mashVolume: number;
     spargeVolume: number;
+    /** Persisted recipe basis; absent on legacy database records. */
+    referenceVolume?: number;
+    /** Persisted brewhouse efficiency of the recipe basis; absent on legacy records. */
+    referenceBrewhouseEfficiency?: number;
+    /** Client-only values on a temporary scaled brew plan. */
+    plannedVolume?: number;
+    plannedBrewhouseEfficiency?: number;
     cookingTime: number;
     cookingTemperatur: number;
     fermentation: FermentationSteps[];

@@ -83,29 +83,44 @@ class WaterProfileCalculator {
 // ---------------------------------------------------------
 export class BeerRecipeScaler {
 
-    static readonly BASE_VOLUME = 10;
-    static readonly BASE_EFFICIENCY = 52;
+    /** Compatibility values for records created before recipe references existed. */
+    static readonly LEGACY_REFERENCE_VOLUME = 10;
+    static readonly LEGACY_REFERENCE_EFFICIENCY = 52;
+
+    static getReferenceVolume(aBeer: Beer): number {
+        return aBeer.referenceVolume && aBeer.referenceVolume > 0
+            ? aBeer.referenceVolume
+            : BeerRecipeScaler.LEGACY_REFERENCE_VOLUME;
+    }
+
+    static getReferenceEfficiency(aBeer: Beer): number {
+        return aBeer.referenceBrewhouseEfficiency && aBeer.referenceBrewhouseEfficiency > 0
+            ? aBeer.referenceBrewhouseEfficiency
+            : BeerRecipeScaler.LEGACY_REFERENCE_EFFICIENCY;
+    }
 
     static scale(aValues: scalingValues, aProfile: EquipmentProfile = DEFAULT_PROFILE): Beer {
 
         const aBeer = aValues.beer;
         const targetVolume = aValues.volume;
-        if(aValues.beer.cookingTime)
-        {
-            aProfile.boilTimeMinutes = aValues.beer.cookingTime
-        }
+        const profile = aValues.beer.cookingTime
+            ? {...aProfile, boilTimeMinutes: aValues.beer.cookingTime}
+            : aProfile;
+
+        const referenceVolume = BeerRecipeScaler.getReferenceVolume(aBeer);
+        const referenceEfficiency = BeerRecipeScaler.getReferenceEfficiency(aBeer);
 
 
         const userEfficiency =
             aValues.brewhouseEfficiency > 0
                 ? aValues.brewhouseEfficiency
-                : BeerRecipeScaler.BASE_EFFICIENCY;
+                : referenceEfficiency;
 
         // VOLUMENFAKTOR
-        const volumeFactor = targetVolume / BeerRecipeScaler.BASE_VOLUME;
+        const volumeFactor = targetVolume / referenceVolume;
 
         // AUSBEUTEFAKTOR (nur für Malz)
-        const efficiencyFactor = BeerRecipeScaler.BASE_EFFICIENCY / userEfficiency;
+        const efficiencyFactor = referenceEfficiency / userEfficiency;
 
         // ---------------------------
         // MALZ (Dreisatz × SHA)
@@ -134,10 +149,15 @@ export class BeerRecipeScaler {
                     : 0
             }));
 
+        const scaledAdditionalIngredients = aBeer.additionalIngredients?.map(ingredient => ({
+            ...ingredient,
+            quantity: Number((ingredient.quantity * volumeFactor).toFixed(2))
+        }));
+
         // ---------------------------
         // REALISTISCHE WASSERBERECHNUNG
         // ---------------------------
-        const water = WaterProfileCalculator.calculate(scaledMalts, targetVolume, aProfile);
+        const water = WaterProfileCalculator.calculate(scaledMalts, targetVolume, profile);
 
         const mashVolume = water.hauptguss;
         const spargeVolume = water.nachguss;
@@ -148,6 +168,8 @@ export class BeerRecipeScaler {
         return {
             ...aBeer,
 
+            plannedVolume: targetVolume,
+            plannedBrewhouseEfficiency: userEfficiency,
             mashVolume,
             spargeVolume,
 
@@ -165,7 +187,8 @@ export class BeerRecipeScaler {
             fermentationMaturation: {
                 ...aBeer.fermentationMaturation,
                 yeast: scaledYeast
-            }
+            },
+            additionalIngredients: scaledAdditionalIngredients
         };
     }
 }

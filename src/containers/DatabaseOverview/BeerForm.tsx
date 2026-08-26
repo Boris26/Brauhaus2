@@ -48,6 +48,8 @@ const procedureTypeOptions = [
 ];
 
 const DEFAULT_COOKING_TEMPERATURE = 100;
+const DEFAULT_REFERENCE_VOLUME = 10;
+const DEFAULT_REFERENCE_BREWHOUSE_EFFICIENCY = 52;
 
 interface BeerFormState {
     id: string;
@@ -61,6 +63,8 @@ interface BeerFormState {
     rating: number;
     mashVolume: number;
     spargeVolume: number;
+    referenceVolume?: number;
+    referenceBrewhouseEfficiency?: number;
     cookingTime: number;
     cookingTemperatur: number;
     fermentationSteps: FermentationSteps[];
@@ -98,6 +102,8 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             rating: 0,
             mashVolume: 0,
             spargeVolume: 0,
+            referenceVolume: DEFAULT_REFERENCE_VOLUME,
+            referenceBrewhouseEfficiency: DEFAULT_REFERENCE_BREWHOUSE_EFFICIENCY,
             cookingTime: 0,
             cookingTemperatur: DEFAULT_COOKING_TEMPERATURE,
             fermentationSteps: createDefaultFermentationSteps(),
@@ -174,6 +180,9 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 rating: importedBeer.rating || 0,
                 mashVolume: importedBeer.mashVolume || 0,
                 spargeVolume: importedBeer.spargeVolume || 0,
+                // Never relabel an import as a 10-l recipe when its source basis is unknown.
+                referenceVolume: importedBeer.referenceVolume,
+                referenceBrewhouseEfficiency: importedBeer.referenceBrewhouseEfficiency,
                 cookingTime: importedBeer.cookingTime || 0,
                 cookingTemperatur: importedBeer.cookingTemperatur || 0,
                 // Importierte Rasten werden defensiv normalisiert (Altformat ohne executionMode => TIMED).
@@ -469,6 +478,8 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             rating,
             mashVolume,
             spargeVolume,
+            referenceVolume,
+            referenceBrewhouseEfficiency,
             cookingTime,
             cookingTemperatur,
             fermentationSteps,
@@ -561,6 +572,8 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             rating,
             mashVolume,
             spargeVolume,
+            referenceVolume,
+            referenceBrewhouseEfficiency,
             fermentationSteps: normalizedFermentationSteps,
             cookingTime,
             cookingTemperatur,
@@ -596,6 +609,8 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             rating: 0,
             mashVolume: 0,
             spargeVolume: 0,
+            referenceVolume: DEFAULT_REFERENCE_VOLUME,
+            referenceBrewhouseEfficiency: DEFAULT_REFERENCE_BREWHOUSE_EFFICIENCY,
             cookingTime: 0,
             cookingTemperatur: DEFAULT_COOKING_TEMPERATURE,
             fermentationSteps: createDefaultFermentationSteps(),
@@ -638,6 +653,8 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             rating: selectedBeer.rating || 0,
             mashVolume: selectedBeer.mashVolume || 0,
             spargeVolume: selectedBeer.spargeVolume || 0,
+            referenceVolume: selectedBeer.referenceVolume,
+            referenceBrewhouseEfficiency: selectedBeer.referenceBrewhouseEfficiency,
             cookingTime: selectedBeer.cookingTime || 0,
             cookingTemperatur: selectedBeer.cookingTemperatur || 0,
             fermentationSteps: normalizeMashPlan(selectedBeer.fermentation || []),
@@ -763,6 +780,8 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 rating: selectedBeer.rating || 0,
                 mashVolume: selectedBeer.mashVolume || 0,
                 spargeVolume: selectedBeer.spargeVolume || 0,
+                referenceVolume: selectedBeer.referenceVolume,
+                referenceBrewhouseEfficiency: selectedBeer.referenceBrewhouseEfficiency,
                 cookingTime: selectedBeer.cookingTime || 0,
                 cookingTemperatur: selectedBeer.cookingTemperatur || 0,
                 fermentationSteps: normalizeMashPlan(selectedBeer.fermentation || []),

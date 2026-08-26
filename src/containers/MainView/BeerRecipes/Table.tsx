@@ -75,8 +75,10 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
     }
 
     onBrewBeer = (beer: Beer) => {
-        const {setBeerToBrew} = this.props;
-        setBeerToBrew(beer);
+        const {setBeerToBrew, selectedBeer} = this.props;
+        // selectedBeer contains the temporary plan produced by the scaler. The
+        // immutable recipe in `beers` must not replace it when brewing starts.
+        setBeerToBrew(selectedBeer.id === beer.id ? selectedBeer : beer);
     }
 
     onCancelBrew = () => {

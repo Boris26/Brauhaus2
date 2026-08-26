@@ -4,6 +4,8 @@
 
 Base URL: `DatabaseURL` (`/api/database`).
 
+Recipe scaling requires optional numeric `referenceVolume` (liters) and `referenceBrewhouseEfficiency` (percent) on `Beer`/`BeerDTO`. The UI preserves supplied import/existing-recipe values and sends defaults of `10` and `52` for recipes newly created in the UI. Database DTO validation, storage, read-back, and import extraction of the source recipe volume/efficiency are **Needs verification**. Until confirmed, legacy responses without these fields use a compatibility fallback and cannot safely distinguish an originally imported 20-/30-l basis.
+
 | Method | Path | UI use | Payload/response expected |
 |---|---|---|---|
 | GET | `beers` | Load recipes | `Beer[]` |
