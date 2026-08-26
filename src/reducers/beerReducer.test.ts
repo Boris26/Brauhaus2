@@ -27,3 +27,10 @@ describe('beerDataReducer recipe import', () => {
         expect(replayed.importResult?.replayed).toBe(true);
     });
 });
+
+describe('beerDataReducer finished brews', () => {
+    it('normalizes a null response to an undefined list', () => {
+        const state = beerDataReducer(initialBeerState, BeerActions.getFinishedBeersSuccess(null));
+        expect(state.finishedBrews).toBeUndefined();
+    });
+});
