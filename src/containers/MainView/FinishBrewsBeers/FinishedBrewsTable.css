@@ -170,7 +170,7 @@
   margin-top:0.7rem;
 }
 
-.finish-btn {
+.FinishedBrewsTable .finish-btn {
   color: #fff;
   border: none;
   border-radius: 4px;
@@ -190,7 +190,7 @@
     color: #fff;
 }
 
-.finish-btn.clicked {
+.FinishedBrewsTable .finish-btn.clicked {
   transform: scale(0.92);
   box-shadow: 0 0 8px 2px var(--shadow-orange);
 }

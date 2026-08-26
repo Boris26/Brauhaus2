@@ -276,8 +276,8 @@
 .mash-plan-table .mash-column-time { width: 14%; }
 .mash-plan-table .mash-column-action { width: 9%; }
 
-.add-button,
-.finish-btn {
+.containerBeerForm .add-button,
+.containerBeerForm .finish-btn {
     min-height: 30px;
     border: none;
     border-radius: var(--border-radius-medium);
@@ -288,7 +288,7 @@
     transition: background 0.2s, transform 0.1s, box-shadow 0.1s;
 }
 
-.add-button {
+.containerBeerForm .add-button {
     background: linear-gradient(180deg, var(--color-primary) 10%, var(--color-primary-hover) 100%);
     border: 1px solid var(--color-orange-dark);
     color: var(--color-text-on-primary);
@@ -296,8 +296,8 @@
     height: 25px;
 }
 
-.add-button:hover:not(:disabled),
-.finish-btn:hover:not(:disabled) {
+.containerBeerForm .add-button:hover:not(:disabled),
+.containerBeerForm .finish-btn:hover:not(:disabled) {
     background: linear-gradient(180deg, var(--color-primary-hover) 10%, var(--color-primary-active) 100%);
 }
 
