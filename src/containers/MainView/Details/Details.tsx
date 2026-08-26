@@ -35,8 +35,12 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
         this.state = {
             selectedBeer: undefined,
             batchSize: BeerRecipeScaler.getReferenceVolume(props.selectedBeer),
-            brewhouseEfficiency: BeerRecipeScaler.getReferenceEfficiency(props.selectedBeer)
+            brewhouseEfficiency: BeerRecipeScaler.DEFAULT_PLANNED_BREWHOUSE_EFFICIENCY
         };
+    }
+
+    componentDidMount() {
+        this.updateRecipe();
     }
 
     componentDidUpdate(prevProps: Readonly<DetailsProps>, prevState: Readonly<DetailsState>, snapshot?: any) {
@@ -46,7 +50,7 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
         {
             this.setState({
                 batchSize: BeerRecipeScaler.getReferenceVolume(selectedBeer),
-                brewhouseEfficiency: BeerRecipeScaler.getReferenceEfficiency(selectedBeer)});
+                brewhouseEfficiency: BeerRecipeScaler.DEFAULT_PLANNED_BREWHOUSE_EFFICIENCY});
         }
 
 
@@ -55,19 +59,6 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
             this.updateRecipe()
         }
     }
-
-    private aDebounceHandle: any = null;
-
-    debounceUpdateRecipe(values: scalingValues) {
-        if (this.aDebounceHandle) {
-            clearTimeout(this.aDebounceHandle);
-        }
-
-        this.aDebounceHandle = setTimeout(() => {
-            this.props.updateRecipeScaling(values);
-        }, 300);
-    }
-
 
     updateRecipe() {
         const { batchSize, brewhouseEfficiency } = this.state;
@@ -81,7 +72,7 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
             brewhouseEfficiency: brewhouseEfficiency
         };
 
-        this.debounceUpdateRecipe(values);
+        this.props.updateRecipeScaling(values);
     }
 
 

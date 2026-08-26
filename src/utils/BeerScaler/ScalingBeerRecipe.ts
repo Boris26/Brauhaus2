@@ -86,6 +86,8 @@ export class BeerRecipeScaler {
     /** Compatibility values for records created before recipe references existed. */
     static readonly LEGACY_REFERENCE_VOLUME = 10;
     static readonly LEGACY_REFERENCE_EFFICIENCY = 52;
+    /** Current equipment/default efficiency used when creating a temporary brew plan. */
+    static readonly DEFAULT_PLANNED_BREWHOUSE_EFFICIENCY = 52;
 
     static getReferenceVolume(aBeer?: Beer): number {
         return aBeer?.referenceVolume && aBeer.referenceVolume > 0
