@@ -1,5 +1,5 @@
 import {BaseRepository} from "./BaseRepository";
-import {AdditionalIngredient, AdditionalIngredientCreatePayload} from "../model/AdditionalIngredient";
+import {AdditionalIngredient, AdditionalIngredientCreatePayload, AdditionalIngredientMasterData} from "../model/AdditionalIngredient";
 
 export class AdditionalIngredientRepository extends BaseRepository {
     static getAdditionalIngredients(): Promise<AdditionalIngredient[]> {
@@ -12,5 +12,9 @@ export class AdditionalIngredientRepository extends BaseRepository {
 
     static deleteAdditionalIngredientById(aId: string): Promise<void> {
         return this.delete(`additionalingredient/${aId}`);
+    }
+
+    static updateAdditionalIngredient(aId: string | number, aData: AdditionalIngredientMasterData): Promise<AdditionalIngredient> {
+        return this.put<AdditionalIngredient>(`additionalingredient/${aId}`, aData);
     }
 }

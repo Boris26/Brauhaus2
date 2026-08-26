@@ -28,6 +28,8 @@ The database/backend owns:
 - response shapes,
 - database defaults and derived values.
 
+Ingredient master-data edits preserve the backend-owned ID and use full replacement payloads without an `id`: `PUT /malt/{id}`, `/hop/{id}`, `/yeast/{id}`, and `/additionalingredient/{id}`. The complete updated record returned by the backend replaces the corresponding Redux list entry. Hop `type` and numeric `alpha`, and yeast `evg`/`temperature` are part of this contract.
+
 Before changing any database/backend field or endpoint, check whether the UI uses it for:
 
 - table display,

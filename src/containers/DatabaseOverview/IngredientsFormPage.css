@@ -103,7 +103,8 @@
 }
 
 .containerIngredientsForm .finish-btn,
-.containerIngredientsForm .cancel-btn {
+.containerIngredientsForm .cancel-btn,
+.containerIngredientsForm .edit-btn {
     height: 34px;
     width: 34px;
     padding: 0;
@@ -114,6 +115,10 @@
     background: transparent;
     border: none;
     cursor: pointer;
+}
+
+.containerIngredientsForm .edit-btn:hover {
+    background-color: var(--bg-transparent-orange);
 }
 
 .containerIngredientsForm .finish-btn:hover {

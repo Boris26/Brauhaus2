@@ -1,11 +1,11 @@
-import {YeastEVG} from "../enums/eYeastType";
-
 export interface Yeasts
 {
     id: number;
     name: string;
     description: string;
-    temperature: string;
+    temperature: number;
     type: string;
-    evg: string;
+    evg: number;
 }
+
+export type YeastMasterData = Omit<Yeasts, "id">;

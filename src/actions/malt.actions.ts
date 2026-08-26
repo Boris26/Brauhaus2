@@ -1,4 +1,4 @@
-import {Malts} from "../model/Malt";
+import {Malts, MaltMasterData} from "../model/Malt";
 
 export namespace MaltsActions{
     export enum ActionTypes {
@@ -7,7 +7,11 @@ export namespace MaltsActions{
         SUBMIT_NEW_MALT = 'MaltsActions.SUBMIT_NEW_MALT',
         SUBMIT_NEW_MALT_SUCCESS = 'MaltsActions.SUBMIT_NEW_MALT_SUCCESS',
         SET_UNKNOWN_MALTS = 'MaltsActions.SET_UNKNOWN_MALTS',
-        DELETE_MALTS_BY_ID = 'MaltsActions.DELETE_MALTS_BY_ID'
+        DELETE_MALTS_BY_ID = 'MaltsActions.DELETE_MALTS_BY_ID',
+        UPDATE_MALT = 'MaltsActions.UPDATE_MALT',
+        UPDATE_MALT_SUCCESS = 'MaltsActions.UPDATE_MALT_SUCCESS',
+        UPDATE_MALT_ERROR = 'MaltsActions.UPDATE_MALT_ERROR',
+        RESET_UPDATE = 'MaltsActions.RESET_UPDATE',
     }
 
     export interface GetMalts {
@@ -52,6 +56,11 @@ export namespace MaltsActions{
             maltsId: string;
         }
     }
+    export interface UpdateMalts { readonly type: ActionTypes.UPDATE_MALT; payload: { id: string | number; data: MaltMasterData } }
+    export interface UpdateMaltsSuccess { readonly type: ActionTypes.UPDATE_MALT_SUCCESS; payload: { malt: Malts } }
+    export interface UpdateMaltsError { readonly type: ActionTypes.UPDATE_MALT_ERROR; payload: { error: string } }
+    export interface ResetUpdate { readonly type: ActionTypes.RESET_UPDATE }
+
     export type AllMaltsActions =
         GetMalts |
         GetMaltsSuccess|
@@ -59,7 +68,8 @@ export namespace MaltsActions{
         SubmitNewMaltSuccess|
         DeleteMaltById |
         SetUnknownMalts |
-        DeleteMaltsById
+        DeleteMaltsById |
+        UpdateMalts | UpdateMaltsSuccess | UpdateMaltsError | ResetUpdate
 
     export function getMalts(aIsFetching: boolean): GetMalts {
         return {
@@ -100,4 +110,8 @@ export namespace MaltsActions{
             payload: {maltsId: aMaltId}
         }
     }
+    export function updateMalts(id: string | number, data: MaltMasterData): UpdateMalts { return { type: ActionTypes.UPDATE_MALT, payload: { id, data } }; }
+    export function updateMaltsSuccess(malt: Malts): UpdateMaltsSuccess { return { type: ActionTypes.UPDATE_MALT_SUCCESS, payload: { malt } }; }
+    export function updateMaltsError(error: string): UpdateMaltsError { return { type: ActionTypes.UPDATE_MALT_ERROR, payload: { error } }; }
+    export function resetUpdate(): ResetUpdate { return { type: ActionTypes.RESET_UPDATE }; }
 }

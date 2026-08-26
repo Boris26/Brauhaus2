@@ -2,6 +2,7 @@ import {ofType} from "redux-observable";
 import {ApplicationActions} from "../actions/actions";
 import {catchError, map, mergeMap} from "rxjs/operators";
 import {from} from "rxjs";
+import {getIngredientUpdateError} from "./ingredientUpdateError";
 import {MaltsActions} from "../actions/malt.actions";
 import {Malts} from "../model/Malt";
 import {MaltRepository} from "../repositorys/MaltRepository";
@@ -34,7 +35,7 @@ export const submitNewMaltEpic = (action$: any) =>
         ofType(MaltsActions.ActionTypes.SUBMIT_NEW_MALT),
         mergeMap((action: any) =>
             from(MaltRepository.submitMalt(action.payload.malt)).pipe(
-                map(() => MaltsActions.submitMaltSuccess()),
+                mergeMap(() => from([MaltsActions.submitMaltSuccess(), MaltsActions.getMalts(true)])),
                 catchError((aError: Error) =>
                     from([
                         ApplicationActions.openErrorDialog(
@@ -71,8 +72,22 @@ export const deleteMaltByIdEpic = (action$: any) =>
         )
     );
 
+
+export const updateIngredientEpic = (action$: any) =>
+    action$.pipe(
+        ofType(MaltsActions.ActionTypes.UPDATE_MALT),
+        mergeMap((action: any) => from(MaltRepository.updateMalt(action.payload.id, action.payload.data)).pipe(
+            mergeMap((updated: any) => from([
+                MaltsActions.updateMaltsSuccess(updated),
+                ApplicationActions.setMessage("Malz erfolgreich aktualisiert.")
+            ])),
+            catchError((error: unknown) => from([MaltsActions.updateMaltsError(getIngredientUpdateError(error))]))
+        ))
+    );
+
 export const maltsEpic = [
     getMaltsEpic,
     submitNewMaltEpic,
-    deleteMaltByIdEpic
+    deleteMaltByIdEpic,
+    updateIngredientEpic
 ]
