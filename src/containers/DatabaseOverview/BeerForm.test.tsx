@@ -294,7 +294,19 @@ describe('BeerForm accordions', () => {
         expect(screen.getByText(/Bitte prüfe den Brauprozess: Bitte ordne der Dekoktion eine Rast zu/)).toBeInTheDocument();
         expect(props.onSubmitBeer).not.toHaveBeenCalled();
     });
-    it('shows replay, warning, mapping and created-master-data import information', () => {
+    it('shows the concise success message for an import without metadata', () => {
+        renderBeerForm({importResult: {
+            recipe: {id: 'beer-1', name: 'Import'} as Beer,
+            warnings: [],
+            ingredientMappings: [],
+            createdMasterData: [],
+            replayed: false,
+        }});
+
+        expect(screen.getByText('Rezept erfolgreich importiert.')).toBeInTheDocument();
+    });
+
+    it('does not include warnings, mappings or created master data in the success message', () => {
         renderBeerForm({importResult: {
             recipe: {id: 'beer-1', name: 'Import'} as Beer,
             warnings: [{code: 'SOURCE_INFORMATION_IGNORED', message: 'Eine Quellenangabe wurde ignoriert.'}],
@@ -302,9 +314,11 @@ describe('BeerForm accordions', () => {
             createdMasterData: [{ingredientId: 'h1', ingredientType: 'HOP', name: 'Hopfen XYZ'}],
             replayed: true,
         }});
-        expect(screen.getByText(/bereits verarbeitet/)).toHaveTextContent('Pilsner Malt');
-        expect(screen.getByText(/bereits verarbeitet/)).toHaveTextContent('Hopfen XYZ');
-        expect(screen.getByText(/bereits verarbeitet/)).toHaveTextContent('Eine Quellenangabe wurde ignoriert.');
+
+        expect(screen.getByText('Rezept erfolgreich importiert.')).toBeInTheDocument();
+        expect(screen.queryByText(/Pilsner Malt/)).not.toBeInTheDocument();
+        expect(screen.queryByText(/Hopfen XYZ/)).not.toBeInTheDocument();
+        expect(screen.queryByText(/Eine Quellenangabe wurde ignoriert/)).not.toBeInTheDocument();
     });
 
 });
