@@ -35,23 +35,23 @@
     box-sizing: border-box;
 }
 
-.left,
-.list,
-.meters,
-.settings,
-.info {
+.containerProduction .left,
+.containerProduction .list,
+.containerProduction .meters,
+.containerProduction .settings,
+.containerProduction .info {
     min-height: 0;
     min-width: 0;
 }
 
-.left {
+.containerProduction .left {
     grid-area: left;
     display: flex;
     flex-direction: column;
     gap: 0;
 }
 
-.list {
+.containerProduction .list {
     grid-area: list;
     background: var(--color-surface-2);
     border-radius: 10px;
@@ -63,7 +63,7 @@
     overflow: hidden;
 }
 
-.meters {
+.containerProduction .meters {
     grid-area: meters;
     display: grid;
     grid-template-rows: minmax(12rem, auto) minmax(0, 1fr);
@@ -124,7 +124,7 @@
 }
 
 /* Settings Panel */
-.settings {
+.containerProduction .settings {
     grid-area: settings;
     background: var(--color-brew-bg);
     border-radius: 12px;
@@ -137,13 +137,13 @@
     overflow: hidden;
 }
 
-.settings h3 {
+.containerProduction .settings h3 {
     margin: 0;
     font-size: 1.35rem;
     line-height: 1.15;
 }
 
-.info {
+.containerProduction .info {
     grid-area: info;
     background: var(--color-brew-bg);
     border-radius: 10px;
@@ -200,7 +200,7 @@
     color: var(--color-light-text);
 }
 
-.info .container {
+.containerProduction .info .container {
     width: 100%;
     max-width: none;
     margin: 0 !important;
@@ -369,7 +369,7 @@
         overflow: auto;
     }
 
-    .settings {
+    .containerProduction .settings {
         overflow-y: auto;
     }
 }
@@ -386,10 +386,10 @@
             "info";
     }
 
-    .left,
-    .list,
-    .meters,
-    .settings {
+    .containerProduction .left,
+    .containerProduction .list,
+    .containerProduction .meters,
+    .containerProduction .settings {
         min-height: 24rem;
     }
 }

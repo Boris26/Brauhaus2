@@ -4,6 +4,7 @@ import Details from "./Details/Details.connect";
 import SimpleBar from 'simplebar-react';
 import BeerTable from "./BeerRecipes/Table.connect";
 import {Beer} from "../../model/Beer";
+import './Main.css';
 
 interface MainProps {
 beers: Beer[]
@@ -50,7 +51,7 @@ export class Main extends React.Component<MainProps,MainState> {
         const { maxHeight } = this.state;
 
         return (
-            <div className="content">
+            <div className="main-view">
                 <div className="CustomTable">
                     <SimpleBar style={{ maxHeight: maxHeight+'px' }}>
                       <BeerTable/>

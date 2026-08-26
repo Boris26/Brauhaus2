@@ -1,53 +1,25 @@
 
-.CustomTable {
+.main-view {
     flex: 1;
+    display: flex;
+}
+
+.main-view .CustomTable {
+    flex: 70%;
+    margin: 10px;
+}
+
+.main-view .Details {
+    flex: 30%;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-brew-bg);
+    margin: 10px;
+}
+
+.main-view .DetailsContainer {
+    flex: 1;
+    height: 100%;
     overflow: auto;
     padding: 10px;
-    height: 100%;
-}
-.ingredients-wrapper {
-    overflow: visible;
-    height: auto;
-}
-
-
-.DetailsContainer {
-    flex: 1;
-    height: 100%;
-    overflow: auto;
-    padding: 10px;
-
-}
-
-/* Stilregeln für SimpleBar */
-.simplebar-content-wrapper {
-    height: 100%;
-}
-
-.simplebar-content {
-    height: 100%;
-}
-
-.simplebar-scrollbar::before {
-    background-color: var(--color-gray-strong);
-}
-
-.simplebar-scrollbar.simplebar-visible::before {
-    opacity: 0.6;
-}
-
-.simplebar-track.simplebar-vertical {
-    background-color: var(--color-gray-light);
-}
-
-.simplebar-scrollbar.simplebar-visible.simplebar-vertical {
-    opacity: 0.6;
-}
-
-.simplebar-track.simplebar-horizontal {
-    background-color: var(--color-gray-light);
-}
-
-.simplebar-scrollbar.simplebar-visible.simplebar-horizontal {
-    opacity: 0.6;
 }
