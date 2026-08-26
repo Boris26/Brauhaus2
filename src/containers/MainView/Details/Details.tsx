@@ -18,7 +18,7 @@ import {BeerRecipeScaler, scalingValues} from "../../../utils/BeerScaler/Scaling
 import {COLOR_ACCENT, COLOR_BREW_BG} from "../../../colors";
 
 interface DetailsProps {
-    selectedBeer: Beer;
+    selectedBeer?: Beer;
     updateRecipeScaling: (aScalingValues: scalingValues) => void;
 }
 
@@ -42,14 +42,11 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
     componentDidUpdate(prevProps: Readonly<DetailsProps>, prevState: Readonly<DetailsState>, snapshot?: any) {
         const {batchSize, brewhouseEfficiency} = this.state
         const {selectedBeer} = this.props
-        if(selectedBeer && prevProps.selectedBeer)
+        if(selectedBeer && selectedBeer.id !== prevProps.selectedBeer?.id)
         {
-            if(selectedBeer?.id !== prevProps?.selectedBeer.id)
-            {
-                this.setState({
-                    batchSize: BeerRecipeScaler.getReferenceVolume(selectedBeer),
-                    brewhouseEfficiency: BeerRecipeScaler.getReferenceEfficiency(selectedBeer)});
-            }
+            this.setState({
+                batchSize: BeerRecipeScaler.getReferenceVolume(selectedBeer),
+                brewhouseEfficiency: BeerRecipeScaler.getReferenceEfficiency(selectedBeer)});
         }
 
 
@@ -106,6 +103,8 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
     // -------------------------------------------------------------
     renderBatchSettings() {
         const {selectedBeer} = this.props;
+        if (!selectedBeer) return null;
+
         const hasRecipeReference = Boolean(
             selectedBeer.referenceVolume && selectedBeer.referenceVolume > 0 &&
             selectedBeer.referenceBrewhouseEfficiency && selectedBeer.referenceBrewhouseEfficiency > 0
@@ -466,6 +465,8 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
     // MAIN RENDER
     // -------------------------------------------------------------
     render() {
+        if (!this.props.selectedBeer) return null;
+
         return (
             <div className="detailsContainer" >
 

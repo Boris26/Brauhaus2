@@ -34,4 +34,9 @@ describe('BeerRecipeScaler', () => {
         expect(scaled.malts[0].quantity).toBe(12000);
         expect(BeerRecipeScaler.getReferenceVolume(recipe())).toBe(10);
     });
+
+    it('uses legacy reference fallbacks while no recipe is loaded yet', () => {
+        expect(BeerRecipeScaler.getReferenceVolume(undefined)).toBe(10);
+        expect(BeerRecipeScaler.getReferenceEfficiency(undefined)).toBe(52);
+    });
 });

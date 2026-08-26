@@ -21,3 +21,15 @@ it('labels the planned batch clearly and displays the compact recipe reference',
     expect(screen.getByRole('combobox')).toHaveValue('30');
     expect(screen.queryByText('Liter:')).not.toBeInTheDocument();
 });
+
+it('handles the initial render before a selected recipe is available', () => {
+    const updateRecipeScaling = jest.fn();
+    const {container, rerender} = render(<Details updateRecipeScaling={updateRecipeScaling} />);
+
+    expect(container).toBeEmptyDOMElement();
+
+    rerender(<Details selectedBeer={beer} updateRecipeScaling={updateRecipeScaling} />);
+
+    expect(screen.getByRole('combobox')).toHaveValue('30');
+    expect(screen.getByRole('spinbutton')).toHaveValue(71);
+});

@@ -87,14 +87,14 @@ export class BeerRecipeScaler {
     static readonly LEGACY_REFERENCE_VOLUME = 10;
     static readonly LEGACY_REFERENCE_EFFICIENCY = 52;
 
-    static getReferenceVolume(aBeer: Beer): number {
-        return aBeer.referenceVolume && aBeer.referenceVolume > 0
+    static getReferenceVolume(aBeer?: Beer): number {
+        return aBeer?.referenceVolume && aBeer.referenceVolume > 0
             ? aBeer.referenceVolume
             : BeerRecipeScaler.LEGACY_REFERENCE_VOLUME;
     }
 
-    static getReferenceEfficiency(aBeer: Beer): number {
-        return aBeer.referenceBrewhouseEfficiency && aBeer.referenceBrewhouseEfficiency > 0
+    static getReferenceEfficiency(aBeer?: Beer): number {
+        return aBeer?.referenceBrewhouseEfficiency && aBeer.referenceBrewhouseEfficiency > 0
             ? aBeer.referenceBrewhouseEfficiency
             : BeerRecipeScaler.LEGACY_REFERENCE_EFFICIENCY;
     }
