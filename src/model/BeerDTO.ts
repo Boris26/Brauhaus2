@@ -69,6 +69,8 @@ export interface BeerDTO {
     rating: number;
     mashVolume: number;
     spargeVolume: number
+    referenceVolume?: number;
+    referenceBrewhouseEfficiency?: number;
     cookingTime: number;
     cookingTemperatur: number;
     fermentationSteps: FermentationStepsDTO[];

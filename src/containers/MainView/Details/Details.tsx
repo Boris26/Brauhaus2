@@ -14,7 +14,7 @@ import {
     Typography
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import {scalingValues} from "../../../utils/BeerScaler/ScalingBeerRecipe";
+import {BeerRecipeScaler, scalingValues} from "../../../utils/BeerScaler/ScalingBeerRecipe";
 import {COLOR_ACCENT, COLOR_BREW_BG} from "../../../colors";
 
 interface DetailsProps {
@@ -34,8 +34,8 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
         super(props);
         this.state = {
             selectedBeer: undefined,
-            batchSize: 10,
-            brewhouseEfficiency: 52
+            batchSize: BeerRecipeScaler.getReferenceVolume(props.selectedBeer),
+            brewhouseEfficiency: BeerRecipeScaler.getReferenceEfficiency(props.selectedBeer)
         };
     }
 
@@ -47,8 +47,8 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
             if(selectedBeer?.id !== prevProps?.selectedBeer.id)
             {
                 this.setState({
-                    batchSize: 10,
-                    brewhouseEfficiency:52});
+                    batchSize: BeerRecipeScaler.getReferenceVolume(selectedBeer),
+                    brewhouseEfficiency: BeerRecipeScaler.getReferenceEfficiency(selectedBeer)});
             }
         }
 
@@ -105,11 +105,16 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
     // Batch Settings
     // -------------------------------------------------------------
     renderBatchSettings() {
+        const {selectedBeer} = this.props;
+        const hasRecipeReference = Boolean(
+            selectedBeer.referenceVolume && selectedBeer.referenceVolume > 0 &&
+            selectedBeer.referenceBrewhouseEfficiency && selectedBeer.referenceBrewhouseEfficiency > 0
+        );
         return (
             <div className="batch-settings">
                 <div className="settings-row">
                     <div>
-                        <label style={{ color: 'white' }}>Liter:</label>
+                        <label style={{ color: 'white' }}>Ausschlagmenge:</label>
                         <select
                             value={this.state.batchSize}
                             onChange={(e) => this.setState({ batchSize: Number(e.target.value) })}
@@ -132,9 +137,14 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
                             step={1}
                             value={this.state.brewhouseEfficiency}
                             onChange={(e) => this.setState({ brewhouseEfficiency: Number(e.target.value) })}
-                            className="batch-input"
+                            className="batch-input brewhouse-efficiency-input"
                         />
                     </div>
+                    {hasRecipeReference && (
+                        <span className="recipe-reference">
+                            Rezeptbasis: {selectedBeer.referenceVolume} l · {selectedBeer.referenceBrewhouseEfficiency} % SHA
+                        </span>
+                    )}
                 </div>
             </div>
         );

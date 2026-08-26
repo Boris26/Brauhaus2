@@ -43,6 +43,8 @@ Before changing any database/backend field or endpoint, check whether the UI use
 
 ### High-risk UI/database fields
 
+- `Beer.referenceVolume` / `BeerDTO.referenceVolume` (recipe-basis liters; UI create default `10`)
+- `Beer.referenceBrewhouseEfficiency` / `BeerDTO.referenceBrewhouseEfficiency` (recipe-basis percent; UI create default `52`)
 - `Beer.id`
 - `Beer.name`
 - `Beer.type`
@@ -71,6 +73,8 @@ Before changing any database/backend field or endpoint, check whether the UI use
 - `FinishedBrew.endDate`
 
 The recipe editor now omits `time` when serializing the fixed `Einmaischen` and `Abmaischen` steps because those phases have no recipe duration. The TypeScript contract already permits this field to be absent, but database/backend persistence tolerance is **Needs verification**; the UI does not synthesize a compatibility value.
+
+The database/import service must preserve or derive `referenceVolume` and `referenceBrewhouseEfficiency` for imported recipes and return them unchanged. Otherwise the UI has no reliable way to distinguish a legacy 20-/30-l import from its temporary legacy fallback. Database support for these two optional fields is **Needs cross-repository update**.
 
 The UI now persists `stepId` and `relatedRastId` in recipe mash steps. Database/backend DTO validation, storage, and read-back of both fields **Needs cross-repository update**; dropping either field would break stable decoction relationships.
 

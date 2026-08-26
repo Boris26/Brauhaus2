@@ -4,6 +4,9 @@
 
 Visible/used fields include:
 
+- Scaling references: optional `referenceVolume` (liters of finished beer) and `referenceBrewhouseEfficiency` (percent) describe the quantities stored in the recipe. New recipes created in this UI use `10` l and `52` % as their recipe basis. Imported/existing recipes preserve values returned by the database. Legacy records without either field retain the UI compatibility fallback of `10` l / `52` %. Database validation, import mapping, and persistence of both fields are **Needs verification**; without them the UI cannot reliably recover whether a legacy import was originally a 20-/30-l recipe.
+- Temporary scaled copies additionally carry client-only `plannedVolume` and `plannedBrewhouseEfficiency`; these are not part of `BeerDTO` and are never persisted to the recipe database.
+
 - Identity/display: `id`, `name`, `type`, `color`, `description`, `rating`.
 - Metrics: `alcohol`, `originalwort`, `bitterness`, `mashVolume`, `spargeVolume`, `cookingTime`, `cookingTemperatur`.
 - New recipes initialize `cookingTemperatur` to `100` °C in the recipe UI. Existing and imported values are preserved. The read-only `Kochen` row derives its display from this top-level form value; the persisted fixed step is synchronized from it only when the existing recipe DTO is submitted.
