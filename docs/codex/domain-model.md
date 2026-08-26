@@ -52,7 +52,7 @@ Fields: `id`, `name`, `startDate`, optional `endDate`, `liters`, `originalwort`,
 ## Ingredients
 
 - `Hops`: `id`, `name`, `type`, `alpha`, `description`.
-- Recipe hop entries: `id`, `name`, `description`, numeric `alpha`, `quantity`, optional `time`, optional `usage`, optional `timeUnit`. BRAUHAUS-v1 hop usage values are `FIRST_WORT`, `BOIL`, `WHIRLPOOL`, and `DRY_HOP`; a supplied time requires one of `MINUTES`, `HOURS`, or `DAYS`, while an untimed addition has no unit. Missing legacy `usage` remains `BOIL`.
+- Recipe hop entries: `id`, `name`, `description`, numeric `alpha`, `quantity`, optional `time`, optional `usage`, optional `timeUnit`. BRAUHAUS-v1 hop usage values are `FIRST_WORT`, `BOIL`, `WHIRLPOOL`, and `DRY_HOP`; a supplied time requires one of `MINUTES`, `HOURS`, or `DAYS`, while an untimed addition has no unit. Missing legacy `usage` remains `BOIL`. The recipe editor currently applies a stricter UI-only rule: `FIRST_WORT`, `BOIL`, and `WHIRLPOOL` allow `MINUTES` or `HOURS`, while `DRY_HOP` allows `HOURS` or `DAYS`. Existing invalid combinations are corrected in UI state without changing the usage or converting the numeric time. The backend contract and BRAUHAUS-v1 schema remain unchanged pending the separate schema work.
 - `Malts`: `id`, `name`, `description`, `ebc`; recipe malt uses uppercase `EBC` and `quantity`.
 - `Yeasts`: `id`, `name`, `description`, `temperature`, `type`, `evg`; recipe yeast uses `EVG`, `temperature`, `type`, and `quantity`.
 - `AdditionalIngredient`: `id`, `name`, optional `description`; recipe additional ingredient has `quantity`, `unit`, `phase`, optional `time`, `timeUnit`, `description`.

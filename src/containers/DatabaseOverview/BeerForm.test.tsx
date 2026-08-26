@@ -85,6 +85,29 @@ const expectProcedureTypeOptions = (select: HTMLElement) => {
 };
 
 describe('BeerForm accordions', () => {
+    it('shows only usage-specific hop time units and defaults invalid units after usage changes', () => {
+        renderBeerForm({beerFormState: {hopsDTO: [{
+            id: 'h1', name: 'Hallertauer Mittelfrüh', quantity: 10, time: 3,
+            usage: HopUsage.DRY_HOP, timeUnit: HopTimeUnit.DAYS,
+        }]}});
+        fireEvent.click(screen.getByRole('button', {name: /Hopfen/}));
+
+        const hopRow = screen.getByDisplayValue('Hallertauer Mittelfrüh').closest('tr')!;
+        const usageSelect = within(hopRow).getByDisplayValue('Hopfen stopfen');
+        const unitSelect = within(hopRow).getByDisplayValue('Tage');
+        expect(within(unitSelect).getAllByRole('option').map((option) => option.textContent)).toEqual([
+            'Keine Einheit', 'Stunden', 'Tage',
+        ]);
+
+        fireEvent.change(usageSelect, {target: {value: HopUsage.WHIRLPOOL}});
+
+        expect(within(hopRow).getByDisplayValue('Whirlpool')).toBeInTheDocument();
+        expect(within(hopRow).getByDisplayValue('Minuten')).toBeInTheDocument();
+        expect(within(unitSelect).getAllByRole('option').map((option) => option.textContent)).toEqual([
+            'Keine Einheit', 'Minuten', 'Stunden',
+        ]);
+    });
+
     it('always renders fixed steps and no time inputs for mash-in and mash-out', () => {
         renderBeerForm({beerFormState: {fermentationSteps: []}});
         fireEvent.click(screen.getByRole('button', {name: /Brauprozess/}));

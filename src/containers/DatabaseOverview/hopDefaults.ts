@@ -2,18 +2,29 @@ import { HopTimeUnit } from '../../enums/eHopTimeUnit';
 import { HopUsage } from '../../enums/eHopUsage';
 import { HopDTO } from '../../model/BeerDTO';
 
+export const hopTimeUnitsByUsage: Record<HopUsage, readonly HopTimeUnit[]> = {
+    [HopUsage.FIRST_WORT]: [HopTimeUnit.MINUTES, HopTimeUnit.HOURS],
+    [HopUsage.BOIL]: [HopTimeUnit.MINUTES, HopTimeUnit.HOURS],
+    [HopUsage.WHIRLPOOL]: [HopTimeUnit.MINUTES, HopTimeUnit.HOURS],
+    [HopUsage.DRY_HOP]: [HopTimeUnit.HOURS, HopTimeUnit.DAYS],
+};
+
+const defaultHopTimeUnitByUsage: Record<HopUsage, HopTimeUnit> = {
+    [HopUsage.FIRST_WORT]: HopTimeUnit.MINUTES,
+    [HopUsage.BOIL]: HopTimeUnit.MINUTES,
+    [HopUsage.WHIRLPOOL]: HopTimeUnit.MINUTES,
+    [HopUsage.DRY_HOP]: HopTimeUnit.DAYS,
+};
+
+const getValidTimeUnit = (usage: HopUsage, timeUnit?: HopTimeUnit): HopTimeUnit =>
+    timeUnit && hopTimeUnitsByUsage[usage].includes(timeUnit)
+        ? timeUnit
+        : defaultHopTimeUnitByUsage[usage];
+
 export const normalizeHopDto = (aHop: Partial<HopDTO>): HopDTO => {
     const usage = aHop.usage ?? HopUsage.BOIL;
     const hasTime = aHop.time !== undefined && aHop.time !== null;
-    let timeUnit = aHop.timeUnit;
-
-    // Keep the documented defaults only for timed legacy records. Untimed v1
-    // records must not gain a unit merely because of their usage.
-    if (hasTime && !timeUnit && usage === HopUsage.BOIL) {
-        timeUnit = HopTimeUnit.MINUTES;
-    } else if (hasTime && !timeUnit && usage === HopUsage.DRY_HOP) {
-        timeUnit = HopTimeUnit.DAYS;
-    }
+    const timeUnit = hasTime ? getValidTimeUnit(usage, aHop.timeUnit) : undefined;
 
     return {
         id: aHop.id ?? '',
@@ -26,7 +37,12 @@ export const normalizeHopDto = (aHop: Partial<HopDTO>): HopDTO => {
 };
 
 export const updateHopUsage = (aHop: HopDTO, aUsage: HopUsage): HopDTO => {
-    return { ...aHop, usage: aUsage };
+    const hasTime = aHop.time !== undefined && aHop.time !== null;
+    return {
+        ...aHop,
+        usage: aUsage,
+        timeUnit: hasTime ? getValidTimeUnit(aUsage, aHop.timeUnit) : undefined,
+    };
 };
 
 export const validateHopDto = (aHop: HopDTO): boolean => {
@@ -41,5 +57,5 @@ export const validateHopDto = (aHop: HopDTO): boolean => {
 
     return Number.isFinite(Number(aHop.time))
         && Number(aHop.time) >= 0
-        && Object.values(HopTimeUnit).includes(aHop.timeUnit as HopTimeUnit);
+        && hopTimeUnitsByUsage[usage].includes(aHop.timeUnit as HopTimeUnit);
 };
