@@ -33,7 +33,7 @@ constructor(props: HopFormProps) {
                 name: name,
                 type: type,
                 description: description,
-                alpha: alpha
+                alpha: Number(alpha)
             }
             this.props.onSubmitHop(hop);
     }

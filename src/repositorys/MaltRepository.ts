@@ -1,5 +1,5 @@
 import {BaseRepository} from "./BaseRepository";
-import {Malts} from "../model/Malt";
+import {MaltMasterData, Malts} from "../model/Malt";
 
 export class MaltRepository extends BaseRepository {
 
@@ -13,5 +13,9 @@ export class MaltRepository extends BaseRepository {
 
     static deleteMaltById(aId: string): Promise<void> {
         return this.delete(`malt/${aId}`);
+    }
+
+    static updateMalt(aId: string | number, aData: MaltMasterData): Promise<Malts> {
+        return this.put<Malts>(`malt/${aId}`, aData);
     }
 }

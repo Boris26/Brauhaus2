@@ -1,4 +1,4 @@
-import {Yeasts} from "../model/Yeasts";
+import {Yeasts, YeastMasterData} from "../model/Yeasts";
 
 export namespace YeastActions{
     export enum ActionTypes {
@@ -7,7 +7,11 @@ export namespace YeastActions{
         SUBMIT_NEW_YEAST = 'YeastActions.SUBMIT_NEW_YEAST',
         SUBMIT_NEW_YEAST_SUCCESS = 'YeastActions.SUBMIT_NEW_YEAST_SUCCESS',
         SET_UNKNOWN_YEASTS = 'YeastActions.SET_UNKNOWN_YEASTS',
-        DELETE_YEAST_BY_ID = 'YeastActions.DELETE_YEAST_BY_ID'
+        DELETE_YEAST_BY_ID = 'YeastActions.DELETE_YEAST_BY_ID',
+        UPDATE_YEAST = 'YeastActions.UPDATE_YEAST',
+        UPDATE_YEAST_SUCCESS = 'YeastActions.UPDATE_YEAST_SUCCESS',
+        UPDATE_YEAST_ERROR = 'YeastActions.UPDATE_YEAST_ERROR',
+        RESET_UPDATE = 'YeastActions.RESET_UPDATE',
     }
     export interface GetYeasts {
         readonly type: ActionTypes.GET_YEASTS
@@ -46,13 +50,19 @@ export namespace YeastActions{
         payload: {yeastId: string};
     }
 
+    export interface UpdateYeasts { readonly type: ActionTypes.UPDATE_YEAST; payload: { id: string | number; data: YeastMasterData } }
+    export interface UpdateYeastsSuccess { readonly type: ActionTypes.UPDATE_YEAST_SUCCESS; payload: { yeast: Yeasts } }
+    export interface UpdateYeastsError { readonly type: ActionTypes.UPDATE_YEAST_ERROR; payload: { error: string } }
+    export interface ResetUpdate { readonly type: ActionTypes.RESET_UPDATE }
+
     export type AllYeastActions =
         GetYeasts |
         GetYeastsSuccess |
         SubmitNewYeast |
         SubmitNewYeastSuccess |
         SetUnknownYeasts |
-        DeleteYeastById
+        DeleteYeastById |
+        UpdateYeasts | UpdateYeastsSuccess | UpdateYeastsError | ResetUpdate
 
     export function submitYeastSuccess(): SubmitNewYeastSuccess {
         return {
@@ -92,4 +102,8 @@ export namespace YeastActions{
             payload: {yeastId: aYeastId}
         }
     }
+    export function updateYeasts(id: string | number, data: YeastMasterData): UpdateYeasts { return { type: ActionTypes.UPDATE_YEAST, payload: { id, data } }; }
+    export function updateYeastsSuccess(yeast: Yeasts): UpdateYeastsSuccess { return { type: ActionTypes.UPDATE_YEAST_SUCCESS, payload: { yeast } }; }
+    export function updateYeastsError(error: string): UpdateYeastsError { return { type: ActionTypes.UPDATE_YEAST_ERROR, payload: { error } }; }
+    export function resetUpdate(): ResetUpdate { return { type: ActionTypes.RESET_UPDATE }; }
 }

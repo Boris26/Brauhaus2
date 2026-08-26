@@ -1,4 +1,4 @@
-import {Hops} from "../model/Hops";
+import {Hops, HopMasterData} from "../model/Hops";
 
 export namespace HopsActions {
     export enum ActionTypes {
@@ -8,7 +8,11 @@ export namespace HopsActions {
         SUBMIT_NEW_HOP_SUCCESS = 'HopsActions.SUBMIT_NEW_HOP_SUCCESS',
         SET_UNKNOWN_HOPS = 'HopsActions.SET_UNKNOWN_HOPS',
         DELETE_HOPS_BY_ID = 'HopsActions.DELETE_HOPS_BY_ID',
-        GET_HOPS_FAILURE = 'HopsActions.GET_HOPS_FAILURE'
+        GET_HOPS_FAILURE = 'HopsActions.GET_HOPS_FAILURE',
+        UPDATE_HOP = 'HopsActions.UPDATE_HOP',
+        UPDATE_HOP_SUCCESS = 'HopsActions.UPDATE_HOP_SUCCESS',
+        UPDATE_HOP_ERROR = 'HopsActions.UPDATE_HOP_ERROR',
+        RESET_UPDATE = 'HopsActions.RESET_UPDATE',
     }
 
     export interface GetHops {
@@ -54,6 +58,11 @@ export namespace HopsActions {
         readonly type: ActionTypes.GET_HOPS_FAILURE;
     }
 
+    export interface UpdateHops { readonly type: ActionTypes.UPDATE_HOP; payload: { id: string | number; data: HopMasterData } }
+    export interface UpdateHopsSuccess { readonly type: ActionTypes.UPDATE_HOP_SUCCESS; payload: { hop: Hops } }
+    export interface UpdateHopsError { readonly type: ActionTypes.UPDATE_HOP_ERROR; payload: { error: string } }
+    export interface ResetUpdate { readonly type: ActionTypes.RESET_UPDATE }
+
     export type AllHopsActions =
         GetHops |
         GetHopsSuccess |
@@ -61,7 +70,8 @@ export namespace HopsActions {
         SubmitNewHopSuccess |
         SetUnknownHops |
         DeleteHopsById |
-        GetHopsFailure
+        GetHopsFailure |
+        UpdateHops | UpdateHopsSuccess | UpdateHopsError | ResetUpdate
 
 
 
@@ -103,6 +113,10 @@ export namespace HopsActions {
             payload: {hopsId: aHopsId}
         }
     }
+    export function updateHops(id: string | number, data: HopMasterData): UpdateHops { return { type: ActionTypes.UPDATE_HOP, payload: { id, data } }; }
+    export function updateHopsSuccess(hop: Hops): UpdateHopsSuccess { return { type: ActionTypes.UPDATE_HOP_SUCCESS, payload: { hop } }; }
+    export function updateHopsError(error: string): UpdateHopsError { return { type: ActionTypes.UPDATE_HOP_ERROR, payload: { error } }; }
+    export function resetUpdate(): ResetUpdate { return { type: ActionTypes.RESET_UPDATE }; }
 }
 
 

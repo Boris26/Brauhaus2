@@ -1,4 +1,4 @@
-import {AdditionalIngredient, AdditionalIngredientCreatePayload} from "../model/AdditionalIngredient";
+import {AdditionalIngredient, AdditionalIngredientCreatePayload, AdditionalIngredientMasterData} from "../model/AdditionalIngredient";
 
 export namespace AdditionalIngredientsActions {
     export enum ActionTypes {
@@ -6,7 +6,11 @@ export namespace AdditionalIngredientsActions {
         GET_ADDITIONAL_INGREDIENTS_SUCCESS = 'AdditionalIngredientsActions.GET_ADDITIONAL_INGREDIENTS_SUCCESS',
         SUBMIT_NEW_ADDITIONAL_INGREDIENT = 'AdditionalIngredientsActions.SUBMIT_NEW_ADDITIONAL_INGREDIENT',
         SUBMIT_NEW_ADDITIONAL_INGREDIENT_SUCCESS = 'AdditionalIngredientsActions.SUBMIT_NEW_ADDITIONAL_INGREDIENT_SUCCESS',
-        DELETE_ADDITIONAL_INGREDIENT_BY_ID = 'AdditionalIngredientsActions.DELETE_ADDITIONAL_INGREDIENT_BY_ID'
+        DELETE_ADDITIONAL_INGREDIENT_BY_ID = 'AdditionalIngredientsActions.DELETE_ADDITIONAL_INGREDIENT_BY_ID',
+        UPDATE_ADDITIONAL_INGREDIENT = 'AdditionalIngredientsActions.UPDATE_ADDITIONAL_INGREDIENT',
+        UPDATE_ADDITIONAL_INGREDIENT_SUCCESS = 'AdditionalIngredientsActions.UPDATE_ADDITIONAL_INGREDIENT_SUCCESS',
+        UPDATE_ADDITIONAL_INGREDIENT_ERROR = 'AdditionalIngredientsActions.UPDATE_ADDITIONAL_INGREDIENT_ERROR',
+        RESET_UPDATE = 'AdditionalIngredientsActions.RESET_UPDATE'
     }
 
     export interface GetAdditionalIngredients {
@@ -41,12 +45,17 @@ export namespace AdditionalIngredientsActions {
         }
     }
 
+    export interface UpdateAdditionalIngredient { readonly type: ActionTypes.UPDATE_ADDITIONAL_INGREDIENT; payload: { id: string | number; data: AdditionalIngredientMasterData } }
+    export interface UpdateAdditionalIngredientSuccess { readonly type: ActionTypes.UPDATE_ADDITIONAL_INGREDIENT_SUCCESS; payload: { ingredient: AdditionalIngredient } }
+    export interface UpdateAdditionalIngredientError { readonly type: ActionTypes.UPDATE_ADDITIONAL_INGREDIENT_ERROR; payload: { error: string } }
+    export interface ResetUpdate { readonly type: ActionTypes.RESET_UPDATE }
+
     export type AllAdditionalIngredientsActions =
         GetAdditionalIngredients |
         GetAdditionalIngredientsSuccess |
         SubmitNewAdditionalIngredient |
         SubmitNewAdditionalIngredientSuccess |
-        DeleteAdditionalIngredientById
+        DeleteAdditionalIngredientById | UpdateAdditionalIngredient | UpdateAdditionalIngredientSuccess | UpdateAdditionalIngredientError | ResetUpdate
 
     export function getAdditionalIngredients(aIsFetching: boolean): GetAdditionalIngredients {
         return {
@@ -81,4 +90,8 @@ export namespace AdditionalIngredientsActions {
             payload: {ingredientId: aId}
         }
     }
+    export function updateAdditionalIngredient(id: string | number, data: AdditionalIngredientMasterData): UpdateAdditionalIngredient { return { type: ActionTypes.UPDATE_ADDITIONAL_INGREDIENT, payload: { id, data } }; }
+    export function updateAdditionalIngredientSuccess(ingredient: AdditionalIngredient): UpdateAdditionalIngredientSuccess { return { type: ActionTypes.UPDATE_ADDITIONAL_INGREDIENT_SUCCESS, payload: { ingredient } }; }
+    export function updateAdditionalIngredientError(error: string): UpdateAdditionalIngredientError { return { type: ActionTypes.UPDATE_ADDITIONAL_INGREDIENT_ERROR, payload: { error } }; }
+    export function resetUpdate(): ResetUpdate { return { type: ActionTypes.RESET_UPDATE }; }
 }

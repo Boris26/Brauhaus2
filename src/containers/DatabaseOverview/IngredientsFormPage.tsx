@@ -21,6 +21,8 @@ import { Yeasts } from '../../model/Yeasts';
 import './IngredientsFormPage.css';
 
 import { AdditionalIngredient } from "../../model/AdditionalIngredient";
+import EditIcon from "@mui/icons-material/Edit";
+import {IngredientEditDialog, IngredientEditValue, IngredientKind} from "./IngredientEditDialog";
 
 
 export class IngredientsFormPage extends React.Component<any, any> {
@@ -40,7 +42,9 @@ export class IngredientsFormPage extends React.Component<any, any> {
             newAdditionalIngredient: { name: "", description: "" },
             showNewAdditionalIngredientRow: false,
             additionalIngredientError: "",
-            expandedAccordion: "malz"
+            expandedAccordion: "malz",
+            editingKind: null,
+            editingValue: null
         };
     }
 
@@ -51,7 +55,11 @@ export class IngredientsFormPage extends React.Component<any, any> {
         this.props.getAdditionalIngredients(true);
     }
 
-    componentDidUpdate() {
+    componentDidUpdate(aPrevProps: any) {
+        const kind = this.state.editingKind as IngredientKind | null;
+        if (kind && aPrevProps.updateStates[kind].isUpdating && !this.props.updateStates[kind].isUpdating && !this.props.updateStates[kind].error) {
+            this.setState({editingKind: null, editingValue: null});
+        }
         if (this.simpleBarRef && this.simpleBarRef.recalculate) {
             this.simpleBarRef.recalculate();
         }
@@ -98,7 +106,7 @@ export class IngredientsFormPage extends React.Component<any, any> {
                 id: 0,
                 name: newHop.name,
                 type: newHop.type,
-                alpha: String(newHop.alpha),
+                alpha: Number(newHop.alpha),
                 description: newHop.description
             };
             this.props.submitNewHop(hop);
@@ -113,8 +121,8 @@ export class IngredientsFormPage extends React.Component<any, any> {
                 id: 0,
                 name: newYeast.name,
                 type: newYeast.type,
-                temperature: String(newYeast.temperature),
-                evg: String(newYeast.evg),
+                temperature: Number(newYeast.temperature),
+                evg: Number(newYeast.evg),
                 description: newYeast.description
             };
             this.props.submitNewYeast(yeast);
@@ -142,6 +150,20 @@ export class IngredientsFormPage extends React.Component<any, any> {
             showNewAdditionalIngredientRow: false,
             additionalIngredientError: ""
         });
+    };
+
+
+    handleOpenEdit = (kind: IngredientKind, value: IngredientEditValue) => {
+        this.props.resetIngredientUpdate(kind);
+        this.setState({editingKind: kind, editingValue: value});
+    };
+
+    handleSaveEdit = (value: IngredientEditValue) => {
+        this.props.updateIngredient(this.state.editingKind, value.id, value);
+    };
+
+    handleCancelEdit = () => {
+        if (!this.props.updateStates[this.state.editingKind]?.isUpdating) this.setState({editingKind: null, editingValue: null});
     };
 
     handleDeleteMalt = (aMalt: Malts) => {
@@ -198,7 +220,7 @@ export class IngredientsFormPage extends React.Component<any, any> {
                                     <TableCell>{m.name}</TableCell>
                                     <TableCell>{m.description}</TableCell>
                                     <TableCell>{m.ebc}</TableCell>
-                                    <TableCell className="action-cell"><div className="action-buttons"><button className="cancel-btn" onClick={() => this.handleDeleteMalt(m)}>🗑️</button></div></TableCell>
+                                    <TableCell className="action-cell"><div className="action-buttons"><button className="edit-btn" aria-label={m.name + " bearbeiten"} onClick={() => this.handleOpenEdit("malt", m)}><EditIcon fontSize="small" /></button><button className="cancel-btn" onClick={() => this.handleDeleteMalt(m)}>🗑️</button></div></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -249,7 +271,7 @@ export class IngredientsFormPage extends React.Component<any, any> {
                                     <TableCell>{h.alpha}</TableCell>
                                     <TableCell>{h.type}</TableCell>
                                     <TableCell>{h.description}</TableCell>
-                                    <TableCell className="action-cell"><div className="action-buttons"><button className="cancel-btn" onClick={() => this.handleDeleteHop(h)}>🗑️</button></div></TableCell>
+                                    <TableCell className="action-cell"><div className="action-buttons"><button className="edit-btn" aria-label={h.name + " bearbeiten"} onClick={() => this.handleOpenEdit("hop", h)}><EditIcon fontSize="small" /></button><button className="cancel-btn" onClick={() => this.handleDeleteHop(h)}>🗑️</button></div></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -300,7 +322,7 @@ export class IngredientsFormPage extends React.Component<any, any> {
                                     <TableCell>{y.type}</TableCell>
                                     <TableCell>{y.temperature}</TableCell>
                                     <TableCell>{y.evg}</TableCell>
-                                    <TableCell className="action-cell"><div className="action-buttons"><button className="cancel-btn" onClick={() => this.handleDeleteYeast(y)}>🗑️</button></div></TableCell>
+                                    <TableCell className="action-cell"><div className="action-buttons"><button className="edit-btn" aria-label={y.name + " bearbeiten"} onClick={() => this.handleOpenEdit("yeast", y)}><EditIcon fontSize="small" /></button><button className="cancel-btn" onClick={() => this.handleDeleteYeast(y)}>🗑️</button></div></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -348,7 +370,7 @@ export class IngredientsFormPage extends React.Component<any, any> {
                                 <TableRow key={aIngredient.id}>
                                     <TableCell>{aIngredient.name}</TableCell>
                                     <TableCell>{aIngredient.description}</TableCell>
-                                    <TableCell className="action-cell"><div className="action-buttons"><button className="cancel-btn" onClick={() => this.handleDeleteAdditionalIngredient(aIngredient)}>🗑️</button></div></TableCell>
+                                    <TableCell className="action-cell"><div className="action-buttons"><button className="edit-btn" aria-label={aIngredient.name + " bearbeiten"} onClick={() => this.handleOpenEdit("additional", aIngredient)}><EditIcon fontSize="small" /></button><button className="cancel-btn" onClick={() => this.handleDeleteAdditionalIngredient(aIngredient)}>🗑️</button></div></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -371,6 +393,15 @@ export class IngredientsFormPage extends React.Component<any, any> {
                     {this.renderIngredientAccordion("hefe", "Hefe", this.renderYeastContent())}
                     {this.renderIngredientAccordion("weitere-zutaten", "Weitere Zutaten", this.renderAdditionalIngredientsContent())}
                 </div>
+                <IngredientEditDialog
+                    kind={this.state.editingKind || "malt"}
+                    value={this.state.editingValue}
+                    open={Boolean(this.state.editingKind)}
+                    loading={this.state.editingKind ? this.props.updateStates[this.state.editingKind].isUpdating : false}
+                    backendError={this.state.editingKind ? this.props.updateStates[this.state.editingKind].error : undefined}
+                    onCancel={this.handleCancelEdit}
+                    onSave={this.handleSaveEdit}
+                />
             </SimpleBar>
         );
     }

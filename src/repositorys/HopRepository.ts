@@ -1,6 +1,6 @@
 // src/repository/HopRepository.ts
 import {BaseRepository} from "./BaseRepository";
-import {Hops} from "../model/Hops";
+import {HopMasterData, Hops} from "../model/Hops";
 
 export class HopRepository extends BaseRepository {
 
@@ -14,5 +14,9 @@ export class HopRepository extends BaseRepository {
 
     static deleteHopById(aId: string): Promise<void> {
         return this.delete(`hop/${aId}`);
+    }
+
+    static updateHop(aId: string | number, aData: HopMasterData): Promise<Hops> {
+        return this.put<Hops>(`hop/${aId}`, aData);
     }
 }

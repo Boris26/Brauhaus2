@@ -17,15 +17,19 @@ Base URL: `DatabaseURL` (`/api/database`).
 | DELETE | `finishedbeer/{id}` | Delete finished brew | no body |
 | GET | `hops` | Load hops | `Hops[]` |
 | POST | `hop` | Create hop | `Hops` |
+| PUT | `hop/{id}` | Update hop master data | Body without `id`: `name`, `description`, `type`, numeric `alpha`; returns complete `Hops` |
 | DELETE | `hop/{id}` | Delete hop | no body |
 | GET | `malts` | Load malts | `Malts[]` |
 | POST | `malt` | Create malt | `Malts` |
+| PUT | `malt/{id}` | Update malt master data | Body without `id`: `name`, `description`, numeric `ebc`; returns complete `Malts` |
 | DELETE | `malt/{id}` | Delete malt | no body |
 | GET | `yeasts` | Load yeasts | `Yeasts[]` |
 | POST | `yeast` | Create yeast | `Yeasts` |
+| PUT | `yeast/{id}` | Update yeast master data | Body without `id`: `name`, `description`, numeric `evg`, numeric `temperature`, `type`; returns complete `Yeasts` |
 | DELETE | `yeast/{id}` | Delete yeast | no body |
 | GET | `additionalingredients` | Load additional ingredients | `AdditionalIngredient[]` |
 | POST | `additionalingredient` | Create additional ingredient | `AdditionalIngredientCreatePayload` |
+| PUT | `additionalingredient/{id}` | Update additional-ingredient master data | Body without `id`: `name`, `description`; returns complete `AdditionalIngredient` |
 | DELETE | `additionalingredient/{id}` | Delete additional ingredient | no body |
 
 ## PI/control REST endpoints

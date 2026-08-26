@@ -53,9 +53,9 @@ export class YeastForm extends React.Component<MaltFormProps,MaltFormState> {
             id:0,
             name: name,
             description: description,
-            temperature: temperature ,
+            temperature: Number(temperature),
             type: type,
-            evg: evg
+            evg: Number(evg)
         }
         this.props.onSubmitMalt(yeast);
     }

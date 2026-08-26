@@ -2,6 +2,7 @@ import {ofType} from "redux-observable";
 import {ApplicationActions} from "../actions/actions";
 import {catchError, mergeMap} from "rxjs/operators";
 import {from} from "rxjs";
+import {getIngredientUpdateError} from "./ingredientUpdateError";
 import {AdditionalIngredientsActions} from "../actions/additionalIngredients.actions";
 import {AdditionalIngredientRepository} from "../repositorys/AdditionalIngredientRepository";
 import {AdditionalIngredient} from "../model/AdditionalIngredient";
@@ -71,8 +72,22 @@ export const deleteAdditionalIngredientByIdEpic = (action$: any) =>
         )
     );
 
+
+export const updateIngredientEpic = (action$: any) =>
+    action$.pipe(
+        ofType(AdditionalIngredientsActions.ActionTypes.UPDATE_ADDITIONAL_INGREDIENT),
+        mergeMap((action: any) => from(AdditionalIngredientRepository.updateAdditionalIngredient(action.payload.id, action.payload.data)).pipe(
+            mergeMap((updated: any) => from([
+                AdditionalIngredientsActions.updateAdditionalIngredientSuccess(updated),
+                ApplicationActions.setMessage("Zutat erfolgreich aktualisiert.")
+            ])),
+            catchError((error: unknown) => from([AdditionalIngredientsActions.updateAdditionalIngredientError(getIngredientUpdateError(error))]))
+        ))
+    );
+
 export const additionalIngredientsEpic = [
     getAdditionalIngredientsEpic,
     submitNewAdditionalIngredientEpic,
-    deleteAdditionalIngredientByIdEpic
+    deleteAdditionalIngredientByIdEpic,
+    updateIngredientEpic
 ]

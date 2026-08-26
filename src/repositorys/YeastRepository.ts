@@ -1,6 +1,6 @@
 // src/repository/YeastRepository.ts
 import {BaseRepository} from "./BaseRepository";
-import {Yeasts} from "../model/Yeasts";
+import {YeastMasterData, Yeasts} from "../model/Yeasts";
 
 export class YeastRepository extends BaseRepository {
 
@@ -14,5 +14,9 @@ export class YeastRepository extends BaseRepository {
 
     static deleteYeastById(aId: string): Promise<void> {
         return this.delete(`yeast/${aId}`);
+    }
+
+    static updateYeast(aId: string | number, aData: YeastMasterData): Promise<Yeasts> {
+        return this.put<Yeasts>(`yeast/${aId}`, aData);
     }
 }
