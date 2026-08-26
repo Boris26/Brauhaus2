@@ -74,6 +74,8 @@ The recipe editor now omits `time` when serializing the fixed `Einmaischen` and 
 
 The UI now persists `stepId` and `relatedRastId` in recipe mash steps. Database/backend DTO validation, storage, and read-back of both fields **Needs cross-repository update**; dropping either field would break stable decoction relationships.
 
+The recipe editor restricts hop time-unit choices by usage as a UI-only rule: `FIRST_WORT`, `BOIL`, and `WHIRLPOOL` accept `MINUTES` or `HOURS`; `DRY_HOP` accepts `HOURS` or `DAYS`. This does not change the API payload shape or BRAUHAUS-v1 schema. Alignment of the authoritative schema with these restrictions is **Needs verification** in the separate BeerDataStore schema work.
+
 ## UI ↔ PI control
 
 The PI control app produces runtime/control data that the UI displays and uses for workflow behavior.
