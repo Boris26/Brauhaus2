@@ -108,6 +108,8 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
         const {beerPendingDelete} = this.state;
         if (!beerPendingDelete) return;
 
+        if (this.props.isPollingRunning && this.props.beerToBrew?.id === beerPendingDelete.id) return;
+
         this.props.deleteBeer(beerPendingDelete.id);
         this.setState({beerPendingDelete: undefined});
     }
@@ -123,7 +125,7 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
         const aDeleteMessage = `Möchtest du das Rezept${aBeerNamePart} wirklich löschen?`;
         if (beers.length > 0) {
             const sortedData = [...beers].sort((a, b) => {
-                const {key, direction} = this.state.sortConfig;
+                const {key, direction} = sortConfig;
                 const aValue = a[key] ?? '';
                 const bValue = b[key] ?? '';
                 if (aValue < bValue) {
@@ -198,7 +200,7 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                                 </TableRow>
                             </TableHead>
                             <TableBody>
-                                {sortedData.map((item, index) => (
+                                {sortedData.map((item) => (
                                     <TableRow key={item.id} onClick={() => this.onSelectBeer(item)}
                                               className={`table-row ${selectedBeerId !== null && item.id === selectedBeerId ? 'selected' : ''}`}
                                     >
@@ -250,6 +252,7 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                                                     }}
                                                     title="Rezept löschen"
                                                     aria-label="Rezept löschen"
+                                                    disabled={Boolean(isPollingRunning && beerToBrew?.id === item.id)}
                                                 >
                                                     <DeleteOutlineIcon sx={{fontSize: '1.4rem', marginTop: '0.3rem'}} />
                                                 </button>
