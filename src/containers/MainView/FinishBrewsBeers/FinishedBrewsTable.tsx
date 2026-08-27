@@ -15,6 +15,7 @@ import { eBrewState, BrewStateGerman } from '../../../enums/eBrewState';
 import Panel from '../../Panel/Panel';
 import FinishedBrewDetails from './FinishedBrewDetails';
 import {completeFinishedBrew, mergeFinishedBrewChanges} from '../../../utils/finishedBrewChanges';
+import ModalDialog, {DialogType} from '../../../components/ModalDialog/ModalDialog';
 
 
 interface FinishedBrewsTableProps {
@@ -29,6 +30,7 @@ interface FinishedBrewsTableProps {
     finishedBrewUpdateErrors: Record<string, string>;
     isAddingFinishedBrew: boolean;
     addFinishedBrewError?: string;
+    deletingFinishedBrewIds: string[];
 }
 
 interface FinishedBrewsTableState {
@@ -42,6 +44,7 @@ interface FinishedBrewsTableState {
     panelBrewId?: string | null;
     submittingRows: Record<string, boolean>;
     newRowSubmitting: boolean;
+    brewPendingDelete?: FinishedBrew;
 }
 
 const calcAlcohol = (w1: number, w2: number | null) => {
@@ -62,6 +65,9 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
     }
 
     componentDidUpdate(prevProps: FinishedBrewsTableProps) {
+        if (this.state.brewPendingDelete && prevProps.brews.some(brew => brew.id === this.state.brewPendingDelete?.id) && !this.props.brews.some(brew => brew.id === this.state.brewPendingDelete?.id)) {
+            this.setState({brewPendingDelete: undefined});
+        }
         const completedIds = prevProps.savingFinishedBrewIds.filter(id => !this.props.savingFinishedBrewIds.includes(id));
         const successfulIds = completedIds.filter(id => !this.props.finishedBrewUpdateErrors[id]);
 
@@ -159,7 +165,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
 
     handleFinishClick = (brew: FinishedBrew) => {
         if (this.state.submittingRows[brew.id] || this.props.savingFinishedBrewIds.includes(brew.id)) return;
-        const updated = completeFinishedBrew(brew);
+        const updated = completeFinishedBrew(mergeFinishedBrewChanges(brew, this.state.editRows[brew.id]));
         this.setState(prev => ({
             clickedFinishBtn: { ...prev.clickedFinishBtn, [brew.id]: true },
             submittingRows: {...prev.submittingRows, [brew.id]: true},
@@ -167,8 +173,14 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
     };
 
     handleDelete = (id: string) => {
-        const { onDelete } = this.props;
-        onDelete(id);
+        if (this.props.deletingFinishedBrewIds.includes(id)) return;
+        this.setState({brewPendingDelete: this.props.brews.find(brew => brew.id === id)});
+    };
+
+    confirmDelete = () => {
+        const brew = this.state.brewPendingDelete;
+        if (!brew || this.props.deletingFinishedBrewIds.includes(brew.id)) return;
+        this.props.onDelete(brew.id);
     };
 
     handleShowDetails = (brewId: string | null) => {
@@ -382,6 +394,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                             <CloseIcon sx={{fontSize: 22}} />
                         </button>
                     </div>
+                    {this.props.addFinishedBrewError && <p role="alert">Speichern fehlgeschlagen: {this.props.addFinishedBrewError}</p>}
                 </TableCell>
             </TableRow>
         );
@@ -567,6 +580,8 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
         const filteredBrews = this.filterBrewsByYearAndActive(brews, filterYear, showOnlyActive, filterOutActive);
         const selectedBrew = panelBrewId ? brews.find(b => b.id === panelBrewId) : null;
         return (
+            <>
+            <ModalDialog type={DialogType.CONFIRM} open={Boolean(this.state.brewPendingDelete)} header="Sud löschen" content={`Soll ${this.state.brewPendingDelete?.name ?? 'dieser Sud'} endgültig gelöscht werden?`} onConfirm={this.confirmDelete} onCancel={() => this.setState({brewPendingDelete: undefined})} showCancelButton={true} actionsDisabled={Boolean(this.state.brewPendingDelete && this.props.deletingFinishedBrewIds.includes(this.state.brewPendingDelete.id))} />
             <main className="finished-brews-page">
                 {this.renderFilterControls(years)}
                 <div className="finished-brews-table-area">{this.renderTable(filteredBrews, beers)}</div>
@@ -581,6 +596,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                     </div>
                 )}
             </main>
+            </>
         );
     }
 }
