@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import './MobileBrewingCalculationsView.css';
 import { COLOR_GOLD_DEEP } from '../../../colors';
 import {
@@ -74,7 +75,7 @@ class MobileBrewingCalculationsView extends Component<{}, State> {
             <div className="mobile-calc-block">
                 <div className="calc-title" style={{fontSize: '1.35em', display: 'flex', alignItems: 'center', gap: 12}}>
                     Brix
-                    <span style={{fontSize: '2.2em', color: COLOR_GOLD_DEEP, display: 'flex', alignItems: 'center', fontWeight: 900, lineHeight: 1, position: 'relative', top: '-6px'}} aria-label="arrow" role="img">→</span>
+                    <ArrowForwardIcon sx={{fontSize: '2.2em', color: COLOR_GOLD_DEEP, fontWeight: 900, lineHeight: 1, position: 'relative', top: '-6px'}} />
                     Plato
                 </div>
                 <input
@@ -97,7 +98,7 @@ class MobileBrewingCalculationsView extends Component<{}, State> {
             <div className="mobile-calc-block">
                 <div className="calc-title" style={{fontSize: '1.35em', display: 'flex', alignItems: 'center', gap: 12}}>
                     Plato
-                    <span style={{fontSize: '2.2em', color: COLOR_GOLD_DEEP, display: 'flex', alignItems: 'center', fontWeight: 900, lineHeight: 1, position: 'relative', top: '-6px'}} aria-label="arrow" role="img">→</span>
+                    <ArrowForwardIcon sx={{fontSize: '2.2em', color: COLOR_GOLD_DEEP, fontWeight: 900, lineHeight: 1, position: 'relative', top: '-6px'}} />
                     Brix
                 </div>
                 <input
