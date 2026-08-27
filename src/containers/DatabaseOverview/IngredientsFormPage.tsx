@@ -12,6 +12,10 @@ import {
     TableRow
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import AddIcon from "@mui/icons-material/Add";
+import SaveIcon from "@mui/icons-material/Save";
+import CloseIcon from "@mui/icons-material/Close";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import SimpleBar from "simplebar-react";
 
 import { Malts } from '../../model/Malt';
@@ -189,7 +193,7 @@ export class IngredientsFormPage extends React.Component<any, any> {
         return (
             <>
                 <div className="filter-container">
-                    <button className="finish-btn" onClick={() => this.setState({ showNewMaltRow: true })}>➕</button>
+                    <button className="finish-btn" onClick={() => this.setState({ showNewMaltRow: true })} title="Malz hinzufügen" aria-label="Malz hinzufügen"><AddIcon fontSize="small" /></button>
                 </div>
                 <TableContainer className="FinishedBrewsTable" sx={{ maxHeight: 400 }}>
                     <Table stickyHeader>
@@ -209,8 +213,8 @@ export class IngredientsFormPage extends React.Component<any, any> {
                                     <TableCell><input type="number" className="table-edit-field" value={newMalt.ebc || ""} onChange={e => this.setState({ newMalt: { ...newMalt, ebc: Number(e.target.value) } })} /></TableCell>
                                     <TableCell className="action-cell">
                                         <div className="action-buttons">
-                                            <button className="finish-btn" onClick={this.handleAddMalt}>💾</button>
-                                            <button className="cancel-btn" onClick={() => this.setState({ showNewMaltRow: false })}>✖️</button>
+                                            <button className="finish-btn" onClick={this.handleAddMalt} title="Speichern" aria-label="Speichern"><SaveIcon fontSize="small" /></button>
+                                            <button className="cancel-btn" onClick={() => this.setState({ showNewMaltRow: false })} title="Abbrechen" aria-label="Abbrechen"><CloseIcon fontSize="small" /></button>
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -220,7 +224,7 @@ export class IngredientsFormPage extends React.Component<any, any> {
                                     <TableCell>{m.name}</TableCell>
                                     <TableCell>{m.description}</TableCell>
                                     <TableCell>{m.ebc}</TableCell>
-                                    <TableCell className="action-cell"><div className="action-buttons"><button className="edit-btn" aria-label={m.name + " bearbeiten"} onClick={() => this.handleOpenEdit("malt", m)}><EditIcon fontSize="small" /></button><button className="cancel-btn" onClick={() => this.handleDeleteMalt(m)}>🗑️</button></div></TableCell>
+                                    <TableCell className="action-cell"><div className="action-buttons"><button className="edit-btn" aria-label={m.name + " bearbeiten"} onClick={() => this.handleOpenEdit("malt", m)}><EditIcon fontSize="small" /></button><button className="cancel-btn" onClick={() => this.handleDeleteMalt(m)} title="Malz löschen" aria-label={m.name + " löschen"}><DeleteOutlineIcon fontSize="small" /></button></div></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -237,7 +241,7 @@ export class IngredientsFormPage extends React.Component<any, any> {
         return (
             <>
                 <div className="filter-container">
-                    <button className="finish-btn" onClick={() => this.setState({ showNewHopRow: true })}>➕</button>
+                    <button className="finish-btn" onClick={() => this.setState({ showNewHopRow: true })} title="Hopfen hinzufügen" aria-label="Hopfen hinzufügen"><AddIcon fontSize="small" /></button>
                 </div>
                 <TableContainer className="FinishedBrewsTable" sx={{ maxHeight: 400 }}>
                     <Table stickyHeader>
@@ -259,8 +263,8 @@ export class IngredientsFormPage extends React.Component<any, any> {
                                     <TableCell><input className="table-edit-field" value={newHop.description || ""} onChange={e => this.setState({ newHop: { ...newHop, description: e.target.value } })} /></TableCell>
                                     <TableCell className="action-cell">
                                         <div className="action-buttons">
-                                            <button className="finish-btn" onClick={this.handleAddHop}>💾</button>
-                                            <button className="cancel-btn" onClick={() => this.setState({ showNewHopRow: false })}>✖️</button>
+                                            <button className="finish-btn" onClick={this.handleAddHop} title="Speichern" aria-label="Speichern"><SaveIcon fontSize="small" /></button>
+                                            <button className="cancel-btn" onClick={() => this.setState({ showNewHopRow: false })} title="Abbrechen" aria-label="Abbrechen"><CloseIcon fontSize="small" /></button>
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -271,7 +275,7 @@ export class IngredientsFormPage extends React.Component<any, any> {
                                     <TableCell>{h.alpha}</TableCell>
                                     <TableCell>{h.type}</TableCell>
                                     <TableCell>{h.description}</TableCell>
-                                    <TableCell className="action-cell"><div className="action-buttons"><button className="edit-btn" aria-label={h.name + " bearbeiten"} onClick={() => this.handleOpenEdit("hop", h)}><EditIcon fontSize="small" /></button><button className="cancel-btn" onClick={() => this.handleDeleteHop(h)}>🗑️</button></div></TableCell>
+                                    <TableCell className="action-cell"><div className="action-buttons"><button className="edit-btn" aria-label={h.name + " bearbeiten"} onClick={() => this.handleOpenEdit("hop", h)}><EditIcon fontSize="small" /></button><button className="cancel-btn" onClick={() => this.handleDeleteHop(h)} title="Hopfen löschen" aria-label={h.name + " löschen"}><DeleteOutlineIcon fontSize="small" /></button></div></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -288,7 +292,7 @@ export class IngredientsFormPage extends React.Component<any, any> {
         return (
             <>
                 <div className="filter-container">
-                    <button className="finish-btn" onClick={() => this.setState({ showNewYeastRow: true })}>➕</button>
+                    <button className="finish-btn" onClick={() => this.setState({ showNewYeastRow: true })} title="Hefe hinzufügen" aria-label="Hefe hinzufügen"><AddIcon fontSize="small" /></button>
                 </div>
                 <TableContainer className="FinishedBrewsTable" sx={{ maxHeight: 400 }}>
                     <Table stickyHeader>
@@ -310,8 +314,8 @@ export class IngredientsFormPage extends React.Component<any, any> {
                                     <TableCell><input className="table-edit-field" value={newYeast.evg || ""} onChange={e => this.setState({ newYeast: { ...newYeast, evg: e.target.value } })} /></TableCell>
                                     <TableCell className="action-cell">
                                         <div className="action-buttons">
-                                            <button className="finish-btn" onClick={this.handleAddYeast}>💾</button>
-                                            <button className="cancel-btn" onClick={() => this.setState({ showNewYeastRow: false })}>✖️</button>
+                                            <button className="finish-btn" onClick={this.handleAddYeast} title="Speichern" aria-label="Speichern"><SaveIcon fontSize="small" /></button>
+                                            <button className="cancel-btn" onClick={() => this.setState({ showNewYeastRow: false })} title="Abbrechen" aria-label="Abbrechen"><CloseIcon fontSize="small" /></button>
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -322,7 +326,7 @@ export class IngredientsFormPage extends React.Component<any, any> {
                                     <TableCell>{y.type}</TableCell>
                                     <TableCell>{y.temperature}</TableCell>
                                     <TableCell>{y.evg}</TableCell>
-                                    <TableCell className="action-cell"><div className="action-buttons"><button className="edit-btn" aria-label={y.name + " bearbeiten"} onClick={() => this.handleOpenEdit("yeast", y)}><EditIcon fontSize="small" /></button><button className="cancel-btn" onClick={() => this.handleDeleteYeast(y)}>🗑️</button></div></TableCell>
+                                    <TableCell className="action-cell"><div className="action-buttons"><button className="edit-btn" aria-label={y.name + " bearbeiten"} onClick={() => this.handleOpenEdit("yeast", y)}><EditIcon fontSize="small" /></button><button className="cancel-btn" onClick={() => this.handleDeleteYeast(y)} title="Hefe löschen" aria-label={y.name + " löschen"}><DeleteOutlineIcon fontSize="small" /></button></div></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
@@ -339,7 +343,7 @@ export class IngredientsFormPage extends React.Component<any, any> {
         return (
             <>
                 <div className="filter-container">
-                    <button className="finish-btn" onClick={() => this.setState({ showNewAdditionalIngredientRow: true, additionalIngredientError: "" })}>➕</button>
+                    <button className="finish-btn" onClick={() => this.setState({ showNewAdditionalIngredientRow: true, additionalIngredientError: "" })} title="Zutat hinzufügen" aria-label="Zutat hinzufügen"><AddIcon fontSize="small" /></button>
                 </div>
                 <TableContainer className="FinishedBrewsTable" sx={{ maxHeight: 400 }}>
                     <Table stickyHeader>
@@ -360,8 +364,8 @@ export class IngredientsFormPage extends React.Component<any, any> {
                                     <TableCell><input className="table-edit-field" value={newAdditionalIngredient.description || ""} onChange={e => this.setState({ newAdditionalIngredient: { ...newAdditionalIngredient, description: e.target.value } })} /></TableCell>
                                     <TableCell className="action-cell">
                                         <div className="action-buttons">
-                                            <button className="finish-btn" onClick={this.handleAddAdditionalIngredient}>💾</button>
-                                            <button className="cancel-btn" onClick={() => this.setState({ showNewAdditionalIngredientRow: false, additionalIngredientError: "" })}>✖️</button>
+                                            <button className="finish-btn" onClick={this.handleAddAdditionalIngredient} title="Speichern" aria-label="Speichern"><SaveIcon fontSize="small" /></button>
+                                            <button className="cancel-btn" onClick={() => this.setState({ showNewAdditionalIngredientRow: false, additionalIngredientError: "" })} title="Abbrechen" aria-label="Abbrechen"><CloseIcon fontSize="small" /></button>
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -370,7 +374,7 @@ export class IngredientsFormPage extends React.Component<any, any> {
                                 <TableRow key={aIngredient.id}>
                                     <TableCell>{aIngredient.name}</TableCell>
                                     <TableCell>{aIngredient.description}</TableCell>
-                                    <TableCell className="action-cell"><div className="action-buttons"><button className="edit-btn" aria-label={aIngredient.name + " bearbeiten"} onClick={() => this.handleOpenEdit("additional", aIngredient)}><EditIcon fontSize="small" /></button><button className="cancel-btn" onClick={() => this.handleDeleteAdditionalIngredient(aIngredient)}>🗑️</button></div></TableCell>
+                                    <TableCell className="action-cell"><div className="action-buttons"><button className="edit-btn" aria-label={aIngredient.name + " bearbeiten"} onClick={() => this.handleOpenEdit("additional", aIngredient)}><EditIcon fontSize="small" /></button><button className="cancel-btn" onClick={() => this.handleDeleteAdditionalIngredient(aIngredient)} title="Zutat löschen" aria-label={aIngredient.name + " löschen"}><DeleteOutlineIcon fontSize="small" /></button></div></TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
