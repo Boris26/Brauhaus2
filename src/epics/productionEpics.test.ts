@@ -136,7 +136,7 @@ describe('nextProcedureStepEpic$', () => {
     mockedProductionRepository.nextProcedureStep.mockReturnValue(request.promise);
     const action$ = new Subject<ProductionActions.NextProcedureStep>();
     const emitted: ProductionActions.AllProductionActions[] = [];
-    const subscription = nextProcedureStepEpic$(action$).subscribe(action => emitted.push(action as ProductionActions.AllProductionActions));
+    const subscription = nextProcedureStepEpic$(action$).subscribe((action: unknown) => emitted.push(action as ProductionActions.AllProductionActions));
 
     action$.next(ProductionActions.nextProcedureStep());
     action$.next(ProductionActions.nextProcedureStep());
@@ -154,7 +154,7 @@ describe('sendBrewingDataEpic$ failures', () => {
     mockedProductionRepository.sendBrewingData.mockResolvedValue(false);
     const action$ = new Subject<ProductionActions.SendBrewingData>();
     const emitted: ProductionActions.AllProductionActions[] = [];
-    const subscription = sendBrewingDataEpic$(action$).subscribe(action => emitted.push(action as ProductionActions.AllProductionActions));
+    const subscription = sendBrewingDataEpic$(action$).subscribe((action: unknown) => emitted.push(action as ProductionActions.AllProductionActions));
     action$.next(ProductionActions.sendBrewingData(createBrewingData()));
     await flushPromises();
     expect(emitted).toEqual([ProductionActions.brewingStartFailure('Das Rezept konnte nicht an den Controller übertragen werden.')]);
