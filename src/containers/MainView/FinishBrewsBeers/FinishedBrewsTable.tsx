@@ -1,5 +1,12 @@
 import React from 'react';
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@mui/material';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import AddIcon from '@mui/icons-material/Add';
+import SaveIcon from '@mui/icons-material/Save';
+import CloseIcon from '@mui/icons-material/Close';
+import CheckIcon from '@mui/icons-material/Check';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import SimpleBar from 'simplebar-react';
 import './FinishedBrewsTable.css';
 import {FinishedBrew, FinishedBrewCreatePayload} from "../../../model/FinishedBrew";
@@ -228,8 +235,9 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                     style={{ marginLeft: '2rem', height: '2.2rem', display: 'flex', alignItems: 'center' }}
                     onClick={this.handleExportPdf}
                     title="PDF exportieren"
+                    aria-label="PDF exportieren"
                 >
-                    <span role="img" aria-label="PDF" style={{ fontSize: 22, verticalAlign: 'middle', marginRight: 4 }}>📄</span>
+                    <PictureAsPdfIcon sx={{fontSize: 22, marginRight: '4px'}} />
                     PDF exportieren
                 </button>
                 <button
@@ -237,8 +245,9 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                     style={{ marginLeft: '2rem', height: '2.2rem', display: 'flex', alignItems: 'center' }}
                     onClick={() => this.setState({ newRowActive: true, newRowData: {} })}
                     title="Neuen Eintrag hinzufügen"
+                    aria-label="Neuen Eintrag hinzufügen"
                 >
-                    <span role="img" aria-label="Plus" style={{ fontSize: 22, verticalAlign: 'middle', marginRight: 4 }}>➕</span>
+                    <AddIcon sx={{fontSize: 22, marginRight: '4px'}} />
                     Neuer Eintrag
                 </button>
             </div>
@@ -359,16 +368,18 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                             }}
                             disabled={newRowSubmitting || this.props.isAddingFinishedBrew}
                             title="Speichern"
+                            aria-label="Speichern"
                         >
-                            <span role="img" aria-label="Speichern" style={{ fontSize: 22, verticalAlign: 'middle',  display: 'inline-block', position: 'relative', top: '3px' }}>💾</span>
+                            <SaveIcon sx={{fontSize: 22}} />
                         </button>
                         <button
                             className="cancel-btn"
                             onClick={() => this.setState({ newRowActive: false, newRowData: {} })}
                             disabled={newRowSubmitting || this.props.isAddingFinishedBrew}
                             title="Abbrechen"
+                            aria-label="Abbrechen"
                         >
-                            <span role="img" aria-label="Abbrechen" style={{ fontSize: 22, verticalAlign: 'middle',  display: 'inline-block', position: 'relative', top: '3px' }}>✖️</span>
+                            <CloseIcon sx={{fontSize: 22}} />
                         </button>
                     </div>
                 </TableCell>
@@ -481,34 +492,38 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                                 onClick={() => this.handleSave(brewId)}
                                 disabled={isSaving}
                                 title="Speichern"
+                                aria-label="Speichern"
                             >
-                                <span role="img" aria-label="Speichern" style={{ fontSize: 22, verticalAlign: 'middle',  display: 'inline-block', position: 'relative', top: '3px' }}>💾</span>
+                                <SaveIcon sx={{fontSize: 22}} />
                             </button>
                         )}
                         {isActive && (
                             <button
                                 className={`finish-btn${clickedFinishBtn[brewId] ? ' clicked' : ''}`}
                                 title="Endgültig fertigstellen"
+                                aria-label="Endgültig fertigstellen"
                                 onClick={() => this.handleFinishClick(row as FinishedBrew)}
                                 disabled={isSaving || row.residual_extract === null || row.residual_extract === undefined}
                             >
-                                <span role="img" aria-label="Fertig" style={{ fontSize: 22, verticalAlign: 'middle',  display: 'inline-block', position: 'relative', top: '3px' }}>✅</span>
+                                <CheckIcon sx={{fontSize: 22}} />
                             </button>
                         )}
                         <button
                             className="cancel-btn"
                             onClick={() => this.handleDelete(brewId)}
                             title="Löschen"
+                            aria-label="Löschen"
                         >
-                            <span role="img" aria-label="Löschen" style={{ fontSize: 22, verticalAlign: 'middle',  display: 'inline-block', position: 'relative', top: '3px' }}>🗑️</span>
+                            <DeleteOutlineIcon sx={{fontSize: 22}} />
 
                         </button>
                         <button
                             className="cancel-btn"
                             onClick={() => this.handleShowDetails(brewId)}
                             title="Details"
+                            aria-label="Details"
                         >
-                            <span role="img" aria-label="Details" style={{ fontSize: 22, verticalAlign: 'middle',  display: 'inline-block', position: 'relative', top: '3px' }}>🔍</span>
+                            <VisibilityIcon sx={{fontSize: 22}} />
                         </button>
                     </div>
                 </TableCell>
