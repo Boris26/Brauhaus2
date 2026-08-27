@@ -612,7 +612,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
         return (
             <div className="settings">
                 <div className="settingsHeader">
-                    <h3>Settings</h3>
+                    <h3>Einstellungen</h3>
                     <button className="startPollingBtn" title="Status aktualisieren" aria-label="Status aktualisieren" disabled={settingsDisabled || this.props.isPollingRunning} onClick={this.startPolling}>
                         <FontAwesomeIcon icon={faRepeat as IconProp} />
                     </button>
@@ -623,12 +623,17 @@ export class Production extends React.Component<ProductionProps, ProductionState
                     <div className="settingsRow">
                         <div className="leftAligned" id="formControl">
                             {renderSwitch('Hauptschalter Rührwerk', mainSwitchState, this.toggleAgitator)}
-                            {renderSwitch('Intervall', intervalSwitchState, this.toggleInterval)}
                             {renderSwitch('Heizphase', heatingAndStirringSwitchState, this.toggleHeatingAndStirring)}
                         </div>
                         <div className="rightAligned" id="quantityPicker">
                             <QuantityPicker initialValue={1} min={1} max={this.MAX_AGITATOR_SPEED} onChange={this.onAgitatorSpeedChange}
                                             isDisabled={settingsDisabled} label="Geschwindigkeit" labelPosition="above"/>
+                        </div>
+                    </div>
+                    <div className="intervalSettings" aria-labelledby="interval-settings-title">
+                        <h5 id="interval-settings-title">Intervallbetrieb</h5>
+                        {renderSwitch('Intervall', intervalSwitchState, this.toggleInterval)}
+                        <div className="intervalTimeControls">
                             <QuantityPicker initialValue={1} min={1} max={this.MAX_BREAK_TIME} onChange={this.onIntervalChangeBreakTime}
                                             isDisabled={settingsDisabled} label="Pausenzeit" labelPosition="above"/>
                             <QuantityPicker initialValue={1} min={1} max={this.MAX_RUNNING_TIME} onChange={this.onIntervalChangeRunningTime}
