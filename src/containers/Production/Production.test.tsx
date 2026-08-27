@@ -617,6 +617,15 @@ describe('Production flame display', () => {
 });
 
 describe('Production layout structure', () => {
+    it('renders the localized settings hierarchy', () => {
+        renderProduction();
+
+        expect(screen.getByRole('heading', {name: 'Einstellungen'})).toBeInTheDocument();
+        expect(screen.getByRole('heading', {name: 'Rührwerk'})).toBeInTheDocument();
+        expect(screen.getByRole('heading', {name: 'Intervallbetrieb'})).toBeInTheDocument();
+        expect(screen.getByRole('heading', {name: 'Wasser'})).toBeInTheDocument();
+    });
+
     it('keeps the main production regions in a shared structural grid', () => {
         const {container} = renderProduction();
 

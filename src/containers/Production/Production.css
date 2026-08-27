@@ -126,21 +126,69 @@
 /* Settings Panel */
 .containerProduction .settings {
     grid-area: settings;
-    background: var(--color-brew-bg);
-    border-radius: 12px;
-    padding: 0.75rem 0.875rem 0.875rem;
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--border-radius-large);
+    padding: var(--spacing-md);
     min-width: 0;
-    box-shadow: 0 2px 16px var(--shadow-medium);
+    box-shadow: 0 2px 8px var(--shadow-secondary);
     display: flex;
     flex-direction: column;
-    gap: 0.7rem;
+    gap: var(--spacing-md);
     overflow: hidden;
 }
 
 .containerProduction .settings h3 {
     margin: 0;
-    font-size: 1.35rem;
+    color: var(--color-light-text);
+    font-size: var(--font-size-section-title);
     line-height: 1.15;
+}
+
+.settingsHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: var(--control-height-compact);
+    padding: 0 var(--spacing-xs) var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border-soft);
+}
+
+.settingsGroup {
+    padding: var(--spacing-md);
+    background: var(--color-brew-bg);
+    border: 1px solid var(--color-border);
+    border-left: 0.25rem solid var(--color-accent);
+    border-radius: var(--border-radius-large);
+}
+
+.settingsGroup h4 {
+    margin: 0 0 var(--spacing-md);
+    color: var(--color-text);
+    font-size: var(--font-size-normal);
+    font-weight: 700;
+}
+
+.intervalSettings {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
+    background: var(--color-accent-subtle);
+    border: 1px solid var(--color-accent-border);
+    border-radius: var(--border-radius-medium);
+}
+
+.intervalSettings h5 {
+    margin: 0 0 var(--spacing-sm);
+    color: var(--color-accent-hover);
+    font-size: var(--font-size-small);
+    font-weight: 700;
+}
+
+.intervalTimeControls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
 }
 
 .containerProduction .info {
@@ -211,63 +259,79 @@
 /* Bedienelemente/Settings innen */
 .settingsRow,
 .settingsRowWater {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: minmax(9rem, 1fr) minmax(9rem, 1fr);
     align-items: flex-start;
-    gap: 1rem;
+    gap: var(--spacing-lg);
 }
+.settingsRowWater { align-items: center; }
 .rightAligned,
 .leftAligned {
     margin: 0;
     min-width: 0;
 }
 
-.leftAligned label {
-    display: block;
-    margin: 0 0 0.25rem;
-    color: var(--color-light-text);
-    line-height: 1.2;
+.settingsRow .rightAligned {
+    display: grid;
+    gap: var(--spacing-sm);
 }
 
-.leftAligned label:not(:first-child) {
-    margin-top: 0.6rem;
+.settingsToggleRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-md);
+    min-height: var(--control-height-compact);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-small);
+    font-weight: 600;
 }
 
-.quantityPickerItem { display: none; }
+.settingsToggleRow + .settingsToggleRow { margin-top: var(--spacing-sm); }
+.settingsToggleRow:has(input:disabled) { color: var(--color-disabled-text); }
+.productionSwitch { flex: 0 0 auto; }
+.productionSwitch .react-switch-bg { background: var(--color-panel-highlight) !important; }
+.productionSwitch:has(input:checked) .react-switch-bg { background: var(--color-primary) !important; }
+.productionSwitch:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.productionSwitch:has(input:disabled) { opacity: 0.65; cursor: not-allowed; }
+
+.settings .quantity-picker-content,
+.settings .quantity-picker-input { background: var(--color-surface-strong); }
+
+.settings .quantity-picker-input-disabled { background: var(--color-disabled-bg); }
 
 /* Buttons */
 .startBtnDiv {
     margin-top: auto;
-    display: flex;
-    justify-content: center;
+    display: block;
 }
 .startBtn {
-    height: 2.75rem;
-    width: 12rem;
+    height: var(--control-height);
+    width: 100%;
     font-size: 1rem;
     padding: 0.3rem 1.2rem;
-    border-radius: 6px;
-    background-color: var(--color-success);
-    color: var(--color-white);
-    border: none;
-    margin-right: 0.5rem;
+    border-radius: var(--border-radius-medium);
+    background-color: var(--color-primary);
+    color: var(--color-text-on-primary);
+    border: 1px solid var(--color-accent-border);
     min-width: 80px;
     min-height: 32px;
     transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
     box-shadow: 0 2px 8px var(--shadow-soft);
 }
 .startBtn:hover:not(:disabled) {
-    background-color: var(--color-accent);
-    color: var(--color-white);
-    box-shadow: 0 4px 16px var(--shadow-green);
-    transform: translateY(-2px) scale(1.03);
+    background-color: var(--color-primary-hover);
+    color: var(--color-text-on-primary);
+    box-shadow: 0 4px 16px var(--shadow-orange-strong);
+    transform: translateY(-1px);
     cursor: pointer;
 }
 .startBtn:disabled,
 .startBtn:disabled:hover {
-    background-color: var(--color-accent);
-    color: var(--color-white);
-    opacity: 0.5;
+    background-color: var(--color-disabled-bg);
+    border-color: var(--color-disabled-border);
+    color: var(--color-disabled-text);
+    opacity: 1;
     cursor: not-allowed;
     transform: none;
 }
@@ -287,15 +351,19 @@
     background-color: var(--color-surface-alt-dark);
 }
 
-.startPollingBtnDiv {
-    display: flex;
-    justify-content: center;
-}
-
 .startPollingBtn {
-    min-width: 3rem;
-    min-height: 2.5rem;
+    width: var(--control-height-compact);
+    height: var(--control-height-compact);
+    padding: 0;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-medium);
+    background: var(--color-panel-raised);
+    color: var(--color-text-secondary);
+    transition: background-color 0.15s ease, color 0.15s ease;
 }
+.startPollingBtn:hover:not(:disabled) { background: var(--color-panel-highlight); color: var(--color-primary-hover); cursor: pointer; }
+.startPollingBtn:active:not(:disabled) { color: var(--color-primary-active); }
+.startPollingBtn:disabled { background: var(--color-disabled-bg); color: var(--color-disabled-text); cursor: not-allowed; }
 
 /* Gauge-Container */
 .GaugeContainer {
@@ -310,29 +378,34 @@
 
 .recipeWaterButtons {
     display: flex;
-    gap: 0.75rem;
-    justify-content: center;
-    margin-top: 0;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
 }
 
 .recipeWaterBtn {
-    background-color: var(--color-surface-alt);
-    border: none;
-    border-radius: 0.5rem;
-    color: var(--color-white);
+    flex: 1 1 0;
+    background-color: var(--color-panel-highlight);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-medium);
+    color: var(--color-text);
     cursor: pointer;
-    font-size: 1rem;
-    min-width: 7.25rem;
-    padding: 0.45rem 0.85rem;
+    font-size: var(--font-size-small);
+    min-height: var(--control-height-compact);
+    min-width: 0;
+    padding: var(--spacing-sm) var(--spacing-md);
+    transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .recipeWaterBtn:hover:not(:disabled) {
-    background-color: var(--color-surface-alt-dark);
+    background-color: var(--color-accent-subtle-hover);
+    border-color: var(--color-accent-border);
 }
 
 .recipeWaterBtn:disabled {
     cursor: not-allowed;
-    opacity: 0.5;
+    background: var(--color-disabled-bg);
+    border-color: var(--color-disabled-border);
+    color: var(--color-disabled-text);
 }
 
 .flame-strip {
@@ -392,4 +465,11 @@
     .containerProduction .settings {
         min-height: 24rem;
     }
+}
+
+@media (max-width: 520px) {
+    .settingsRow,
+    .settingsRowWater { grid-template-columns: 1fr; }
+    .intervalTimeControls { grid-template-columns: 1fr; }
+    .recipeWaterButtons { flex-direction: column; }
 }
