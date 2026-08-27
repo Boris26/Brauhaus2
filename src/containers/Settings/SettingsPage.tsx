@@ -10,6 +10,8 @@ import { getUiMode, setUiMode } from '../../utils/uiMode';
 interface SettingsPageProps {
     theme: ThemeName;
     setTheme: (theme: ThemeName) => void;
+    debug: boolean;
+    setDebug: (debug: boolean) => void;
 }
 
 interface SettingsPageState {
@@ -182,7 +184,7 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
     };
 
     render() {
-        const { theme } = this.props;
+        const { theme, debug } = this.props;
         const { autoConnect, notificationsEnabled, temperatureUnit, statusMessage, pushSupported, pushSubscribed, pushLoading, pushError, pushPermission, soundPlaying, soundError } = this.state;
 
         return (
@@ -272,6 +274,28 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
 
                     <section className="settings-card">
                         <div className="settings-card-header">
+                            <h3>Entwicklung</h3>
+                            <p>Blende Funktionen zur manuellen Prüfung der Brausteuerung ein.</p>
+                        </div>
+                        <div className="setting-row">
+                            <div className="setting-label-group">
+                                <label htmlFor="debug-mode">Debug-Modus</label>
+                                <span className="setting-description">Aktiviert Soundtests und die manuelle Prozessnavigation.</span>
+                            </div>
+                            <div className="setting-toggle">
+                                <input
+                                    id="debug-mode"
+                                    type="checkbox"
+                                    checked={debug}
+                                    onChange={(event) => this.props.setDebug(event.target.checked)}
+                                />
+                                <label htmlFor="debug-mode">{debug ? 'Aktiviert' : 'Deaktiviert'}</label>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section className="settings-card">
+                        <div className="settings-card-header">
                             <h3>Benachrichtigungen</h3>
                             <p>Kontrolliere, ob Hinweistexte automatisch angezeigt werden sollen.</p>
                         </div>
@@ -292,7 +316,7 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                         </div>
                     </section>
 
-                    <section className="settings-card">
+                    {debug && <section className="settings-card">
                         <div className="settings-card-header">
                             <h3>Sounds</h3>
                             <p>Hier können die Signaltöne der Brausteuerung getestet werden.</p>
@@ -316,7 +340,7 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                                 </div>
                             ))}
                         </div>
-                    </section>
+                    </section>}
 
 
 

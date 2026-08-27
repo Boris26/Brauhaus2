@@ -64,6 +64,7 @@ export interface ProductionProps {
     nextProcedureStep: () => void;
     isPollingRunning: boolean;
     confirm: (confirmState: ConfirmStates) => void;
+    debug: boolean;
 }
 
 interface ProductionState {
@@ -731,7 +732,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
         }
         const isNextStepDisabled = !this.isControllerAvailable() || !this.isNextProcedureStepAvailable();
         return (
-            <ProcessList displayMode="overview" selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} remainingSeconds={this.state.displayedRemainingSeconds} onNextStep={this.handleNextProcedureStep} isNextStepDisabled={isNextStepDisabled} />
+            <ProcessList displayMode="overview" selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} remainingSeconds={this.state.displayedRemainingSeconds} onNextStep={this.props.debug ? this.handleNextProcedureStep : undefined} isNextStepDisabled={isNextStepDisabled} />
         );
     }
 

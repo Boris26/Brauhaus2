@@ -54,7 +54,8 @@ const mapStateToProps = (state: RootState) => (
         brewingStatus: state.productionReducer.brewingStatus,
         isBackenAvailable: state.productionReducer.isBackenAvailable,
         waterStatus: state.productionReducer.waterStatus,
-        isPollingRunning: state.productionReducer.isPollingRunning
+        isPollingRunning: state.productionReducer.isPollingRunning,
+        debug: state.applicationReducer.debug
 
     });
 export default connect(mapStateToProps, mapDispatchToProps)(Production);

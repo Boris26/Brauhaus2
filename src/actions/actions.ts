@@ -13,6 +13,7 @@ import {scalingValues} from "../utils/BeerScaler/ScalingBeerRecipe";
 import {RecipeImportRequest, RecipeImportResult} from '../model/RecipeImport';
 import { ThemeName, setTheme as applyAndStoreTheme } from "../utils/theme";
 import { pushViewPath } from "../utils/viewRoutes";
+import { setStoredDebugMode } from "../utils/debugMode";
 
 export namespace BeerActions {
 
@@ -455,6 +456,7 @@ export namespace ApplicationActions {
         SET_MESSAGE = 'ApplicationActions.SET_MESSAGE',
         REMOVE_MESSAGE = 'ApplicationActions.REMOVE_MESSAGE',
         SET_THEME = 'ApplicationActions.SET_THEME',
+        SET_DEBUG = 'ApplicationActions.SET_DEBUG',
     }
 
     export interface SetView {
@@ -487,13 +489,19 @@ export namespace ApplicationActions {
         payload: { theme: ThemeName }
     }
 
+    export interface SetDebug {
+        readonly type: ActionTypes.SET_DEBUG
+        payload: { debug: boolean }
+    }
+
     export type AllApplicationActions =
 
         SetView |
         OpenDialog |
         SetMessage |
         RemoveMessage |
-        SetTheme;
+        SetTheme |
+        SetDebug;
 
     export function setViewState(aView: Views): SetView {
         pushViewPath(aView);
@@ -529,6 +537,15 @@ export namespace ApplicationActions {
         return {
             type: ActionTypes.SET_THEME,
             payload: { theme },
+        };
+    }
+
+    export function setDebug(debug: boolean): SetDebug {
+        setStoredDebugMode(debug);
+
+        return {
+            type: ActionTypes.SET_DEBUG,
+            payload: { debug },
         };
     }
 }

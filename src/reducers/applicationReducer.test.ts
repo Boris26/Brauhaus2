@@ -2,6 +2,11 @@ import {ApplicationActions} from '../actions/actions';
 import {applicationReducer, initialApplicationState, MAX_APPLICATION_MESSAGES} from './applicationReducer';
 
 describe('applicationReducer messages', (): void => {
+  it('updates the central debug setting', (): void => {
+    const state = applicationReducer(initialApplicationState, ApplicationActions.setDebug(true));
+    expect(state.debug).toBe(true);
+    expect(window.localStorage.getItem('debug')).toBe('true');
+  });
   it('keeps only the newest configured number of messages', (): void => {
     let aState = initialApplicationState;
 
