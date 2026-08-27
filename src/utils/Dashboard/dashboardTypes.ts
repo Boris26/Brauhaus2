@@ -36,6 +36,28 @@ export interface DashboardMonthlyStat {
   liters: number;
 }
 
+export interface DashboardRecipeHistory {
+  recipeId: string;
+  recipeName: string;
+  brewCount: number;
+  liters: number;
+}
+
+export interface DashboardAdditionalStats {
+  averageOriginalWort?: number;
+  originalWortSampleCount: number;
+  largestBrew?: number;
+  smallestBrew?: number;
+  lastBrew?: string;
+}
+
+export interface DashboardConsumption {
+  maltQuantity: number;
+  hopQuantity: number;
+  yeastUses: number;
+  linkedBrewCount: number;
+}
+
 export interface DashboardCareHints {
   missingLiters: number;
   missingEndDate: number;
@@ -48,6 +70,7 @@ export interface DashboardActiveBrewRow {
   id: string;
   name: string;
   stateLabel: string;
+  state: string;
   startDateLabel: string;
   daysSinceStartLabel: string;
   litersLabel: string;

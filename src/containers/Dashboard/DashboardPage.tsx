@@ -1,16 +1,18 @@
 import React from 'react';
 import AssessmentIcon from '@mui/icons-material/Assessment';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import LocalDrinkIcon from '@mui/icons-material/LocalDrink';
+import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
 import ScienceIcon from '@mui/icons-material/Science';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import { Beer } from '../../model/Beer';
 import { FinishedBrew } from '../../model/FinishedBrew';
-import { BrewingStatus, ProcessMode, ProcessState } from '../../model/brewingStatus.types';
+import { BrewingStatus, ProcessMode } from '../../model/brewingStatus.types';
+import { eBrewState } from '../../enums/eBrewState';
 import { getBrewingStatusLabel, isProcessActive } from '../../utils/brewingStatus/selectors';
-import { buildActiveBrewRows, calculateCareHints, calculateDashboardKpis, calculateIngredientSummary, calculateMonthlyStats, formatDashboardQuantity, safeNumber } from '../../utils/Dashboard/dashboardCalculations';
-import { DashboardIngredientUsage, DashboardYeastUsage } from '../../utils/Dashboard/dashboardTypes';
+import { buildActiveBrewRows, calculateAdditionalStats, calculateCareHints, calculateConsumption, calculateDashboardKpis, calculateRecipeHistory, formatDashboardQuantity, safeNumber } from '../../utils/Dashboard/dashboardCalculations';
 import './DashboardPage.css';
-
 
 interface DashboardPageProps {
   beers?: Beer[];
@@ -23,39 +25,15 @@ interface DashboardPageProps {
   getFinishedBrews: (isFetching: boolean) => void;
 }
 
+const formatSeconds = (value: unknown): string => {
+  const seconds = Math.max(0, Math.round(safeNumber(value)));
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+};
+
 export class DashboardPage extends React.Component<DashboardPageProps> {
   componentDidMount(): void {
-    if (this.props.beers === undefined) {
-      this.props.getBeers(true);
-    }
-    if (this.props.finishedBrews === undefined) {
-      this.props.getFinishedBrews(true);
-    }
-  }
-
-  private renderKpis(): React.ReactNode {
-    const kpis = calculateDashboardKpis(this.props.beers ?? [], this.props.finishedBrews ?? []);
-    const cards = [
-      { label: 'Rezepte', value: kpis.recipeCount },
-      { label: 'Sude', value: kpis.brewCount },
-      { label: 'Gesamt gebraut', value: formatDashboardQuantity(kpis.totalLiters), unit: 'Liter' },
-      { label: 'Aktive Biere', value: kpis.activeBeerCount },
-      { label: 'In Hauptgärung', value: kpis.fermentationCount },
-      { label: 'In Reifung', value: kpis.maturationCount },
-      { label: 'Fertige Biere', value: kpis.finishedCount },
-    ];
-
-    return (
-      <section className="dashboard-kpi-grid" aria-label="Dashboard Kennzahlen">
-        {cards.map((card) => (
-          <article className="dashboard-card dashboard-kpi-card" key={card.label}>
-            <span className="dashboard-kpi-label">{card.label}</span>
-            <strong className="dashboard-kpi-value">{card.value}</strong>
-            {card.unit && <span className="dashboard-kpi-unit">{card.unit}</span>}
-          </article>
-        ))}
-      </section>
-    );
+    if (this.props.beers === undefined) this.props.getBeers(true);
+    if (this.props.finishedBrews === undefined) this.props.getFinishedBrews(true);
   }
 
   private renderProductionStatus(): React.ReactNode {
@@ -63,157 +41,67 @@ export class DashboardPage extends React.Component<DashboardPageProps> {
     const isActive = isProcessActive(brewingStatus);
     const currentTemp = safeNumber(brewingStatus?.temperature.current, NaN);
     const targetTemp = safeNumber(brewingStatus?.temperature.target, NaN);
-    const hasCurrentTemp = Number.isFinite(currentTemp);
-    const hasTargetTemp = Number.isFinite(targetTemp);
-    const isHeating = brewingStatus?.currentStep.mode === ProcessMode.HEATING;
-    const canShowProgress = brewingStatus?.currentStep.mode === ProcessMode.TIMER_RUNNING && safeNumber(brewingStatus.currentStep.duration) > 0;
-    const progress = canShowProgress ? Math.min(100, Math.max(0, Math.round(safeNumber(brewingStatus?.elapsedTime) * 100 / safeNumber(brewingStatus?.currentStep.duration)))) : 0;
+    const duration = safeNumber(brewingStatus?.currentStep.duration);
+    const elapsed = safeNumber(brewingStatus?.currentStep.elapsedTime);
+    const canShowProgress = brewingStatus?.currentStep.mode === ProcessMode.TIMER_RUNNING && duration > 0;
+    const progress = canShowProgress ? Math.min(100, Math.max(0, Math.round(elapsed * 100 / duration))) : 0;
 
     return (
-      <section className="dashboard-card dashboard-production-card" aria-labelledby="dashboard-production-title">
-        <div className="dashboard-section-header">
-          <AssessmentIcon aria-hidden="true" />
-          <h2 id="dashboard-production-title">Aktuelle Produktion</h2>
-        </div>
+      <section className={`dashboard-card dashboard-main-card dashboard-production-card${isActive ? ' is-active' : ''}`} aria-labelledby="dashboard-production-title">
+        <div className="dashboard-section-header"><AssessmentIcon aria-hidden="true" /><h2 id="dashboard-production-title">Aktuelle Produktion</h2></div>
         {!isBackendAvailable && <p className="dashboard-warning">Der aktuelle Produktionsstatus konnte nicht geladen werden.</p>}
-        {!isActive && <p className="dashboard-empty">Kein aktiver Brauvorgang.</p>}
-        {isActive && (
-          <div className="dashboard-production-details">
-            <h3>{beerToBrew?.name ?? 'Unbekanntes Bier'}</h3>
-            <p className="dashboard-muted">{getBrewingStatusLabel(brewingStatus)}</p>
-            <p>{brewingStatus?.currentStep.phase ?? '-'} · {brewingStatus?.currentStep.name ?? '-'}</p>
-            <dl className="dashboard-status-grid">
-              <div><dt>Ist</dt><dd>{hasCurrentTemp ? currentTemp.toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '-'} °C</dd></div>
-              <div><dt>Soll</dt><dd>{hasTargetTemp ? targetTemp.toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '-'} °C</dd></div>
-              <div><dt>Heizung</dt><dd>{brewingStatus?.hardware.heater === 'ON' ? 'aktiv' : 'aus'}</dd></div>
-              <div><dt>Rührwerk</dt><dd>{brewingStatus?.hardware.agitator === 'ON' ? 'aktiv' : 'aus'}</dd></div>
-              <div><dt>Warten</dt><dd>{brewingStatus?.waiting.canConfirm ? String(brewingStatus.waiting.waitingFor) : 'Nein'}</dd></div>
-            </dl>
-            <div className="dashboard-progress-slot">
-              {isHeating && <span>Zieltemperatur wird erreicht.</span>}
-              {canShowProgress && <><span>Fortschritt {progress} %</span><div className="dashboard-progress"><span style={{ width: `${progress}%` }} /></div></>}
-              {!isHeating && !canShowProgress && <span>{brewingStatus?.process.state === ProcessState.ACTIVE ? 'Prozess läuft.' : 'Bereit.'}</span>}
-            </div>
-          </div>
-        )}
+        {!isActive && isBackendAvailable && <div className="dashboard-production-empty"><strong>Keine aktive Produktion</strong><span>Die Brausteuerung wartet auf einen neuen Brauvorgang.</span></div>}
+        {isActive && <div className="dashboard-production-details">
+          <div className="dashboard-production-heading"><h3>{beerToBrew?.name ?? 'Unbekanntes Bier'}</h3><span className="dashboard-badge dashboard-badge-production">{getBrewingStatusLabel(brewingStatus)}</span></div>
+          <p className="dashboard-step">{brewingStatus?.currentStep.name || brewingStatus?.currentStep.phase || 'Aktueller Schritt'}</p>
+          <div className="dashboard-temperature"><strong>{Number.isFinite(currentTemp) ? currentTemp.toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '–'} °C</strong><span>Ziel: {Number.isFinite(targetTemp) ? targetTemp.toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '–'} °C</span></div>
+          <div className="dashboard-progress" aria-label={`Fortschritt ${progress} Prozent`}><span style={{ width: `${progress}%` }} /></div>
+          <div className="dashboard-time"><span>{canShowProgress ? `${formatSeconds(elapsed)} / ${formatSeconds(duration)}` : brewingStatus?.currentStep.mode === ProcessMode.HEATING ? 'Zieltemperatur wird erreicht' : 'Prozess läuft'}</span>{canShowProgress && <strong>{progress} %</strong>}</div>
+          <dl className="dashboard-hardware">
+            <div><dt>Heizung</dt><dd className={brewingStatus?.hardware.heater === 'ON' ? 'is-on' : ''}>{brewingStatus?.hardware.heater === 'ON' ? 'EIN' : 'AUS'}</dd></div>
+            <div><dt>Rührwerk</dt><dd className={brewingStatus?.hardware.agitator === 'ON' ? 'is-on' : ''}>{brewingStatus?.hardware.agitator === 'ON' ? 'EIN' : 'AUS'}</dd></div>
+          </dl>
+          {brewingStatus?.waiting.canConfirm && <p className="dashboard-warning">Bestätigung erforderlich: {String(brewingStatus.waiting.waitingFor)}</p>}
+        </div>}
       </section>
     );
-  }
-
-  private renderActiveBrews(): React.ReactNode {
-    const rows = buildActiveBrewRows(this.props.finishedBrews ?? []);
-    return (
-      <section className="dashboard-card" aria-labelledby="dashboard-active-brews-title">
-        <div className="dashboard-section-header"><LocalDrinkIcon aria-hidden="true" /><h2 id="dashboard-active-brews-title">Meine aktuellen Biere</h2></div>
-        {rows.length === 0 ? <p className="dashboard-empty">Keine Biere in Hauptgärung oder Reifung.</p> : (
-          <div className="dashboard-active-list">
-            {rows.map((row) => (
-              <article className="dashboard-active-row" key={row.id}>
-                <h3>{row.name}</h3>
-                <span className="dashboard-badge">{row.stateLabel}</span>
-                <dl>
-                  <div><dt>Start</dt><dd>{row.startDateLabel}</dd></div>
-                  <div><dt>Seit</dt><dd>{row.daysSinceStartLabel}</dd></div>
-                  <div><dt>Liter</dt><dd>{row.litersLabel}</dd></div>
-                  <div><dt>Stammwürze</dt><dd>{row.originalWortLabel}</dd></div>
-                  <div><dt>Restextrakt</dt><dd>{row.residualExtractLabel}</dd></div>
-                  <div><dt>Notiz</dt><dd>{row.noteLabel}</dd></div>
-                </dl>
-              </article>
-            ))}
-          </div>
-        )}
-      </section>
-    );
-  }
-
-  private renderIngredientList(title: string, items: DashboardIngredientUsage[] | DashboardYeastUsage[], unitFallback: string): React.ReactNode {
-    return (
-      <section className="dashboard-ingredient-panel" aria-label={title}>
-        <h3>{title}</h3>
-        {items.length === 0 ? <p className="dashboard-empty">Noch keine Zutatenstatistik verfügbar.</p> : (
-          <ol>
-            {items.map((item) => {
-              const quantityText = 'quantity' in item ? `${formatDashboardQuantity(item.quantity)} ${item.unit ?? unitFallback}` : `${item.brewCount} Sude`;
-              return <li key={`${item.name}-${'unit' in item ? item.unit ?? '' : ''}`}><span>{item.name}</span><strong>{quantityText}</strong><small>{item.brewCount} Sude{'type' in item && item.type ? ` · ${item.type}` : ''}</small></li>;
-            })}
-          </ol>
-        )}
-      </section>
-    );
-  }
-
-  private renderIngredients(): React.ReactNode {
-    const summary = calculateIngredientSummary(this.props.beers ?? [], this.props.finishedBrews ?? []);
-    return (
-      <section className="dashboard-card" aria-labelledby="dashboard-ingredients-title">
-        <div className="dashboard-section-header"><ScienceIcon aria-hidden="true" /><h2 id="dashboard-ingredients-title">Zutatenverbrauch</h2></div>
-        <p className="dashboard-muted">Mengen werden neutral als Rezeptmenge angezeigt, da die gespeicherte Mengeneinheit für Malz und Hopfen nicht eindeutig im Feldnamen codiert ist.</p>
-        {summary.linkedBrewCount === 0 && <p className="dashboard-empty">Noch keine Zutatenstatistik verfügbar.</p>}
-        <div className="dashboard-ingredients-grid">
-          {this.renderIngredientList('Top 5 Malze', summary.malts, 'Menge')}
-          {this.renderIngredientList('Top 5 Hopfen', summary.hops, 'Menge')}
-          {this.renderIngredientList('Meistverwendete Hefen', summary.yeasts, '')}
-          {this.renderIngredientList('Weitere Zutaten', summary.additionalIngredients, '')}
-        </div>
-      </section>
-    );
-  }
-
-  private renderHistory(): React.ReactNode {
-    const stats = calculateMonthlyStats(this.props.finishedBrews ?? []);
-    const maxLiters = Math.max(...stats.map((stat) => stat.liters), 1);
-    return (
-      <section className="dashboard-card" aria-labelledby="dashboard-history-title">
-        <h2 id="dashboard-history-title">Brauhistorie</h2>
-        {stats.length === 0 ? <p className="dashboard-empty">Noch keine Braudurchgänge vorhanden.</p> : (
-          <div className="dashboard-history-chart" role="list" aria-label="Liter und Sude pro Monat">
-            {stats.map((stat) => (
-              <div className="dashboard-history-bar" role="listitem" key={stat.key}>
-                <span className="dashboard-history-value">{formatDashboardQuantity(stat.liters)} L · {stat.brewCount} Sude</span>
-                <div className="dashboard-history-track"><span style={{ height: `${Math.max(8, stat.liters / maxLiters * 100)}%` }} /></div>
-                <span className="dashboard-history-label">{stat.label}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-    );
-  }
-
-  private renderCareHints(): React.ReactNode {
-    const hints = calculateCareHints(this.props.beers ?? [], this.props.finishedBrews ?? []);
-    const lines = [
-      `${hints.missingLiters} Sude ohne eingetragene Litermenge`,
-      `${hints.missingEndDate} Sude ohne Enddatum`,
-      `${hints.missingResidualExtract} Sude ohne sinnvollen Restextrakt`,
-      `${hints.activeInvalidStartDate} aktive Biere ohne gültiges Startdatum`,
-      `${hints.missingRecipeLink} Sude ohne Rezeptverknüpfung`,
-    ];
-    return <section className="dashboard-card dashboard-care-card" aria-labelledby="dashboard-care-title"><div className="dashboard-section-header"><WarningAmberIcon aria-hidden="true" /><h2 id="dashboard-care-title">Daten prüfen</h2></div><ul>{lines.map((line) => <li key={line}>{line}</li>)}</ul></section>;
   }
 
   render(): React.ReactNode {
-    return (
-      <main className="dashboard-page" aria-labelledby="dashboard-title">
-        <header className="dashboard-title-row">
-          <div>
-            <p className="dashboard-eyebrow">Brauhaus Übersicht</p>
-            <h1 id="dashboard-title">Dashboard</h1>
-          </div>
-          {this.props.isFetching && <span className="dashboard-loading">Dashboard-Daten werden geladen …</span>}
-        </header>
-        {this.renderKpis()}
-        <div className="dashboard-two-column">
-          {this.renderProductionStatus()}
-          {this.renderActiveBrews()}
-        </div>
-        {this.renderIngredients()}
-        <div className="dashboard-two-column dashboard-bottom-grid">
-          {this.renderHistory()}
-          {this.renderCareHints()}
-        </div>
-      </main>
-    );
+    const beers = this.props.beers ?? [];
+    const brews = this.props.finishedBrews ?? [];
+    const kpis = calculateDashboardKpis(beers, brews);
+    const activeRows = buildActiveBrewRows(brews);
+    const history = calculateRecipeHistory(beers, brews);
+    const consumption = calculateConsumption(beers, brews);
+    const stats = calculateAdditionalStats(brews);
+    const hints = calculateCareHints(beers, brews);
+    const maxHistoryBrews = Math.max(1, ...history.map((row) => row.brewCount));
+    const hintLines = [
+      hints.missingLiters > 0 ? `${hints.missingLiters} Sude ohne Litermenge` : '',
+      hints.missingEndDate > 0 ? `${hints.missingEndDate} Sude ohne Enddatum` : '',
+      hints.activeInvalidStartDate > 0 ? `${hints.activeInvalidStartDate} aktive Biere ohne Startdatum` : '',
+      hints.missingRecipeLink > 0 ? `${hints.missingRecipeLink} Sude ohne Rezeptverknüpfung` : '',
+    ].filter(Boolean);
+    const activeBreakdown = [kpis.fermentationCount ? `${kpis.fermentationCount} in Hauptgärung` : '', kpis.maturationCount ? `${kpis.maturationCount} in Reifung` : ''].filter(Boolean).join(' · ') || 'Keine aktiven Biere';
+    const cards = [
+      { label: 'Sude gesamt', value: kpis.brewCount, detail: `${formatDashboardQuantity(kpis.totalLiters)} Liter gebraut`, icon: <ScienceIcon /> },
+      { label: 'Aktive Biere', value: kpis.activeBeerCount, detail: activeBreakdown, icon: <LocalDrinkIcon /> },
+      { label: 'Fertige Biere', value: kpis.finishedCount, detail: 'abgeschlossene Sude', icon: <CheckCircleOutlineIcon /> },
+      { label: 'Rezepte', value: kpis.recipeCount, detail: 'verfügbar insgesamt', icon: <MenuBookOutlinedIcon /> },
+    ];
+
+    return <main className="dashboard-page" aria-labelledby="dashboard-title">
+      <header className="dashboard-title-row"><div><h1 id="dashboard-title">Dashboard</h1><p>Brauhaus auf einen Blick</p></div>{this.props.isFetching && <span className="dashboard-loading">Dashboard-Daten werden geladen …</span>}</header>
+      <section className="dashboard-kpi-grid" aria-label="Dashboard Kennzahlen">{cards.map((card) => <article className="dashboard-card dashboard-kpi-card" key={card.label}><span className="dashboard-kpi-icon" aria-hidden="true">{card.icon}</span><span className="dashboard-kpi-label">{card.label}</span><strong className="dashboard-kpi-value">{card.value}</strong><span className="dashboard-kpi-detail">{card.detail}</span></article>)}</section>
+      <div className="dashboard-content-grid">
+        <section className="dashboard-card dashboard-main-card dashboard-active-card" aria-labelledby="dashboard-active-title"><div className="dashboard-section-header"><LocalDrinkIcon aria-hidden="true" /><h2 id="dashboard-active-title">Aktive Biere</h2></div>{activeRows.length === 0 ? <p className="dashboard-empty">Keine Biere in Hauptgärung oder Reifung.</p> : <div className="dashboard-scroll-list">{activeRows.map((row) => <article className="dashboard-active-row" key={row.id}><span className={`dashboard-state-dot ${row.state === eBrewState.MATURATION ? 'is-maturation' : ''}`} /><div><h3>{row.name}</h3><p>{row.litersLabel} · {row.originalWortLabel} · {row.residualExtractLabel}</p></div><span className={`dashboard-badge ${row.state === eBrewState.MATURATION ? 'is-maturation' : ''}`}>{row.stateLabel}</span><strong className="dashboard-day">{row.daysSinceStartLabel === '-' ? '–' : `Tag ${row.daysSinceStartLabel.replace(' Tage', '')}`}</strong></article>)}</div>}</section>
+        {this.renderProductionStatus()}
+        <section className="dashboard-card dashboard-main-card dashboard-history-card" aria-labelledby="dashboard-history-title"><div className="dashboard-section-header"><AssessmentIcon aria-hidden="true" /><h2 id="dashboard-history-title">Brauhistorie nach Rezept</h2></div><div className="dashboard-history-summary"><span><strong>{kpis.brewCount}</strong>Sude</span><span><strong>{formatDashboardQuantity(kpis.totalLiters)} l</strong>gebraut</span><span><strong>{kpis.brewCount ? formatDashboardQuantity(kpis.totalLiters / kpis.brewCount) : '–'} l</strong>Ø pro Sud</span><span><strong>{history.length}</strong>verwendet</span></div>{history.length === 0 ? <p className="dashboard-empty">Keine verknüpfte Brauhistorie verfügbar.</p> : <div className="dashboard-scroll-list dashboard-history-list">{history.map((row) => <div className="dashboard-history-row" key={row.recipeId}><strong>{row.recipeName}</strong><span>{row.brewCount} {row.brewCount === 1 ? 'Sud' : 'Sude'}</span><span>{formatDashboardQuantity(row.liters)} l</span><div className="dashboard-history-track"><span style={{ width: `${row.brewCount / maxHistoryBrews * 100}%` }} /></div></div>)}</div>}</section>
+        <section className="dashboard-card dashboard-compact-card" aria-labelledby="dashboard-consumption-title"><div className="dashboard-section-header"><Inventory2OutlinedIcon aria-hidden="true" /><h2 id="dashboard-consumption-title">Gesamtverbrauch</h2></div>{consumption.linkedBrewCount ? <><div className="dashboard-consumption-grid"><div><span>Malz</span><strong>{formatDashboardQuantity(consumption.maltQuantity)}</strong><small>Rezeptmenge*</small></div><div><span>Hopfen</span><strong>{formatDashboardQuantity(consumption.hopQuantity)}</strong><small>Rezeptmenge*</small></div><div><span>Hefe</span><strong>{consumption.yeastUses}</strong><small>Sud-Einsätze</small></div></div><p className="dashboard-footnote">* Die gespeicherten Mengen haben keine verlässliche Einheit.</p></> : <p className="dashboard-empty">Keine verknüpften Rezeptdaten verfügbar.</p>}</section>
+        <section className="dashboard-card dashboard-compact-card" aria-labelledby="dashboard-stats-title"><div className="dashboard-section-header"><ScienceIcon aria-hidden="true" /><h2 id="dashboard-stats-title">Weitere Kennzahlen</h2></div><dl className="dashboard-metric-list"><div><dt>Ø Stammwürze ({stats.originalWortSampleCount})</dt><dd>{stats.averageOriginalWort === undefined ? '–' : `${formatDashboardQuantity(stats.averageOriginalWort)} °P`}</dd></div><div><dt>Größter Sud</dt><dd>{stats.largestBrew === undefined ? '–' : `${formatDashboardQuantity(stats.largestBrew)} l`}</dd></div><div><dt>Kleinster Sud</dt><dd>{stats.smallestBrew === undefined ? '–' : `${formatDashboardQuantity(stats.smallestBrew)} l`}</dd></div><div><dt>Letzter Sud</dt><dd>{stats.lastBrew ?? '–'}</dd></div></dl></section>
+        <section className="dashboard-card dashboard-compact-card dashboard-hints-card" aria-labelledby="dashboard-hints-title"><div className="dashboard-section-header">{!this.props.isBackendAvailable || hintLines.length ? <WarningAmberIcon aria-hidden="true" /> : <CheckCircleOutlineIcon aria-hidden="true" />}<h2 id="dashboard-hints-title">Hinweise</h2></div>{!this.props.isBackendAvailable && <p className="dashboard-hint is-warning">Backend nicht erreichbar</p>}{hintLines.map((line) => <p className="dashboard-hint" key={line}>• {line}</p>)}{this.props.isBackendAvailable && hintLines.length === 0 && <p className="dashboard-hint is-clear">Keine offenen Aktionen</p>}</section>
+      </div>
+    </main>;
   }
 }
