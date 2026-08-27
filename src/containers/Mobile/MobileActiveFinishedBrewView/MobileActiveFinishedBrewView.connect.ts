@@ -5,7 +5,9 @@ import { BeerActions } from '../../../actions/actions';
 import {MobileActiveFinishedBrewView} from './MobileActiveFinishedBrewView';
 
 const mapStateToProps = (state: any) => ({
-    finishedBrews: state.beerDataReducer?.finishedBrews?.filter((brew: FinishedBrew) => brew.active) || finishedBrewsTestData.filter((brew: FinishedBrew) => brew.active)
+    finishedBrews: state.beerDataReducer?.finishedBrews?.filter((brew: FinishedBrew) => brew.active) || finishedBrewsTestData.filter((brew: FinishedBrew) => brew.active),
+    savingFinishedBrewIds: state.beerDataReducer?.savingFinishedBrewIds || [],
+    finishedBrewUpdateErrors: state.beerDataReducer?.finishedBrewUpdateErrors || {},
 });
 
 const mapDispatchToProps = (dispatch: any) => ({

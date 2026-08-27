@@ -6,6 +6,8 @@ interface Props {
     finishedBrews?: FinishedBrew[];
     getFinishedBrews?: (isFetching: boolean) => void;
     saveFinishedBrew?: (brew: FinishedBrew) => void;
+    savingFinishedBrewIds?: string[];
+    finishedBrewUpdateErrors?: Record<string, string>;
 }
 
 interface State {
@@ -31,10 +33,12 @@ export class MobileActiveFinishedBrewView extends React.Component<Props, State> 
     }
 
     componentDidUpdate(prevProps: Props, prevState: State) {
-        if (prevProps.finishedBrews !== this.props.finishedBrews) {
+        const previousSelectedBrew = prevProps.finishedBrews?.[this.state.currentIndex];
+        const currentSelectedBrew = this.props.finishedBrews?.[this.state.currentIndex];
+        if (previousSelectedBrew !== currentSelectedBrew) {
             this.setState({
-                currentIndex: 0,
-                editedBrew: this.props.finishedBrews && this.props.finishedBrews.length > 0 ? { ...this.props.finishedBrews[0] } : undefined,
+                currentIndex: currentSelectedBrew ? this.state.currentIndex : 0,
+                editedBrew: currentSelectedBrew ? {...currentSelectedBrew} : (this.props.finishedBrews?.[0] ? {...this.props.finishedBrews[0]} : undefined),
                 editMode: false
             });
         }
@@ -52,21 +56,24 @@ export class MobileActiveFinishedBrewView extends React.Component<Props, State> 
 
     handleSave = () => {
         const { editedBrew } = this.state;
-        if (editedBrew) {
+        if (editedBrew && !this.props.savingFinishedBrewIds?.includes(editedBrew.id)) {
             // Redux-Action zum Speichern des Suds
             if (this.props.saveFinishedBrew) {
                 this.props.saveFinishedBrew(editedBrew);
             }
             console.log('Sud gespeichert:', editedBrew);
         }
-        this.setState({ editMode: false });
     };
 
     handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
+        const numericFields = ['liters', 'originalwort', 'residual_extract'];
+        const parsedValue = numericFields.includes(name)
+            ? (value === '' && name === 'residual_extract' ? null : Number(value))
+            : value;
         this.setState(prevState => ({
             editedBrew: prevState.editedBrew
-                ? { ...prevState.editedBrew, [name]: value }
+                ? { ...prevState.editedBrew, [name]: parsedValue }
                 : undefined
         }));
     };
@@ -224,9 +231,10 @@ export class MobileActiveFinishedBrewView extends React.Component<Props, State> 
                         <div className="mobile-value">{editedBrew.note || '-'}</div>
                     )}
                 </div>
-                <button className="mobile-polling-btn" onClick={editMode ? this.handleSave : this.handleEdit}>
-                    {editMode ? 'Speichern' : 'Bearbeiten'}
+                <button className="mobile-polling-btn" onClick={editMode ? this.handleSave : this.handleEdit} disabled={Boolean(editedBrew && this.props.savingFinishedBrewIds?.includes(editedBrew.id))}>
+                    {editedBrew && this.props.savingFinishedBrewIds?.includes(editedBrew.id) ? 'Speichert …' : (editMode ? 'Speichern' : 'Bearbeiten')}
                 </button>
+                {editedBrew && this.props.finishedBrewUpdateErrors?.[editedBrew.id] && <p role="alert">Speichern fehlgeschlagen: {this.props.finishedBrewUpdateErrors[editedBrew.id]}</p>}
             </div>
         );
     }

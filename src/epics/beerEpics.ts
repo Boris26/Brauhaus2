@@ -1,6 +1,6 @@
 import { ofType } from 'redux-observable';
 import {of, from} from 'rxjs';
-import { catchError, exhaustMap, map, mergeMap } from 'rxjs/operators';
+import { catchError, exhaustMap, groupBy, map, mergeMap, switchMap } from 'rxjs/operators';
 import {ApplicationActions, BeerActions} from '../actions/actions';
 import { BeerRepository } from '../repositorys/BeerRepository';
 import {Beer} from "../model/Beer";
@@ -10,7 +10,6 @@ import { FinishedBrewListPdfStrategy } from '../utils/pdf/finishedBrewStrategy';
 import {PdfGenerator} from "../utils/pdf/PdfGenerator";
 import { BeerPdfStrategy } from '../utils/pdf/shoppingListPdfStrategy';
 import {FinishedBeerRepository} from "../repositorys/FinishedBeerRepository";
-import {dataCollector} from "../utils/DataCollector/dataCollector";
 import {getRecipeImportErrorMessage} from '../utils/recipeImport';
 
 /**
@@ -20,10 +19,11 @@ import {getRecipeImportErrorMessage} from '../utils/recipeImport';
 export const getBeersEpic = (action$: any) =>
     action$.pipe(
         ofType(BeerActions.ActionTypes.GET_BEERS),
-        mergeMap(() =>
+        switchMap(() =>
             from(BeerRepository.getBeers()).pipe(map((beers: Beer[]) =>BeerActions.getBeersSuccess(beers)),
                 catchError((aError: Error) =>
                     from([
+                        BeerActions.getBeersFailure(),
                         ApplicationActions.openErrorDialog(
                             true,
                             "Bier fehler",
@@ -38,10 +38,11 @@ export const getBeersEpic = (action$: any) =>
 export const getFinishedBeersEpic = (action$: any) =>
     action$.pipe(
         ofType(BeerActions.ActionTypes.GET_FINISHED_BEERS),
-        mergeMap(() =>
+        switchMap(() =>
         from(FinishedBeerRepository.getFinishedBeers()).pipe(
             map((finishedBeers: FinishedBrew[]) => BeerActions.getFinishedBeersSuccess(finishedBeers)),
             catchError((aError) => from([
+                BeerActions.getFinishedBeersFailure(),
                 ApplicationActions.openErrorDialog(
                     true,
                     "Bier fehler",
@@ -83,11 +84,13 @@ export const submitBeerEpic = (aAction$: any) =>
 export const deleteFinishedBeerEpic = (action$: any) =>
   action$.pipe(
     ofType(BeerActions.ActionTypes.DELETE_FINISHED_BEER),
-    mergeMap((action: any) =>
+    groupBy((action: any) => action.payload.finishedBrewId),
+    mergeMap(actionsForBrew$ => actionsForBrew$.pipe(exhaustMap((action: any) =>
       from(FinishedBeerRepository.deleteFinishedBeer(action.payload.finishedBrewId)).pipe(
         map(() => BeerActions.deleteFinishedBeerSuccess(true, action.payload.finishedBrewId)),
           catchError((aError: Error) =>
               from([
+                  BeerActions.deleteFinishedBeerFailure(action.payload.finishedBrewId, aError.message),
                   ApplicationActions.openErrorDialog(
                       true,
                       "Fertige Bier fehler",
@@ -95,39 +98,34 @@ export const deleteFinishedBeerEpic = (action$: any) =>
                   )
               ])
           )
-      )
-    )
+      ))
+    ))
   );
 
 export const updateFinishedBeerEpic = (action$: any) =>
   action$.pipe(
     ofType(BeerActions.ActionTypes.UPDATE_ACTIVE_BEER),
-    mergeMap((action: any) =>
-      from(FinishedBeerRepository.updateFinishedBeer(action.payload.beer)).pipe(
-        map((beer) => BeerActions.updateFinishedBrewSuccess({...action.payload.beer, ...beer}, action.payload.beer.id)),
-        catchError((aError: Error) =>  from([
-            BeerActions.updateFinishedBrewFailure(action.payload.beer.id, aError.message),
-            ApplicationActions.openErrorDialog(
-                true,
-                "Bier fehler",
-                "Submit Bier: " + aError.message
-            )
-        ])
+    groupBy((action: any) => action.payload.beer.id),
+    mergeMap((actionsForBrew$) => actionsForBrew$.pipe(
+      exhaustMap((action: any) =>
+        from(FinishedBeerRepository.updateFinishedBeer(action.payload.beer)).pipe(
+          map((beer) => BeerActions.updateFinishedBrewSuccess({...action.payload.beer, ...beer}, action.payload.beer.id)),
+          catchError((aError: Error) => from([
+              BeerActions.updateFinishedBrewFailure(action.payload.beer.id, aError.message),
+              ApplicationActions.openErrorDialog(true, "Bier fehler", "Submit Bier: " + aError.message)
+          ]))
+        )
       )
-    )
-  )
+    ))
   )
 ;
 
 export const sendNewFinishedBeerEpic = (action$: any) =>
   action$.pipe(
     ofType(BeerActions.ActionTypes.ADD_FINISHED_BREW),
-    mergeMap((action: any) =>
+    exhaustMap((action: any) =>
       from(FinishedBeerRepository.sendNewFinishedBeer(action.payload.finishedBrew)).pipe(
-        map((beer) => {
-          dataCollector.reset();
-          return BeerActions.addFinishedBrewSuccess({...action.payload.finishedBrew, ...beer});
-        }),
+        map((beer) => BeerActions.addFinishedBrewSuccess({...action.payload.finishedBrew, ...beer})),
         catchError((aError: Error) =>  from([
             BeerActions.addFinishedBrewFailure(aError.message),
             ApplicationActions.openErrorDialog(

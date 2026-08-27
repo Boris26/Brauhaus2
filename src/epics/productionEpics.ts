@@ -1,7 +1,7 @@
 import { ofType } from 'redux-observable';
 import {from, of, interval, EMPTY, filter, takeWhile, startWith, Observable} from 'rxjs';
 import { catchError, exhaustMap, map, mergeMap, switchMap, takeUntil } from 'rxjs/operators';
-import { ProductionActions } from '../actions/actions';
+import { ApplicationActions, ProductionActions } from '../actions/actions';
 import { ProductionRepository } from '../repositorys/ProductionRepository';
 import { dataCollector } from '../utils/DataCollector/dataCollector';
 import { WebSocketController } from '../utils/WebSocketController';
@@ -17,6 +17,10 @@ export const WATER_STATUS_REQUEST_TIMEOUT = 8000;
 export const WATER_FILLING_MAX_DURATION = 30 * 60 * 1000;
 const WS_URL = (typeof BaseURL !== 'undefined' ? BaseURL : '').replace(/^http/, 'ws');
 let wsController: WebSocketController | null = null;
+
+export const mapControlSocketEvent = (event: {event: string; data: any}) => event.event === 'overheat'
+  ? ProductionActions.overheatReceived(event.data)
+  : undefined;
 
 export const getTemperaturesEpic$ = (action$: any) =>
     action$.pipe(
@@ -132,13 +136,13 @@ export const sendBrewingDataEpic$ = (action$: any) =>
           if (sendResult) {
             // Start the brewing process
             return from(ProductionRepository.startBrewing()).pipe(
-              switchMap((startResult) => startResult ? createBrewingStatusPolling$(action$) : of(ProductionActions.stopPolling()))
+              switchMap((startResult) => startResult ? createBrewingStatusPolling$(action$) : of(ProductionActions.brewingStartFailure('Der Controller konnte den Brauvorgang nicht starten.')))
             );
           } else {
-            return of(ProductionActions.stopPolling());
+            return of(ProductionActions.brewingStartFailure('Das Rezept konnte nicht an den Controller übertragen werden.'));
           }
         }),
-        catchError((error) => of(ProductionActions.stopPolling()))
+        catchError((error) => of(ProductionActions.brewingStartFailure(error instanceof Error ? error.message : 'Braustart fehlgeschlagen.')))
       )
     )
   );
@@ -146,10 +150,16 @@ export const sendBrewingDataEpic$ = (action$: any) =>
 export const confirmEpic$ = (action$: any) =>
   action$.pipe(
     ofType(ProductionActions.ActionTypes.CONFIRM),
-    mergeMap((action: any) =>
+    exhaustMap((action: any) =>
       from(ProductionRepository.confirm(action.payload.confirmState)).pipe(
-        map(() => ({ type: 'NO_OP' })),
-        catchError((error) => of({ type: 'NO_OP' }))
+        map(() => ProductionActions.confirmSuccess()),
+        catchError((error) => {
+          const message = error instanceof Error ? error.message : 'Bestätigung fehlgeschlagen';
+          return from([
+            ProductionActions.confirmFailure(message),
+            ApplicationActions.openErrorDialog(true, 'Bestätigung fehlgeschlagen', message),
+          ]);
+        })
       )
     )
   );
@@ -173,7 +183,7 @@ export const checkIsBackendAvailableEpic$ = (action$: any) =>
 export const nextProcedureStepEpic$ = (action$: any) =>
   action$.pipe(
     ofType(ProductionActions.ActionTypes.NEXT_PROCEDURE_STEP),
-    switchMap(() =>
+    exhaustMap(() =>
       from(ProductionRepository.nextProcedureStep()).pipe(
         map((result) =>
           result
@@ -198,13 +208,9 @@ export const productionWebSocketEpic$ = (action$: any) =>
         }
         return new Observable((observer) => {
           wsController!.onMessage((event) => {
-            try {
-              const msg = JSON.parse(event.data);
-              if (msg.event === 'overheat') {
-                observer.next(ProductionActions.overheatReceived(msg.data));
-              }
-            } catch (e) {
-              // ignore invalid messages
+            const action = mapControlSocketEvent(event);
+            if (action) {
+              observer.next(action);
             }
           });
           wsController!.connect();

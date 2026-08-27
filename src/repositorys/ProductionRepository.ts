@@ -110,17 +110,7 @@ export class ProductionRepository {
 
 
     private static async _doConfirm(aConfirmState: ConfirmStates) {
-        try {
-            const response = await axios.post(ConfirmURL + aConfirmState);
-            if (response.status === 200) {
-                console.log(response.data);
-            } else {
-                console.log(response.data);
-            }
-        } catch (error) {
-            console.error('Fehler beim API-Aufruf', error);
-        }
-
+        await axios.post(ConfirmURL + aConfirmState);
     }
 
     private static async _doGetTemperature(): Promise<number> {

@@ -28,6 +28,13 @@ describe('ProductionRepository API method/path usage', () => {
     expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Confirm/Decoction'));
   });
 
+  it('rejects when the confirm request fails', async () => {
+    const error = new Error('network unavailable');
+    mockedAxios.post.mockRejectedValueOnce(error);
+
+    await expect(ProductionRepository.confirm(ConfirmStates.IODINE)).rejects.toBe(error);
+  });
+
   it('uses POST for command-based state changes', async () => {
     await ProductionRepository.startBrewing();
     await ProductionRepository.fillWaterAutomatic(15);

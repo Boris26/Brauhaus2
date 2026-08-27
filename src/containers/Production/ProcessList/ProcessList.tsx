@@ -57,6 +57,7 @@ export interface ProcessListProps {
     remainingSeconds?: number;
     displayMode?: 'combined' | 'overview' | 'current';
     confirmationPending?: boolean;
+    confirmationError?: string;
     onConfirmWaiting?: () => void;
     hopReminderName?: string;
     onCompleteHopReminder?: () => void;
@@ -290,7 +291,7 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
             const heldMashTemperature = this.props.brewingStatus?.currentStep?.phase === ProcessPhase.DECOCTION
                 ? this.props.brewingStatus?.temperature?.target ?? this.getRelatedRastTemperature(undefined)
                 : undefined;
-            return <ControlConfirmationNotice request={confirmationRequest} pending={this.props.confirmationPending === true} onConfirm={this.props.onConfirmWaiting} heldMashTemperature={heldMashTemperature} />;
+            return <ControlConfirmationNotice request={confirmationRequest} pending={this.props.confirmationPending === true} onConfirm={this.props.onConfirmWaiting} heldMashTemperature={heldMashTemperature} errorMessage={this.props.confirmationError} />;
         }
         if (this.props.hopReminderName && this.props.onCompleteHopReminder) {
             return <HopReminderNotice hopName={this.props.hopReminderName} onDone={this.props.onCompleteHopReminder} />;

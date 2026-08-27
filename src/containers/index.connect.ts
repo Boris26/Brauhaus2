@@ -15,6 +15,9 @@ const mapDispatchToProps = (dispatch: any) => ({
 
     webSocketConnect: () => {
         dispatch(ProductionActions.webSocketConnect());
+    },
+    webSocketDisconnect: () => {
+        dispatch(ProductionActions.webSocketDisconnect());
     }
 
 

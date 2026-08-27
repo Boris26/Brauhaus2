@@ -1,6 +1,6 @@
 import {eBrewState} from '../enums/eBrewState';
 import {FinishedBrew} from '../model/FinishedBrew';
-import {completeFinishedBrew, mergeFinishedBrewChanges} from './finishedBrewChanges';
+import {completeFinishedBrew, enforceFinishedBrewStateInvariant, mergeFinishedBrewChanges} from './finishedBrewChanges';
 
 const brew: FinishedBrew = {
     id: 'ABC', name: 'Testbier', startDate: '2026-08-20', liters: 20,
@@ -27,5 +27,15 @@ describe('finished brew changes', () => {
     it('does not overwrite an explicitly supplied end date', () => {
         const updated = completeFinishedBrew({...brew, endDate: '2026-08-26'});
         expect(updated.endDate).toBe('2026-08-26');
+    });
+});
+
+describe('enforceFinishedBrewStateInvariant', () => {
+    it('never allows FINISHED together with active=true', () => {
+        expect(enforceFinishedBrewStateInvariant({...brew, state: eBrewState.FINISHED, active: true})).toMatchObject({state: eBrewState.FINISHED, active: false});
+    });
+
+    it('does not change active fermentation or maturation records', () => {
+        expect(enforceFinishedBrewStateInvariant(brew)).toBe(brew);
     });
 });

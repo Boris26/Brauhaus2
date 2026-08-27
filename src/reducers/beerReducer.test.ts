@@ -47,6 +47,23 @@ describe('beerDataReducer finished brews', () => {
         expect(state.finishedBrews).toEqual([brew]);
     });
 
+    it('retains the exact create payload on failure and clears it only on success', () => {
+        const {id, ...payload} = brew;
+        const pending = beerDataReducer(initialBeerState, BeerActions.addFinishedBrew(payload));
+        expect(pending.isAddingFinishedBrew).toBe(true);
+        expect(pending.pendingFinishedBrewPayload).toBe(payload);
+
+        const failed = beerDataReducer(pending, BeerActions.addFinishedBrewFailure('HTTP 500'));
+        expect(failed.isAddingFinishedBrew).toBe(false);
+        expect(failed.addFinishedBrewError).toBe('HTTP 500');
+        expect(failed.pendingFinishedBrewPayload).toBe(payload);
+
+        const retrying = beerDataReducer(failed, BeerActions.addFinishedBrew(failed.pendingFinishedBrewPayload!));
+        const succeeded = beerDataReducer(retrying, BeerActions.addFinishedBrewSuccess(brew));
+        expect(succeeded.pendingFinishedBrewPayload).toBeUndefined();
+        expect(succeeded.isAddingFinishedBrew).toBe(false);
+    });
+
     it('replaces the existing id after update success', () => {
         const pending = beerDataReducer({...initialBeerState, finishedBrews: [brew]}, BeerActions.updateActiveBeer({...brew, state: eBrewState.MATURATION}));
         const state = beerDataReducer(pending, BeerActions.updateFinishedBrewSuccess({...brew, state: eBrewState.MATURATION}, 'ABC'));
@@ -60,4 +77,29 @@ describe('beerDataReducer finished brews', () => {
         expect(state.finishedBrews).toEqual([brew]);
         expect(state.finishedBrewUpdateErrors?.ABC).toBeDefined();
     });
+});
+
+describe('beerDataReducer loading failures', () => {
+    it('clears recipe and finished-brew loading independently after errors', () => {
+        const loadingBeers = beerDataReducer(initialBeerState, BeerActions.getBeers(true));
+        expect(beerDataReducer(loadingBeers, BeerActions.getBeersFailure()).isFetchingBeers).toBe(false);
+        const loadingBrews = beerDataReducer(initialBeerState, BeerActions.getFinishedBeers(true));
+        expect(beerDataReducer(loadingBrews, BeerActions.getFinishedBeersFailure()).isFetchingFinishedBrews).toBe(false);
+    });
+});
+
+it('tracks a finished-brew delete and releases it after failure', () => {
+    const deleting = beerDataReducer(initialBeerState, BeerActions.deleteFinishedBeer('ABC'));
+    expect(deleting.deletingFinishedBrewIds).toEqual(['ABC']);
+    const failed = beerDataReducer(deleting, BeerActions.deleteFinishedBeerFailure('ABC', 'HTTP 500'));
+    expect(failed.deletingFinishedBrewIds).toEqual([]);
+    expect(failed.finishedBrewDeleteErrors?.ABC).toBe('HTTP 500');
+});
+
+it('replaces stale recipes when the server returns an empty list', () => {
+    const stale = {...initialBeerState, beers: [{id: 'beer-1', name: 'stale'} as Beer], selectedBeer: {id: 'beer-1'} as Beer, isFetching: true, isFetchingBeers: true};
+    const state = beerDataReducer(stale, BeerActions.getBeersSuccess([]));
+    expect(state.beers).toEqual([]);
+    expect(state.selectedBeer).toBeUndefined();
+    expect(state.isFetchingBeers).toBe(false);
 });

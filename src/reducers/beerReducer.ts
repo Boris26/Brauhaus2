@@ -2,9 +2,10 @@ import { BeerActions } from '../actions/actions';
 import AllBeerActions = BeerActions.AllBeerActions;
 import {Beer} from "../model/Beer";
 import {BeerDTO} from "../model/BeerDTO";
-import {FinishedBrew} from "../model/FinishedBrew";
+import {FinishedBrew, FinishedBrewCreatePayload} from "../model/FinishedBrew";
 import {BeerRecipeScaler} from "../utils/BeerScaler/ScalingBeerRecipe";
 import {RecipeImportResult} from '../model/RecipeImport';
+import {enforceFinishedBrewStateInvariant} from '../utils/finishedBrewChanges';
 
 
 export interface BeerDataReducerState {
@@ -12,6 +13,8 @@ export interface BeerDataReducerState {
     beer: BeerDTO | undefined
     isSuccessful: boolean,
     isFetching: boolean,
+    isFetchingBeers: boolean,
+    isFetchingFinishedBrews: boolean,
     isSubmitSuccessful: boolean | undefined,
     message: string | undefined,
     type: string | undefined,
@@ -29,6 +32,9 @@ export interface BeerDataReducerState {
     finishedBrewUpdateErrors?: Record<string, string>
     isAddingFinishedBrew?: boolean
     addFinishedBrewError?: string
+    pendingFinishedBrewPayload?: FinishedBrewCreatePayload
+    deletingFinishedBrewIds?: string[]
+    finishedBrewDeleteErrors?: Record<string, string>
 }
 
 export const initialBeerState: BeerDataReducerState =
@@ -37,6 +43,8 @@ export const initialBeerState: BeerDataReducerState =
         beer: undefined,
         isSuccessful: false,
         isFetching: false,
+        isFetchingBeers: false,
+        isFetchingFinishedBrews: false,
         isSubmitSuccessful: true,
         message: undefined,
         type: undefined,
@@ -46,6 +54,9 @@ export const initialBeerState: BeerDataReducerState =
         savingFinishedBrewIds: [],
         finishedBrewUpdateErrors: {},
         isAddingFinishedBrew: false,
+        pendingFinishedBrewPayload: undefined,
+        deletingFinishedBrewIds: [],
+        finishedBrewDeleteErrors: {},
     }
 
 const beerDataReducer = (
@@ -65,15 +76,26 @@ const beerDataReducer = (
                   ...aState,
                   beers: aAction.payload.beers,
                   selectedBeer: selectedBeer,
-                  isFetching: false
+                  isFetching: false,
+                  isFetchingBeers: false
               };
           }
-          return { ...aState };
+          return {
+              ...aState,
+              beers: [],
+              selectedBeer: undefined,
+              beerToBrew: undefined,
+              isFetching: false,
+              isFetchingBeers: false,
+          };
 
       }
 
       case BeerActions.ActionTypes.GET_BEERS: {
-      return { ...aState, isFetching: aAction.payload.isFetching };
+      return { ...aState, isFetching: aAction.payload.isFetching, isFetchingBeers: aAction.payload.isFetching };
+    }
+    case BeerActions.ActionTypes.GET_BEERS_FAILURE: {
+      return {...aState, isFetching: false, isFetchingBeers: false};
     }
     case BeerActions.ActionTypes.SET_SELECTED_BEER: {
       return { ...aState, selectedBeer: aAction.payload.beer };
@@ -127,10 +149,13 @@ const beerDataReducer = (
     }
 
     case BeerActions.ActionTypes.GET_FINISHED_BEERS: {
-      return { ...aState, isFetching: aAction.payload.isFetching };
+      return { ...aState, isFetching: aAction.payload.isFetching, isFetchingFinishedBrews: aAction.payload.isFetching };
     }
     case BeerActions.ActionTypes.GET_FINISHED_BEERS_SUCCESS: {
-      return { ...aState, finishedBrews: aAction.payload.finishedBeers ?? undefined };
+      return { ...aState, isFetching: false, isFetchingFinishedBrews: false, finishedBrews: aAction.payload.finishedBeers ?? undefined };
+    }
+    case BeerActions.ActionTypes.GET_FINISHED_BEERS_FAILURE: {
+      return {...aState, isFetching: false, isFetchingFinishedBrews: false};
     }
     case BeerActions.ActionTypes.UPDATE_ACTIVE_BEER: {
       const requestedId = aAction.payload.beer.id;
@@ -140,18 +165,30 @@ const beerDataReducer = (
       return { ...aState, savingFinishedBrewIds, finishedBrewUpdateErrors };
     }
     case BeerActions.ActionTypes.DELETE_FINISHED_BEER: {
-      return { ...aState };
+      const id = aAction.payload.finishedBrewId;
+      const errors = {...(aState.finishedBrewDeleteErrors ?? {})};
+      delete errors[id];
+      return { ...aState, deletingFinishedBrewIds: Array.from(new Set([...(aState.deletingFinishedBrewIds ?? []), id])), finishedBrewDeleteErrors: errors };
     }
     case BeerActions.ActionTypes.DELETE_FINISHED_BEER_SUCCESS: {
       let finishedBrews = aState.finishedBrews ? [...aState.finishedBrews] : [];
       finishedBrews = finishedBrews.filter(b => b.id !== aAction.payload.deletedFinishedBrewId);
-      return { ...aState, finishedBrews };
+      return { ...aState, finishedBrews, deletingFinishedBrewIds: (aState.deletingFinishedBrewIds ?? []).filter(id => id !== aAction.payload.deletedFinishedBrewId) };
+    }
+    case BeerActions.ActionTypes.DELETE_FINISHED_BEER_FAILURE: {
+      const {deletedFinishedBrewId, message} = aAction.payload;
+      return {...aState, deletingFinishedBrewIds: (aState.deletingFinishedBrewIds ?? []).filter(id => id !== deletedFinishedBrewId), finishedBrewDeleteErrors: {...(aState.finishedBrewDeleteErrors ?? {}), [deletedFinishedBrewId]: message}};
     }
     case BeerActions.ActionTypes.ADD_FINISHED_BREW: {
-      return { ...aState, isAddingFinishedBrew: true, addFinishedBrewError: undefined };
+      return {
+        ...aState,
+        isAddingFinishedBrew: true,
+        addFinishedBrewError: undefined,
+        pendingFinishedBrewPayload: aAction.payload.finishedBrew,
+      };
     }
     case BeerActions.ActionTypes.ADD_FINISHED_BREW_SUCCESS: {
-      const createdBrew = aAction.payload.beer;
+      const createdBrew = enforceFinishedBrewStateInvariant(aAction.payload.beer);
       const finishedBrews = aState.finishedBrews ?? [];
       if (!createdBrew?.id) {
         return {...aState, isAddingFinishedBrew: false, addFinishedBrewError: 'Die Create-Antwort enthält keine FinishedBeer-ID.'};
@@ -160,6 +197,7 @@ const beerDataReducer = (
         ...aState,
         isAddingFinishedBrew: false,
         addFinishedBrewError: undefined,
+        pendingFinishedBrewPayload: undefined,
         finishedBrews: [...finishedBrews, createdBrew],
       };
     }
@@ -167,7 +205,7 @@ const beerDataReducer = (
       return { ...aState, isAddingFinishedBrew: false, addFinishedBrewError: aAction.payload.message };
     }
     case BeerActions.ActionTypes.UPDATE_FINISHED_BREW_SUCCESS: {
-        const updatedBrew = aAction.payload.beer;
+        const updatedBrew = enforceFinishedBrewStateInvariant(aAction.payload.beer);
           const requestedId = aAction.payload.requestedId;
           const finishedBrews = aState.finishedBrews ?? [];
           const savingFinishedBrewIds = (aState.savingFinishedBrewIds ?? []).filter(id => id !== requestedId);

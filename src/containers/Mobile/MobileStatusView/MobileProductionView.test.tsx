@@ -38,6 +38,8 @@ const renderMobileView = (overrides: Partial<React.ComponentProps<typeof MobileP
         brewingStatus: makeStatus(),
         startPolling: jest.fn(),
         stopPolling: jest.fn(),
+        isConfirmPending: false,
+        isBrewingStatusStale: false,
         isPollingRunning: false,
         confirm: jest.fn(),
         ...overrides,
@@ -91,13 +93,56 @@ describe('MobileProductionView confirmations', () => {
         status.currentStep.mode = ProcessMode.WAITING;
         status.waiting = {waitingFor: WaitingFor.IODINE_TEST, canConfirm: true};
         const confirm = jest.fn();
-        renderMobileView({brewingStatus: status, confirm});
+        const {props, rerender} = renderMobileView({brewingStatus: status, confirm});
 
         fireEvent.click(screen.getByRole('button', {name: 'Jodprobe abgeschlossen'}));
         expect(confirm).toHaveBeenCalledWith(ConfirmStates.IODINE);
+        rerender(
+            <Provider store={configureStore({reducer: rootReducer})}>
+                <MobileProductionView {...props} brewingStatus={status} confirm={confirm} isConfirmPending={true} />
+            </Provider>
+        );
         expect(screen.getByRole('button', {name: 'Wird verarbeitet …'})).toBeDisabled();
+        fireEvent.click(screen.getByRole('button', {name: 'Wird verarbeitet …'}));
+        expect(confirm).toHaveBeenCalledTimes(1);
         expect(screen.getByText('24 °C')).toBeInTheDocument();
         expect(screen.getByText('65 °C')).toBeInTheDocument();
+    });
+
+    it('allows retry with the same waiting state after pending is cleared', () => {
+        const status = makeStatus();
+        status.currentStep.mode = ProcessMode.WAITING;
+        status.waiting = {waitingFor: WaitingFor.IODINE_TEST, canConfirm: true};
+        const confirm = jest.fn();
+        const {props, rerender} = renderMobileView({brewingStatus: status, confirm, isConfirmPending: true});
+
+        expect(screen.getByRole('button', {name: 'Wird verarbeitet …'})).toBeDisabled();
+        rerender(
+            <Provider store={configureStore({reducer: rootReducer})}>
+                <MobileProductionView {...props} brewingStatus={status} confirm={confirm} isConfirmPending={false} />
+            </Provider>
+        );
+        fireEvent.click(screen.getByRole('button', {name: 'Jodprobe abgeschlossen'}));
+        expect(confirm).toHaveBeenCalledWith(ConfirmStates.IODINE);
+    });
+
+    it('shows a confirm failure while keeping retry available', () => {
+        const status = makeStatus();
+        status.currentStep.mode = ProcessMode.WAITING;
+        status.waiting = {waitingFor: WaitingFor.IODINE_TEST, canConfirm: true};
+        renderMobileView({brewingStatus: status, isConfirmPending: false, confirmError: 'Netzwerkfehler'});
+
+        expect(screen.getByRole('alert')).toHaveTextContent('Bestätigung fehlgeschlagen: Netzwerkfehler');
+        expect(screen.getByRole('button', {name: 'Jodprobe abgeschlossen'})).toBeEnabled();
+    });
+});
+
+describe('MobileProductionView stale status', () => {
+    it('does not present stale hardware and temperature values as current', () => {
+        renderMobileView({isBrewingStatusStale: true});
+        expect(screen.getByText('Status veraltet – Controller nicht erreichbar')).toBeInTheDocument();
+        expect(screen.getByText('Unbekannt')).toBeInTheDocument();
+        expect(screen.queryByText('24 °C')).not.toBeInTheDocument();
     });
 });
 

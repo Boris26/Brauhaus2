@@ -11,6 +11,7 @@ const mapStateToProps = (state: any) => ({
     finishedBrewUpdateErrors: state.beerDataReducer.finishedBrewUpdateErrors || {},
     isAddingFinishedBrew: Boolean(state.beerDataReducer.isAddingFinishedBrew),
     addFinishedBrewError: state.beerDataReducer.addFinishedBrewError,
+    deletingFinishedBrewIds: state.beerDataReducer.deletingFinishedBrewIds || [],
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
