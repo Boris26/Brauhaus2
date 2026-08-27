@@ -14,3 +14,5 @@ export interface FinishedBrew {
     state: eBrewState;
     brewValues?: string;
 }
+
+export type FinishedBrewCreatePayload = Omit<FinishedBrew, 'id'>;

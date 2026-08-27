@@ -25,6 +25,10 @@ export interface BeerDataReducerState {
     isImportingBeer?: boolean
     importResult?: RecipeImportResult
     importError?: string
+    savingFinishedBrewIds?: string[]
+    finishedBrewUpdateErrors?: Record<string, string>
+    isAddingFinishedBrew?: boolean
+    addFinishedBrewError?: string
 }
 
 export const initialBeerState: BeerDataReducerState =
@@ -39,6 +43,9 @@ export const initialBeerState: BeerDataReducerState =
         importedBeer: undefined,
         isSavingBeer: false,
         isImportingBeer: false,
+        savingFinishedBrewIds: [],
+        finishedBrewUpdateErrors: {},
+        isAddingFinishedBrew: false,
     }
 
 const beerDataReducer = (
@@ -126,7 +133,11 @@ const beerDataReducer = (
       return { ...aState, finishedBrews: aAction.payload.finishedBeers ?? undefined };
     }
     case BeerActions.ActionTypes.UPDATE_ACTIVE_BEER: {
-      return { ...aState };
+      const requestedId = aAction.payload.beer.id;
+      const savingFinishedBrewIds = Array.from(new Set([...(aState.savingFinishedBrewIds ?? []), requestedId]));
+      const finishedBrewUpdateErrors = {...(aState.finishedBrewUpdateErrors ?? {})};
+      delete finishedBrewUpdateErrors[requestedId];
+      return { ...aState, savingFinishedBrewIds, finishedBrewUpdateErrors };
     }
     case BeerActions.ActionTypes.DELETE_FINISHED_BEER: {
       return { ...aState };
@@ -137,18 +148,57 @@ const beerDataReducer = (
       return { ...aState, finishedBrews };
     }
     case BeerActions.ActionTypes.ADD_FINISHED_BREW: {
-      return { ...aState };
+      return { ...aState, isAddingFinishedBrew: true, addFinishedBrewError: undefined };
+    }
+    case BeerActions.ActionTypes.ADD_FINISHED_BREW_SUCCESS: {
+      const createdBrew = aAction.payload.beer;
+      const finishedBrews = aState.finishedBrews ?? [];
+      if (!createdBrew?.id) {
+        return {...aState, isAddingFinishedBrew: false, addFinishedBrewError: 'Die Create-Antwort enthält keine FinishedBeer-ID.'};
+      }
+      return {
+        ...aState,
+        isAddingFinishedBrew: false,
+        addFinishedBrewError: undefined,
+        finishedBrews: [...finishedBrews, createdBrew],
+      };
+    }
+    case BeerActions.ActionTypes.ADD_FINISHED_BREW_FAILURE: {
+      return { ...aState, isAddingFinishedBrew: false, addFinishedBrewError: aAction.payload.message };
     }
     case BeerActions.ActionTypes.UPDATE_FINISHED_BREW_SUCCESS: {
         const updatedBrew = aAction.payload.beer;
+          const requestedId = aAction.payload.requestedId;
           const finishedBrews = aState.finishedBrews ?? [];
-          const found = finishedBrews.some(b => b.id === updatedBrew.id);
+          const savingFinishedBrewIds = (aState.savingFinishedBrewIds ?? []).filter(id => id !== requestedId);
+
+          if (!updatedBrew?.id || updatedBrew.id !== requestedId || !finishedBrews.some(b => b.id === requestedId)) {
+              return {
+                  ...aState,
+                  savingFinishedBrewIds,
+                  finishedBrewUpdateErrors: {
+                      ...(aState.finishedBrewUpdateErrors ?? {}),
+                      [requestedId]: 'Die Update-Antwort enthält keine passende FinishedBeer-ID.',
+                  },
+              };
+          }
+
+          const finishedBrewUpdateErrors = {...(aState.finishedBrewUpdateErrors ?? {})};
+          delete finishedBrewUpdateErrors[requestedId];
 
           return {
               ...aState,
-              finishedBrews: found
-                  ? finishedBrews.map(b => b.id === updatedBrew.id ? updatedBrew : b)
-                  : [...finishedBrews, updatedBrew],
+              savingFinishedBrewIds,
+              finishedBrewUpdateErrors,
+              finishedBrews: finishedBrews.map(b => b.id === requestedId ? updatedBrew : b),
+          };
+      }
+      case BeerActions.ActionTypes.UPDATE_FINISHED_BREW_FAILURE: {
+          const {requestedId, message} = aAction.payload;
+          return {
+              ...aState,
+              savingFinishedBrewIds: (aState.savingFinishedBrewIds ?? []).filter(id => id !== requestedId),
+              finishedBrewUpdateErrors: {...(aState.finishedBrewUpdateErrors ?? {}), [requestedId]: message},
           };
       }
 

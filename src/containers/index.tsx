@@ -55,9 +55,7 @@ export class Index extends React.Component<indexMainProps> {
                     {activeView === Views.INGREDIENTS && <IngredientsFormPage />}
                 </div>
                 {activeView === Views.SETTINGS && <SettingsPage />}
-                <SimpleBar style={{maxHeight: '100%', overflowY: 'auto'}}>
-                    {activeView === Views.FINISHED_BREWS && <FinishedBrewsTable></FinishedBrewsTable>}
-                </SimpleBar>
+                {activeView === Views.FINISHED_BREWS && <FinishedBrewsTable />}
                 {activeView === Views.BREWING_CALCULATIONS && <BrewingCalculations />}
                 {activeView === Views.VERSION && <VersionPage />}
             </div>

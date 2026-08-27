@@ -14,8 +14,8 @@ Recipe scaling requires optional numeric `referenceVolume` (liters) and `referen
 | DELETE | `beer/{id}` | Delete recipe | no body |
 | POST | `importbeer` | Import recipe JSON (Recipe Import V2) | `{ format: 'BRAUHAUS' \| 'MMUM', recipe: Record<string, unknown>, idempotencyKey: string }`, returns `RecipeImportResult` with `recipe`, `warnings`, `ingredientMappings`, `createdMasterData`, and `replayed` |
 | GET | `finishedbeers` | Load finished brews | `FinishedBrew[]` |
-| POST | `finishedbeer` | Create finished brew | `FinishedBrew`, returns `FinishedBrew` |
-| POST | `finishedbeer` | Update finished brew | `FinishedBrew`, returns `FinishedBrew`; create/update distinction is backend-owned |
+| POST | `finishedbeer` | Create finished brew | Complete payload without `id`; backend generates the UUID and returns the created `FinishedBrew` |
+| PUT | `finishedbeer` | Update finished brew | Complete `FinishedBrew` including its existing `id`; returns the updated `FinishedBrew` |
 | DELETE | `finishedbeer/{id}` | Delete finished brew | no body |
 | GET | `hops` | Load hops | `Hops[]` |
 | POST | `hop` | Create hop | `Hops` |

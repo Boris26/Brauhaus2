@@ -104,8 +104,9 @@ export const updateFinishedBeerEpic = (action$: any) =>
     ofType(BeerActions.ActionTypes.UPDATE_ACTIVE_BEER),
     mergeMap((action: any) =>
       from(FinishedBeerRepository.updateFinishedBeer(action.payload.beer)).pipe(
-        map((beer) => BeerActions.updateFinishedBrewSuccess(beer)),
+        map((beer) => BeerActions.updateFinishedBrewSuccess({...action.payload.beer, ...beer}, action.payload.beer.id)),
         catchError((aError: Error) =>  from([
+            BeerActions.updateFinishedBrewFailure(action.payload.beer.id, aError.message),
             ApplicationActions.openErrorDialog(
                 true,
                 "Bier fehler",
@@ -123,11 +124,12 @@ export const sendNewFinishedBeerEpic = (action$: any) =>
     ofType(BeerActions.ActionTypes.ADD_FINISHED_BREW),
     mergeMap((action: any) =>
       from(FinishedBeerRepository.sendNewFinishedBeer(action.payload.finishedBrew)).pipe(
-        map(() => {
+        map((beer) => {
           dataCollector.reset();
-          return BeerActions.getFinishedBeers(true);
+          return BeerActions.addFinishedBrewSuccess({...action.payload.finishedBrew, ...beer});
         }),
         catchError((aError: Error) =>  from([
+            BeerActions.addFinishedBrewFailure(aError.message),
             ApplicationActions.openErrorDialog(
                 true,
                 "Bier fehler",

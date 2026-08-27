@@ -1,17 +1,24 @@
 import {connect} from "react-redux";
-import {FinishedBrew} from "../../../model/FinishedBrew";
+import {FinishedBrew, FinishedBrewCreatePayload} from "../../../model/FinishedBrew";
 import {finishedBrewsTestData} from "../../../model/finishedBrewsTestData";
 import {BeerActions} from "../../../actions/actions";
 import {FinishedBrewsTable} from './FinishedBrewsTable';
 
 const mapStateToProps = (state: any) => ({
     brews: state.beerDataReducer.finishedBrews || finishedBrewsTestData,
-    beers: state.beerDataReducer.beers
+    beers: state.beerDataReducer.beers || [],
+    savingFinishedBrewIds: state.beerDataReducer.savingFinishedBrewIds || [],
+    finishedBrewUpdateErrors: state.beerDataReducer.finishedBrewUpdateErrors || {},
+    isAddingFinishedBrew: Boolean(state.beerDataReducer.isAddingFinishedBrew),
+    addFinishedBrewError: state.beerDataReducer.addFinishedBrewError,
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
     onSave: (brew: FinishedBrew) => {
         dispatch(BeerActions.updateActiveBeer(brew));
+    },
+    onCreate: (brew: FinishedBrewCreatePayload) => {
+        dispatch(BeerActions.addFinishedBrew(brew));
     },
     exportPdf: (brews: FinishedBrew[]) => {
         dispatch(BeerActions.generateFinishedBrewsPdf(brews));

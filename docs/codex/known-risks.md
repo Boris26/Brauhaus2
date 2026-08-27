@@ -7,7 +7,7 @@
 - Recipe list default selection depends on the last item returned by `GET beers`. Backend ordering changes affect default preview.
 - Hop reminders assume recipe hop `time` is minutes before end of boil and status `currentStep.elapsedTime` is seconds within cooking phase.
 - `FinishedBrew` creation after production finish stores default numeric values (`liters`, `originalwort`, `residual_extract`) as `0`; real measurement ownership is unclear. Needs verification.
-- `finishedbeer` create and update both use `POST finishedbeer`; changing backend semantics could break update behavior.
+- Finished-brew create and update have distinct confirmed semantics: create uses `POST finishedbeer` without a client ID, while full-record update uses `PUT finishedbeer` with the existing ID.
 - Status normalization supports legacy fields; removing backend legacy fields is safe only if structured fields are complete.
 - The app mixes Material UI v4 and MUI v5 dependencies.
 - `build-deploy`/`deploy` assume SSH access to `boris@192.168.178.72:/srv/sites/braumeister`.

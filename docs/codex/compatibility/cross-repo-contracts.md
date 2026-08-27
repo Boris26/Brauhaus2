@@ -136,12 +136,11 @@ Before changing control output, check whether the UI uses it for:
 
 ## Known compatibility conflicts
 
-### Finished beer update
+### Finished beer create/update
 
-- UI currently documents/calls update through `POST finishedbeer`.
-- Database documentation says update is `PUT /finishedbeer`.
-
-Until this is resolved, do not change finished-brew update behavior without checking both repositories.
+- `POST /finishedbeer` always creates a new record, ignores any supplied `id`, and returns the backend-generated UUID.
+- `PUT /finishedbeer` updates an existing record identified by the body `id`; the UI sends the complete `FinishedBrew`, not a partial patch.
+- An update response must retain the requested ID and must never be inserted as a second Redux list entry.
 
 ### Control availability endpoint
 
