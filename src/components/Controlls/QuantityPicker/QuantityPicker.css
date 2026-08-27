@@ -2,74 +2,73 @@
 .quantity-picker-container {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
+    min-width: 0;
 }
 
 .quantity-picker-label {
-    padding: 0.2rem 0.2rem;
-    color: var(--color-light-text);
+    padding: 0 0 0.3rem;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-small);
+    font-weight: 600;
 }
 
 .quantity-picker-content {
     display: flex;
     align-items: center;
+    height: var(--control-height-compact);
+    overflow: hidden;
+    background: var(--color-input-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-medium);
 }
-.decrement-btn {
-    width: 3rem;
-    height: 3rem;
-    border-radius: 8px 0 0 8px;
-    background-color: var(--color-input-bg); /* Weißer Hintergrund für den Bereich mit der Zahl */
-    color: var(--color-input-border);
-    border-right: var(--color-input-border) 1px solid;
-    &:disabled {
-        background-color: var(--color-input-bg2);
-        cursor: not-allowed;
-    }
-}
+.decrement-btn,
 .increment-btn {
-    width: 3rem;
-    height: 3rem;
-    border-radius: 0 8px 8px 0;
-
-    background-color: var(--color-input-bg); /* Weißer Hintergrund für den Bereich mit der Zahl */
-    color: var(--color-input-border);
-    border-left: var(--color-input-border) 1px solid;
+    width: 2.25rem;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: var(--color-panel-highlight);
+    color: var(--color-text);
+    font-size: 1.1rem;
+    line-height: 1;
+    transition: background-color 0.15s ease, color 0.15s ease;
 }
-.increment-btn:hover {
-    background-color: var(--color-input-bg3);
+.increment-btn { border-left: 1px solid var(--color-border); }
+.decrement-btn { border-right: 1px solid var(--color-border); }
+.increment-btn:hover:not(:disabled),
+.decrement-btn:hover:not(:disabled) {
+    background: var(--color-accent-subtle-hover);
+    color: var(--color-primary-hover);
     cursor: pointer;
 }
-.decrement-btn:hover {
-    background-color: var(--color-input-bg3);
-    cursor: pointer;
-}
-.increment-btn:disabled
-{
-    background-color: var(--color-input-bg2);
-    cursor: not-allowed;
-}
-
+.increment-btn:active:not(:disabled),
+.decrement-btn:active:not(:disabled) { background: var(--color-accent-subtle); }
+.increment-btn:disabled,
 .decrement-btn:disabled {
-    background-color: var(--color-input-bg2);
+    background: var(--color-disabled-bg);
+    color: var(--color-disabled-text);
     cursor: not-allowed;
-    /* Weitere Styles für den deaktivierten Button... */
 }
 
 
 .quantity-picker-input{
-    width: 3.5rem;
-    height: 3rem;
+    min-width: 2.75rem;
+    height: 100%;
     flex-grow: 1;
     flex: 1; /* Nimmt den verfügbaren Platz ein, um den Raum zwischen Buttons und der Zahl zu füllen */
     display: flex;
     justify-content: center;
     align-items: center;
 
-    background-color: var(--color-input-bg); /* Weißer Hintergrund für den Bereich mit der Zahl */
-
+    background: var(--color-input-bg);
+    color: var(--color-text);
+    font-weight: 700;
 }
 .quantity-picker-input-disabled {
-    background-color: var(--color-input-bg2);
+    background: var(--color-disabled-bg);
+    color: var(--color-disabled-text);
     cursor: not-allowed;
 }
 /* Positionierung des Labels */
