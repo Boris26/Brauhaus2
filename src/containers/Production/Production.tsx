@@ -592,65 +592,69 @@ export class Production extends React.Component<ProductionProps, ProductionState
         const settingsDisabled = !this.isControllerAvailable();
         const mashWaterDisabled = settingsDisabled || this.isRecipeWaterButtonDisabled('mash');
         const spargeWaterDisabled = settingsDisabled || this.isRecipeWaterButtonDisabled('sparge');
+        const renderSwitch = (label: string, checked: boolean, onChange: (checked: boolean) => void, disabled = settingsDisabled) => (
+            <div className="settingsToggleRow">
+                <span>{label}</span>
+                <Switch
+                    className="productionSwitch"
+                    onChange={onChange}
+                    checked={checked}
+                    height={24}
+                    width={44}
+                    handleDiameter={18}
+                    checkedIcon={false}
+                    uncheckedIcon={false}
+                    disabled={disabled}
+                    aria-label={label}
+                />
+            </div>
+        );
         return (
             <div className="settings">
-                <h3>Settings</h3>
-                <div className="settingsRow">
-                    <div className="leftAligned" id="formControl">
-                      <label>
-                        <span>Hauptschalter Rührwerk</span>
-                        </label>
-                        <Switch onChange={this.toggleAgitator} checked={mainSwitchState} height={40} width={100} disabled={settingsDisabled} />
-                        <label>
-                        <span>Interval</span>
-                        </label>
-                        <Switch onChange={this.toggleInterval} checked={intervalSwitchState} height={40} width={100} disabled={settingsDisabled}/>
-                        <label>
-                        <span>Heizphase</span>
-                        </label>
-                        <Switch onChange={this.toggleHeatingAndStirring} checked={heatingAndStirringSwitchState} height={40} width={100} disabled={settingsDisabled} />
-                    </div>
-                    <div className="rightAligned" id="quantityPicker">
-                        <QuantityPicker initialValue={1} min={1} max={this.MAX_AGITATOR_SPEED} onChange={this.onAgitatorSpeedChange}
-                                        isDisabled={settingsDisabled} label="Geschwindigkeit" labelPosition="above"/>
-                        <div className="quantityPickerItem">
-
-                        </div>
-                        <QuantityPicker initialValue={1} min={1} max={this.MAX_BREAK_TIME} onChange={this.onIntervalChangeBreakTime}
-                                        isDisabled={settingsDisabled} label="Pausenzeit" labelPosition="above"/>
-                        <div className="quantityPickerItem">
-
-                        </div>
-                        <QuantityPicker initialValue={1} min={1} max={this.MAX_RUNNING_TIME} onChange={this.onIntervalChangeRunningTime}
-                                        isDisabled={settingsDisabled} label="Laufzeit" labelPosition="above"/>
-                    </div>
-                </div>
-
-                <div className="settingsRowWater">
-                    <div className="leftAligned">
-                    <label>
-                        <span>Wasser</span>
-                    </label>
-                    <Switch onChange={this.toggleWaterSwitchState} checked={waterSwitchState} height={40} width={100} disabled={settingsDisabled} />
-                    </div>
-                    <div className="rightAligned">
-                        <QuantityPicker initialValue={1} min={1} max={this.MAX_WATER_LEVEL} onChange={this.onSetWaterChangeQuantity}
-                                        isDisabled={settingsDisabled || waterSwitchState} label="Liter" labelPosition="above"/>
-                    </div>
-
-
-                </div>
-                <div className="recipeWaterButtons">
-                    <button className="recipeWaterBtn" disabled={spargeWaterDisabled} onClick={this.startSpargeWaterFilling}>{this.getRecipeWaterButtonLabel('sparge')}</button>
-                    <button className="recipeWaterBtn" disabled={mashWaterDisabled} onClick={this.startMashWaterFilling}>{this.getRecipeWaterButtonLabel('mash')}</button>
-                </div>
-                <div className="startBtnDiv">
-                    <button className="startBtn" disabled={this.isStartButtonDisabled()} onClick={this.startBrewing}>Start</button>
-                </div>
-                <div className="startPollingBtnDiv">
-                    <button className="startPollingBtn" disabled={settingsDisabled || this.props.isPollingRunning} onClick={this.startPolling}>
+                <div className="settingsHeader">
+                    <h3>Settings</h3>
+                    <button className="startPollingBtn" title="Status aktualisieren" aria-label="Status aktualisieren" disabled={settingsDisabled || this.props.isPollingRunning} onClick={this.startPolling}>
                         <FontAwesomeIcon icon={faRepeat as IconProp} />
                     </button>
+                </div>
+
+                <section className="settingsGroup" aria-labelledby="agitator-settings-title">
+                    <h4 id="agitator-settings-title">Rührwerk</h4>
+                    <div className="settingsRow">
+                        <div className="leftAligned" id="formControl">
+                            {renderSwitch('Hauptschalter Rührwerk', mainSwitchState, this.toggleAgitator)}
+                            {renderSwitch('Intervall', intervalSwitchState, this.toggleInterval)}
+                            {renderSwitch('Heizphase', heatingAndStirringSwitchState, this.toggleHeatingAndStirring)}
+                        </div>
+                        <div className="rightAligned" id="quantityPicker">
+                            <QuantityPicker initialValue={1} min={1} max={this.MAX_AGITATOR_SPEED} onChange={this.onAgitatorSpeedChange}
+                                            isDisabled={settingsDisabled} label="Geschwindigkeit" labelPosition="above"/>
+                            <QuantityPicker initialValue={1} min={1} max={this.MAX_BREAK_TIME} onChange={this.onIntervalChangeBreakTime}
+                                            isDisabled={settingsDisabled} label="Pausenzeit" labelPosition="above"/>
+                            <QuantityPicker initialValue={1} min={1} max={this.MAX_RUNNING_TIME} onChange={this.onIntervalChangeRunningTime}
+                                            isDisabled={settingsDisabled} label="Laufzeit" labelPosition="above"/>
+                        </div>
+                    </div>
+                </section>
+
+                <section className="settingsGroup" aria-labelledby="water-settings-title">
+                    <h4 id="water-settings-title">Wasser</h4>
+                    <div className="settingsRowWater">
+                        <div className="leftAligned">
+                            {renderSwitch('Wasser aktivieren', waterSwitchState, this.toggleWaterSwitchState)}
+                        </div>
+                        <div className="rightAligned">
+                            <QuantityPicker initialValue={1} min={1} max={this.MAX_WATER_LEVEL} onChange={this.onSetWaterChangeQuantity}
+                                            isDisabled={settingsDisabled || waterSwitchState} label="Liter" labelPosition="above"/>
+                        </div>
+                    </div>
+                    <div className="recipeWaterButtons">
+                        <button className="recipeWaterBtn" disabled={spargeWaterDisabled} onClick={this.startSpargeWaterFilling}>{this.getRecipeWaterButtonLabel('sparge')}</button>
+                        <button className="recipeWaterBtn" disabled={mashWaterDisabled} onClick={this.startMashWaterFilling}>{this.getRecipeWaterButtonLabel('mash')}</button>
+                    </div>
+                </section>
+                <div className="startBtnDiv">
+                    <button className="startBtn" disabled={this.isStartButtonDisabled()} onClick={this.startBrewing}>Start</button>
                 </div>
             </div>);
     }
