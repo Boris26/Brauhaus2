@@ -148,10 +148,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
     handleChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
-        this.setState({[name]: value} as unknown as Pick<BeerFormState, keyof BeerFormState>, () => {
-            // Nach jeder Statusänderung den aktuellen Formularstatus speichern
-            this.props.saveBeerFormState(this.state);
-        });
+        this.setState({[name]: value} as unknown as Pick<BeerFormState, keyof BeerFormState>);
     };
 
     componentDidMount() {
@@ -199,7 +196,6 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 isSubmitSuccessful: undefined,
             }, () => {
                 this.updateFermentationStepValidationErrors(this.state.fermentationSteps);
-                this.props.saveBeerFormState(this.state);
             });
         }
 
@@ -252,8 +248,6 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
           return { fermentationSteps };
        }, () => {
             this.updateFermentationStepValidationErrors(this.state.fermentationSteps);
-            // Nach jeder Statusänderung den aktuellen Formularstatus speichern
-            this.props.saveBeerFormState(this.state);
        });
     };
 
@@ -295,9 +289,6 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             // @ts-ignore
             step[name] = value;
             return { maltsDTO };
-        }, () => {
-            // Nach jeder Statusänderung den aktuellen Formularstatus speichern
-            this.props.saveBeerFormState(this.state);
         });
     }
 
@@ -321,8 +312,6 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             }
 
             return { hopsDTO };
-        }, () => {
-            this.props.saveBeerFormState(this.state);
         });
     }
 
@@ -333,9 +322,6 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             // @ts-ignore
             step[name] = value;
             return { yeastsDTO };
-        }, () => {
-            // Nach jeder Statusänderung den aktuellen Formularstatus speichern
-            this.props.saveBeerFormState(this.state);
         });
     }
 
@@ -382,8 +368,6 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             }
 
             return { additionalIngredientsDTO };
-        }, () => {
-            this.props.saveBeerFormState(this.state);
         });
     }
 
@@ -398,7 +382,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             if (aIngredient.timeUnit !== undefined && !Object.values(AdditionalIngredientTimeUnit).includes(aIngredient.timeUnit)) return false;
         }
         return true;
-    };
+    }
 
     isValidQuantity = (aValue: unknown): boolean => {
         return isRequiredPositiveQuantity(aValue);
@@ -631,9 +615,6 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 yeast: false,
                 additional: false,
             },
-        }, () => {
-            // Nach dem Zurücksetzen des Formulars aktualisieren wir den gespeicherten Status
-            this.props.saveBeerFormState(this.state);
         });
     };
 
@@ -668,7 +649,6 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             validationErrors: {},
         }, () => {
             this.updateFermentationStepValidationErrors(this.state.fermentationSteps);
-            this.props.saveBeerFormState(this.state);
         });
     };
 
@@ -797,7 +777,6 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 isSubmitSuccessful: undefined,
             }, () => {
                 this.updateFermentationStepValidationErrors(this.state.fermentationSteps);
-                this.props.saveBeerFormState(this.state);
             });
         }
     };
