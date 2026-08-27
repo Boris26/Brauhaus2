@@ -1,5 +1,9 @@
 import React from 'react';
 import {Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel} from '@mui/material';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import CloseIcon from '@mui/icons-material/Close';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import SportsBarIcon from '@mui/icons-material/SportsBar';
 import './Table.css';
 import {Beer} from "../../../model/Beer";
 import {WaterHeatingTimeCalculator, cookingTimeOptions} from "../../../utils/WaterHeatingTimeCalculator";
@@ -119,7 +123,7 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
         const aDeleteMessage = `Möchtest du das Rezept${aBeerNamePart} wirklich löschen?`;
         if (beers.length > 0) {
             const sortedData = [...beers].sort((a, b) => {
-                const {key, direction} = sortConfig;
+                const {key, direction} = this.state.sortConfig;
                 const aValue = a[key] ?? '';
                 const bValue = b[key] ?? '';
                 if (aValue < bValue) {
@@ -211,8 +215,9 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                                                         this.handleExportShoppingListPdfForBeer(item);
                                                     }}
                                                     title="Einkaufsliste"
+                                                    aria-label="Einkaufsliste"
                                                 >
-                                                    <span role="img" aria-label="Einkaufsliste" style={{fontSize: '1.5rem', marginTop: '0.4rem'}}>🛒</span>
+                                                    <ShoppingCartIcon sx={{fontSize: '1.5rem', marginTop: '0.4rem'}} />
                                                 </button>
                                                 <button
                                                     className={`table-action-button ${beerToBrew && beerToBrew.id === item.id ? 'cancel-brew-button' : 'brew-button'}`}
@@ -231,10 +236,11 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                                                         (beerToBrew && beerToBrew.id === item.id && isPollingRunning)
                                                     }
                                                     title={beerToBrew && beerToBrew.id === item.id ? 'Abbrechen' : 'Brauen'}
+                                                    aria-label={beerToBrew && beerToBrew.id === item.id ? 'Abbrechen' : 'Brauen'}
                                                 >
-                                                    <span role="img" aria-label={beerToBrew && beerToBrew.id === item.id ? 'Abbrechen' : 'Brauen'} style={{fontSize: '1.5rem', marginTop: '0.3rem'}}>
-                                                        {beerToBrew && beerToBrew.id === item.id ? '✖️' : '🍺'}
-                                                    </span>
+                                                    {beerToBrew && beerToBrew.id === item.id
+                                                        ? <CloseIcon sx={{fontSize: '1.5rem', marginTop: '0.3rem'}} />
+                                                        : <SportsBarIcon sx={{fontSize: '1.5rem', marginTop: '0.3rem'}} />}
                                                 </button>
                                                 <button
                                                     className="table-action-button delete-beer-button"
@@ -243,8 +249,9 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                                                         this.handleDeleteBeer(item);
                                                     }}
                                                     title="Rezept löschen"
+                                                    aria-label="Rezept löschen"
                                                 >
-                                                    <span role="img" aria-label="Rezept löschen" style={{fontSize: '1.4rem', marginTop: '0.3rem'}}>🗑️</span>
+                                                    <DeleteOutlineIcon sx={{fontSize: '1.4rem', marginTop: '0.3rem'}} />
                                                 </button>
                                             </div>
                                         </TableCell>
