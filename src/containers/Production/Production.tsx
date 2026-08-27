@@ -631,8 +631,10 @@ export class Production extends React.Component<ProductionProps, ProductionState
                         </div>
                     </div>
                     <div className="intervalSettings" aria-labelledby="interval-settings-title">
-                        <h5 id="interval-settings-title">Intervallbetrieb</h5>
-                        {renderSwitch('Intervall', intervalSwitchState, this.toggleInterval)}
+                        <div className="intervalHeader">
+                            <h5 id="interval-settings-title">Intervallbetrieb</h5>
+                            {renderSwitch('Intervall', intervalSwitchState, this.toggleInterval)}
+                        </div>
                         <div className="intervalTimeControls">
                             <QuantityPicker initialValue={1} min={1} max={this.MAX_BREAK_TIME} onChange={this.onIntervalChangeBreakTime}
                                             isDisabled={settingsDisabled} label="Pausenzeit" labelPosition="above"/>

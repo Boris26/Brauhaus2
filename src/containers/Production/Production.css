@@ -129,13 +129,14 @@
     background: var(--color-surface-2);
     border: 1px solid var(--color-border-soft);
     border-radius: var(--border-radius-large);
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm);
     min-width: 0;
     box-shadow: 0 2px 8px var(--shadow-secondary);
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
-    overflow: hidden;
+    gap: var(--spacing-sm);
+    overflow-x: hidden;
+    overflow-y: auto;
 }
 
 .containerProduction .settings h3 {
@@ -150,12 +151,12 @@
     align-items: center;
     justify-content: space-between;
     min-height: var(--control-height-compact);
-    padding: 0 var(--spacing-xs) var(--spacing-sm);
+    padding: 0 var(--spacing-xs) var(--spacing-xs);
     border-bottom: 1px solid var(--color-border-soft);
 }
 
 .settingsGroup {
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm);
     background: var(--color-brew-bg);
     border: 1px solid var(--color-border);
     border-left: 0.25rem solid var(--color-accent);
@@ -163,32 +164,49 @@
 }
 
 .settingsGroup h4 {
-    margin: 0 0 var(--spacing-md);
+    margin: 0 0 var(--spacing-sm);
     color: var(--color-text);
     font-size: var(--font-size-normal);
     font-weight: 700;
 }
 
 .intervalSettings {
-    margin-top: var(--spacing-md);
-    padding: var(--spacing-sm) var(--spacing-md) var(--spacing-md);
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-xs) var(--spacing-sm) var(--spacing-sm);
     background: var(--color-accent-subtle);
     border: 1px solid var(--color-accent-border);
     border-radius: var(--border-radius-medium);
 }
 
 .intervalSettings h5 {
-    margin: 0 0 var(--spacing-sm);
+    margin: 0;
     color: var(--color-accent-hover);
     font-size: var(--font-size-small);
     font-weight: 700;
+}
+
+.intervalHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+}
+
+.intervalHeader .settingsToggleRow {
+    min-height: var(--control-height-compact);
 }
 
 .intervalTimeControls {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--spacing-sm);
-    margin-top: var(--spacing-sm);
+    margin-top: var(--spacing-xs);
+}
+
+.intervalTimeControls .quantity-picker-content { height: 2rem; }
+.intervalTimeControls .quantity-picker-label {
+    padding-bottom: var(--spacing-xs);
+    font-size: 0.8rem;
 }
 
 .containerProduction .info {
@@ -304,6 +322,12 @@
 .startBtnDiv {
     margin-top: auto;
     display: block;
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    flex: 0 0 auto;
+    padding-top: var(--spacing-xs);
+    background: var(--color-surface-2);
 }
 .startBtn {
     height: var(--control-height);
