@@ -1,16 +1,55 @@
-/* Entferne Hintergrundfarbe und Border-Radius von der allgemeinen Klasse */
-.FinishedBrewsTable {
-  width: 80%;
+.finished-brews-page {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: var(--spacing-md) var(--spacing-lg);
+  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  overflow: hidden;
+}
 
+.finished-brews-table-area,
+.finished-brews-table-scroll,
+.finished-brews-table-scroll .simplebar-wrapper,
+.finished-brews-table-scroll .simplebar-mask,
+.finished-brews-table-scroll .simplebar-offset,
+.finished-brews-table-scroll .simplebar-content-wrapper {
+  min-width: 0;
+  min-height: 0;
+}
+
+.finished-brews-table-area {
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.finished-brews-table-scroll {
+  width: 100%;
+  height: 100%;
+}
+
+.finished-brews-table-scroll .simplebar-content-wrapper {
+  overflow: auto !important;
+}
+
+.FinishedBrewsTable {
+  width: 100%;
+  min-width: 88rem;
+  table-layout: fixed;
 }
 
 /* Setze Hintergrund und Ecken gezielt auf das MUI Paper-Element */
-.MuiPaper-root.FinishedBrewsTable {
+.MuiPaper-root.finished-brews-table-container {
   background-color: var(--color-brew-bg); /* wie Table.css */
   border-top-left-radius: 5px !important;
   border-top-right-radius: 5px !important;
-  margin: 0.6rem;
-  width: 99%;
+  width: 100%;
+  min-width: 88rem;
+  overflow: visible;
 }
 
 .FinishedBrewsTable .table-header {
@@ -139,8 +178,18 @@
 .filter-container {
   display: flex;
   align-items: center;
-  margin: 1rem 0 0.5rem 20px; /* Abstand für den gesamten Filter-Block */
-  gap: 2rem;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm) var(--spacing-md);
+  min-height: var(--control-height-compact);
+}
+
+.filter-container > .finish-btn:first-of-type {
+  margin-left: auto !important;
+}
+
+.filter-container > .finish-btn {
+  margin-left: 0 !important;
 }
 
 .filter-label {
@@ -166,8 +215,7 @@
   accent-color: var(--color-accent);
   width: 1.1rem;
   height: 1.1rem;
-  /* vertikale Ausrichtung anpassen */
-  margin-top:0.7rem;
+  margin: 0;
 }
 
 .FinishedBrewsTable .finish-btn {
@@ -221,6 +269,22 @@
 .FinishedBrewsTable .table-cell.beschreibung {
   min-width: 50px;
   width: 30%;
+}
+
+.FinishedBrewsTable th:nth-child(1), .FinishedBrewsTable td:nth-child(1) { width: 11rem; }
+.FinishedBrewsTable th:nth-child(2), .FinishedBrewsTable td:nth-child(2),
+.FinishedBrewsTable th:nth-child(3), .FinishedBrewsTable td:nth-child(3) { width: 9rem; }
+.FinishedBrewsTable th:nth-child(4), .FinishedBrewsTable td:nth-child(4),
+.FinishedBrewsTable th:nth-child(5), .FinishedBrewsTable td:nth-child(5),
+.FinishedBrewsTable th:nth-child(6), .FinishedBrewsTable td:nth-child(6),
+.FinishedBrewsTable th:nth-child(7), .FinishedBrewsTable td:nth-child(7) { width: 7rem; }
+.FinishedBrewsTable th:nth-child(8), .FinishedBrewsTable td:nth-child(8) { width: 9rem; }
+.FinishedBrewsTable th:nth-child(9), .FinishedBrewsTable td:nth-child(9) { width: auto; }
+.FinishedBrewsTable th:nth-child(10), .FinishedBrewsTable td:nth-child(10) { width: 12rem; }
+
+@media (max-width: 900px) {
+  .finished-brews-page { padding: var(--spacing-md); }
+  .filter-container > .finish-btn:first-of-type { margin-left: 0 !important; }
 }
 
 .FinishedBrewsTable .table-edit-field:focus {

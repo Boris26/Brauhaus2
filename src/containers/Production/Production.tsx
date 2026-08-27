@@ -1,7 +1,6 @@
 import React from 'react';
 import {isUndefined} from 'lodash';
 import {Beer} from "../../model/Beer";
-import {v4 as uuidv4} from 'uuid';
 import '@fortawesome/fontawesome-free/css/all.css'; // Stile
 import './Production.css'
 
@@ -22,7 +21,7 @@ import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
 import {faRepeat} from '@fortawesome/free-solid-svg-icons';
 import Switch from "react-switch";
 import {IconProp} from "@fortawesome/fontawesome-svg-core";
-import {FinishedBrew} from "../../model/FinishedBrew";
+import {FinishedBrewCreatePayload} from "../../model/FinishedBrew";
 import {eBrewState} from "../../enums/eBrewState";
 import {BackendAvailable} from "../../reducers/productionReducer";
 import {ProcessList} from "./ProcessList/ProcessList";
@@ -60,7 +59,7 @@ export interface ProductionProps {
     stopPolling: () => void;
     isBackenAvailable: BackendAvailable | boolean;
     waterStatus: WaterStatus;
-    addFinishedBrew: (finishedBrew: FinishedBrew) => void;
+    addFinishedBrew: (finishedBrew: FinishedBrewCreatePayload) => void;
     nextProcedureStep: () => void;
     isPollingRunning: boolean;
     confirm: (confirmState: ConfirmStates) => void;
@@ -711,8 +710,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
         const jsonString = dataCollector.getAllDataAsJSONString();
         // FinishedBrew erzeugen und speichern
         if (selectedBeer) {
-            const finishedBrew : FinishedBrew = {
-                id: uuidv4(),
+            const finishedBrew : FinishedBrewCreatePayload = {
                 name: selectedBeer.name || 'Unknown Beer',
                 liters: 0,
                 originalwort:  0,

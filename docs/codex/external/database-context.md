@@ -15,7 +15,7 @@ The database/backend is the source of truth for recipes, finished brews, and ing
 ## Important conflict notes
 
 - UI expects `POST beer` to return a `Beer`, but backend docs say it returns a message object.
-- UI documents finished-brew update through `POST finishedbeer`, but backend docs say update is `PUT /finishedbeer`.
+- Finished-brew create/update is confirmed: `POST /finishedbeer` always creates with a backend-generated UUID; `PUT /finishedbeer` performs a full-record update using the body `id`.
 - Backend has inconsistent error keys: route errors often use `error`; app handlers use `message`.
 - `cookingTemperatur` is misspelled but documented as stable compatibility field.
 
@@ -241,7 +241,6 @@ The UI uses the database/backend service for persistent brewing data, not hardwa
 ## Backend assumptions needing verification
 
 - Whether `GET beers` ordering is intentional.
-- Whether `POST finishedbeer` is intended for both create and update.
 - Whether `FinishedBrew` date fields should be ISO strings, localized strings, or `Date`-parseable values.
 - Whether recipe import returns a full `Beer` compatible with UI state.
 - Whether ingredient ID and numeric field casing/types should be normalized across standalone ingredients and recipe ingredients.

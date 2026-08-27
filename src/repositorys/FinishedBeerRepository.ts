@@ -1,5 +1,5 @@
 import {BaseRepository} from "./BaseRepository";
-import {FinishedBrew} from "../model/FinishedBrew";
+import {FinishedBrew, FinishedBrewCreatePayload} from "../model/FinishedBrew";
 
 export class FinishedBeerRepository extends BaseRepository {
 
@@ -7,12 +7,12 @@ export class FinishedBeerRepository extends BaseRepository {
         return this.get<FinishedBrew[]>("finishedbeers");
     }
 
-    static sendNewFinishedBeer(aBeer: FinishedBrew): Promise<FinishedBrew> {
+    static sendNewFinishedBeer(aBeer: FinishedBrewCreatePayload): Promise<FinishedBrew> {
         return this.post<FinishedBrew>("finishedbeer", aBeer);
     }
 
     static updateFinishedBeer(aBeer: FinishedBrew): Promise<FinishedBrew> {
-        return this.post<FinishedBrew>("finishedbeer", aBeer);
+        return this.put<FinishedBrew>("finishedbeer", aBeer);
     }
 
     static deleteFinishedBeer(aBeerId: string): Promise<void> {

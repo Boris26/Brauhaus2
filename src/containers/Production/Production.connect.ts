@@ -3,7 +3,7 @@ import {Dispatch} from "redux";
 import {BeerActions, ProductionActions} from "../../actions/actions";
 import {MashAgitatorStates} from "../../model/MashAgitator";
 import {BrewingData} from "../../model/BrewingData";
-import {FinishedBrew} from "../../model/FinishedBrew";
+import {FinishedBrewCreatePayload} from "../../model/FinishedBrew";
 import {RootState} from "../../reducers/rootReducer";
 import {Production} from './Production';
 import {ConfirmStates} from '../../enums/eConfirmStates';
@@ -31,7 +31,7 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
         dispatch(ProductionActions.stopPolling())
     },
 
-    addFinishedBrew: (finishedBrew: FinishedBrew) => {
+    addFinishedBrew: (finishedBrew: FinishedBrewCreatePayload) => {
         dispatch(BeerActions.addFinishedBrew(finishedBrew))
     },
     nextProcedureStep: () => {

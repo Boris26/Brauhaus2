@@ -2,21 +2,26 @@ import React from 'react';
 import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@mui/material';
 import SimpleBar from 'simplebar-react';
 import './FinishedBrewsTable.css';
-import {FinishedBrew} from "../../../model/FinishedBrew";
+import {FinishedBrew, FinishedBrewCreatePayload} from "../../../model/FinishedBrew";
 import {isNil} from "lodash";
-import { v4 as uuidv4 } from 'uuid';
 import { eBrewState, BrewStateGerman } from '../../../enums/eBrewState';
 import Panel from '../../Panel/Panel';
 import FinishedBrewDetails from './FinishedBrewDetails';
+import {completeFinishedBrew, mergeFinishedBrewChanges} from '../../../utils/finishedBrewChanges';
 
 
 interface FinishedBrewsTableProps {
     brews: FinishedBrew[];
     onSave: (brew: FinishedBrew) => void;
+    onCreate: (brew: FinishedBrewCreatePayload) => void;
     exportPdf: (brews: FinishedBrew[]) => void;
     getFinishedBrews: (isFetching: boolean) => void;
     beers: { id: string; name: string }[]; // id als string (UUID)
     onDelete: (id: string) => void;
+    savingFinishedBrewIds: string[];
+    finishedBrewUpdateErrors: Record<string, string>;
+    isAddingFinishedBrew: boolean;
+    addFinishedBrewError?: string;
 }
 
 interface FinishedBrewsTableState {
@@ -28,6 +33,8 @@ interface FinishedBrewsTableState {
     newRowActive?: boolean;
     newRowData?: Partial<FinishedBrew>;
     panelBrewId?: string | null;
+    submittingRows: Record<string, boolean>;
+    newRowSubmitting: boolean;
 }
 
 const calcAlcohol = (w1: number, w2: number | null) => {
@@ -39,12 +46,37 @@ const calcAlcohol = (w1: number, w2: number | null) => {
 export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, FinishedBrewsTableState> {
     constructor(props: FinishedBrewsTableProps) {
         super(props);
-        this.state = { editRows: {}, filterYear: '', showOnlyActive: false, filterOutActive: false, clickedFinishBtn: {}, panelBrewId: null };
+        this.state = { editRows: {}, filterYear: '', showOnlyActive: false, filterOutActive: false, clickedFinishBtn: {}, panelBrewId: null, submittingRows: {}, newRowSubmitting: false };
     }
 
     componentDidMount() {
         const { getFinishedBrews } = this.props;
         getFinishedBrews(true);
+    }
+
+    componentDidUpdate(prevProps: FinishedBrewsTableProps) {
+        const completedIds = prevProps.savingFinishedBrewIds.filter(id => !this.props.savingFinishedBrewIds.includes(id));
+        const successfulIds = completedIds.filter(id => !this.props.finishedBrewUpdateErrors[id]);
+
+        if (completedIds.length > 0) {
+            this.setState(prevState => {
+                const editRows = {...prevState.editRows};
+                const submittingRows = {...prevState.submittingRows};
+                const clickedFinishBtn = {...prevState.clickedFinishBtn};
+                successfulIds.forEach(id => delete editRows[id]);
+                completedIds.forEach(id => {
+                    delete submittingRows[id];
+                    delete clickedFinishBtn[id];
+                });
+                return {editRows, submittingRows, clickedFinishBtn};
+            });
+        }
+
+        if (prevProps.isAddingFinishedBrew && !this.props.isAddingFinishedBrew) {
+            this.setState(this.props.addFinishedBrewError
+                ? {newRowSubmitting: false}
+                : {newRowActive: false, newRowData: {}, newRowSubmitting: false});
+        }
     }
 
     handleChange = (id: string, field: keyof FinishedBrew, value: string) => {
@@ -71,13 +103,9 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
     handleSave = (id: string) => {
         const brew = this.props.brews.find(b => b.id === id);
         if (!brew) return;
-        const updated = { ...brew, beer_id: brew.beer_id,state : brew.state ,...this.state.editRows[id] } as FinishedBrew;
-        this.props.onSave(updated);
-        this.setState(prevState => {
-            const editRows = { ...prevState.editRows };
-            delete editRows[id];
-            return { editRows };
-        });
+        const updated = mergeFinishedBrewChanges(brew, this.state.editRows[id]);
+        if (this.state.submittingRows[id] || this.props.savingFinishedBrewIds.includes(id)) return;
+        this.setState(prevState => ({submittingRows: {...prevState.submittingRows, [id]: true}}), () => this.props.onSave(updated));
     };
 
     handleFilterYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -123,17 +151,12 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
     };
 
     handleFinishClick = (brew: FinishedBrew) => {
+        if (this.state.submittingRows[brew.id] || this.props.savingFinishedBrewIds.includes(brew.id)) return;
+        const updated = completeFinishedBrew(brew);
         this.setState(prev => ({
-            clickedFinishBtn: { ...prev.clickedFinishBtn, [brew.id]: true }
-        }), () => {
-            setTimeout(() => {
-                this.setState(prev => ({
-                    clickedFinishBtn: { ...prev.clickedFinishBtn, [brew.id]: false }
-                }));
-                const updated = { ...brew, active: false, beer_id: brew.beer_id };
-                this.props.onSave(updated);
-            }, 150);
-        });
+            clickedFinishBtn: { ...prev.clickedFinishBtn, [brew.id]: true },
+            submittingRows: {...prev.submittingRows, [brew.id]: true},
+        }), () => this.props.onSave(updated));
     };
 
     handleDelete = (id: string) => {
@@ -223,7 +246,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
     }
 
     renderNewRow(beers: { id: string; name: string }[]) {
-        const { newRowActive, newRowData } = this.state;
+        const { newRowActive, newRowData, newRowSubmitting } = this.state;
         if (!newRowActive) return null;
         return (
             <TableRow className="table-row">
@@ -324,11 +347,17 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                         <button
                             className="finish-btn"
                             onClick={() => {
-                                const newId = uuidv4();
-                                const newBrew: FinishedBrew = { ...newRowData, id: newId, beer_id: newRowData?.beer_id, active: true } as FinishedBrew;
-                                this.props.onSave(newBrew);
-                                this.setState({ newRowActive: false, newRowData: {} });
+                                if (newRowSubmitting || this.props.isAddingFinishedBrew) return;
+                                const newBrew: FinishedBrewCreatePayload = {
+                                    ...newRowData,
+                                    beer_id: newRowData?.beer_id,
+                                    state: newRowData?.state || eBrewState.FERMENTATION,
+                                    note: newRowData?.note || '',
+                                    active: true,
+                                } as FinishedBrewCreatePayload;
+                                this.setState({newRowSubmitting: true}, () => this.props.onCreate(newBrew));
                             }}
+                            disabled={newRowSubmitting || this.props.isAddingFinishedBrew}
                             title="Speichern"
                         >
                             <span role="img" aria-label="Speichern" style={{ fontSize: 22, verticalAlign: 'middle',  display: 'inline-block', position: 'relative', top: '3px' }}>💾</span>
@@ -336,6 +365,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                         <button
                             className="cancel-btn"
                             onClick={() => this.setState({ newRowActive: false, newRowData: {} })}
+                            disabled={newRowSubmitting || this.props.isAddingFinishedBrew}
                             title="Abbrechen"
                         >
                             <span role="img" aria-label="Abbrechen" style={{ fontSize: 22, verticalAlign: 'middle',  display: 'inline-block', position: 'relative', top: '3px' }}>✖️</span>
@@ -347,11 +377,12 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
     }
 
     renderBrewRow(brew: FinishedBrew, beers: { id: string; name: string }[]) {
-        const { editRows, clickedFinishBtn } = this.state;
+        const { editRows, clickedFinishBtn, submittingRows } = this.state;
         const brewId = brew.id;
         const isEdited = !!editRows[brewId];
         const row = { ...brew, ...editRows[brewId] };
         const isActive = brew.active;
+        const isSaving = Boolean(submittingRows[brewId]) || this.props.savingFinishedBrewIds.includes(brewId);
         return (
             <TableRow key={brewId} className={`table-row${isActive ? ' active-row' : ''}`}>
                 <TableCell className="table-cell">{brew.name}</TableCell>
@@ -448,6 +479,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                             <button
                                 className="finish-btn"
                                 onClick={() => this.handleSave(brewId)}
+                                disabled={isSaving}
                                 title="Speichern"
                             >
                                 <span role="img" aria-label="Speichern" style={{ fontSize: 22, verticalAlign: 'middle',  display: 'inline-block', position: 'relative', top: '3px' }}>💾</span>
@@ -457,8 +489,8 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                             <button
                                 className={`finish-btn${clickedFinishBtn[brewId] ? ' clicked' : ''}`}
                                 title="Endgültig fertigstellen"
-                                onClick={() => this.handleFinishClick(brew)}
-                                disabled={row.residual_extract === null || row.residual_extract === undefined}
+                                onClick={() => this.handleFinishClick(row as FinishedBrew)}
+                                disabled={isSaving || row.residual_extract === null || row.residual_extract === undefined}
                             >
                                 <span role="img" aria-label="Fertig" style={{ fontSize: 22, verticalAlign: 'middle',  display: 'inline-block', position: 'relative', top: '3px' }}>✅</span>
                             </button>
@@ -486,8 +518,8 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
 
     renderTable(filteredBrews: FinishedBrew[], beers: { id: string; name: string }[]) {
         return (
-            <SimpleBar style={{ maxHeight: 600 }}>
-                <TableContainer component={Paper} className="FinishedBrewsTable">
+            <SimpleBar className="finished-brews-table-scroll">
+                <TableContainer component={Paper} className="finished-brews-table-container">
                     <Table className="FinishedBrewsTable">
                         <TableHead className="table-header">
                             <TableRow>
@@ -520,9 +552,9 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
         const filteredBrews = this.filterBrewsByYearAndActive(brews, filterYear, showOnlyActive, filterOutActive);
         const selectedBrew = panelBrewId ? brews.find(b => b.id === panelBrewId) : null;
         return (
-            <>
+            <main className="finished-brews-page">
                 {this.renderFilterControls(years)}
-                {this.renderTable(filteredBrews, beers)}
+                <div className="finished-brews-table-area">{this.renderTable(filteredBrews, beers)}</div>
                 {/* Panel als Overlay am Ende */}
                 {selectedBrew && (
                     <div style={{ position: 'fixed', left: 0, top: 0, width: '100vw', height: '100vh', zIndex: 2000, pointerEvents: 'none' }}>
@@ -533,7 +565,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                         </div>
                     </div>
                 )}
-            </>
+            </main>
         );
     }
 }

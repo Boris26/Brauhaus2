@@ -7,7 +7,7 @@ import {BrewingData} from "../model/BrewingData";
 import {BrewingStatus} from "../model/BrewingStatus";
 import {ConfirmStates} from "../enums/eConfirmStates";
 import {WaterStatus} from "../components/Controlls/WaterControll/WaterControl";
-import {FinishedBrew} from "../model/FinishedBrew";
+import {FinishedBrew, FinishedBrewCreatePayload} from "../model/FinishedBrew";
 import {BackendAvailable} from "../reducers/productionReducer";
 import {scalingValues} from "../utils/BeerScaler/ScalingBeerRecipe";
 import {RecipeImportRequest, RecipeImportResult} from '../model/RecipeImport';
@@ -31,7 +31,10 @@ export namespace BeerActions {
         DELETE_FINISHED_BEER = 'BeerActions.DELETE_FINISHED_BEER',
         DELETE_FINISHED_BEER_SUCCESS = 'BeerActions.DELETE_FINISHED_BEER_SUCCESS',
         ADD_FINISHED_BREW = 'BeerActions.ADD_FINISHED_BREW',
+        ADD_FINISHED_BREW_SUCCESS = 'BeerActions.ADD_FINISHED_BREW_SUCCESS',
+        ADD_FINISHED_BREW_FAILURE = 'BeerActions.ADD_FINISHED_BREW_FAILURE',
         UPDATE_FINISHED_BREW_SUCCESS = 'BeerActions.UPDATE_FINISHED_BREW_SUCCESS',
+        UPDATE_FINISHED_BREW_FAILURE = 'BeerActions.UPDATE_FINISHED_BREW_FAILURE',
         SAVE_BEER_FORM_STATE = 'BeerActions.SAVE_BEER_FORM_STATE',
         LOAD_BEER_FORM_STATE = 'BeerActions.LOAD_BEER_FORM_STATE',
         GENERATE_FINISHED_BREWS_PDF = 'BeerActions.GENERATE_FINISHED_BREWS_PDF',
@@ -137,13 +140,28 @@ export namespace BeerActions {
     export interface AddFinishedBrew {
         readonly type: ActionTypes.ADD_FINISHED_BREW;
         payload: {
-            finishedBrew: FinishedBrew;
+            finishedBrew: FinishedBrewCreatePayload;
         };
     }
 
     export interface UpdateFinishedBrewSuccess {
         readonly type: ActionTypes.UPDATE_FINISHED_BREW_SUCCESS;
+        payload: { beer: FinishedBrew; requestedId: string };
+    }
+
+    export interface UpdateFinishedBrewFailure {
+        readonly type: ActionTypes.UPDATE_FINISHED_BREW_FAILURE;
+        payload: { requestedId: string; message: string };
+    }
+
+    export interface AddFinishedBrewSuccess {
+        readonly type: ActionTypes.ADD_FINISHED_BREW_SUCCESS;
         payload: { beer: FinishedBrew };
+    }
+
+    export interface AddFinishedBrewFailure {
+        readonly type: ActionTypes.ADD_FINISHED_BREW_FAILURE;
+        payload: { message: string };
     }
 
     export interface SaveBeerFormState {
@@ -240,7 +258,10 @@ export namespace BeerActions {
         DeleteFinishedBeer |
         DeleteFinishedBeerSuccess |
         AddFinishedBrew |
+        AddFinishedBrewSuccess |
+        AddFinishedBrewFailure |
         UpdateFinishedBrewSuccess |
+        UpdateFinishedBrewFailure |
         SaveBeerFormState |
         LoadBeerFormState |
         GenerateFinishedBrewsPdf |
@@ -381,17 +402,38 @@ export namespace BeerActions {
         }
     }
 
-    export function addFinishedBrew(finishedBrew: FinishedBrew): AddFinishedBrew {
+    export function addFinishedBrew(finishedBrew: FinishedBrewCreatePayload): AddFinishedBrew {
         return {
             type: ActionTypes.ADD_FINISHED_BREW,
             payload: {finishedBrew}
         };
     }
 
-    export function updateFinishedBrewSuccess(beer: FinishedBrew): UpdateFinishedBrewSuccess {
+    export function addFinishedBrewSuccess(beer: FinishedBrew): AddFinishedBrewSuccess {
+        return {
+            type: ActionTypes.ADD_FINISHED_BREW_SUCCESS,
+            payload: {beer}
+        };
+    }
+
+    export function addFinishedBrewFailure(message: string): AddFinishedBrewFailure {
+        return {
+            type: ActionTypes.ADD_FINISHED_BREW_FAILURE,
+            payload: {message}
+        };
+    }
+
+    export function updateFinishedBrewSuccess(beer: FinishedBrew, requestedId: string): UpdateFinishedBrewSuccess {
         return {
             type: ActionTypes.UPDATE_FINISHED_BREW_SUCCESS,
-            payload: {beer}
+            payload: {beer, requestedId}
+        };
+    }
+
+    export function updateFinishedBrewFailure(requestedId: string, message: string): UpdateFinishedBrewFailure {
+        return {
+            type: ActionTypes.UPDATE_FINISHED_BREW_FAILURE,
+            payload: {requestedId, message}
         };
     }
 
