@@ -126,8 +126,8 @@
 /* Settings Panel */
 .containerProduction .settings {
     grid-area: settings;
-    background: var(--color-brew-bg);
-    border: 1px solid var(--color-border);
+    background: var(--color-panel-bg);
+    border: 1px solid var(--color-border-soft);
     border-radius: var(--border-radius-large);
     padding: var(--spacing-md);
     min-width: 0;
@@ -140,7 +140,6 @@
 
 .containerProduction .settings h3 {
     margin: 0;
-    color: var(--color-light-text);
     font-size: var(--font-size-section-title);
     line-height: 1.15;
 }
@@ -151,13 +150,13 @@
     justify-content: space-between;
     min-height: var(--control-height-compact);
     padding: 0 var(--spacing-xs) var(--spacing-sm);
-    border-bottom: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border-soft);
 }
 
 .settingsGroup {
     padding: var(--spacing-md);
-    background: var(--color-surface-2);
-    border: 1px solid var(--color-border);
+    background: var(--color-panel-raised);
+    border: 1px solid var(--color-border-soft);
     border-radius: var(--border-radius-large);
 }
 
@@ -166,26 +165,6 @@
     color: var(--color-text);
     font-size: var(--font-size-normal);
     font-weight: 700;
-}
-
-.intervalSettings {
-    margin-top: var(--spacing-md);
-    padding-top: var(--spacing-md);
-    border-top: 1px solid var(--color-border);
-}
-
-.intervalSettings h5 {
-    margin: 0 0 var(--spacing-sm);
-    color: var(--color-light-text);
-    font-size: var(--font-size-small);
-    font-weight: 700;
-}
-
-.intervalTimeControls {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--spacing-sm);
-    margin-top: var(--spacing-sm);
 }
 
 .containerProduction .info {
@@ -285,17 +264,11 @@
 }
 
 .settingsToggleRow + .settingsToggleRow { margin-top: var(--spacing-sm); }
-.settingsToggleRow:has(input:disabled) { color: var(--color-disabled-text); }
 .productionSwitch { flex: 0 0 auto; }
 .productionSwitch .react-switch-bg { background: var(--color-panel-highlight) !important; }
 .productionSwitch:has(input:checked) .react-switch-bg { background: var(--color-primary) !important; }
 .productionSwitch:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
-.productionSwitch:has(input:disabled) { opacity: 0.65; cursor: not-allowed; }
-
-.settings .quantity-picker-content,
-.settings .quantity-picker-input { background: var(--color-surface-strong); }
-
-.settings .quantity-picker-input-disabled { background: var(--color-disabled-bg); }
+.productionSwitch:has(input:disabled) { opacity: 0.45; cursor: not-allowed; }
 
 /* Buttons */
 .startBtnDiv {
@@ -467,6 +440,5 @@
 @media (max-width: 520px) {
     .settingsRow,
     .settingsRowWater { grid-template-columns: 1fr; }
-    .intervalTimeControls { grid-template-columns: 1fr; }
     .recipeWaterButtons { flex-direction: column; }
 }
