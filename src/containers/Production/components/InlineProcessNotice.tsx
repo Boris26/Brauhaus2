@@ -8,6 +8,7 @@ interface ControlConfirmationNoticeProps {
     pending: boolean;
     onConfirm?: () => void;
     heldMashTemperature?: number;
+    errorMessage?: string;
 }
 
 const compactCopyByWaitingState: Partial<Record<WaitingFor, {title: string; buttonLabel?: string}>> = {
@@ -19,7 +20,7 @@ const compactCopyByWaitingState: Partial<Record<WaitingFor, {title: string; butt
     [WaitingFor.BOILING_CONFIRMATION]: {title: 'Siedepunkt bestätigen', buttonLabel: 'Siedepunkt erreicht'},
 };
 
-export const ControlConfirmationNotice: React.FC<ControlConfirmationNoticeProps> = ({request, pending, onConfirm, heldMashTemperature}) => (
+export const ControlConfirmationNotice: React.FC<ControlConfirmationNoticeProps> = ({request, pending, onConfirm, heldMashTemperature, errorMessage}) => (
     <section className="inline-process-notice inline-process-notice--action" aria-label="Aktion erforderlich" aria-live="polite">
         <div className="inline-process-notice__content">
             <div className="inline-process-notice__heading">
@@ -38,6 +39,7 @@ export const ControlConfirmationNotice: React.FC<ControlConfirmationNoticeProps>
                 <p className="inline-process-notice__detail">Hauptmaische wird weiterhin auf {heldMashTemperature.toLocaleString('de-DE', {maximumFractionDigits: 1})} °C gehalten.</p>
             )}
             {!request.canConfirm && <p className="inline-process-notice__detail">{request.message}</p>}
+            {errorMessage && <p className="inline-process-notice__detail" role="alert">Bestätigung fehlgeschlagen: {errorMessage}</p>}
         </div>
     </section>
 );

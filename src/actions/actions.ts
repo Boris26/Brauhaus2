@@ -22,14 +22,17 @@ export namespace BeerActions {
         SUBMIT_BEER_SUCCESS = 'BeerActions.SUBMIT_BEER_SUCCESS',
         GET_BEERS = 'BeerActions.GET_BEERS',
         GET_BEERS_SUCCESS = 'BeerActions.GET_BEERS_SUCCESS',
+        GET_BEERS_FAILURE = 'BeerActions.GET_BEERS_FAILURE',
         SET_SELECTED_BEER = 'BeerActions.SET_SELECTED_BEER',
         SET_IS_SUBMIT_SUCCESSFUL = 'BeerActions.SET_IS_SUBMIT_SUCCESSFUL',
         SET_BEER_TO_BREW = 'BeerActions.SET_BEER_TO_BREW',
         UPDATE_ACTIVE_BEER = 'BeerActions.UPDATE_ACTIVE_BEER',
         GET_FINISHED_BEERS = 'BeerActions.GET_FINISHED_BEERS',
         GET_FINISHED_BEERS_SUCCESS = 'BeerActions.GET_FINISHED_BEERS_SUCCESS',
+        GET_FINISHED_BEERS_FAILURE = 'BeerActions.GET_FINISHED_BEERS_FAILURE',
         DELETE_FINISHED_BEER = 'BeerActions.DELETE_FINISHED_BEER',
         DELETE_FINISHED_BEER_SUCCESS = 'BeerActions.DELETE_FINISHED_BEER_SUCCESS',
+        DELETE_FINISHED_BEER_FAILURE = 'BeerActions.DELETE_FINISHED_BEER_FAILURE',
         ADD_FINISHED_BREW = 'BeerActions.ADD_FINISHED_BREW',
         ADD_FINISHED_BREW_SUCCESS = 'BeerActions.ADD_FINISHED_BREW_SUCCESS',
         ADD_FINISHED_BREW_FAILURE = 'BeerActions.ADD_FINISHED_BREW_FAILURE',
@@ -65,6 +68,7 @@ export namespace BeerActions {
             beers: Beer[]
         }
     }
+    export interface GetBeersFailure { readonly type: ActionTypes.GET_BEERS_FAILURE }
 
     export interface SetIsSubmitSuccessful {
         readonly type: ActionTypes.SET_IS_SUBMIT_SUCCESSFUL
@@ -121,6 +125,7 @@ export namespace BeerActions {
             finishedBeers: FinishedBrew[] | null
         }
     }
+    export interface GetFinishedBeersFailure { readonly type: ActionTypes.GET_FINISHED_BEERS_FAILURE }
 
     export interface DeleteFinishedBeer {
         readonly type: ActionTypes.DELETE_FINISHED_BEER
@@ -136,6 +141,7 @@ export namespace BeerActions {
             deletedFinishedBrewId: string
         }
     }
+    export interface DeleteFinishedBeerFailure { readonly type: ActionTypes.DELETE_FINISHED_BEER_FAILURE; payload: {deletedFinishedBrewId: string; message: string} }
 
     export interface AddFinishedBrew {
         readonly type: ActionTypes.ADD_FINISHED_BREW;
@@ -249,14 +255,17 @@ export namespace BeerActions {
         SubmitBeerSuccess |
         GetBeers |
         GetBeersSuccess |
+        GetBeersFailure |
         SetIsSubmitSuccessful |
         SetSelectedBeer |
         SetBeerToBrew |
         UpdateActiveBeer |
         GetFinishedBeers |
         GetFinishedBeersSuccess |
+        GetFinishedBeersFailure |
         DeleteFinishedBeer |
         DeleteFinishedBeerSuccess |
+        DeleteFinishedBeerFailure |
         AddFinishedBrew |
         AddFinishedBrewSuccess |
         AddFinishedBrewFailure |
@@ -291,6 +300,7 @@ export namespace BeerActions {
             payload: {beers: aBeers}
         }
     }
+    export function getBeersFailure(): GetBeersFailure { return {type: ActionTypes.GET_BEERS_FAILURE} }
 
     export function submitBeer(aBeer: BeerDTO): SubmitBeer {
         return {
@@ -387,6 +397,7 @@ export namespace BeerActions {
             payload: {finishedBeers: aFinishedBeers}
         }
     }
+    export function getFinishedBeersFailure(): GetFinishedBeersFailure { return {type: ActionTypes.GET_FINISHED_BEERS_FAILURE} }
 
     export function deleteFinishedBeer(aFinishedBrewId: string): DeleteFinishedBeer {
         return {
@@ -400,6 +411,9 @@ export namespace BeerActions {
             type: BeerActions.ActionTypes.DELETE_FINISHED_BEER_SUCCESS,
             payload: {isDeleteFinishedBeerSuccessful: aIsSuccessful, deletedFinishedBrewId: aDeletedFinishedBrewId}
         }
+    }
+    export function deleteFinishedBeerFailure(aDeletedFinishedBrewId: string, message: string): DeleteFinishedBeerFailure {
+        return {type: ActionTypes.DELETE_FINISHED_BEER_FAILURE, payload: {deletedFinishedBrewId: aDeletedFinishedBrewId, message}}
     }
 
     export function addFinishedBrew(finishedBrew: FinishedBrewCreatePayload): AddFinishedBrew {
@@ -602,10 +616,13 @@ export namespace ProductionActions {
         START_WATER_FILLING = 'ProductionActions.START_WATER_FILLING',
         START_WATER_FILLING_SUCCESS = 'ProductionActions.START_WATER_FILLING_SUCCESS',
         SEND_BREWING_DATA = 'ProductionActions.SEND_BREWING_DATA',
+        BREWING_START_FAILURE = 'ProductionActions.BREWING_START_FAILURE',
         SET_BREWING_STATUS = 'ProductionActions.SET_BREWING_STATUS',
         START_POLLING = 'ProductionActions.START_POLLING',
         STOP_POLLING = 'ProductionActions.STOP_POLLING',
         CONFIRM = 'ProductionActions.CONFIRM',
+        CONFIRM_SUCCESS = 'ProductionActions.CONFIRM_SUCCESS',
+        CONFIRM_FAILURE = 'ProductionActions.CONFIRM_FAILURE',
         CHECK_IS_BACKEND_AVAILABLE = 'ProductionActions.CHECK_IS_BACKEND_AVAILABLE',
         IS_BACKEND_AVAILABLE = 'ProductionActions.IS_BACKEND_AVAILABLE',
         SET_WATER_STATUS = 'ProductionActions.SET_WATER_STATUS',
@@ -637,6 +654,15 @@ export namespace ProductionActions {
         payload: { confirmState: ConfirmStates }
     }
 
+    export interface ConfirmSuccess {
+        readonly type: ActionTypes.CONFIRM_SUCCESS
+    }
+
+    export interface ConfirmFailure {
+        readonly type: ActionTypes.CONFIRM_FAILURE
+        payload: { error: string }
+    }
+
     export interface StartPolling {
         readonly type: ActionTypes.START_POLLING
     }
@@ -654,6 +680,7 @@ export namespace ProductionActions {
         readonly type: ActionTypes.SEND_BREWING_DATA
         payload: { brewingData: BrewingData }
     }
+    export interface BrewingStartFailure { readonly type: ActionTypes.BREWING_START_FAILURE; payload: {error: string} }
 
     export interface ToggleAgitatorSuccess {
         readonly type: ActionTypes.TOGGLE_AGITATOR_SUCCESS
@@ -734,7 +761,10 @@ export namespace ProductionActions {
         StartPolling |
         StopPolling |
         Confirm |
+        ConfirmSuccess |
+        ConfirmFailure |
         SendBrewingData |
+        BrewingStartFailure |
         CheckIsBackendAvailable |
         IsBackendAvailable |
         SetWaterStatus |
@@ -774,6 +804,14 @@ export namespace ProductionActions {
         }
     }
 
+    export function confirmSuccess(): ProductionActions.ConfirmSuccess {
+        return {type: ActionTypes.CONFIRM_SUCCESS}
+    }
+
+    export function confirmFailure(aError: string): ProductionActions.ConfirmFailure {
+        return {type: ActionTypes.CONFIRM_FAILURE, payload: {error: aError}}
+    }
+
     export function startPolling(): StartPolling {
         return {
             type: ActionTypes.START_POLLING,
@@ -799,6 +837,7 @@ export namespace ProductionActions {
             payload: {brewingData: aBrewingData}
         }
     }
+    export function brewingStartFailure(error: string): BrewingStartFailure { return {type: ActionTypes.BREWING_START_FAILURE, payload: {error}} }
 
     export function toggleAgitatorSuccess(aIsSuccess: boolean): ToggleAgitatorSuccess {
         return {

@@ -28,17 +28,26 @@ const makeStatus = (overrides: Partial<BrewingStatus> = {}): BrewingStatus => ({
     ...overrides,
 });
 
-const renderIndex = (brewingStatus: BrewingStatus, viewState = Views.VERSION) => {
+const renderIndex = (brewingStatus: BrewingStatus, viewState = Views.VERSION, lifecycle = {connect: jest.fn(), disconnect: jest.fn()}) => {
     const result = render(
         <Index
             viewState={viewState}
             brewingStatus={brewingStatus}
             checkIsBackenAvailable={jest.fn()}
-            webSocketConnect={jest.fn()}
+            webSocketConnect={lifecycle.connect}
+            webSocketDisconnect={lifecycle.disconnect}
         />
     );
     return result;
 };
+
+it('connects overheat events for the app lifetime and disconnects on unmount', () => {
+    const lifecycle = {connect: jest.fn(), disconnect: jest.fn()};
+    const rendered = renderIndex(makeStatus(), Views.VERSION, lifecycle);
+    expect(lifecycle.connect).toHaveBeenCalledTimes(1);
+    rendered.unmount();
+    expect(lifecycle.disconnect).toHaveBeenCalledTimes(1);
+});
 
 describe('Index view routing', () => {
     it('points the dashboard view to the dashboard page', (): void => {

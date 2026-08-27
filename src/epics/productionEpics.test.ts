@@ -1,10 +1,11 @@
 import { Subject } from 'rxjs';
 import { ProductionActions } from '../actions/actions';
-import { BREWING_STATUS_REQUEST_TIMEOUT, sendBrewingDataEpic$, startPollingEpic$, startWaterFillingEpic$, WATER_FILLING_MAX_DURATION, WATER_STATUS_REQUEST_TIMEOUT } from './productionEpics';
+import { BREWING_STATUS_REQUEST_TIMEOUT, confirmEpic$, mapControlSocketEvent, nextProcedureStepEpic$, sendBrewingDataEpic$, startPollingEpic$, startWaterFillingEpic$, WATER_FILLING_MAX_DURATION, WATER_STATUS_REQUEST_TIMEOUT } from './productionEpics';
 import { ProductionRepository } from '../repositorys/ProductionRepository';
 import {BackendAvailable} from '../reducers/productionReducer';
 import {BrewingData} from '../model/BrewingData';
 import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../model/brewingStatus.types';
+import {ConfirmStates} from '../enums/eConfirmStates';
 
 jest.mock('../repositorys/ProductionRepository', () => ({
   ProductionRepository: {
@@ -13,6 +14,8 @@ jest.mock('../repositorys/ProductionRepository', () => ({
     sendBrewingData: jest.fn(),
     startBrewing: jest.fn(),
     getBrewingStatus: jest.fn(),
+    confirm: jest.fn(),
+    nextProcedureStep: jest.fn(),
   },
 }));
 
@@ -68,6 +71,100 @@ const createBrewingData = (): BrewingData => ({
   CookingTemperature: 99,
   CookingTime: 60,
   Rasten: [],
+});
+
+describe('confirmEpic$', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('emits success after a successful confirm request', async () => {
+    mockedProductionRepository.confirm.mockResolvedValue(undefined);
+    const action$ = new Subject<ProductionActions.Confirm>();
+    const emitted: any[] = [];
+    const subscription = confirmEpic$(action$).subscribe((action: any) => emitted.push(action));
+
+    action$.next(ProductionActions.confirm(ConfirmStates.IODINE));
+    await flushPromises();
+
+    expect(emitted).toEqual([ProductionActions.confirmSuccess()]);
+    subscription.unsubscribe();
+  });
+
+  it('emits failure and a visible error when the request fails', async () => {
+    mockedProductionRepository.confirm.mockRejectedValue(new Error('HTTP 500'));
+    const action$ = new Subject<ProductionActions.Confirm>();
+    const emitted: any[] = [];
+    const subscription = confirmEpic$(action$).subscribe((action: any) => emitted.push(action));
+
+    action$.next(ProductionActions.confirm(ConfirmStates.IODINE));
+    await flushPromises();
+
+    expect(emitted[0]).toEqual(ProductionActions.confirmFailure('HTTP 500'));
+    expect(emitted[1]).toMatchObject({type: 'ApplicationActions.OPEN_ERROR_DIALOG', payload: {open: true}});
+    subscription.unsubscribe();
+  });
+
+  it('ignores parallel confirms and accepts a retry after failure', async () => {
+    const first = createDeferred<void>();
+    mockedProductionRepository.confirm
+      .mockReturnValueOnce(first.promise)
+      .mockResolvedValueOnce(undefined);
+    const action$ = new Subject<ProductionActions.Confirm>();
+    const emitted: any[] = [];
+    const subscription = confirmEpic$(action$).subscribe((action: any) => emitted.push(action));
+
+    action$.next(ProductionActions.confirm(ConfirmStates.IODINE));
+    action$.next(ProductionActions.confirm(ConfirmStates.IODINE));
+    expect(mockedProductionRepository.confirm).toHaveBeenCalledTimes(1);
+
+    first.reject(new Error('network unavailable'));
+    await flushPromises();
+    action$.next(ProductionActions.confirm(ConfirmStates.IODINE));
+    await flushPromises();
+
+    expect(mockedProductionRepository.confirm).toHaveBeenCalledTimes(2);
+    expect(emitted).toContainEqual(ProductionActions.confirmFailure('network unavailable'));
+    expect(emitted).toContainEqual(ProductionActions.confirmSuccess());
+    subscription.unsubscribe();
+  });
+});
+
+describe('nextProcedureStepEpic$', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('allows only one next-step request while the first is pending', async () => {
+    const request = createDeferred<boolean>();
+    mockedProductionRepository.nextProcedureStep.mockReturnValue(request.promise);
+    const action$ = new Subject<ProductionActions.NextProcedureStep>();
+    const emitted: ProductionActions.AllProductionActions[] = [];
+    const subscription = nextProcedureStepEpic$(action$).subscribe(action => emitted.push(action as ProductionActions.AllProductionActions));
+
+    action$.next(ProductionActions.nextProcedureStep());
+    action$.next(ProductionActions.nextProcedureStep());
+    expect(mockedProductionRepository.nextProcedureStep).toHaveBeenCalledTimes(1);
+
+    request.resolve(true);
+    await flushPromises();
+    expect(emitted).toEqual([ProductionActions.nextProcedureStepSuccess()]);
+    subscription.unsubscribe();
+  });
+});
+
+describe('sendBrewingDataEpic$ failures', () => {
+  it('emits a visible lifecycle failure when recipe transfer fails', async () => {
+    mockedProductionRepository.sendBrewingData.mockResolvedValue(false);
+    const action$ = new Subject<ProductionActions.SendBrewingData>();
+    const emitted: ProductionActions.AllProductionActions[] = [];
+    const subscription = sendBrewingDataEpic$(action$).subscribe(action => emitted.push(action as ProductionActions.AllProductionActions));
+    action$.next(ProductionActions.sendBrewingData(createBrewingData()));
+    await flushPromises();
+    expect(emitted).toEqual([ProductionActions.brewingStartFailure('Das Rezept konnte nicht an den Controller übertragen werden.')]);
+    subscription.unsubscribe();
+  });
+});
+
+it('maps the structured socket.io overheat event without JSON parsing', () => {
+  expect(mapControlSocketEvent({event: 'overheat', data: {temperature: 101}})).toEqual(ProductionActions.overheatReceived({temperature: 101}));
+  expect(mapControlSocketEvent({event: 'other', data: {}})).toBeUndefined();
 });
 
 describe('startWaterFillingEpic$', () => {

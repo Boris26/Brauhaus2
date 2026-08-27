@@ -71,6 +71,14 @@ const fillValidRecipe = () => {
     fireEvent.change(yeastQuantity, {target: {value: '1'}});
 };
 
+it('synchronizes one form-state action per local field change', () => {
+    const saveBeerFormState = jest.fn();
+    renderBeerForm({saveBeerFormState});
+    fireEvent.change(screen.getByLabelText(/Name:/), {target: {value: 'Helles'}});
+    expect(saveBeerFormState).toHaveBeenCalledTimes(1);
+    expect(saveBeerFormState).toHaveBeenLastCalledWith(expect.objectContaining({name: 'Helles'}));
+});
+
 const expectProcedureTypeOptions = (select: HTMLElement) => {
     const options = within(select).getAllByRole('option');
     expect(options).toHaveLength(2);

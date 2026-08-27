@@ -26,6 +26,12 @@ export interface ProductionReducerState {
     waterStatus: WaterStatus;
     isPollingRunning: boolean;
     overHeat: boolean;
+    isConfirmPending: boolean;
+    confirmError?: string;
+    isNextProcedureStepPending: boolean;
+    nextProcedureStepError?: string;
+    isBrewingStatusStale: boolean;
+    brewingStartError?: string;
 }
 
 export const initialProductionState: ProductionReducerState = {
@@ -42,7 +48,12 @@ export const initialProductionState: ProductionReducerState = {
     isBackenAvailable:  false,
     waterStatus: { filledLiters: 0, targetLiters: 0, openClose: false },
     isPollingRunning: false,
-    overHeat: false
+    overHeat: false,
+    isConfirmPending: false,
+    confirmError: undefined,
+    isNextProcedureStepPending: false,
+    nextProcedureStepError: undefined,
+    isBrewingStatusStale: false
 };
 
 const productionReducer = (
@@ -77,12 +88,15 @@ const productionReducer = (
         }
 
         case ProductionActions.ActionTypes.SEND_BREWING_DATA: {
-            return { ...aState, isPollingRunning: true };
+            return { ...aState, isPollingRunning: true, brewingStartError: undefined };
+        }
+        case ProductionActions.ActionTypes.BREWING_START_FAILURE: {
+            return {...aState, isPollingRunning: false, brewingStartError: aAction.payload.error};
         }
         case ProductionActions.ActionTypes.SET_BREWING_STATUS: {
             const aBrewingStatus = aAction.payload.brewingStatus;
             const aIsTerminalOrIdle = isProcessIdle(aBrewingStatus) || isProcessFinished(aBrewingStatus) || isProcessAborted(aBrewingStatus) || isProcessInError(aBrewingStatus);
-            return { ...aState, brewingStatus: aBrewingStatus, isPollingRunning: aIsTerminalOrIdle ? false : aState.isPollingRunning };
+            return { ...aState, brewingStatus: aBrewingStatus, isBrewingStatusStale: false, isPollingRunning: aIsTerminalOrIdle ? false : aState.isPollingRunning };
         }
         case ProductionActions.ActionTypes.START_POLLING: {
             return { ...aState, isPollingRunning: true };
@@ -91,17 +105,36 @@ const productionReducer = (
             return { ...aState, isPollingRunning: false };
         }
         case ProductionActions.ActionTypes.CONFIRM: {
-            return { ...aState };
+            return { ...aState, isConfirmPending: true, confirmError: undefined };
+        }
+        case ProductionActions.ActionTypes.CONFIRM_SUCCESS: {
+            return { ...aState, isConfirmPending: false, confirmError: undefined };
+        }
+        case ProductionActions.ActionTypes.CONFIRM_FAILURE: {
+            return { ...aState, isConfirmPending: false, confirmError: aAction.payload.error };
+        }
+        case ProductionActions.ActionTypes.NEXT_PROCEDURE_STEP: {
+            return {...aState, isNextProcedureStepPending: true, nextProcedureStepError: undefined};
+        }
+        case ProductionActions.ActionTypes.NEXT_PROCEDURE_STEP_SUCCESS: {
+            return {...aState, isNextProcedureStepPending: false, nextProcedureStepError: undefined};
+        }
+        case ProductionActions.ActionTypes.NEXT_PROCEDURE_STEP_FAILURE: {
+            const error = aAction.payload.error instanceof Error ? aAction.payload.error.message : String(aAction.payload.error);
+            return {...aState, isNextProcedureStepPending: false, nextProcedureStepError: error};
         }
         case ProductionActions.ActionTypes.CHECK_IS_BACKEND_AVAILABLE: {
             return { ...aState };
         }
         case ProductionActions.ActionTypes.IS_BACKEND_AVAILABLE: {
             const aIsBackenAvailable = aAction.payload.isBackenAvailable.isBackenAvailable;
-            if (aState.isBackenAvailable === aIsBackenAvailable) {
+            const isBrewingStatusStale = aIsBackenAvailable
+                ? aState.isBrewingStatusStale
+                : aState.brewingStatus !== undefined;
+            if (aState.isBackenAvailable === aIsBackenAvailable && aState.isBrewingStatusStale === isBrewingStatusStale) {
                 return aState;
             }
-            return { ...aState, isBackenAvailable: aIsBackenAvailable };
+            return { ...aState, isBackenAvailable: aIsBackenAvailable, isBrewingStatusStale };
         }
         case ProductionActions.ActionTypes.SET_WATER_STATUS: {
             return { ...aState, waterStatus: aAction.payload.waterStatus };

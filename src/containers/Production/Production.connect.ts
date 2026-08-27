@@ -55,6 +55,15 @@ const mapStateToProps = (state: RootState) => (
         isBackenAvailable: state.productionReducer.isBackenAvailable,
         waterStatus: state.productionReducer.waterStatus,
         isPollingRunning: state.productionReducer.isPollingRunning,
+        isConfirmPending: state.productionReducer.isConfirmPending,
+        confirmError: state.productionReducer.confirmError,
+        isAddingFinishedBrew: Boolean(state.beerDataReducer.isAddingFinishedBrew),
+        addFinishedBrewError: state.beerDataReducer.addFinishedBrewError,
+        pendingFinishedBrewPayload: state.beerDataReducer.pendingFinishedBrewPayload,
+        isNextProcedureStepPending: state.productionReducer.isNextProcedureStepPending,
+        nextProcedureStepError: state.productionReducer.nextProcedureStepError,
+        isBrewingStatusStale: state.productionReducer.isBrewingStatusStale,
+        brewingStartError: state.productionReducer.brewingStartError,
         debug: state.applicationReducer.debug
 
     });

@@ -15,11 +15,13 @@ interface MobileProductionViewProps {
     stopPolling: () => void;
     isPollingRunning: boolean;
     confirm: (confirmState: ConfirmStates) => void;
+    isConfirmPending: boolean;
+    confirmError?: string;
+    isBrewingStatusStale: boolean;
 }
 
 interface MobileProductionViewState {
     activeTab: MobileTab;
-    confirmationPendingFor?: string;
 }
 
 type MobileTab = 'status' | 'finishedBrew' | 'calculations' | 'settings';
@@ -27,7 +29,7 @@ type MobileTab = 'status' | 'finishedBrew' | 'calculations' | 'settings';
 export class MobileProductionView extends React.Component<MobileProductionViewProps, MobileProductionViewState> {
     constructor(props: MobileProductionViewProps) {
         super(props);
-        this.state = { activeTab: 'status', confirmationPendingFor: undefined };
+        this.state = { activeTab: 'status' };
     }
 
     handleTabChange = (tab: MobileTab) => {
@@ -53,16 +55,11 @@ export class MobileProductionView extends React.Component<MobileProductionViewPr
                 navigator.vibrate(200); // 200ms Vibration
             }
         }
-        if (this.state.confirmationPendingFor && (prevProps.brewingStatus?.waiting?.waitingFor !== this.props.brewingStatus?.waiting?.waitingFor
-            || prevProps.brewingStatus?.currentStep?.mode !== this.props.brewingStatus?.currentStep?.mode)) {
-            this.setState({confirmationPendingFor: undefined});
-        }
     }
 
     confirmCurrentWaitingState = () => {
         const request = getConfirmationRequestViewModel(this.props.brewingStatus);
-        if (!request?.canConfirm || !request.confirmState || this.state.confirmationPendingFor) return;
-        this.setState({confirmationPendingFor: String(request.waitingFor)});
+        if (!request?.canConfirm || !request.confirmState || this.props.isConfirmPending) return;
         this.props.confirm(request.confirmState);
     };
 
@@ -97,7 +94,7 @@ export class MobileProductionView extends React.Component<MobileProductionViewPr
     render() {
         const { brewingStatus, startPolling, isPollingRunning } = this.props;
         const { activeTab } = this.state;
-        const statusText = getBrewingStatusLabel(brewingStatus);
+        const statusText = this.props.isBrewingStatusStale ? 'Status veraltet – Controller nicht erreichbar' : getBrewingStatusLabel(brewingStatus);
         const confirmationRequest = getConfirmationRequestViewModel(brewingStatus);
         return (
             <div
@@ -119,11 +116,11 @@ export class MobileProductionView extends React.Component<MobileProductionViewPr
                         <div className="mobile-info-list">
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Temperatur:</span>
-                                <span className="mobile-value">{brewingStatus?.temperature?.current ?? '-'} °C</span>
+                                <span className="mobile-value">{this.props.isBrewingStatusStale ? '-' : (brewingStatus?.temperature?.current ?? '-')} °C</span>
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Zieltemperatur:</span>
-                                <span className="mobile-value">{brewingStatus?.temperature?.target ?? '-'} °C</span>
+                                <span className="mobile-value">{this.props.isBrewingStatusStale ? '-' : (brewingStatus?.temperature?.target ?? '-')} °C</span>
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Typ:</span>
@@ -139,7 +136,7 @@ export class MobileProductionView extends React.Component<MobileProductionViewPr
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Rührwerk:</span>
-                                <span className="mobile-value">{brewingStatus?.hardware?.agitator === 'ON' ? 'An' : 'Aus'}</span>
+                                <span className="mobile-value">{this.props.isBrewingStatusStale ? 'Unbekannt' : (brewingStatus?.hardware?.agitator === 'ON' ? 'An' : 'Aus')}</span>
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Laufzeit:</span>
@@ -156,7 +153,7 @@ export class MobileProductionView extends React.Component<MobileProductionViewPr
                         </div>
                         {confirmationRequest && (
                             <div className="mobile-confirmation-wrapper">
-                                <ControlConfirmationNotice request={confirmationRequest} pending={Boolean(this.state.confirmationPendingFor)} onConfirm={this.confirmCurrentWaitingState} />
+                                <ControlConfirmationNotice request={confirmationRequest} pending={this.props.isConfirmPending} errorMessage={this.props.confirmError} onConfirm={this.confirmCurrentWaitingState} />
                             </div>
                         )}
                         <button className="mobile-polling-btn" onClick={startPolling} disabled={isPollingRunning}>

@@ -5,6 +5,7 @@ import {Beer} from '../../model/Beer';
 import {ToggleState} from '../../enums/eToggleState';
 import {AlarmType, BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
 import {ConfirmStates} from '../../enums/eConfirmStates';
+import {dataCollector} from '../../utils/DataCollector/dataCollector';
 
 const createBeer = (aMashVolume: number | undefined = 18, aSpargeVolume: number | undefined = 12, aId: string = '1'): Beer => ({
     id: aId,
@@ -72,15 +73,99 @@ const renderProduction = (aOverrides: Partial<React.ComponentProps<typeof Produc
         isBackenAvailable: {isBackenAvailable: true, statusText: 'OK'},
         waterStatus: {filledLiters: 0, targetLiters: 0, openClose: false},
         addFinishedBrew: jest.fn(),
+        isAddingFinishedBrew: false,
+        addFinishedBrewError: undefined,
+        pendingFinishedBrewPayload: undefined,
         nextProcedureStep: jest.fn(),
+        isNextProcedureStepPending: false,
+        isBrewingStatusStale: false,
         confirm: jest.fn(),
+        isConfirmPending: false,
         debug: true,
         ...aOverrides
     };
     return {props, ...render(<Production {...props} />)};
 };
 
+describe('Production finished-brew persistence', () => {
+    beforeEach(() => dataCollector.reset());
+    afterEach(() => dataCollector.reset());
+
+    const openFinishDialog = (overrides: Partial<React.ComponentProps<typeof Production>> = {}) => {
+        const activeStatus = createBrewingStatus(ProcessState.ACTIVE);
+        const finishedStatus = createBrewingStatus(ProcessState.FINISHED);
+        dataCollector.setBrewingStatus(finishedStatus);
+        const rendered = renderProduction({brewingStatus: activeStatus, ...overrides});
+        rendered.rerender(<Production {...rendered.props} brewingStatus={finishedStatus} />);
+        return {...rendered, finishedStatus};
+    };
+
+    it('keeps the dialog open while saving and completes only after create success', async () => {
+        const addFinishedBrew = jest.fn();
+        const stopPolling = jest.fn();
+        const {props, rerender, finishedStatus} = openFinishDialog({addFinishedBrew, stopPolling});
+
+        fireEvent.click(await screen.findByRole('button', {name: 'Sud speichern'}));
+        fireEvent.click(screen.getByRole('button', {name: 'Sud speichern'}));
+        expect(addFinishedBrew).toHaveBeenCalledTimes(1);
+        const actualPayload = addFinishedBrew.mock.calls[0][0];
+
+        rerender(<Production {...props} brewingStatus={finishedStatus} isAddingFinishedBrew={true} pendingFinishedBrewPayload={actualPayload} />);
+        expect(screen.getByRole('button', {name: 'Speichert …'})).toBeDisabled();
+        expect(stopPolling).not.toHaveBeenCalled();
+        expect(dataCollector.getMeasurementCount()).toBe(1);
+
+        rerender(<Production {...props} brewingStatus={finishedStatus} isAddingFinishedBrew={false} pendingFinishedBrewPayload={undefined} />);
+        await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+        expect(stopPolling).toHaveBeenCalledTimes(1);
+        expect(dataCollector.getMeasurementCount()).toBe(0);
+    });
+
+    it('preserves payload and measurements after failure and retries the exact payload', async () => {
+        const addFinishedBrew = jest.fn();
+        const {props, rerender, finishedStatus} = openFinishDialog({addFinishedBrew});
+
+        fireEvent.click(screen.getByRole('button', {name: 'Sud speichern'}));
+        const payload = addFinishedBrew.mock.calls[0][0];
+        rerender(<Production {...props} brewingStatus={finishedStatus} isAddingFinishedBrew={true} pendingFinishedBrewPayload={payload} />);
+        rerender(<Production {...props} brewingStatus={finishedStatus} isAddingFinishedBrew={false} addFinishedBrewError="HTTP 500" pendingFinishedBrewPayload={payload} />);
+
+        expect(await screen.findByText(/HTTP 500/)).toBeInTheDocument();
+        expect(dataCollector.getMeasurementCount()).toBe(1);
+        fireEvent.click(screen.getByRole('button', {name: 'Erneut versuchen'}));
+
+        expect(addFinishedBrew).toHaveBeenCalledTimes(2);
+        expect(addFinishedBrew.mock.calls[1][0]).toBe(payload);
+        expect(addFinishedBrew.mock.calls[1][0].brewValues).toBe(payload.brewValues);
+
+        rerender(<Production {...props} brewingStatus={finishedStatus} addFinishedBrew={addFinishedBrew} isAddingFinishedBrew={true} pendingFinishedBrewPayload={payload} />);
+        rerender(<Production {...props} brewingStatus={finishedStatus} addFinishedBrew={addFinishedBrew} isAddingFinishedBrew={false} pendingFinishedBrewPayload={undefined} />);
+        await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+        expect(dataCollector.getMeasurementCount()).toBe(0);
+    });
+});
+
 describe('Production start button', () => {
+
+    it('starts status polling when the desktop production view is restored', () => {
+        const startPolling = jest.fn();
+        renderProduction({startPolling, isPollingRunning: false});
+        expect(startPolling).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not start a duplicate poller when polling is already active', () => {
+        const startPolling = jest.fn();
+        renderProduction({startPolling, isPollingRunning: true});
+        expect(startPolling).not.toHaveBeenCalled();
+    });
+
+    it('warns about stale controller data and suppresses the stale heater flame', () => {
+        const status = createBrewingStatus(ProcessState.ACTIVE);
+        status.hardware.heater = 'ON';
+        const {container} = renderProduction({brewingStatus: status, isBrewingStatusStale: true});
+        expect(screen.getByRole('alert')).toHaveTextContent('Braustatus ist veraltet');
+        expect(container.querySelector('.flame-strip')).toBeNull();
+    });
 
     it('places the current step above the sole temperature gauge and keeps the process column focused on the upcoming flow', () => {
         const {container} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.IDLE)});
@@ -159,6 +244,7 @@ describe('Production start button', () => {
         const {props, container} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.ACTIVE), isPollingRunning: false});
         const startPollingButton = container.querySelector('.startPollingBtn') as HTMLButtonElement;
 
+        (props.startPolling as jest.Mock).mockClear();
         fireEvent.click(startPollingButton);
 
         expect(props.startPolling).toHaveBeenCalledTimes(1);
@@ -191,13 +277,15 @@ describe('Production inline confirmations', () => {
         [WaitingFor.COOKING_CONFIRMATION, ProcessPhase.COOKING, 'Kochen bestätigen', ConfirmStates.COOKING],
     ] as const)('renders %s inline and dispatches the existing confirm state', (waitingFor, phase, buttonLabel, confirmState) => {
         const confirm = jest.fn();
-        const {container} = renderProduction({brewingStatus: waitingStatus(waitingFor, phase), confirm});
+        const status = waitingStatus(waitingFor, phase);
+        const {container, props, rerender} = renderProduction({brewingStatus: status, confirm});
 
         expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
         expect(screen.getByLabelText('Aktion erforderlich')).toBeInTheDocument();
         expect(container.querySelector('.Temp')).toBeInTheDocument();
         fireEvent.click(screen.getByRole('button', {name: buttonLabel}));
         expect(confirm).toHaveBeenCalledWith(confirmState);
+        rerender(<Production {...props} brewingStatus={status} confirm={confirm} isConfirmPending={true} />);
         expect(screen.getByRole('button', {name: 'Wird verarbeitet …'})).toBeDisabled();
     });
 
@@ -205,6 +293,30 @@ describe('Production inline confirmations', () => {
         renderProduction({brewingStatus: waitingStatus(WaitingFor.USER_CONFIRMATION, ProcessPhase.RAST)});
         expect(screen.getByText('Wartet auf Benutzeraktion')).toBeInTheDocument();
         expect(screen.getByLabelText('Aktion erforderlich').querySelector('button')).toBeNull();
+    });
+
+    it('uses the shared pending state and allows retry when failure clears it', () => {
+        const confirm = jest.fn();
+        const status = waitingStatus(WaitingFor.IODINE_TEST, ProcessPhase.RAST);
+        const {props, rerender} = renderProduction({brewingStatus: status, confirm});
+
+        rerender(<Production {...props} brewingStatus={status} confirm={confirm} isConfirmPending={true} />);
+        expect(screen.getByRole('button', {name: 'Wird verarbeitet …'})).toBeDisabled();
+
+        rerender(<Production {...props} brewingStatus={status} confirm={confirm} isConfirmPending={false} />);
+        fireEvent.click(screen.getByRole('button', {name: 'Jodprobe abgeschlossen'}));
+        expect(confirm).toHaveBeenCalledWith(ConfirmStates.IODINE);
+    });
+
+    it('shows a confirm failure without removing the current waiting action', () => {
+        renderProduction({
+            brewingStatus: waitingStatus(WaitingFor.IODINE_TEST, ProcessPhase.RAST),
+            isConfirmPending: false,
+            confirmError: 'HTTP 500',
+        });
+
+        expect(screen.getByRole('alert')).toHaveTextContent('Bestätigung fehlgeschlagen: HTTP 500');
+        expect(screen.getByRole('button', {name: 'Jodprobe abgeschlossen'})).toBeEnabled();
     });
 
     it('labels the decoction target as the held main-mash rest temperature', () => {
@@ -338,6 +450,17 @@ describe('Production next button', () => {
         expect(nextButton).not.toBeDisabled();
         fireEvent.click(nextButton);
         expect(props.nextProcedureStep).toHaveBeenCalledTimes(1);
+    });
+
+    it('disables the next button while a next-step request is pending', () => {
+        const {props} = renderProduction({
+            brewingStatus: createBrewingStatus(ProcessState.ACTIVE),
+            isNextProcedureStepPending: true,
+        });
+        const nextButton = getNextButton();
+        expect(nextButton).toBeDisabled();
+        fireEvent.click(nextButton);
+        expect(props.nextProcedureStep).not.toHaveBeenCalled();
     });
 
     it('disables the next button while the controller is offline and does not dispatch next', () => {

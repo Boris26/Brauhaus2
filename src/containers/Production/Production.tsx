@@ -60,9 +60,18 @@ export interface ProductionProps {
     isBackenAvailable: BackendAvailable | boolean;
     waterStatus: WaterStatus;
     addFinishedBrew: (finishedBrew: FinishedBrewCreatePayload) => void;
+    isAddingFinishedBrew: boolean;
+    addFinishedBrewError?: string;
+    pendingFinishedBrewPayload?: FinishedBrewCreatePayload;
     nextProcedureStep: () => void;
+    isNextProcedureStepPending: boolean;
+    nextProcedureStepError?: string;
+    isBrewingStatusStale: boolean;
+    brewingStartError?: string;
     isPollingRunning: boolean;
     confirm: (confirmState: ConfirmStates) => void;
+    isConfirmPending: boolean;
+    confirmError?: string;
     debug: boolean;
 }
 
@@ -91,11 +100,11 @@ interface ProductionState {
     recipeWaterFill: RecipeWaterFillStatus;
     displayedRemainingSeconds: number | undefined;
     equipmentAlarmDismissed: boolean;
-    confirmationPendingFor?: string;
 }
 
 export class Production extends React.Component<ProductionProps, ProductionState> {
     private isBrewingStartRequestPending = false;
+    private isFinishedBrewSaveRequestPending = false;
     private readonly MAX_AGITATOR_SPEED = 40;
     private readonly MAX_WATER_LEVEL = 70;
     private readonly MAX_BREAK_TIME = 10;
@@ -130,18 +139,20 @@ export class Production extends React.Component<ProductionProps, ProductionState
             announcedHopTimes: [],
             recipeWaterFill: createInitialRecipeWaterFillStatus(),
             displayedRemainingSeconds: undefined,
-            equipmentAlarmDismissed: false,
-            confirmationPendingFor: undefined
+            equipmentAlarmDismissed: false
         }
     }
 
     componentDidMount() {
         this.isMountedComponent = true;
-        const {getTemperatures, selectedBeer} = this.props;
+        const {getTemperatures, selectedBeer, isPollingRunning, startPolling} = this.props;
         if (!isUndefined(selectedBeer)) {
             this.calculateTheHopTimes();
         }
         getTemperatures();
+        if (!isPollingRunning) {
+            startPolling();
+        }
         this.syncRemainingTimeFromStatus();
         this.remainingTimeInterval = setInterval(this.tickRemainingTime, 1000);
     }
@@ -164,12 +175,6 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
         if (prevProps.brewingStatus !== brewingStatus) {
             this.syncRemainingTimeFromStatus();
-        }
-
-        const previousWaitingFor = prevProps.brewingStatus?.waiting?.waitingFor;
-        const currentWaitingFor = brewingStatus?.waiting?.waitingFor;
-        if (this.state.confirmationPendingFor && (currentWaitingFor !== previousWaitingFor || brewingStatus?.currentStep?.mode !== prevProps.brewingStatus?.currentStep?.mode)) {
-            this.setState({confirmationPendingFor: undefined});
         }
 
         if (isEquipmentAlarmActive(prevProps.brewingStatus) && !isEquipmentAlarmActive(brewingStatus)) {
@@ -240,6 +245,18 @@ export class Production extends React.Component<ProductionProps, ProductionState
         if (brewingStatus?.process?.state === ProcessState.FINISHED && !showFinishDialog && !this.state.brewingFinished)
         {
             this.setState({showFinishDialog: true})
+        }
+
+        const aFinishedBrewSaveCompleted = prevProps.isAddingFinishedBrew && !this.props.isAddingFinishedBrew;
+        if (aFinishedBrewSaveCompleted && prevProps.pendingFinishedBrewPayload) {
+            this.isFinishedBrewSaveRequestPending = false;
+            if (this.props.addFinishedBrewError) {
+                this.setState({showFinishDialog: true, brewingFinished: false});
+            } else {
+                dataCollector.reset();
+                this.props.stopPolling();
+                this.setState({showFinishDialog: false, brewingFinished: true});
+            }
         }
 
     }
@@ -523,7 +540,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     isNextProcedureStepAvailable = (): boolean => {
-        return this.isControllerAvailable() && isBrewingProcessActive(this.props.brewingStatus);
+        return this.isControllerAvailable() && isBrewingProcessActive(this.props.brewingStatus) && !this.props.isNextProcedureStepPending;
     }
 
     handleNextProcedureStep = (): void => {
@@ -542,7 +559,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
         return (
             <div className='Flame'>
-              {isHeaterActive(brewingStatus) && (
+              {!this.props.isBrewingStatusStale && isHeaterActive(brewingStatus) && (
                     <div className="flame-strip" aria-label="Heizung aktiv">
                         <Flame/>
                         <Flame/>
@@ -569,7 +586,9 @@ export class Production extends React.Component<ProductionProps, ProductionState
     renderTemperature() {
         const {brewingStatus, temperature} = this.props;
         let value: number;
-        if (brewingStatus?.temperature?.current === undefined || Number(brewingStatus?.temperature?.current) === 0) {
+        if (this.props.isBrewingStatusStale) {
+            value = 0;
+        } else if (brewingStatus?.temperature?.current === undefined || Number(brewingStatus?.temperature?.current) === 0) {
             value = temperature;
         } else {
             value = isNaN(Number(brewingStatus?.temperature?.current)) ? 0 : Number(brewingStatus?.temperature?.current);
@@ -696,21 +715,19 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     confirmCurrentWaitingState = () => {
         const request = getConfirmationRequestViewModel(this.props.brewingStatus);
-        if (!request?.canConfirm || !request.confirmState || this.state.confirmationPendingFor) return;
-        this.setState({confirmationPendingFor: String(request.waitingFor)});
+        if (!request?.canConfirm || !request.confirmState || this.props.isConfirmPending) return;
         this.props.confirm(request.confirmState);
     }
 
 
     confirmFinishDialog = async () => {
-        const { stopPolling, selectedBeer, addFinishedBrew } = this.props;
-        this.setState({ showFinishDialog: false, brewingFinished: true });
-        stopPolling();
-        // Messdaten als Blob holen
-        const jsonString = dataCollector.getAllDataAsJSONString();
-        // FinishedBrew erzeugen und speichern
-        if (selectedBeer) {
-            const finishedBrew : FinishedBrewCreatePayload = {
+        const {selectedBeer, addFinishedBrew, isAddingFinishedBrew, pendingFinishedBrewPayload} = this.props;
+        if (!selectedBeer || isAddingFinishedBrew || this.isFinishedBrewSaveRequestPending) {
+            return;
+        }
+
+        this.isFinishedBrewSaveRequestPending = true;
+        const finishedBrew = pendingFinishedBrewPayload ?? {
                 name: selectedBeer.name || 'Unknown Beer',
                 liters: 0,
                 originalwort:  0,
@@ -720,17 +737,16 @@ export class Production extends React.Component<ProductionProps, ProductionState
                 beer_id: selectedBeer.id.toString(), // Assuming beer_id is a string
                 active: true,
                 state: eBrewState.FERMENTATION,
-                brewValues: jsonString // Attach measurement data
+                brewValues: dataCollector.getAllDataAsJSONString()
             };
-            addFinishedBrew(finishedBrew);
-        }
+        addFinishedBrew(finishedBrew);
     };
     renderProcessList() {
         const { selectedBeer, brewingStatus } = this.props;
         if (selectedBeer === undefined) {
             return null;
         }
-        const isNextStepDisabled = !this.isControllerAvailable() || !this.isNextProcedureStepAvailable();
+        const isNextStepDisabled = !this.isNextProcedureStepAvailable();
         return (
             <ProcessList displayMode="overview" selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} remainingSeconds={this.state.displayedRemainingSeconds} onNextStep={this.props.debug ? this.handleNextProcedureStep : undefined} isNextStepDisabled={isNextStepDisabled} />
         );
@@ -741,7 +757,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
         if (selectedBeer === undefined) {
             return null;
         }
-        return <ProcessList displayMode="current" selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} remainingSeconds={this.state.displayedRemainingSeconds} confirmationPending={Boolean(this.state.confirmationPendingFor)} onConfirmWaiting={this.confirmCurrentWaitingState} hopReminderName={this.state.showHopsDialog ? this.state.hopName : undefined} onCompleteHopReminder={this.confirmHopDialog} />;
+        return <ProcessList displayMode="current" selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} remainingSeconds={this.state.displayedRemainingSeconds} confirmationPending={this.props.isConfirmPending} confirmationError={this.props.confirmError} onConfirmWaiting={this.confirmCurrentWaitingState} hopReminderName={this.state.showHopsDialog ? this.state.hopName : undefined} onCompleteHopReminder={this.confirmHopDialog} />;
     }
 
 
@@ -750,9 +766,13 @@ export class Production extends React.Component<ProductionProps, ProductionState
         const equipmentAlarmActive = isEquipmentAlarmActive(this.props.brewingStatus);
         return (
             <div className="containerProduction ">
+                {this.props.isBrewingStatusStale && <div role="alert" className="production-stale-status">Controller nicht erreichbar – angezeigter Braustatus ist veraltet.</div>}
+                {this.props.brewingStartError && <div role="alert">Braustart fehlgeschlagen: {this.props.brewingStartError}</div>}
                 <ProductionDialogs
                     showFinishDialog={showFinishDialog}
                     onConfirmFinish={this.confirmFinishDialog}
+                    isSavingFinishedBrew={this.props.isAddingFinishedBrew}
+                    finishedBrewSaveError={this.props.addFinishedBrewError}
                     showEquipmentAlarmDialog={equipmentAlarmActive && !this.state.equipmentAlarmDismissed}
                     equipmentAlarmTitle={equipmentAlarmDisplay.title}
                     equipmentAlarmMessage={equipmentAlarmDisplay.message}

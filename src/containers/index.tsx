@@ -20,12 +20,18 @@ interface indexMainProps {
     brewingStatus: BrewingStatus;
     checkIsBackenAvailable : () => void;
     webSocketConnect: () => void;
+    webSocketDisconnect: () => void;
 }
 
 export class Index extends React.Component<indexMainProps> {
     componentDidMount() {
-        const {checkIsBackenAvailable} = this.props;
+        const {checkIsBackenAvailable, webSocketConnect} = this.props;
         checkIsBackenAvailable();
+        webSocketConnect();
+    }
+
+    componentWillUnmount() {
+        this.props.webSocketDisconnect();
     }
 
     componentDidUpdate(prevProps: Readonly<indexMainProps>, prevState: Readonly<{}>, snapshot?: any) {

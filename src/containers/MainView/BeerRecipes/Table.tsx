@@ -104,6 +104,8 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
         const {beerPendingDelete} = this.state;
         if (!beerPendingDelete) return;
 
+        if (this.props.isPollingRunning && this.props.beerToBrew?.id === beerPendingDelete.id) return;
+
         this.props.deleteBeer(beerPendingDelete.id);
         this.setState({beerPendingDelete: undefined});
     }
@@ -243,6 +245,7 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                                                         this.handleDeleteBeer(item);
                                                     }}
                                                     title="Rezept löschen"
+                                                    disabled={Boolean(isPollingRunning && beerToBrew?.id === item.id)}
                                                 >
                                                     <span role="img" aria-label="Rezept löschen" style={{fontSize: '1.4rem', marginTop: '0.3rem'}}>🗑️</span>
                                                 </button>
