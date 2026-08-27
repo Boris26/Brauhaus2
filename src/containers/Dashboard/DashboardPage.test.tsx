@@ -72,8 +72,8 @@ describe('DashboardPage', () => {
 
     expect(screen.getByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
     expect(screen.getByText('Rezepte')).toBeInTheDocument();
-    expect(screen.getByText('Gesamt gebraut')).toBeInTheDocument();
-    expect(screen.getByText('Kein aktiver Brauvorgang.')).toBeInTheDocument();
+    expect(screen.getByText('Sude gesamt')).toBeInTheDocument();
+    expect(screen.getByText('Keine aktive Produktion')).toBeInTheDocument();
     expect(screen.queryByText(/NaN/)).not.toBeInTheDocument();
   });
 
@@ -84,14 +84,14 @@ describe('DashboardPage', () => {
     expect(screen.getByText(/Maltoserast/)).toBeInTheDocument();
     expect(screen.getByText('Heizung')).toBeInTheDocument();
     expect(screen.getByText('Rührwerk')).toBeInTheDocument();
-    expect(screen.getByText('Fortschritt 50 %')).toBeInTheDocument();
+    expect(screen.getByText('50 %')).toBeInTheDocument();
   });
 
   it('keeps partial backend errors local to production card', () => {
     renderDashboard({ isBackendAvailable: false, brewingStatus: undefined });
 
     expect(screen.getByText('Der aktuelle Produktionsstatus konnte nicht geladen werden.')).toBeInTheDocument();
-    expect(screen.getByText('Top 5 Malze')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Gesamtverbrauch' })).toBeInTheDocument();
   });
 
   it('loads missing recipes and finished brews through existing actions', () => {

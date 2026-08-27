@@ -2,7 +2,7 @@ import { AdditionalIngredientPhase } from '../../model/Beer';
 import { Beer } from '../../model/Beer';
 import { FinishedBrew } from '../../model/FinishedBrew';
 import { eBrewState } from '../../enums/eBrewState';
-import { buildActiveBrewRows, calculateCareHints, calculateDashboardKpis, calculateIngredientSummary, calculateMonthlyStats } from './dashboardCalculations';
+import { buildActiveBrewRows, calculateAdditionalStats, calculateCareHints, calculateConsumption, calculateDashboardKpis, calculateIngredientSummary, calculateMonthlyStats, calculateRecipeHistory } from './dashboardCalculations';
 
 const makeBeer = (id: string, name: string): Beer => ({
   id,
@@ -84,13 +84,26 @@ describe('dashboard calculations', () => {
     expect(result[0]).toMatchObject({ brewCount: 1, liters: 20 });
   });
 
+  it('groups brew history by stable recipe id and calculates reliable summaries', () => {
+    const beers = [makeBeer('b1', 'Pils'), makeBeer('b2', 'Weizen')];
+    const brews = [
+      makeBrew('f1', 'b1', eBrewState.FINISHED, 20, '2026-01-01'),
+      makeBrew('f2', 'b1', eBrewState.FINISHED, 10, '2026-02-01'),
+      makeBrew('f3', 'b2', eBrewState.FINISHED, 15, '2026-03-01'),
+    ];
+
+    expect(calculateRecipeHistory(beers, brews)[0]).toMatchObject({ recipeId: 'b1', recipeName: 'Pils', brewCount: 2, liters: 30 });
+    expect(calculateConsumption(beers, brews)).toEqual({ maltQuantity: 15000, hopQuantity: 150, yeastUses: 3, linkedBrewCount: 3 });
+    expect(calculateAdditionalStats(brews)).toMatchObject({ averageOriginalWort: 12, originalWortSampleCount: 3, largestBrew: 20, smallestBrew: 10, lastBrew: '1.3.2026' });
+  });
+
   it('builds care hints and active brew rows defensively', () => {
     const brews = [
       makeBrew('f1', 'b1', eBrewState.FERMENTATION, 0, 'bad-date'),
       { ...makeBrew('f2', undefined, eBrewState.MATURATION, 10), endDate: undefined, residual_extract: null },
     ];
 
-    expect(calculateCareHints([makeBeer('b1', 'Pils')], brews)).toEqual({ missingLiters: 1, missingEndDate: 2, missingResidualExtract: 1, activeInvalidStartDate: 1, missingRecipeLink: 1 });
+    expect(calculateCareHints([makeBeer('b1', 'Pils')], brews)).toEqual({ missingLiters: 1, missingEndDate: 0, missingResidualExtract: 1, activeInvalidStartDate: 1, missingRecipeLink: 1 });
     expect(buildActiveBrewRows(brews, new Date('2026-07-22'))[0].daysSinceStartLabel).toBe('-');
   });
 });

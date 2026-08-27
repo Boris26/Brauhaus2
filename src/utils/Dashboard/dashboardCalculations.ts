@@ -1,7 +1,7 @@
 import { Beer } from '../../model/Beer';
 import { FinishedBrew } from '../../model/FinishedBrew';
 import { eBrewState, BrewStateGerman } from '../../enums/eBrewState';
-import { DashboardActiveBrewRow, DashboardCareHints, DashboardIngredientSummary, DashboardIngredientUsage, DashboardKpis, DashboardMonthlyStat, DashboardYeastUsage } from './dashboardTypes';
+import { DashboardActiveBrewRow, DashboardAdditionalStats, DashboardCareHints, DashboardConsumption, DashboardIngredientSummary, DashboardIngredientUsage, DashboardKpis, DashboardMonthlyStat, DashboardRecipeHistory, DashboardYeastUsage } from './dashboardTypes';
 
 const TOP_LIMIT = 5;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -38,7 +38,7 @@ export const calculateDashboardKpis = (beers: Beer[] = [], brews: FinishedBrew[]
   recipeCount: beers.length,
   brewCount: brews.length,
   totalLiters: brews.reduce((sum, brew) => sum + Math.max(0, safeNumber(brew.liters)), 0),
-  activeBeerCount: brews.filter((brew) => brew.active === true).length,
+  activeBeerCount: brews.filter((brew) => brew.state === eBrewState.FERMENTATION || brew.state === eBrewState.MATURATION).length,
   fermentationCount: brews.filter((brew) => brew.state === eBrewState.FERMENTATION).length,
   maturationCount: brews.filter((brew) => brew.state === eBrewState.MATURATION).length,
   finishedCount: brews.filter((brew) => brew.state === eBrewState.FINISHED).length,
@@ -124,11 +124,53 @@ export const calculateMonthlyStats = (brews: FinishedBrew[] = []): DashboardMont
   return Array.from(stats.values()).sort((a, b) => a.key.localeCompare(b.key));
 };
 
+export const calculateRecipeHistory = (beers: Beer[] = [], brews: FinishedBrew[] = []): DashboardRecipeHistory[] => {
+  const recipes = new Map(beers.map((beer) => [String(beer.id), beer]));
+  const history = new Map<string, DashboardRecipeHistory>();
+  brews.forEach((brew) => {
+    if (!brew.beer_id) return;
+    const recipe = recipes.get(String(brew.beer_id));
+    if (!recipe) return;
+    const recipeId = String(recipe.id);
+    const row = history.get(recipeId) ?? { recipeId, recipeName: recipe.name || 'Unbenanntes Rezept', brewCount: 0, liters: 0 };
+    row.brewCount += 1;
+    row.liters += Math.max(0, safeNumber(brew.liters));
+    history.set(recipeId, row);
+  });
+  return Array.from(history.values()).sort((a, b) => b.brewCount - a.brewCount || b.liters - a.liters || a.recipeName.localeCompare(b.recipeName, 'de'));
+};
+
+export const calculateAdditionalStats = (brews: FinishedBrew[] = []): DashboardAdditionalStats => {
+  const wortValues = brews.map((brew) => safeNumber(brew.originalwort)).filter((value) => value > 0);
+  const literValues = brews.map((brew) => safeNumber(brew.liters)).filter((value) => value > 0);
+  const dates = brews.map((brew) => parseDate(brew.startDate)).filter((date): date is Date => Boolean(date));
+  return {
+    averageOriginalWort: wortValues.length ? wortValues.reduce((sum, value) => sum + value, 0) / wortValues.length : undefined,
+    originalWortSampleCount: wortValues.length,
+    largestBrew: literValues.length ? Math.max(...literValues) : undefined,
+    smallestBrew: literValues.length ? Math.min(...literValues) : undefined,
+    lastBrew: dates.length ? formatDateGerman(new Date(Math.max(...dates.map((date) => date.getTime())))) : undefined,
+  };
+};
+
+export const calculateConsumption = (beers: Beer[] = [], brews: FinishedBrew[] = []): DashboardConsumption => {
+  const recipes = new Map(beers.map((beer) => [String(beer.id), beer]));
+  return brews.reduce<DashboardConsumption>((result, brew) => {
+    const recipe = brew.beer_id ? recipes.get(String(brew.beer_id)) : undefined;
+    if (!recipe) return result;
+    result.linkedBrewCount += 1;
+    result.maltQuantity += recipe.malts?.reduce((sum, malt) => sum + Math.max(0, safeNumber(malt.quantity)), 0) ?? 0;
+    result.hopQuantity += recipe.wortBoiling?.hops?.reduce((sum, hop) => sum + Math.max(0, safeNumber(hop.quantity)), 0) ?? 0;
+    if (recipe.fermentationMaturation?.yeast?.length) result.yeastUses += 1;
+    return result;
+  }, { maltQuantity: 0, hopQuantity: 0, yeastUses: 0, linkedBrewCount: 0 });
+};
+
 export const calculateCareHints = (beers: Beer[] = [], brews: FinishedBrew[] = []): DashboardCareHints => {
   const recipeIds = new Set(beers.map((beer) => String(beer.id)));
   return {
     missingLiters: brews.filter((brew) => safeNumber(brew.liters) <= 0).length,
-    missingEndDate: brews.filter((brew) => !parseDate(brew.endDate)).length,
+    missingEndDate: brews.filter((brew) => brew.state === eBrewState.FINISHED && !parseDate(brew.endDate)).length,
     missingResidualExtract: brews.filter((brew) => brew.residual_extract === null || safeNumber(brew.residual_extract) <= 0).length,
     activeInvalidStartDate: brews.filter((brew) => brew.active === true && !parseDate(brew.startDate)).length,
     missingRecipeLink: brews.filter((brew) => !brew.beer_id || !recipeIds.has(String(brew.beer_id))).length,
@@ -143,6 +185,7 @@ export const buildActiveBrewRows = (brews: FinishedBrew[] = [], now = new Date()
       id: brew.id,
       name: brew.name || 'Unbenannter Sud',
       stateLabel: BrewStateGerman[brew.state] ?? String(brew.state ?? '-'),
+      state: brew.state,
       startDateLabel: formatDateGerman(brew.startDate),
       daysSinceStartLabel: days === undefined ? '-' : `${days} Tage`,
       litersLabel: `${formatQuantity(Math.max(0, safeNumber(brew.liters)))} Liter`,
