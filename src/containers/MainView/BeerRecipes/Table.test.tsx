@@ -26,7 +26,7 @@ it('does not delete the recipe used by an active brewing process', () => {
         exportShoppingListPdf: jest.fn(), deleteBeer,
     } as BeerTableProps;
     const table = new BeerTableComponent(props);
-    table.state.beerPendingDelete = storedRecipe;
+    Object.assign(table.state, {beerPendingDelete: storedRecipe});
 
     table.confirmDeleteBeer();
 

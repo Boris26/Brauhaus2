@@ -54,7 +54,7 @@ describe('sendNewFinishedBeerEpic', () => {
             .mockResolvedValueOnce({...payload, id: 'brew-1'});
         const action$ = new Subject<BeerActions.AddFinishedBrew>();
         const emitted: BeerActions.AllBeerActions[] = [];
-        const subscription = sendNewFinishedBeerEpic(action$).subscribe(action => emitted.push(action as BeerActions.AllBeerActions));
+        const subscription = sendNewFinishedBeerEpic(action$).subscribe((action: unknown) => emitted.push(action as BeerActions.AllBeerActions));
 
         action$.next(BeerActions.addFinishedBrew(payload));
         await flush();

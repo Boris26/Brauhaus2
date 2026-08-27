@@ -85,7 +85,7 @@ export const deleteFinishedBeerEpic = (action$: any) =>
   action$.pipe(
     ofType(BeerActions.ActionTypes.DELETE_FINISHED_BEER),
     groupBy((action: any) => action.payload.finishedBrewId),
-    mergeMap(actionsForBrew$ => actionsForBrew$.pipe(exhaustMap((action: any) =>
+    mergeMap((actionsForBrew$: any) => actionsForBrew$.pipe(exhaustMap((action: any) =>
       from(FinishedBeerRepository.deleteFinishedBeer(action.payload.finishedBrewId)).pipe(
         map(() => BeerActions.deleteFinishedBeerSuccess(true, action.payload.finishedBrewId)),
           catchError((aError: Error) =>
@@ -106,7 +106,7 @@ export const updateFinishedBeerEpic = (action$: any) =>
   action$.pipe(
     ofType(BeerActions.ActionTypes.UPDATE_ACTIVE_BEER),
     groupBy((action: any) => action.payload.beer.id),
-    mergeMap((actionsForBrew$) => actionsForBrew$.pipe(
+    mergeMap((actionsForBrew$: any) => actionsForBrew$.pipe(
       exhaustMap((action: any) =>
         from(FinishedBeerRepository.updateFinishedBeer(action.payload.beer)).pipe(
           map((beer) => BeerActions.updateFinishedBrewSuccess({...action.payload.beer, ...beer}, action.payload.beer.id)),

@@ -383,7 +383,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                             <span role="img" aria-label="Abbrechen" style={{ fontSize: 22, verticalAlign: 'middle',  display: 'inline-block', position: 'relative', top: '3px' }}>✖️</span>
                         </button>
                     </div>
-                    {this.props.finishedBrewUpdateErrors[brewId] && <p role="alert">Speichern fehlgeschlagen: {this.props.finishedBrewUpdateErrors[brewId]}</p>}
+                    {this.props.addFinishedBrewError && <p role="alert">Speichern fehlgeschlagen: {this.props.addFinishedBrewError}</p>}
                 </TableCell>
             </TableRow>
         );
