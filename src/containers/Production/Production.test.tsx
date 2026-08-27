@@ -74,6 +74,7 @@ const renderProduction = (aOverrides: Partial<React.ComponentProps<typeof Produc
         addFinishedBrew: jest.fn(),
         nextProcedureStep: jest.fn(),
         confirm: jest.fn(),
+        debug: true,
         ...aOverrides
     };
     return {props, ...render(<Production {...props} />)};
@@ -301,6 +302,11 @@ describe('Production equipment alarm dialog', () => {
 
 describe('Production next button', () => {
     const getNextButton = () => screen.getByRole('button', {name: 'Nächster Schritt'});
+
+    it('does not render the next button outside debug mode', () => {
+        renderProduction({debug: false});
+        expect(screen.queryByRole('button', {name: 'Nächster Schritt'})).not.toBeInTheDocument();
+    });
 
     it('disables the next button while the status has not been loaded yet', () => {
         renderProduction({brewingStatus: undefined});

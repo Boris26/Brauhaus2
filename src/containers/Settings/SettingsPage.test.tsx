@@ -8,12 +8,23 @@ jest.mock('../../repositorys/AudioRepository');
 
 const mockedTestSound = AudioRepository.testSound as jest.MockedFunction<typeof AudioRepository.testSound>;
 
-const renderSettings = () => render(<SettingsPage theme="default" setTheme={jest.fn()} />);
+const renderSettings = (debug = true, setDebug = jest.fn()) => render(
+    <SettingsPage theme="default" setTheme={jest.fn()} debug={debug} setDebug={setDebug} />
+);
 
 describe('Settings sound tests', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         mockedTestSound.mockResolvedValue();
+    });
+
+    it('hides sound tests outside debug mode and enables debug centrally', () => {
+        const setDebug = jest.fn();
+        renderSettings(false, setDebug);
+
+        expect(screen.queryByText('Sounds')).not.toBeInTheDocument();
+        fireEvent.click(screen.getByRole('checkbox', { name: 'Debug-Modus' }));
+        expect(setDebug).toHaveBeenCalledWith(true);
     });
 
     it('renders all six user-friendly sound labels', () => {
