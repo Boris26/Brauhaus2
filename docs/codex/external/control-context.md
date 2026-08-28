@@ -72,7 +72,7 @@ See `docs/codex/interfaces.md` for full JSON shape. Important values:
 - `currentStep.phase`: `NONE`, `MASHING_IN`, `RAST`, `MASHING_OUT`, `COOKING`, `COOLING`, `FINISHED`.
 - `currentStep.mode`: `NONE`, `HEATING`, `HOLDING`, `TIMER_RUNNING`, `WAITING`, `FINISHED`, `ERROR`.
 - `waiting.waitingFor`: `NONE`, `USER_CONFIRMATION`, `IODINE_TEST`, `MASHING_IN_CONFIRMATION`, `MASHING_OUT_CONFIRMATION`, `COOKING_CONFIRMATION`, `BOILING_CONFIRMATION`, `DECOCTION_CONFIRMATION`, `DECOCTION_RETURN_CONFIRMATION`.
-- `heating.followsDecoction` marks the return heat-up after decoction; `heating.heaterEnabled` reports whether the heater is physically enabled.
+- `heating.followsDecoction` marks the return heat-up after decoction; `heating.heaterEnabled` reports whether the process currently permits heater use, not whether the heater is physically switched on.
 - `temperature.sensorHealth`: `OK`, `MISSING`, `STALE`, `INVALID_READING`, `MULTIPLE_SENSORS_FOUND`, `NOT_CONFIGURED`.
 - `hardware.heater` and `hardware.agitator`: `ON`, `OFF`, or `ERROR`.
 

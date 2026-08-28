@@ -30,7 +30,7 @@ import {isBrewingProcessActive, isProcessActive} from "../../utils/brewingStatus
 import {getVesselContentType} from "../../utils/brewingStatus/vesselContent";
 import {calculateHopSchedule, getDueHopAddition, HopAddition} from "./utils/hopSchedule";
 import {getRemainingSecondsFromStatus, shouldCountdownLocally, tickRemainingSeconds} from "./utils/productionCountdown";
-import {isAgitatorActive, isControllerAvailable as getIsControllerAvailable, isHeaterActive} from "./utils/productionStatus";
+import {getHeaterDisplayLabel, getHeaterDisplayStatus, isAgitatorActive, isControllerAvailable as getIsControllerAvailable, isHeaterActive} from "./utils/productionStatus";
 import {RecipeWaterFill, RecipeWaterFillStatus} from "./waterFill/recipeWaterFill.types";
 import {completeWaterFill, createInitialRecipeWaterFillStatus, failWaterFill, includePreparedSpargeAfterMashingOut, markValveOpened, resetWaterFill, startManualWaterFill, startWaterFill} from "./waterFill/recipeWaterFillState";
 import {ProductionDialogs} from "./components/ProductionDialogs";
@@ -556,9 +556,14 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     renderFlames() {
         const {brewingStatus} = this.props;
+        const heaterStatus = getHeaterDisplayStatus(brewingStatus);
+        const heaterLabel = this.props.isBrewingStatusStale ? 'Heizungsstatus unbekannt' : getHeaterDisplayLabel(brewingStatus);
 
         return (
             <div className='Flame'>
+              <span className={`heater-status heater-status--${this.props.isBrewingStatusStale ? 'unknown' : heaterStatus}`}>
+                  {heaterLabel}
+              </span>
               {!this.props.isBrewingStatusStale && isHeaterActive(brewingStatus) && (
                     <div className="flame-strip" aria-label="Heizung aktiv">
                         <Flame/>

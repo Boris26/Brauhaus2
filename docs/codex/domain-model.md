@@ -45,7 +45,7 @@ Runtime status is normalized into process state, current step, temperature, hard
 - `temperature.current`/`target`: gauges and mobile display.
 - `hardware.heater`/`agitator`: flames, water-control agitator visual, mobile agitator display.
 - `heating.followsDecoction`: marks the main-mash heat-up directly after a decoction so Production presents the return phase instead of an ordinary heat-up.
-- `heating.heaterEnabled`: authoritative physical-heater state when present; older payloads retain the `hardware.heater`/step-mode fallback.
+- `heating.heaterEnabled`: process-level permission to use the heater, especially around decoction transitions. It does not report the physical switch state. The UI derives “Heizung gesperrt” from `false`, “Heizung bereit” from an enabled but physically off heater, and “Heizung aktiv” from an enabled and physically on heater.
 - `waiting.waitingFor`/`canConfirm`: central inline confirmation content and confirm endpoint mapping for desktop and mobile. `MASHING_OUT_CONFIRMATION` uses the existing `Confirm/Mashup` control confirmation value. Generic or unknown waiting values are displayed without an action button.
 - `DECOCTION_RETURN_CONFIRMATION` asks for the completed return of the decoction and maps exclusively to `POST /Confirm/DecoctionReturned`.
 

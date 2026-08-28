@@ -90,7 +90,7 @@ The Settings UI also consumes the existing `POST /api/audio/test` contract. Its 
 
 The UI accepts `currentStep.phase: DECOCTION` as a public sequential mash phase and sends new decoction recipe steps with `procedureType: DECOCTION` plus `executionMode: CONFIRMATION_HOLD`. Database persistence of the new optional field is **Needs verification** in the database/backend repository.
 
-After `Confirm/Decoction`, control may publish a return heat-up with `heating.followsDecoction: true`; `heating.heaterEnabled` is then the authoritative heater indicator. For `waiting.waitingFor: DECOCTION_RETURN_CONFIRMATION` with `canConfirm: true`, the UI sends exactly `POST /Confirm/DecoctionReturned`. Status payloads without `heating` retain the legacy heater fallback.
+After `Confirm/Decoction`, control may publish a return heat-up with `heating.followsDecoction: true`; `heating.heaterEnabled` then indicates whether process logic permits the heater to be used. The actual heater indicator remains `hardware.heater`, and flames are shown only for `hardware.heater === 'ON'`. For `waiting.waitingFor: DECOCTION_RETURN_CONFIRMATION` with `canConfirm: true`, the UI sends exactly `POST /Confirm/DecoctionReturned`.
 
 Production `Rasten` now retain `stepId`, and decoctions retain `relatedRastId` without copying the referenced temperature. PI/control lookup of `relatedRastId -> RAST.stepId -> temperature` **Needs cross-repository update**.
 
