@@ -732,29 +732,36 @@ describe('Production recipe water filling', () => {
 
 
 describe('Production flame display', () => {
-    it('renders no flame strip when heating is off', () => {
-        const {container} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.IDLE)});
-        expect(container.querySelector('.flame-strip')).toBeNull();
+    const cases = [
+        {name: 'ready heater', heater: 'OFF', enabled: true, followsDecoction: false, mode: ProcessMode.TIMER_RUNNING, current: 60, target: 55, label: 'Heizung bereit', flame: false},
+        {name: 'active heater', heater: 'ON', enabled: true, followsDecoction: false, mode: ProcessMode.HEATING, current: 54, target: 55, label: 'Heizung aktiv', flame: true},
+        {name: 'blocked heater', heater: 'OFF', enabled: false, followsDecoction: false, mode: ProcessMode.HEATING, current: 54, target: 55, label: 'Heizung gesperrt', flame: false},
+        {name: 'rest above target', heater: 'OFF', enabled: true, followsDecoction: false, mode: ProcessMode.TIMER_RUNNING, current: 60, target: 55, label: 'Heizung bereit', flame: false},
+        {name: 'rest actively reheating', heater: 'ON', enabled: true, followsDecoction: false, mode: ProcessMode.HEATING, current: 54, target: 55, label: 'Heizung aktiv', flame: true},
+        {name: 'blocked decoction return', heater: 'OFF', enabled: false, followsDecoction: true, mode: ProcessMode.HEATING, current: 54, target: 55, label: 'Heizung gesperrt', flame: false},
+        {name: 'enabled decoction return', heater: 'OFF', enabled: true, followsDecoction: true, mode: ProcessMode.HEATING, current: 54, target: 55, label: 'Heizung bereit', flame: false},
+    ] as const;
+
+    it.each(cases)('derives flames and the user-facing status for $name', ({heater, enabled, followsDecoction, mode, current, target, label, flame}) => {
+        const status = createBrewingStatus(ProcessState.ACTIVE);
+        status.currentStep = {phase: ProcessPhase.RAST, mode};
+        status.temperature = {current, target};
+        status.hardware.heater = heater;
+        status.heating = {followsDecoction, heaterEnabled: enabled};
+
+        const {container} = renderProduction({brewingStatus: status});
+
+        expect(screen.getByText(label)).toBeInTheDocument();
+        expect(container.querySelector('.flame-strip') !== null).toBe(flame);
+        expect(screen.queryAllByLabelText('Heizflamme')).toHaveLength(flame ? 4 : 0);
     });
 
-    it('renders responsive flames while heating', () => {
-        const heatingStatus = createBrewingStatus(ProcessState.ACTIVE);
-        heatingStatus.currentStep.mode = ProcessMode.HEATING;
-        const {container} = renderProduction({brewingStatus: heatingStatus});
-        expect(container.querySelector('.flame-strip')).toBeInTheDocument();
-        expect(screen.getAllByLabelText('Heizflamme')).toHaveLength(4);
-    });
-
-    it('uses heating.heaterEnabled as the authoritative heater state during decoction return', () => {
-        const returnHeating = createBrewingStatus(ProcessState.ACTIVE);
-        returnHeating.currentStep = {phase: ProcessPhase.DECOCTION, mode: ProcessMode.HEATING};
-        returnHeating.hardware.heater = 'ON';
-        returnHeating.heating = {followsDecoction: true, heaterEnabled: false};
-        const {container, rerender, props} = renderProduction({brewingStatus: returnHeating});
+    it('does not infer an active flame from heating mode when hardware is off', () => {
+        const status = createBrewingStatus(ProcessState.ACTIVE);
+        status.currentStep.mode = ProcessMode.HEATING;
+        status.hardware.heater = 'OFF';
+        const {container} = renderProduction({brewingStatus: status});
         expect(container.querySelector('.flame-strip')).toBeNull();
-
-        rerender(<Production {...props} brewingStatus={{...returnHeating, heating: {...returnHeating.heating, heaterEnabled: true}}} />);
-        expect(container.querySelector('.flame-strip')).toBeInTheDocument();
     });
 });
 

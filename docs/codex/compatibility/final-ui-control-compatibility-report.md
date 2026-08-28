@@ -70,7 +70,7 @@ The UI-facing availability endpoint is `GET /Available/`; PI control also preser
 | `currentStep.mode` | string enum | PI control | Current step mode. | UI labels, heating/progress/waiting decisions. | Preserve documented enum strings. |
 | `waiting.waitingFor` | string enum | PI control | Concrete wait/confirmation reason or status. | UI maps only concrete values to confirmation endpoints; generic values do not dispatch. | Do not rename concrete confirmation enum values without coordinated UI update. |
 | `heating.followsDecoction` | boolean | PI control | Marks the return heat-up after a decoction. | Production return-phase copy and status. | Missing values use the ordinary-heating compatibility path. |
-| `heating.heaterEnabled` | boolean | PI control | Reports whether heating is actually enabled. | Desktop flames and mobile heating state. | When present this is authoritative; older payloads use hardware/mode fallback. |
+| `heating.heaterEnabled` | boolean | PI control | Reports whether process logic permits heater use. | Desktop and mobile blocked/ready/active heating status. | This is a permission, not the physical heater state; flames use `hardware.heater` only. |
 | `waiting.canConfirm` | boolean | PI control | Whether confirmation may be submitted. | UI enables confirm button only when a concrete confirm exists and `canConfirm` is true. | Keep boolean semantics stable. |
 | `temperature.current` | number | PI control | Current temperature in Celsius. | UI gauges/mobile display; fallback from `/temperatur/0` if missing/zero. | Keep Celsius and numeric type stable. |
 | `temperature.target` | number | PI control | Target temperature in Celsius. | UI target gauge/mobile display. | Keep Celsius and numeric type stable. |

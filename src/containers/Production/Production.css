@@ -102,12 +102,40 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
     background: var(--color-surface-strong);
     border-radius: 0 0 12px 12px;
     box-shadow: 0 2px 8px var(--shadow-error-soft);
     overflow: visible;
     min-height: 4rem;
     padding: var(--spacing-xs) 0;
+}
+
+.heater-status {
+    border: 1px solid var(--color-disabled-border);
+    border-radius: 999px;
+    color: var(--color-light-text);
+    font-size: 0.78rem;
+    font-weight: 700;
+    line-height: 1.2;
+    padding: 0.2rem 0.55rem;
+    white-space: nowrap;
+}
+
+.heater-status--active {
+    background: var(--color-error-subtle);
+    border-color: var(--color-error);
+}
+
+.heater-status--ready {
+    background: var(--color-success-subtle);
+    border-color: var(--color-success);
+}
+
+.heater-status--blocked,
+.heater-status--unknown {
+    background: var(--color-disabled-bg);
+    color: var(--color-disabled-text);
 }
 
 /* Temperaturanzeige mittig */
@@ -438,7 +466,8 @@
     justify-content: center;
     gap: clamp(0.5rem, 3vw, 2rem);
     width: 100%;
-    height: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
     min-width: 0;
 }
 

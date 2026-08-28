@@ -157,6 +157,19 @@ describe('MobileProductionView stale status', () => {
     });
 });
 
+describe('MobileProductionView heater status', () => {
+    it('shows heater permission separately from the physical heater state', () => {
+        const status = makeStatus();
+        status.hardware.heater = 'OFF';
+        status.heating = {followsDecoction: true, heaterEnabled: true};
+
+        renderMobileView({brewingStatus: status});
+
+        expect(screen.getByText('Heizung bereit')).toBeInTheDocument();
+        expect(screen.queryByText('Heizung aktiv')).not.toBeInTheDocument();
+    });
+});
+
 
 describe('MobileProductionView polling lifecycle', () => {
     it('starts polling when the mobile status page opens', () => {

@@ -93,7 +93,7 @@ interface BrewingStatus {
   };
   temperature: { current?: number; target?: number };
   hardware: { heater?: string; agitator?: string };
-  heating?: { followsDecoction?: boolean; heaterEnabled?: boolean };
+  heating?: { followsDecoction?: boolean; heaterEnabled?: boolean }; // heaterEnabled permits heater use; hardware.heater is the physical state
   waiting: { waitingFor: WaitingFor; canConfirm: boolean };
   error: { code?: string | null; details?: string | null };
 }
