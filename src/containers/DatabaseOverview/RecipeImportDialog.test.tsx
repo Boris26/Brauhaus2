@@ -13,6 +13,16 @@ const selectFile = (file: File) => fireEvent.change(document.querySelector('inpu
 describe('RecipeImportDialog', () => {
     beforeEach(() => (createImportIdempotencyKey as jest.Mock).mockReset().mockReturnValue('key-a'));
 
+    it('uses the app dialog styles for its surface and controls', () => {
+        render(<RecipeImportDialog open onCancel={jest.fn()} onImport={jest.fn()} />);
+
+        expect(screen.getByRole('dialog')).toHaveClass('recipe-import-dialog');
+        expect(screen.getByText('Rezept importieren')).toHaveClass('recipe-import-dialog__title');
+        expect(screen.getByRole('button', {name: 'Datei auswählen'})).toHaveClass('recipe-import-dialog__file-button');
+        expect(screen.getByRole('button', {name: 'Abbrechen'})).toHaveClass('recipe-import-dialog__cancel-button');
+        expect(screen.getByRole('button', {name: 'Importieren'})).toHaveClass('recipe-import-dialog__import-button');
+    });
+
     it.each([
         ['Brauhaus', RecipeImportFormat.BRAUHAUS],
         ['MaischeMalzundMehr (MMuM)', RecipeImportFormat.MMUM],

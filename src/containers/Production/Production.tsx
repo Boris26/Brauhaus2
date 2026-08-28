@@ -670,7 +670,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
                 <section className="settingsGroup" aria-labelledby="water-settings-title">
                     <h4 id="water-settings-title">Wasser</h4>
-                    <div className="settingsRowWater">
+                    <div className="settingsRowWater" aria-label="Manuelle Wasserzufuhr">
                         <div className="leftAligned">
                             {renderSwitch('Wasser aktivieren', waterSwitchState, this.toggleWaterSwitchState)}
                         </div>
@@ -679,6 +679,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
                                             isDisabled={settingsDisabled || waterSwitchState} label="Liter" labelPosition="above"/>
                         </div>
                     </div>
+                    <hr className="waterSettingsSeparator" />
                     <div className="recipeWaterButtons">
                         <button className="recipeWaterBtn" disabled={spargeWaterDisabled} onClick={this.startSpargeWaterFilling}>{this.getRecipeWaterButtonLabel('sparge')}</button>
                         <button className="recipeWaterBtn" disabled={mashWaterDisabled} onClick={this.startMashWaterFilling}>{this.getRecipeWaterButtonLabel('mash')}</button>

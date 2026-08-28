@@ -310,7 +310,7 @@
     align-items: flex-start;
     gap: var(--spacing-lg);
 }
-.settingsRowWater { align-items: center; }
+.settingsRowWater { align-items: end; }
 .rightAligned,
 .leftAligned {
     margin: 0;
@@ -345,6 +345,13 @@
 .settings .quantity-picker-input { background: var(--color-surface-strong); }
 
 .settings .quantity-picker-input-disabled { background: var(--color-disabled-bg); }
+
+.waterSettingsSeparator {
+    width: 100%;
+    margin: var(--spacing-md) 0 0;
+    border: 0;
+    border-top: 1px solid var(--color-border-soft);
+}
 
 /* Buttons */
 .startBtnDiv {
@@ -431,7 +438,7 @@
 .recipeWaterButtons {
     display: flex;
     gap: var(--spacing-sm);
-    margin-top: var(--spacing-md);
+    margin-top: var(--spacing-sm);
 }
 
 .recipeWaterBtn {

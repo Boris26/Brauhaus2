@@ -333,12 +333,12 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
 
         const currentStepCard = hasRecipeProcess ? (
             <>
-                <div className="current-process-label">Aktueller Schritt</div>
+                <div className="current-process-label">Aktiver Schritt</div>
                 <section className={`current-process-step${confirmationRequest ? ' current-process-step--action-required' : ''}`} aria-label="Aktueller Prozessschritt">
                     <div className="current-step-heading">
                         <div>
                             <h4>{isProcessStarted ? this.getCurrentStepTitle(activeStep) : 'Noch kein Brauvorgang gestartet'}</h4>
-                            <span className="current-step-badge">{isProcessStarted ? 'Aktiver Schritt' : 'Geplanter Ablauf'}</span>
+                            {!isProcessStarted && <span className="current-step-badge">Geplanter Ablauf</span>}
                         </div>
                         {this.getCurrentStepMeta(activeStep, isProcessStarted)}
                     </div>
