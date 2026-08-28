@@ -210,6 +210,16 @@ describe('ProcessList compact production overview', () => {
         alarms: [],
     });
 
+    it('uses a single compact active-step heading above the step name and target temperature', () => {
+        const {container} = render(<ProcessList displayMode="current" selectedBeer={selectedBeer} currentStepIndex={3} brewingStatus={activeStatus(3)} remainingSeconds={1176} />);
+
+        expect(screen.getAllByText('Aktiver Schritt')).toHaveLength(1);
+        expect(screen.getByText('Rast 2')).toBeInTheDocument();
+        expect(screen.getByText('68 °C')).toBeInTheDocument();
+        expect(container.querySelector('.current-step-heading')).toContainElement(screen.getByText('Rast 2'));
+        expect(container.querySelector('.current-step-heading')).toContainElement(screen.getByText('68 °C'));
+    });
+
     it('shows current visible step position and total visible steps', () => {
         render(<ProcessList selectedBeer={selectedBeer} currentStepIndex={3} currentStep={{index: 3, phase: ProcessPhase.RAST, mode: ProcessMode.TIMER_RUNNING}} brewingStatus={activeStatus(3)} remainingSeconds={1176} />);
 

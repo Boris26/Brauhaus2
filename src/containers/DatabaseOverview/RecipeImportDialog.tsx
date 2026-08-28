@@ -2,6 +2,7 @@ import React from 'react';
 import {Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent} from '@mui/material';
 import {JsonObject, RecipeImportFormat, RecipeImportRequest} from '../../model/RecipeImport';
 import {createImportIdempotencyKey} from '../../utils/recipeImport';
+import './RecipeImportDialog.css';
 
 interface RecipeImportDialogProps {
     open: boolean;
@@ -65,12 +66,13 @@ export const RecipeImportDialog: React.FC<RecipeImportDialogProps> = ({open, loa
     const canImport = Boolean(format && recipe && idempotencyKey && !parseError && !loading);
 
     return (
-        <Dialog open={open} onClose={loading ? undefined : resetAndCancel} maxWidth="sm" fullWidth>
-            <DialogTitle>Rezept importieren</DialogTitle>
-            <DialogContent>
-                <FormControl fullWidth margin="normal">
+        <Dialog open={open} onClose={loading ? undefined : resetAndCancel} maxWidth="sm" fullWidth PaperProps={{className: 'recipe-import-dialog'}}>
+            <DialogTitle className="recipe-import-dialog__title">Rezept importieren</DialogTitle>
+            <DialogContent className="recipe-import-dialog__content">
+                <FormControl className="recipe-import-dialog__format" fullWidth margin="normal">
                     <InputLabel id="recipe-import-format-label">Importformat</InputLabel>
                     <Select labelId="recipe-import-format-label" label="Importformat" value={format} disabled={loading}
+                        MenuProps={{PaperProps: {className: 'recipe-import-dialog__menu'}}}
                         onChange={(event: SelectChangeEvent) => {
                             setFormat(event.target.value as RecipeImportFormat);
                             if (recipe) setIdempotencyKey(createImportIdempotencyKey());
@@ -79,17 +81,17 @@ export const RecipeImportDialog: React.FC<RecipeImportDialogProps> = ({open, loa
                         <MenuItem value={RecipeImportFormat.MMUM}>MaischeMalzundMehr (MMuM)</MenuItem>
                     </Select>
                 </FormControl>
-                <Button component="label" variant="outlined" fullWidth disabled={loading}>
+                <Button className="recipe-import-dialog__file-button" component="label" variant="outlined" fullWidth disabled={loading}>
                     {fileName || 'Datei auswählen'}
                     <input hidden type="file" accept=".json,application/json"
                         onChange={(event) => { void readFile(event.target.files?.[0]); event.target.value = ''; }} />
                 </Button>
-                {parseError && <p role="alert">{parseError}</p>}
-                {backendError && submitted && <p role="alert">{backendError}</p>}
+                {parseError && <p className="recipe-import-dialog__error" role="alert">{parseError}</p>}
+                {backendError && submitted && <p className="recipe-import-dialog__error" role="alert">{backendError}</p>}
             </DialogContent>
-            <DialogActions>
-                <Button onClick={resetAndCancel} disabled={loading}>Abbrechen</Button>
-                <Button onClick={() => {
+            <DialogActions className="recipe-import-dialog__actions">
+                <Button className="recipe-import-dialog__cancel-button" onClick={resetAndCancel} disabled={loading}>Abbrechen</Button>
+                <Button className="recipe-import-dialog__import-button" onClick={() => {
                     if (format && recipe && idempotencyKey) {
                         setSubmitted(true);
                         onImport({format, recipe, idempotencyKey});
