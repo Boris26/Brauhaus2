@@ -670,16 +670,18 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
                 <section className="settingsGroup" aria-labelledby="water-settings-title">
                     <h4 id="water-settings-title">Wasser</h4>
-                    <div className="settingsRowWater" aria-label="Manuelle Wasserzufuhr">
-                        <div className="leftAligned">
-                            {renderSwitch('Wasser aktivieren', waterSwitchState, this.toggleWaterSwitchState)}
-                        </div>
-                        <div className="rightAligned">
-                            <QuantityPicker initialValue={1} min={1} max={this.MAX_WATER_LEVEL} onChange={this.onSetWaterChangeQuantity}
-                                            isDisabled={settingsDisabled || waterSwitchState} label="Liter" labelPosition="above"/>
+                    <div className="intervalSettings manualWaterSettings" aria-labelledby="manual-water-settings-title">
+                        <h5 id="manual-water-settings-title">Manuelle Wasserzufuhr</h5>
+                        <div className="settingsRowWater manualWaterControls">
+                            <div className="leftAligned">
+                                {renderSwitch('Wasser aktivieren', waterSwitchState, this.toggleWaterSwitchState)}
+                            </div>
+                            <div className="rightAligned">
+                                <QuantityPicker initialValue={1} min={1} max={this.MAX_WATER_LEVEL} onChange={this.onSetWaterChangeQuantity}
+                                                isDisabled={settingsDisabled || waterSwitchState} label="Liter" labelPosition="above"/>
+                            </div>
                         </div>
                     </div>
-                    <hr className="waterSettingsSeparator" />
                     <div className="recipeWaterButtons">
                         <button className="recipeWaterBtn" disabled={spargeWaterDisabled} onClick={this.startSpargeWaterFilling}>{this.getRecipeWaterButtonLabel('sparge')}</button>
                         <button className="recipeWaterBtn" disabled={mashWaterDisabled} onClick={this.startMashWaterFilling}>{this.getRecipeWaterButtonLabel('mash')}</button>
