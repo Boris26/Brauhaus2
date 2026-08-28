@@ -53,7 +53,7 @@ Base URL: `BaseURL` (`/api/controller`), `CommandsURL` (`/api/controller/Command
 | POST | `Command/Speed:{speed}` | Set agitator speed | `200` |
 | POST | `Command/AgitatorInterval:""` | Set agitator interval body | `200` |
 | POST | `next` | Advance process step | `200` |
-| POST | `Confirm/{confirmState}` | Confirm concrete waiting state only (`Iodine`, `Mashup`, `Cooking`, `Boiling`, `Decoction`) | `200`; UI must not send `Confirm/Wait`; PI rejects `Confirm/Wait` with a controlled error |
+| POST | `Confirm/{confirmState}` | Confirm concrete waiting state only (`Iodine`, `Mashup`, `Cooking`, `Boiling`, `Decoction`, `DecoctionReturned`) | `200`; `DECOCTION_RETURN_CONFIRMATION` maps to `Confirm/DecoctionReturned`; UI must not send `Confirm/Wait` |
 
 ## Audio REST endpoint
 
@@ -93,6 +93,7 @@ interface BrewingStatus {
   };
   temperature: { current?: number; target?: number };
   hardware: { heater?: string; agitator?: string };
+  heating?: { followsDecoction?: boolean; heaterEnabled?: boolean };
   waiting: { waitingFor: WaitingFor; canConfirm: boolean };
   error: { code?: string | null; details?: string | null };
 }

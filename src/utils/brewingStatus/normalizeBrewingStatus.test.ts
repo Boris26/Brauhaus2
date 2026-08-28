@@ -7,10 +7,12 @@ describe('normalizeBrewingStatus', () => {
     expect(s.currentStep.phase).toBe(ProcessPhase.DECOCTION);
   });
   it('uses structured payload', () => {
-    const s = normalizeBrewingStatus({process:{state:'ACTIVE'}, currentStep:{phase:'RAST', mode:'TIMER_RUNNING', remainingTime:12}, waiting:{waitingFor:'NONE', canConfirm:false}, temperature:{current:60,target:63}});
+    const s = normalizeBrewingStatus({process:{state:'ACTIVE'}, currentStep:{phase:'RAST', mode:'TIMER_RUNNING', remainingTime:12}, heating:{followsDecoction:true, heaterEnabled:false}, waiting:{waitingFor:'DECOCTION_RETURN_CONFIRMATION', canConfirm:true}, temperature:{current:60,target:63}});
     expect(s.process.state).toBe(ProcessState.ACTIVE);
     expect(s.currentStep.phase).toBe(ProcessPhase.RAST);
     expect(s.currentStep.mode).toBe(ProcessMode.TIMER_RUNNING);
+    expect(s.heating).toEqual({followsDecoction: true, heaterEnabled: false});
+    expect(s.waiting.waitingFor).toBe(WaitingFor.DECOCTION_RETURN_CONFIRMATION);
   });
 
   it('falls back to legacy payload', () => {

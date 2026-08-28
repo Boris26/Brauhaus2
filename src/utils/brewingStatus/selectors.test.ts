@@ -66,12 +66,22 @@ describe('brewing selectors', () => {
     [WaitingFor.MASHING_IN_CONFIRMATION, ConfirmStates.MASHUP, 'Einmaischen bestätigen'],
     [WaitingFor.IODINE_TEST, ConfirmStates.IODINE, 'Jodprobe durchführen'],
     [WaitingFor.DECOCTION_CONFIRMATION, ConfirmStates.DECOCTION, 'Dekoktion'],
+    [WaitingFor.DECOCTION_RETURN_CONFIRMATION, ConfirmStates.DECOCTION_RETURNED, 'Dickmaische zurückführen'],
     [WaitingFor.MASHING_OUT_CONFIRMATION, ConfirmStates.MASHUP, 'Abmaischen bestätigen'],
     [WaitingFor.COOKING_CONFIRMATION, ConfirmStates.COOKING, 'Kochen bestätigen'],
     [WaitingFor.BOILING_CONFIRMATION, ConfirmStates.BOILING, 'Siedepunkt bestätigen'],
   ] as const)('builds one central view model for %s', (waitingFor, confirmState, title) => {
     const status = makeStatus({currentStep:{phase:ProcessPhase.RAST, mode:ProcessMode.WAITING}, waiting:{waitingFor, canConfirm:true}});
     expect(getConfirmationRequestViewModel(status)).toMatchObject({waitingFor, confirmState, title, canConfirm: true, requiresAction: true});
+  });
+
+  it('labels the decoction return heating and confirmation states', () => {
+    const heating = makeStatus({currentStep:{phase:ProcessPhase.DECOCTION, mode:ProcessMode.HEATING}, heating:{followsDecoction:true, heaterEnabled:true}});
+    expect(getBrewingStatusLabel(heating)).toBe('Hauptmaische wird nach der Dekoktion aufgeheizt');
+
+    const waiting = makeStatus({currentStep:{phase:ProcessPhase.DECOCTION, mode:ProcessMode.WAITING}, waiting:{waitingFor:WaitingFor.DECOCTION_RETURN_CONFIRMATION, canConfirm:true}});
+    expect(getConfirmationType(waiting)).toBe(ConfirmStates.DECOCTION_RETURNED);
+    expect(getConfirmButtonLabel(waiting)).toBe('Abgeschlossen');
   });
 
   it('represents unsupported waiting states without a confirmation command', () => {

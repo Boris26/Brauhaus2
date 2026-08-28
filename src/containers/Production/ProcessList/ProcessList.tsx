@@ -230,10 +230,13 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
             );
         }
         if (this.isHeatingStatus()) {
+            const statusText = this.props.brewingStatus?.heating?.followsDecoction === true
+                ? 'Hauptmaische wird nach der Dekoktion aufgeheizt'
+                : 'Zieltemperatur wird erreicht';
             return (
                 <div className="current-step-status" aria-label="Statusbereich">
                     <span className="current-step-status-label">Status</span>
-                    <span className="current-step-status-value">Zieltemperatur wird erreicht</span>
+                    <span className="current-step-status-value">{statusText}</span>
                     {this.renderTemperatureProgress()}
                 </div>
             );

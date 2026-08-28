@@ -135,6 +135,17 @@ describe('MobileProductionView confirmations', () => {
         expect(screen.getByRole('alert')).toHaveTextContent('Bestätigung fehlgeschlagen: Netzwerkfehler');
         expect(screen.getByRole('button', {name: 'Jodprobe abgeschlossen'})).toBeEnabled();
     });
+
+    it('confirms the decoction return through DecoctionReturned', () => {
+        const status = makeStatus();
+        status.currentStep = {phase: ProcessPhase.DECOCTION, mode: ProcessMode.WAITING};
+        status.waiting = {waitingFor: WaitingFor.DECOCTION_RETURN_CONFIRMATION, canConfirm: true};
+        const confirm = jest.fn();
+        renderMobileView({brewingStatus: status, confirm});
+
+        fireEvent.click(screen.getByRole('button', {name: 'Abgeschlossen'}));
+        expect(confirm).toHaveBeenCalledWith(ConfirmStates.DECOCTION_RETURNED);
+    });
 });
 
 describe('MobileProductionView stale status', () => {

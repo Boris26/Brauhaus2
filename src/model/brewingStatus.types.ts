@@ -35,7 +35,8 @@ export enum WaitingFor {
     MASHING_OUT_CONFIRMATION = "MASHING_OUT_CONFIRMATION",
     COOKING_CONFIRMATION = "COOKING_CONFIRMATION",
     BOILING_CONFIRMATION = "BOILING_CONFIRMATION",
-    DECOCTION_CONFIRMATION = "DECOCTION_CONFIRMATION"
+    DECOCTION_CONFIRMATION = "DECOCTION_CONFIRMATION",
+    DECOCTION_RETURN_CONFIRMATION = "DECOCTION_RETURN_CONFIRMATION"
 }
 
 export type WaitingState = WaitingFor | string;
@@ -75,6 +76,10 @@ export interface BrewingStatus {
     hardware: {
         heater?: string;
         agitator?: string;
+    };
+    heating?: {
+        followsDecoction?: boolean;
+        heaterEnabled?: boolean;
     };
     waiting: {
         waitingFor: WaitingState;

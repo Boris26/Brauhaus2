@@ -7,6 +7,7 @@ import {getBrewingStatusLabel, getConfirmationRequestViewModel, getStatusChangeK
 import SettingsPage from '../../Settings/SettingsPage.connect';
 import {ConfirmStates} from '../../../enums/eConfirmStates';
 import {ControlConfirmationNotice} from '../../Production/components/InlineProcessNotice';
+import {isHeaterActive} from '../../Production/utils/productionStatus';
 
 interface MobileProductionViewProps {
     temperature: number;
@@ -132,7 +133,7 @@ export class MobileProductionView extends React.Component<MobileProductionViewPr
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Heizt auf:</span>
-                                <span className="mobile-value">{brewingStatus?.currentStep?.mode === 'HEATING' ? 'Ja' : 'Nein'}</span>
+                                <span className="mobile-value">{this.props.isBrewingStatusStale ? 'Unbekannt' : (isHeaterActive(brewingStatus) ? 'Ja' : 'Nein')}</span>
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Rührwerk:</span>

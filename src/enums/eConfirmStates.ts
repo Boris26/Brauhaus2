@@ -3,5 +3,6 @@ export enum ConfirmStates {
     COOKING = "Cooking",
     IODINE = "Iodine",
     BOILING = 'Boiling',
-    DECOCTION = 'Decoction'
+    DECOCTION = 'Decoction',
+    DECOCTION_RETURNED = 'DecoctionReturned'
 }

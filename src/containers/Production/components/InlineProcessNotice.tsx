@@ -15,6 +15,7 @@ const compactCopyByWaitingState: Partial<Record<WaitingFor, {title: string; butt
     [WaitingFor.MASHING_IN_CONFIRMATION]: {title: 'Einmaischen abschließen'},
     [WaitingFor.IODINE_TEST]: {title: 'Jodprobe durchführen'},
     [WaitingFor.DECOCTION_CONFIRMATION]: {title: 'Dekoktion abschließen'},
+    [WaitingFor.DECOCTION_RETURN_CONFIRMATION]: {title: 'Dickmaische zurückführen', buttonLabel: 'Abgeschlossen'},
     [WaitingFor.MASHING_OUT_CONFIRMATION]: {title: 'Abmaischen abschließen'},
     [WaitingFor.COOKING_CONFIRMATION]: {title: 'Kochen bestätigen'},
     [WaitingFor.BOILING_CONFIRMATION]: {title: 'Siedepunkt bestätigen', buttonLabel: 'Siedepunkt erreicht'},
@@ -35,7 +36,7 @@ export const ControlConfirmationNotice: React.FC<ControlConfirmationNoticeProps>
                     </button>
                 )}
             </div>
-            {request.waitingFor === WaitingFor.DECOCTION_CONFIRMATION && typeof heldMashTemperature === 'number' && (
+            {[WaitingFor.DECOCTION_CONFIRMATION, WaitingFor.DECOCTION_RETURN_CONFIRMATION].includes(request.waitingFor as WaitingFor) && typeof heldMashTemperature === 'number' && (
                 <p className="inline-process-notice__detail">Hauptmaische wird weiterhin auf {heldMashTemperature.toLocaleString('de-DE', {maximumFractionDigits: 1})} °C gehalten.</p>
             )}
             {!request.canConfirm && <p className="inline-process-notice__detail">{request.message}</p>}
