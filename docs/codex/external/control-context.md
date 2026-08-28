@@ -71,7 +71,8 @@ See `docs/codex/interfaces.md` for full JSON shape. Important values:
 - `process.state`: `IDLE`, `ACTIVE`, `FINISHED`, `ABORTED`, `ERROR`.
 - `currentStep.phase`: `NONE`, `MASHING_IN`, `RAST`, `MASHING_OUT`, `COOKING`, `COOLING`, `FINISHED`.
 - `currentStep.mode`: `NONE`, `HEATING`, `HOLDING`, `TIMER_RUNNING`, `WAITING`, `FINISHED`, `ERROR`.
-- `waiting.waitingFor`: `NONE`, `USER_CONFIRMATION`, `IODINE_TEST`, `MASHING_IN_CONFIRMATION`, `MASHING_OUT_CONFIRMATION`, `COOKING_CONFIRMATION`, `BOILING_CONFIRMATION`, `DECOCTION_CONFIRMATION`.
+- `waiting.waitingFor`: `NONE`, `USER_CONFIRMATION`, `IODINE_TEST`, `MASHING_IN_CONFIRMATION`, `MASHING_OUT_CONFIRMATION`, `COOKING_CONFIRMATION`, `BOILING_CONFIRMATION`, `DECOCTION_CONFIRMATION`, `DECOCTION_RETURN_CONFIRMATION`.
+- `heating.followsDecoction` marks the return heat-up after decoction; `heating.heaterEnabled` reports whether the heater is physically enabled.
 - `temperature.sensorHealth`: `OK`, `MISSING`, `STALE`, `INVALID_READING`, `MULTIPLE_SENSORS_FOUND`, `NOT_CONFIGURED`.
 - `hardware.heater` and `hardware.agitator`: `ON`, `OFF`, or `ERROR`.
 
@@ -128,7 +129,7 @@ Before changing these fields or their semantics, verify backend and UI consumers
 
 - Recipe top-level fields: `MashupTemperature`, `MashdownTemperature`, `Rasten`, `CookingTime`, `CookingTemperature`.
 - Rest fields: `type`, `temperature`, `time`, `executionMode`.
-- Confirm names: `Iodine`, `Mashup`, `Cooking`, `Boiling`, `Decoction`. `Wait` is a status, not a valid confirmation command; `POST /Confirm/Wait` is rejected with a controlled error.
+- Confirm names: `Iodine`, `Mashup`, `Cooking`, `Boiling`, `Decoction`, `DecoctionReturned`. `Wait` is a status, not a valid confirmation command; `POST /Confirm/Wait` is rejected with a controlled error.
 - Command names: `start`, `StartBrewing`, `StartCooking`, `TurnOn`, `TurnOff`, `Stop`, `Speed`, `Frq`, `FillWaterAutomatic`, `FillWaterManuel`, `FillWaterManual`, `FillWaterStop`, `AgitatorInterval`.
 - `AgitatorInterval` payload keys expected by mixer code.
 
@@ -158,7 +159,7 @@ Workflow/control endpoints:
 
 - `POST /Recipe/` accepts required recipe JSON and returns 201 empty body on success.
 - `POST /Command/<command>:<value>` dispatches workflow and hardware commands.
-- `POST /Confirm/<confirm>` sets workflow confirmation flags for concrete confirmations only (`Iodine`, `Mashup`, `Cooking`, `Boiling`, `Decoction`); `Wait` must not be sent as a confirm command and `POST /Confirm/Wait` is rejected with a controlled error.
+- `POST /Confirm/<confirm>` sets workflow confirmation flags for concrete confirmations only (`Iodine`, `Mashup`, `Cooking`, `Boiling`, `Decoction`, `DecoctionReturned`); `DecoctionReturned` completes `DECOCTION_RETURN_CONFIRMATION`. `Wait` must not be sent as a confirm command.
 - `PUT /Extended/<time>` extends active rest by positive integer minutes.
 - `POST /next` stops the current workflow step and proceeds.
 - `POST /jump/<step_name>` requests a jump to an exact procedure name.
@@ -206,7 +207,8 @@ Current status dict shape:
     "sensorId": "28-..."
   },
   "hardware": {"heater": "ON|OFF|ERROR", "agitator": "ON|OFF|ERROR"},
-  "waiting": {"waitingFor": "NONE|USER_CONFIRMATION|IODINE_TEST|MASHING_IN_CONFIRMATION|MASHING_OUT_CONFIRMATION|COOKING_CONFIRMATION|BOILING_CONFIRMATION|DECOCTION_CONFIRMATION", "canConfirm": false},
+  "heating": {"followsDecoction": false, "heaterEnabled": false},
+  "waiting": {"waitingFor": "NONE|USER_CONFIRMATION|IODINE_TEST|MASHING_IN_CONFIRMATION|MASHING_OUT_CONFIRMATION|COOKING_CONFIRMATION|BOILING_CONFIRMATION|DECOCTION_CONFIRMATION|DECOCTION_RETURN_CONFIRMATION", "canConfirm": false},
   "error": {"code": null, "details": null}
 }
 ```

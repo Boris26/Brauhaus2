@@ -5,6 +5,8 @@ export const isControllerAvailable = (aBackendAvailable: BackendAvailable | bool
     typeof aBackendAvailable === 'boolean' ? aBackendAvailable : aBackendAvailable?.isBackenAvailable === true;
 
 export const isHeaterActive = (aBrewingStatus?: BrewingStatus): boolean =>
-    aBrewingStatus?.hardware?.heater === 'ON' || aBrewingStatus?.currentStep?.mode === ProcessMode.HEATING;
+    typeof aBrewingStatus?.heating?.heaterEnabled === 'boolean'
+        ? aBrewingStatus.heating.heaterEnabled
+        : aBrewingStatus?.hardware?.heater === 'ON' || aBrewingStatus?.currentStep?.mode === ProcessMode.HEATING;
 
 export const isAgitatorActive = (aBrewingStatus?: BrewingStatus): boolean => aBrewingStatus?.hardware?.agitator === 'ON';

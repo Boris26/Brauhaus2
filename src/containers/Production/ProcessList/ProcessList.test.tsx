@@ -291,6 +291,15 @@ describe('ProcessList compact production overview', () => {
         expect(screen.queryByText('NaN')).not.toBeInTheDocument();
     });
 
+    it('labels heating that follows a decoction as the main-mash return phase', () => {
+        const heatingStatus = activeStatus(3, ProcessMode.HEATING);
+        heatingStatus.currentStep.phase = ProcessPhase.DECOCTION;
+        heatingStatus.heating = {followsDecoction: true, heaterEnabled: true};
+        render(<ProcessList selectedBeer={selectedBeer} currentStepIndex={3} currentStep={heatingStatus.currentStep} brewingStatus={heatingStatus} />);
+
+        expect(screen.getByText('Hauptmaische wird nach der Dekoktion aufgeheizt')).toBeInTheDocument();
+    });
+
     it('does not invent countdowns for waiting or durationless steps', () => {
         const waitingStatus = activeStatus(3, ProcessMode.WAITING);
         waitingStatus.waiting = {waitingFor: WaitingFor.IODINE_TEST, canConfirm: true};

@@ -21,6 +21,7 @@ export const confirmationTypeByWaitingState: Partial<Record<WaitingState, Confir
     [WaitingFor.BOILING_CONFIRMATION]: ConfirmStates.BOILING,
     [WaitingFor.COOKING_CONFIRMATION]: ConfirmStates.COOKING,
     [WaitingFor.DECOCTION_CONFIRMATION]: ConfirmStates.DECOCTION,
+    [WaitingFor.DECOCTION_RETURN_CONFIRMATION]: ConfirmStates.DECOCTION_RETURNED,
 };
 
 const warnedUnknownWaitingStates = new Set<string>();
@@ -51,6 +52,7 @@ export const getConfirmButtonLabel = (aStatus?: BrewingStatus) => {
         case WaitingFor.COOKING_CONFIRMATION: return 'Kochen bestätigen';
         case WaitingFor.BOILING_CONFIRMATION: return 'Siedepunkt bestätigen';
         case WaitingFor.DECOCTION_CONFIRMATION: return 'Dickmaische bestätigen';
+        case WaitingFor.DECOCTION_RETURN_CONFIRMATION: return 'Abgeschlossen';
         case WaitingFor.USER_CONFIRMATION: return 'Bestätigen';
         default: return 'Bestätigen';
     }
@@ -81,6 +83,11 @@ const confirmationCopyByWaitingState: Partial<Record<WaitingState, Pick<Confirma
         title: 'Dekoktion',
         message: 'Die Dekoktion läuft. Die Hauptmaische wird weiterhin auf der Temperatur der zugehörigen Rast gehalten.',
         buttonLabel: 'Dekoktion abgeschlossen',
+    },
+    [WaitingFor.DECOCTION_RETURN_CONFIRMATION]: {
+        title: 'Dickmaische zurückführen',
+        message: 'Bitte die Dickmaische vollständig in die Hauptmaische zurückführen und anschließend bestätigen.',
+        buttonLabel: 'Abgeschlossen',
     },
     [WaitingFor.MASHING_OUT_CONFIRMATION]: {
         title: 'Abmaischen bestätigen',
@@ -129,6 +136,8 @@ export const getBrewingStatusLabel = (aStatus?: BrewingStatus) => {
     if (aMode === ProcessMode.WAITING && aPhase === ProcessPhase.MASHING_IN && aWaitingFor === WaitingFor.MASHING_IN_CONFIRMATION) return 'Einmaischen: bitte bestätigen';
     if (aMode === ProcessMode.WAITING && aPhase === ProcessPhase.RAST && aWaitingFor === WaitingFor.IODINE_TEST) return 'Warten auf Iodine-Test';
     if (aMode === ProcessMode.WAITING && aPhase === ProcessPhase.DECOCTION && aWaitingFor === WaitingFor.DECOCTION_CONFIRMATION) return 'Dekoktion: bitte bestätigen';
+    if (aMode === ProcessMode.WAITING && aWaitingFor === WaitingFor.DECOCTION_RETURN_CONFIRMATION) return 'Dickmaische zurückführen und bestätigen';
+    if (aStatus.heating?.followsDecoction === true && aMode === ProcessMode.HEATING) return 'Hauptmaische wird nach der Dekoktion aufgeheizt';
     if (aMode === ProcessMode.WAITING && aPhase === ProcessPhase.MASHING_OUT && aWaitingFor === WaitingFor.MASHING_OUT_CONFIRMATION) return 'Abmaischen und Nachguss abgeschlossen?';
     if (aMode === ProcessMode.WAITING && aPhase === ProcessPhase.COOKING && aWaitingFor === WaitingFor.BOILING_CONFIRMATION) return 'Warten auf Siedepunkt-Bestätigung';
     if (aMode === ProcessMode.WAITING && aWaitingFor === WaitingFor.COOKING_CONFIRMATION) return 'Bestätigung für den Kochvorgang erforderlich';

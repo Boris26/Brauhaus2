@@ -65,7 +65,9 @@ Needs verification: backend ordering of `GET beers`, because the UI treats the l
   - `BOILING_CONFIRMATION` -> `Confirm/Boiling`
   - `COOKING_CONFIRMATION` -> `Confirm/Cooking`
   - `DECOCTION_CONFIRMATION` -> `Confirm/Decoction`
+  - `DECOCTION_RETURN_CONFIRMATION` -> `Confirm/DecoctionReturned`
   - `USER_CONFIRMATION`, `NONE`, or unknown waiting reasons do not send a confirm command. `Wait` may be displayed as a status, but the UI must not call `Confirm/Wait`.
+- During the return phase after a decoction, `heating.followsDecoction` selects return-specific Production copy and `heating.heaterEnabled` drives the actual heater/flame indication. Older control responses without `heating` keep the legacy fallback.
 - `USER_CONFIRMATION` and unknown waiting reasons remain visibly marked as waiting inline but do not render a confirmation button.
 
 ## Hop reminder flow

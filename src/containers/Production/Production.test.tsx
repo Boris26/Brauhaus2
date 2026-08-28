@@ -270,6 +270,7 @@ describe('Production inline confirmations', () => {
 
     it.each([
         [WaitingFor.DECOCTION_CONFIRMATION, ProcessPhase.DECOCTION, 'Dekoktion abgeschlossen', ConfirmStates.DECOCTION],
+        [WaitingFor.DECOCTION_RETURN_CONFIRMATION, ProcessPhase.DECOCTION, 'Abgeschlossen', ConfirmStates.DECOCTION_RETURNED],
         [WaitingFor.IODINE_TEST, ProcessPhase.RAST, 'Jodprobe abgeschlossen', ConfirmStates.IODINE],
         [WaitingFor.MASHING_IN_CONFIRMATION, ProcessPhase.MASHING_IN, 'Einmaischen abgeschlossen', ConfirmStates.MASHUP],
         [WaitingFor.MASHING_OUT_CONFIRMATION, ProcessPhase.MASHING_OUT, 'Abmaischen abgeschlossen', ConfirmStates.MASHUP],
@@ -742,6 +743,18 @@ describe('Production flame display', () => {
         const {container} = renderProduction({brewingStatus: heatingStatus});
         expect(container.querySelector('.flame-strip')).toBeInTheDocument();
         expect(screen.getAllByLabelText('Heizflamme')).toHaveLength(4);
+    });
+
+    it('uses heating.heaterEnabled as the authoritative heater state during decoction return', () => {
+        const returnHeating = createBrewingStatus(ProcessState.ACTIVE);
+        returnHeating.currentStep = {phase: ProcessPhase.DECOCTION, mode: ProcessMode.HEATING};
+        returnHeating.hardware.heater = 'ON';
+        returnHeating.heating = {followsDecoction: true, heaterEnabled: false};
+        const {container, rerender, props} = renderProduction({brewingStatus: returnHeating});
+        expect(container.querySelector('.flame-strip')).toBeNull();
+
+        rerender(<Production {...props} brewingStatus={{...returnHeating, heating: {...returnHeating.heating, heaterEnabled: true}}} />);
+        expect(container.querySelector('.flame-strip')).toBeInTheDocument();
     });
 });
 

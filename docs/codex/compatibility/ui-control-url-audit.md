@@ -44,6 +44,7 @@ The socket.io URL is derived as `BaseURL.replace(/^http/, 'ws')`, which produces
 | `confirm(ConfirmStates.COOKING)` | POST | `http://192.168.178.37:5000/Confirm/Cooking` | No | None | Response body logged | Catch logs; no retry or UI state update | Confirmed compatible |
 | `confirm(ConfirmStates.BOILING)` | POST | `http://192.168.178.37:5000/Confirm/Boiling` | No | None | Response body logged | Catch logs; no retry or UI state update | Confirmed compatible |
 | `confirm(ConfirmStates.DECOCTION)` | POST | `http://192.168.178.37:5000/Confirm/Decoction` | No | None | Response body logged | Catch logs; no retry or UI state update | Confirmed compatible |
+| `confirm(ConfirmStates.DECOCTION_RETURNED)` | POST | `http://192.168.178.37:5000/Confirm/DecoctionReturned` | No | None | Response body logged | Shared confirm pending/error flow | Confirmed compatible |
 | `nextProcedureStep()` | POST | `http://192.168.178.37:5000/next` | No | None | HTTP `200`; body ignored | Catch logs and dispatches next-step failure | Confirmed compatible |
 | `getTemperature()` | GET | `http://192.168.178.37:5000/temperatur/0` | No | None | HTTP `200` plain number | Non-200/catch returns `0` | Confirmed compatible; route stability remains Needs verification in PI control repository |
 | `productionWebSocketEpic$` connect | socket.io | `ws://192.168.178.37:5000/` | Yes | Socket.io connect | `overheat` event | Payload-shape mismatch remains possible | Needs verification in PI control repository |

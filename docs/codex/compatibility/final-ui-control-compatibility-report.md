@@ -48,6 +48,7 @@ The UI-facing availability endpoint is `GET /Available/`; PI control also preser
 | POST | `/Confirm/Boiling` | PI control | UI sends only for `BOILING_CONFIRMATION`. | Verified by counterpart repository. | Compatible. |
 | POST | `/Confirm/Cooking` | PI control | UI sends only for `COOKING_CONFIRMATION`. | Verified by counterpart repository. | Compatible. |
 | POST | `/Confirm/Decoction` | PI control | UI sends only for `DECOCTION_CONFIRMATION`. | Verified by counterpart repository. | Compatible. |
+| POST | `/Confirm/DecoctionReturned` | PI control | UI sends only for `DECOCTION_RETURN_CONFIRMATION`. | Confirmed by the PI-control decoction-return contract. | Compatible. |
 | POST | `/Confirm/Wait` | PI control | UI must not call this path. | PI rejects with controlled error; verified by counterpart repository. | Compatible because UI does not send it. |
 | POST | `/next` | PI control | UI posts to root `/next` and expects HTTP 200. | Verified by counterpart repository. | Compatible. |
 | socket.io | `overheat` event at `ws://192.168.178.37:5000/` | Shared | UI subscribes to `overheat`, but payload-shape handling remains unclear. | Not fully verified in this repository. | Needs verification. |
@@ -68,6 +69,8 @@ The UI-facing availability endpoint is `GET /Available/`; PI control also preser
 | `currentStep.phase` | string enum | PI control | Current brewing phase. | UI labels, hop reminders, mobile display. | Preserve documented enum strings. |
 | `currentStep.mode` | string enum | PI control | Current step mode. | UI labels, heating/progress/waiting decisions. | Preserve documented enum strings. |
 | `waiting.waitingFor` | string enum | PI control | Concrete wait/confirmation reason or status. | UI maps only concrete values to confirmation endpoints; generic values do not dispatch. | Do not rename concrete confirmation enum values without coordinated UI update. |
+| `heating.followsDecoction` | boolean | PI control | Marks the return heat-up after a decoction. | Production return-phase copy and status. | Missing values use the ordinary-heating compatibility path. |
+| `heating.heaterEnabled` | boolean | PI control | Reports whether heating is actually enabled. | Desktop flames and mobile heating state. | When present this is authoritative; older payloads use hardware/mode fallback. |
 | `waiting.canConfirm` | boolean | PI control | Whether confirmation may be submitted. | UI enables confirm button only when a concrete confirm exists and `canConfirm` is true. | Keep boolean semantics stable. |
 | `temperature.current` | number | PI control | Current temperature in Celsius. | UI gauges/mobile display; fallback from `/temperatur/0` if missing/zero. | Keep Celsius and numeric type stable. |
 | `temperature.target` | number | PI control | Target temperature in Celsius. | UI target gauge/mobile display. | Keep Celsius and numeric type stable. |
