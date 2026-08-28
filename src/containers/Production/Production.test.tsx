@@ -773,21 +773,23 @@ describe('Production layout structure', () => {
         expect(screen.getByRole('heading', {name: 'Rührwerk'})).toBeInTheDocument();
         expect(screen.getByRole('heading', {name: 'Intervallbetrieb'})).toBeInTheDocument();
         expect(screen.getByRole('heading', {name: 'Wasser'})).toBeInTheDocument();
+        expect(screen.getByRole('heading', {name: 'Manuelle Wasserzufuhr'})).toBeInTheDocument();
     });
 
-    it('groups manual water controls above a separator and the recipe water buttons', () => {
+    it('groups manual water controls in an accent container above the recipe water buttons', () => {
         const {container} = renderProduction();
-        const manualControls = screen.getByLabelText('Manuelle Wasserzufuhr');
-        const separator = container.querySelector('.waterSettingsSeparator');
+        const manualHeading = screen.getByRole('heading', {name: 'Manuelle Wasserzufuhr'});
+        const manualControls = container.querySelector('.manualWaterSettings');
         const recipeControls = container.querySelector('.recipeWaterButtons');
 
+        expect(manualControls).toHaveClass('intervalSettings');
+        expect(manualControls).toContainElement(manualHeading);
         expect(manualControls).toContainElement(screen.getByText('Wasser aktivieren'));
         expect(manualControls).toContainElement(screen.getByText('Liter'));
-        expect(separator).toBeInTheDocument();
+        expect(container.querySelector('.waterSettingsSeparator')).not.toBeInTheDocument();
         expect(recipeControls).toContainElement(screen.getByRole('button', {name: /Nachguss/}));
         expect(recipeControls).toContainElement(screen.getByRole('button', {name: /Hauptguss/}));
-        expect(manualControls.compareDocumentPosition(separator as Node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-        expect((separator as Node).compareDocumentPosition(recipeControls as Node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+        expect((manualControls as Node).compareDocumentPosition(recipeControls as Node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 
     it('keeps the main production regions in a shared structural grid', () => {
