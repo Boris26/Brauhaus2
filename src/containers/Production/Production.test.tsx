@@ -113,6 +113,19 @@ describe('Production agitator controller integration', () => {
         expect(ProductionRepository.getAgitatorStatus).toHaveBeenCalledTimes(1);
     });
 
+    it('keeps the complete agitator UI visible and disabled when detail status is unavailable', async () => {
+        jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockRejectedValue(new Error('offline'));
+        renderProduction({isBackenAvailable: {isBackenAvailable: false, statusText: 'Offline'}});
+        expect(await screen.findByText('Rührwerk-Konfiguration nicht verfügbar')).toBeInTheDocument();
+        expect(screen.getByRole('switch', {name: 'Durchgehend rühren'})).toBeDisabled();
+        expect(screen.getByRole('switch', {name: 'Automatik'})).toBeDisabled();
+        expect(screen.getByLabelText('Laufzeit')).toBeDisabled();
+        expect(screen.getByLabelText('Pausenzeit')).toBeDisabled();
+        expect(screen.getByRole('slider')).toBeDisabled();
+        expect(screen.getByText('Geschwindigkeit')).toBeInTheDocument();
+        expect(ProductionRepository.setAgitatorConfig).not.toHaveBeenCalled();
+    });
+
     it.each([
         ['OFF', false, false],
         ['CONTINUOUS', true, false],
