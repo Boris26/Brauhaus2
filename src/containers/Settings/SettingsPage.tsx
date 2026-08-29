@@ -9,6 +9,12 @@ import { getUiMode, setUiMode } from '../../utils/uiMode';
 import PaletteOutlinedIcon from '@mui/icons-material/PaletteOutlined';
 import PrecisionManufacturingOutlinedIcon from '@mui/icons-material/PrecisionManufacturingOutlined';
 import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined';
+import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
+import QuantityPicker from '../../components/Controlls/QuantityPicker/QuantityPicker';
+import {AgitatorSettings} from '../../model/AgitatorSettings';
+import {AgitatorSettingsRepository} from '../../repositorys/AgitatorSettingsRepository';
+
+export const AGITATOR_SETTINGS_SPEED_DEBOUNCE_MS = 300;
 
 interface SettingsPageProps {
     theme: ThemeName;
@@ -29,6 +35,12 @@ interface SettingsPageState {
     pushError: string | null;
     soundPlaying: SoundType | null;
     soundError: string | null;
+    agitatorSettings?: AgitatorSettings;
+    agitatorSpeedDraft?: number;
+    agitatorIntervalDraft?: Pick<AgitatorSettings, 'runningMinutes' | 'breakMinutes'>;
+    agitatorLoading: boolean;
+    agitatorSaving: boolean;
+    agitatorError: string | null;
 }
 
 export class SettingsPage extends React.Component<SettingsPageProps, SettingsPageState> {
@@ -47,14 +59,95 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
             pushError: null,
             soundPlaying: null,
             soundError: null,
+            agitatorSettings: undefined,
+            agitatorSpeedDraft: undefined,
+            agitatorIntervalDraft: undefined,
+            agitatorLoading: true,
+            agitatorSaving: false,
+            agitatorError: null,
         };
     }
 
     private soundRequestActive = false;
+    private agitatorSpeedDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
+    private isMountedComponent = false;
 
     componentDidMount() {
+        this.isMountedComponent = true;
         this.refreshPushState();
+        void this.loadAgitatorSettings();
     }
+
+    componentWillUnmount() {
+        this.isMountedComponent = false;
+        this.clearAgitatorSpeedDebounce();
+    }
+
+    clearAgitatorSpeedDebounce = () => {
+        if (this.agitatorSpeedDebounceTimeout !== null) {
+            clearTimeout(this.agitatorSpeedDebounceTimeout);
+            this.agitatorSpeedDebounceTimeout = null;
+        }
+    };
+
+    loadAgitatorSettings = async () => {
+        this.clearAgitatorSpeedDebounce();
+        this.setState({agitatorLoading: true, agitatorError: null, agitatorSpeedDraft: undefined, agitatorIntervalDraft: undefined});
+        try {
+            const settings = await AgitatorSettingsRepository.get();
+            if (this.isMountedComponent) this.setState({agitatorSettings: settings, agitatorLoading: false});
+        } catch (error) {
+            if (this.isMountedComponent) this.setState({
+                agitatorSettings: undefined,
+                agitatorLoading: false,
+                agitatorError: 'Rührwerk-Standardwerte konnten nicht geladen werden.',
+            });
+        }
+    };
+
+    saveAgitatorSettings = async (settings: AgitatorSettings) => {
+        if (this.state.agitatorSaving) return;
+        this.setState({agitatorSaving: true, agitatorError: null});
+        try {
+            const confirmed = await AgitatorSettingsRepository.update(settings);
+            if (this.isMountedComponent) this.setState({
+                agitatorSettings: confirmed,
+                agitatorSpeedDraft: undefined,
+                agitatorIntervalDraft: undefined,
+                agitatorSaving: false,
+            });
+        } catch (error) {
+            if (this.isMountedComponent) this.setState({
+                agitatorSpeedDraft: undefined,
+                agitatorIntervalDraft: undefined,
+                agitatorSaving: false,
+                agitatorError: 'Rührwerk-Standardwerte konnten nicht gespeichert werden.',
+            });
+        }
+    };
+
+    changeAgitatorMinutes = (field: 'runningMinutes' | 'breakMinutes', value: number) => {
+        const settings = this.state.agitatorSettings;
+        if (!settings || this.state.agitatorSaving || value < 0) return;
+        const next = {...settings, [field]: value};
+        if (next.runningMinutes === 0 && next.breakMinutes === 0) return;
+        this.setState({agitatorIntervalDraft: {
+            runningMinutes: next.runningMinutes,
+            breakMinutes: next.breakMinutes,
+        }});
+        void this.saveAgitatorSettings(next);
+    };
+
+    changeAgitatorSpeed = (speedPercent: number) => {
+        const settings = this.state.agitatorSettings;
+        if (!settings || this.state.agitatorSaving || speedPercent < 0 || speedPercent > 100) return;
+        this.setState({agitatorSpeedDraft: speedPercent, agitatorError: null});
+        this.clearAgitatorSpeedDebounce();
+        this.agitatorSpeedDebounceTimeout = setTimeout(() => {
+            this.agitatorSpeedDebounceTimeout = null;
+            void this.saveAgitatorSettings({...settings, speedPercent});
+        }, AGITATOR_SETTINGS_SPEED_DEBOUNCE_MS);
+    };
 
     refreshPushState = async () => {
         const pushSupported = isPushSupported();
@@ -184,7 +277,7 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
 
     render() {
         const { theme, debug } = this.props;
-        const { autoConnect, notificationsEnabled, temperatureUnit, statusMessage, pushSupported, pushSubscribed, pushLoading, pushError, pushPermission, soundPlaying, soundError } = this.state;
+        const { autoConnect, notificationsEnabled, temperatureUnit, statusMessage, pushSupported, pushSubscribed, pushLoading, pushError, pushPermission, soundPlaying, soundError, agitatorSettings, agitatorSpeedDraft, agitatorIntervalDraft, agitatorLoading, agitatorSaving, agitatorError } = this.state;
 
         return (
             <main className="settings-page">
@@ -200,6 +293,48 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                 )}
 
                 <div className="settings-grid">
+                    <section className="settings-card agitator-defaults-card">
+                        <div className="settings-card-header">
+                            <TuneOutlinedIcon aria-hidden="true" />
+                            <div>
+                                <h2>Rührwerk</h2>
+                                <p>Persistente Standardwerte der Brausteuerung.</p>
+                            </div>
+                        </div>
+
+                        {agitatorLoading && <p className="agitator-settings-state" role="status">Rührwerk-Standardwerte werden geladen…</p>}
+                        {!agitatorLoading && !agitatorSettings && <div className="agitator-settings-state">
+                            <p className="settings-error" role="alert">{agitatorError}</p>
+                            <button className="settings-secondary" type="button" onClick={this.loadAgitatorSettings}>Erneut versuchen</button>
+                        </div>}
+                        {agitatorSettings && <div className="agitator-defaults-controls">
+                            <label className="agitator-default-speed" htmlFor="agitator-default-speed">
+                                <span>Standard-Geschwindigkeit <strong>{agitatorSpeedDraft ?? agitatorSettings.speedPercent} %</strong></span>
+                                <input id="agitator-default-speed" type="range" min="0" max="100"
+                                    value={agitatorSpeedDraft ?? agitatorSettings.speedPercent}
+                                    disabled={agitatorSaving}
+                                    onChange={(event) => this.changeAgitatorSpeed(Number(event.target.value))}/>
+                            </label>
+                            <h3>Intervall</h3>
+                            <div className="agitator-default-intervals">
+                                <div className="agitator-default-stepper" data-testid="settings-running-minutes-stepper">
+                                    <QuantityPicker initialValue={agitatorIntervalDraft?.runningMinutes ?? agitatorSettings.runningMinutes} min={agitatorSettings.breakMinutes === 0 ? 1 : 0}
+                                        max={Number.MAX_SAFE_INTEGER} onChange={(value) => this.changeAgitatorMinutes('runningMinutes', value)}
+                                        isDisabled={agitatorSaving} label="Laufzeit" labelPosition="above"/>
+                                    <span>min</span>
+                                </div>
+                                <div className="agitator-default-stepper" data-testid="settings-break-minutes-stepper">
+                                    <QuantityPicker initialValue={agitatorIntervalDraft?.breakMinutes ?? agitatorSettings.breakMinutes} min={agitatorSettings.runningMinutes === 0 ? 1 : 0}
+                                        max={Number.MAX_SAFE_INTEGER} onChange={(value) => this.changeAgitatorMinutes('breakMinutes', value)}
+                                        isDisabled={agitatorSaving} label="Pausenzeit" labelPosition="above"/>
+                                    <span>min</span>
+                                </div>
+                            </div>
+                            {agitatorSaving && <p className="agitator-saving" role="status">Wird gespeichert…</p>}
+                            {agitatorError && <p className="settings-error" role="alert">{agitatorError}</p>}
+                        </div>}
+                    </section>
+
                     <section className="settings-card">
                         <div className="settings-card-header">
                             <PaletteOutlinedIcon aria-hidden="true" />
