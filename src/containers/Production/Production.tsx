@@ -683,32 +683,31 @@ export class Production extends React.Component<ProductionProps, ProductionState
                         {renderSwitch('Durchgehend rühren', agitatorConfig?.mode === 'CONTINUOUS',
                             (checked) => this.toggleAgitatorMode('CONTINUOUS', checked), settingsDisabled || !agitatorConfig || agitatorRequestPending)}
                     </div>
-                    <div className="intervalSettings agitatorAutomaticSettings" aria-labelledby="interval-settings-title">
+                    <div className={`intervalSettings agitatorAutomaticSettings ${agitatorConfig?.mode === 'AUTOMATIC' ? 'is-active' : ''}`} aria-labelledby="interval-settings-title">
                         <div className="agitatorAutomaticHeader">
-                            {renderSwitch('Automatik', agitatorConfig?.mode === 'AUTOMATIC',
-                                (checked) => this.toggleAgitatorMode('AUTOMATIC', checked), settingsDisabled || !agitatorConfig || agitatorRequestPending)}
-                            <p>Beim Heizen durchgehend, sonst im Intervall</p>
-                        </div>
-                        <h6>Intervall</h6>
-                        <div className="intervalTimeControls">
-                            <div className="agitatorIntervalStepper" data-testid="running-seconds-stepper">
-                                <QuantityPicker key={`running-${agitatorConfig?.runningSeconds ?? 'unknown'}`}
-                                    initialValue={agitatorConfig?.runningSeconds ?? 0} min={agitatorConfig?.breakSeconds === 0 ? 1 : 0} max={Number.MAX_SAFE_INTEGER}
-                                    onChange={this.onIntervalChangeRunningTime} label="Laufzeit" labelPosition="above"
-                                    isDisabled={settingsDisabled || !agitatorConfig || agitatorRequestPending || agitatorConfig.mode !== 'AUTOMATIC'}/>
-                                <span className="agitatorIntervalUnit">s</span>
-                            </div>
-                            <div className="agitatorIntervalStepper" data-testid="break-seconds-stepper">
-                                <QuantityPicker key={`break-${agitatorConfig?.breakSeconds ?? 'unknown'}`}
-                                    initialValue={agitatorConfig?.breakSeconds ?? 0} min={agitatorConfig?.runningSeconds === 0 ? 1 : 0} max={Number.MAX_SAFE_INTEGER}
-                                    onChange={this.onIntervalChangeBreakTime} label="Pausenzeit" labelPosition="above"
-                                    isDisabled={settingsDisabled || !agitatorConfig || agitatorRequestPending || agitatorConfig.mode !== 'AUTOMATIC'}/>
-                                <span className="agitatorIntervalUnit">s</span>
+                            <div>
+                                <h5 id="interval-settings-title">Automatik</h5>
+                                <p>Beim Heizen durchgehend, sonst im Intervall</p>
                             </div>
                             <Switch className="productionSwitch" onChange={(checked) => this.toggleAgitatorMode('AUTOMATIC', checked)}
                                 checked={agitatorConfig?.mode === 'AUTOMATIC'} height={24} width={44} handleDiameter={18}
                                 checkedIcon={false} uncheckedIcon={false} disabled={settingsDisabled || !agitatorConfig || agitatorRequestPending}
                                 aria-label="Automatik" />
+                        </div>
+                        <h6>Intervall</h6>
+                        <div className="intervalTimeControls">
+                            <div className="intervalTimeControl" data-testid="running-minutes-stepper">
+                                <QuantityPicker initialValue={agitatorIntervalDraft?.runningMinutes ?? agitatorConfig?.runningMinutes}
+                                    min={0} max={Number.MAX_SAFE_INTEGER} onChange={this.onIntervalChangeRunningTime}
+                                    isDisabled={settingsDisabled || !agitatorConfig || agitatorRequestPending || agitatorConfig.mode !== 'AUTOMATIC'} label="Laufzeit" labelPosition="above"/>
+                                <span className="intervalTimeUnit">min</span>
+                            </div>
+                            <div className="intervalTimeControl" data-testid="break-minutes-stepper">
+                                <QuantityPicker initialValue={agitatorIntervalDraft?.breakMinutes ?? agitatorConfig?.breakMinutes}
+                                    min={0} max={Number.MAX_SAFE_INTEGER} onChange={this.onIntervalChangeBreakTime}
+                                    isDisabled={settingsDisabled || !agitatorConfig || agitatorRequestPending || agitatorConfig.mode !== 'AUTOMATIC'} label="Pausenzeit" labelPosition="above"/>
+                                <span className="intervalTimeUnit">min</span>
+                            </div>
                         </div>
                     </div>
                     <label className="agitatorSpeedControl">
