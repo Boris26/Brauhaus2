@@ -13,6 +13,21 @@ describe('ProductionRepository API method/path usage', () => {
     jest.clearAllMocks();
     mockedAxios.get.mockResolvedValue({ status: 200, data: 42, statusText: 'OK' } as any);
     mockedAxios.post.mockResolvedValue({ status: 200, data: {}, statusText: 'OK' } as any);
+    mockedAxios.put.mockResolvedValue({ status: 200, data: {}, statusText: 'OK' } as any);
+  });
+
+  it('uses the agitator detail/config and pause/resume contracts', async () => {
+    const detail = {config: {mode: 'AUTOMATIC', speedPercent: 36, runningSeconds: 30, breakSeconds: 120}, inputs: {heatingActive: false}, runtime: {paused: false, desiredOperation: 'INTERVAL', actualOutputOn: false}};
+    mockedAxios.get.mockResolvedValueOnce({status: 200, data: detail} as any);
+    await expect(ProductionRepository.getAgitatorStatus()).resolves.toEqual(detail);
+    await ProductionRepository.setAgitatorConfig(detail.config as any);
+    await ProductionRepository.pauseAgitator();
+    await ProductionRepository.resumeAgitator();
+
+    expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining('/Agitator/Status'));
+    expect(mockedAxios.put).toHaveBeenCalledWith(expect.stringContaining('/Agitator/Config'), detail.config);
+    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Agitator/Pause'));
+    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Agitator/Resume'));
   });
 
   it('uses POST only for concrete confirm actions', async () => {

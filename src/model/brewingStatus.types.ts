@@ -53,6 +53,7 @@ export interface Alarm {
 }
 
 export interface BrewingStatus {
+    agitator?: import('./Agitator').AgitatorRuntimeStatus;
     elapsedTime: number;
     currentTime: number;
     process: {
