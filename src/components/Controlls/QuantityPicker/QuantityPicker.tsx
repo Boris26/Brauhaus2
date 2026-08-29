@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import './QuantityPicker.css'; // Passe den Dateipfad entsprechend an
 
 interface QuantityPickerProps {
-    initialValue: number;
+    initialValue?: number;
     onChange: (value: number) => void;
     label: string;
     labelPosition?: 'left' | 'right' | 'above' | 'below';
@@ -12,7 +12,7 @@ interface QuantityPickerProps {
 }
 
 interface QuantityPickerState {
-    quantity: number;
+    quantity?: number;
     isIncrementing: boolean;
     isDecrementing: boolean;
 }
@@ -23,7 +23,15 @@ class QuantityPicker extends Component<QuantityPickerProps, QuantityPickerState>
 
     constructor(props: QuantityPickerProps) {
         super(props);
-        if(props.initialValue > props.max)
+        if(props.initialValue === undefined)
+        {
+            this.state = {
+                quantity: undefined,
+                isIncrementing: false,
+                isDecrementing: false,
+            };
+        }
+        else if(props.initialValue > props.max)
         {
             this.state = {
                 quantity: props.max,
@@ -51,6 +59,14 @@ class QuantityPicker extends Component<QuantityPickerProps, QuantityPickerState>
 
     }
 
+    componentDidUpdate(prevProps: QuantityPickerProps) {
+        if (prevProps.initialValue !== this.props.initialValue) {
+            this.setState({quantity: this.props.initialValue === undefined
+                ? undefined
+                : Math.min(this.props.max, Math.max(this.props.min, this.props.initialValue))});
+        }
+    }
+
     handleIncrementMouseDown = () => {
         this.setState({ isIncrementing: true });
         this.incrementQuantity();
@@ -72,19 +88,21 @@ class QuantityPicker extends Component<QuantityPickerProps, QuantityPickerState>
     };
 
     incrementQuantity = () => {
-        if(this.state.quantity < this.props.max)
+        if(this.state.quantity !== undefined && this.state.quantity < this.props.max)
         {
-            this.props.onChange(this.state.quantity + 1);
-            this.setState((prevState) => ({ quantity: prevState.quantity + 1 }));
+            const nextQuantity = this.state.quantity + 1;
+            this.props.onChange(nextQuantity);
+            this.setState({quantity: nextQuantity});
             this.incrementTimer = setTimeout(this.incrementQuantity, 200);
         }
 
     };
 
     decrementQuantity = () => {
-        if (this.state.quantity > this.props.min) {
-            this.props.onChange(this.state.quantity - 1);
-            this.setState((prevState) => ({ quantity: prevState.quantity - 1 }));
+        if (this.state.quantity !== undefined && this.state.quantity > this.props.min) {
+            const nextQuantity = this.state.quantity - 1;
+            this.props.onChange(nextQuantity);
+            this.setState({quantity: nextQuantity});
             this.decrementTimer = setTimeout(this.decrementQuantity, 200);
         }
     };
@@ -119,16 +137,18 @@ class QuantityPicker extends Component<QuantityPickerProps, QuantityPickerState>
                         onMouseUp={this.handleDecrementMouseUp}
                         onMouseLeave={this.handleDecrementMouseUp}
                         disabled={isDisabled}
+                        aria-label={`${label} verringern`}
                     >
                         -
                     </button>
-                    <span  className={`quantity-picker-input ${isDisabled ? 'quantity-picker-input-disabled' : ''}`} >{this.state.quantity}</span>
+                    <span className={`quantity-picker-input ${isDisabled ? 'quantity-picker-input-disabled' : ''}`} aria-label={label}>{this.state.quantity ?? '–'}</span>
                     <button
                         className={"increment-btn"}
                         onMouseDown={this.handleIncrementMouseDown}
                         onMouseUp={this.handleIncrementMouseUp}
                         onMouseLeave={this.handleIncrementMouseUp}
                         disabled={isDisabled}
+                        aria-label={`${label} erhöhen`}
                     >
                         +
                     </button>

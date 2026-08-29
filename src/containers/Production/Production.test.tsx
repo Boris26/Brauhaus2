@@ -90,7 +90,7 @@ const renderProduction = (aOverrides: Partial<React.ComponentProps<typeof Produc
 
 describe('Production agitator controller integration', () => {
     const detail = {
-        config: {mode: 'AUTOMATIC' as const, speedPercent: 36, runningSeconds: 30, breakSeconds: 120},
+        config: {mode: 'AUTOMATIC' as const, speedPercent: 36, runningMinutes: 2, breakMinutes: 7},
         inputs: {heatingActive: false},
         runtime: {paused: false, desiredOperation: 'INTERVAL' as const, actualOutputOn: false, intervalPhase: 'BREAK'}
     };
@@ -143,7 +143,7 @@ describe('Production agitator controller integration', () => {
     it('switches directly from AUTOMATIC to CONTINUOUS with the complete confirmed config', async () => {
         renderProduction();
         fireEvent.click(await screen.findByRole('switch', {name: 'Durchgehend rühren'}));
-        await waitFor(() => expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledWith({mode: 'CONTINUOUS', speedPercent: 36, runningSeconds: 30, breakSeconds: 120}));
+        await waitFor(() => expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledWith({mode: 'CONTINUOUS', speedPercent: 36, runningMinutes: 2, breakMinutes: 7}));
         expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledTimes(1);
     });
 
@@ -151,14 +151,14 @@ describe('Production agitator controller integration', () => {
         jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockResolvedValue({...detail, config: {...detail.config, mode: 'CONTINUOUS'}});
         renderProduction();
         fireEvent.click(await screen.findByRole('switch', {name: 'Automatik'}));
-        await waitFor(() => expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledWith({mode: 'AUTOMATIC', speedPercent: 36, runningSeconds: 30, breakSeconds: 120}));
+        await waitFor(() => expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledWith({mode: 'AUTOMATIC', speedPercent: 36, runningMinutes: 2, breakMinutes: 7}));
         expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledTimes(1);
     });
 
     it('turns an active mode off without changing the remaining config', async () => {
         renderProduction();
         fireEvent.click(await screen.findByRole('switch', {name: 'Automatik'}));
-        await waitFor(() => expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledWith({mode: 'OFF', speedPercent: 36, runningSeconds: 30, breakSeconds: 120}));
+        await waitFor(() => expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledWith({mode: 'OFF', speedPercent: 36, runningMinutes: 2, breakMinutes: 7}));
     });
 
     it('keeps both mode switches disabled while a config request is pending', async () => {
@@ -183,7 +183,7 @@ describe('Production agitator controller integration', () => {
         expect(ProductionRepository.setAgitatorConfig).not.toHaveBeenCalled();
         act(() => jest.advanceTimersByTime(AGITATOR_SPEED_DEBOUNCE_MS));
         await act(async () => { await Promise.resolve(); });
-        expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledWith({mode: 'AUTOMATIC', speedPercent: 42, runningSeconds: 30, breakSeconds: 120});
+        expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledWith({mode: 'AUTOMATIC', speedPercent: 42, runningMinutes: 2, breakMinutes: 7});
         jest.useRealTimers();
     });
 
@@ -213,7 +213,7 @@ describe('Production agitator controller integration', () => {
     it('adopts optional #98 config fields from the normal poll', async () => {
         const {props, rerender} = renderProduction();
         await screen.findByText('36 %');
-        rerender(<Production {...props} brewingStatus={{...createBrewingStatus(), agitator: {mode: 'AUTOMATIC', paused: false, operation: 'INTERVAL', intervalPhase: 'RUNNING', actualOutputOn: true, speedPercent: 42, runningSeconds: 20, breakSeconds: 90}}} />);
+        rerender(<Production {...props} brewingStatus={{...createBrewingStatus(), agitator: {mode: 'AUTOMATIC', paused: false, operation: 'INTERVAL', intervalPhase: 'RUNNING', actualOutputOn: true, speedPercent: 42, runningMinutes: 4, breakMinutes: 10}}} />);
         expect(await screen.findByText('42 %')).toBeInTheDocument();
         expect(within(screen.getByTestId('running-seconds-stepper')).getByText('20')).toBeInTheDocument();
         expect(within(screen.getByTestId('break-seconds-stepper')).getByText('90')).toBeInTheDocument();
@@ -293,8 +293,8 @@ describe('Production agitator controller integration', () => {
     it('keeps interval settings visible but only editable in AUTOMATIC mode and places speed afterwards', async () => {
         jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockResolvedValue({...detail, config: {...detail.config, mode: 'OFF'}});
         const {container} = renderProduction();
-        expect(await screen.findByLabelText('Laufzeit')).toBeDisabled();
-        expect(screen.getByLabelText('Pausenzeit')).toBeDisabled();
+        expect(await screen.findByRole('button', {name: 'Laufzeit erhöhen'})).toBeDisabled();
+        expect(screen.getByRole('button', {name: 'Pausenzeit erhöhen'})).toBeDisabled();
         const automaticCard = container.querySelector('.agitatorAutomaticSettings') as HTMLElement;
         const speed = screen.getByText('Geschwindigkeit').closest('label') as HTMLElement;
         expect(automaticCard.compareDocumentPosition(speed) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -308,6 +308,37 @@ describe('Production agitator controller integration', () => {
         expect(screen.getByRole('switch', {name: 'Automatik'})).toBeChecked();
         expect(ProductionRepository.setAgitatorConfig).not.toHaveBeenCalled();
         expect(screen.getByRole('button', {name: 'Rührwerk fortsetzen'})).toBeInTheDocument();
+    });
+
+    it('uses controller minute values and sends the complete config when incrementing runtime', async () => {
+        renderProduction();
+        expect(await screen.findByLabelText('Laufzeit')).toHaveTextContent('2');
+        expect(screen.getByLabelText('Pausenzeit')).toHaveTextContent('7');
+        const increment = screen.getByRole('button', {name: 'Laufzeit erhöhen'});
+        fireEvent.mouseDown(increment);
+        fireEvent.mouseUp(increment);
+        await waitFor(() => expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledWith({mode: 'AUTOMATIC', speedPercent: 36, runningMinutes: 3, breakMinutes: 7}));
+    });
+
+    it('sends the complete config when decrementing break time', async () => {
+        renderProduction();
+        await screen.findByLabelText('Pausenzeit');
+        const decrement = screen.getByRole('button', {name: 'Pausenzeit verringern'});
+        fireEvent.mouseDown(decrement);
+        fireEvent.mouseUp(decrement);
+        await waitFor(() => expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledWith({mode: 'AUTOMATIC', speedPercent: 36, runningMinutes: 2, breakMinutes: 6}));
+    });
+
+    it('discards an interval draft after a failed config request', async () => {
+        jest.spyOn(ProductionRepository, 'setAgitatorConfig').mockRejectedValue(new Error('failed'));
+        renderProduction();
+        await screen.findByLabelText('Laufzeit');
+        const increment = screen.getByRole('button', {name: 'Laufzeit erhöhen'});
+        fireEvent.mouseDown(increment);
+        fireEvent.mouseUp(increment);
+        await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Rührwerk konnte nicht aktualisiert werden.'));
+        expect(screen.getByLabelText('Laufzeit')).toHaveTextContent('2');
+        expect(screen.getByLabelText('Pausenzeit')).toHaveTextContent('7');
     });
 });
 

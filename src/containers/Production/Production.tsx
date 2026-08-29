@@ -83,6 +83,7 @@ interface ProductionState {
     agitatorConfig?: AgitatorConfig;
     agitatorRuntime?: AgitatorRuntimeStatus;
     agitatorSpeedDraft?: number;
+    agitatorIntervalDraft?: Pick<AgitatorConfig, 'runningMinutes' | 'breakMinutes'>;
     agitatorRequestPending: boolean;
     agitatorStatusLoadFailed: boolean;
     waterSwitchState: boolean
@@ -119,6 +120,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
             agitatorConfig: undefined,
             agitatorRuntime: undefined,
             agitatorSpeedDraft: undefined,
+            agitatorIntervalDraft: undefined,
             agitatorRequestPending: false,
             agitatorStatusLoadFailed: false,
             waterSwitchState: false,
@@ -260,6 +262,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
             if (!this.isMountedComponent) return;
             this.setState({
                 agitatorConfig: detail.config,
+                agitatorIntervalDraft: undefined,
                 agitatorStatusLoadFailed: false,
                 agitatorRuntime: {
                     mode: detail.config.mode,
@@ -283,9 +286,12 @@ export class Production extends React.Component<ProductionProps, ProductionState
                 ...previous.agitatorConfig,
                 mode: poll.mode,
                 ...(typeof poll.speedPercent === 'number' ? {speedPercent: poll.speedPercent} : {}),
-                ...(typeof poll.runningSeconds === 'number' ? {runningSeconds: poll.runningSeconds} : {}),
-                ...(typeof poll.breakSeconds === 'number' ? {breakSeconds: poll.breakSeconds} : {}),
+                ...(typeof poll.runningMinutes === 'number' ? {runningMinutes: poll.runningMinutes} : {}),
+                ...(typeof poll.breakMinutes === 'number' ? {breakMinutes: poll.breakMinutes} : {}),
             } : previous.agitatorConfig,
+            agitatorIntervalDraft: typeof poll.runningMinutes === 'number' || typeof poll.breakMinutes === 'number'
+                ? undefined
+                : previous.agitatorIntervalDraft,
         }));
     }
 
@@ -297,11 +303,12 @@ export class Production extends React.Component<ProductionProps, ProductionState
                 agitatorConfig: confirmed,
                 agitatorRuntime: previous.agitatorRuntime ? {...previous.agitatorRuntime, mode: confirmed.mode} : previous.agitatorRuntime,
                 agitatorSpeedDraft: undefined,
+                agitatorIntervalDraft: undefined,
                 agitatorRequestPending: false,
             }));
             return true;
         } catch (error) {
-            if (this.isMountedComponent) this.setState({agitatorSpeedDraft: undefined, agitatorRequestPending: false, mainAgitatorError: true});
+            if (this.isMountedComponent) this.setState({agitatorSpeedDraft: undefined, agitatorIntervalDraft: undefined, agitatorRequestPending: false, mainAgitatorError: true});
             return false;
         }
     }
@@ -398,11 +405,19 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     onIntervalChangeBreakTime = (value: number) => {
-        if (this.isControllerAvailable() && this.state.agitatorConfig) void this.submitAgitatorConfig({...this.state.agitatorConfig, breakSeconds: value});
+        const config = this.state.agitatorConfig;
+        if (!this.isControllerAvailable() || !config || this.state.agitatorRequestPending) return;
+        this.setState({agitatorIntervalDraft: {runningMinutes: config.runningMinutes, breakMinutes: value}}, () => {
+            void this.submitAgitatorConfig({...config, breakMinutes: value});
+        });
     }
 
     onIntervalChangeRunningTime = (value: number) => {
-        if (this.isControllerAvailable() && this.state.agitatorConfig) void this.submitAgitatorConfig({...this.state.agitatorConfig, runningSeconds: value});
+        const config = this.state.agitatorConfig;
+        if (!this.isControllerAvailable() || !config || this.state.agitatorRequestPending) return;
+        this.setState({agitatorIntervalDraft: {runningMinutes: value, breakMinutes: config.breakMinutes}}, () => {
+            void this.submitAgitatorConfig({...config, runningMinutes: value});
+        });
     }
 
     onSetWaterChangeQuantity = (value: number) => {
@@ -629,7 +644,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     renderSettings() {
-        const {waterSwitchState, agitatorConfig, agitatorRuntime, agitatorSpeedDraft, agitatorRequestPending, agitatorStatusLoadFailed} = this.state;
+        const {waterSwitchState, agitatorConfig, agitatorRuntime, agitatorSpeedDraft, agitatorIntervalDraft, agitatorRequestPending, agitatorStatusLoadFailed} = this.state;
         const settingsDisabled = !this.isControllerAvailable();
         const mashWaterDisabled = settingsDisabled || this.isRecipeWaterButtonDisabled('mash');
         const spargeWaterDisabled = settingsDisabled || this.isRecipeWaterButtonDisabled('sparge');
