@@ -547,3 +547,110 @@
     .intervalTimeControls { grid-template-columns: 1fr; }
     .recipeWaterButtons { flex-direction: column; }
 }
+
+/* The kiosk settings column remains in normal document flow. The cards keep
+ * their content-defined height and use a little more of the available vertical
+ * space before the footer action without allowing them to shrink below content. */
+@media (min-width: 1281px) {
+    .containerProduction .settings {
+        display: flex;
+        flex-direction: column;
+        gap: clamp(0.3rem, 0.65vh, 0.5rem);
+        height: 100%;
+        min-height: 0;
+        overflow: visible;
+        padding: clamp(0.4rem, 0.75vh, 0.625rem);
+    }
+
+    .settingsHeader {
+        flex: 0 0 auto;
+        min-height: 0;
+        padding: 0 0.25rem clamp(0.25rem, 0.5vh, 0.375rem);
+    }
+
+    .settingsGroup {
+        flex: 0 0 auto;
+        min-height: max-content;
+        padding: clamp(0.425rem, 0.8vh, 0.625rem) 0.65rem;
+    }
+
+    .settingsGroup h4 {
+        margin-bottom: clamp(0.25rem, 0.5vh, 0.4rem);
+        line-height: 1.1;
+    }
+
+    .agitatorAvailability {
+        margin: -0.05rem 0 clamp(0.175rem, 0.35vh, 0.275rem);
+        font-size: 0.78rem;
+        line-height: 1.15;
+    }
+
+    .agitatorPrimaryMode {
+        padding-inline: 0.2rem;
+    }
+
+    .settingsToggleRow {
+        min-height: 2rem;
+    }
+
+    .intervalSettings {
+        margin-top: clamp(0.25rem, 0.5vh, 0.4rem);
+        padding: clamp(0.35rem, 0.6vh, 0.45rem) 0.55rem;
+    }
+
+    .agitatorAutomaticHeader {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    .agitatorAutomaticHeader h5 {
+        line-height: 1.1;
+    }
+
+    .agitatorAutomaticHeader p {
+        margin-top: 0.15rem;
+        line-height: 1.15;
+    }
+
+    .agitatorAutomaticSettings h6 {
+        margin-top: clamp(0.25rem, 0.5vh, 0.4rem);
+        line-height: 1.1;
+    }
+
+    .intervalTimeControls {
+        gap: 0.6rem;
+        margin-top: 0.2rem;
+    }
+
+    .intervalTimeControls .quantity-picker-label {
+        padding-bottom: 0.2rem;
+    }
+
+    .agitatorSpeedControl {
+        gap: 0.15rem;
+        margin-top: clamp(0.25rem, 0.5vh, 0.4rem);
+    }
+
+    .agitatorPauseButton {
+        margin-top: 0.35rem;
+        padding: 0.4rem;
+    }
+
+    .manualWaterControls,
+    .recipeWaterButtons {
+        margin-top: clamp(0.25rem, 0.45vh, 0.35rem);
+    }
+
+    .recipeWaterBtn {
+        padding-block: 0.35rem;
+    }
+
+    .startBtnDiv {
+        position: static;
+        flex: 0 0 auto;
+        margin-top: clamp(0.2rem, 0.45vh, 0.35rem);
+        padding-top: 0;
+    }
+}

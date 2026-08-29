@@ -109,6 +109,7 @@ describe('Production agitator controller integration', () => {
         expect(screen.getByText('36 %')).toBeInTheDocument();
         expect(screen.getByRole('switch', {name: 'Durchgehend rühren'})).not.toBeChecked();
         expect(screen.getByRole('switch', {name: 'Automatik'})).toBeChecked();
+        expect(screen.getAllByRole('switch', {name: 'Automatik'})).toHaveLength(1);
         expect(screen.queryByText('Automatik · Intervallpause')).not.toBeInTheDocument();
         expect(ProductionRepository.getAgitatorStatus).toHaveBeenCalledTimes(1);
     });
@@ -119,8 +120,8 @@ describe('Production agitator controller integration', () => {
         expect(await screen.findByText('Rührwerk-Konfiguration nicht verfügbar')).toBeInTheDocument();
         expect(screen.getByRole('switch', {name: 'Durchgehend rühren'})).toBeDisabled();
         expect(screen.getByRole('switch', {name: 'Automatik'})).toBeDisabled();
-        within(screen.getByTestId('running-seconds-stepper')).getAllByRole('button').forEach(button => expect(button).toBeDisabled());
-        within(screen.getByTestId('break-seconds-stepper')).getAllByRole('button').forEach(button => expect(button).toBeDisabled());
+        within(screen.getByTestId('running-minutes-stepper')).getAllByRole('button').forEach(button => expect(button).toBeDisabled());
+        within(screen.getByTestId('break-minutes-stepper')).getAllByRole('button').forEach(button => expect(button).toBeDisabled());
         expect(screen.getByRole('slider')).toBeDisabled();
         expect(screen.getByText('Geschwindigkeit')).toBeInTheDocument();
         expect(ProductionRepository.setAgitatorConfig).not.toHaveBeenCalled();
@@ -215,79 +216,8 @@ describe('Production agitator controller integration', () => {
         await screen.findByText('36 %');
         rerender(<Production {...props} brewingStatus={{...createBrewingStatus(), agitator: {mode: 'AUTOMATIC', paused: false, operation: 'INTERVAL', intervalPhase: 'RUNNING', actualOutputOn: true, speedPercent: 42, runningMinutes: 4, breakMinutes: 10}}} />);
         expect(await screen.findByText('42 %')).toBeInTheDocument();
-        expect(within(screen.getByTestId('running-seconds-stepper')).getByText('20')).toBeInTheDocument();
-        expect(within(screen.getByTestId('break-seconds-stepper')).getByText('90')).toBeInTheDocument();
-    });
-
-    it.each(['OFF', 'CONTINUOUS'] as const)('keeps the automatic switch enabled and only disables interval steppers in %s', async (mode) => {
-        jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockResolvedValue({...detail, config: {...detail.config, mode}});
-        const {container} = renderProduction();
-        expect(await screen.findByRole('switch', {name: 'Automatik'})).toBeEnabled();
-        within(screen.getByTestId('running-seconds-stepper')).getAllByRole('button').forEach(button => expect(button).toBeDisabled());
-        within(screen.getByTestId('break-seconds-stepper')).getAllByRole('button').forEach(button => expect(button).toBeDisabled());
-        const automaticCard = container.querySelector('.agitatorAutomaticSettings') as HTMLElement;
-        const speed = screen.getByText('Geschwindigkeit').closest('label') as HTMLElement;
-        expect(automaticCard.compareDocumentPosition(speed) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-        expect(screen.getByText('36 %')).toBeInTheDocument();
-    });
-
-    it('enables both interval steppers in AUTOMATIC mode', async () => {
-        renderProduction();
-        expect(await screen.findByRole('switch', {name: 'Automatik'})).toBeChecked();
-        within(screen.getByTestId('running-seconds-stepper')).getAllByRole('button').forEach(button => expect(button).toBeEnabled());
-        within(screen.getByTestId('break-seconds-stepper')).getAllByRole('button').forEach(button => expect(button).toBeEnabled());
-    });
-
-    it('increments and decrements both interval values with complete config payloads', async () => {
-        renderProduction();
-        await screen.findByText('36 %');
-        const clickStepper = async (testId: string, name: '+' | '-') => {
-            const button = within(screen.getByTestId(testId)).getByRole('button', {name});
-            fireEvent.mouseDown(button);
-            fireEvent.mouseUp(button);
-            await waitFor(() => expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledTimes(1));
-        };
-
-        await clickStepper('running-seconds-stepper', '+');
-        expect(ProductionRepository.setAgitatorConfig).toHaveBeenLastCalledWith({mode: 'AUTOMATIC', speedPercent: 36, runningSeconds: 31, breakSeconds: 120});
-        (ProductionRepository.setAgitatorConfig as jest.Mock).mockClear();
-        await clickStepper('running-seconds-stepper', '-');
-        expect(ProductionRepository.setAgitatorConfig).toHaveBeenLastCalledWith({mode: 'AUTOMATIC', speedPercent: 36, runningSeconds: 30, breakSeconds: 120});
-        (ProductionRepository.setAgitatorConfig as jest.Mock).mockClear();
-        await clickStepper('break-seconds-stepper', '+');
-        expect(ProductionRepository.setAgitatorConfig).toHaveBeenLastCalledWith({mode: 'AUTOMATIC', speedPercent: 36, runningSeconds: 30, breakSeconds: 121});
-        (ProductionRepository.setAgitatorConfig as jest.Mock).mockClear();
-        await clickStepper('break-seconds-stepper', '-');
-        expect(ProductionRepository.setAgitatorConfig).toHaveBeenLastCalledWith({mode: 'AUTOMATIC', speedPercent: 36, runningSeconds: 30, breakSeconds: 120});
-    });
-
-    it('does not decrement interval values below zero', async () => {
-        jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockResolvedValue({...detail, config: {...detail.config, runningSeconds: 0}});
-        renderProduction();
-        const runningMinus = await within(screen.getByTestId('running-seconds-stepper')).findByRole('button', {name: '-'});
-        fireEvent.mouseDown(runningMinus);
-        fireEvent.mouseUp(runningMinus);
-        expect(within(screen.getByTestId('running-seconds-stepper')).getByText('0')).toBeInTheDocument();
-        expect(ProductionRepository.setAgitatorConfig).not.toHaveBeenCalled();
-    });
-
-    it('does not create an AUTOMATIC 0/0 interval', async () => {
-        jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockResolvedValue({...detail, config: {...detail.config, runningSeconds: 1, breakSeconds: 0}});
-        renderProduction();
-        const runningMinus = await within(screen.getByTestId('running-seconds-stepper')).findByRole('button', {name: '-'});
-        fireEvent.mouseDown(runningMinus);
-        fireEvent.mouseUp(runningMinus);
-        expect(within(screen.getByTestId('running-seconds-stepper')).getByText('1')).toBeInTheDocument();
-        expect(ProductionRepository.setAgitatorConfig).not.toHaveBeenCalled();
-    });
-
-    it('pauses independently without changing the selected mode', async () => {
-        renderProduction();
-        fireEvent.click(await screen.findByRole('button', {name: 'Rührwerk pausieren'}));
-        await waitFor(() => expect(ProductionRepository.pauseAgitator).toHaveBeenCalledTimes(1));
-        expect(screen.getByRole('switch', {name: 'Automatik'})).toBeChecked();
-        expect(ProductionRepository.setAgitatorConfig).not.toHaveBeenCalled();
-        expect(screen.getByRole('button', {name: 'Rührwerk fortsetzen'})).toBeInTheDocument();
+        expect(within(screen.getByTestId('running-minutes-stepper')).getByText('4')).toBeInTheDocument();
+        expect(within(screen.getByTestId('break-minutes-stepper')).getByText('10')).toBeInTheDocument();
     });
 
     it('keeps interval settings visible but only editable in AUTOMATIC mode and places speed afterwards', async () => {
