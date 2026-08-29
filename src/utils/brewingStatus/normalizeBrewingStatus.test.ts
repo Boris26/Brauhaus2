@@ -8,6 +8,9 @@ describe('normalizeBrewingStatus', () => {
         const extendedPoll = normalizeBrewingStatus({agitator: {mode: 'AUTOMATIC', paused: false, operation: 'INTERVAL', intervalPhase: 'RUNNING', actualOutputOn: true, speedPercent: 42, runningSeconds: 20, breakSeconds: 90}});
         expect(extendedPoll.agitator).toEqual(expect.objectContaining({speedPercent: 42, runningSeconds: 20, breakSeconds: 90}));
     });
+    it('ignores an incomplete agitator runtime payload', () => {
+        expect(normalizeBrewingStatus({agitator: {mode: 'AUTOMATIC'}}).agitator).toBeUndefined();
+    });
   it('accepts the public DECOCTION runtime phase', () => {
     const s = normalizeBrewingStatus({currentStep: {phase: 'DECOCTION', mode: 'WAITING'}});
     expect(s.currentStep.phase).toBe(ProcessPhase.DECOCTION);
