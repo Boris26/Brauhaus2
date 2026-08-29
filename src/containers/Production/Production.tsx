@@ -299,9 +299,11 @@ export class Production extends React.Component<ProductionProps, ProductionState
         }
     }
 
-    selectAgitatorMode = (mode: AgitatorMode): void => {
-        if (!this.isControllerAvailable() || !this.state.agitatorConfig) return;
-        void this.submitAgitatorConfig({...this.state.agitatorConfig, mode});
+    toggleAgitatorMode = (mode: Exclude<AgitatorMode, 'OFF'>, checked: boolean): void => {
+        const {agitatorConfig, agitatorRequestPending} = this.state;
+        if (!this.isControllerAvailable() || !agitatorConfig || agitatorRequestPending) return;
+        const nextMode: AgitatorMode = checked ? mode : (agitatorConfig.mode === mode ? 'OFF' : agitatorConfig.mode);
+        if (nextMode !== agitatorConfig.mode) void this.submitAgitatorConfig({...agitatorConfig, mode: nextMode});
     }
 
     toggleAgitatorPause = async (): Promise<void> => {
@@ -319,19 +321,6 @@ export class Production extends React.Component<ProductionProps, ProductionState
             if (this.isMountedComponent) this.setState({agitatorRequestPending: false, mainAgitatorError: true});
         }
     }
-
-    getAgitatorStatusLabel = (): string => {
-        const runtime = this.state.agitatorRuntime;
-        if (!runtime) return 'Status wird geladen';
-        if (runtime.paused) return 'Pausiert';
-        if (runtime.mode === 'OFF') return 'Aus';
-        if (runtime.mode === 'CONTINUOUS') return 'Dauerbetrieb';
-        if (runtime.operation === 'CONTINUOUS') return 'Automatik · Heizen';
-        if (runtime.operation === 'INTERVAL' && runtime.intervalPhase === 'RUNNING') return 'Automatik · Intervall läuft';
-        if (runtime.operation === 'INTERVAL' && runtime.intervalPhase === 'BREAK') return 'Automatik · Intervallpause';
-        return 'Automatik';
-    }
-
 
     syncRemainingTimeFromStatus = (): void => {
         const remainingSeconds = this.getRemainingSecondsFromStatus();
@@ -665,29 +654,33 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
                 <section className="settingsGroup" aria-labelledby="agitator-settings-title">
                     <h4 id="agitator-settings-title">Rührwerk</h4>
-                    <div className="agitatorModeControl" role="group" aria-label="Rührwerk Betriebsart">
-                        {([['OFF', 'Aus'], ['CONTINUOUS', 'Dauerhaft'], ['AUTOMATIC', 'Automatik']] as const).map(([mode, label]) => (
-                            <button key={mode} type="button" aria-pressed={agitatorConfig?.mode === mode}
-                                    disabled={settingsDisabled || !agitatorConfig || agitatorRequestPending}
-                                    onClick={() => this.selectAgitatorMode(mode)}>{label}</button>
-                        ))}
-                    </div>
-                    <p className="agitatorRuntimeStatus" aria-live="polite">{this.getAgitatorStatusLabel()}</p>
                     {agitatorConfig && <>
+                        {renderSwitch('Durchgehend rühren', agitatorConfig.mode === 'CONTINUOUS',
+                            (checked) => this.toggleAgitatorMode('CONTINUOUS', checked), settingsDisabled || agitatorRequestPending)}
+                        <div className={`intervalSettings agitatorAutomaticSettings ${agitatorConfig.mode === 'AUTOMATIC' ? 'is-active' : ''}`} aria-labelledby="interval-settings-title">
+                            <div className="agitatorAutomaticHeader">
+                                <div>
+                                    <h5 id="interval-settings-title">Automatik</h5>
+                                    <p>Beim Heizen durchgehend, sonst im Intervall</p>
+                                </div>
+                                <Switch className="productionSwitch" onChange={(checked) => this.toggleAgitatorMode('AUTOMATIC', checked)}
+                                    checked={agitatorConfig.mode === 'AUTOMATIC'} height={24} width={44} handleDiameter={18}
+                                    checkedIcon={false} uncheckedIcon={false} disabled={settingsDisabled || agitatorRequestPending}
+                                    aria-label="Automatik" />
+                            </div>
+                            <h6>Intervall</h6>
+                            <div className="intervalTimeControls">
+                                <label>Laufzeit <input aria-label="Laufzeit" type="number" min="0" value={agitatorConfig.runningSeconds}
+                                    disabled={settingsDisabled || agitatorRequestPending || agitatorConfig.mode !== 'AUTOMATIC'} onChange={(event) => this.onIntervalChangeRunningTime(Number(event.target.value))}/><span>s</span></label>
+                                <label>Pausenzeit <input aria-label="Pausenzeit" type="number" min="0" value={agitatorConfig.breakSeconds}
+                                    disabled={settingsDisabled || agitatorRequestPending || agitatorConfig.mode !== 'AUTOMATIC'} onChange={(event) => this.onIntervalChangeBreakTime(Number(event.target.value))}/><span>s</span></label>
+                            </div>
+                        </div>
                         <label className="agitatorSpeedControl">
                             <span>Geschwindigkeit <strong>{agitatorSpeedDraft ?? agitatorConfig.speedPercent} %</strong></span>
                             <input type="range" min="0" max="100" value={agitatorSpeedDraft ?? agitatorConfig.speedPercent}
                                    disabled={settingsDisabled} onChange={(event) => this.onAgitatorSpeedChange(Number(event.target.value))}/>
                         </label>
-                        <div className={`intervalSettings agitatorAutomaticSettings ${agitatorConfig.mode === 'AUTOMATIC' ? 'is-active' : ''}`} aria-labelledby="interval-settings-title">
-                            <h5 id="interval-settings-title">Automatik · Intervall</h5>
-                            <div className="intervalTimeControls">
-                                <label>Laufzeit <input aria-label="Laufzeit" type="number" min="0" value={agitatorConfig.runningSeconds}
-                                    disabled={settingsDisabled || agitatorRequestPending} onChange={(event) => this.onIntervalChangeRunningTime(Number(event.target.value))}/><span>s</span></label>
-                                <label>Pause <input aria-label="Pause" type="number" min="0" value={agitatorConfig.breakSeconds}
-                                    disabled={settingsDisabled || agitatorRequestPending} onChange={(event) => this.onIntervalChangeBreakTime(Number(event.target.value))}/><span>s</span></label>
-                            </div>
-                        </div>
                     </>}
                     {agitatorRuntime && agitatorRuntime.mode !== 'OFF' && <button className="agitatorPauseButton" type="button"
                         disabled={settingsDisabled || agitatorRequestPending} onClick={this.toggleAgitatorPause}>
