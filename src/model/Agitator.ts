@@ -4,8 +4,8 @@ export type AgitatorOperation = 'OFF' | 'CONTINUOUS' | 'INTERVAL';
 export interface AgitatorConfig {
     mode: AgitatorMode;
     speedPercent: number;
-    runningSeconds: number;
-    breakSeconds: number;
+    runningMinutes: number;
+    breakMinutes: number;
 }
 
 export interface AgitatorRuntimeStatus {
@@ -15,8 +15,8 @@ export interface AgitatorRuntimeStatus {
     intervalPhase?: string;
     actualOutputOn: boolean;
     speedPercent?: number;
-    runningSeconds?: number;
-    breakSeconds?: number;
+    runningMinutes?: number;
+    breakMinutes?: number;
 }
 
 export interface AgitatorDetailStatus {

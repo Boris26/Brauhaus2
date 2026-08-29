@@ -5,8 +5,8 @@ describe('normalizeBrewingStatus', () => {
     it('preserves optional agitator poll config fields without inventing missing values', () => {
         const legacyPoll = normalizeBrewingStatus({agitator: {mode: 'AUTOMATIC', paused: false, operation: 'INTERVAL', intervalPhase: 'BREAK', actualOutputOn: false}});
         expect(legacyPoll.agitator?.speedPercent).toBeUndefined();
-        const extendedPoll = normalizeBrewingStatus({agitator: {mode: 'AUTOMATIC', paused: false, operation: 'INTERVAL', intervalPhase: 'RUNNING', actualOutputOn: true, speedPercent: 42, runningSeconds: 20, breakSeconds: 90}});
-        expect(extendedPoll.agitator).toEqual(expect.objectContaining({speedPercent: 42, runningSeconds: 20, breakSeconds: 90}));
+        const extendedPoll = normalizeBrewingStatus({agitator: {mode: 'AUTOMATIC', paused: false, operation: 'INTERVAL', intervalPhase: 'RUNNING', actualOutputOn: true, speedPercent: 42, runningMinutes: 2, breakMinutes: 7}});
+        expect(extendedPoll.agitator).toEqual(expect.objectContaining({speedPercent: 42, runningMinutes: 2, breakMinutes: 7}));
     });
     it('ignores an incomplete agitator runtime payload', () => {
         expect(normalizeBrewingStatus({agitator: {mode: 'AUTOMATIC'}}).agitator).toBeUndefined();

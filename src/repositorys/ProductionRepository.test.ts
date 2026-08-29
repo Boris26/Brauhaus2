@@ -17,7 +17,7 @@ describe('ProductionRepository API method/path usage', () => {
   });
 
   it('uses the agitator detail/config and pause/resume contracts', async () => {
-    const detail = {config: {mode: 'AUTOMATIC', speedPercent: 36, runningSeconds: 30, breakSeconds: 120}, inputs: {heatingActive: false}, runtime: {paused: false, desiredOperation: 'INTERVAL', actualOutputOn: false}};
+    const detail = {config: {mode: 'AUTOMATIC', speedPercent: 36, runningMinutes: 2, breakMinutes: 7}, inputs: {heatingActive: false}, runtime: {paused: false, desiredOperation: 'INTERVAL', actualOutputOn: false}};
     mockedAxios.get.mockResolvedValueOnce({status: 200, data: detail} as any);
     await expect(ProductionRepository.getAgitatorStatus()).resolves.toEqual(detail);
     await ProductionRepository.setAgitatorConfig(detail.config as any);
