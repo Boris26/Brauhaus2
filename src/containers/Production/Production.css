@@ -547,3 +547,88 @@
     .intervalTimeControls { grid-template-columns: 1fr; }
     .recipeWaterButtons { flex-direction: column; }
 }
+
+/* The kiosk settings column shares one fixed-height grid row with the other
+ * production panels. Header and start action keep their natural height; the
+ * two setting cards use only the remaining space without creating a nested
+ * scroll area. */
+@media (min-width: 1281px) {
+    .containerProduction .settings {
+        display: grid;
+        grid-template-rows: auto minmax(0, auto) minmax(0, auto) auto;
+        align-content: space-between;
+        gap: clamp(0.3rem, 0.65vh, 0.55rem);
+        height: 100%;
+        min-height: 0;
+        overflow: visible;
+        padding: clamp(0.4rem, 0.75vh, 0.65rem);
+    }
+
+    .settingsHeader {
+        min-height: 0;
+        padding: 0 0.25rem 0.3rem;
+    }
+
+    .settingsGroup {
+        min-height: 0;
+        padding: clamp(0.4rem, 0.7vh, 0.6rem) 0.65rem;
+    }
+
+    .settingsGroup h4 {
+        margin-bottom: clamp(0.3rem, 0.6vh, 0.5rem);
+    }
+
+    .agitatorPrimaryMode {
+        padding-inline: 0.25rem;
+    }
+
+    .intervalSettings {
+        margin-top: clamp(0.3rem, 0.55vh, 0.45rem);
+        padding: 0.35rem 0.55rem 0.45rem;
+    }
+
+    .agitatorAutomaticHeader {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    .agitatorAutomaticSettings h6 {
+        margin-top: clamp(0.3rem, 0.55vh, 0.45rem);
+    }
+
+    .intervalTimeControls {
+        gap: 0.65rem;
+        margin-top: 0.2rem;
+    }
+
+    .intervalTimeControls .quantity-picker-label {
+        padding-bottom: 0.2rem;
+    }
+
+    .agitatorSpeedControl {
+        gap: 0.2rem;
+        margin-top: clamp(0.3rem, 0.55vh, 0.45rem);
+    }
+
+    .agitatorPauseButton {
+        margin-top: 0.35rem;
+        padding: 0.4rem 0.35rem;
+    }
+
+    .manualWaterControls,
+    .recipeWaterButtons {
+        margin-top: 0.3rem;
+    }
+
+    .recipeWaterBtn {
+        padding-block: 0.35rem;
+    }
+
+    .startBtnDiv {
+        position: static;
+        margin-top: 0;
+        padding-top: 0;
+    }
+}
