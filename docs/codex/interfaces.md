@@ -46,6 +46,8 @@ Base URL: `BaseURL` (`/api/controller`), `CommandsURL` (`/api/controller/Command
 | GET | `Status/` | Runtime brewing status | `200`, structured or legacy status |
 | GET | `Agitator/Status` | Initialize the production agitator UI | `200`, full `{ config, inputs, runtime }` detail status |
 | PUT | `Agitator/Config` | Replace agitator configuration | Full `{ mode, speedPercent, runningMinutes, breakMinutes }` payload |
+| GET | `Settings/Agitator` | Load persistent agitator defaults for Settings | `{ speedPercent, runningMinutes, breakMinutes }` in percent/minutes |
+| PUT | `Settings/Agitator` | Replace persistent agitator defaults without changing runtime | Full `{ speedPercent, runningMinutes, breakMinutes }`; response contains the confirmed configuration |
 | POST | `Agitator/Pause` | Pause the selected active mode | `200` success |
 | POST | `Agitator/Resume` | Resume the selected active mode | `200` success |
 | GET | `Available/` | Availability heartbeat | `200` means available |
