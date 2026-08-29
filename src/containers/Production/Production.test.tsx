@@ -1,6 +1,6 @@
 import React from 'react';
-import {render, screen, fireEvent, waitFor} from '@testing-library/react';
-import {Production} from './Production';
+import {act, render, screen, fireEvent, waitFor, within} from '@testing-library/react';
+import {AGITATOR_SPEED_DEBOUNCE_MS, Production} from './Production';
 import {Beer} from '../../model/Beer';
 import {ToggleState} from '../../enums/eToggleState';
 import {AlarmType, BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
@@ -86,6 +86,73 @@ const renderProduction = (aOverrides: Partial<React.ComponentProps<typeof Produc
     };
     return {props, ...render(<Production {...props} />)};
 };
+
+describe('Production agitator speed control', () => {
+    beforeEach(() => jest.useFakeTimers());
+    afterEach(() => {
+        jest.clearAllTimers();
+        jest.useRealTimers();
+    });
+
+    const getSpeedControl = () => screen.getByText('Geschwindigkeit').closest('.quantity-picker-container') as HTMLElement;
+
+    const incrementSpeed = () => {
+        const incrementButton = within(getSpeedControl()).getByRole('button', {name: '+'});
+        fireEvent.mouseDown(incrementButton);
+        fireEvent.mouseUp(incrementButton);
+    };
+
+    it('updates the displayed speed immediately and sends only the latest rapid change', () => {
+        const setAgitatorSpeed = jest.fn();
+        renderProduction({setAgitatorSpeed});
+
+        incrementSpeed();
+        incrementSpeed();
+        incrementSpeed();
+
+        expect(within(getSpeedControl()).getByText('4')).toBeInTheDocument();
+        expect(setAgitatorSpeed).not.toHaveBeenCalled();
+
+        act(() => jest.advanceTimersByTime(AGITATOR_SPEED_DEBOUNCE_MS));
+
+        expect(setAgitatorSpeed).toHaveBeenCalledTimes(1);
+        expect(setAgitatorSpeed).toHaveBeenCalledWith(4);
+    });
+
+    it('sends a single change only after the debounce delay', () => {
+        const setAgitatorSpeed = jest.fn();
+        renderProduction({setAgitatorSpeed});
+
+        incrementSpeed();
+        act(() => jest.advanceTimersByTime(AGITATOR_SPEED_DEBOUNCE_MS - 1));
+        expect(setAgitatorSpeed).not.toHaveBeenCalled();
+
+        act(() => jest.advanceTimersByTime(1));
+        expect(setAgitatorSpeed).toHaveBeenCalledWith(2);
+    });
+
+    it('cancels a pending speed request when the view unmounts', () => {
+        const setAgitatorSpeed = jest.fn();
+        const {unmount} = renderProduction({setAgitatorSpeed});
+
+        incrementSpeed();
+        unmount();
+        act(() => jest.advanceTimersByTime(AGITATOR_SPEED_DEBOUNCE_MS));
+
+        expect(setAgitatorSpeed).not.toHaveBeenCalled();
+    });
+
+    it('cancels a pending speed request when the controller becomes unavailable', () => {
+        const setAgitatorSpeed = jest.fn();
+        const {props, rerender} = renderProduction({setAgitatorSpeed});
+
+        incrementSpeed();
+        rerender(<Production {...props} isBackenAvailable={{isBackenAvailable: false, statusText: 'Offline'}} />);
+        act(() => jest.advanceTimersByTime(AGITATOR_SPEED_DEBOUNCE_MS));
+
+        expect(setAgitatorSpeed).not.toHaveBeenCalled();
+    });
+});
 
 describe('Production finished-brew persistence', () => {
     beforeEach(() => dataCollector.reset());
