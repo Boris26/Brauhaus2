@@ -45,11 +45,6 @@ interface BeerFormProps {
 
 type BeerFormSection = 'basic' | 'brewing' | 'mash' | 'malts' | 'hops' | 'yeast' | 'additional';
 
-const procedureTypeOptions = [
-    {value: ProcedureType.RAST, label: 'Rast'},
-    {value: ProcedureType.DECOCTION, label: 'Dekoktion'},
-];
-
 const DEFAULT_COOKING_TEMPERATURE = 100;
 const DEFAULT_REFERENCE_VOLUME = 10;
 const DEFAULT_REFERENCE_BREWHOUSE_EFFICIENCY = 52;
