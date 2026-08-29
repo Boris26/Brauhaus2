@@ -690,6 +690,10 @@ export class Production extends React.Component<ProductionProps, ProductionState
                                     isDisabled={settingsDisabled || !agitatorConfig || agitatorRequestPending || agitatorConfig.mode !== 'AUTOMATIC'}/>
                                 <span className="agitatorIntervalUnit">s</span>
                             </div>
+                            <Switch className="productionSwitch" onChange={(checked) => this.toggleAgitatorMode('AUTOMATIC', checked)}
+                                checked={agitatorConfig?.mode === 'AUTOMATIC'} height={24} width={44} handleDiameter={18}
+                                checkedIcon={false} uncheckedIcon={false} disabled={settingsDisabled || !agitatorConfig || agitatorRequestPending}
+                                aria-label="Automatik" />
                         </div>
                     </div>
                     <label className="agitatorSpeedControl">

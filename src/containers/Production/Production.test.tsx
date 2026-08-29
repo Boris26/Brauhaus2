@@ -289,6 +289,26 @@ describe('Production agitator controller integration', () => {
         expect(ProductionRepository.setAgitatorConfig).not.toHaveBeenCalled();
         expect(screen.getByRole('button', {name: 'Rührwerk fortsetzen'})).toBeInTheDocument();
     });
+
+    it('keeps interval settings visible but only editable in AUTOMATIC mode and places speed afterwards', async () => {
+        jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockResolvedValue({...detail, config: {...detail.config, mode: 'OFF'}});
+        const {container} = renderProduction();
+        expect(await screen.findByLabelText('Laufzeit')).toBeDisabled();
+        expect(screen.getByLabelText('Pausenzeit')).toBeDisabled();
+        const automaticCard = container.querySelector('.agitatorAutomaticSettings') as HTMLElement;
+        const speed = screen.getByText('Geschwindigkeit').closest('label') as HTMLElement;
+        expect(automaticCard.compareDocumentPosition(speed) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+        expect(screen.getByText('36 %')).toBeInTheDocument();
+    });
+
+    it('pauses independently without changing the selected mode', async () => {
+        renderProduction();
+        fireEvent.click(await screen.findByRole('button', {name: 'Rührwerk pausieren'}));
+        await waitFor(() => expect(ProductionRepository.pauseAgitator).toHaveBeenCalledTimes(1));
+        expect(screen.getByRole('switch', {name: 'Automatik'})).toBeChecked();
+        expect(ProductionRepository.setAgitatorConfig).not.toHaveBeenCalled();
+        expect(screen.getByRole('button', {name: 'Rührwerk fortsetzen'})).toBeInTheDocument();
+    });
 });
 
 describe('Production finished-brew persistence', () => {
