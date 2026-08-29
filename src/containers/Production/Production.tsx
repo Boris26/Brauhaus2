@@ -40,6 +40,8 @@ import {equipmentAlarmDisplay, isEquipmentAlarmActive} from '../../utils/brewing
 import {getConfirmationRequestViewModel} from '../../utils/brewingStatus/selectors';
 import {ConfirmStates} from '../../enums/eConfirmStates';
 
+export const AGITATOR_SPEED_DEBOUNCE_MS = 300;
+
 export interface ProductionProps {
     selectedBeer?: Beer;
     temperature: number;
@@ -110,6 +112,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
     private readonly MAX_BREAK_TIME = 10;
     private readonly MAX_RUNNING_TIME = 10;
     private remainingTimeInterval: NodeJS.Timeout | null = null;
+    private agitatorSpeedDebounceTimeout: NodeJS.Timeout | null = null;
     private errorTimeouts: NodeJS.Timeout[] = [];
     private isMountedComponent = false;
 
@@ -159,6 +162,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     componentWillUnmount() {
         this.isMountedComponent = false;
+        this.clearAgitatorSpeedDebounce();
         if (this.remainingTimeInterval !== null) {
             clearInterval(this.remainingTimeInterval);
             this.remainingTimeInterval = null;
@@ -175,6 +179,10 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
         if (prevProps.brewingStatus !== brewingStatus) {
             this.syncRemainingTimeFromStatus();
+        }
+
+        if (getIsControllerAvailable(prevProps.isBackenAvailable) && !this.isControllerAvailable()) {
+            this.clearAgitatorSpeedDebounce();
         }
 
         if (isEquipmentAlarmActive(prevProps.brewingStatus) && !isEquipmentAlarmActive(brewingStatus)) {
@@ -364,9 +372,21 @@ export class Production extends React.Component<ProductionProps, ProductionState
         if (!this.isControllerAvailable()) {
             return;
         }
-        const {setAgitatorSpeed} = this.props
         this.setState({agitatorSpeed: value});
-        setAgitatorSpeed(value);
+        this.clearAgitatorSpeedDebounce();
+        this.agitatorSpeedDebounceTimeout = setTimeout(() => {
+            this.agitatorSpeedDebounceTimeout = null;
+            if (this.isControllerAvailable()) {
+                this.props.setAgitatorSpeed(value);
+            }
+        }, AGITATOR_SPEED_DEBOUNCE_MS);
+    }
+
+    clearAgitatorSpeedDebounce = (): void => {
+        if (this.agitatorSpeedDebounceTimeout !== null) {
+            clearTimeout(this.agitatorSpeedDebounceTimeout);
+            this.agitatorSpeedDebounceTimeout = null;
+        }
     }
 
     onIntervalChangeBreakTime = (value: number) => {
