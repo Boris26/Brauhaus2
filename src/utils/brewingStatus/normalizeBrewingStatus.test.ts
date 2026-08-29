@@ -2,6 +2,12 @@ import {normalizeBrewingStatus} from './normalizeBrewingStatus';
 import {AlarmType, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
 
 describe('normalizeBrewingStatus', () => {
+    it('preserves optional agitator poll config fields without inventing missing values', () => {
+        const legacyPoll = normalizeBrewingStatus({agitator: {mode: 'AUTOMATIC', paused: false, operation: 'INTERVAL', intervalPhase: 'BREAK', actualOutputOn: false}});
+        expect(legacyPoll.agitator?.speedPercent).toBeUndefined();
+        const extendedPoll = normalizeBrewingStatus({agitator: {mode: 'AUTOMATIC', paused: false, operation: 'INTERVAL', intervalPhase: 'RUNNING', actualOutputOn: true, speedPercent: 42, runningSeconds: 20, breakSeconds: 90}});
+        expect(extendedPoll.agitator).toEqual(expect.objectContaining({speedPercent: 42, runningSeconds: 20, breakSeconds: 90}));
+    });
   it('accepts the public DECOCTION runtime phase', () => {
     const s = normalizeBrewingStatus({currentStep: {phase: 'DECOCTION', mode: 'WAITING'}});
     expect(s.currentStep.phase).toBe(ProcessPhase.DECOCTION);

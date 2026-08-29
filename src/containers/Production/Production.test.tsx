@@ -6,6 +6,7 @@ import {ToggleState} from '../../enums/eToggleState';
 import {AlarmType, BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
 import {ConfirmStates} from '../../enums/eConfirmStates';
 import {dataCollector} from '../../utils/DataCollector/dataCollector';
+import {ProductionRepository} from '../../repositorys/ProductionRepository';
 
 const createBeer = (aMashVolume: number | undefined = 18, aSpargeVolume: number | undefined = 12, aId: string = '1'): Beer => ({
     id: aId,
@@ -87,70 +88,66 @@ const renderProduction = (aOverrides: Partial<React.ComponentProps<typeof Produc
     return {props, ...render(<Production {...props} />)};
 };
 
-describe('Production agitator speed control', () => {
-    beforeEach(() => jest.useFakeTimers());
-    afterEach(() => {
-        jest.clearAllTimers();
+describe('Production agitator controller integration', () => {
+    const detail = {
+        config: {mode: 'AUTOMATIC' as const, speedPercent: 36, runningSeconds: 30, breakSeconds: 120},
+        inputs: {heatingActive: false},
+        runtime: {paused: false, desiredOperation: 'INTERVAL' as const, actualOutputOn: false, intervalPhase: 'BREAK'}
+    };
+
+    beforeEach(() => {
+        jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockResolvedValue(detail);
+        jest.spyOn(ProductionRepository, 'setAgitatorConfig').mockImplementation(async config => config);
+        jest.spyOn(ProductionRepository, 'pauseAgitator').mockResolvedValue();
+        jest.spyOn(ProductionRepository, 'resumeAgitator').mockResolvedValue();
+    });
+    afterEach(() => jest.restoreAllMocks());
+
+    it('initializes from detail status and renders controller runtime', async () => {
+        renderProduction();
+        expect(await screen.findByText('Geschwindigkeit')).toBeInTheDocument();
+        expect(screen.getByText('36 %')).toBeInTheDocument();
+        expect(screen.getByText('Automatik · Intervallpause')).toBeInTheDocument();
+        expect(ProductionRepository.getAgitatorStatus).toHaveBeenCalledTimes(1);
+    });
+
+    it('sends a complete config for mode selection', async () => {
+        renderProduction();
+        fireEvent.click(await screen.findByRole('button', {name: 'Dauerhaft'}));
+        await waitFor(() => expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledWith({mode: 'CONTINUOUS', speedPercent: 36, runningSeconds: 30, breakSeconds: 120}));
+    });
+
+    it('debounces speed drafts and sends only the latest complete config', async () => {
+        jest.useFakeTimers();
+        renderProduction();
+        await act(async () => { await Promise.resolve(); });
+        const slider = screen.getByRole('slider');
+        fireEvent.change(slider, {target: {value: '40'}});
+        fireEvent.change(slider, {target: {value: '42'}});
+        expect(screen.getByText('42 %')).toBeInTheDocument();
+        expect(ProductionRepository.setAgitatorConfig).not.toHaveBeenCalled();
+        act(() => jest.advanceTimersByTime(AGITATOR_SPEED_DEBOUNCE_MS));
+        await act(async () => { await Promise.resolve(); });
+        expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledWith({mode: 'AUTOMATIC', speedPercent: 42, runningSeconds: 30, breakSeconds: 120});
         jest.useRealTimers();
     });
 
-    const getSpeedControl = () => screen.getByText('Geschwindigkeit').closest('.quantity-picker-container') as HTMLElement;
-
-    const incrementSpeed = () => {
-        const incrementButton = within(getSpeedControl()).getByRole('button', {name: '+'});
-        fireEvent.mouseDown(incrementButton);
-        fireEvent.mouseUp(incrementButton);
-    };
-
-    it('updates the displayed speed immediately and sends only the latest rapid change', () => {
-        const setAgitatorSpeed = jest.fn();
-        renderProduction({setAgitatorSpeed});
-
-        incrementSpeed();
-        incrementSpeed();
-        incrementSpeed();
-
-        expect(within(getSpeedControl()).getByText('4')).toBeInTheDocument();
-        expect(setAgitatorSpeed).not.toHaveBeenCalled();
-
-        act(() => jest.advanceTimersByTime(AGITATOR_SPEED_DEBOUNCE_MS));
-
-        expect(setAgitatorSpeed).toHaveBeenCalledTimes(1);
-        expect(setAgitatorSpeed).toHaveBeenCalledWith(4);
+    it('keeps confirmed config when a legacy poll updates runtime only', async () => {
+        const {props, rerender} = renderProduction();
+        await screen.findByText('36 %');
+        rerender(<Production {...props} brewingStatus={{...createBrewingStatus(), agitator: {mode: 'AUTOMATIC', paused: true, operation: 'INTERVAL', intervalPhase: 'BREAK', actualOutputOn: false}}} />);
+        expect(await screen.findByText('36 %')).toBeInTheDocument();
+        expect(screen.getByText('Pausiert')).toBeInTheDocument();
+        expect(ProductionRepository.setAgitatorConfig).not.toHaveBeenCalled();
     });
 
-    it('sends a single change only after the debounce delay', () => {
-        const setAgitatorSpeed = jest.fn();
-        renderProduction({setAgitatorSpeed});
-
-        incrementSpeed();
-        act(() => jest.advanceTimersByTime(AGITATOR_SPEED_DEBOUNCE_MS - 1));
-        expect(setAgitatorSpeed).not.toHaveBeenCalled();
-
-        act(() => jest.advanceTimersByTime(1));
-        expect(setAgitatorSpeed).toHaveBeenCalledWith(2);
-    });
-
-    it('cancels a pending speed request when the view unmounts', () => {
-        const setAgitatorSpeed = jest.fn();
-        const {unmount} = renderProduction({setAgitatorSpeed});
-
-        incrementSpeed();
-        unmount();
-        act(() => jest.advanceTimersByTime(AGITATOR_SPEED_DEBOUNCE_MS));
-
-        expect(setAgitatorSpeed).not.toHaveBeenCalled();
-    });
-
-    it('cancels a pending speed request when the controller becomes unavailable', () => {
-        const setAgitatorSpeed = jest.fn();
-        const {props, rerender} = renderProduction({setAgitatorSpeed});
-
-        incrementSpeed();
-        rerender(<Production {...props} isBackenAvailable={{isBackenAvailable: false, statusText: 'Offline'}} />);
-        act(() => jest.advanceTimersByTime(AGITATOR_SPEED_DEBOUNCE_MS));
-
-        expect(setAgitatorSpeed).not.toHaveBeenCalled();
+    it('adopts optional #98 config fields from the normal poll', async () => {
+        const {props, rerender} = renderProduction();
+        await screen.findByText('36 %');
+        rerender(<Production {...props} brewingStatus={{...createBrewingStatus(), agitator: {mode: 'AUTOMATIC', paused: false, operation: 'INTERVAL', intervalPhase: 'RUNNING', actualOutputOn: true, speedPercent: 42, runningSeconds: 20, breakSeconds: 90}}} />);
+        expect(await screen.findByText('42 %')).toBeInTheDocument();
+        expect(screen.getByDisplayValue('20')).toBeInTheDocument();
+        expect(screen.getByDisplayValue('90')).toBeInTheDocument();
     });
 });
 

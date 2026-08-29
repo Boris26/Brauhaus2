@@ -11,6 +11,7 @@ import {ConfirmStates} from "../enums/eConfirmStates";
 import {WaterStatus} from "../components/Controlls/WaterControll/WaterControl";
 import {BackendAvailable} from "../reducers/productionReducer";
 import {IDiagnosticResponse, normalizeDiagnosticVersion} from "../model/DiagnosticResponse";
+import {AgitatorConfig, AgitatorDetailStatus} from "../model/Agitator";
 
 const DEFAULT_WATER_STATUS: WaterStatus = { filledLiters: 0, targetLiters: 0, openClose: false };
 const DEFAULT_CONTROL_REQUEST_TIMEOUT = 8000;
@@ -59,6 +60,24 @@ const normalizeWaterStatus = (aValue: unknown): WaterStatus => {
 };
 
 export class ProductionRepository {
+
+    static async getAgitatorStatus(): Promise<AgitatorDetailStatus> {
+        const response = await axios.get<AgitatorDetailStatus>(`${BaseURL}/Agitator/Status`);
+        return response.data;
+    }
+
+    static async setAgitatorConfig(config: AgitatorConfig): Promise<AgitatorConfig> {
+        await axios.put(`${BaseURL}/Agitator/Config`, config);
+        return config;
+    }
+
+    static async pauseAgitator(): Promise<void> {
+        await axios.post(`${BaseURL}/Agitator/Pause`);
+    }
+
+    static async resumeAgitator(): Promise<void> {
+        await axios.post(`${BaseURL}/Agitator/Resume`);
+    }
 
     static async getTemperature(): Promise<number> {
         return await this._doGetTemperature();

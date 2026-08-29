@@ -82,6 +82,8 @@ The recipe editor restricts hop time-unit choices by usage as a UI-only rule: `F
 
 ## UI ↔ PI control
 
+The production agitator UI initializes once with `GET /Agitator/Status` and uses the controller as source of truth. It sends only full replacements to `PUT /Agitator/Config` and uses `POST /Agitator/Pause` or `POST /Agitator/Resume`. The regular `GET /Status/` response may contain `agitator` runtime fields only (before Braumeister #98) or additionally `speedPercent`, `runningSeconds`, and `breakSeconds` (after #98). Missing optional configuration fields must retain the last confirmed configuration and must never cause a control request. Timing values are seconds and speed is a percentage from 0 through 100. No permanent detail-status poll is used.
+
 The desktop UI invokes the Caddy-routed system shutdown contract with `POST /api/system/shutdown`, without a request body, exclusively after explicit user confirmation. A successful HTTP status is sufficient; the UI does not depend on the exact response message, retry, poll, or repeat the request. Ownership and deployment routing of `/api/system` outside this repository are **Needs verification**.
 
 The PI control app produces runtime/control data that the UI displays and uses for workflow behavior.

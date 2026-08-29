@@ -213,6 +213,20 @@
     font-weight: 700;
 }
 
+.agitatorModeControl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.25rem; }
+.agitatorModeControl button, .agitatorPauseButton { border: 1px solid var(--color-accent-border); border-radius: var(--border-radius-medium); background: var(--color-surface-2); color: var(--color-text); padding: 0.55rem 0.35rem; font-weight: 700; }
+.agitatorModeControl button[aria-pressed="true"] { background: var(--color-accent); color: var(--color-light-text); }
+.agitatorRuntimeStatus { margin: 0.65rem 0; font-weight: 700; color: var(--color-text); }
+.agitatorSpeedControl { display: grid; gap: 0.35rem; color: var(--color-text); }
+.agitatorSpeedControl span { display: flex; justify-content: space-between; }
+.agitatorSpeedControl input { width: 100%; accent-color: var(--color-accent); }
+.agitatorAutomaticSettings { opacity: 0.58; }
+.agitatorAutomaticSettings.is-active { opacity: 1; }
+.agitatorAutomaticSettings .intervalTimeControls label { display: grid; grid-template-columns: 1fr 4.5rem auto; align-items: center; gap: 0.3rem; color: var(--color-text); }
+.agitatorAutomaticSettings input { width: 100%; padding: 0.35rem; }
+.agitatorPauseButton { width: 100%; margin-top: 0.65rem; }
+.agitatorError { color: var(--color-error); margin: 0.5rem 0 0; }
+
 .intervalHeader {
     display: flex;
     align-items: center;
