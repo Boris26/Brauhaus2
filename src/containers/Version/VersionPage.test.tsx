@@ -70,4 +70,16 @@ describe('VersionPage', () => {
             expect(screen.getByTestId('database-version')).toHaveTextContent('v1.1.0');
         });
     });
+
+    it('shows the connected status and current socket id', (): void => {
+        render(<VersionPage socketConnected socketId="abc123" loadControlVersion={() => new Promise<string>(() => {})} loadDatabaseVersion={() => new Promise<string>(() => {})} />);
+        expect(screen.getByText('Verbunden')).toBeInTheDocument();
+        expect(screen.getByTestId('socket-id')).toHaveTextContent('abc123');
+    });
+
+    it('shows no socket id while disconnected', (): void => {
+        render(<VersionPage socketConnected={false} loadControlVersion={() => new Promise<string>(() => {})} loadDatabaseVersion={() => new Promise<string>(() => {})} />);
+        expect(screen.getByText('Nicht verbunden')).toBeInTheDocument();
+        expect(screen.getByTestId('socket-id')).toHaveTextContent('–');
+    });
 });

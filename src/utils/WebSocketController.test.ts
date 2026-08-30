@@ -10,6 +10,7 @@ type SocketListener = (data?: any) => void;
 describe('WebSocketController', () => {
   const listeners: Record<string, SocketListener> = {};
   const socket = {
+    id: undefined as string | undefined,
     on: jest.fn((event: string, listener: SocketListener) => {
       listeners[event] = listener;
     }),
@@ -20,6 +21,7 @@ describe('WebSocketController', () => {
     jest.clearAllMocks();
     Object.keys(listeners).forEach((event) => delete listeners[event]);
     (io as jest.Mock).mockReturnValue(socket);
+    socket.id = undefined;
   });
 
   it('registers overheat and brew-session-running on the existing socket connection', () => {
@@ -53,5 +55,32 @@ describe('WebSocketController', () => {
     listeners['brew-session-running']();
 
     expect(handler).toHaveBeenCalledWith({event: 'brew-session-running', data: undefined});
+  });
+
+  it('forwards connect and disconnect with the current technical socket id', () => {
+    const handler = jest.fn();
+    const controller = new WebSocketController('ws://controller');
+    controller.onMessage(handler);
+    controller.connect();
+    socket.id = 'abc123';
+    listeners.connect();
+    listeners.disconnect();
+
+    expect(handler).toHaveBeenNthCalledWith(1, {event: 'connection-status', data: {connected: true, socketId: 'abc123'}});
+    expect(handler).toHaveBeenNthCalledWith(2, {event: 'connection-status', data: {connected: false, socketId: undefined}});
+  });
+
+  it('uses only the new socket id after a reconnect', () => {
+    const handler = jest.fn();
+    const controller = new WebSocketController('ws://controller');
+    controller.onMessage(handler);
+    controller.connect();
+    socket.id = 'abc123';
+    listeners.connect();
+    listeners.disconnect();
+    socket.id = 'xyz789';
+    listeners.connect();
+
+    expect(handler).toHaveBeenLastCalledWith({event: 'connection-status', data: {connected: true, socketId: 'xyz789'}});
   });
 });

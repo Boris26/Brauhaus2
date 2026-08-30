@@ -10,6 +10,8 @@ interface VersionPageProps {
     version?: string;
     loadControlVersion?: () => Promise<string>;
     loadDatabaseVersion?: () => Promise<string>;
+    socketConnected?: boolean;
+    socketId?: string;
 }
 
 interface VersionPageState {
@@ -82,6 +84,7 @@ class VersionPage extends React.Component<VersionPageProps, VersionPageState> {
 
     render(): React.ReactNode {
         const {controlVersion, databaseVersion, isControlLoading, isDatabaseLoading} = this.state;
+        const {socketConnected = false, socketId} = this.props;
         return (
             <div className="version-page">
                 <section className="version-card">
@@ -93,6 +96,22 @@ class VersionPage extends React.Component<VersionPageProps, VersionPageState> {
                     {this.renderVersionRow('UI', this.getVersion(), 'application-version', false)}
                     {this.renderVersionRow('Control', controlVersion, 'control-version', isControlLoading)}
                     {this.renderVersionRow('Database', databaseVersion, 'database-version', isDatabaseLoading)}
+                </section>
+                <section className="version-card socket-card" aria-labelledby="socket-connection-title">
+                    <h2 id="socket-connection-title">Socket-Verbindung</h2>
+                    <div className="version-value-row">
+                        <span className="version-label">Status</span>
+                        <span className={`socket-status ${socketConnected ? 'socket-status-connected' : 'socket-status-disconnected'}`}>
+                            <span className="socket-status-indicator" aria-hidden="true" />
+                            {socketConnected ? 'Verbunden' : 'Nicht verbunden'}
+                        </span>
+                    </div>
+                    <div className="version-value-row">
+                        <span className="version-label">Socket-ID</span>
+                        <span className="version-value socket-id" data-testid="socket-id">
+                            {socketConnected && socketId ? socketId : '–'}
+                        </span>
+                    </div>
                 </section>
             </div>
         );

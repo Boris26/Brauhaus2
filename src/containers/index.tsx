@@ -21,6 +21,8 @@ interface indexMainProps {
     checkIsBackenAvailable : () => void;
     webSocketConnect: () => void;
     webSocketDisconnect: () => void;
+    socketConnected: boolean;
+    socketId?: string;
 }
 
 export class Index extends React.Component<indexMainProps> {
@@ -43,7 +45,7 @@ export class Index extends React.Component<indexMainProps> {
     }
 
     render() {
-        const {viewState} = this.props;
+        const {viewState, socketConnected, socketId} = this.props;
         const mode = getUiMode();
         const activeView = isViewAllowed(viewState, mode) ? viewState : CONTROLLER_HOME_VIEW;
 
@@ -63,7 +65,7 @@ export class Index extends React.Component<indexMainProps> {
                 {activeView === Views.SETTINGS && <SettingsPage />}
                 {activeView === Views.FINISHED_BREWS && <FinishedBrewsTable />}
                 {activeView === Views.BREWING_CALCULATIONS && <BrewingCalculations />}
-                {activeView === Views.VERSION && <VersionPage />}
+                {activeView === Views.VERSION && <VersionPage socketConnected={socketConnected} socketId={socketId} />}
             </div>
             </Suspense>
 

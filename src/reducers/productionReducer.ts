@@ -32,6 +32,10 @@ export interface ProductionReducerState {
     nextProcedureStepError?: string;
     isBrewingStatusStale: boolean;
     brewingStartError?: string;
+    socketConnection: {
+        connected: boolean;
+        socketId?: string;
+    };
 }
 
 export const initialProductionState: ProductionReducerState = {
@@ -53,7 +57,8 @@ export const initialProductionState: ProductionReducerState = {
     confirmError: undefined,
     isNextProcedureStepPending: false,
     nextProcedureStepError: undefined,
-    isBrewingStatusStale: false
+    isBrewingStatusStale: false,
+    socketConnection: {connected: false}
 };
 
 const productionReducer = (
@@ -142,6 +147,18 @@ const productionReducer = (
         case ProductionActions.ActionTypes.OVERHEAT_RECEIVED: {
             console.warn('Overheat received, setting overHeat to true');
             return { ...aState, overHeat: true };
+        }
+        case ProductionActions.ActionTypes.SOCKET_CONNECTION_CHANGED: {
+            return {
+                ...aState,
+                socketConnection: {
+                    connected: aAction.payload.connected,
+                    socketId: aAction.payload.connected ? aAction.payload.socketId : undefined
+                }
+            };
+        }
+        case ProductionActions.ActionTypes.WEBSOCKET_DISCONNECT: {
+            return {...aState, socketConnection: {connected: false}};
         }
 
         default:

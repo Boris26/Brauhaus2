@@ -1,6 +1,52 @@
 .version-page {
   padding: 1.5rem 2rem;
   color: var(--color-black);
+  display: grid;
+  gap: 1rem;
+}
+
+.socket-card h2 {
+  margin-bottom: 0.5rem;
+}
+
+.socket-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+}
+
+.socket-status-indicator {
+  width: 0.7rem;
+  height: 0.7rem;
+  flex: 0 0 0.7rem;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+}
+
+.socket-status-connected {
+  color: var(--color-success-dark);
+}
+
+.socket-status-connected .socket-status-indicator {
+  background: var(--color-success);
+}
+
+.socket-status-disconnected {
+  color: var(--color-error-deep);
+}
+
+.socket-id {
+  min-width: 0;
+  max-width: 70%;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
+
+@media (max-width: 480px) {
+  .version-page {
+    padding: 1rem;
+  }
 }
 
 .version-card {

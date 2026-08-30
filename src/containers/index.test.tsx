@@ -36,6 +36,7 @@ const renderIndex = (brewingStatus: BrewingStatus, viewState = Views.VERSION, li
             checkIsBackenAvailable={jest.fn()}
             webSocketConnect={lifecycle.connect}
             webSocketDisconnect={lifecycle.disconnect}
+            socketConnected={false}
         />
     );
     return result;
