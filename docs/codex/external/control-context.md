@@ -72,7 +72,7 @@ See `docs/codex/interfaces.md` for full JSON shape. Important values:
 - `currentStep.phase`: `NONE`, `MASHING_IN`, `RAST`, `MASHING_OUT`, `COOKING`, `COOLING`, `FINISHED`.
 - `currentStep.mode`: `NONE`, `HEATING`, `HOLDING`, `TIMER_RUNNING`, `WAITING`, `FINISHED`, `ERROR`.
 - `waiting.waitingFor`: `NONE`, `USER_CONFIRMATION`, `IODINE_TEST`, `MASHING_IN_CONFIRMATION`, `MASHING_OUT_CONFIRMATION`, `COOKING_CONFIRMATION`, `BOILING_CONFIRMATION`, `DECOCTION_CONFIRMATION`, `DECOCTION_RETURN_CONFIRMATION`.
-- `heating.followsDecoction` marks the return heat-up after decoction; `heating.heaterEnabled` reports whether the process currently permits heater use, not whether the heater is physically switched on.
+- `heating.followsDecoction` marks the return heat-up after decoction. REST does not report heater activity; physical heater state is published by `heating-running-changed`.
 - `temperature.sensorHealth`: `OK`, `MISSING`, `STALE`, `INVALID_READING`, `MULTIPLE_SENSORS_FOUND`, `NOT_CONFIGURED`.
 - `hardware.heater` and `hardware.agitator`: `ON`, `OFF`, or `ERROR`.
 
@@ -192,7 +192,7 @@ Current Status Contract 2.0 is process-only:
   "currentStep": {"index": 2, "count": 7, "phase": "RAST", "mode": "TIMER_RUNNING", "name": "Rast 1", "duration": 900, "elapsedTime": 299.362060546875, "remainingTime": 600.637939453125},
   "temperature": {"current": 60, "target": 55},
   "waiting": {"waitingFor": "NONE", "canConfirm": false},
-  "heating": {"followsDecoction": false, "heaterEnabled": true},
+  "heating": {"followsDecoction": false},
   "error": {"code": null, "details": null}
 }
 ```

@@ -893,34 +893,35 @@ describe('Production recipe water filling', () => {
 
 
 describe('Production flame display', () => {
-    const cases = [
-        {name: 'ready heater', heater: 'OFF', enabled: true, followsDecoction: false, mode: ProcessMode.TIMER_RUNNING, current: 60, target: 55, label: 'Heizung bereit', flame: false},
-        {name: 'active heater', heater: 'ON', enabled: true, followsDecoction: false, mode: ProcessMode.HEATING, current: 54, target: 55, label: 'Heizung aktiv', flame: true},
-        {name: 'blocked heater', heater: 'OFF', enabled: false, followsDecoction: false, mode: ProcessMode.HEATING, current: 54, target: 55, label: 'Heizung gesperrt', flame: false},
-        {name: 'rest above target', heater: 'OFF', enabled: true, followsDecoction: false, mode: ProcessMode.TIMER_RUNNING, current: 60, target: 55, label: 'Heizung bereit', flame: false},
-        {name: 'rest actively reheating', heater: 'ON', enabled: true, followsDecoction: false, mode: ProcessMode.HEATING, current: 54, target: 55, label: 'Heizung aktiv', flame: true},
-        {name: 'blocked decoction return', heater: 'OFF', enabled: false, followsDecoction: true, mode: ProcessMode.HEATING, current: 54, target: 55, label: 'Heizung gesperrt', flame: false},
-        {name: 'enabled decoction return', heater: 'OFF', enabled: true, followsDecoction: true, mode: ProcessMode.HEATING, current: 54, target: 55, label: 'Heizung bereit', flame: false},
-    ] as const;
+    it('shows accessible flames only for a connected running heater snapshot', () => {
+        const {container} = renderProduction({socketConnected: true, realtimeState: {heatingRunning: true, alarms: [], alarmsReceived: true}});
 
-    it.each(cases)('derives flames and the user-facing status for $name', ({heater, enabled, followsDecoction, mode, current, target, label, flame}) => {
-        const status = createBrewingStatus(ProcessState.ACTIVE);
-        status.currentStep = {phase: ProcessPhase.RAST, mode};
-        status.temperature = {current, target};
-        status.heating = {followsDecoction, heaterEnabled: enabled};
-
-        const {container} = renderProduction({brewingStatus: status, socketConnected: true, realtimeState: {heatingRunning: heater === 'ON', alarms: [], alarmsReceived: true}});
-
-        expect(screen.getByText(label)).toBeInTheDocument();
-        expect(container.querySelector('.flame-strip') !== null).toBe(flame);
-        expect(screen.queryAllByLabelText('Heizflamme')).toHaveLength(flame ? 4 : 0);
+        expect(container.querySelector('.flame-strip')).toHaveAttribute('aria-label', 'Heizung aktiv');
+        expect(screen.queryAllByLabelText('Heizflamme')).toHaveLength(4);
+        expect(screen.queryByText('Heizung aktiv')).not.toBeInTheDocument();
+        expect(screen.queryByText('Heizung bereit')).not.toBeInTheDocument();
+        expect(screen.queryByText('Heizung gesperrt')).not.toBeInTheDocument();
     });
 
-    it('does not infer an active flame from heating mode when hardware is off', () => {
-        const status = createBrewingStatus(ProcessState.ACTIVE);
-        status.currentStep.mode = ProcessMode.HEATING;
-        const {container} = renderProduction({brewingStatus: status, socketConnected: true, realtimeState: {heatingRunning: false, alarms: [], alarmsReceived: true}});
+    it('does not show flames when the connected controller reports running false', () => {
+        const {container} = renderProduction({socketConnected: true, realtimeState: {heatingRunning: false, alarms: [], alarmsReceived: true}});
         expect(container.querySelector('.flame-strip')).toBeNull();
+    });
+
+    it('does not show a stale active snapshot after socket disconnect', () => {
+        const {container, rerender, props} = renderProduction({socketConnected: true, realtimeState: {heatingRunning: true, alarms: [], alarmsReceived: true}});
+        expect(container.querySelector('.flame-strip')).not.toBeNull();
+
+        rerender(<Production {...props} socketConnected={false} />);
+        expect(container.querySelector('.flame-strip')).toBeNull();
+    });
+
+    it('shows flames again after reconnect receives a running snapshot', () => {
+        const {container, rerender, props} = renderProduction({socketConnected: false, realtimeState: {heatingRunning: true, alarms: [], alarmsReceived: true}});
+        expect(container.querySelector('.flame-strip')).toBeNull();
+
+        rerender(<Production {...props} socketConnected={true} realtimeState={{...props.realtimeState, heatingRunning: true}} />);
+        expect(container.querySelector('.flame-strip')).not.toBeNull();
     });
 });
 

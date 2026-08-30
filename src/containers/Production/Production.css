@@ -111,33 +111,6 @@
     padding: var(--spacing-xs) 0;
 }
 
-.heater-status {
-    border: 1px solid var(--color-disabled-border);
-    border-radius: 999px;
-    color: var(--color-light-text);
-    font-size: 0.78rem;
-    font-weight: 700;
-    line-height: 1.2;
-    padding: 0.2rem 0.55rem;
-    white-space: nowrap;
-}
-
-.heater-status--active {
-    background: var(--color-error-subtle);
-    border-color: var(--color-error);
-}
-
-.heater-status--ready {
-    background: var(--color-success-subtle);
-    border-color: var(--color-success);
-}
-
-.heater-status--blocked,
-.heater-status--unknown {
-    background: var(--color-disabled-bg);
-    color: var(--color-disabled-text);
-}
-
 /* Temperaturanzeige mittig */
 .Temp {
     background: var(--color-brew-bg);

@@ -7,7 +7,7 @@ const contract = {
     currentStep: {index: 2, count: 7, phase: 'RAST', mode: 'TIMER_RUNNING', name: 'Rast 1', duration: 900, elapsedTime: 299.362060546875, remainingTime: 600.637939453125},
     temperature: {current: 60, target: 55},
     waiting: {waitingFor: 'NONE', canConfirm: false},
-    heating: {followsDecoction: false, heaterEnabled: true},
+    heating: {followsDecoction: false},
     error: {code: null, details: null},
 };
 
@@ -20,6 +20,7 @@ describe('normalizeBrewingStatus', () => {
         expect(status).not.toHaveProperty('agitator');
         expect(status).not.toHaveProperty('alarms');
         expect(status.temperature).toEqual({current: 60, target: 55});
+        expect(status.heating).toEqual({followsDecoction: false});
     });
 
     it('keeps independent legacy process compatibility', () => {

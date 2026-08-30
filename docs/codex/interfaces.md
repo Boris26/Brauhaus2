@@ -94,7 +94,7 @@ interface BrewingStatus {
     name?: string; duration?: number; elapsedTime?: number; remainingTime?: number; type?: string;
   };
   temperature: { current?: number; target?: number };
-  heating?: { followsDecoction?: boolean; heaterEnabled?: boolean };
+  heating?: { followsDecoction?: boolean };
   waiting: { waitingFor: WaitingFor; canConfirm: boolean };
   error: { code?: string | null; details?: string | null };
 }

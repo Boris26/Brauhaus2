@@ -7,7 +7,7 @@ import {getBrewingStatusLabel, getConfirmationRequestViewModel, getStatusChangeK
 import SettingsPage from '../../Settings/SettingsPage.connect';
 import {ConfirmStates} from '../../../enums/eConfirmStates';
 import {ControlConfirmationNotice} from '../../Production/components/InlineProcessNotice';
-import {getAgitatorActive, getHeaterDisplayLabel} from '../../Production/utils/productionStatus';
+import {getAgitatorActive, getHeatingActive} from '../../Production/utils/productionStatus';
 import {RealtimeControllerState} from '../../../model/RealtimeControllerState';
 
 interface MobileProductionViewProps {
@@ -136,7 +136,7 @@ export class MobileProductionView extends React.Component<MobileProductionViewPr
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Heizung:</span>
-                                <span className="mobile-value">{this.props.isBrewingStatusStale ? 'Unbekannt' : getHeaterDisplayLabel(brewingStatus, this.props.realtimeState, this.props.socketConnected)}</span>
+                                <span className="mobile-value">{this.props.isBrewingStatusStale || getHeatingActive(this.props.realtimeState, this.props.socketConnected) === undefined ? 'Unbekannt' : getHeatingActive(this.props.realtimeState, this.props.socketConnected) ? 'An' : 'Aus'}</span>
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Rührwerk:</span>

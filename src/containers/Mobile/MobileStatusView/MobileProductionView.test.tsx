@@ -155,14 +155,14 @@ describe('MobileProductionView stale status', () => {
 });
 
 describe('MobileProductionView heater status', () => {
-    it('shows heater permission separately from the physical heater state', () => {
+    it('shows the connected realtime heater state', () => {
         const status = makeStatus();
-        status.heating = {followsDecoction: true, heaterEnabled: true};
+        status.heating = {followsDecoction: true};
 
         renderMobileView({brewingStatus: status, socketConnected: true, realtimeState: {heatingRunning: false, alarms: [], alarmsReceived: true}});
 
-        expect(screen.getByText('Heizung bereit')).toBeInTheDocument();
-        expect(screen.queryByText('Heizung aktiv')).not.toBeInTheDocument();
+        expect(screen.getByText('Aus')).toBeInTheDocument();
+        expect(screen.queryByText('Heizung bereit')).not.toBeInTheDocument();
     });
 });
 
