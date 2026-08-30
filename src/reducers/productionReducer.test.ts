@@ -39,6 +39,22 @@ describe('productionReducer waterStatus', () => {
     });
 });
 
+describe('productionReducer socket connection', () => {
+    it('stores a connected socket id and clears it on disconnect', () => {
+        const connected = productionReducer(initialProductionState, ProductionActions.socketConnectionChanged(true, 'abc123'));
+        expect(connected.socketConnection).toEqual({connected: true, socketId: 'abc123'});
+        const disconnected = productionReducer(connected, ProductionActions.socketConnectionChanged(false));
+        expect(disconnected.socketConnection).toEqual({connected: false, socketId: undefined});
+    });
+
+    it('replaces the previous id after reconnect', () => {
+        const first = productionReducer(initialProductionState, ProductionActions.socketConnectionChanged(true, 'abc123'));
+        const disconnected = productionReducer(first, ProductionActions.socketConnectionChanged(false));
+        const reconnected = productionReducer(disconnected, ProductionActions.socketConnectionChanged(true, 'xyz789'));
+        expect(reconnected.socketConnection).toEqual({connected: true, socketId: 'xyz789'});
+    });
+});
+
 describe('productionReducer brewingStatus alarms', () => {
     it('replaces the complete status so an ended alarm is removed on the next poll', () => {
         const activeAlarm = {type: AlarmType.EQUIPMENT_ALARM, active: true};

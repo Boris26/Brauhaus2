@@ -171,6 +171,13 @@ describe('mapControlSocketEvent', () => {
     expect(mapControlSocketEvent({event: 'brew-session-running'})).toEqual(ProductionActions.brewSessionRunningReceived());
   });
 
+  it('maps socket connection changes without affecting existing control events', () => {
+    expect(mapControlSocketEvent({event: 'connection-status', data: {connected: true, socketId: 'abc123'}}))
+      .toEqual(ProductionActions.socketConnectionChanged(true, 'abc123'));
+    expect(mapControlSocketEvent({event: 'connection-status', data: {connected: false}}))
+      .toEqual(ProductionActions.socketConnectionChanged(false));
+  });
+
   it('ignores unknown socket events', () => {
     expect(mapControlSocketEvent({event: 'other', data: {}})).toBeUndefined();
   });

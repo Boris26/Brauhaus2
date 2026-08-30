@@ -6,6 +6,8 @@ import {Index} from './index';
 const mapStateToProps = (state: any) => ({
     viewState: state.applicationReducer.view as Views,
     brewingStatus: state.productionReducer.brewingStatus,
+    socketConnected: state.productionReducer.socketConnection.connected,
+    socketId: state.productionReducer.socketConnection.socketId,
 });
 
 const mapDispatchToProps = (dispatch: any) => ({

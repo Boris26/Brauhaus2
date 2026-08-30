@@ -1,5 +1,10 @@
 import { io, Socket } from 'socket.io-client';
 
+export interface SocketConnectionStatus {
+  connected: boolean;
+  socketId?: string;
+}
+
 export type MessageHandler = (event: { event: string; data?: any }) => void;
 
 export class WebSocketController {
@@ -14,6 +19,22 @@ export class WebSocketController {
   connect() {
     if (this.socket) return;
     this.socket = io(this.url);
+    this.socket.on('connect', () => {
+      if (this.messageHandler) {
+        this.messageHandler({
+          event: 'connection-status',
+          data: {connected: true, socketId: this.socket?.id},
+        });
+      }
+    });
+    this.socket.on('disconnect', () => {
+      if (this.messageHandler) {
+        this.messageHandler({
+          event: 'connection-status',
+          data: {connected: false, socketId: undefined},
+        });
+      }
+    });
     this.socket.on('overheat', (data: any) => {
       if (this.messageHandler) {
         this.messageHandler({ event: 'overheat', data });

@@ -24,6 +24,8 @@ export const mapControlSocketEvent = (event: {event: string; data?: any}) => {
       return ProductionActions.overheatReceived(event.data);
     case 'brew-session-running':
       return ProductionActions.brewSessionRunningReceived();
+    case 'connection-status':
+      return ProductionActions.socketConnectionChanged(event.data.connected, event.data.socketId);
     default:
       return undefined;
   }

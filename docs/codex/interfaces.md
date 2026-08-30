@@ -76,6 +76,7 @@ The desktop header sends `POST /api/system/shutdown` without a request body only
 - On `overheat`, it calls the configured handler with `{ event: 'overheat', data }`.
 - On `brew-session-running`, it calls the same configured handler with `{ event: 'brew-session-running', data }`; `data` may be absent. The UI converts this to the payload-free technical Redux action `BREW_SESSION_RUNNING_RECEIVED` and does not start synchronization, polling, or navigation.
 - The production epic maps the controller's structured handler object directly and ignores unknown event names.
+- The same shared connection reports `connect` as `{ connected: true, socketId: socket.id }` and `disconnect` as `{ connected: false, socketId: undefined }` through the production Redux flow. The Socket.IO ID is transient diagnostic data only; the UI does not persist it or use it as a client/device identity.
 
 ## Normalized brewing status expected by UI
 
