@@ -10,15 +10,23 @@ export type MessageHandler = (event: { event: string; data?: any }) => void;
 export class WebSocketController {
   private socket: Socket | null = null;
   private messageHandler: MessageHandler | null = null;
-  private url: string;
+  private serverUrl?: string;
 
-  constructor(url: string) {
-    this.url = url;
+  constructor(url?: string) {
+    // Relative values such as /api/controller are REST prefixes, not Socket.IO
+    // namespaces. In that case Socket.IO must use the current origin and the
+    // default namespace. Absolute URLs remain supported for explicit hosts.
+    this.serverUrl = url && !url.startsWith('/') ? url : undefined;
   }
 
   connect() {
     if (this.socket) return;
-    this.socket = io(this.url);
+
+    const socketOptions = { path: '/socket.io' };
+    this.socket = this.serverUrl
+      ? io(this.serverUrl, socketOptions)
+      : io(socketOptions);
+
     this.socket.on('connect', () => {
       if (this.messageHandler) {
         this.messageHandler({
