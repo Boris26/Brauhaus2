@@ -76,7 +76,7 @@ describe('brewing selectors', () => {
   });
 
   it('labels the decoction return heating and confirmation states', () => {
-    const heating = makeStatus({currentStep:{phase:ProcessPhase.DECOCTION, mode:ProcessMode.HEATING}, heating:{followsDecoction:true, heaterEnabled:true}});
+    const heating = makeStatus({currentStep:{phase:ProcessPhase.DECOCTION, mode:ProcessMode.HEATING}, heating:{followsDecoction:true}});
     expect(getBrewingStatusLabel(heating)).toBe('Hauptmaische wird nach der Dekoktion aufgeheizt');
 
     const waiting = makeStatus({currentStep:{phase:ProcessPhase.DECOCTION, mode:ProcessMode.WAITING}, waiting:{waitingFor:WaitingFor.DECOCTION_RETURN_CONFIRMATION, canConfirm:true}});

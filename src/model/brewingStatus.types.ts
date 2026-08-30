@@ -74,7 +74,6 @@ export interface BrewingStatus {
     };
     heating?: {
         followsDecoction?: boolean;
-        heaterEnabled?: boolean;
     };
     waiting: {
         waitingFor: WaitingState;

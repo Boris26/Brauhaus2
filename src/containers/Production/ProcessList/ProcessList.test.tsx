@@ -301,7 +301,7 @@ describe('ProcessList compact production overview', () => {
     it('labels heating that follows a decoction as the main-mash return phase', () => {
         const heatingStatus = activeStatus(3, ProcessMode.HEATING);
         heatingStatus.currentStep.phase = ProcessPhase.DECOCTION;
-        heatingStatus.heating = {followsDecoction: true, heaterEnabled: true};
+        heatingStatus.heating = {followsDecoction: true};
         render(<ProcessList selectedBeer={selectedBeer} currentStepIndex={3} currentStep={heatingStatus.currentStep} brewingStatus={heatingStatus} />);
 
         expect(screen.getByText('Hauptmaische wird nach der Dekoktion aufgeheizt')).toBeInTheDocument();

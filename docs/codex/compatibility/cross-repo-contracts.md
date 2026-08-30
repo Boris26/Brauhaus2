@@ -96,7 +96,7 @@ The Settings UI also consumes the existing `POST /api/audio/test` contract. Its 
 
 The UI accepts `currentStep.phase: DECOCTION` as a public sequential mash phase and sends new decoction recipe steps with `procedureType: DECOCTION` plus `executionMode: CONFIRMATION_HOLD`. Database persistence of the new optional field is **Needs verification** in the database/backend repository.
 
-After `Confirm/Decoction`, control may publish a return heat-up with `heating.followsDecoction: true`; `heating.heaterEnabled` then indicates whether process logic permits the heater to be used. Physical heater feedback comes exclusively from connected `realtimeState.heatingRunning`; disconnected or missing snapshots are unknown. For `waiting.waitingFor: DECOCTION_RETURN_CONFIRMATION` with `canConfirm: true`, the UI sends exactly `POST /Confirm/DecoctionReturned`.
+After `Confirm/Decoction`, control may publish a return heat-up with `heating.followsDecoction: true`. Physical heater feedback comes exclusively from connected `realtimeState.heatingRunning`; disconnected or missing snapshots are unknown. For `waiting.waitingFor: DECOCTION_RETURN_CONFIRMATION` with `canConfirm: true`, the UI sends exactly `POST /Confirm/DecoctionReturned`.
 
 Production `Rasten` now retain `stepId`, and decoctions retain `relatedRastId` without copying the referenced temperature. PI/control lookup of `relatedRastId -> RAST.stepId -> temperature` **Needs cross-repository update**.
 
@@ -134,7 +134,6 @@ Before changing control output, check whether the UI uses it for:
 - `hardware.heater`
 - `hardware.agitator`
 - `heating.followsDecoction`
-- `heating.heaterEnabled`
 - `waiting.waitingFor`
 - `waiting.canConfirm`
 - `error.code`
@@ -207,7 +206,7 @@ Push notifications are triggered by the control service when `waiting.canConfirm
 
 ## Realtime State Contract v1 (Brauhaus2 #194 / Braumeister #109)
 
-The existing single Socket.IO connection on namespace `/` and path `/socket.io` publishes complete controller snapshots. REST remains rooted at `/api/controller`; `GET /Status/` continues polling process state, steps, temperatures, timing, waiting/confirmation, and `heating.heaterEnabled` every second.
+The existing single Socket.IO connection on namespace `/` and path `/socket.io` publishes complete controller snapshots. REST remains rooted at `/api/controller`; `GET /Status/` continues polling process state, steps, temperatures, timing, waiting/confirmation, and `heating.followsDecoction` every second.
 
 ```ts
 // heating-running-changed
@@ -232,4 +231,4 @@ interface AlarmRealtimeState { alarms: Alarm[]; }
 interface TemperatureSensorRealtimeState { health: string; sensorId?: string; }
 ```
 
-`running` and `actualOutputOn` are physical hardware feedback. An alarm payload replaces the complete alarm collection. Sensor `health` values are controller-owned and must not be synthesized by the UI. These snapshots are the sole UI source of truth for physical heater feedback, agitator output, alarms, and sensor health. After disconnect, received snapshots are stale/unknown; REST process availability remains independent. `GET /Agitator/Status` continues only to initialize editable agitator configuration, not as a live-state fallback. Deployment and reconnect snapshot behavior **Needs verification** with Braumeister #109 and two real clients.
+`running` is the controller-reported heater on/off state, while `actualOutputOn` is agitator hardware feedback. An alarm payload replaces the complete alarm collection. Sensor `health` values are controller-owned and must not be synthesized by the UI. These snapshots are the sole UI source of truth for physical heater feedback, agitator output, alarms, and sensor health. After disconnect, received snapshots are stale/unknown; REST process availability remains independent. `GET /Agitator/Status` continues only to initialize editable agitator configuration, not as a live-state fallback. Deployment and reconnect snapshot behavior **Needs verification** with Braumeister #109 and two real clients.
