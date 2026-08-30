@@ -21,6 +21,8 @@ Visible/used fields include:
 
 The PI/control payload is:
 
+- Brew-session metadata: `beerId` is the persisted base recipe ID; `plannedVolume` (liters) and `plannedBrewhouseEfficiency` (percent) describe the exact temporary scaling used for this brew.
+
 - `MashdownTemperature`: from recipe step `Abmaischen.temperature`.
 - `MashupTemperature`: from recipe step `Einmaischen.temperature`.
 - `CookingTemperature`: from `beer.cookingTemperatur`, with UI fallback `99` °C only when the stored cooking temperature is missing or invalid.

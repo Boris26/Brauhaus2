@@ -1,11 +1,15 @@
-import { Subject } from 'rxjs';
-import { ProductionActions } from '../actions/actions';
-import { BREWING_STATUS_REQUEST_TIMEOUT, confirmEpic$, mapControlSocketEvent, nextProcedureStepEpic$, sendBrewingDataEpic$, startPollingEpic$, startWaterFillingEpic$, WATER_FILLING_MAX_DURATION, WATER_STATUS_REQUEST_TIMEOUT } from './productionEpics';
+import { BehaviorSubject, Subject } from 'rxjs';
+import { BeerActions, ProductionActions } from '../actions/actions';
+import { BREWING_STATUS_REQUEST_TIMEOUT, confirmEpic$, mapControlSocketEvent, nextProcedureStepEpic$, restoreBrewSessionEpic$, sendBrewingDataEpic$, startPollingEpic$, startWaterFillingEpic$, WATER_FILLING_MAX_DURATION, WATER_STATUS_REQUEST_TIMEOUT } from './productionEpics';
 import { ProductionRepository } from '../repositorys/ProductionRepository';
 import {BackendAvailable} from '../reducers/productionReducer';
 import {BrewingData} from '../model/BrewingData';
 import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../model/brewingStatus.types';
 import {ConfirmStates} from '../enums/eConfirmStates';
+import {BeerRepository} from '../repositorys/BeerRepository';
+import {BeerRecipeScaler} from '../utils/BeerScaler/ScalingBeerRecipe';
+import {initialBeerState, initialProductionState} from '../reducers/rootReducer';
+import {Beer} from '../model/Beer';
 
 jest.mock('../repositorys/ProductionRepository', () => ({
   ProductionRepository: {
@@ -16,8 +20,11 @@ jest.mock('../repositorys/ProductionRepository', () => ({
     getBrewingStatus: jest.fn(),
     confirm: jest.fn(),
     nextProcedureStep: jest.fn(),
+    getBrewSession: jest.fn(),
   },
 }));
+
+jest.mock('../repositorys/BeerRepository', () => ({BeerRepository: {getBeers: jest.fn()}}));
 
 const mockedProductionRepository = ProductionRepository as jest.Mocked<typeof ProductionRepository>;
 
@@ -66,11 +73,28 @@ const createStatusResponse = (aProcessState: ProcessState): { available: Backend
 });
 
 const createBrewingData = (): BrewingData => ({
+  beerId: 'beer-1',
+  plannedVolume: 20,
+  plannedBrewhouseEfficiency: 60,
   MashdownTemperature: 76,
   MashupTemperature: 62,
   CookingTemperature: 99,
   CookingTime: 60,
   Rasten: [],
+});
+
+const baseBeer = (): Beer => ({
+  id: 'beer-1', name: 'Test', type: 'Ale', color: 'gold', alcohol: 5,
+  originalwort: 12, bitterness: 20, description: '', rating: 0,
+  mashVolume: 10, spargeVolume: 10, referenceVolume: 10,
+  referenceBrewhouseEfficiency: 52, cookingTime: 60, cookingTemperatur: 100,
+  fermentation: [], malts: [], wortBoiling: {totalTime: 60, hops: []},
+  fermentationMaturation: {fermentationTemperature: 20, carbonation: 5, yeast: []},
+});
+
+const restoreState = (beers: Beer[] | undefined, isPollingRunning = false): any => ({
+  beerDataReducer: {...initialBeerState, beers},
+  productionReducer: {...initialProductionState, isPollingRunning},
 });
 
 describe('confirmEpic$', () => {
@@ -180,6 +204,64 @@ describe('mapControlSocketEvent', () => {
 
   it('ignores unknown socket events', () => {
     expect(mapControlSocketEvent({event: 'other', data: {}})).toBeUndefined();
+  });
+});
+
+describe('restoreBrewSessionEpic$', () => {
+  const mockedBeerRepository = BeerRepository as jest.Mocked<typeof BeerRepository>;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockedProductionRepository.getBrewSession.mockResolvedValue({beerId: 'beer-1', plannedVolume: 20, plannedBrewhouseEfficiency: 60});
+  });
+
+  const runRestore = async (state: any): Promise<any[]> => {
+    const action$ = new Subject<any>();
+    const emitted: any[] = [];
+    const subscription = restoreBrewSessionEpic$(action$, new BehaviorSubject(state)).subscribe((action: any) => emitted.push(action));
+    action$.next(ProductionActions.brewSessionRunningReceived());
+    await flushPromises();
+    subscription.unsubscribe();
+    return emitted;
+  };
+
+  it('uses a loaded beer, reconstructs it with BeerRecipeScaler and starts observation only', async () => {
+    const scale = jest.spyOn(BeerRecipeScaler, 'scale');
+    const emitted = await runRestore(restoreState([baseBeer()]));
+
+    expect(mockedProductionRepository.getBrewSession).toHaveBeenCalledTimes(1);
+    expect(mockedBeerRepository.getBeers).not.toHaveBeenCalled();
+    expect(scale).toHaveBeenCalledWith(expect.objectContaining({volume: 20, brewhouseEfficiency: 60}));
+    expect(emitted[0]).toEqual(BeerActions.setSelectedBeer(expect.objectContaining({id: 'beer-1', plannedVolume: 20}) as any));
+    expect(emitted[1]).toEqual(BeerActions.setBeerToBrew(expect.objectContaining({id: 'beer-1', plannedBrewhouseEfficiency: 60}) as any));
+    expect(emitted[2]).toEqual(ProductionActions.startPolling());
+    expect(emitted).not.toEqual(expect.arrayContaining([expect.objectContaining({type: ProductionActions.ActionTypes.SEND_BREWING_DATA})]));
+    scale.mockRestore();
+  });
+
+  it('loads beers through BeerRepository when the beer is not in state', async () => {
+    mockedBeerRepository.getBeers.mockResolvedValue([baseBeer()]);
+    const emitted = await runRestore(restoreState(undefined));
+    expect(mockedBeerRepository.getBeers).toHaveBeenCalledTimes(1);
+    expect(emitted[0]).toEqual(BeerActions.getBeersSuccess([baseBeer()]));
+    expect(emitted).toContainEqual(ProductionActions.startPolling());
+  });
+
+  it('reports unknown beers and request or validation errors without polling', async () => {
+    mockedBeerRepository.getBeers.mockResolvedValue([]);
+    expect(await runRestore(restoreState(undefined))).not.toContainEqual(ProductionActions.startPolling());
+
+    mockedProductionRepository.getBrewSession.mockRejectedValueOnce(new Error('HTTP 404'));
+    expect(await runRestore(restoreState([baseBeer()]))).toEqual([expect.objectContaining({type: 'ApplicationActions.OPEN_ERROR_DIALOG'})]);
+
+    mockedProductionRepository.getBrewSession.mockResolvedValueOnce({beerId: 'beer-1', plannedVolume: 0, plannedBrewhouseEfficiency: 60});
+    expect(await runRestore(restoreState([baseBeer()]))).not.toContainEqual(ProductionActions.startPolling());
+  });
+
+  it('does not restart an already running poll', async () => {
+    const emitted = await runRestore(restoreState([baseBeer()], true));
+    expect(emitted).not.toContainEqual(ProductionActions.startPolling());
+    expect(emitted).toHaveLength(2);
   });
 });
 
