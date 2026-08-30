@@ -53,9 +53,7 @@ export interface Alarm {
 }
 
 export interface BrewingStatus {
-    agitator?: import('./Agitator').AgitatorRuntimeStatus;
     elapsedTime: number;
-    currentTime: number;
     process: {
         state: ProcessState;
     };
@@ -74,10 +72,6 @@ export interface BrewingStatus {
         current?: number;
         target?: number;
     };
-    hardware: {
-        heater?: string;
-        agitator?: string;
-    };
     heating?: {
         followsDecoction?: boolean;
         heaterEnabled?: boolean;
@@ -90,20 +84,16 @@ export interface BrewingStatus {
         code?: string | null;
         details?: string | null;
     };
-    alarms: Alarm[];
 }
 
 export type LegacyBrewingStatus = {
     elapsedTime?: number;
-    currentTime?: number;
     Temperature?: number;
     TargetTemperature?: number;
     StatusText?: string;
-    HeatingStates?: string;
     Name?: string;
     Type?: string;
     WaitingStatus?: boolean;
     HeatUpStatus?: boolean;
-    AgitatorStatus?: boolean;
     index?: number;
 };

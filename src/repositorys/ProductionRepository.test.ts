@@ -115,13 +115,13 @@ describe('ProductionRepository API method/path usage', () => {
     await expect(ProductionRepository.getBrewSession()).rejects.toBe(error);
   });
 
-  it('normalizes alarms from the brewing status response', async () => {
+  it('does not import realtime alarms into the brewing status response', async () => {
     const alarms = [{type: 'EQUIPMENT_ALARM', active: true}];
     mockedAxios.get.mockResolvedValueOnce({status: 200, data: {alarms}, statusText: 'OK'} as any);
 
     const result = await ProductionRepository.getBrewingStatus();
 
-    expect(result.brewingStatus?.alarms).toEqual(alarms);
+    expect(result.brewingStatus).not.toHaveProperty('alarms');
   });
 
   it('uses canonical GET /temperatur/<alter> for temperature reads', async () => {

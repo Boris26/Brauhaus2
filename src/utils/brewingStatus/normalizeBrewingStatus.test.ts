@@ -1,60 +1,34 @@
 import {normalizeBrewingStatus} from './normalizeBrewingStatus';
-import {AlarmType, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
+import {ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
+
+const contract = {
+    elapsedTime: 299.362060546875,
+    process: {state: 'ACTIVE'},
+    currentStep: {index: 2, count: 7, phase: 'RAST', mode: 'TIMER_RUNNING', name: 'Rast 1', duration: 900, elapsedTime: 299.362060546875, remainingTime: 600.637939453125},
+    temperature: {current: 60, target: 55},
+    waiting: {waitingFor: 'NONE', canConfirm: false},
+    heating: {followsDecoction: false, heaterEnabled: true},
+    error: {code: null, details: null},
+};
 
 describe('normalizeBrewingStatus', () => {
-    it('preserves optional agitator poll config fields without inventing missing values', () => {
-        const legacyPoll = normalizeBrewingStatus({agitator: {mode: 'AUTOMATIC', paused: false, operation: 'INTERVAL', intervalPhase: 'BREAK', actualOutputOn: false}});
-        expect(legacyPoll.agitator?.speedPercent).toBeUndefined();
-        const extendedPoll = normalizeBrewingStatus({agitator: {mode: 'AUTOMATIC', paused: false, operation: 'INTERVAL', intervalPhase: 'RUNNING', actualOutputOn: true, speedPercent: 42, runningMinutes: 2, breakMinutes: 7}});
-        expect(extendedPoll.agitator).toEqual(expect.objectContaining({speedPercent: 42, runningMinutes: 2, breakMinutes: 7}));
+    it('normalizes the complete 2.0 process-only contract', () => {
+        const status = normalizeBrewingStatus(contract);
+        expect(status).toEqual({...contract, process: {state: ProcessState.ACTIVE}, currentStep: {...contract.currentStep, phase: ProcessPhase.RAST, mode: ProcessMode.TIMER_RUNNING}, waiting: {waitingFor: WaitingFor.NONE, canConfirm: false}});
+        expect(status).not.toHaveProperty('currentTime');
+        expect(status).not.toHaveProperty('hardware');
+        expect(status).not.toHaveProperty('agitator');
+        expect(status).not.toHaveProperty('alarms');
+        expect(status.temperature).toEqual({current: 60, target: 55});
     });
-    it('ignores an incomplete agitator runtime payload', () => {
-        expect(normalizeBrewingStatus({agitator: {mode: 'AUTOMATIC'}}).agitator).toBeUndefined();
+
+    it('keeps independent legacy process compatibility', () => {
+        const status = normalizeBrewingStatus({Type: 'COOKING', HeatUpStatus: true, Temperature: 50, TargetTemperature: 100});
+        expect(status.currentStep).toEqual(expect.objectContaining({phase: ProcessPhase.COOKING, mode: ProcessMode.HEATING}));
+        expect(status.temperature).toEqual({current: 50, target: 100});
     });
-  it('accepts the public DECOCTION runtime phase', () => {
-    const s = normalizeBrewingStatus({currentStep: {phase: 'DECOCTION', mode: 'WAITING'}});
-    expect(s.currentStep.phase).toBe(ProcessPhase.DECOCTION);
-  });
-  it('uses structured payload', () => {
-    const s = normalizeBrewingStatus({process:{state:'ACTIVE'}, currentStep:{phase:'RAST', mode:'TIMER_RUNNING', remainingTime:12}, heating:{followsDecoction:true, heaterEnabled:false}, waiting:{waitingFor:'DECOCTION_RETURN_CONFIRMATION', canConfirm:true}, temperature:{current:60,target:63}});
-    expect(s.process.state).toBe(ProcessState.ACTIVE);
-    expect(s.currentStep.phase).toBe(ProcessPhase.RAST);
-    expect(s.currentStep.mode).toBe(ProcessMode.TIMER_RUNNING);
-    expect(s.heating).toEqual({followsDecoction: true, heaterEnabled: false});
-    expect(s.waiting.waitingFor).toBe(WaitingFor.DECOCTION_RETURN_CONFIRMATION);
-  });
 
-  it('falls back to legacy payload', () => {
-    const s = normalizeBrewingStatus({Type:'COOKING', HeatUpStatus:true, WaitingStatus:false, Temperature:50, TargetTemperature:100, AgitatorStatus:true});
-    expect(s.currentStep.phase).toBe(ProcessPhase.COOKING);
-    expect(s.currentStep.mode).toBe(ProcessMode.HEATING);
-    expect(s.temperature.current).toBe(50);
-    expect(s.hardware.agitator).toBe('ON');
-  });
-
-  it('structured values win over legacy values', () => {
-    const s = normalizeBrewingStatus({process:{state:'FINISHED'}, currentStep:{phase:'RAST', mode:'HOLDING'}, Type:'COOKING', HeatUpStatus:true, waiting:{waitingFor:'IODINE_TEST', canConfirm:true}});
-    expect(s.currentStep.phase).toBe(ProcessPhase.RAST);
-    expect(s.currentStep.mode).toBe(ProcessMode.HOLDING);
-    expect(s.waiting.waitingFor).toBe(WaitingFor.IODINE_TEST);
-  });
-
-  it('preserves unknown waitingFor values for central confirmation mapping warnings', () => {
-    const s = normalizeBrewingStatus({waiting:{waitingFor:'future_confirmation', canConfirm:true}});
-    expect(s.waiting.waitingFor).toBe('FUTURE_CONFIRMATION');
-  });
-
-  it('defaults alarms to an empty list for an older backend response', () => {
-    expect(normalizeBrewingStatus({process: {}}).alarms).toEqual([]);
-  });
-
-  it('transports empty, active, multiple, and future alarm entries', () => {
-    expect(normalizeBrewingStatus({alarms: []}).alarms).toEqual([]);
-
-    const alarms = [
-      {type: AlarmType.EQUIPMENT_ALARM, active: true},
-      {type: 'FUTURE_ALARM', active: false},
-    ];
-    expect(normalizeBrewingStatus({alarms}).alarms).toEqual(alarms);
-  });
+    it('preserves unknown waiting states for central confirmation handling', () => {
+        expect(normalizeBrewingStatus({waiting: {waitingFor: 'future_confirmation', canConfirm: true}}).waiting.waitingFor).toBe('FUTURE_CONFIRMATION');
+    });
 });

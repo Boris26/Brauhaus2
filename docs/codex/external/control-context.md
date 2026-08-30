@@ -183,37 +183,21 @@ Disabled/legacy endpoints:
 
 ## Status payload contract
 
-Current status dict shape:
+Current Status Contract 2.0 is process-only:
 
 ```json
 {
-  "elapsedTime": 0,
-  "currentTime": 0,
-  "process": {"state": "IDLE|ACTIVE|FINISHED|ABORTED|ERROR"},
-  "currentStep": {
-    "index": 1,
-    "count": 4,
-    "phase": "NONE|MASHING_IN|RAST|MASHING_OUT|COOKING|COOLING|FINISHED",
-    "mode": "NONE|HEATING|HOLDING|TIMER_RUNNING|WAITING|FINISHED|ERROR",
-    "name": "Einmaischen",
-    "duration": 0,
-    "elapsedTime": 0,
-    "remainingTime": 0
-  },
-  "temperature": {
-    "current": 20,
-    "target": 65,
-    "sensorHealth": "OK|MISSING|STALE|INVALID_READING|MULTIPLE_SENSORS_FOUND|NOT_CONFIGURED",
-    "sensorId": "28-..."
-  },
-  "hardware": {"heater": "ON|OFF|ERROR", "agitator": "ON|OFF|ERROR"},
-  "heating": {"followsDecoction": false, "heaterEnabled": false},
-  "waiting": {"waitingFor": "NONE|USER_CONFIRMATION|IODINE_TEST|MASHING_IN_CONFIRMATION|MASHING_OUT_CONFIRMATION|COOKING_CONFIRMATION|BOILING_CONFIRMATION|DECOCTION_CONFIRMATION|DECOCTION_RETURN_CONFIRMATION", "canConfirm": false},
+  "elapsedTime": 299.362060546875,
+  "process": {"state": "ACTIVE"},
+  "currentStep": {"index": 2, "count": 7, "phase": "RAST", "mode": "TIMER_RUNNING", "name": "Rast 1", "duration": 900, "elapsedTime": 299.362060546875, "remainingTime": 600.637939453125},
+  "temperature": {"current": 60, "target": 55},
+  "waiting": {"waitingFor": "NONE", "canConfirm": false},
+  "heating": {"followsDecoction": false, "heaterEnabled": true},
   "error": {"code": null, "details": null}
 }
 ```
 
-No unique event ID or monotonic sequence number is generated for statuses. `currentTime` is a Unix timestamp while a timed/heating step is actively updating, but may be 0 immediately after entering a step. `elapsedTime`, `duration`, and `remainingTime` are seconds in status payloads; UI progress must use those explicit seconds-based fields instead of `currentTime`.
+Timing fields are seconds. Hardware running state, agitator state, alarms, and temperature-sensor health are supplied only through Realtime State Contract v1 Socket.IO snapshots. The one-second poll remains active for the process fields above.
 
 ## Logs and diagnostics
 

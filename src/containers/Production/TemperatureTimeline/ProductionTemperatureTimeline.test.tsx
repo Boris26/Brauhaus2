@@ -39,7 +39,7 @@ describe('ProductionTemperatureTimeline', () => {
     it('renders distinct measurement and target curves without permanent dots', () => {
         render(
             <ProductionTemperatureTimeline
-                measurements={[{elapsedTime: 1, currentTime: 1, Temperature: 62, TargetTemperature: 63}]}
+                measurements={[{elapsedTime: 1, Temperature: 62, TargetTemperature: 63}]}
                 fallbackTemperature={0}
             />
         );
@@ -61,7 +61,7 @@ describe('ProductionTemperatureTimeline', () => {
     it('shows the compact color-coded legend and preserves the now marker', () => {
         render(
             <ProductionTemperatureTimeline
-                measurements={[{elapsedTime: 1, currentTime: 1, Temperature: 62, TargetTemperature: 63}]}
+                measurements={[{elapsedTime: 1, Temperature: 62, TargetTemperature: 63}]}
                 fallbackTemperature={0}
             />
         );

@@ -177,7 +177,6 @@
 .settingsHeader {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     min-height: var(--control-height-compact);
     padding: 0 var(--spacing-xs) var(--spacing-xs);
     border-bottom: 1px solid var(--color-border-soft);
@@ -423,20 +422,6 @@
 .nextStepBtn:hover {
     background-color: var(--color-surface-alt-dark);
 }
-
-.startPollingBtn {
-    width: var(--control-height-compact);
-    height: var(--control-height-compact);
-    padding: 0;
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius-medium);
-    background: var(--color-panel-raised);
-    color: var(--color-text-secondary);
-    transition: background-color 0.15s ease, color 0.15s ease;
-}
-.startPollingBtn:hover:not(:disabled) { background: var(--color-panel-highlight); color: var(--color-primary-hover); cursor: pointer; }
-.startPollingBtn:active:not(:disabled) { color: var(--color-primary-active); }
-.startPollingBtn:disabled { background: var(--color-disabled-bg); color: var(--color-disabled-text); cursor: not-allowed; }
 
 /* Gauge-Container */
 .GaugeContainer {

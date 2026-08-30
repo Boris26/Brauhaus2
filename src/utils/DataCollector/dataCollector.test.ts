@@ -3,7 +3,6 @@ import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from
 
 const createStatus = (aTemperature: number): BrewingStatus => ({
   elapsedTime: aTemperature,
-  currentTime: aTemperature,
   process: {state: ProcessState.ACTIVE},
   currentStep: {
     index: 1,
@@ -15,13 +14,11 @@ const createStatus = (aTemperature: number): BrewingStatus => ({
     current: aTemperature,
     target: 65,
   },
-  hardware: {},
   waiting: {
     waitingFor: WaitingFor.NONE,
     canConfirm: false,
   },
   error: {},
-  alarms: [],
 });
 
 describe('dataCollector', (): void => {

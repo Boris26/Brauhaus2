@@ -96,7 +96,7 @@ export class MobileProductionView extends React.Component<MobileProductionViewPr
     };
 
     render() {
-        const { brewingStatus, startPolling, isPollingRunning } = this.props;
+        const { brewingStatus } = this.props;
         const { activeTab } = this.state;
         const statusText = this.props.isBrewingStatusStale ? 'Status veraltet – Controller nicht erreichbar' : getBrewingStatusLabel(brewingStatus);
         const confirmationRequest = getConfirmationRequestViewModel(brewingStatus);
@@ -140,7 +140,7 @@ export class MobileProductionView extends React.Component<MobileProductionViewPr
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Rührwerk:</span>
-                                <span className="mobile-value">{this.props.isBrewingStatusStale ? 'Unbekannt' : (getAgitatorActive(brewingStatus, this.props.realtimeState, this.props.socketConnected) === undefined ? 'Unbekannt' : getAgitatorActive(brewingStatus, this.props.realtimeState, this.props.socketConnected) ? 'An' : 'Aus')}</span>
+                                <span className="mobile-value">{this.props.isBrewingStatusStale ? 'Unbekannt' : (getAgitatorActive(this.props.realtimeState, this.props.socketConnected) === undefined ? 'Unbekannt' : getAgitatorActive(this.props.realtimeState, this.props.socketConnected) ? 'An' : 'Aus')}</span>
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Laufzeit:</span>
@@ -160,9 +160,6 @@ export class MobileProductionView extends React.Component<MobileProductionViewPr
                                 <ControlConfirmationNotice request={confirmationRequest} pending={this.props.isConfirmPending} errorMessage={this.props.confirmError} onConfirm={this.confirmCurrentWaitingState} />
                             </div>
                         )}
-                        <button className="mobile-polling-btn" onClick={startPolling} disabled={isPollingRunning}>
-                            {isPollingRunning ? 'Aktualisierung läuft...' : 'Aktualisieren'}
-                        </button>
                     </>
                 )}
                 {activeTab === 'finishedBrew' && (

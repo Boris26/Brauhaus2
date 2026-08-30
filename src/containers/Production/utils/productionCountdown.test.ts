@@ -3,14 +3,11 @@ import {getRemainingSecondsFromStatus, shouldCountdownLocally, tickRemainingSeco
 
 const status = (mode: ProcessMode, remainingTime: number): BrewingStatus => ({
     elapsedTime: 0,
-    currentTime: 0,
     process: {state: ProcessState.ACTIVE},
     currentStep: {phase: ProcessPhase.RAST, mode, duration: 10, elapsedTime: 10 - remainingTime, remainingTime},
     temperature: {},
-    hardware: {},
     waiting: {waitingFor: WaitingFor.NONE, canConfirm: false},
     error: {},
-    alarms: [],
 });
 
 describe('production countdown', () => {

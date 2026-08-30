@@ -17,10 +17,7 @@ import {BrewingStatus, ProcessPhase, ProcessState} from "../../model/brewingStat
 import {TimeFormatter} from "../../utils/TimeFormatter";
 
 
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faRepeat} from '@fortawesome/free-solid-svg-icons';
 import Switch from "react-switch";
-import {IconProp} from "@fortawesome/fontawesome-svg-core";
 import {FinishedBrewCreatePayload} from "../../model/FinishedBrew";
 import {eBrewState} from "../../enums/eBrewState";
 import {BackendAvailable} from "../../reducers/productionReducer";
@@ -180,9 +177,6 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
         if (prevProps.brewingStatus !== brewingStatus) {
             this.syncRemainingTimeFromStatus();
-            if (brewingStatus?.agitator) {
-                this.mergeAgitatorPoll(brewingStatus.agitator);
-            }
         }
         if (prevProps.realtimeState?.agitator !== this.props.realtimeState?.agitator && this.props.socketConnected && this.props.realtimeState?.agitator) {
             this.mergeAgitatorPoll(this.props.realtimeState.agitator);
@@ -195,7 +189,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
             this.loadAgitatorStatus();
         }
 
-        if (isEquipmentAlarmActive(getAlarmSnapshot(prevProps.brewingStatus, prevProps.realtimeState, prevProps.socketConnected)) && !isEquipmentAlarmActive(getAlarmSnapshot(brewingStatus, this.props.realtimeState, this.props.socketConnected))) {
+        if (isEquipmentAlarmActive(getAlarmSnapshot(prevProps.realtimeState, prevProps.socketConnected)) && !isEquipmentAlarmActive(getAlarmSnapshot(this.props.realtimeState, this.props.socketConnected))) {
             this.setState({equipmentAlarmDismissed: false});
         }
 
@@ -577,11 +571,6 @@ export class Production extends React.Component<ProductionProps, ProductionState
         sendBrewingData(result.brewingData);
     }
 
-    startPolling = () => {
-        const {startPolling} = this.props;
-        startPolling();
-    }
-
     isNextProcedureStepAvailable = (): boolean => {
         return this.isControllerAvailable() && isBrewingProcessActive(this.props.brewingStatus) && !this.props.isNextProcedureStepPending;
     }
@@ -675,9 +664,6 @@ export class Production extends React.Component<ProductionProps, ProductionState
             <div className="settings">
                 <div className="settingsHeader">
                     <h3>Einstellungen</h3>
-                    <button className="startPollingBtn" title="Status aktualisieren" aria-label="Status aktualisieren" disabled={settingsDisabled || this.props.isPollingRunning} onClick={this.startPolling}>
-                        <FontAwesomeIcon icon={faRepeat as IconProp} />
-                    </button>
                 </div>
 
                 <section className="settingsGroup" aria-labelledby="agitator-settings-title">
@@ -761,7 +747,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
             <div className="Water">
                 <WaterControl filledLiters={displayedWaterLiters} label={this.getDisplayedWaterLabel()} agitatorSpeed={currentAgitatorSpeed}
-                              agitatorState={getAgitatorActive(brewingStatus, this.props.realtimeState, this.props.socketConnected) === true}
+                              agitatorState={getAgitatorActive(this.props.realtimeState, this.props.socketConnected) === true}
                               contentType={getVesselContentType(brewingStatus)}></WaterControl>
 
             </div>);
@@ -831,7 +817,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     render() {
         const {showFinishDialog} = this.state;
-        const equipmentAlarmActive = isEquipmentAlarmActive(getAlarmSnapshot(this.props.brewingStatus, this.props.realtimeState, this.props.socketConnected));
+        const equipmentAlarmActive = isEquipmentAlarmActive(getAlarmSnapshot(this.props.realtimeState, this.props.socketConnected));
         return (
             <div className="containerProduction ">
                 {this.props.isBrewingStatusStale && <div role="alert" className="production-stale-status">Controller nicht erreichbar – angezeigter Braustatus ist veraltet.</div>}

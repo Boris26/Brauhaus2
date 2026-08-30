@@ -81,37 +81,26 @@ The desktop header sends `POST /api/system/shutdown` without a request body only
 
 ## Normalized brewing status expected by UI
 
-Preferred structured schema:
+`BrewingStatus` is exclusively the process model returned by the one-second `GET /Status/` poll:
 
 ```ts
 interface BrewingStatus {
-  alarms: Array<{ type: string; active: boolean }>;
   elapsedTime: number;
-  currentTime: number; // Unix timestamp from PI control; UI must not treat it as duration/countdown
   process: { state: 'IDLE' | 'ACTIVE' | 'FINISHED' | 'ABORTED' | 'ERROR' };
   currentStep: {
-    index?: number;
-    count?: number;
+    index?: number; count?: number;
     phase: 'NONE' | 'MASHING_IN' | 'RAST' | 'DECOCTION' | 'MASHING_OUT' | 'COOKING' | 'COOLING' | 'FINISHED';
     mode: 'NONE' | 'HEATING' | 'HOLDING' | 'TIMER_RUNNING' | 'WAITING' | 'FINISHED' | 'ERROR';
-    name?: string;
-    duration?: number;
-    elapsedTime?: number;
-    remainingTime?: number;
-    type?: string;
+    name?: string; duration?: number; elapsedTime?: number; remainingTime?: number; type?: string;
   };
   temperature: { current?: number; target?: number };
-  hardware: { heater?: string; agitator?: string };
-  heating?: { followsDecoction?: boolean; heaterEnabled?: boolean }; // heaterEnabled permits heater use; hardware.heater is the physical state
+  heating?: { followsDecoction?: boolean; heaterEnabled?: boolean };
   waiting: { waitingFor: WaitingFor; canConfirm: boolean };
   error: { code?: string | null; details?: string | null };
 }
 ```
 
-`alarms` is part of every normalized polling status. The UI defaults a missing node from an older control backend to `[]`; it currently knows `EQUIPMENT_ALARM` and preserves unknown future string types without evaluating them.
-
-Legacy fallback fields still accepted by `normalizeBrewingStatus`: `Temperature`, `TargetTemperature`, `StatusText`, `HeatingStates`, `Name`, `Type`, `WaitingStatus`, `HeatUpStatus`, `AgitatorStatus`, `index`, `elapsedTime`, and `currentTime`.
-
+`RealtimeControllerState` is the separate event-oriented hardware, alarm, and sensor model. Heater running feedback, agitator output, alarms, and temperature-sensor health have no polling fallback. Legacy normalization remains only for independent process fields such as temperature, phase, mode, waiting, index, and elapsed time.
 
 ## PI/control Web Push endpoints
 

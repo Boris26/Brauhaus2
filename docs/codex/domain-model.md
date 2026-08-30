@@ -43,9 +43,9 @@ Runtime status is normalized into process state, current step, temperature, hard
 - `currentStep.index`: highlights process list step.
 - `currentStep.name`: progress display label.
 - `currentStep.elapsedTime`: cooking-phase hop reminders.
-- `currentStep.duration`, `currentStep.elapsedTime`, and `currentStep.remainingTime`: duration/progress/countdown values in seconds. `currentTime` is preserved in collected status data but must not be used as a duration/countdown unless the PI control contract changes.
+- `elapsedTime`, `currentStep.duration`, `currentStep.elapsedTime`, and `currentStep.remainingTime`: duration/progress/countdown values in seconds.
 - `temperature.current`/`target`: gauges and mobile display.
-- `hardware.heater`/`agitator`: flames, water-control agitator visual, mobile agitator display.
+- Realtime Socket.IO snapshots provide physical heater feedback, agitator output, alarms, and temperature-sensor health; disconnected snapshots are stale/unknown.
 - `heating.followsDecoction`: marks the main-mash heat-up directly after a decoction so Production presents the return phase instead of an ordinary heat-up.
 - `heating.heaterEnabled`: process-level permission to use the heater, especially around decoction transitions. It does not report the physical switch state. The UI derives “Heizung gesperrt” from `false`, “Heizung bereit” from an enabled but physically off heater, and “Heizung aktiv” from an enabled and physically on heater.
 - `waiting.waitingFor`/`canConfirm`: central inline confirmation content and confirm endpoint mapping for desktop and mobile. `MASHING_OUT_CONFIRMATION` uses the existing `Confirm/Mashup` control confirmation value. Generic or unknown waiting values are displayed without an action button.

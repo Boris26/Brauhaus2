@@ -4,19 +4,19 @@ import {ConfirmStates} from '../../enums/eConfirmStates';
 import {isEquipmentAlarmActive} from './alarmDisplay';
 
 const makeStatus = (aPart: Partial<BrewingStatus>): BrewingStatus => ({
-  elapsedTime: 0, currentTime: 0,
+  elapsedTime: 0,
   process: {state: ProcessState.ACTIVE},
   currentStep: {phase: ProcessPhase.NONE, mode: ProcessMode.NONE},
-  temperature: {}, hardware: {}, waiting: {waitingFor: WaitingFor.NONE, canConfirm: false}, error: {}, alarms: [],
+  temperature: {}, waiting: {waitingFor: WaitingFor.NONE, canConfirm: false}, error: {},
   ...aPart
 });
 
 describe('brewing selectors', () => {
   it('recognizes only an explicitly active equipment alarm in the alarm list', () => {
-    expect(isEquipmentAlarmActive(makeStatus({}).alarms)).toBe(false);
-    expect(isEquipmentAlarmActive(makeStatus({alarms: [{type: 'FUTURE_ALARM', active: true}]}).alarms)).toBe(false);
-    expect(isEquipmentAlarmActive(makeStatus({alarms: [{type: AlarmType.EQUIPMENT_ALARM, active: false}]}).alarms)).toBe(false);
-    expect(isEquipmentAlarmActive(makeStatus({alarms: [{type: AlarmType.EQUIPMENT_ALARM, active: true}]}).alarms)).toBe(true);
+    expect(isEquipmentAlarmActive([])).toBe(false);
+    expect(isEquipmentAlarmActive([{type: 'FUTURE_ALARM', active: true}])).toBe(false);
+    expect(isEquipmentAlarmActive([{type: AlarmType.EQUIPMENT_ALARM, active: false}])).toBe(false);
+    expect(isEquipmentAlarmActive([{type: AlarmType.EQUIPMENT_ALARM, active: true}])).toBe(true);
   });
   it('derives an active brewing process from process.state ACTIVE only', () => {
     expect(isBrewingProcessActive(undefined)).toBe(false);
@@ -95,8 +95,8 @@ describe('brewing selectors', () => {
     expect(shouldShowCountdown(makeStatus({currentStep:{phase:ProcessPhase.RAST, mode:ProcessMode.HEATING}}))).toBe(false);
   });
 
-  it('does not use currentTime as countdown fallback', () => {
-    expect(getCountdownValue(makeStatus({currentTime: 1710000000, currentStep:{phase:ProcessPhase.RAST, mode:ProcessMode.TIMER_RUNNING}}))).toBe(0);
-    expect(getCountdownValue(makeStatus({currentTime: 1710000000, currentStep:{phase:ProcessPhase.RAST, mode:ProcessMode.TIMER_RUNNING, remainingTime: 45}}))).toBe(45);
+  it('uses remainingTime as the only countdown value', () => {
+    expect(getCountdownValue(makeStatus({ currentStep:{phase:ProcessPhase.RAST, mode:ProcessMode.TIMER_RUNNING}}))).toBe(0);
+    expect(getCountdownValue(makeStatus({ currentStep:{phase:ProcessPhase.RAST, mode:ProcessMode.TIMER_RUNNING, remainingTime: 45}}))).toBe(45);
   });
 });

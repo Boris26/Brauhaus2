@@ -3,7 +3,6 @@ import { getStatusChangeKey } from '../brewingStatus/selectors';
 
 export interface TimelineMeasurement {
   elapsedTime: number;
-  currentTime: number;
   Temperature: number;
   TargetTemperature: number;
   stepIndex?: number;
@@ -38,7 +37,6 @@ class DataCollector {
     const aStatusKey = getStatusChangeKey(aStatus);
     const aCurrentMeasurement: TimelineMeasurement = Object.freeze({
       elapsedTime: aStatus.elapsedTime,
-      currentTime: aStatus.currentTime,
       // Compatibility output for existing charts and exports.
       Temperature: Number(aStatus.temperature.current ?? 0),
       TargetTemperature: Number(aStatus.temperature.target ?? 0),

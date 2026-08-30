@@ -12,7 +12,6 @@ jest.mock('../MobileBrewingCalculationsView/MobileBrewingCalculationsView', () =
 
 const makeStatus = (): BrewingStatus => ({
     elapsedTime: 23,
-    currentTime: 1783885211,
     process: {state: ProcessState.ACTIVE},
     currentStep: {
         index: 1,
@@ -25,10 +24,8 @@ const makeStatus = (): BrewingStatus => ({
         remainingTime: 97,
     },
     temperature: {current: 24, target: 65},
-    hardware: {heater: 'ON', agitator: 'OFF'},
     waiting: {waitingFor: WaitingFor.NONE, canConfirm: false},
     error: {code: null, details: null},
-    alarms: [],
 });
 
 const renderMobileView = (overrides: Partial<React.ComponentProps<typeof MobileProductionView>> = {}) => {
@@ -160,10 +157,9 @@ describe('MobileProductionView stale status', () => {
 describe('MobileProductionView heater status', () => {
     it('shows heater permission separately from the physical heater state', () => {
         const status = makeStatus();
-        status.hardware.heater = 'OFF';
         status.heating = {followsDecoction: true, heaterEnabled: true};
 
-        renderMobileView({brewingStatus: status});
+        renderMobileView({brewingStatus: status, socketConnected: true, realtimeState: {heatingRunning: false, alarms: [], alarmsReceived: true}});
 
         expect(screen.getByText('Heizung bereit')).toBeInTheDocument();
         expect(screen.queryByText('Heizung aktiv')).not.toBeInTheDocument();
