@@ -12,7 +12,6 @@ describe('WebSocketController', () => {
   const socket = {
     on: jest.fn((event: string, listener: SocketListener) => {
       listeners[event] = listener;
-      return socket;
     }),
     disconnect: jest.fn(),
   };
