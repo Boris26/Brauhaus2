@@ -49,6 +49,20 @@ describe('productionRecipe mapping', () => {
     expect(stepTypes.filter((type) => type === 'Kochen')).toHaveLength(0);
   });
 
+  it('adds the persisted beer identity and exact planned scaling to the controller payload', () => {
+    const result = mapBeerToBrewingData(makeBeer({
+      id: 'stored-beer-id',
+      plannedVolume: 27.5,
+      plannedBrewhouseEfficiency: 64,
+    }));
+
+    expect(result.brewingData).toMatchObject({
+      beerId: 'stored-beer-id',
+      plannedVolume: 27.5,
+      plannedBrewhouseEfficiency: 64,
+    });
+  });
+
   it('keeps real timed rests with executionMode TIMED and requires time > 0', () => {
     const validResult = mapBeerToBrewingData(makeBeer({
       fermentation: [

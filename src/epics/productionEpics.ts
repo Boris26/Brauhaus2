@@ -1,7 +1,7 @@
 import { ofType } from 'redux-observable';
 import {from, of, interval, EMPTY, filter, takeWhile, startWith, Observable} from 'rxjs';
 import { catchError, exhaustMap, map, mergeMap, switchMap, takeUntil } from 'rxjs/operators';
-import { ApplicationActions, ProductionActions } from '../actions/actions';
+import { ApplicationActions, BeerActions, ProductionActions } from '../actions/actions';
 import { ProductionRepository } from '../repositorys/ProductionRepository';
 import { dataCollector } from '../utils/DataCollector/dataCollector';
 import { WebSocketController } from '../utils/WebSocketController';
@@ -10,6 +10,11 @@ import {isProcessAborted, isProcessFinished, isProcessInError} from "../utils/br
 import {BackendAvailable} from "../reducers/productionReducer";
 import {BrewingStatus} from "../model/brewingStatus.types";
 import {debugMetrics} from "../utils/debugMetrics";
+import {BeerRepository} from "../repositorys/BeerRepository";
+import {BeerRecipeScaler} from "../utils/BeerScaler/ScalingBeerRecipe";
+import {BrewSession} from "../model/BrewSession";
+import {Beer} from "../model/Beer";
+import type {RootState} from "../reducers/rootReducer";
 
 const BREWING_STATUS_POLL_INTERVAL = 1000;
 export const BREWING_STATUS_REQUEST_TIMEOUT = 8000;
@@ -136,6 +141,53 @@ export const startPollingEpic$ = (action$: any) =>
     switchMap(() => createBrewingStatusPolling$(action$))
   );
 
+const isValidBrewSession = (session: BrewSession): boolean =>
+  typeof session.beerId === 'string' && session.beerId.length > 0
+  && Number.isFinite(session.plannedVolume) && session.plannedVolume > 0
+  && Number.isFinite(session.plannedBrewhouseEfficiency)
+  && session.plannedBrewhouseEfficiency > 0 && session.plannedBrewhouseEfficiency <= 100;
+
+export const restoreBrewSessionEpic$ = (action$: any, state$: {value: RootState}) =>
+  action$.pipe(
+    ofType(ProductionActions.ActionTypes.BREW_SESSION_RUNNING_RECEIVED),
+    exhaustMap(() => from(ProductionRepository.getBrewSession()).pipe(
+      switchMap((session: BrewSession) => {
+        if (!isValidBrewSession(session)) {
+          return of(ApplicationActions.openErrorDialog(true, 'BrewSession konnte nicht übernommen werden', 'Die Skalierungsdaten der laufenden BrewSession sind ungültig.'));
+        }
+
+        const loadedBeers = state$.value.beerDataReducer.beers;
+        const beerRequest = loadedBeers?.some((beer) => beer.id === session.beerId)
+          ? of({beers: loadedBeers, fetched: false})
+          : from(BeerRepository.getBeers()).pipe(map((beers) => ({beers, fetched: true})));
+
+        return beerRequest.pipe(mergeMap(({beers, fetched}: {beers: Beer[]; fetched: boolean}) => {
+          const baseBeer = beers.find((beer) => beer.id === session.beerId);
+          if (!baseBeer) {
+            return of(ApplicationActions.openErrorDialog(true, 'BrewSession konnte nicht übernommen werden', `Das Bier der laufenden BrewSession (${session.beerId}) wurde nicht gefunden.`));
+          }
+
+          const reconstructedBeer = BeerRecipeScaler.scale({
+            beer: baseBeer,
+            volume: session.plannedVolume,
+            brewhouseEfficiency: session.plannedBrewhouseEfficiency,
+          });
+          const actions: any[] = [];
+          if (fetched) actions.push(BeerActions.getBeersSuccess(beers));
+          actions.push(BeerActions.setSelectedBeer(reconstructedBeer));
+          actions.push(BeerActions.setBeerToBrew(reconstructedBeer));
+          if (!state$.value.productionReducer.isPollingRunning) actions.push(ProductionActions.startPolling());
+          return from(actions);
+        }));
+      }),
+      catchError((error) => of(ApplicationActions.openErrorDialog(
+        true,
+        'BrewSession konnte nicht übernommen werden',
+        error instanceof Error ? error.message : 'Die laufende BrewSession konnte nicht geladen werden.'
+      )))
+    ))
+  );
+
 export const sendBrewingDataEpic$ = (action$: any) =>
   action$.pipe(
     ofType(ProductionActions.ActionTypes.SEND_BREWING_DATA),
@@ -242,6 +294,7 @@ export const productionEpics = [
   toggleAgitatorEpic$,
   setAgitatorSpeedEpic$,
   sendBrewingDataEpic$,
+  restoreBrewSessionEpic$,
   startPollingEpic$,
   startWaterFillingEpic$,
   confirmEpic$,

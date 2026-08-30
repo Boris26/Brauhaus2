@@ -52,6 +52,7 @@ Base URL: `BaseURL` (`/api/controller`), `CommandsURL` (`/api/controller/Command
 | POST | `Agitator/Resume` | Resume the selected active mode | `200` success |
 | GET | `Available/` | Availability heartbeat | `200` means available |
 | POST | `Recipe/` | Send `BrewingData` | `201` |
+| GET | `BrewSession` | Restore the currently running brew after the payload-free Socket.IO signal | `{ beerId, plannedVolume, plannedBrewhouseEfficiency }`; errors including `404` are propagated and do not start polling |
 | POST | `Command/StartBrewing:""` | Start brew | `200` |
 | POST | `Command/FillWaterAutomatic:{liters}` | Water fill | `200` |
 | POST | `Command/TurnOn` | Heater on using no-value command alias | `200` |
@@ -74,7 +75,7 @@ The desktop header sends `POST /api/system/shutdown` without a request body only
 - URL is derived from `BaseURL` by replacing leading `http` with `ws`.
 - `WebSocketController` uses `socket.io-client` and subscribes to event names `overheat` and `brew-session-running` on one shared connection.
 - On `overheat`, it calls the configured handler with `{ event: 'overheat', data }`.
-- On `brew-session-running`, it calls the same configured handler with `{ event: 'brew-session-running', data }`; `data` may be absent. The UI converts this to the payload-free technical Redux action `BREW_SESSION_RUNNING_RECEIVED` and does not start synchronization, polling, or navigation.
+- On `brew-session-running`, it calls the same configured handler with `{ event: 'brew-session-running', data }`; `data` may be absent. The UI converts this to `BREW_SESSION_RUNNING_RECEIVED`, loads `GET /BrewSession`, reconstructs the scaled recipe, and starts the existing status poll if it is not already running.
 - The production epic maps the controller's structured handler object directly and ignores unknown event names.
 - The same shared connection reports `connect` as `{ connected: true, socketId: socket.id }` and `disconnect` as `{ connected: false, socketId: undefined }` through the production Redux flow. The Socket.IO ID is transient diagnostic data only; the UI does not persist it or use it as a client/device identity.
 
