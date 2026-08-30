@@ -13,10 +13,10 @@ const makeStatus = (aPart: Partial<BrewingStatus>): BrewingStatus => ({
 
 describe('brewing selectors', () => {
   it('recognizes only an explicitly active equipment alarm in the alarm list', () => {
-    expect(isEquipmentAlarmActive(makeStatus({}))).toBe(false);
-    expect(isEquipmentAlarmActive(makeStatus({alarms: [{type: 'FUTURE_ALARM', active: true}]}))).toBe(false);
-    expect(isEquipmentAlarmActive(makeStatus({alarms: [{type: AlarmType.EQUIPMENT_ALARM, active: false}]}))).toBe(false);
-    expect(isEquipmentAlarmActive(makeStatus({alarms: [{type: AlarmType.EQUIPMENT_ALARM, active: true}]}))).toBe(true);
+    expect(isEquipmentAlarmActive(makeStatus({}).alarms)).toBe(false);
+    expect(isEquipmentAlarmActive(makeStatus({alarms: [{type: 'FUTURE_ALARM', active: true}]}).alarms)).toBe(false);
+    expect(isEquipmentAlarmActive(makeStatus({alarms: [{type: AlarmType.EQUIPMENT_ALARM, active: false}]}).alarms)).toBe(false);
+    expect(isEquipmentAlarmActive(makeStatus({alarms: [{type: AlarmType.EQUIPMENT_ALARM, active: true}]}).alarms)).toBe(true);
   });
   it('derives an active brewing process from process.state ACTIVE only', () => {
     expect(isBrewingProcessActive(undefined)).toBe(false);
