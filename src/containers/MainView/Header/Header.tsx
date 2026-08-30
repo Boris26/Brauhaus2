@@ -111,7 +111,7 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
 
     render() {
        const { messages = [] , removeAllMessages, backendStatus, brewingStatus } = this.props; // Default-Wert für messages ist ein leeres Array
-       const equipmentAlarmText = isEquipmentAlarmActive(getAlarmSnapshot(brewingStatus, this.props.realtimeState, this.props.socketConnected)) ? equipmentAlarmDisplay.headerText : undefined;
+       const equipmentAlarmText = isEquipmentAlarmActive(getAlarmSnapshot(this.props.realtimeState, this.props.socketConnected)) ? equipmentAlarmDisplay.headerText : undefined;
        const uiMode = getUiMode();
        const navigationViews = getNavigationViews(uiMode);
        const isVisible = (view: Views) => navigationViews.includes(view);

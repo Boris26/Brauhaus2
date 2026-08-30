@@ -46,7 +46,6 @@ const createDeferred = <TValue>(): { promise: Promise<TValue>; resolve: (aValue:
 
 const createBrewingStatus = (aProcessState: ProcessState): BrewingStatus => ({
   elapsedTime: 1,
-  currentTime: 1,
   process: {state: aProcessState},
   currentStep: {
     index: 1,
@@ -58,13 +57,11 @@ const createBrewingStatus = (aProcessState: ProcessState): BrewingStatus => ({
     current: 64,
     target: 65,
   },
-  hardware: {},
   waiting: {
     waitingFor: WaitingFor.NONE,
     canConfirm: false,
   },
   error: {},
-  alarms: [],
 });
 
 const createStatusResponse = (aProcessState: ProcessState): { available: BackendAvailable; brewingStatus: BrewingStatus } => ({

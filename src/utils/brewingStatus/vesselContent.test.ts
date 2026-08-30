@@ -4,14 +4,11 @@ import {getVesselContentType} from './vesselContent';
 
 const makeStatus = (aPhase: ProcessPhase = ProcessPhase.NONE, aWaitingFor = WaitingFor.NONE): BrewingStatus => ({
     elapsedTime: 0,
-    currentTime: 0,
     process: {state: ProcessState.ACTIVE},
     currentStep: {phase: aPhase, mode: ProcessMode.NONE},
     temperature: {},
-    hardware: {},
     waiting: {waitingFor: aWaitingFor, canConfirm: aWaitingFor !== WaitingFor.NONE},
     error: {},
-    alarms: [],
 });
 
 describe('getVesselContentType', () => {

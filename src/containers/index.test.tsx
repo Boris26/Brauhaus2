@@ -8,7 +8,6 @@ jest.mock('./Dashboard/DashboardPage.connect', () => () => <div><h1>Dashboard</h
 
 const makeStatus = (overrides: Partial<BrewingStatus> = {}): BrewingStatus => ({
     elapsedTime: 23,
-    currentTime: 1783885211,
     process: {state: ProcessState.ACTIVE},
     currentStep: {
         index: 6,
@@ -21,10 +20,8 @@ const makeStatus = (overrides: Partial<BrewingStatus> = {}): BrewingStatus => ({
         remainingTime: 0
     },
     temperature: {current: 24, target: 78},
-    hardware: {heater: 'ON', agitator: 'OFF'},
     waiting: {waitingFor: WaitingFor.MASHING_OUT_CONFIRMATION, canConfirm: true},
     error: {code: null, details: null},
-    alarms: [],
     ...overrides,
 });
 

@@ -42,14 +42,11 @@ const brew: FinishedBrew = {
 
 const activeStatus: BrewingStatus = {
   elapsedTime: 300,
-  currentTime: 1783885211,
   process: { state: ProcessState.ACTIVE },
   currentStep: { phase: ProcessPhase.RAST, mode: ProcessMode.TIMER_RUNNING, name: 'Maltoserast', duration: 600, elapsedTime: 300, remainingTime: 300 },
   temperature: { current: 64.2, target: 65 },
-  hardware: { heater: 'ON', agitator: 'ON' },
   waiting: { waitingFor: WaitingFor.NONE, canConfirm: false },
   error: { code: null, details: null },
-  alarms: [],
 };
 
 const renderDashboard = (overrides: Partial<React.ComponentProps<typeof DashboardPage>> = {}) => render(

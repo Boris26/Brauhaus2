@@ -33,7 +33,6 @@ const createBeer = (aMashVolume: number | undefined = 18, aSpargeVolume: number 
 
 const createBrewingStatus = (aProcessState: ProcessState = ProcessState.IDLE): BrewingStatus => ({
     elapsedTime: 0,
-    currentTime: 0,
     process: {state: aProcessState},
     currentStep: {
         index: 0,
@@ -46,10 +45,8 @@ const createBrewingStatus = (aProcessState: ProcessState = ProcessState.IDLE): B
         remainingTime: 0
     },
     temperature: {},
-    hardware: {},
     waiting: {waitingFor: WaitingFor.NONE, canConfirm: false},
     error: {},
-    alarms: [],
 });
 
 const renderProduction = (aOverrides: Partial<React.ComponentProps<typeof Production>> = {}) => {
@@ -188,33 +185,33 @@ describe('Production agitator controller integration', () => {
         jest.useRealTimers();
     });
 
-    it('keeps confirmed config when a legacy poll updates runtime only', async () => {
+    it('keeps confirmed config when a realtime snapshot updates runtime only', async () => {
         const {props, rerender} = renderProduction();
         await screen.findByText('36 %');
-        rerender(<Production {...props} brewingStatus={{...createBrewingStatus(), agitator: {mode: 'AUTOMATIC', paused: true, operation: 'INTERVAL', intervalPhase: 'BREAK', actualOutputOn: false}}} />);
+        rerender(<Production {...props} socketConnected={true} realtimeState={{alarms: [], alarmsReceived: true, agitator: {mode: 'AUTOMATIC', paused: true, operation: 'INTERVAL', intervalPhase: 'BREAK', actualOutputOn: false}}} />);
         expect(await screen.findByText('36 %')).toBeInTheDocument();
         expect(screen.getByRole('switch', {name: 'Automatik'})).toBeChecked();
         expect(screen.getByRole('button', {name: 'Rührwerk fortsetzen'})).toBeInTheDocument();
         expect(ProductionRepository.setAgitatorConfig).not.toHaveBeenCalled();
     });
 
-    it('renders polled multi-client mode changes without sending config', async () => {
+    it('renders realtime multi-client mode changes without sending config', async () => {
         const {props, rerender} = renderProduction();
         await screen.findByText('36 %');
         (ProductionRepository.setAgitatorConfig as jest.Mock).mockClear();
-        rerender(<Production {...props} brewingStatus={{...createBrewingStatus(), agitator: {mode: 'CONTINUOUS', paused: false, operation: 'CONTINUOUS', intervalPhase: 'IDLE', actualOutputOn: true}}} />);
+        rerender(<Production {...props} socketConnected={true} realtimeState={{alarms: [], alarmsReceived: true, agitator: {mode: 'CONTINUOUS', paused: false, operation: 'CONTINUOUS', intervalPhase: 'IDLE', actualOutputOn: true}}} />);
         expect(await screen.findByRole('switch', {name: 'Durchgehend rühren'})).toBeChecked();
         expect(screen.getByRole('switch', {name: 'Automatik'})).not.toBeChecked();
-        rerender(<Production {...props} brewingStatus={{...createBrewingStatus(), agitator: {mode: 'OFF', paused: false, operation: 'STOPPED', intervalPhase: 'IDLE', actualOutputOn: false}}} />);
+        rerender(<Production {...props} socketConnected={true} realtimeState={{alarms: [], alarmsReceived: true, agitator: {mode: 'OFF', paused: false, operation: 'STOPPED', intervalPhase: 'IDLE', actualOutputOn: false}}} />);
         await waitFor(() => expect(screen.getByRole('switch', {name: 'Durchgehend rühren'})).not.toBeChecked());
         expect(screen.getByRole('switch', {name: 'Automatik'})).not.toBeChecked();
         expect(ProductionRepository.setAgitatorConfig).not.toHaveBeenCalled();
     });
 
-    it('adopts optional #98 config fields from the normal poll', async () => {
+    it('adopts config fields from the realtime snapshot', async () => {
         const {props, rerender} = renderProduction();
         await screen.findByText('36 %');
-        rerender(<Production {...props} brewingStatus={{...createBrewingStatus(), agitator: {mode: 'AUTOMATIC', paused: false, operation: 'INTERVAL', intervalPhase: 'RUNNING', actualOutputOn: true, speedPercent: 42, runningMinutes: 4, breakMinutes: 10}}} />);
+        rerender(<Production {...props} socketConnected={true} realtimeState={{alarms: [], alarmsReceived: true, agitator: {mode: 'AUTOMATIC', paused: false, operation: 'INTERVAL', intervalPhase: 'RUNNING', actualOutputOn: true, speedPercent: 42, runningMinutes: 4, breakMinutes: 10}}} />);
         expect(await screen.findByText('42 %')).toBeInTheDocument();
         expect(within(screen.getByTestId('running-minutes-stepper')).getByText('4')).toBeInTheDocument();
         expect(within(screen.getByTestId('break-minutes-stepper')).getByText('10')).toBeInTheDocument();
@@ -346,7 +343,6 @@ describe('Production start button', () => {
 
     it('warns about stale controller data and suppresses the stale heater flame', () => {
         const status = createBrewingStatus(ProcessState.ACTIVE);
-        status.hardware.heater = 'ON';
         const {container} = renderProduction({brewingStatus: status, isBrewingStatusStale: true});
         expect(screen.getByRole('alert')).toHaveTextContent('Braustatus ist veraltet');
         expect(container.querySelector('.flame-strip')).toBeNull();
@@ -425,22 +421,10 @@ describe('Production start button', () => {
         expect(props.sendBrewingData).toHaveBeenCalledTimes(1);
     });
 
-    it('uses the polling refresh flow for the repeat polling button instead of starting a brew', () => {
-        const {props, container} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.ACTIVE), isPollingRunning: false});
-        const startPollingButton = container.querySelector('.startPollingBtn') as HTMLButtonElement;
-
-        (props.startPolling as jest.Mock).mockClear();
-        fireEvent.click(startPollingButton);
-
-        expect(props.startPolling).toHaveBeenCalledTimes(1);
-        expect(props.sendBrewingData).not.toHaveBeenCalled();
-    });
-
-    it('disables the repeat polling button while polling is already running', () => {
-        const {container} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.ACTIVE), isPollingRunning: true});
-        const startPollingButton = container.querySelector('.startPollingBtn') as HTMLButtonElement;
-
-        expect(startPollingButton).toBeDisabled();
+    it('does not render a redundant manual polling button', () => {
+        const {container} = renderProduction();
+        expect(container.querySelector('.startPollingBtn')).not.toBeInTheDocument();
+        expect(screen.queryByLabelText('Status aktualisieren')).not.toBeInTheDocument();
     });
 
 });
@@ -559,40 +543,33 @@ describe('Production controller availability dialog', () => {
 });
 
 describe('Production equipment alarm dialog', () => {
-    const withEquipmentAlarm = (aStatus: BrewingStatus): BrewingStatus => ({
-        ...aStatus,
-        alarms: [{type: AlarmType.EQUIPMENT_ALARM, active: true}]
-    });
+    const inactiveRealtime = {alarms: [], alarmsReceived: true};
+    const activeRealtime = {alarms: [{type: AlarmType.EQUIPMENT_ALARM, active: true}], alarmsReceived: true};
 
     it('is absent without an alarm and visible immediately for an initially active alarm', () => {
         const {unmount} = renderProduction();
         expect(screen.queryByRole('dialog', {name: 'Anlagenalarm'})).not.toBeInTheDocument();
         unmount();
-        renderProduction({brewingStatus: withEquipmentAlarm(createBrewingStatus(ProcessState.ACTIVE))});
+        renderProduction({brewingStatus: createBrewingStatus(ProcessState.ACTIVE), socketConnected: true, realtimeState: activeRealtime});
         expect(screen.getByRole('dialog', {name: 'Anlagenalarm'})).toBeInTheDocument();
         expect(screen.getByText(/angeschlossene Anlagensteuerung meldet einen Fehler/)).toBeInTheDocument();
     });
 
     it('stays dismissed across active polls and reopens for a new alarm cycle', () => {
-        const inactive = createBrewingStatus(ProcessState.ACTIVE);
-        const active = withEquipmentAlarm(inactive);
-        const {rerender, props} = renderProduction({brewingStatus: inactive});
-        rerender(<Production {...props} brewingStatus={active} />);
+        const {rerender, props} = renderProduction({socketConnected: true, realtimeState: inactiveRealtime});
+        rerender(<Production {...props} socketConnected={true} realtimeState={activeRealtime} />);
         fireEvent.click(screen.getByRole('button', {name: 'Schließen'}));
-        rerender(<Production {...props} brewingStatus={{...active}} />);
-        rerender(<Production {...props} brewingStatus={{...active}} />);
+        rerender(<Production {...props} socketConnected={true} realtimeState={{...activeRealtime}} />);
         expect(screen.queryByRole('dialog', {name: 'Anlagenalarm'})).not.toBeInTheDocument();
-        rerender(<Production {...props} brewingStatus={inactive} />);
-        rerender(<Production {...props} brewingStatus={active} />);
+        rerender(<Production {...props} socketConnected={true} realtimeState={inactiveRealtime} />);
+        rerender(<Production {...props} socketConnected={true} realtimeState={activeRealtime} />);
         expect(screen.getByRole('dialog', {name: 'Anlagenalarm'})).toBeInTheDocument();
     });
 
     it('closes automatically without user action when the alarm ends', () => {
-        const inactive = createBrewingStatus(ProcessState.ACTIVE);
-        const active = withEquipmentAlarm(inactive);
-        const {rerender, props} = renderProduction({brewingStatus: active});
+        const {rerender, props} = renderProduction({socketConnected: true, realtimeState: activeRealtime});
         expect(screen.getByRole('dialog', {name: 'Anlagenalarm'})).toBeInTheDocument();
-        rerender(<Production {...props} brewingStatus={inactive} />);
+        rerender(<Production {...props} socketConnected={true} realtimeState={inactiveRealtime} />);
         expect(screen.queryByRole('dialog', {name: 'Anlagenalarm'})).not.toBeInTheDocument();
     });
 });
@@ -908,7 +885,6 @@ describe('Production recipe water filling', () => {
 
         expect(container.querySelector('.Settings')).toHaveClass('Settings--disabled');
         expect(screen.getByRole('button', {name: 'Start'})).toBeDisabled();
-        expect(container.querySelector('.startPollingBtn')).toBeDisabled();
         expect(screen.getByRole('button', {name: /Nachguss/})).toBeDisabled();
         expect(screen.getByRole('button', {name: /Hauptguss/})).toBeDisabled();
         expect(container.querySelectorAll('.Settings .quantity-picker-content button:not(:disabled)')).toHaveLength(0);
@@ -931,10 +907,9 @@ describe('Production flame display', () => {
         const status = createBrewingStatus(ProcessState.ACTIVE);
         status.currentStep = {phase: ProcessPhase.RAST, mode};
         status.temperature = {current, target};
-        status.hardware.heater = heater;
         status.heating = {followsDecoction, heaterEnabled: enabled};
 
-        const {container} = renderProduction({brewingStatus: status});
+        const {container} = renderProduction({brewingStatus: status, socketConnected: true, realtimeState: {heatingRunning: heater === 'ON', alarms: [], alarmsReceived: true}});
 
         expect(screen.getByText(label)).toBeInTheDocument();
         expect(container.querySelector('.flame-strip') !== null).toBe(flame);
@@ -944,8 +919,7 @@ describe('Production flame display', () => {
     it('does not infer an active flame from heating mode when hardware is off', () => {
         const status = createBrewingStatus(ProcessState.ACTIVE);
         status.currentStep.mode = ProcessMode.HEATING;
-        status.hardware.heater = 'OFF';
-        const {container} = renderProduction({brewingStatus: status});
+        const {container} = renderProduction({brewingStatus: status, socketConnected: true, realtimeState: {heatingRunning: false, alarms: [], alarmsReceived: true}});
         expect(container.querySelector('.flame-strip')).toBeNull();
     });
 });

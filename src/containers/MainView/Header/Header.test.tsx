@@ -9,11 +9,10 @@ jest.mock('../../../repositorys/SystemRepository');
 
 const mockedShutdown = SystemRepository.shutdown as jest.MockedFunction<typeof SystemRepository.shutdown>;
 
-const brewingStatus = (activeAlarm: boolean): BrewingStatus => ({
-    elapsedTime: 0, currentTime: 0, process: {state: ProcessState.ACTIVE},
-    currentStep: {phase: ProcessPhase.RAST, mode: ProcessMode.HEATING}, temperature: {}, hardware: {},
+const brewingStatus = (): BrewingStatus => ({
+    elapsedTime: 0, process: {state: ProcessState.ACTIVE},
+    currentStep: {phase: ProcessPhase.RAST, mode: ProcessMode.HEATING}, temperature: {},
     waiting: {waitingFor: WaitingFor.NONE, canConfirm: false}, error: {},
-    alarms: activeAlarm ? [{type: AlarmType.EQUIPMENT_ALARM, active: true}] : []
 });
 
 describe('Header navigation', () => {
@@ -62,12 +61,14 @@ describe('Header navigation', () => {
 
     it('prioritizes the equipment alarm and restores existing status messages after it ends', (): void => {
         const props = {setViewState: jest.fn(), currentView: Views.PRODUCTION, removeAllMessages: jest.fn(), backendStatus: true, messages: ['Aufheizen']};
-        const {rerender} = render(<Header {...props} brewingStatus={brewingStatus(false)} />);
+        const inactiveRealtime = {alarms: [], alarmsReceived: true};
+        const activeRealtime = {alarms: [{type: AlarmType.EQUIPMENT_ALARM, active: true}], alarmsReceived: true};
+        const {rerender} = render(<Header {...props} brewingStatus={brewingStatus()} socketConnected={true} realtimeState={inactiveRealtime} />);
         expect(screen.getByText('Aufheizen')).toBeInTheDocument();
-        rerender(<Header {...props} brewingStatus={brewingStatus(true)} />);
+        rerender(<Header {...props} brewingStatus={brewingStatus()} socketConnected={true} realtimeState={activeRealtime} />);
         expect(screen.getByRole('alert')).toHaveTextContent('ANLAGENALARM – Anlage prüfen');
         expect(screen.queryByText('Aufheizen')).not.toBeInTheDocument();
-        rerender(<Header {...props} brewingStatus={brewingStatus(false)} />);
+        rerender(<Header {...props} brewingStatus={brewingStatus()} socketConnected={true} realtimeState={inactiveRealtime} />);
         expect(screen.queryByRole('alert')).not.toBeInTheDocument();
         expect(screen.getByText('Aufheizen')).toBeInTheDocument();
     });
@@ -101,7 +102,7 @@ describe('Header navigation', () => {
                 removeAllMessages={jest.fn()}
                 backendStatus={true}
                 messages={[]}
-                brewingStatus={brewingStatus(false)}
+                brewingStatus={brewingStatus()}
             />
         );
 

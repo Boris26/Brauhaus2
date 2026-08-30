@@ -4,16 +4,13 @@ import {AlarmType, BrewingStatus, ProcessMode, ProcessPhase, ProcessState, Waiti
 import {ToggleState} from '../enums/eToggleState';
 import {ConfirmStates} from '../enums/eConfirmStates';
 
-const statusWithAlarms = (alarms: BrewingStatus['alarms']): BrewingStatus => ({
+const status = (): BrewingStatus => ({
     elapsedTime: 0,
-    currentTime: 0,
     process: {state: ProcessState.ACTIVE},
     currentStep: {phase: ProcessPhase.NONE, mode: ProcessMode.NONE},
     temperature: {},
-    hardware: {},
     waiting: {waitingFor: WaitingFor.NONE, canConfirm: false},
     error: {},
-    alarms,
 });
 
 describe('productionReducer waterStatus', () => {
@@ -64,14 +61,11 @@ describe('productionReducer brewingStatus alarms', () => {
         expect(repeated.realtimeState.alarms).toEqual(snapshot.alarms);
         expect(cleared.realtimeState.alarms).toEqual([]);
     });
-    it('replaces the complete status so an ended alarm is removed on the next poll', () => {
+    it('keeps realtime alarms independent from process status polling', () => {
         const activeAlarm = {type: AlarmType.EQUIPMENT_ALARM, active: true};
-        const alarmState = productionReducer(initialProductionState, ProductionActions.setBrewingStatus(statusWithAlarms([activeAlarm])));
-
-        expect(alarmState.brewingStatus?.alarms).toEqual([activeAlarm]);
-
-        const clearedState = productionReducer(alarmState, ProductionActions.setBrewingStatus(statusWithAlarms([])));
-        expect(clearedState.brewingStatus?.alarms).toEqual([]);
+        const alarmState = productionReducer(initialProductionState, ProductionActions.alarmStateChanged({alarms: [activeAlarm]}));
+        const polledState = productionReducer(alarmState, ProductionActions.setBrewingStatus(status()));
+        expect(polledState.realtimeState.alarms).toEqual([activeAlarm]);
     });
 });
 

@@ -17,16 +17,15 @@ const beer = {
 
 const status = (overrides: Partial<BrewingStatus> = {}): BrewingStatus => ({
     elapsedTime: 120,
-    currentTime: 1783885211,
     process: {state: ProcessState.ACTIVE},
     currentStep: {index: 6, count: 7, phase: ProcessPhase.MASHING_OUT, mode: ProcessMode.HEATING, name: 'Aufheizen für Abmaischen', elapsedTime: 120},
     temperature: {current: 34, target: 45},
-    hardware: {}, waiting: {waitingFor: WaitingFor.NONE, canConfirm: false}, error: {}, alarms: [],
+    waiting: {waitingFor: WaitingFor.NONE, canConfirm: false}, error: {},
     ...overrides
 });
 
 const point = (elapsedTime: number, stepIndex: number, stepPhase: ProcessPhase, stepMode: ProcessMode): TimelineMeasurement => ({
-    elapsedTime, currentTime: 0, Temperature: 34, TargetTemperature: 45,
+    elapsedTime, Temperature: 34, TargetTemperature: 45,
     stepIndex, stepPhase, stepMode
 });
 

@@ -191,7 +191,6 @@ describe('ProcessList current-step mapping', () => {
 describe('ProcessList compact production overview', () => {
     const activeStatus = (index: number, mode: ProcessMode = ProcessMode.TIMER_RUNNING, remainingTime = 1176): BrewingStatus => ({
         elapsedTime: 0,
-        currentTime: 0,
         process: {state: ProcessState.ACTIVE},
         currentStep: {
             index,
@@ -204,10 +203,8 @@ describe('ProcessList compact production overview', () => {
             remainingTime
         },
         temperature: {target: 68},
-        hardware: {},
         waiting: {waitingFor: WaitingFor.NONE, canConfirm: false},
         error: {},
-        alarms: [],
     });
 
     it('uses a single compact active-step heading above the step name and target temperature', () => {

@@ -63,7 +63,7 @@ export class DashboardPage extends React.Component<DashboardPageProps> {
           <div className="dashboard-time"><span>{canShowProgress ? `${formatSeconds(elapsed)} / ${formatSeconds(duration)}` : brewingStatus?.currentStep.mode === ProcessMode.HEATING ? 'Zieltemperatur wird erreicht' : 'Prozess läuft'}</span>{canShowProgress && <strong>{progress} %</strong>}</div>
           <dl className="dashboard-hardware">
             <div><dt>Heizung</dt><dd className={getHeaterDisplayStatus(brewingStatus, this.props.realtimeState, this.props.socketConnected) === 'active' ? 'is-on' : ''}>{getHeaterDisplayStatus(brewingStatus, this.props.realtimeState, this.props.socketConnected) === 'unknown' ? 'UNBEKANNT' : getHeaterDisplayStatus(brewingStatus, this.props.realtimeState, this.props.socketConnected) === 'active' ? 'EIN' : 'AUS'}</dd></div>
-            <div><dt>Rührwerk</dt><dd className={getAgitatorActive(brewingStatus, this.props.realtimeState, this.props.socketConnected) ? 'is-on' : ''}>{getAgitatorActive(brewingStatus, this.props.realtimeState, this.props.socketConnected) === undefined ? 'UNBEKANNT' : getAgitatorActive(brewingStatus, this.props.realtimeState, this.props.socketConnected) ? 'EIN' : 'AUS'}</dd></div>
+            <div><dt>Rührwerk</dt><dd className={getAgitatorActive(this.props.realtimeState, this.props.socketConnected) ? 'is-on' : ''}>{getAgitatorActive(this.props.realtimeState, this.props.socketConnected) === undefined ? 'UNBEKANNT' : getAgitatorActive(this.props.realtimeState, this.props.socketConnected) ? 'EIN' : 'AUS'}</dd></div>
           </dl>
           {brewingStatus?.waiting.canConfirm && <p className="dashboard-warning">Bestätigung erforderlich: {String(brewingStatus.waiting.waitingFor)}</p>}
         </div>}
