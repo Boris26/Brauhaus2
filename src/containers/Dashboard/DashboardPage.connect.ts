@@ -15,6 +15,8 @@ const mapStateToProps = (state: DashboardRootState) => ({
   beerToBrew: state.beerDataReducer.beerToBrew,
   brewingStatus: state.productionReducer.brewingStatus,
   isBackendAvailable: state.productionReducer.isBackenAvailable,
+  realtimeState: state.productionReducer.realtimeState,
+  socketConnected: state.productionReducer.socketConnection.connected,
 });
 
 const mapDispatchToProps = (dispatch: (action: BeerActions.AllBeerActions) => void) => ({

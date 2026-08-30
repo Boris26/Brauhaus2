@@ -56,6 +56,14 @@ describe('productionReducer socket connection', () => {
 });
 
 describe('productionReducer brewingStatus alarms', () => {
+    it('stores replacement realtime snapshots idempotently', () => {
+        const snapshot = {alarms: [{type: AlarmType.EQUIPMENT_ALARM, active: true}]};
+        const active = productionReducer(initialProductionState, ProductionActions.alarmStateChanged(snapshot));
+        const repeated = productionReducer(active, ProductionActions.alarmStateChanged(snapshot));
+        const cleared = productionReducer(repeated, ProductionActions.alarmStateChanged({alarms: []}));
+        expect(repeated.realtimeState.alarms).toEqual(snapshot.alarms);
+        expect(cleared.realtimeState.alarms).toEqual([]);
+    });
     it('replaces the complete status so an ended alarm is removed on the next poll', () => {
         const activeAlarm = {type: AlarmType.EQUIPMENT_ALARM, active: true};
         const alarmState = productionReducer(initialProductionState, ProductionActions.setBrewingStatus(statusWithAlarms([activeAlarm])));

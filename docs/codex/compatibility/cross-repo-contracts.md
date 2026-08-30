@@ -204,3 +204,32 @@ The React PWA now expects the PI/control service to expose Web-Push management b
 - `POST /push/test` sends a test notification to registered subscriptions.
 
 Push notifications are triggered by the control service when `waiting.canConfirm` becomes true for confirmation states such as `MASHING_IN_CONFIRMATION`, `IODINE_TEST`, `MASHING_OUT_CONFIRMATION`, `COOKING_CONFIRMATION`, `BOILING_CONFIRMATION`, or `DECOCTION_CONFIRMATION`. This repository only implements the UI/service-worker side; backend persistence and status-transition detection remain **Needs verification** in the PI/control repository.
+
+## Realtime State Contract v1 (Brauhaus2 #194 / Braumeister #109)
+
+The existing single Socket.IO connection on namespace `/` and path `/socket.io` publishes complete controller snapshots. REST remains rooted at `/api/controller`; `GET /Status/` continues polling process state, steps, temperatures, timing, waiting/confirmation, and `heating.heaterEnabled` every second.
+
+```ts
+// heating-running-changed
+interface HeatingRunningState { running: boolean; }
+
+// agitator-state-changed
+interface AgitatorRealtimeState {
+  mode: 'OFF' | 'CONTINUOUS' | 'AUTOMATIC';
+  paused: boolean;
+  operation: 'STOPPED' | 'CONTINUOUS' | 'INTERVAL';
+  intervalPhase?: string;
+  actualOutputOn: boolean;
+  speedPercent: number;
+  runningMinutes: number;
+  breakMinutes: number;
+}
+
+// alarm-state-changed
+interface AlarmRealtimeState { alarms: Alarm[]; }
+
+// temperature-sensor-state-changed
+interface TemperatureSensorRealtimeState { health: string; sensorId?: string; }
+```
+
+`running` and `actualOutputOn` are physical hardware feedback. An alarm payload replaces the complete alarm collection. Sensor `health` values are controller-owned and must not be synthesized by the UI. While connected, these snapshots take precedence over Phase-A legacy `/Status/` fields. After disconnect, received hardware snapshots are stale/unknown. Until the Phase-B hardware test succeeds, legacy fields and the initial `GET /Agitator/Status` read remain fallbacks. Deployment and reconnect snapshot behavior **Needs verification** with Braumeister #109 and two real clients.

@@ -6,6 +6,7 @@ export interface SocketConnectionStatus {
 }
 
 export type MessageHandler = (event: { event: string; data?: any }) => void;
+const realtimeEvents = ['heating-running-changed', 'agitator-state-changed', 'alarm-state-changed', 'temperature-sensor-state-changed'] as const;
 
 export class WebSocketController {
   private socket: Socket | null = null;
@@ -53,6 +54,9 @@ export class WebSocketController {
         this.messageHandler({ event: 'brew-session-running', data });
       }
     });
+    realtimeEvents.forEach((event) => this.socket!.on(event, (data: unknown) => {
+      this.messageHandler?.({event, data});
+    }));
   }
 
   onMessage(handler: MessageHandler) {

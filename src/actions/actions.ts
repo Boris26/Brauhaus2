@@ -14,6 +14,7 @@ import {RecipeImportRequest, RecipeImportResult} from '../model/RecipeImport';
 import { ThemeName, setTheme as applyAndStoreTheme } from "../utils/theme";
 import { pushViewPath } from "../utils/viewRoutes";
 import { setStoredDebugMode } from "../utils/debugMode";
+import {AgitatorRealtimeState, AlarmRealtimeState, HeatingRunningState, TemperatureSensorRealtimeState} from '../model/RealtimeControllerState';
 
 export namespace BeerActions {
 
@@ -634,6 +635,10 @@ export namespace ProductionActions {
         OVERHEAT_RECEIVED = 'ProductionActions.OVERHEAT_RECEIVED',
         BREW_SESSION_RUNNING_RECEIVED = 'ProductionActions.BREW_SESSION_RUNNING_RECEIVED',
         SOCKET_CONNECTION_CHANGED = 'ProductionActions.SOCKET_CONNECTION_CHANGED',
+        HEATING_RUNNING_CHANGED = 'ProductionActions.HEATING_RUNNING_CHANGED',
+        AGITATOR_STATE_CHANGED = 'ProductionActions.AGITATOR_STATE_CHANGED',
+        ALARM_STATE_CHANGED = 'ProductionActions.ALARM_STATE_CHANGED',
+        TEMPERATURE_SENSOR_STATE_CHANGED = 'ProductionActions.TEMPERATURE_SENSOR_STATE_CHANGED',
     }
 
     export interface SetWaterStatus {
@@ -756,6 +761,10 @@ export namespace ProductionActions {
         readonly type: ActionTypes.SOCKET_CONNECTION_CHANGED;
         payload: { connected: boolean; socketId?: string };
     }
+    export interface HeatingRunningChanged { readonly type: ActionTypes.HEATING_RUNNING_CHANGED; payload: HeatingRunningState; }
+    export interface AgitatorStateChanged { readonly type: ActionTypes.AGITATOR_STATE_CHANGED; payload: AgitatorRealtimeState; }
+    export interface AlarmStateChanged { readonly type: ActionTypes.ALARM_STATE_CHANGED; payload: AlarmRealtimeState; }
+    export interface TemperatureSensorStateChanged { readonly type: ActionTypes.TEMPERATURE_SENSOR_STATE_CHANGED; payload: TemperatureSensorRealtimeState; }
 
     export type AllProductionActions =
         GetTemperatures |
@@ -784,7 +793,7 @@ export namespace ProductionActions {
         WebSocketDisconnect |
         OverheatReceived |
         BrewSessionRunningReceived |
-        SocketConnectionChanged;
+        SocketConnectionChanged | HeatingRunningChanged | AgitatorStateChanged | AlarmStateChanged | TemperatureSensorStateChanged;
 
     export function setWaterStatus(aWaterStatus: WaterStatus): ProductionActions.SetWaterStatus {
         return {
@@ -960,4 +969,8 @@ export namespace ProductionActions {
             payload: {connected, socketId}
         };
     }
+    export const heatingRunningChanged = (payload: HeatingRunningState): HeatingRunningChanged => ({type: ActionTypes.HEATING_RUNNING_CHANGED, payload});
+    export const agitatorStateChanged = (payload: AgitatorRealtimeState): AgitatorStateChanged => ({type: ActionTypes.AGITATOR_STATE_CHANGED, payload});
+    export const alarmStateChanged = (payload: AlarmRealtimeState): AlarmStateChanged => ({type: ActionTypes.ALARM_STATE_CHANGED, payload});
+    export const temperatureSensorStateChanged = (payload: TemperatureSensorRealtimeState): TemperatureSensorStateChanged => ({type: ActionTypes.TEMPERATURE_SENSOR_STATE_CHANGED, payload});
 }

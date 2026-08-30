@@ -13,6 +13,8 @@ import { eBrewState } from '../../enums/eBrewState';
 import { getBrewingStatusLabel, isProcessActive } from '../../utils/brewingStatus/selectors';
 import { buildActiveBrewRows, calculateAdditionalStats, calculateCareHints, calculateConsumption, calculateDashboardKpis, calculateRecipeHistory, formatDashboardQuantity, safeNumber } from '../../utils/Dashboard/dashboardCalculations';
 import './DashboardPage.css';
+import {RealtimeControllerState} from '../../model/RealtimeControllerState';
+import {getAgitatorActive, getHeaterDisplayStatus} from '../Production/utils/productionStatus';
 
 interface DashboardPageProps {
   beers?: Beer[];
@@ -21,6 +23,8 @@ interface DashboardPageProps {
   beerToBrew?: Beer;
   brewingStatus?: BrewingStatus;
   isBackendAvailable: boolean;
+  realtimeState?: RealtimeControllerState;
+  socketConnected?: boolean;
   getBeers: (isFetching: boolean) => void;
   getFinishedBrews: (isFetching: boolean) => void;
 }
@@ -58,8 +62,8 @@ export class DashboardPage extends React.Component<DashboardPageProps> {
           <div className="dashboard-progress" aria-label={`Fortschritt ${progress} Prozent`}><span style={{ width: `${progress}%` }} /></div>
           <div className="dashboard-time"><span>{canShowProgress ? `${formatSeconds(elapsed)} / ${formatSeconds(duration)}` : brewingStatus?.currentStep.mode === ProcessMode.HEATING ? 'Zieltemperatur wird erreicht' : 'Prozess läuft'}</span>{canShowProgress && <strong>{progress} %</strong>}</div>
           <dl className="dashboard-hardware">
-            <div><dt>Heizung</dt><dd className={brewingStatus?.hardware.heater === 'ON' ? 'is-on' : ''}>{brewingStatus?.hardware.heater === 'ON' ? 'EIN' : 'AUS'}</dd></div>
-            <div><dt>Rührwerk</dt><dd className={brewingStatus?.hardware.agitator === 'ON' ? 'is-on' : ''}>{brewingStatus?.hardware.agitator === 'ON' ? 'EIN' : 'AUS'}</dd></div>
+            <div><dt>Heizung</dt><dd className={getHeaterDisplayStatus(brewingStatus, this.props.realtimeState, this.props.socketConnected) === 'active' ? 'is-on' : ''}>{getHeaterDisplayStatus(brewingStatus, this.props.realtimeState, this.props.socketConnected) === 'unknown' ? 'UNBEKANNT' : getHeaterDisplayStatus(brewingStatus, this.props.realtimeState, this.props.socketConnected) === 'active' ? 'EIN' : 'AUS'}</dd></div>
+            <div><dt>Rührwerk</dt><dd className={getAgitatorActive(brewingStatus, this.props.realtimeState, this.props.socketConnected) ? 'is-on' : ''}>{getAgitatorActive(brewingStatus, this.props.realtimeState, this.props.socketConnected) === undefined ? 'UNBEKANNT' : getAgitatorActive(brewingStatus, this.props.realtimeState, this.props.socketConnected) ? 'EIN' : 'AUS'}</dd></div>
           </dl>
           {brewingStatus?.waiting.canConfirm && <p className="dashboard-warning">Bestätigung erforderlich: {String(brewingStatus.waiting.waitingFor)}</p>}
         </div>}

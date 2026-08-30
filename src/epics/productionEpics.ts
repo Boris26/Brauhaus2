@@ -15,6 +15,7 @@ import {BeerRecipeScaler} from "../utils/BeerScaler/ScalingBeerRecipe";
 import {BrewSession} from "../model/BrewSession";
 import {Beer} from "../model/Beer";
 import type {RootState} from "../reducers/rootReducer";
+import {AgitatorRealtimeState, AlarmRealtimeState, HeatingRunningState, TemperatureSensorRealtimeState} from '../model/RealtimeControllerState';
 
 const BREWING_STATUS_POLL_INTERVAL = 1000;
 export const BREWING_STATUS_REQUEST_TIMEOUT = 8000;
@@ -23,14 +24,19 @@ export const WATER_FILLING_MAX_DURATION = 30 * 60 * 1000;
 const WS_URL = (typeof BaseURL !== 'undefined' ? BaseURL : '').replace(/^http/, 'ws');
 let wsController: WebSocketController | null = null;
 
-export const mapControlSocketEvent = (event: {event: string; data?: any}) => {
+export const mapControlSocketEvent = (event: {event: string; data?: unknown}) => {
   switch (event.event) {
     case 'overheat':
       return ProductionActions.overheatReceived(event.data);
     case 'brew-session-running':
       return ProductionActions.brewSessionRunningReceived();
     case 'connection-status':
-      return ProductionActions.socketConnectionChanged(event.data.connected, event.data.socketId);
+      const connection = event.data as {connected: boolean; socketId?: string};
+      return ProductionActions.socketConnectionChanged(connection.connected, connection.socketId);
+    case 'heating-running-changed': return ProductionActions.heatingRunningChanged(event.data as HeatingRunningState);
+    case 'agitator-state-changed': return ProductionActions.agitatorStateChanged(event.data as AgitatorRealtimeState);
+    case 'alarm-state-changed': return ProductionActions.alarmStateChanged(event.data as AlarmRealtimeState);
+    case 'temperature-sensor-state-changed': return ProductionActions.temperatureSensorStateChanged(event.data as TemperatureSensorRealtimeState);
     default:
       return undefined;
   }

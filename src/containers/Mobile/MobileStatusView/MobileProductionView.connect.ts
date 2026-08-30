@@ -10,6 +10,8 @@ const mapStateToProps = (state: any) => ({
     isConfirmPending: state.productionReducer.isConfirmPending,
     confirmError: state.productionReducer.confirmError,
     isBrewingStatusStale: state.productionReducer.isBrewingStatusStale
+    ,realtimeState: state.productionReducer.realtimeState
+    ,socketConnected: state.productionReducer.socketConnection.connected
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
