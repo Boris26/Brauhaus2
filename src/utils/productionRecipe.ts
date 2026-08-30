@@ -3,6 +3,7 @@ import { BrewingData } from '../model/BrewingData';
 import { RestExecutionMode } from '../enums/eRestExecutionMode';
 import { ProcedureType } from '../enums/eProcedureType';
 import { normalizeMashPlan } from '../containers/DatabaseOverview/fermentationDefaults';
+import { BeerRecipeScaler } from './BeerScaler/ScalingBeerRecipe';
 
 const isValidTemperature = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0;
 const isValidTimedDuration = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0;
@@ -89,6 +90,9 @@ export function mapBeerToBrewingData(beer: Beer): ProductionRecipeNormalizationR
   return {
     ok: true,
     brewingData: {
+      beerId: beer.id,
+      plannedVolume: beer.plannedVolume ?? BeerRecipeScaler.getReferenceVolume(beer),
+      plannedBrewhouseEfficiency: beer.plannedBrewhouseEfficiency ?? BeerRecipeScaler.getReferenceEfficiency(beer),
       MashdownTemperature: mashdownTemperature,
       MashupTemperature: mashupTemperature,
       CookingTemperature: cookingTemperature,

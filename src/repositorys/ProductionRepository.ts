@@ -12,6 +12,7 @@ import {WaterStatus} from "../components/Controlls/WaterControll/WaterControl";
 import {BackendAvailable} from "../reducers/productionReducer";
 import {IDiagnosticResponse, normalizeDiagnosticVersion} from "../model/DiagnosticResponse";
 import {AgitatorConfig, AgitatorDetailStatus} from "../model/Agitator";
+import {BrewSession} from "../model/BrewSession";
 
 const DEFAULT_WATER_STATUS: WaterStatus = { filledLiters: 0, targetLiters: 0, openClose: false };
 const DEFAULT_CONTROL_REQUEST_TIMEOUT = 8000;
@@ -60,6 +61,11 @@ const normalizeWaterStatus = (aValue: unknown): WaterStatus => {
 };
 
 export class ProductionRepository {
+
+    static async getBrewSession(): Promise<BrewSession> {
+        const response = await axios.get<BrewSession>(`${BaseURL}/BrewSession`);
+        return response.data;
+    }
 
     static async getAgitatorStatus(): Promise<AgitatorDetailStatus> {
         const response = await axios.get<AgitatorDetailStatus>(`${BaseURL}/Agitator/Status`);

@@ -104,6 +104,17 @@ describe('ProductionRepository API method/path usage', () => {
     expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining('/Available/'));
   });
 
+  it('loads the typed BrewSession from GET /BrewSession and propagates failures', async () => {
+    const session = {beerId: 'beer-1', plannedVolume: 25, plannedBrewhouseEfficiency: 61};
+    mockedAxios.get.mockResolvedValueOnce({status: 200, data: session} as any);
+    await expect(ProductionRepository.getBrewSession()).resolves.toEqual(session);
+    expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining('/BrewSession'));
+
+    const error = new Error('HTTP 404');
+    mockedAxios.get.mockRejectedValueOnce(error);
+    await expect(ProductionRepository.getBrewSession()).rejects.toBe(error);
+  });
+
   it('normalizes alarms from the brewing status response', async () => {
     const alarms = [{type: 'EQUIPMENT_ALARM', active: true}];
     mockedAxios.get.mockResolvedValueOnce({status: 200, data: {alarms}, statusText: 'OK'} as any);
@@ -127,6 +138,7 @@ describe('ProductionRepository API method/path usage', () => {
     mockedAxios.post.mockResolvedValueOnce({ status: 201 } as any);
 
     const result = await ProductionRepository.sendBrewingData({
+      beerId: 'beer-1', plannedVolume: 20, plannedBrewhouseEfficiency: 60,
       MashdownTemperature: 76,
       MashupTemperature: 52,
       CookingTemperature: 100,
@@ -144,6 +156,7 @@ describe('ProductionRepository API method/path usage', () => {
   it('keeps executionMode in recipe payload', async () => {
     mockedAxios.post.mockResolvedValueOnce({ status: 201 } as any);
     await ProductionRepository.sendBrewingData({
+      beerId: 'beer-1', plannedVolume: 20, plannedBrewhouseEfficiency: 60,
       MashdownTemperature: 76,
       MashupTemperature: 52,
       CookingTemperature: 100,
