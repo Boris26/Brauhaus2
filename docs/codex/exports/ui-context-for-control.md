@@ -34,3 +34,5 @@ Needs verification in control repository: exact operational meaning of `WaterSta
 See `docs/codex/compatibility/final-ui-control-compatibility-report.md` for the final UI ↔ PI control contract. Resolved items: `/Available/` is UI-facing availability while `/` remains preserved, both `/WaterStatus` and `/WaterStatus/` are supported with object/default shape, `TurnOn`/`TurnOff` no-value aliases are valid, value-bearing command aliases remain preserved, `Wait` is status-only and `/Confirm/Wait` is rejected by PI, and `currentTime` is a Unix timestamp not used for UI progress.
 
 Remaining open items: exact operational meaning of `WaterStatus.filledLiters / WaterStatus.targetLiters`, long-term stability of `/temperatur/0`, socket.io `overheat` payload shape, and initial empty `Status` behavior.
+
+The shared Socket.IO connection also accepts `brew-session-running` with an optional payload. The UI currently maps it only to `ProductionActions.BREW_SESSION_RUNNING_RECEIVED`; it does not infer BrewSession fields or trigger REST synchronization, polling, or navigation.
