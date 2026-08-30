@@ -97,7 +97,7 @@ describe('productionReducer confirm lifecycle', () => {
     });
 
     it('clears pending on failure while preserving the current waiting status', () => {
-        const waitingStatus = {...statusWithAlarms([]), waiting: {waitingFor: WaitingFor.IODINE_TEST, canConfirm: true}};
+        const waitingStatus = {...status(), waiting: {waitingFor: WaitingFor.IODINE_TEST, canConfirm: true}};
         const waiting = productionReducer(initialProductionState, ProductionActions.setBrewingStatus(waitingStatus));
         const pending = productionReducer(waiting, ProductionActions.confirm(ConfirmStates.IODINE));
         const failed = productionReducer(pending, ProductionActions.confirmFailure('HTTP 500'));
@@ -120,11 +120,11 @@ describe('productionReducer next-step lifecycle', () => {
 
 describe('productionReducer stale status', () => {
     it('marks an existing status stale while offline and clears stale on a fresh status', () => {
-        const withStatus = productionReducer(initialProductionState, ProductionActions.setBrewingStatus(statusWithAlarms([])));
+        const withStatus = productionReducer(initialProductionState, ProductionActions.setBrewingStatus(status()));
         const offline = productionReducer(withStatus, ProductionActions.isBackenAvailable({isBackenAvailable: false, statusText: 'offline'}));
         expect(offline.brewingStatus).toBe(withStatus.brewingStatus);
         expect(offline.isBrewingStatusStale).toBe(true);
-        const refreshed = productionReducer(offline, ProductionActions.setBrewingStatus(statusWithAlarms([])));
+        const refreshed = productionReducer(offline, ProductionActions.setBrewingStatus(status()));
         expect(refreshed.isBrewingStatusStale).toBe(false);
     });
 });
