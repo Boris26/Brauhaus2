@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 
-export type MessageHandler = (event: { event: string; data: any }) => void;
+export type MessageHandler = (event: { event: string; data?: any }) => void;
 
 export class WebSocketController {
   private socket: Socket | null = null;
@@ -17,6 +17,11 @@ export class WebSocketController {
     this.socket.on('overheat', (data: any) => {
       if (this.messageHandler) {
         this.messageHandler({ event: 'overheat', data });
+      }
+    });
+    this.socket.on('brew-session-running', (data?: any) => {
+      if (this.messageHandler) {
+        this.messageHandler({ event: 'brew-session-running', data });
       }
     });
   }

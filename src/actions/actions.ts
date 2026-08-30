@@ -632,6 +632,7 @@ export namespace ProductionActions {
         WEBSOCKET_CONNECT = 'ProductionActions.WEBSOCKET_CONNECT',
         WEBSOCKET_DISCONNECT = 'ProductionActions.WEBSOCKET_DISCONNECT',
         OVERHEAT_RECEIVED = 'ProductionActions.OVERHEAT_RECEIVED',
+        BREW_SESSION_RUNNING_RECEIVED = 'ProductionActions.BREW_SESSION_RUNNING_RECEIVED',
     }
 
     export interface SetWaterStatus {
@@ -747,6 +748,9 @@ export namespace ProductionActions {
             data: any;
         };
     }
+    export interface BrewSessionRunningReceived {
+        readonly type: ActionTypes.BREW_SESSION_RUNNING_RECEIVED;
+    }
 
     export type AllProductionActions =
         GetTemperatures |
@@ -773,7 +777,8 @@ export namespace ProductionActions {
         NextProcedureStepFailure |
         WebSocketConnect |
         WebSocketDisconnect |
-        OverheatReceived;
+        OverheatReceived |
+        BrewSessionRunningReceived;
 
     export function setWaterStatus(aWaterStatus: WaterStatus): ProductionActions.SetWaterStatus {
         return {
@@ -934,6 +939,12 @@ export namespace ProductionActions {
         return {
             type: ActionTypes.OVERHEAT_RECEIVED,
             payload: { data }
+        };
+    }
+
+    export function brewSessionRunningReceived(): BrewSessionRunningReceived {
+        return {
+            type: ActionTypes.BREW_SESSION_RUNNING_RECEIVED
         };
     }
 }

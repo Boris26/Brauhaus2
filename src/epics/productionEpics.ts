@@ -18,9 +18,16 @@ export const WATER_FILLING_MAX_DURATION = 30 * 60 * 1000;
 const WS_URL = (typeof BaseURL !== 'undefined' ? BaseURL : '').replace(/^http/, 'ws');
 let wsController: WebSocketController | null = null;
 
-export const mapControlSocketEvent = (event: {event: string; data: any}) => event.event === 'overheat'
-  ? ProductionActions.overheatReceived(event.data)
-  : undefined;
+export const mapControlSocketEvent = (event: {event: string; data?: any}) => {
+  switch (event.event) {
+    case 'overheat':
+      return ProductionActions.overheatReceived(event.data);
+    case 'brew-session-running':
+      return ProductionActions.brewSessionRunningReceived();
+    default:
+      return undefined;
+  }
+};
 
 export const getTemperaturesEpic$ = (action$: any) =>
     action$.pipe(

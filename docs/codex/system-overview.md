@@ -30,7 +30,7 @@ The UI expects a brewing-control service at `BaseURL`/`CommandsURL`/`ConfirmURL`
 - Starting brewing and advancing workflow steps.
 - Hardware commands for water filling, heater, agitator speed, and agitator interval.
 - Confirmation commands for waiting states.
-- Socket.io `overheat` event.
+- Socket.io `overheat` and payload-optional `brew-session-running` events. The latter is currently only forwarded as a technical Redux signal.
 
 Needs verification in PI/control repository: exact command syntax, status schema, whether trailing slashes are required, whether temperature alter `0` is fixed, socket.io payload shape, safety behavior, and units.
 
@@ -54,4 +54,3 @@ No `.env`-based URL configuration was found in inspected source. Changing deploy
 5. Production view maps the selected recipe into `BrewingData`, sends it to control, starts brewing, then polls status every second until terminal state.
 6. Runtime status updates drive progress display, confirm dialogs, timeline grouping, hop-addition reminders, finish dialog, and saved finished-brew records.
 7. Finished brew completion stores collected status samples as JSON in `FinishedBrew.brewValues`.
-
