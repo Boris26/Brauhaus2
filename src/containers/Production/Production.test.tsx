@@ -188,7 +188,7 @@ describe('Production agitator controller integration', () => {
     it('keeps confirmed config when a realtime snapshot updates runtime only', async () => {
         const {props, rerender} = renderProduction();
         await screen.findByText('36 %');
-        rerender(<Production {...props} socketConnected={true} realtimeState={{alarms: [], alarmsReceived: true, agitator: {mode: 'AUTOMATIC', paused: true, operation: 'INTERVAL', intervalPhase: 'BREAK', actualOutputOn: false}}} />);
+        rerender(<Production {...props} socketConnected={true} realtimeState={{alarms: [], alarmsReceived: true, agitator: {mode: 'AUTOMATIC', paused: true, operation: 'INTERVAL', intervalPhase: 'BREAK', actualOutputOn: false, speedPercent: 36, runningMinutes: 2, breakMinutes: 7}}} />);
         expect(await screen.findByText('36 %')).toBeInTheDocument();
         expect(screen.getByRole('switch', {name: 'Automatik'})).toBeChecked();
         expect(screen.getByRole('button', {name: 'Rührwerk fortsetzen'})).toBeInTheDocument();
@@ -199,10 +199,10 @@ describe('Production agitator controller integration', () => {
         const {props, rerender} = renderProduction();
         await screen.findByText('36 %');
         (ProductionRepository.setAgitatorConfig as jest.Mock).mockClear();
-        rerender(<Production {...props} socketConnected={true} realtimeState={{alarms: [], alarmsReceived: true, agitator: {mode: 'CONTINUOUS', paused: false, operation: 'CONTINUOUS', intervalPhase: 'IDLE', actualOutputOn: true}}} />);
+        rerender(<Production {...props} socketConnected={true} realtimeState={{alarms: [], alarmsReceived: true, agitator: {mode: 'CONTINUOUS', paused: false, operation: 'CONTINUOUS', intervalPhase: 'IDLE', actualOutputOn: true, speedPercent: 36, runningMinutes: 2, breakMinutes: 7}}} />);
         expect(await screen.findByRole('switch', {name: 'Durchgehend rühren'})).toBeChecked();
         expect(screen.getByRole('switch', {name: 'Automatik'})).not.toBeChecked();
-        rerender(<Production {...props} socketConnected={true} realtimeState={{alarms: [], alarmsReceived: true, agitator: {mode: 'OFF', paused: false, operation: 'STOPPED', intervalPhase: 'IDLE', actualOutputOn: false}}} />);
+        rerender(<Production {...props} socketConnected={true} realtimeState={{alarms: [], alarmsReceived: true, agitator: {mode: 'OFF', paused: false, operation: 'STOPPED', intervalPhase: 'IDLE', actualOutputOn: false, speedPercent: 36, runningMinutes: 2, breakMinutes: 7}}} />);
         await waitFor(() => expect(screen.getByRole('switch', {name: 'Durchgehend rühren'})).not.toBeChecked());
         expect(screen.getByRole('switch', {name: 'Automatik'})).not.toBeChecked();
         expect(ProductionRepository.setAgitatorConfig).not.toHaveBeenCalled();
