@@ -24,6 +24,22 @@ describe('WebSocketController', () => {
     socket.id = undefined;
   });
 
+  it('uses the current origin and default namespace for a relative REST prefix', () => {
+    const controller = new WebSocketController('/api/controller');
+
+    controller.connect();
+
+    expect(io).toHaveBeenCalledWith({path: '/socket.io'});
+  });
+
+  it('keeps an explicit absolute socket server URL while using the standard transport path', () => {
+    const controller = new WebSocketController('ws://controller');
+
+    controller.connect();
+
+    expect(io).toHaveBeenCalledWith('ws://controller', {path: '/socket.io'});
+  });
+
   it('registers overheat and brew-session-running on the existing socket connection', () => {
     const controller = new WebSocketController('ws://controller');
 
