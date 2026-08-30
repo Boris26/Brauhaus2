@@ -125,3 +125,7 @@ Additional controller API endpoints expected by the PWA:
 | POST | `/push/test` | Sends a test notification to registered subscriptions |
 
 These paths are consumed through the existing relative UI base URL `/api/controller`. Backend implementation, durable storage, and process-state event detection are **Needs verification** in the PI/control repository.
+
+### Realtime State Contract v1
+
+The exact events `heating-running-changed`, `agitator-state-changed`, `alarm-state-changed`, and `temperature-sensor-state-changed` use the existing shared connection. Payloads are respectively `{ running: boolean }`; the complete agitator snapshot with `mode: OFF|CONTINUOUS|AUTOMATIC`, `operation: STOPPED|CONTINUOUS|INTERVAL`, `paused`, optional `intervalPhase`, `actualOutputOn`, `speedPercent`, `runningMinutes`, and `breakMinutes`; `{ alarms: Alarm[] }`; and `{ health: string, sensorId?: string }`. Alarm arrays replace rather than merge state. Socket disconnect makes received hardware state stale. Braumeister #109 reconnect snapshots **Needs verification** on hardware.

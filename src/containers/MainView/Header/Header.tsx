@@ -12,6 +12,8 @@ import {getNavigationViews} from '../../../utils/viewConfig';
 import {UiMode} from '../../../enums/eUiMode';
 import ModalDialog, {DialogType} from '../../../components/ModalDialog/ModalDialog';
 import {SystemRepository} from '../../../repositorys/SystemRepository';
+import {RealtimeControllerState} from '../../../model/RealtimeControllerState';
+import {getAlarmSnapshot} from '../../Production/utils/productionStatus';
 
 
 
@@ -22,6 +24,8 @@ interface HeaderProps {
     removeAllMessages: () => void;
     backendStatus: boolean;
     brewingStatus?: BrewingStatus;
+    realtimeState?: RealtimeControllerState;
+    socketConnected?: boolean;
 }
 
 interface HeaderState {
@@ -107,7 +111,7 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
 
     render() {
        const { messages = [] , removeAllMessages, backendStatus, brewingStatus } = this.props; // Default-Wert für messages ist ein leeres Array
-       const equipmentAlarmText = isEquipmentAlarmActive(brewingStatus) ? equipmentAlarmDisplay.headerText : undefined;
+       const equipmentAlarmText = isEquipmentAlarmActive(getAlarmSnapshot(brewingStatus, this.props.realtimeState, this.props.socketConnected)) ? equipmentAlarmDisplay.headerText : undefined;
        const uiMode = getUiMode();
        const navigationViews = getNavigationViews(uiMode);
        const isVisible = (view: Views) => navigationViews.includes(view);

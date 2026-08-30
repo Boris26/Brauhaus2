@@ -5,6 +5,7 @@ import { BrewingStatus } from '../model/BrewingStatus';
 import { isProcessAborted, isProcessFinished, isProcessIdle, isProcessInError } from '../utils/brewingStatus/selectors';
 import { ConfirmStates } from '../enums/eConfirmStates';
 import { WaterStatus } from '../components/Controlls/WaterControll/WaterControl';
+import {RealtimeControllerState} from '../model/RealtimeControllerState';
 
 export interface BackendAvailable {
     isBackenAvailable: boolean;
@@ -36,6 +37,7 @@ export interface ProductionReducerState {
         connected: boolean;
         socketId?: string;
     };
+    realtimeState: RealtimeControllerState;
 }
 
 export const initialProductionState: ProductionReducerState = {
@@ -58,7 +60,8 @@ export const initialProductionState: ProductionReducerState = {
     isNextProcedureStepPending: false,
     nextProcedureStepError: undefined,
     isBrewingStatusStale: false,
-    socketConnection: {connected: false}
+    socketConnection: {connected: false},
+    realtimeState: {alarms: [], alarmsReceived: false}
 };
 
 const productionReducer = (
@@ -157,6 +160,14 @@ const productionReducer = (
                 }
             };
         }
+        case ProductionActions.ActionTypes.HEATING_RUNNING_CHANGED:
+            return {...aState, realtimeState: {...aState.realtimeState, heatingRunning: aAction.payload.running}};
+        case ProductionActions.ActionTypes.AGITATOR_STATE_CHANGED:
+            return {...aState, realtimeState: {...aState.realtimeState, agitator: aAction.payload}};
+        case ProductionActions.ActionTypes.ALARM_STATE_CHANGED:
+            return {...aState, realtimeState: {...aState.realtimeState, alarms: aAction.payload.alarms, alarmsReceived: true}};
+        case ProductionActions.ActionTypes.TEMPERATURE_SENSOR_STATE_CHANGED:
+            return {...aState, realtimeState: {...aState.realtimeState, temperatureSensor: aAction.payload}};
         case ProductionActions.ActionTypes.WEBSOCKET_DISCONNECT: {
             return {...aState, socketConnection: {connected: false}};
         }

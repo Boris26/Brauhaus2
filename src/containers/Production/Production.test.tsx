@@ -205,7 +205,7 @@ describe('Production agitator controller integration', () => {
         rerender(<Production {...props} brewingStatus={{...createBrewingStatus(), agitator: {mode: 'CONTINUOUS', paused: false, operation: 'CONTINUOUS', intervalPhase: 'IDLE', actualOutputOn: true}}} />);
         expect(await screen.findByRole('switch', {name: 'Durchgehend rühren'})).toBeChecked();
         expect(screen.getByRole('switch', {name: 'Automatik'})).not.toBeChecked();
-        rerender(<Production {...props} brewingStatus={{...createBrewingStatus(), agitator: {mode: 'OFF', paused: false, operation: 'OFF', intervalPhase: 'IDLE', actualOutputOn: false}}} />);
+        rerender(<Production {...props} brewingStatus={{...createBrewingStatus(), agitator: {mode: 'OFF', paused: false, operation: 'STOPPED', intervalPhase: 'IDLE', actualOutputOn: false}}} />);
         await waitFor(() => expect(screen.getByRole('switch', {name: 'Durchgehend rühren'})).not.toBeChecked());
         expect(screen.getByRole('switch', {name: 'Automatik'})).not.toBeChecked();
         expect(ProductionRepository.setAgitatorConfig).not.toHaveBeenCalled();

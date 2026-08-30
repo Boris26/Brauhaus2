@@ -49,6 +49,10 @@ describe('WebSocketController', () => {
     expect(io).toHaveBeenCalledTimes(1);
     expect(socket.on).toHaveBeenCalledWith('overheat', expect.any(Function));
     expect(socket.on).toHaveBeenCalledWith('brew-session-running', expect.any(Function));
+    expect(socket.on).toHaveBeenCalledWith('heating-running-changed', expect.any(Function));
+    expect(socket.on).toHaveBeenCalledWith('agitator-state-changed', expect.any(Function));
+    expect(socket.on).toHaveBeenCalledWith('alarm-state-changed', expect.any(Function));
+    expect(socket.on).toHaveBeenCalledWith('temperature-sensor-state-changed', expect.any(Function));
   });
 
   it('forwards brew-session-running with its payload to the message handler', () => {

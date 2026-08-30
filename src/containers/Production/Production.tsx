@@ -30,7 +30,7 @@ import {isBrewingProcessActive, isProcessActive} from "../../utils/brewingStatus
 import {getVesselContentType} from "../../utils/brewingStatus/vesselContent";
 import {calculateHopSchedule, getDueHopAddition, HopAddition} from "./utils/hopSchedule";
 import {getRemainingSecondsFromStatus, shouldCountdownLocally, tickRemainingSeconds} from "./utils/productionCountdown";
-import {getHeaterDisplayLabel, getHeaterDisplayStatus, isAgitatorActive, isControllerAvailable as getIsControllerAvailable, isHeaterActive} from "./utils/productionStatus";
+import {getAlarmSnapshot, getAgitatorActive, getHeaterDisplayLabel, getHeaterDisplayStatus, isControllerAvailable as getIsControllerAvailable} from "./utils/productionStatus";
 import {RecipeWaterFill, RecipeWaterFillStatus} from "./waterFill/recipeWaterFill.types";
 import {completeWaterFill, createInitialRecipeWaterFillStatus, failWaterFill, includePreparedSpargeAfterMashingOut, markValveOpened, resetWaterFill, startManualWaterFill, startWaterFill} from "./waterFill/recipeWaterFillState";
 import {ProductionDialogs} from "./components/ProductionDialogs";
@@ -41,6 +41,7 @@ import {getConfirmationRequestViewModel} from '../../utils/brewingStatus/selecto
 import {ConfirmStates} from '../../enums/eConfirmStates';
 import {AgitatorConfig, AgitatorMode, AgitatorRuntimeStatus} from '../../model/Agitator';
 import {ProductionRepository} from '../../repositorys/ProductionRepository';
+import {RealtimeControllerState} from '../../model/RealtimeControllerState';
 
 export const AGITATOR_SPEED_DEBOUNCE_MS = 300;
 
@@ -77,6 +78,8 @@ export interface ProductionProps {
     isConfirmPending: boolean;
     confirmError?: string;
     debug: boolean;
+    realtimeState?: RealtimeControllerState;
+    socketConnected?: boolean;
 }
 
 interface ProductionState {
@@ -181,6 +184,9 @@ export class Production extends React.Component<ProductionProps, ProductionState
                 this.mergeAgitatorPoll(brewingStatus.agitator);
             }
         }
+        if (prevProps.realtimeState?.agitator !== this.props.realtimeState?.agitator && this.props.socketConnected && this.props.realtimeState?.agitator) {
+            this.mergeAgitatorPoll(this.props.realtimeState.agitator);
+        }
 
         if (getIsControllerAvailable(prevProps.isBackenAvailable) && !this.isControllerAvailable()) {
             this.clearAgitatorSpeedDebounce();
@@ -189,7 +195,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
             this.loadAgitatorStatus();
         }
 
-        if (isEquipmentAlarmActive(prevProps.brewingStatus) && !isEquipmentAlarmActive(brewingStatus)) {
+        if (isEquipmentAlarmActive(getAlarmSnapshot(prevProps.brewingStatus, prevProps.realtimeState, prevProps.socketConnected)) && !isEquipmentAlarmActive(getAlarmSnapshot(brewingStatus, this.props.realtimeState, this.props.socketConnected))) {
             this.setState({equipmentAlarmDismissed: false});
         }
 
@@ -593,15 +599,15 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     renderFlames() {
         const {brewingStatus} = this.props;
-        const heaterStatus = getHeaterDisplayStatus(brewingStatus);
-        const heaterLabel = this.props.isBrewingStatusStale ? 'Heizungsstatus unbekannt' : getHeaterDisplayLabel(brewingStatus);
+        const heaterStatus = getHeaterDisplayStatus(brewingStatus, this.props.realtimeState, this.props.socketConnected);
+        const heaterLabel = this.props.isBrewingStatusStale ? 'Heizungsstatus unbekannt' : getHeaterDisplayLabel(brewingStatus, this.props.realtimeState, this.props.socketConnected);
 
         return (
             <div className='Flame'>
               <span className={`heater-status heater-status--${this.props.isBrewingStatusStale ? 'unknown' : heaterStatus}`}>
                   {heaterLabel}
               </span>
-              {!this.props.isBrewingStatusStale && isHeaterActive(brewingStatus) && (
+              {!this.props.isBrewingStatusStale && heaterStatus === 'active' && (
                     <div className="flame-strip" aria-label="Heizung aktiv">
                         <Flame/>
                         <Flame/>
@@ -755,7 +761,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
             <div className="Water">
                 <WaterControl filledLiters={displayedWaterLiters} label={this.getDisplayedWaterLabel()} agitatorSpeed={currentAgitatorSpeed}
-                              agitatorState={isAgitatorActive(brewingStatus)}
+                              agitatorState={getAgitatorActive(brewingStatus, this.props.realtimeState, this.props.socketConnected) === true}
                               contentType={getVesselContentType(brewingStatus)}></WaterControl>
 
             </div>);
@@ -825,7 +831,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     render() {
         const {showFinishDialog} = this.state;
-        const equipmentAlarmActive = isEquipmentAlarmActive(this.props.brewingStatus);
+        const equipmentAlarmActive = isEquipmentAlarmActive(getAlarmSnapshot(this.props.brewingStatus, this.props.realtimeState, this.props.socketConnected));
         return (
             <div className="containerProduction ">
                 {this.props.isBrewingStatusStale && <div role="alert" className="production-stale-status">Controller nicht erreichbar – angezeigter Braustatus ist veraltet.</div>}

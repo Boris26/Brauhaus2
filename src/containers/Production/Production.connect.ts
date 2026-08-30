@@ -52,6 +52,8 @@ const mapStateToProps = (state: RootState) => (
         isWaterFillingSuccessful: state.productionReducer.isWaterFillingSuccessful,
         isToggleAgitatorSuccess: state.productionReducer.isToggleAgitatorSuccess,
         brewingStatus: state.productionReducer.brewingStatus,
+        realtimeState: state.productionReducer.realtimeState,
+        socketConnected: state.productionReducer.socketConnection.connected,
         isBackenAvailable: state.productionReducer.isBackenAvailable,
         waterStatus: state.productionReducer.waterStatus,
         isPollingRunning: state.productionReducer.isPollingRunning,

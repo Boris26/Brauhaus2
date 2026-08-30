@@ -252,3 +252,7 @@ No unique event ID or monotonic sequence number is generated for statuses. `curr
 - `hardware.heater === 'ON'` and `hardware.agitator === 'ON'` are meaningful for display.
 
 Needs verification in control repository: socket.io event shape, initial empty `Status` behavior, and whether `/temperatur/0` is the intended long-term stable temperature read route.
+
+## Realtime State Contract v1
+
+Brauhaus2 #194 consumes Braumeister #109 on the existing Socket.IO connection: `heating-running-changed`, `agitator-state-changed`, `alarm-state-changed`, and `temperature-sensor-state-changed`. Agitator `operation` is exactly `STOPPED | CONTINUOUS | INTERVAL` (`OFF` is only a mode), and `actualOutputOn` is physical output truth. Alarm snapshots replace the entire alarm list. The UI retains `overheat` and `brew-session-running`, retains the one-second process poll, and treats realtime state as stale after disconnect. End-to-end reconnect and two-client behavior **Needs verification** on real hardware.

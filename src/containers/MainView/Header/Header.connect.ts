@@ -9,6 +9,8 @@ const mapStateToProps = (state: any) => ({
     messages: state.applicationReducer.message,
     backendStatus: state.productionReducer.isBackenAvailable,
     brewingStatus: state.productionReducer.brewingStatus,
+    realtimeState: state.productionReducer.realtimeState,
+    socketConnected: state.productionReducer.socketConnection.connected,
 });
 
 const mapDispatchToProps = (dispatch: any) => ({

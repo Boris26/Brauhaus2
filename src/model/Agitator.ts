@@ -1,5 +1,5 @@
 export type AgitatorMode = 'OFF' | 'CONTINUOUS' | 'AUTOMATIC';
-export type AgitatorOperation = 'OFF' | 'CONTINUOUS' | 'INTERVAL';
+export type AgitatorOperation = 'STOPPED' | 'CONTINUOUS' | 'INTERVAL';
 
 export interface AgitatorConfig {
     mode: AgitatorMode;

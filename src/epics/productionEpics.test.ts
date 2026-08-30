@@ -187,6 +187,16 @@ describe('sendBrewingDataEpic$ failures', () => {
 });
 
 describe('mapControlSocketEvent', () => {
+  it('maps every Realtime State Contract v1 event without changing its snapshot', () => {
+    const heating = {running: true};
+    const agitator = {mode: 'AUTOMATIC' as const, paused: false, operation: 'INTERVAL' as const, intervalPhase: 'RUNNING', actualOutputOn: true, speedPercent: 42, runningMinutes: 3, breakMinutes: 2};
+    const alarm = {alarms: [{type: 'EQUIPMENT_ALARM', active: true}]};
+    const sensor = {health: 'OK', sensorId: '28-1'};
+    expect(mapControlSocketEvent({event: 'heating-running-changed', data: heating})).toEqual(ProductionActions.heatingRunningChanged(heating));
+    expect(mapControlSocketEvent({event: 'agitator-state-changed', data: agitator})).toEqual(ProductionActions.agitatorStateChanged(agitator));
+    expect(mapControlSocketEvent({event: 'alarm-state-changed', data: alarm})).toEqual(ProductionActions.alarmStateChanged(alarm));
+    expect(mapControlSocketEvent({event: 'temperature-sensor-state-changed', data: sensor})).toEqual(ProductionActions.temperatureSensorStateChanged(sensor));
+  });
   it('maps the structured socket.io overheat event without JSON parsing', () => {
     expect(mapControlSocketEvent({event: 'overheat', data: {temperature: 101}})).toEqual(ProductionActions.overheatReceived({temperature: 101}));
   });

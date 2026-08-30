@@ -1,4 +1,4 @@
-import {AlarmType, BrewingStatus} from '../../model/brewingStatus.types';
+import {Alarm, AlarmType} from '../../model/brewingStatus.types';
 
 export const equipmentAlarmDisplay = {
     title: 'Anlagenalarm',
@@ -6,7 +6,7 @@ export const equipmentAlarmDisplay = {
     headerText: 'ANLAGENALARM – Anlage prüfen'
 };
 
-export const isEquipmentAlarmActive = (aStatus?: BrewingStatus): boolean =>
-    aStatus?.alarms?.some((aAlarm) =>
+export const isEquipmentAlarmActive = (alarms?: Alarm[]): boolean =>
+    alarms?.some((aAlarm) =>
         aAlarm.type === AlarmType.EQUIPMENT_ALARM && aAlarm.active === true
     ) === true;

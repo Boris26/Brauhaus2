@@ -7,7 +7,8 @@ import {getBrewingStatusLabel, getConfirmationRequestViewModel, getStatusChangeK
 import SettingsPage from '../../Settings/SettingsPage.connect';
 import {ConfirmStates} from '../../../enums/eConfirmStates';
 import {ControlConfirmationNotice} from '../../Production/components/InlineProcessNotice';
-import {getHeaterDisplayLabel} from '../../Production/utils/productionStatus';
+import {getAgitatorActive, getHeaterDisplayLabel} from '../../Production/utils/productionStatus';
+import {RealtimeControllerState} from '../../../model/RealtimeControllerState';
 
 interface MobileProductionViewProps {
     temperature: number;
@@ -19,6 +20,8 @@ interface MobileProductionViewProps {
     isConfirmPending: boolean;
     confirmError?: string;
     isBrewingStatusStale: boolean;
+    realtimeState?: RealtimeControllerState;
+    socketConnected?: boolean;
 }
 
 interface MobileProductionViewState {
@@ -133,11 +136,11 @@ export class MobileProductionView extends React.Component<MobileProductionViewPr
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Heizung:</span>
-                                <span className="mobile-value">{this.props.isBrewingStatusStale ? 'Unbekannt' : getHeaterDisplayLabel(brewingStatus)}</span>
+                                <span className="mobile-value">{this.props.isBrewingStatusStale ? 'Unbekannt' : getHeaterDisplayLabel(brewingStatus, this.props.realtimeState, this.props.socketConnected)}</span>
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Rührwerk:</span>
-                                <span className="mobile-value">{this.props.isBrewingStatusStale ? 'Unbekannt' : (brewingStatus?.hardware?.agitator === 'ON' ? 'An' : 'Aus')}</span>
+                                <span className="mobile-value">{this.props.isBrewingStatusStale ? 'Unbekannt' : (getAgitatorActive(brewingStatus, this.props.realtimeState, this.props.socketConnected) === undefined ? 'Unbekannt' : getAgitatorActive(brewingStatus, this.props.realtimeState, this.props.socketConnected) ? 'An' : 'Aus')}</span>
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Laufzeit:</span>
