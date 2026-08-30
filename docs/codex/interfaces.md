@@ -72,9 +72,10 @@ The desktop header sends `POST /api/system/shutdown` without a request body only
 ## Socket.io
 
 - URL is derived from `BaseURL` by replacing leading `http` with `ws`.
-- `WebSocketController` uses `socket.io-client` and subscribes to event name `overheat`.
+- `WebSocketController` uses `socket.io-client` and subscribes to event names `overheat` and `brew-session-running` on one shared connection.
 - On `overheat`, it calls the configured handler with `{ event: 'overheat', data }`.
-- Needs verification: production epic currently parses `event.data` as JSON, which does not match the controller handler object shape.
+- On `brew-session-running`, it calls the same configured handler with `{ event: 'brew-session-running', data }`; `data` may be absent. The UI converts this to the payload-free technical Redux action `BREW_SESSION_RUNNING_RECEIVED` and does not start synchronization, polling, or navigation.
+- The production epic maps the controller's structured handler object directly and ignores unknown event names.
 
 ## Normalized brewing status expected by UI
 

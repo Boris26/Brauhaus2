@@ -162,9 +162,18 @@ describe('sendBrewingDataEpic$ failures', () => {
   });
 });
 
-it('maps the structured socket.io overheat event without JSON parsing', () => {
-  expect(mapControlSocketEvent({event: 'overheat', data: {temperature: 101}})).toEqual(ProductionActions.overheatReceived({temperature: 101}));
-  expect(mapControlSocketEvent({event: 'other', data: {}})).toBeUndefined();
+describe('mapControlSocketEvent', () => {
+  it('maps the structured socket.io overheat event without JSON parsing', () => {
+    expect(mapControlSocketEvent({event: 'overheat', data: {temperature: 101}})).toEqual(ProductionActions.overheatReceived({temperature: 101}));
+  });
+
+  it('maps brew-session-running to its payload-free technical Redux signal', () => {
+    expect(mapControlSocketEvent({event: 'brew-session-running'})).toEqual(ProductionActions.brewSessionRunningReceived());
+  });
+
+  it('ignores unknown socket events', () => {
+    expect(mapControlSocketEvent({event: 'other', data: {}})).toBeUndefined();
+  });
 });
 
 describe('startWaterFillingEpic$', () => {
