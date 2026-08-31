@@ -157,7 +157,8 @@ const productionReducer = (
                 socketConnection: {
                     connected: aAction.payload.connected,
                     socketId: aAction.payload.connected ? aAction.payload.socketId : undefined
-                }
+                },
+                realtimeState: {...aState.realtimeState, temperatureSensor: undefined}
             };
         }
         case ProductionActions.ActionTypes.HEATING_RUNNING_CHANGED:
@@ -169,7 +170,7 @@ const productionReducer = (
         case ProductionActions.ActionTypes.TEMPERATURE_SENSOR_STATE_CHANGED:
             return {...aState, realtimeState: {...aState.realtimeState, temperatureSensor: aAction.payload}};
         case ProductionActions.ActionTypes.WEBSOCKET_DISCONNECT: {
-            return {...aState, socketConnection: {connected: false}};
+            return {...aState, socketConnection: {connected: false}, realtimeState: {...aState.realtimeState, temperatureSensor: undefined}};
         }
 
         default:

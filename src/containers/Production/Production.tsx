@@ -39,6 +39,7 @@ import {ConfirmStates} from '../../enums/eConfirmStates';
 import {AgitatorConfig, AgitatorMode, AgitatorRuntimeStatus} from '../../model/Agitator';
 import {ProductionRepository} from '../../repositorys/ProductionRepository';
 import {RealtimeControllerState} from '../../model/RealtimeControllerState';
+import {formatTemperature, getTemperatureSensorMessage, isTemperatureSensorReady} from '../../utils/temperatureSensor';
 
 export const AGITATOR_SPEED_DEBOUNCE_MS = 300;
 
@@ -552,7 +553,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     isStartButtonDisabled = (): boolean => {
         const {selectedBeer} = this.props;
-        return isUndefined(selectedBeer) || !this.isControllerAvailable() || this.state.brewingIsRunning || this.isBrewingStartRequestPending || !this.isControlBrewingStartAvailable();
+        return isUndefined(selectedBeer) || !this.isControllerAvailable() || !isTemperatureSensorReady(this.props.realtimeState?.temperatureSensor, this.props.socketConnected) || this.state.brewingIsRunning || this.isBrewingStartRequestPending || !this.isControlBrewingStartAvailable();
     }
 
     startBrewing = (): void => {
@@ -616,20 +617,14 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     renderTemperature() {
-        const {brewingStatus, temperature} = this.props;
-        let value: number;
-        if (this.props.isBrewingStatusStale) {
-            value = 0;
-        } else if (brewingStatus?.temperature?.current === undefined || Number(brewingStatus?.temperature?.current) === 0) {
-            value = temperature;
-        } else {
-            value = isNaN(Number(brewingStatus?.temperature?.current)) ? 0 : Number(brewingStatus?.temperature?.current);
-        }
+        const {brewingStatus} = this.props;
+        const sensor = this.props.realtimeState?.temperatureSensor;
+        const value = isTemperatureSensorReady(sensor, this.props.socketConnected) ? sensor.current : null;
         const targetValue = isNaN(Number(brewingStatus?.temperature?.target)) ? 0 : Number(brewingStatus?.temperature?.target);
-        return (<div className="Temp">
-            <Gauge showAreas={true} value={value} targetValue={targetValue}
+        return (<div className="Temp" aria-label={`Aktuelle Temperatur: ${formatTemperature(value)}`}>
+            {value === null ? <div className="temperatureUnavailable" role="status">{formatTemperature(value)}</div> : <Gauge showAreas={true} value={value} targetValue={targetValue}
                    height={220}
-                   offset={1} minValue={0} maxValue={100} label={"°C"}/>
+                   offset={1} minValue={0} maxValue={100} label={"°C"}/>}
         </div>);
     }
 
@@ -730,6 +725,9 @@ export class Production extends React.Component<ProductionProps, ProductionState
                 </section>
                 <div className="startBtnDiv">
                     <button className="startBtn" disabled={this.isStartButtonDisabled()} onClick={this.startBrewing}>Start</button>
+                    {!isTemperatureSensorReady(this.props.realtimeState?.temperatureSensor, this.props.socketConnected) && <p className="sensorStartWarning" role="alert">
+                        Brauvorgang kann nicht gestartet werden: {getTemperatureSensorMessage(this.props.realtimeState?.temperatureSensor)}.
+                    </p>}
                 </div>
             </div>);
     }

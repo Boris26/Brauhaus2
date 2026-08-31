@@ -124,6 +124,23 @@
     padding: 0 0.75rem;
 }
 
+.temperatureUnavailable {
+    display: flex;
+    min-height: 220px;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-text-secondary);
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.sensorStartWarning {
+    margin: 0.4rem 0 0;
+    color: var(--color-warning);
+    font-size: 0.85rem;
+    line-height: 1.25;
+}
+
 /* Settings Panel */
 .containerProduction .settings {
     grid-area: settings;

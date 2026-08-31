@@ -188,7 +188,7 @@ describe('mapControlSocketEvent', () => {
     const heating = {running: true};
     const agitator = {mode: 'AUTOMATIC' as const, paused: false, operation: 'INTERVAL' as const, intervalPhase: 'RUNNING', actualOutputOn: true, speedPercent: 42, runningMinutes: 3, breakMinutes: 2};
     const alarm = {alarms: [{type: 'EQUIPMENT_ALARM', active: true}]};
-    const sensor = {health: 'OK', sensorId: '28-1'};
+    const sensor = {current: 55.4, health: 'OK' as const, sensorId: '28-1'};
     expect(mapControlSocketEvent({event: 'heating-running-changed', data: heating})).toEqual(ProductionActions.heatingRunningChanged(heating));
     expect(mapControlSocketEvent({event: 'agitator-state-changed', data: agitator})).toEqual(ProductionActions.agitatorStateChanged(agitator));
     expect(mapControlSocketEvent({event: 'alarm-state-changed', data: alarm})).toEqual(ProductionActions.alarmStateChanged(alarm));

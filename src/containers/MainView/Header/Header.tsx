@@ -14,6 +14,7 @@ import ModalDialog, {DialogType} from '../../../components/ModalDialog/ModalDial
 import {SystemRepository} from '../../../repositorys/SystemRepository';
 import {RealtimeControllerState} from '../../../model/RealtimeControllerState';
 import {getAlarmSnapshot} from '../../Production/utils/productionStatus';
+import {getTemperatureSensorMessage} from '../../../utils/temperatureSensor';
 
 
 
@@ -112,6 +113,10 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
     render() {
        const { messages = [] , removeAllMessages, backendStatus, brewingStatus } = this.props; // Default-Wert für messages ist ein leeres Array
        const equipmentAlarmText = isEquipmentAlarmActive(getAlarmSnapshot(this.props.realtimeState, this.props.socketConnected)) ? equipmentAlarmDisplay.headerText : undefined;
+       const temperatureSensor = this.props.realtimeState?.temperatureSensor;
+       const sensorWarning = !this.props.socketConnected || temperatureSensor?.health !== 'OK'
+           ? `⚠ Temperatursensor: ${getTemperatureSensorMessage(temperatureSensor)}`
+           : undefined;
        const uiMode = getUiMode();
        const navigationViews = getNavigationViews(uiMode);
        const isVisible = (view: Views) => navigationViews.includes(view);
@@ -201,7 +206,7 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
                 </div>
                 <div className="header-status">
                   <div className="status-display-wrapper">
-                    <StatusDisplay backendStatus={backendStatus} messages={messages} priorityMessage={equipmentAlarmText} disableScrollAnimation={true} removeAllMessages={removeAllMessages}/>
+                    <StatusDisplay backendStatus={backendStatus} messages={messages} priorityMessage={equipmentAlarmText ?? sensorWarning} disableScrollAnimation={true} removeAllMessages={removeAllMessages}/>
                   </div>
                   <div className="time">
                     <span>{this.state.currentDate}</span>

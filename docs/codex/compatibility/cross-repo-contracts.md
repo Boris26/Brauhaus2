@@ -228,7 +228,11 @@ interface AgitatorRealtimeState {
 interface AlarmRealtimeState { alarms: Alarm[]; }
 
 // temperature-sensor-state-changed
-interface TemperatureSensorRealtimeState { health: string; sensorId?: string; }
+interface TemperatureSensorRealtimeState {
+  current: number | null;
+  health: 'OK' | 'MISSING' | 'STALE' | 'INVALID_READING' | 'MULTIPLE_SENSORS_FOUND' | 'NOT_CONFIGURED';
+  sensorId: string | null;
+}
 ```
 
-`running` is the controller-reported heater on/off state, while `actualOutputOn` is agitator hardware feedback. An alarm payload replaces the complete alarm collection. Sensor `health` values are controller-owned and must not be synthesized by the UI. These snapshots are the sole UI source of truth for physical heater feedback, agitator output, alarms, and sensor health. After disconnect, received snapshots are stale/unknown; REST process availability remains independent. `GET /Agitator/Status` continues only to initialize editable agitator configuration, not as a live-state fallback. Deployment and reconnect snapshot behavior **Needs verification** with Braumeister #109 and two real clients.
+`running` is the controller-reported heater on/off state, while `actualOutputOn` is agitator hardware feedback. An alarm payload replaces the complete alarm collection. Sensor `health` values are controller-owned and must not be synthesized by the UI; `current: null` means that no valid measurement exists, while numeric zero is valid. These snapshots are the sole UI source of truth for physical heater feedback, agitator output, alarms, and sensor health. After disconnect, received snapshots are stale/unknown; REST process availability remains independent. The controller sends a fresh sensor snapshot after connect/reconnect, so the UI clears the previous sensor snapshot during connection changes and does not add polling. `GET /Agitator/Status` continues only to initialize editable agitator configuration, not as a live-state fallback. Deployment and reconnect snapshot behavior **Needs verification** with Braumeister #109 and two real clients.
