@@ -38,6 +38,7 @@ import {getConfirmationRequestViewModel} from '../../utils/brewingStatus/selecto
 import {ConfirmStates} from '../../enums/eConfirmStates';
 import {AgitatorConfig, AgitatorMode, AgitatorRuntimeStatus} from '../../model/Agitator';
 import {ProductionRepository} from '../../repositorys/ProductionRepository';
+import {AgitatorSettingsRepository} from '../../repositorys/AgitatorSettingsRepository';
 import {RealtimeControllerState} from '../../model/RealtimeControllerState';
 import {formatTemperature, getTemperatureSensorMessage, isTemperatureSensorReady} from '../../utils/temperatureSensor';
 
@@ -179,7 +180,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
         if (getIsControllerAvailable(prevProps.isBackenAvailable) && !this.isControllerAvailable()) {
             this.clearAgitatorSpeedDebounce();
         }
-        if (!getIsControllerAvailable(prevProps.isBackenAvailable) && this.isControllerAvailable() && !this.state.agitatorConfig) {
+        if (!getIsControllerAvailable(prevProps.isBackenAvailable) && this.isControllerAvailable() && !this.state.agitatorRuntime) {
             this.loadAgitatorStatus();
         }
 
@@ -254,26 +255,57 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     loadAgitatorStatus = async (): Promise<void> => {
-        try {
-            const detail = await ProductionRepository.getAgitatorStatus();
-            if (!this.isMountedComponent) return;
+        const [defaultsResult, detailResult] = await Promise.allSettled([
+            AgitatorSettingsRepository.get(),
+            ProductionRepository.getAgitatorStatus(),
+        ]);
+        if (!this.isMountedComponent) return;
+
+        if (detailResult.status === 'fulfilled') {
+            const detail = detailResult.value;
+            const hasCurrentRuntimeConfig = detail.config.mode !== 'OFF';
+            const config = hasCurrentRuntimeConfig || defaultsResult.status !== 'fulfilled'
+                ? detail.config
+                : {
+                    ...detail.config,
+                    speedPercent: defaultsResult.value.speed,
+                    runningMinutes: defaultsResult.value.intervalOnMinutes,
+                    breakMinutes: defaultsResult.value.intervalOffMinutes,
+                };
             this.setState({
-                agitatorConfig: detail.config,
+                agitatorConfig: config,
                 agitatorIntervalDraft: undefined,
                 agitatorStatusLoadFailed: false,
                 agitatorRuntime: {
-                    mode: detail.config.mode,
+                    mode: config.mode,
                     paused: detail.runtime.paused,
                     operation: detail.runtime.desiredOperation,
                     intervalPhase: detail.runtime.intervalPhase,
                     actualOutputOn: detail.runtime.actualOutputOn,
                 }
             });
-        } catch (error) {
-            // The remaining production screen stays usable when detail status is unavailable.
-            console.error('Rührwerkstatus konnte nicht geladen werden', error);
-            if (this.isMountedComponent) this.setState({agitatorStatusLoadFailed: true});
+            return;
         }
+
+        console.error('Rührwerkstatus konnte nicht geladen werden', detailResult.reason);
+        if (defaultsResult.status === 'fulfilled') {
+            const defaults = defaultsResult.value;
+            this.setState({
+                agitatorConfig: {
+                    mode: 'OFF',
+                    speedPercent: defaults.speed,
+                    runningMinutes: defaults.intervalOnMinutes,
+                    breakMinutes: defaults.intervalOffMinutes,
+                },
+                agitatorIntervalDraft: undefined,
+                agitatorStatusLoadFailed: false,
+            });
+            return;
+        }
+
+        // The remaining production screen stays usable when neither runtime state nor defaults are available.
+        console.error('Rührwerk-Defaults konnten nicht geladen werden', defaultsResult.reason);
+        this.setState({agitatorStatusLoadFailed: true});
     }
 
     mergeAgitatorPoll = (poll: AgitatorRuntimeStatus): void => {
@@ -664,15 +696,14 @@ export class Production extends React.Component<ProductionProps, ProductionState
                     <div className={`intervalSettings agitatorAutomaticSettings ${agitatorConfig?.mode === 'AUTOMATIC' ? 'is-active' : ''}`} aria-labelledby="interval-settings-title">
                         <div className="agitatorAutomaticHeader">
                             <div>
-                                <h5 id="interval-settings-title">Automatik</h5>
+                                <h5 id="interval-settings-title">Intervallbetrieb</h5>
                                 <p>Beim Heizen durchgehend, sonst im Intervall</p>
                             </div>
                             <Switch className="productionSwitch" onChange={(checked) => this.toggleAgitatorMode('AUTOMATIC', checked)}
                                 checked={agitatorConfig?.mode === 'AUTOMATIC'} height={24} width={44} handleDiameter={18}
                                 checkedIcon={false} uncheckedIcon={false} disabled={settingsDisabled || !agitatorConfig || agitatorRequestPending}
-                                aria-label="Automatik" />
+                                aria-label="Intervallbetrieb" />
                         </div>
-                        <h6>Intervall</h6>
                         <div className="intervalTimeControls">
                             <div className="intervalTimeControl" data-testid="running-minutes-stepper">
                                 <QuantityPicker initialValue={agitatorIntervalDraft?.runningMinutes ?? agitatorConfig?.runningMinutes}

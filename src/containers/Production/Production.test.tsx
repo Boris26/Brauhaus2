@@ -7,6 +7,7 @@ import {AlarmType, BrewingStatus, ProcessMode, ProcessPhase, ProcessState, Waiti
 import {ConfirmStates} from '../../enums/eConfirmStates';
 import {dataCollector} from '../../utils/DataCollector/dataCollector';
 import {ProductionRepository} from '../../repositorys/ProductionRepository';
+import {AgitatorSettingsRepository} from '../../repositorys/AgitatorSettingsRepository';
 
 const createBeer = (aMashVolume: number | undefined = 18, aSpargeVolume: number | undefined = 12, aId: string = '1'): Beer => ({
     id: aId,
@@ -92,6 +93,8 @@ describe('Production agitator controller integration', () => {
     };
 
     beforeEach(() => {
+        jest.spyOn(AgitatorSettingsRepository, 'get').mockResolvedValue({speed: 26, intervalOnMinutes: 2, intervalOffMinutes: 2});
+        jest.spyOn(AgitatorSettingsRepository, 'update').mockResolvedValue({speed: 26, intervalOnMinutes: 2, intervalOffMinutes: 2});
         jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockResolvedValue(detail);
         jest.spyOn(ProductionRepository, 'setAgitatorConfig').mockImplementation(async config => config);
         jest.spyOn(ProductionRepository, 'pauseAgitator').mockResolvedValue();
@@ -104,18 +107,44 @@ describe('Production agitator controller integration', () => {
         expect(await screen.findByText('Geschwindigkeit')).toBeInTheDocument();
         expect(screen.getByText('36 %')).toBeInTheDocument();
         expect(screen.getByRole('switch', {name: 'Durchgehend rühren'})).not.toBeChecked();
-        expect(screen.getByRole('switch', {name: 'Automatik'})).toBeChecked();
-        expect(screen.getAllByRole('switch', {name: 'Automatik'})).toHaveLength(1);
-        expect(screen.queryByText('Automatik · Intervallpause')).not.toBeInTheDocument();
+        expect(screen.getByRole('switch', {name: 'Intervallbetrieb'})).toBeChecked();
+        expect(screen.getAllByRole('switch', {name: 'Intervallbetrieb'})).toHaveLength(1);
+        expect(screen.queryByText('Intervallbetrieb · Intervallpause')).not.toBeInTheDocument();
         expect(ProductionRepository.getAgitatorStatus).toHaveBeenCalledTimes(1);
+        expect(AgitatorSettingsRepository.get).toHaveBeenCalledTimes(1);
+        expect(AgitatorSettingsRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('uses persistent defaults as the initial runtime config when no current agitator state is available', async () => {
+        jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockRejectedValue(new Error('no runtime state'));
+        renderProduction();
+        expect(await screen.findByText('26 %')).toBeInTheDocument();
+        expect(within(screen.getByTestId('running-minutes-stepper')).getByText('2')).toBeInTheDocument();
+        expect(within(screen.getByTestId('break-minutes-stepper')).getByText('2')).toBeInTheDocument();
+        expect(AgitatorSettingsRepository.get).toHaveBeenCalledTimes(1);
+        expect(AgitatorSettingsRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('replaces inactive legacy status values with the current controller defaults', async () => {
+        jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockResolvedValue({
+            ...detail,
+            config: {mode: 'OFF', speedPercent: 20, runningMinutes: 1, breakMinutes: 5},
+            runtime: {...detail.runtime, desiredOperation: 'STOPPED'},
+        });
+        renderProduction();
+        expect(await screen.findByText('26 %')).toBeInTheDocument();
+        expect(screen.getByLabelText('Laufzeit')).toHaveTextContent('2');
+        expect(screen.getByLabelText('Pausenzeit')).toHaveTextContent('2');
+        expect(AgitatorSettingsRepository.update).not.toHaveBeenCalled();
     });
 
     it('keeps the complete agitator UI visible and disabled when detail status is unavailable', async () => {
         jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockRejectedValue(new Error('offline'));
+        jest.spyOn(AgitatorSettingsRepository, 'get').mockRejectedValue(new Error('offline'));
         renderProduction({isBackenAvailable: {isBackenAvailable: false, statusText: 'Offline'}});
         expect(await screen.findByText('Rührwerk-Konfiguration nicht verfügbar')).toBeInTheDocument();
         expect(screen.getByRole('switch', {name: 'Durchgehend rühren'})).toBeDisabled();
-        expect(screen.getByRole('switch', {name: 'Automatik'})).toBeDisabled();
+        expect(screen.getByRole('switch', {name: 'Intervallbetrieb'})).toBeDisabled();
         within(screen.getByTestId('running-minutes-stepper')).getAllByRole('button').forEach(button => expect(button).toBeDisabled());
         within(screen.getByTestId('break-minutes-stepper')).getAllByRole('button').forEach(button => expect(button).toBeDisabled());
         expect(screen.getByRole('slider')).toBeDisabled();
@@ -134,7 +163,7 @@ describe('Production agitator controller integration', () => {
         });
         renderProduction();
         expect(await screen.findByRole('switch', {name: 'Durchgehend rühren'})).toHaveProperty('checked', continuous);
-        expect(screen.getByRole('switch', {name: 'Automatik'})).toHaveProperty('checked', automatic);
+        expect(screen.getByRole('switch', {name: 'Intervallbetrieb'})).toHaveProperty('checked', automatic);
     });
 
     it('switches directly from AUTOMATIC to CONTINUOUS with the complete confirmed config', async () => {
@@ -147,14 +176,14 @@ describe('Production agitator controller integration', () => {
     it('switches directly from CONTINUOUS to AUTOMATIC and preserves interval and speed config', async () => {
         jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockResolvedValue({...detail, config: {...detail.config, mode: 'CONTINUOUS'}});
         renderProduction();
-        fireEvent.click(await screen.findByRole('switch', {name: 'Automatik'}));
+        fireEvent.click(await screen.findByRole('switch', {name: 'Intervallbetrieb'}));
         await waitFor(() => expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledWith({mode: 'AUTOMATIC', speedPercent: 36, runningMinutes: 2, breakMinutes: 7}));
         expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledTimes(1);
     });
 
     it('turns an active mode off without changing the remaining config', async () => {
         renderProduction();
-        fireEvent.click(await screen.findByRole('switch', {name: 'Automatik'}));
+        fireEvent.click(await screen.findByRole('switch', {name: 'Intervallbetrieb'}));
         await waitFor(() => expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledWith({mode: 'OFF', speedPercent: 36, runningMinutes: 2, breakMinutes: 7}));
     });
 
@@ -164,7 +193,7 @@ describe('Production agitator controller integration', () => {
         renderProduction();
         fireEvent.click(await screen.findByRole('switch', {name: 'Durchgehend rühren'}));
         expect(screen.getByRole('switch', {name: 'Durchgehend rühren'})).toBeDisabled();
-        expect(screen.getByRole('switch', {name: 'Automatik'})).toBeDisabled();
+        expect(screen.getByRole('switch', {name: 'Intervallbetrieb'})).toBeDisabled();
         resolveConfig({...detail.config, mode: 'CONTINUOUS'});
         await waitFor(() => expect(screen.getByRole('switch', {name: 'Durchgehend rühren'})).toBeEnabled());
     });
@@ -189,7 +218,7 @@ describe('Production agitator controller integration', () => {
         await screen.findByText('36 %');
         rerender(<Production {...props} socketConnected={true} realtimeState={{alarms: [], alarmsReceived: true, agitator: {mode: 'AUTOMATIC', paused: true, operation: 'INTERVAL', intervalPhase: 'BREAK', actualOutputOn: false, speedPercent: 36, runningMinutes: 2, breakMinutes: 7}}} />);
         expect(await screen.findByText('36 %')).toBeInTheDocument();
-        expect(screen.getByRole('switch', {name: 'Automatik'})).toBeChecked();
+        expect(screen.getByRole('switch', {name: 'Intervallbetrieb'})).toBeChecked();
         expect(screen.getByRole('button', {name: 'Rührwerk fortsetzen'})).toBeInTheDocument();
         expect(ProductionRepository.setAgitatorConfig).not.toHaveBeenCalled();
     });
@@ -200,10 +229,10 @@ describe('Production agitator controller integration', () => {
         (ProductionRepository.setAgitatorConfig as jest.Mock).mockClear();
         rerender(<Production {...props} socketConnected={true} realtimeState={{alarms: [], alarmsReceived: true, agitator: {mode: 'CONTINUOUS', paused: false, operation: 'CONTINUOUS', intervalPhase: 'IDLE', actualOutputOn: true, speedPercent: 36, runningMinutes: 2, breakMinutes: 7}}} />);
         expect(await screen.findByRole('switch', {name: 'Durchgehend rühren'})).toBeChecked();
-        expect(screen.getByRole('switch', {name: 'Automatik'})).not.toBeChecked();
+        expect(screen.getByRole('switch', {name: 'Intervallbetrieb'})).not.toBeChecked();
         rerender(<Production {...props} socketConnected={true} realtimeState={{alarms: [], alarmsReceived: true, agitator: {mode: 'OFF', paused: false, operation: 'STOPPED', intervalPhase: 'IDLE', actualOutputOn: false, speedPercent: 36, runningMinutes: 2, breakMinutes: 7}}} />);
         await waitFor(() => expect(screen.getByRole('switch', {name: 'Durchgehend rühren'})).not.toBeChecked());
-        expect(screen.getByRole('switch', {name: 'Automatik'})).not.toBeChecked();
+        expect(screen.getByRole('switch', {name: 'Intervallbetrieb'})).not.toBeChecked();
         expect(ProductionRepository.setAgitatorConfig).not.toHaveBeenCalled();
     });
 
@@ -231,7 +260,7 @@ describe('Production agitator controller integration', () => {
         renderProduction();
         fireEvent.click(await screen.findByRole('button', {name: 'Rührwerk pausieren'}));
         await waitFor(() => expect(ProductionRepository.pauseAgitator).toHaveBeenCalledTimes(1));
-        expect(screen.getByRole('switch', {name: 'Automatik'})).toBeChecked();
+        expect(screen.getByRole('switch', {name: 'Intervallbetrieb'})).toBeChecked();
         expect(ProductionRepository.setAgitatorConfig).not.toHaveBeenCalled();
         expect(screen.getByRole('button', {name: 'Rührwerk fortsetzen'})).toBeInTheDocument();
     });
