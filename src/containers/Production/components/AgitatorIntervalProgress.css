@@ -12,5 +12,17 @@
     inset: 0;
 }
 
-.agitatorIntervalProgressTrack { opacity: 0.16; }
-.agitatorIntervalProgress.is-inactive { opacity: 0.32; }
+.agitatorIntervalProgress .agitatorIntervalProgressTrack {
+    color: var(--color-text-secondary);
+    opacity: 0.24;
+}
+
+.agitatorIntervalProgress .agitatorIntervalProgressValue {
+    color: var(--color-accent);
+}
+
+/* Keep the reserved indicator clearly recognizable even before the controller
+ * provides phase progress. Only the track is shown; no progress is implied. */
+.agitatorIntervalProgress.is-inactive .agitatorIntervalProgressTrack {
+    opacity: 0.58;
+}
