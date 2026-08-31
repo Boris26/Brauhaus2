@@ -190,10 +190,12 @@ describe('mapControlSocketEvent', () => {
     const agitator = {mode: 'AUTOMATIC' as const, paused: false, operation: 'INTERVAL' as const, intervalPhase: 'RUNNING', actualOutputOn: true, speedPercent: 42, runningMinutes: 3, breakMinutes: 2};
     const alarm = {alarms: [{type: 'EQUIPMENT_ALARM', active: true}]};
     const sensor = {current: 55.4, health: 'OK' as const, sensorId: '28-1'};
+    const defaults = {speed: 75, intervalOnMinutes: 5, intervalOffMinutes: 2};
     expect(mapControlSocketEvent({event: 'heating-running-changed', data: heating})).toEqual(ProductionActions.heatingRunningChanged(heating));
     expect(mapControlSocketEvent({event: 'agitator-state-changed', data: agitator})).toEqual(ProductionActions.agitatorStateChanged(agitator));
     expect(mapControlSocketEvent({event: 'alarm-state-changed', data: alarm})).toEqual(ProductionActions.alarmStateChanged(alarm));
     expect(mapControlSocketEvent({event: 'temperature-sensor-state-changed', data: sensor})).toEqual(ProductionActions.temperatureSensorStateChanged(sensor));
+    expect(mapControlSocketEvent({event: 'agitator-defaults-changed', data: defaults})).toEqual(ProductionActions.agitatorDefaultsChanged(defaults));
   });
   it('maps the structured socket.io overheat event without JSON parsing', () => {
     expect(mapControlSocketEvent({event: 'overheat', data: {temperature: 101}})).toEqual(ProductionActions.overheatReceived({temperature: 101}));

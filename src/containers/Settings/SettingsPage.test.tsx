@@ -1,6 +1,6 @@
 import React from 'react';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { AGITATOR_SETTINGS_SPEED_DEBOUNCE_MS, SettingsPage } from './SettingsPage';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { SettingsPage } from './SettingsPage';
 import { AudioRepository } from '../../repositorys/AudioRepository';
 import { SoundType } from '../../enums/eSoundType';
 import {AgitatorSettingsRepository} from '../../repositorys/AgitatorSettingsRepository';
@@ -20,7 +20,7 @@ describe('Settings sound tests', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         mockedTestSound.mockResolvedValue();
-        mockedGetAgitatorSettings.mockResolvedValue({speedPercent: 32, runningMinutes: 2, breakMinutes: 7});
+        mockedGetAgitatorSettings.mockResolvedValue({speed: 32, intervalOnMinutes: 2.5, intervalOffMinutes: 7});
         mockedUpdateAgitatorSettings.mockImplementation(async (settings) => settings);
     });
 
@@ -89,101 +89,75 @@ describe('Settings agitator defaults', () => {
     beforeEach(() => {
         jest.clearAllMocks();
         mockedTestSound.mockResolvedValue();
-        mockedGetAgitatorSettings.mockResolvedValue({speedPercent: 32, runningMinutes: 2, breakMinutes: 7});
+        mockedGetAgitatorSettings.mockResolvedValue({speed: 32, intervalOnMinutes: 2.5, intervalOffMinutes: 7});
         mockedUpdateAgitatorSettings.mockImplementation(async (settings) => settings);
     });
 
-    const loadSettings = async () => {
+    it('loads and displays the complete controller snapshot without frontend defaults', async () => {
         renderSettings(false);
-        await screen.findByText('32 %');
-    };
-
-    const step = async (testId: string, name: RegExp) => {
-        fireEvent.mouseDown(within(screen.getByTestId(testId)).getByRole('button', {name}));
-        fireEvent.mouseUp(within(screen.getByTestId(testId)).getByRole('button', {name}));
-        await waitFor(() => expect(mockedUpdateAgitatorSettings).toHaveBeenCalled());
-    };
-
-    it('shows exactly the values returned by the controller and has no UI defaults', async () => {
-        mockedGetAgitatorSettings.mockResolvedValueOnce({speedPercent: 40, runningMinutes: 3, breakMinutes: 9});
-        renderSettings(false);
-
-        expect(await screen.findByText('40 %')).toBeInTheDocument();
-        expect(within(screen.getByTestId('settings-running-minutes-stepper')).getByText('3')).toBeInTheDocument();
-        expect(within(screen.getByTestId('settings-break-minutes-stepper')).getByText('9')).toBeInTheDocument();
-        expect(screen.queryByText('25 %')).not.toBeInTheDocument();
-    });
-
-    it.each<[string, RegExp, {speedPercent: number; runningMinutes: number; breakMinutes: number}]>([
-        ['settings-running-minutes-stepper', /Laufzeit erhöhen/, {speedPercent: 32, runningMinutes: 3, breakMinutes: 7}],
-        ['settings-running-minutes-stepper', /Laufzeit verringern/, {speedPercent: 32, runningMinutes: 1, breakMinutes: 7}],
-        ['settings-break-minutes-stepper', /Pausenzeit erhöhen/, {speedPercent: 32, runningMinutes: 2, breakMinutes: 8}],
-        ['settings-break-minutes-stepper', /Pausenzeit verringern/, {speedPercent: 32, runningMinutes: 2, breakMinutes: 6}],
-    ])('sends the complete configuration for %s %s', async (testId, buttonName, expected) => {
-        await loadSettings();
-        await step(testId, buttonName);
-        expect(mockedUpdateAgitatorSettings).toHaveBeenCalledWith(expected);
-    });
-
-    it('does not decrement below zero or permit a zero/zero interval', async () => {
-        mockedGetAgitatorSettings.mockResolvedValueOnce({speedPercent: 32, runningMinutes: 0, breakMinutes: 1});
-        renderSettings(false);
-        await screen.findByText('32 %');
-
-        fireEvent.mouseDown(within(screen.getByTestId('settings-running-minutes-stepper')).getByRole('button', {name: /verringern/}));
-        fireEvent.mouseDown(within(screen.getByTestId('settings-break-minutes-stepper')).getByRole('button', {name: /verringern/}));
-        expect(mockedUpdateAgitatorSettings).not.toHaveBeenCalled();
-    });
-
-    it('debounces speed changes and adopts the controller-confirmed response', async () => {
-        mockedUpdateAgitatorSettings.mockResolvedValueOnce({speedPercent: 41, runningMinutes: 4, breakMinutes: 8});
-        await loadSettings();
-        jest.useFakeTimers();
-        const slider = screen.getByRole('slider', {name: 'Standard-Geschwindigkeit'});
-
-        fireEvent.change(slider, {target: {value: '40'}});
-        expect(screen.getByText('40 %')).toBeInTheDocument();
-        expect(mockedUpdateAgitatorSettings).not.toHaveBeenCalled();
-        await act(async () => {
-            jest.advanceTimersByTime(AGITATOR_SETTINGS_SPEED_DEBOUNCE_MS);
-            await Promise.resolve();
-        });
-
-        expect(mockedUpdateAgitatorSettings).toHaveBeenCalledWith({speedPercent: 40, runningMinutes: 2, breakMinutes: 7});
-        expect(screen.getByText('41 %')).toBeInTheDocument();
-        expect(within(screen.getByTestId('settings-running-minutes-stepper')).getByText('4')).toBeInTheDocument();
-        jest.useRealTimers();
-    });
-
-    it('rolls back an unconfirmed value after a failed PUT', async () => {
-        mockedUpdateAgitatorSettings.mockRejectedValueOnce(new Error('failed'));
-        await loadSettings();
-        await step('settings-running-minutes-stepper', /Laufzeit erhöhen/);
-
-        expect(await screen.findByRole('alert')).toHaveTextContent('konnten nicht gespeichert werden');
-        expect(within(screen.getByTestId('settings-running-minutes-stepper')).getByText('2')).toBeInTheDocument();
-    });
-
-    it('shows a loading/error state without invented values and retries GET', async () => {
-        mockedGetAgitatorSettings.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce({speedPercent: 37, runningMinutes: 2, breakMinutes: 8});
-        renderSettings(false);
-
+        expect(mockedGetAgitatorSettings).toHaveBeenCalledTimes(1);
         expect(screen.getByText(/werden geladen/)).toBeInTheDocument();
+        expect(await screen.findByDisplayValue('32')).toBeInTheDocument();
+        expect(screen.getByDisplayValue('2.5')).toBeInTheDocument();
+        expect(screen.getByDisplayValue('7')).toBeInTheDocument();
+    });
+
+    it('retries a failed GET without displaying invented values', async () => {
+        mockedGetAgitatorSettings.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce({speed: 37, intervalOnMinutes: 2, intervalOffMinutes: 8});
+        renderSettings(false);
         expect(await screen.findByRole('alert')).toHaveTextContent('konnten nicht geladen werden');
-        expect(screen.queryByRole('slider')).not.toBeInTheDocument();
+        expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
         fireEvent.click(screen.getByRole('button', {name: 'Erneut versuchen'}));
-        expect(await screen.findByText('37 %')).toBeInTheDocument();
+        expect(await screen.findByDisplayValue('37')).toBeInTheDocument();
         expect(mockedGetAgitatorSettings).toHaveBeenCalledTimes(2);
     });
 
-    it('loads controller values again after remounting the page', async () => {
-        const first = renderSettings(false);
-        await screen.findByText('32 %');
-        first.unmount();
-        mockedGetAgitatorSettings.mockResolvedValueOnce({speedPercent: 35, runningMinutes: 5, breakMinutes: 6});
-
+    it('PUTs exactly all three fields in minutes and adopts the response', async () => {
+        mockedUpdateAgitatorSettings.mockResolvedValueOnce({speed: 41, intervalOnMinutes: 4.25, intervalOffMinutes: 8.5});
         renderSettings(false);
-        expect(await screen.findByText('35 %')).toBeInTheDocument();
-        expect(mockedGetAgitatorSettings).toHaveBeenCalledTimes(2);
+        const speed = await screen.findByLabelText('Geschwindigkeit');
+        fireEvent.change(speed, {target: {value: '40'}});
+        fireEvent.change(screen.getByLabelText('Intervall EIN'), {target: {value: '3.5'}});
+        fireEvent.click(screen.getByRole('button', {name: 'Speichern'}));
+        await waitFor(() => expect(mockedUpdateAgitatorSettings).toHaveBeenCalledWith({speed: 40, intervalOnMinutes: 3.5, intervalOffMinutes: 7}));
+        expect(await screen.findByDisplayValue('41')).toBeInTheDocument();
+        expect(screen.getByDisplayValue('4.25')).toBeInTheDocument();
+        expect(screen.getByDisplayValue('8.5')).toBeInTheDocument();
+    });
+
+    it('keeps edited values and shows a backend PUT error', async () => {
+        mockedUpdateAgitatorSettings.mockRejectedValueOnce({response: {data: {error: 'Ungültige Werte'}}});
+        renderSettings(false);
+        fireEvent.change(await screen.findByLabelText('Intervall AUS'), {target: {value: '3.75'}});
+        fireEvent.click(screen.getByRole('button', {name: 'Speichern'}));
+        expect(await screen.findByRole('alert')).toHaveTextContent('Ungültige Werte');
+        expect(screen.getByDisplayValue('3.75')).toBeInTheDocument();
+    });
+
+    it('prevents invalid integer speed and non-positive intervals', async () => {
+        renderSettings(false);
+        fireEvent.change(await screen.findByLabelText('Geschwindigkeit'), {target: {value: '20.5'}});
+        expect(screen.getByRole('button', {name: 'Speichern'})).toBeDisabled();
+        expect(screen.getByRole('alert')).toHaveTextContent('Ganzzahl');
+        expect(mockedUpdateAgitatorSettings).not.toHaveBeenCalled();
+    });
+
+    it('adopts socket snapshots when clean without another GET', async () => {
+        const view = render(<SettingsPage theme="default" setTheme={jest.fn()} debug={false} setDebug={jest.fn()} />);
+        await screen.findByDisplayValue('32');
+        view.rerender(<SettingsPage theme="default" setTheme={jest.fn()} debug={false} setDebug={jest.fn()} agitatorDefaultsSnapshot={{speed: 75, intervalOnMinutes: 5, intervalOffMinutes: 2}} />);
+        expect(screen.getByDisplayValue('75')).toBeInTheDocument();
+        expect(screen.getByDisplayValue('5')).toBeInTheDocument();
+        expect(mockedGetAgitatorSettings).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not silently overwrite dirty inputs with a socket snapshot', async () => {
+        const view = render(<SettingsPage theme="default" setTheme={jest.fn()} debug={false} setDebug={jest.fn()} />);
+        fireEvent.change(await screen.findByLabelText('Geschwindigkeit'), {target: {value: '44'}});
+        view.rerender(<SettingsPage theme="default" setTheme={jest.fn()} debug={false} setDebug={jest.fn()} agitatorDefaultsSnapshot={{speed: 75, intervalOnMinutes: 5, intervalOffMinutes: 2}} />);
+        expect(screen.getByDisplayValue('44')).toBeInTheDocument();
+        expect(screen.getByText(/extern geändert/)).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', {name: 'Externe Werte übernehmen'}));
+        expect(screen.getByDisplayValue('75')).toBeInTheDocument();
     });
 });

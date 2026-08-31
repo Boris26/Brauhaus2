@@ -2,7 +2,7 @@ import axios from 'axios';
 import {BaseURL} from '../global';
 import {AgitatorSettings} from '../model/AgitatorSettings';
 
-const AGITATOR_SETTINGS_URL = `${BaseURL}/Settings/Agitator`;
+const AGITATOR_SETTINGS_URL = `${BaseURL}/Agitator/Defaults`;
 
 export class AgitatorSettingsRepository {
     static async get(): Promise<AgitatorSettings> {

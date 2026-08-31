@@ -6,6 +6,7 @@ import {SettingsPage} from './SettingsPage';
 const mapStateToProps = (state: any) => ({
     theme: state.applicationReducer.theme as ThemeName,
     debug: state.applicationReducer.debug as boolean,
+    agitatorDefaultsSnapshot: state.productionReducer.agitatorDefaults,
 });
 
 const mapDispatchToProps = (dispatch: any) => ({

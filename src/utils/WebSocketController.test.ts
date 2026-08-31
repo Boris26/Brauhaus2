@@ -53,6 +53,7 @@ describe('WebSocketController', () => {
     expect(socket.on).toHaveBeenCalledWith('agitator-state-changed', expect.any(Function));
     expect(socket.on).toHaveBeenCalledWith('alarm-state-changed', expect.any(Function));
     expect(socket.on).toHaveBeenCalledWith('temperature-sensor-state-changed', expect.any(Function));
+    expect(socket.on).toHaveBeenCalledWith('agitator-defaults-changed', expect.any(Function));
   });
 
   it('forwards brew-session-running with its payload to the message handler', () => {
@@ -87,6 +88,20 @@ describe('WebSocketController', () => {
     listeners['temperature-sensor-state-changed'](snapshot);
 
     expect(handler).toHaveBeenCalledWith({event: 'temperature-sensor-state-changed', data: snapshot});
+  });
+
+
+  it('forwards complete agitator defaults snapshots on the shared connection', () => {
+    const handler = jest.fn();
+    const controller = new WebSocketController('/api/controller');
+    controller.onMessage(handler);
+    controller.connect();
+    const snapshot = {speed: 75, intervalOnMinutes: 5, intervalOffMinutes: 2};
+
+    listeners['agitator-defaults-changed'](snapshot);
+
+    expect(handler).toHaveBeenCalledWith({event: 'agitator-defaults-changed', data: snapshot});
+    expect(io).toHaveBeenCalledTimes(1);
   });
 
   it('forwards connect and disconnect with the current technical socket id', () => {

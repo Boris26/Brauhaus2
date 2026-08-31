@@ -161,3 +161,13 @@ it('makes a brewing start failure visible and releases polling pending state', (
     expect(failed.isPollingRunning).toBe(false);
     expect(failed.brewingStartError).toBe('HTTP 500');
 });
+
+
+describe('productionReducer persistent agitator defaults', () => {
+    it('stores defaults separately from realtime agitator state', () => {
+        const defaults = {speed: 75, intervalOnMinutes: 5, intervalOffMinutes: 2};
+        const nextState = productionReducer(initialProductionState, ProductionActions.agitatorDefaultsChanged(defaults));
+        expect(nextState.agitatorDefaults).toEqual(defaults);
+        expect(nextState.realtimeState.agitator).toBeUndefined();
+    });
+});

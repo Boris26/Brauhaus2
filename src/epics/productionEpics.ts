@@ -16,6 +16,7 @@ import {BrewSession} from "../model/BrewSession";
 import {Beer} from "../model/Beer";
 import type {RootState} from "../reducers/rootReducer";
 import {AgitatorRealtimeState, AlarmRealtimeState, HeatingRunningState, TemperatureSensorRealtimeState} from '../model/RealtimeControllerState';
+import {AgitatorSettings} from '../model/AgitatorSettings';
 
 const BREWING_STATUS_POLL_INTERVAL = 1000;
 export const BREWING_STATUS_REQUEST_TIMEOUT = 8000;
@@ -37,6 +38,7 @@ export const mapControlSocketEvent = (event: {event: string; data?: unknown}) =>
     case 'agitator-state-changed': return ProductionActions.agitatorStateChanged(event.data as AgitatorRealtimeState);
     case 'alarm-state-changed': return ProductionActions.alarmStateChanged(event.data as AlarmRealtimeState);
     case 'temperature-sensor-state-changed': return ProductionActions.temperatureSensorStateChanged(event.data as TemperatureSensorRealtimeState);
+    case 'agitator-defaults-changed': return ProductionActions.agitatorDefaultsChanged(event.data as AgitatorSettings);
     default:
       return undefined;
   }
