@@ -174,8 +174,9 @@ describe('sendBrewingDataEpic$ failures', () => {
   it('emits a visible lifecycle failure when recipe transfer fails', async () => {
     mockedProductionRepository.sendBrewingData.mockResolvedValue(false);
     const action$ = new Subject<ProductionActions.SendBrewingData>();
+    const state$ = new BehaviorSubject(restoreState([]));
     const emitted: ProductionActions.AllProductionActions[] = [];
-    const subscription = sendBrewingDataEpic$(action$).subscribe((action: unknown) => emitted.push(action as ProductionActions.AllProductionActions));
+    const subscription = sendBrewingDataEpic$(action$, state$).subscribe((action: unknown) => emitted.push(action as ProductionActions.AllProductionActions));
     action$.next(ProductionActions.sendBrewingData(createBrewingData()));
     await flushPromises();
     expect(emitted).toEqual([ProductionActions.brewingStartFailure('Das Rezept konnte nicht an den Controller übertragen werden.')]);
@@ -513,7 +514,7 @@ describe('sendBrewingDataEpic$', (): void => {
     const action$ = new Subject<ProductionActions.SendBrewingData>();
     const state$ = new BehaviorSubject(stateWithSocket(true, 'socket-123'));
     const emitted: ProductionActions.AllProductionActions[] = [];
-    const subscription = sendBrewingDataEpic$(action$, state$).subscribe((action) => emitted.push(action));
+    const subscription = sendBrewingDataEpic$(action$, state$).subscribe((action: unknown) => emitted.push(action as ProductionActions.AllProductionActions));
 
     action$.next(ProductionActions.sendBrewingData(createBrewingData()));
     await flushPromises();
@@ -530,7 +531,7 @@ describe('sendBrewingDataEpic$', (): void => {
     const action$ = new Subject<ProductionActions.SendBrewingData>();
     const state$ = new BehaviorSubject(stateWithSocket(false));
     const emitted: ProductionActions.AllProductionActions[] = [];
-    const subscription = sendBrewingDataEpic$(action$, state$).subscribe((action) => emitted.push(action));
+    const subscription = sendBrewingDataEpic$(action$, state$).subscribe((action: unknown) => emitted.push(action as ProductionActions.AllProductionActions));
 
     action$.next(ProductionActions.sendBrewingData(createBrewingData()));
     await flushPromises();

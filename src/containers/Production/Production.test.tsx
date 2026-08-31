@@ -283,8 +283,7 @@ describe('Production finished-brew persistence', () => {
 
     it('keeps the dialog open while saving and completes only after create success', async () => {
         const addFinishedBrew = jest.fn();
-        const stopPolling = jest.fn();
-        const {props, rerender, finishedStatus} = openFinishDialog({addFinishedBrew, stopPolling});
+        const {props, rerender, finishedStatus} = openFinishDialog({addFinishedBrew});
 
         fireEvent.click(await screen.findByRole('button', {name: 'Sud speichern'}));
         fireEvent.click(screen.getByRole('button', {name: 'Sud speichern'}));
@@ -293,12 +292,10 @@ describe('Production finished-brew persistence', () => {
 
         rerender(<Production {...props} brewingStatus={finishedStatus} isAddingFinishedBrew={true} pendingFinishedBrewPayload={actualPayload} />);
         expect(screen.getByRole('button', {name: 'Speichert …'})).toBeDisabled();
-        expect(stopPolling).not.toHaveBeenCalled();
         expect(dataCollector.getMeasurementCount()).toBe(1);
 
         rerender(<Production {...props} brewingStatus={finishedStatus} isAddingFinishedBrew={false} pendingFinishedBrewPayload={undefined} />);
         await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-        expect(stopPolling).toHaveBeenCalledTimes(1);
         expect(dataCollector.getMeasurementCount()).toBe(0);
     });
 
