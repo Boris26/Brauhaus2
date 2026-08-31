@@ -14,9 +14,6 @@ import {formatTemperature} from '../../../utils/temperatureSensor';
 interface MobileProductionViewProps {
     temperature: number;
     brewingStatus: BrewingStatus;
-    startPolling: () => void;
-    stopPolling: () => void;
-    isPollingRunning: boolean;
     confirm: (confirmState: ConfirmStates) => void;
     isConfirmPending: boolean;
     confirmError?: string;
@@ -40,16 +37,6 @@ export class MobileProductionView extends React.Component<MobileProductionViewPr
     handleTabChange = (tab: MobileTab) => {
         this.setState({ activeTab: tab });
     };
-
-    componentDidMount() {
-        if (!this.props.isPollingRunning) {
-            this.props.startPolling();
-        }
-    }
-
-    componentWillUnmount() {
-        this.props.stopPolling();
-    }
 
     componentDidUpdate(prevProps: MobileProductionViewProps) {
         const prevStatus = getStatusChangeKey(prevProps.brewingStatus);
@@ -137,11 +124,11 @@ export class MobileProductionView extends React.Component<MobileProductionViewPr
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Heizung:</span>
-                                <span className="mobile-value">{this.props.isBrewingStatusStale || getHeatingActive(this.props.realtimeState, this.props.socketConnected) === undefined ? 'Unbekannt' : getHeatingActive(this.props.realtimeState, this.props.socketConnected) ? 'An' : 'Aus'}</span>
+                                <span className="mobile-value">{getHeatingActive(this.props.realtimeState, this.props.socketConnected) === undefined ? 'Unbekannt' : getHeatingActive(this.props.realtimeState, this.props.socketConnected) ? 'An' : 'Aus'}</span>
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Rührwerk:</span>
-                                <span className="mobile-value">{this.props.isBrewingStatusStale ? 'Unbekannt' : (getAgitatorActive(this.props.realtimeState, this.props.socketConnected) === undefined ? 'Unbekannt' : getAgitatorActive(this.props.realtimeState, this.props.socketConnected) ? 'An' : 'Aus')}</span>
+                                <span className="mobile-value">{getAgitatorActive(this.props.realtimeState, this.props.socketConnected) === undefined ? 'Unbekannt' : getAgitatorActive(this.props.realtimeState, this.props.socketConnected) ? 'An' : 'Aus'}</span>
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Laufzeit:</span>
