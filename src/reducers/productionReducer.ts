@@ -14,6 +14,7 @@ const agitatorSnapshotsEqual = (left?: AgitatorRealtimeState, right?: AgitatorRe
         && left.paused === right.paused
         && left.operation === right.operation
         && left.intervalPhase === right.intervalPhase
+        && left.intervalProgressPercent === right.intervalProgressPercent
         && left.actualOutputOn === right.actualOutputOn
         && left.speedPercent === right.speedPercent
         && left.runningMinutes === right.runningMinutes

@@ -122,6 +122,36 @@ describe('Production agitator controller integration', () => {
         expect(AgitatorSettingsRepository.update).not.toHaveBeenCalled();
     });
 
+    it('places one interval indicator beside the interval switch without inventing progress', async () => {
+        const {container} = renderProduction();
+        await screen.findByRole('switch', {name: 'Intervallbetrieb'});
+
+        const actions = container.querySelector('.agitatorAutomaticActions');
+        expect(actions).toContainElement(screen.getByRole('progressbar', {name: 'Intervallfortschritt'}));
+        expect(actions).toContainElement(screen.getByRole('switch', {name: 'Intervallbetrieb'}));
+        expect(screen.getAllByRole('progressbar')).toHaveLength(1);
+        expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '0');
+    });
+
+    it('uses controller-owned interval progress only while an interval phase is active', async () => {
+        const {props, rerender} = renderProduction();
+        await screen.findByRole('progressbar');
+        const runtime = {mode: 'AUTOMATIC' as const, paused: false, operation: 'INTERVAL' as const,
+            intervalPhase: 'RUNNING', intervalProgressPercent: 48, actualOutputOn: true,
+            speedPercent: 36, runningMinutes: 2, breakMinutes: 7};
+
+        rerender(<Production {...props} realtimeState={{alarms: [], alarmsReceived: true, agitator: runtime}} />);
+        expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '48');
+
+        rerender(<Production {...props} realtimeState={{alarms: [], alarmsReceived: true,
+            agitator: {...runtime, operation: 'CONTINUOUS'}}} />);
+        expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '0');
+
+        rerender(<Production {...props} realtimeState={{alarms: [], alarmsReceived: true,
+            agitator: {...runtime, paused: true}}} />);
+        expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '0');
+    });
+
     it('uses persistent defaults as the initial runtime config when no current agitator state is available', async () => {
         jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockRejectedValue(new Error('no runtime state'));
         renderProduction();

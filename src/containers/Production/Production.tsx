@@ -41,6 +41,7 @@ import {ProductionRepository} from '../../repositorys/ProductionRepository';
 import {AgitatorSettingsRepository} from '../../repositorys/AgitatorSettingsRepository';
 import {RealtimeControllerState} from '../../model/RealtimeControllerState';
 import {formatTemperature, getTemperatureSensorMessage, isTemperatureSensorReady} from '../../utils/temperatureSensor';
+import {AgitatorIntervalProgress} from './components/AgitatorIntervalProgress';
 
 export const AGITATOR_SPEED_DEBOUNCE_MS = 300;
 
@@ -303,6 +304,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
                     paused: detail.runtime.paused,
                     operation: detail.runtime.desiredOperation,
                     intervalPhase: detail.runtime.intervalPhase,
+                    intervalProgressPercent: detail.runtime.intervalProgressPercent,
                     actualOutputOn: detail.runtime.actualOutputOn,
                 }
             });
@@ -764,6 +766,9 @@ export class Production extends React.Component<ProductionProps, ProductionState
         const settingsDisabled = !this.isControllerAvailable();
         const mashWaterDisabled = settingsDisabled || this.isRecipeWaterButtonDisabled('mash');
         const spargeWaterDisabled = settingsDisabled || this.isRecipeWaterButtonDisabled('sparge');
+        const intervalProgressActive = this.props.socketConnected === true
+            && agitatorRuntime?.mode === 'AUTOMATIC'
+            && agitatorRuntime.operation === 'INTERVAL';
         const renderSwitch = (label: string, checked: boolean, onChange: (checked: boolean) => void, disabled = settingsDisabled) => (
             <div className="settingsToggleRow">
                 <span>{label}</span>
@@ -802,10 +807,14 @@ export class Production extends React.Component<ProductionProps, ProductionState
                                 <h5 id="interval-settings-title">Intervallbetrieb</h5>
                                 <p>Beim Heizen durchgehend, sonst im Intervall</p>
                             </div>
-                            <Switch className="productionSwitch" onChange={(checked) => this.toggleAgitatorMode('AUTOMATIC', checked)}
-                                checked={displayedAgitatorMode === 'AUTOMATIC'} height={24} width={44} handleDiameter={18}
-                                checkedIcon={false} uncheckedIcon={false} disabled={settingsDisabled || !agitatorConfig}
-                                aria-label="Intervallbetrieb" />
+                            <div className="agitatorAutomaticActions">
+                                <AgitatorIntervalProgress active={intervalProgressActive} paused={agitatorRuntime?.paused ?? false}
+                                    progress={agitatorRuntime?.intervalProgressPercent} />
+                                <Switch className="productionSwitch" onChange={(checked) => this.toggleAgitatorMode('AUTOMATIC', checked)}
+                                    checked={displayedAgitatorMode === 'AUTOMATIC'} height={24} width={44} handleDiameter={18}
+                                    checkedIcon={false} uncheckedIcon={false} disabled={settingsDisabled || !agitatorConfig}
+                                    aria-label="Intervallbetrieb" />
+                            </div>
                         </div>
                         <div className="intervalTimeControls">
                             <div className="intervalTimeControl" data-testid="running-minutes-stepper">
@@ -848,9 +857,12 @@ export class Production extends React.Component<ProductionProps, ProductionState
                             </div>
                         </div>
                     </div>
-                    <div className="recipeWaterButtons">
-                        <button className="recipeWaterBtn" disabled={spargeWaterDisabled} onClick={this.startSpargeWaterFilling}>{this.getRecipeWaterButtonLabel('sparge')}</button>
-                        <button className="recipeWaterBtn" disabled={mashWaterDisabled} onClick={this.startMashWaterFilling}>{this.getRecipeWaterButtonLabel('mash')}</button>
+                    <div className="recipeWaterGroup" aria-label="Rezeptmengen">
+                        <span className="recipeWaterGroupLabel">Rezeptmengen</span>
+                        <div className="recipeWaterButtons">
+                            <button className="recipeWaterBtn" disabled={spargeWaterDisabled} onClick={this.startSpargeWaterFilling}>{this.getRecipeWaterButtonLabel('sparge')}</button>
+                            <button className="recipeWaterBtn" disabled={mashWaterDisabled} onClick={this.startMashWaterFilling}>{this.getRecipeWaterButtonLabel('mash')}</button>
+                        </div>
                     </div>
                 </section>
             </div>);

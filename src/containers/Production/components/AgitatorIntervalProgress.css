@@ -1,0 +1,28 @@
+.agitatorIntervalProgress {
+    position: relative;
+    display: inline-flex;
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
+    color: var(--color-accent);
+}
+
+.agitatorIntervalProgress .MuiCircularProgress-root {
+    position: absolute;
+    inset: 0;
+}
+
+.agitatorIntervalProgress .agitatorIntervalProgressTrack {
+    color: var(--color-text-secondary);
+    opacity: 0.24;
+}
+
+.agitatorIntervalProgress .agitatorIntervalProgressValue {
+    color: var(--color-accent);
+}
+
+/* Keep the reserved indicator clearly recognizable even before the controller
+ * provides phase progress. Only the track is shown; no progress is implied. */
+.agitatorIntervalProgress.is-inactive .agitatorIntervalProgressTrack {
+    opacity: 0.58;
+}
