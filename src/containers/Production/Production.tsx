@@ -38,6 +38,7 @@ import {getConfirmationRequestViewModel} from '../../utils/brewingStatus/selecto
 import {ConfirmStates} from '../../enums/eConfirmStates';
 import {AgitatorConfig, AgitatorMode, AgitatorRuntimeStatus} from '../../model/Agitator';
 import {ProductionRepository} from '../../repositorys/ProductionRepository';
+import {AgitatorSettingsRepository} from '../../repositorys/AgitatorSettingsRepository';
 import {RealtimeControllerState} from '../../model/RealtimeControllerState';
 import {formatTemperature, getTemperatureSensorMessage, isTemperatureSensorReady} from '../../utils/temperatureSensor';
 
@@ -179,7 +180,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
         if (getIsControllerAvailable(prevProps.isBackenAvailable) && !this.isControllerAvailable()) {
             this.clearAgitatorSpeedDebounce();
         }
-        if (!getIsControllerAvailable(prevProps.isBackenAvailable) && this.isControllerAvailable() && !this.state.agitatorConfig) {
+        if (!getIsControllerAvailable(prevProps.isBackenAvailable) && this.isControllerAvailable() && !this.state.agitatorRuntime) {
             this.loadAgitatorStatus();
         }
 
@@ -254,9 +255,14 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     loadAgitatorStatus = async (): Promise<void> => {
-        try {
-            const detail = await ProductionRepository.getAgitatorStatus();
-            if (!this.isMountedComponent) return;
+        const [defaultsResult, detailResult] = await Promise.allSettled([
+            AgitatorSettingsRepository.get(),
+            ProductionRepository.getAgitatorStatus(),
+        ]);
+        if (!this.isMountedComponent) return;
+
+        if (detailResult.status === 'fulfilled') {
+            const detail = detailResult.value;
             this.setState({
                 agitatorConfig: detail.config,
                 agitatorIntervalDraft: undefined,
@@ -269,11 +275,28 @@ export class Production extends React.Component<ProductionProps, ProductionState
                     actualOutputOn: detail.runtime.actualOutputOn,
                 }
             });
-        } catch (error) {
-            // The remaining production screen stays usable when detail status is unavailable.
-            console.error('Rührwerkstatus konnte nicht geladen werden', error);
-            if (this.isMountedComponent) this.setState({agitatorStatusLoadFailed: true});
+            return;
         }
+
+        console.error('Rührwerkstatus konnte nicht geladen werden', detailResult.reason);
+        if (defaultsResult.status === 'fulfilled') {
+            const defaults = defaultsResult.value;
+            this.setState({
+                agitatorConfig: {
+                    mode: 'OFF',
+                    speedPercent: defaults.speed,
+                    runningMinutes: defaults.intervalOnMinutes,
+                    breakMinutes: defaults.intervalOffMinutes,
+                },
+                agitatorIntervalDraft: undefined,
+                agitatorStatusLoadFailed: false,
+            });
+            return;
+        }
+
+        // The remaining production screen stays usable when neither runtime state nor defaults are available.
+        console.error('Rührwerk-Defaults konnten nicht geladen werden', defaultsResult.reason);
+        this.setState({agitatorStatusLoadFailed: true});
     }
 
     mergeAgitatorPoll = (poll: AgitatorRuntimeStatus): void => {
