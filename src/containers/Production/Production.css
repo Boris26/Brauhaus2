@@ -240,10 +240,8 @@
 .agitatorSpeedControl span { display: flex; justify-content: space-between; }
 .agitatorSpeedControl input { width: 100%; accent-color: var(--color-accent); }
 .agitatorAutomaticSettings { background: var(--color-surface-2); border: 0; box-shadow: inset 0 0 0 1px var(--color-accent-border); }
-.agitatorAutomaticHeader .settingsToggleRow { width: 100%; }
-.agitatorAutomaticHeader .settingsToggleRow > span { color: var(--color-accent-hover); font-weight: 700; }
-.agitatorAutomaticHeader p { margin: var(--spacing-xs) 0 0; color: var(--color-text-muted); font-size: var(--font-size-small); }
-.agitatorAutomaticActions { display: flex; align-items: center; gap: var(--spacing-sm); flex: 0 0 auto; }
+.agitatorAutomaticHeader { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-sm); }
+.agitatorIntervalProgressRow { display: flex; flex: 1 1 auto; align-items: center; justify-content: center; min-height: var(--control-height-compact); padding-block: var(--spacing-sm); }
 .agitatorAutomaticSettings h6 { margin: var(--spacing-sm) 0 0; color: var(--color-text); font-size: var(--font-size-small); }
 .agitatorIntervalStepper { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: var(--spacing-xs); min-width: 0; }
 .agitatorIntervalUnit { display: flex; align-items: center; height: 2rem; color: var(--color-text-secondary); }
@@ -617,7 +615,8 @@
 
     .intervalSettings {
         margin-top: clamp(0.25rem, 0.5vh, 0.4rem);
-        padding: clamp(var(--spacing-sm), 1vh, var(--spacing-md)) var(--spacing-sm);
+        padding: clamp(var(--spacing-sm), 1vh, var(--spacing-md)) var(--spacing-sm)
+            clamp(var(--spacing-md), 1.5vh, var(--spacing-lg));
     }
 
     .agitatorAutomaticSettings {
@@ -639,11 +638,6 @@
         line-height: 1.1;
     }
 
-    .agitatorAutomaticHeader p {
-        margin-top: var(--spacing-xs);
-        line-height: 1.15;
-    }
-
     .agitatorAutomaticSettings h6 {
         margin-top: clamp(0.25rem, 0.5vh, 0.4rem);
         line-height: 1.1;
@@ -652,8 +646,8 @@
     .intervalTimeControls {
         align-items: end;
         gap: var(--spacing-sm);
-        margin-top: auto;
-        padding-top: clamp(var(--spacing-md), 1.5vh, var(--spacing-lg));
+        margin-top: 0;
+        padding-top: var(--spacing-xs);
     }
 
     .intervalTimeControls .quantity-picker-label {
