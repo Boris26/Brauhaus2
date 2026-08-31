@@ -12,6 +12,7 @@ import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNone
 import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
 import {AgitatorSettings} from '../../model/AgitatorSettings';
 import {AgitatorSettingsRepository} from '../../repositorys/AgitatorSettingsRepository';
+import '../../components/Controlls/QuantityPicker/QuantityPicker.css';
 
 interface SettingsPageProps {
     theme: ThemeName;
@@ -337,14 +338,14 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                         </div>}
                         {agitatorSettings && agitatorDraft && <div className="agitator-defaults-controls">
                             <div className="agitator-default-fields">
-                                <label>Geschwindigkeit
-                                    <span><input aria-label="Geschwindigkeit" type="number" min="0" max="100" step="1" value={agitatorDraft.speed} disabled={agitatorSaving} onChange={(event) => this.changeAgitatorDraft('speed', event.target.value)}/> %</span>
+                                <label className="quantity-picker-container"> <span className="quantity-picker-label">Geschwindigkeit</span>
+                                    <span className="intervalTimeControl"><span className={`quantity-picker-content quantity-picker-editable ${agitatorSaving ? 'quantity-picker-content-disabled' : ''} ${this.agitatorValidationError()?.startsWith('Geschwindigkeit') ? 'quantity-picker-content-error' : ''}`}><input className="quantity-picker-native-input" aria-label="Geschwindigkeit" aria-invalid={this.agitatorValidationError()?.startsWith('Geschwindigkeit')} type="number" min="0" max="100" step="1" value={agitatorDraft.speed} disabled={agitatorSaving} onChange={(event) => this.changeAgitatorDraft('speed', event.target.value)}/></span><span className="intervalTimeUnit">%</span></span>
                                 </label>
-                                <label>Intervall EIN
-                                    <span><input aria-label="Intervall EIN" type="number" min="0" step="any" value={agitatorDraft.intervalOnMinutes} disabled={agitatorSaving} onChange={(event) => this.changeAgitatorDraft('intervalOnMinutes', event.target.value)}/> min</span>
+                                <label className="quantity-picker-container"> <span className="quantity-picker-label">Intervall EIN</span>
+                                    <span className="intervalTimeControl"><span className={`quantity-picker-content quantity-picker-editable ${agitatorSaving ? 'quantity-picker-content-disabled' : ''} ${this.agitatorValidationError()?.startsWith('Intervall EIN') ? 'quantity-picker-content-error' : ''}`}><input className="quantity-picker-native-input" aria-label="Intervall EIN" aria-invalid={this.agitatorValidationError()?.startsWith('Intervall EIN')} type="number" min="0" step="any" value={agitatorDraft.intervalOnMinutes} disabled={agitatorSaving} onChange={(event) => this.changeAgitatorDraft('intervalOnMinutes', event.target.value)}/></span><span className="intervalTimeUnit">min</span></span>
                                 </label>
-                                <label>Intervall AUS
-                                    <span><input aria-label="Intervall AUS" type="number" min="0" step="any" value={agitatorDraft.intervalOffMinutes} disabled={agitatorSaving} onChange={(event) => this.changeAgitatorDraft('intervalOffMinutes', event.target.value)}/> min</span>
+                                <label className="quantity-picker-container"> <span className="quantity-picker-label">Intervall AUS</span>
+                                    <span className="intervalTimeControl"><span className={`quantity-picker-content quantity-picker-editable ${agitatorSaving ? 'quantity-picker-content-disabled' : ''} ${this.agitatorValidationError()?.startsWith('Intervall AUS') ? 'quantity-picker-content-error' : ''}`}><input className="quantity-picker-native-input" aria-label="Intervall AUS" aria-invalid={this.agitatorValidationError()?.startsWith('Intervall AUS')} type="number" min="0" step="any" value={agitatorDraft.intervalOffMinutes} disabled={agitatorSaving} onChange={(event) => this.changeAgitatorDraft('intervalOffMinutes', event.target.value)}/></span><span className="intervalTimeUnit">min</span></span>
                                 </label>
                             </div>
                             {this.agitatorValidationError() && <p className="settings-error" role="alert">{this.agitatorValidationError()}</p>}
