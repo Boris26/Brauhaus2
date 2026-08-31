@@ -11,6 +11,7 @@
 - Water status via `GET /WaterStatus` returning `{ filledLiters, targetLiters, openClose }`; control also supports `GET /WaterStatus/`.
 - Hardware commands for water, heater, agitator speed, and agitator interval.
 - Confirm endpoints only for concrete waiting states: `Iodine`, `Mashup`, `Cooking`, `Boiling`, and `Decoction`. `Wait` may be displayed as a status but must not be sent as `/Confirm/Wait`.
+- `PUT /Agitator/Config` acknowledges a command but does not return confirmed configuration. The complete `agitator-state-changed` snapshot is the authoritative runtime configuration and must continue to be broadcast to all clients, including the initiating client.
 
 ## UI-owned behavior
 

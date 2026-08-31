@@ -45,7 +45,7 @@ Base URL: `BaseURL` (`/api/controller`), `CommandsURL` (`/api/controller/Command
 | GET | `WaterStatus` | Water fill status | `200`, `{ filledLiters, targetLiters, openClose }`; PI control also supports `WaterStatus/` |
 | GET | `Status/` | Runtime brewing status | `200`, structured or legacy status |
 | GET | `Agitator/Status` | Load current production agitator state; active modes take priority over defaults | `200`, full `{ config, inputs, runtime }` detail status |
-| PUT | `Agitator/Config` | Replace agitator configuration | Full `{ mode, speedPercent, runningMinutes, breakMinutes }` payload |
+| PUT | `Agitator/Config` | Replace agitator configuration | Full `{ mode, speedPercent, runningMinutes, breakMinutes }` payload; success acknowledges only the command, while `agitator-state-changed` confirms controller state |
 | GET | `Agitator/Defaults` | Load persistent agitator defaults for Settings and initial Production runtime values | `{ speed, intervalOnMinutes, intervalOffMinutes }` in percent/minutes |
 | PUT | `Agitator/Defaults` | Replace persistent agitator defaults without changing runtime | Full `{ speed, intervalOnMinutes, intervalOffMinutes }`; response contains the confirmed configuration |
 | POST | `Agitator/Pause` | Pause the selected active mode | `200` success |
