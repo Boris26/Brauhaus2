@@ -172,12 +172,27 @@
     border-bottom: 1px solid var(--color-border-soft);
 }
 
+.settingsContent {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: minmax(max-content, 3fr) minmax(max-content, 2fr);
+    gap: var(--spacing-sm);
+}
+
 .settingsGroup {
     padding: var(--spacing-sm);
     background: var(--color-brew-bg);
     border: 1px solid var(--color-border);
     border-left: 0.25rem solid var(--color-accent);
     border-radius: var(--border-radius-large);
+    min-height: 0;
+}
+
+.agitatorSettingsGroup,
+.waterSettingsGroup {
+    display: flex;
+    flex-direction: column;
 }
 
 .settingsGroup h4 {
@@ -202,10 +217,26 @@
     font-weight: 700;
 }
 
-.agitatorPauseButton { border: 1px solid var(--color-accent-border); border-radius: var(--border-radius-medium); background: var(--color-surface-2); color: var(--color-text); padding: 0.55rem 0.35rem; font-weight: 700; }
+.agitatorPauseButton {
+    width: 100%;
+    border: 1px solid var(--color-accent-border);
+    border-radius: var(--border-radius-medium);
+    background: var(--color-surface-2);
+    color: var(--color-text);
+    padding: 0.55rem 0.35rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+.agitatorPauseButton:hover:not(:disabled) { background: var(--color-accent-subtle-hover); }
+.agitatorPauseButton:disabled {
+    background: var(--color-disabled-bg);
+    border-color: var(--color-disabled-border);
+    color: var(--color-disabled-text);
+    cursor: not-allowed;
+}
 .agitatorAvailability { margin: 0 0 var(--spacing-xs); color: var(--color-text-muted); font-size: var(--font-size-small); }
 .agitatorPrimaryMode { padding-inline: var(--spacing-sm); }
-.agitatorSpeedControl { display: grid; gap: 0.35rem; margin-top: var(--spacing-sm); color: var(--color-text); }
+.agitatorSpeedControl { display: grid; gap: 0.35rem; margin-top: var(--spacing-md); color: var(--color-text); }
 .agitatorSpeedControl span { display: flex; justify-content: space-between; }
 .agitatorSpeedControl input { width: 100%; accent-color: var(--color-accent); }
 .agitatorAutomaticSettings { background: var(--color-surface-2); border: 0; box-shadow: inset 0 0 0 1px var(--color-accent-border); }
@@ -217,7 +248,7 @@
 .agitatorIntervalStepper { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: var(--spacing-xs); min-width: 0; }
 .agitatorIntervalUnit { display: flex; align-items: center; height: 2rem; color: var(--color-text-secondary); }
 .agitatorAutomaticSettings .quantity-picker-input-disabled { color: var(--color-text-secondary); }
-.agitatorPauseButton { width: 100%; margin-top: var(--spacing-sm); padding-top: var(--spacing-sm); border-top-color: var(--color-border-soft); }
+.agitatorFooter { margin-top: auto; padding-top: var(--spacing-sm); }
 .agitatorError { color: var(--color-error); margin: 0.5rem 0 0; }
 
 .intervalHeader {
@@ -418,7 +449,7 @@
 }
 
 .recipeWaterGroup {
-    margin-top: var(--spacing-sm);
+    margin-top: auto;
     padding-top: var(--spacing-sm);
     border-top: 1px solid var(--color-border-soft);
 }
@@ -522,9 +553,9 @@
     .recipeWaterButtons { flex-direction: column; }
 }
 
-/* The kiosk settings column remains in normal document flow. The cards keep
- * their content-defined height and use a little more of the available vertical
- * space before the footer action without allowing them to shrink below content. */
+/* At kiosk widths the settings grid consumes the full column height. Its 3:2
+ * tracks give the denser agitator controls more room while keeping both cards
+ * stable as runtime states change. */
 @media (min-width: 1281px) {
     .containerProduction .settings {
         display: flex;
@@ -543,9 +574,13 @@
     }
 
     .settingsGroup {
-        flex: 0 0 auto;
-        min-height: max-content;
         padding: clamp(0.425rem, 0.8vh, 0.625rem) 0.65rem;
+    }
+
+    .settingsContent {
+        grid-template-rows: minmax(0, 3fr) minmax(0, 2fr);
+        gap: clamp(0.3rem, 0.65vh, 0.5rem);
+        overflow: hidden;
     }
 
     .settingsGroup h4 {
@@ -608,8 +643,11 @@
     }
 
     .agitatorPauseButton {
-        margin-top: 0.35rem;
         padding: 0.4rem;
+    }
+
+    .agitatorFooter {
+        padding-top: 0.35rem;
     }
 
     .manualWaterControls,
