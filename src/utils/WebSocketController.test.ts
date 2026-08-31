@@ -77,6 +77,18 @@ describe('WebSocketController', () => {
     expect(handler).toHaveBeenCalledWith({event: 'brew-session-running', data: undefined});
   });
 
+  it('forwards complete temperature snapshots on the shared connection', () => {
+    const handler = jest.fn();
+    const controller = new WebSocketController('ws://controller');
+    controller.onMessage(handler);
+    controller.connect();
+    const snapshot = {current: null, health: 'MISSING', sensorId: '28-1'};
+
+    listeners['temperature-sensor-state-changed'](snapshot);
+
+    expect(handler).toHaveBeenCalledWith({event: 'temperature-sensor-state-changed', data: snapshot});
+  });
+
   it('forwards connect and disconnect with the current technical socket id', () => {
     const handler = jest.fn();
     const controller = new WebSocketController('ws://controller');

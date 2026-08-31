@@ -50,6 +50,17 @@ describe('productionReducer socket connection', () => {
         const reconnected = productionReducer(disconnected, ProductionActions.socketConnectionChanged(true, 'xyz789'));
         expect(reconnected.socketConnection).toEqual({connected: true, socketId: 'xyz789'});
     });
+
+    it('uses a fresh complete sensor snapshot and makes reconnect unknown until the next snapshot', () => {
+        const connected = productionReducer(initialProductionState, ProductionActions.socketConnectionChanged(true, 'abc123'));
+        const missing = productionReducer(connected, ProductionActions.temperatureSensorStateChanged({current: null, health: 'MISSING', sensorId: '28-1'}));
+        expect(missing.realtimeState.temperatureSensor).toEqual({current: null, health: 'MISSING', sensorId: '28-1'});
+
+        const reconnected = productionReducer(missing, ProductionActions.socketConnectionChanged(true, 'xyz789'));
+        expect(reconnected.realtimeState.temperatureSensor).toBeUndefined();
+        const recovered = productionReducer(reconnected, ProductionActions.temperatureSensorStateChanged({current: 55.8, health: 'OK', sensorId: '28-1'}));
+        expect(recovered.realtimeState.temperatureSensor?.current).toBe(55.8);
+    });
 });
 
 describe('productionReducer brewingStatus alarms', () => {

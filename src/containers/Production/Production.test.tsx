@@ -80,6 +80,8 @@ const renderProduction = (aOverrides: Partial<React.ComponentProps<typeof Produc
         confirm: jest.fn(),
         isConfirmPending: false,
         debug: true,
+        realtimeState: {alarms: [], alarmsReceived: true, temperatureSensor: {current: 55.4, health: 'OK', sensorId: '28-1'}},
+        socketConnected: true,
         ...aOverrides
     };
     return {props, ...render(<Production {...props} />)};
@@ -328,6 +330,38 @@ describe('Production finished-brew persistence', () => {
 });
 
 describe('Production start button', () => {
+
+    it('blocks startup safely until the first sensor snapshot arrives', () => {
+        renderProduction({realtimeState: {alarms: [], alarmsReceived: false}});
+        expect(screen.getByRole('button', {name: 'Start'})).toBeDisabled();
+        expect(screen.getByRole('alert')).toHaveTextContent('Temperatursensorstatus wird ermittelt');
+        expect(screen.getByLabelText('Aktuelle Temperatur: -- °C')).toBeInTheDocument();
+    });
+
+    it.each([
+        ['MISSING' as const, 'Temperatursensor nicht verfügbar'],
+        ['INVALID_READING' as const, 'Ungültiger Temperaturwert'],
+    ])('blocks startup for %s and explains the sensor problem', (health, message) => {
+        const {props} = renderProduction({realtimeState: {alarms: [], alarmsReceived: true, temperatureSensor: {current: null, health, sensorId: '28-1'}}});
+        fireEvent.click(screen.getByRole('button', {name: 'Start'}));
+        expect(props.sendBrewingData).not.toHaveBeenCalled();
+        expect(screen.getByRole('button', {name: 'Start'})).toBeDisabled();
+        expect(screen.getByRole('alert')).toHaveTextContent(message);
+        expect(screen.getByLabelText('Aktuelle Temperatur: -- °C')).toBeInTheDocument();
+        expect(screen.queryByLabelText('Aktuelle Temperatur: 0 °C')).not.toBeInTheDocument();
+    });
+
+    it('keeps a real zero valid and recovers immediately after a healthy snapshot', () => {
+        const missing = {alarms: [], alarmsReceived: true, temperatureSensor: {current: null, health: 'MISSING' as const, sensorId: '28-1'}};
+        const {rerender, props} = renderProduction({realtimeState: missing});
+        expect(screen.getByRole('button', {name: 'Start'})).toBeDisabled();
+        rerender(<Production {...props} realtimeState={{...missing, temperatureSensor: {current: 0, health: 'OK', sensorId: '28-1'}}} />);
+        expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+        expect(screen.getByLabelText('Aktuelle Temperatur: 0 °C')).toBeInTheDocument();
+        expect(screen.getByRole('button', {name: 'Start'})).toBeEnabled();
+        rerender(<Production {...props} realtimeState={{...missing, temperatureSensor: {current: 55.8, health: 'OK', sensorId: '28-1'}}} />);
+        expect(screen.getByLabelText('Aktuelle Temperatur: 55,8 °C')).toBeInTheDocument();
+    });
 
     it('starts status polling when the desktop production view is restored', () => {
         const startPolling = jest.fn();

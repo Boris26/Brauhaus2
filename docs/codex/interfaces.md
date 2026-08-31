@@ -73,7 +73,7 @@ The desktop header sends `POST /api/system/shutdown` without a request body only
 ## Socket.io
 
 - URL is derived from `BaseURL` by replacing leading `http` with `ws`.
-- `WebSocketController` uses `socket.io-client` and subscribes to event names `overheat` and `brew-session-running` on one shared connection.
+- `WebSocketController` uses `socket.io-client` and subscribes to `overheat`, `brew-session-running`, and all Realtime State Contract events on one shared connection.
 - On `overheat`, it calls the configured handler with `{ event: 'overheat', data }`.
 - On `brew-session-running`, it calls the same configured handler with `{ event: 'brew-session-running', data }`; `data` may be absent. The UI converts this to `BREW_SESSION_RUNNING_RECEIVED`, loads `GET /BrewSession`, reconstructs the scaled recipe, and starts the existing status poll if it is not already running.
 - The production epic maps the controller's structured handler object directly and ignores unknown event names.
@@ -117,4 +117,4 @@ These paths are consumed through the existing relative UI base URL `/api/control
 
 ### Realtime State Contract v1
 
-The exact events `heating-running-changed`, `agitator-state-changed`, `alarm-state-changed`, and `temperature-sensor-state-changed` use the existing shared connection. Payloads are respectively `{ running: boolean }`; the complete agitator snapshot with `mode: OFF|CONTINUOUS|AUTOMATIC`, `operation: STOPPED|CONTINUOUS|INTERVAL`, `paused`, optional `intervalPhase`, `actualOutputOn`, `speedPercent`, `runningMinutes`, and `breakMinutes`; `{ alarms: Alarm[] }`; and `{ health: string, sensorId?: string }`. Alarm arrays replace rather than merge state. Socket disconnect makes received hardware state stale. Braumeister #109 reconnect snapshots **Needs verification** on hardware.
+The exact events `heating-running-changed`, `agitator-state-changed`, `alarm-state-changed`, and `temperature-sensor-state-changed` use the existing shared connection. The temperature snapshot is `{ current: number | null, health: 'OK' | 'MISSING' | 'STALE' | 'INVALID_READING' | 'MULTIPLE_SENSORS_FOUND' | 'NOT_CONFIGURED', sensorId: string | null }`. Numeric zero is valid; `null` means that no valid reading exists. Alarm arrays replace rather than merge state. Socket disconnect makes received hardware state stale. The controller sends a fresh temperature snapshot to new and reconnected clients; end-to-end behavior on hardware **Needs verification**.

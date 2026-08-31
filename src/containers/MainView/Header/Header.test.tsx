@@ -16,6 +16,7 @@ const brewingStatus = (): BrewingStatus => ({
 });
 
 describe('Header navigation', () => {
+    const healthyRealtime = {alarms: [], alarmsReceived: true, temperatureSensor: {current: 55.4, health: 'OK' as const, sensorId: '28-1'}};
     beforeEach(() => {
         jest.clearAllMocks();
         mockedShutdown.mockResolvedValue();
@@ -71,6 +72,14 @@ describe('Header navigation', () => {
         rerender(<Header {...props} brewingStatus={brewingStatus()} socketConnected={true} realtimeState={inactiveRealtime} />);
         expect(screen.queryByRole('alert')).not.toBeInTheDocument();
         expect(screen.getByText('Aufheizen')).toBeInTheDocument();
+    });
+
+    it('shows translated sensor failures globally and removes the warning after recovery', () => {
+        const props = {setViewState: jest.fn(), currentView: Views.SETTINGS, removeAllMessages: jest.fn(), backendStatus: true, messages: []};
+        const {rerender} = render(<Header {...props} socketConnected={true} realtimeState={{...healthyRealtime, temperatureSensor: {current: null, health: 'MULTIPLE_SENSORS_FOUND', sensorId: null}}} />);
+        expect(screen.getByRole('alert')).toHaveTextContent('Mehrere Temperatursensoren erkannt');
+        rerender(<Header {...props} socketConnected={true} realtimeState={healthyRealtime} />);
+        expect(screen.queryByText(/Temperatursensor:/)).not.toBeInTheDocument();
     });
 
     it('asks for confirmation without performing a shutdown action', (): void => {

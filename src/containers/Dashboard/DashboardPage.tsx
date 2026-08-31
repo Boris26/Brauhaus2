@@ -15,6 +15,7 @@ import { buildActiveBrewRows, calculateAdditionalStats, calculateCareHints, calc
 import './DashboardPage.css';
 import {RealtimeControllerState} from '../../model/RealtimeControllerState';
 import {getAgitatorActive, getHeatingActive} from '../Production/utils/productionStatus';
+import {formatTemperature} from '../../utils/temperatureSensor';
 
 interface DashboardPageProps {
   beers?: Beer[];
@@ -43,7 +44,7 @@ export class DashboardPage extends React.Component<DashboardPageProps> {
   private renderProductionStatus(): React.ReactNode {
     const { brewingStatus, beerToBrew, isBackendAvailable } = this.props;
     const isActive = isProcessActive(brewingStatus);
-    const currentTemp = safeNumber(brewingStatus?.temperature.current, NaN);
+    const currentTemp = this.props.socketConnected ? this.props.realtimeState?.temperatureSensor?.current : null;
     const targetTemp = safeNumber(brewingStatus?.temperature.target, NaN);
     const duration = safeNumber(brewingStatus?.currentStep.duration);
     const elapsed = safeNumber(brewingStatus?.currentStep.elapsedTime);
@@ -58,7 +59,7 @@ export class DashboardPage extends React.Component<DashboardPageProps> {
         {isActive && <div className="dashboard-production-details">
           <div className="dashboard-production-heading"><h3>{beerToBrew?.name ?? 'Unbekanntes Bier'}</h3><span className="dashboard-badge dashboard-badge-production">{getBrewingStatusLabel(brewingStatus)}</span></div>
           <p className="dashboard-step">{brewingStatus?.currentStep.name || brewingStatus?.currentStep.phase || 'Aktueller Schritt'}</p>
-          <div className="dashboard-temperature"><strong>{Number.isFinite(currentTemp) ? currentTemp.toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '–'} °C</strong><span>Ziel: {Number.isFinite(targetTemp) ? targetTemp.toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '–'} °C</span></div>
+          <div className="dashboard-temperature"><strong>{formatTemperature(currentTemp)}</strong><span>Ziel: {Number.isFinite(targetTemp) ? targetTemp.toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '–'} °C</span></div>
           <div className="dashboard-progress" aria-label={`Fortschritt ${progress} Prozent`}><span style={{ width: `${progress}%` }} /></div>
           <div className="dashboard-time"><span>{canShowProgress ? `${formatSeconds(elapsed)} / ${formatSeconds(duration)}` : brewingStatus?.currentStep.mode === ProcessMode.HEATING ? 'Zieltemperatur wird erreicht' : 'Prozess läuft'}</span>{canShowProgress && <strong>{progress} %</strong>}</div>
           <dl className="dashboard-hardware">

@@ -9,6 +9,7 @@ import {ConfirmStates} from '../../../enums/eConfirmStates';
 import {ControlConfirmationNotice} from '../../Production/components/InlineProcessNotice';
 import {getAgitatorActive, getHeatingActive} from '../../Production/utils/productionStatus';
 import {RealtimeControllerState} from '../../../model/RealtimeControllerState';
+import {formatTemperature} from '../../../utils/temperatureSensor';
 
 interface MobileProductionViewProps {
     temperature: number;
@@ -120,7 +121,7 @@ export class MobileProductionView extends React.Component<MobileProductionViewPr
                         <div className="mobile-info-list">
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Temperatur:</span>
-                                <span className="mobile-value">{this.props.isBrewingStatusStale ? '-' : (brewingStatus?.temperature?.current ?? '-')} °C</span>
+                                <span className="mobile-value">{formatTemperature(this.props.socketConnected ? this.props.realtimeState?.temperatureSensor?.current : null)}</span>
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Zieltemperatur:</span>
