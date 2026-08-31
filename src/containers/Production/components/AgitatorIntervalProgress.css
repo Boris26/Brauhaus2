@@ -1,0 +1,16 @@
+.agitatorIntervalProgress {
+    position: relative;
+    display: inline-flex;
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
+    color: var(--color-accent);
+}
+
+.agitatorIntervalProgress .MuiCircularProgress-root {
+    position: absolute;
+    inset: 0;
+}
+
+.agitatorIntervalProgressTrack { opacity: 0.16; }
+.agitatorIntervalProgress.is-inactive { opacity: 0.32; }
