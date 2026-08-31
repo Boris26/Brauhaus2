@@ -255,9 +255,9 @@ describe('Production agitator controller integration', () => {
         await act(async () => { await Promise.resolve(); });
         expect(screen.getByText('42 %')).toBeInTheDocument();
 
-        rerender(<Production {...props} realtimeState={{...props.realtimeState, agitator: {...detail.config, paused: false, operation: 'INTERVAL', actualOutputOn: true, speedPercent: 36}}} />);
+        rerender(<Production {...props} realtimeState={{...props.realtimeState!, agitator: {...detail.config, paused: false, operation: 'INTERVAL', actualOutputOn: true, speedPercent: 36}}} />);
         expect(await screen.findByText('42 %')).toBeInTheDocument();
-        rerender(<Production {...props} realtimeState={{...props.realtimeState, agitator: {...detail.config, paused: false, operation: 'INTERVAL', actualOutputOn: true, speedPercent: 42}}} />);
+        rerender(<Production {...props} realtimeState={{...props.realtimeState!, agitator: {...detail.config, paused: false, operation: 'INTERVAL', actualOutputOn: true, speedPercent: 42}}} />);
         expect(await screen.findByText('42 %')).toBeInTheDocument();
         jest.useRealTimers();
     });
@@ -274,9 +274,9 @@ describe('Production agitator controller integration', () => {
         expect(screen.getByLabelText(label)).toHaveTextContent(String(label === 'Laufzeit' ? runningMinutes : breakMinutes));
         expect(button).toBeEnabled();
 
-        rerender(<Production {...props} realtimeState={{...props.realtimeState, agitator: {...detail.config, paused: false, operation: 'INTERVAL', actualOutputOn: true}}} />);
+        rerender(<Production {...props} realtimeState={{...props.realtimeState!, agitator: {...detail.config, paused: false, operation: 'INTERVAL', actualOutputOn: true}}} />);
         expect(await screen.findByLabelText(label)).toHaveTextContent(String(label === 'Laufzeit' ? runningMinutes : breakMinutes));
-        rerender(<Production {...props} realtimeState={{...props.realtimeState, agitator: {...detail.config, paused: false, operation: 'INTERVAL', actualOutputOn: true, runningMinutes, breakMinutes}}} />);
+        rerender(<Production {...props} realtimeState={{...props.realtimeState!, agitator: {...detail.config, paused: false, operation: 'INTERVAL', actualOutputOn: true, runningMinutes, breakMinutes}}} />);
         expect(await screen.findByLabelText(label)).toHaveTextContent(String(label === 'Laufzeit' ? runningMinutes : breakMinutes));
     });
 
