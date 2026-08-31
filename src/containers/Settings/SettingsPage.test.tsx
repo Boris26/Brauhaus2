@@ -4,13 +4,33 @@ import { SettingsPage } from './SettingsPage';
 import { AudioRepository } from '../../repositorys/AudioRepository';
 import { SoundType } from '../../enums/eSoundType';
 import {AgitatorSettingsRepository} from '../../repositorys/AgitatorSettingsRepository';
+import {PushService} from '../../utils/pushService';
 
 jest.mock('../../repositorys/AudioRepository');
 jest.mock('../../repositorys/AgitatorSettingsRepository');
+jest.mock('../../utils/pushService', () => ({
+    isPushSupported: jest.fn(() => true),
+    getPermissionState: jest.fn(() => 'granted'),
+    PushService: {
+        getSubscription: jest.fn(),
+        subscribe: jest.fn(),
+        unsubscribe: jest.fn(),
+        sendTestNotification: jest.fn(),
+    },
+}));
 
 const mockedTestSound = AudioRepository.testSound as jest.MockedFunction<typeof AudioRepository.testSound>;
 const mockedGetAgitatorSettings = AgitatorSettingsRepository.get as jest.MockedFunction<typeof AgitatorSettingsRepository.get>;
 const mockedUpdateAgitatorSettings = AgitatorSettingsRepository.update as jest.MockedFunction<typeof AgitatorSettingsRepository.update>;
+const mockedPushService = PushService as jest.Mocked<typeof PushService>;
+
+const deferred = <T,>() => {
+    let resolve!: (value: T) => void;
+    const promise = new Promise<T>((promiseResolve) => {
+        resolve = promiseResolve;
+    });
+    return {promise, resolve};
+};
 
 const renderSettings = (debug = true, setDebug = jest.fn()) => render(
     <SettingsPage theme="default" setTheme={jest.fn()} debug={debug} setDebug={setDebug} />
@@ -22,6 +42,7 @@ describe('Settings sound tests', () => {
         mockedTestSound.mockResolvedValue();
         mockedGetAgitatorSettings.mockResolvedValue({speed: 32, intervalOnMinutes: 2.5, intervalOffMinutes: 7});
         mockedUpdateAgitatorSettings.mockImplementation(async (settings) => settings);
+        mockedPushService.getSubscription.mockResolvedValue(null);
     });
 
     it('hides sound tests outside debug mode and enables debug centrally', () => {
@@ -91,6 +112,7 @@ describe('Settings agitator defaults', () => {
         mockedTestSound.mockResolvedValue();
         mockedGetAgitatorSettings.mockResolvedValue({speed: 32, intervalOnMinutes: 2.5, intervalOffMinutes: 7});
         mockedUpdateAgitatorSettings.mockImplementation(async (settings) => settings);
+        mockedPushService.getSubscription.mockResolvedValue(null);
     });
 
     it('loads and displays the complete controller snapshot without frontend defaults', async () => {
@@ -159,5 +181,56 @@ describe('Settings agitator defaults', () => {
         expect(screen.getByText(/extern geändert/)).toBeInTheDocument();
         fireEvent.click(screen.getByRole('button', {name: 'Externe Werte übernehmen'}));
         expect(screen.getByDisplayValue('75')).toBeInTheDocument();
+    });
+});
+
+describe('Settings async lifecycle', () => {
+    let page: SettingsPage | null = null;
+
+    beforeEach(async () => {
+        jest.clearAllMocks();
+        mockedGetAgitatorSettings.mockResolvedValue({speed: 32, intervalOnMinutes: 2.5, intervalOffMinutes: 7});
+        mockedPushService.getSubscription.mockResolvedValue(null);
+    });
+
+    const renderWithRef = () => render(
+        <SettingsPage ref={(instance) => { page = instance; }} theme="default" setTheme={jest.fn()} debug setDebug={jest.fn()} />
+    );
+
+    const expectNoPostUnmountState = async (start: () => Promise<void>, settle: () => void) => {
+        const view = renderWithRef();
+        await waitFor(() => expect(mockedGetAgitatorSettings).toHaveBeenCalled());
+        const instance = page!;
+        const setState = jest.spyOn(instance, 'setState');
+        const request = start();
+        view.unmount();
+        setState.mockClear();
+        settle();
+        await request;
+        expect(setState).not.toHaveBeenCalled();
+    };
+
+    it('does not update state after unmount during a push-state refresh', async () => {
+        const request = deferred<PushSubscription | null>();
+        mockedPushService.getSubscription.mockReturnValue(request.promise);
+        await expectNoPostUnmountState(() => page!.refreshPushState(), () => request.resolve(null));
+    });
+
+    it('does not update state after unmount during a push toggle', async () => {
+        const request = deferred<PushSubscription>();
+        mockedPushService.subscribe.mockReturnValue(request.promise);
+        await expectNoPostUnmountState(() => page!.handlePushToggle(), () => request.resolve({} as PushSubscription));
+    });
+
+    it('does not update state after unmount during a push test', async () => {
+        const request = deferred<void>();
+        mockedPushService.sendTestNotification.mockReturnValue(request.promise);
+        await expectNoPostUnmountState(() => page!.handlePushTest(), () => request.resolve());
+    });
+
+    it('does not update state after unmount during a sound test', async () => {
+        const request = deferred<void>();
+        mockedTestSound.mockReturnValue(request.promise);
+        await expectNoPostUnmountState(() => page!.handleSoundTest(SoundType.ALARM), () => request.resolve());
     });
 });

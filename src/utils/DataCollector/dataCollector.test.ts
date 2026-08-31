@@ -1,4 +1,4 @@
-import {dataCollector, MAX_MEASUREMENTS_PER_STATUS_GROUP} from './dataCollector';
+import {dataCollector, MAX_MEASUREMENTS_PER_STATUS_GROUP, MAX_TOTAL_MEASUREMENTS} from './dataCollector';
 import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
 
 const createStatus = (aTemperature: number): BrewingStatus => ({
@@ -51,6 +51,31 @@ describe('dataCollector', (): void => {
     expect(aMeasurements[0].Temperature).toBe(0);
     expect(aMeasurements[1].Temperature).toBe(6);
     expect(aMeasurements.at(-1)?.Temperature).toBe(MAX_MEASUREMENTS_PER_STATUS_GROUP + 4);
+  });
+
+  it('bounds the total across many distinct status groups', (): void => {
+    for (let index = 0; index < MAX_TOTAL_MEASUREMENTS; index += 1) {
+      dataCollector.setBrewingStatus({
+        ...createStatus(index),
+        currentStep: {...createStatus(index).currentStep, index, name: `step-${index}`},
+      });
+    }
+
+    expect(dataCollector.getMeasurementCount()).toBe(MAX_TOTAL_MEASUREMENTS);
+    expect(dataCollector.getTimelineMeasurements()).toHaveLength(MAX_TOTAL_MEASUREMENTS);
+
+    for (let index = MAX_TOTAL_MEASUREMENTS; index < MAX_TOTAL_MEASUREMENTS + 25; index += 1) {
+      dataCollector.setBrewingStatus({
+        ...createStatus(index),
+        currentStep: {...createStatus(index).currentStep, index, name: `step-${index}`},
+      });
+    }
+
+    const parsed = JSON.parse(dataCollector.getAllDataAsJSONString()) as {groupedData: Record<string, unknown[]>};
+    expect(dataCollector.getMeasurementCount()).toBe(MAX_TOTAL_MEASUREMENTS);
+    expect(dataCollector.getTimelineMeasurements()).toHaveLength(MAX_TOTAL_MEASUREMENTS);
+    expect(Object.keys(parsed.groupedData)).toHaveLength(MAX_TOTAL_MEASUREMENTS);
+    expect(dataCollector.getTimelineMeasurements().at(-1)?.Temperature).toBe(MAX_TOTAL_MEASUREMENTS + 24);
   });
 });
 

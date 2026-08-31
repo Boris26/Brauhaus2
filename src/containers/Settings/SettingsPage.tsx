@@ -70,6 +70,12 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
     private soundRequestActive = false;
     private isMountedComponent = false;
 
+    private setStateWhileMounted = (state: Parameters<SettingsPage['setState']>[0]) => {
+        if (this.isMountedComponent) {
+            this.setState(state);
+        }
+    };
+
     componentDidMount() {
         this.isMountedComponent = true;
         this.refreshPushState();
@@ -195,7 +201,7 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
     refreshPushState = async () => {
         const pushSupported = isPushSupported();
         if (!pushSupported) {
-            this.setState({
+            this.setStateWhileMounted({
                 pushSupported: false,
                 pushPermission: getPermissionState(),
                 pushSubscribed: false,
@@ -205,14 +211,14 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
 
         try {
             const subscription = await PushService.getSubscription();
-            this.setState({
+            this.setStateWhileMounted({
                 pushSupported,
                 pushPermission: getPermissionState(),
                 pushSubscribed: Boolean(subscription),
                 pushError: null,
             });
         } catch (error) {
-            this.setState({
+            this.setStateWhileMounted({
                 pushSupported,
                 pushPermission: getPermissionState(),
                 pushSubscribed: false,
@@ -244,19 +250,19 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
         try {
             if (this.state.pushSubscribed) {
                 await PushService.unsubscribe();
-                this.setState({ statusMessage: 'Push-Benachrichtigungen deaktiviert.' });
+                this.setStateWhileMounted({ statusMessage: 'Push-Benachrichtigungen deaktiviert.' });
             } else {
                 await PushService.subscribe();
-                this.setState({ statusMessage: 'Push-Benachrichtigungen aktiviert.' });
+                this.setStateWhileMounted({ statusMessage: 'Push-Benachrichtigungen aktiviert.' });
             }
-            await this.refreshPushState();
+            if (this.isMountedComponent) await this.refreshPushState();
         } catch (error) {
-            this.setState({
+            this.setStateWhileMounted({
                 pushError: this.formatPushError(error),
                 pushPermission: getPermissionState(),
             });
         } finally {
-            this.setState({ pushLoading: false });
+            this.setStateWhileMounted({ pushLoading: false });
         }
     };
 
@@ -264,11 +270,11 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
         this.setState({ pushLoading: true, pushError: null, statusMessage: null });
         try {
             await PushService.sendTestNotification();
-            this.setState({ statusMessage: 'Testnachricht wurde an den Controller übergeben.' });
+            this.setStateWhileMounted({ statusMessage: 'Testnachricht wurde an den Controller übergeben.' });
         } catch (error) {
-            this.setState({ pushError: this.formatPushError(error) });
+            this.setStateWhileMounted({ pushError: this.formatPushError(error) });
         } finally {
-            this.setState({ pushLoading: false });
+            this.setStateWhileMounted({ pushLoading: false });
         }
     };
 
@@ -295,10 +301,10 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
         try {
             await AudioRepository.testSound(sound);
         } catch (error) {
-            this.setState({ soundError: 'Sound konnte nicht abgespielt werden.' });
+            this.setStateWhileMounted({ soundError: 'Sound konnte nicht abgespielt werden.' });
         } finally {
             this.soundRequestActive = false;
-            this.setState({ soundPlaying: null });
+            this.setStateWhileMounted({ soundPlaying: null });
         }
     };
 

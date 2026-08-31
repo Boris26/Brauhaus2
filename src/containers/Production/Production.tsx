@@ -111,8 +111,13 @@ export class Production extends React.Component<ProductionProps, ProductionState
     private readonly MAX_WATER_LEVEL = 70;
     private remainingTimeInterval: NodeJS.Timeout | null = null;
     private agitatorSpeedDebounceTimeout: NodeJS.Timeout | null = null;
-    private errorTimeouts: NodeJS.Timeout[] = [];
+    private waterErrorTimeout: NodeJS.Timeout | null = null;
     private isMountedComponent = false;
+    private agitatorFreshnessGeneration = 0;
+    private agitatorLoadGeneration = 0;
+    private agitatorIntentGeneration = 0;
+    private queuedAgitatorConfig?: {config: AgitatorConfig; generation: number};
+    private agitatorConfigRequestRunning = false;
 
     constructor(props: ProductionProps) {
         super(props);
@@ -125,7 +130,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
             agitatorRequestPending: false,
             agitatorStatusLoadFailed: false,
             waterSwitchState: false,
-            liters: 0,
+            liters: 1,
             waterFillingError: false,
             mainAgitatorError: false,
             isWaterSwitchBlinking: false,
@@ -157,19 +162,20 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     componentWillUnmount() {
         this.isMountedComponent = false;
+        this.queuedAgitatorConfig = undefined;
         this.clearAgitatorSpeedDebounce();
         if (this.remainingTimeInterval !== null) {
             clearInterval(this.remainingTimeInterval);
             this.remainingTimeInterval = null;
         }
-        this.errorTimeouts.forEach(clearTimeout);
-        this.errorTimeouts = [];
+        this.clearWaterErrorTimeout();
     }
 
 
     componentDidUpdate(prevProps: Readonly<ProductionProps>, prevState: Readonly<ProductionState>) {
         const {brewingStatus,isWaterFillingSuccessful, waterStatus} = this.props;
         const {waterSwitchState,showHopsDialog,showFinishDialog} = this.state;
+        const selectedRecipeChanged = prevProps.selectedBeer?.id !== this.props.selectedBeer?.id;
 
 
         if (prevProps.brewingStatus !== brewingStatus) {
@@ -190,8 +196,9 @@ export class Production extends React.Component<ProductionProps, ProductionState
             this.setState({equipmentAlarmDismissed: false});
         }
 
-        if (prevProps.selectedBeer !== this.props.selectedBeer) {
+        if (selectedRecipeChanged) {
             this.resetRecipeWaterFillState({indexOfCurrentStep: 0});
+            this.calculateTheHopTimes();
         }
 
         const aBrewingProcessChangedToInactive = prevProps.brewingStatus?.process?.state !== brewingStatus?.process?.state && brewingStatus?.process?.state !== ProcessState.ACTIVE;
@@ -223,19 +230,21 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
 
         if (!isWaterFillingSuccessful && waterSwitchState) {
-            const timeoutId = setTimeout(() => {
+            if (this.waterErrorTimeout === null) this.waterErrorTimeout = setTimeout(() => {
+                this.waterErrorTimeout = null;
                 if (this.isMountedComponent) {
                     this.failActiveRecipeWaterFill();
                 }
             }, 300);
-            this.errorTimeouts.push(timeoutId);
+        } else {
+            this.clearWaterErrorTimeout();
         }
         if (typeof brewingStatus?.currentStep?.index === "number" && brewingStatus.currentStep.index !== prevProps?.brewingStatus?.currentStep?.index) {
             this.setState({indexOfCurrentStep: brewingStatus.currentStep.index});
         }
 
 
-        if (brewingStatus?.currentStep?.phase === ProcessPhase.COOKING && !showHopsDialog) {
+        if (!selectedRecipeChanged && brewingStatus?.currentStep?.phase === ProcessPhase.COOKING && !showHopsDialog) {
             this.checkForHopAddition()
         }
         if (brewingStatus?.process?.state === ProcessState.FINISHED && !showFinishDialog && !this.state.brewingFinished)
@@ -256,12 +265,23 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     }
 
+    private clearWaterErrorTimeout = (): void => {
+        if (this.waterErrorTimeout !== null) {
+            clearTimeout(this.waterErrorTimeout);
+            this.waterErrorTimeout = null;
+        }
+    };
+
     loadAgitatorStatus = async (): Promise<void> => {
+        const loadGeneration = ++this.agitatorLoadGeneration;
+        const freshnessAtStart = this.agitatorFreshnessGeneration;
         const [defaultsResult, detailResult] = await Promise.allSettled([
             AgitatorSettingsRepository.get(),
             ProductionRepository.getAgitatorStatus(),
         ]);
-        if (!this.isMountedComponent) return;
+        if (!this.isMountedComponent
+            || loadGeneration !== this.agitatorLoadGeneration
+            || freshnessAtStart !== this.agitatorFreshnessGeneration) return;
 
         if (detailResult.status === 'fulfilled') {
             const detail = detailResult.value;
@@ -311,15 +331,25 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     mergeAgitatorPoll = (poll: AgitatorRuntimeStatus): void => {
+        this.agitatorFreshnessGeneration += 1;
         this.setState((previous) => ({
             agitatorRuntime: {...previous.agitatorRuntime, ...poll},
             agitatorConfig: previous.agitatorConfig ? {
-                ...previous.agitatorConfig,
-                mode: poll.mode,
-                ...(typeof poll.speedPercent === 'number' ? {speedPercent: poll.speedPercent} : {}),
-                ...(typeof poll.runningMinutes === 'number' ? {runningMinutes: poll.runningMinutes} : {}),
-                ...(typeof poll.breakMinutes === 'number' ? {breakMinutes: poll.breakMinutes} : {}),
-            } : previous.agitatorConfig,
+                    ...previous.agitatorConfig,
+                    mode: poll.mode,
+                    ...(typeof poll.speedPercent === 'number' ? {speedPercent: poll.speedPercent} : {}),
+                    ...(typeof poll.runningMinutes === 'number' ? {runningMinutes: poll.runningMinutes} : {}),
+                    ...(typeof poll.breakMinutes === 'number' ? {breakMinutes: poll.breakMinutes} : {}),
+                } : typeof poll.speedPercent === 'number'
+                    && typeof poll.runningMinutes === 'number'
+                    && typeof poll.breakMinutes === 'number'
+                    ? {
+                        mode: poll.mode,
+                        speedPercent: poll.speedPercent,
+                        runningMinutes: poll.runningMinutes,
+                        breakMinutes: poll.breakMinutes,
+                    }
+                    : undefined,
             agitatorSpeedDraft: previous.agitatorSpeedDraft !== undefined && poll.speedPercent === previous.agitatorSpeedDraft
                 ? undefined
                 : previous.agitatorSpeedDraft,
@@ -331,6 +361,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
             agitatorModeDraft: previous.agitatorModeDraft !== undefined && poll.mode === previous.agitatorModeDraft
                 ? undefined
                 : previous.agitatorModeDraft,
+            mainAgitatorError: false,
         }));
     }
 
@@ -346,52 +377,83 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     submitAgitatorConfig = async (config: AgitatorConfig): Promise<boolean> => {
+        const generation = ++this.agitatorIntentGeneration;
+        this.queuedAgitatorConfig = {config, generation};
         this.setState({mainAgitatorError: false});
-        try {
-            await ProductionRepository.setAgitatorConfig(config);
-            return true;
-        } catch (error) {
-            if (this.isMountedComponent) this.setState((previous) => {
-                const desired = this.getDesiredAgitatorConfig();
-                const requestIsStillCurrent = desired !== undefined
-                    && desired.mode === config.mode
-                    && desired.speedPercent === config.speedPercent
-                    && desired.runningMinutes === config.runningMinutes
-                    && desired.breakMinutes === config.breakMinutes;
-                return {
-                    agitatorSpeedDraft: requestIsStillCurrent ? undefined : previous.agitatorSpeedDraft,
-                    agitatorIntervalDraft: requestIsStillCurrent ? undefined : previous.agitatorIntervalDraft,
-                    agitatorModeDraft: requestIsStillCurrent ? undefined : previous.agitatorModeDraft,
-                    mainAgitatorError: true,
-                };
-            });
-            return false;
-        }
+        return this.drainAgitatorConfigQueue();
     }
+
+    private drainAgitatorConfigQueue = async (): Promise<boolean> => {
+        if (this.agitatorConfigRequestRunning) return true;
+        let latestResult = true;
+        this.agitatorConfigRequestRunning = true;
+        try {
+            while (this.queuedAgitatorConfig) {
+                const request = this.queuedAgitatorConfig;
+                this.queuedAgitatorConfig = undefined;
+                const authorityAtStart = this.agitatorFreshnessGeneration;
+                try {
+                    await ProductionRepository.setAgitatorConfig(request.config);
+                    latestResult = true;
+                } catch (error) {
+                    latestResult = false;
+                    if (this.isMountedComponent
+                        && request.generation === this.agitatorIntentGeneration
+                        && authorityAtStart === this.agitatorFreshnessGeneration) {
+                        this.setState((previous) => {
+                            const desired = this.getDesiredAgitatorConfig();
+                            const requestIsStillCurrent = desired !== undefined && this.sameAgitatorConfig(desired, request.config);
+                            return {
+                                agitatorSpeedDraft: requestIsStillCurrent ? undefined : previous.agitatorSpeedDraft,
+                                agitatorIntervalDraft: requestIsStillCurrent ? undefined : previous.agitatorIntervalDraft,
+                                agitatorModeDraft: requestIsStillCurrent ? undefined : previous.agitatorModeDraft,
+                                mainAgitatorError: true,
+                            };
+                        });
+                    }
+                }
+            }
+        } finally {
+            this.agitatorConfigRequestRunning = false;
+        }
+        return latestResult;
+    }
+
+    private sameAgitatorConfig = (left: AgitatorConfig, right: AgitatorConfig): boolean =>
+        left.mode === right.mode && left.speedPercent === right.speedPercent
+        && left.runningMinutes === right.runningMinutes && left.breakMinutes === right.breakMinutes;
 
     toggleAgitatorMode = (mode: Exclude<AgitatorMode, 'OFF'>, checked: boolean): void => {
         const config = this.getDesiredAgitatorConfig();
         if (!this.isControllerAvailable() || !config) return;
         const nextMode: AgitatorMode = checked ? mode : (config.mode === mode ? 'OFF' : config.mode);
-        if (nextMode !== config.mode) this.setState({agitatorModeDraft: nextMode}, () => {
-            const desired = this.getDesiredAgitatorConfig();
-            if (desired) void this.submitAgitatorConfig(desired);
-        });
+        if (nextMode !== config.mode) {
+            this.agitatorFreshnessGeneration += 1;
+            this.setState({agitatorModeDraft: nextMode, mainAgitatorError: false}, () => {
+                const desired = this.getDesiredAgitatorConfig();
+                if (desired) void this.submitAgitatorConfig(desired);
+            });
+        }
     }
 
     toggleAgitatorPause = async (): Promise<void> => {
         const runtime = this.state.agitatorRuntime;
         if (!runtime || runtime.mode === 'OFF' || this.state.agitatorRequestPending) return;
+        const generation = ++this.agitatorIntentGeneration;
+        const authorityAtStart = this.agitatorFreshnessGeneration;
         this.setState({agitatorRequestPending: true, mainAgitatorError: false});
         try {
             if (runtime.paused) await ProductionRepository.resumeAgitator();
             else await ProductionRepository.pauseAgitator();
-            if (this.isMountedComponent) this.setState((previous) => ({
-                agitatorRuntime: previous.agitatorRuntime ? {...previous.agitatorRuntime, paused: !runtime.paused} : previous.agitatorRuntime,
-                agitatorRequestPending: false,
-            }));
+            if (this.isMountedComponent) this.setState({agitatorRequestPending: false});
         } catch (error) {
-            if (this.isMountedComponent) this.setState({agitatorRequestPending: false, mainAgitatorError: true});
+            if (this.isMountedComponent) this.setState((previous) => ({
+                agitatorRequestPending: false,
+                mainAgitatorError: generation === this.agitatorIntentGeneration
+                    && authorityAtStart === this.agitatorFreshnessGeneration
+                    ? true
+                    : previous.mainAgitatorError,
+            }));
         }
     }
 
@@ -438,14 +500,20 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     calculateTheHopTimes() {
         const {selectedBeer} = this.props;
-        this.setState({hopSchedule: selectedBeer ? calculateHopSchedule(selectedBeer) : [], announcedHopTimes: []});
+        this.setState({
+            hopSchedule: selectedBeer ? calculateHopSchedule(selectedBeer) : [],
+            announcedHopTimes: [],
+            showHopsDialog: false,
+            hopName: ''
+        });
     }
 
     onAgitatorSpeedChange = (value: number) => {
         if (!this.isControllerAvailable() || !this.state.agitatorConfig) {
             return;
         }
-        this.setState({agitatorSpeedDraft: value});
+        this.agitatorFreshnessGeneration += 1;
+        this.setState({agitatorSpeedDraft: value, mainAgitatorError: false});
         this.clearAgitatorSpeedDebounce();
         this.agitatorSpeedDebounceTimeout = setTimeout(() => {
             this.agitatorSpeedDebounceTimeout = null;
@@ -466,7 +534,8 @@ export class Production extends React.Component<ProductionProps, ProductionState
     onIntervalChangeBreakTime = (value: number) => {
         const config = this.getDesiredAgitatorConfig();
         if (!this.isControllerAvailable() || !config) return;
-        this.setState({agitatorIntervalDraft: {runningMinutes: config.runningMinutes, breakMinutes: value}}, () => {
+        this.agitatorFreshnessGeneration += 1;
+        this.setState({agitatorIntervalDraft: {runningMinutes: config.runningMinutes, breakMinutes: value}, mainAgitatorError: false}, () => {
             const desired = this.getDesiredAgitatorConfig();
             if (desired) void this.submitAgitatorConfig(desired);
         });
@@ -475,7 +544,8 @@ export class Production extends React.Component<ProductionProps, ProductionState
     onIntervalChangeRunningTime = (value: number) => {
         const config = this.getDesiredAgitatorConfig();
         if (!this.isControllerAvailable() || !config) return;
-        this.setState({agitatorIntervalDraft: {runningMinutes: value, breakMinutes: config.breakMinutes}}, () => {
+        this.agitatorFreshnessGeneration += 1;
+        this.setState({agitatorIntervalDraft: {runningMinutes: value, breakMinutes: config.breakMinutes}, mainAgitatorError: false}, () => {
             const desired = this.getDesiredAgitatorConfig();
             if (desired) void this.submitAgitatorConfig(desired);
         });
@@ -739,13 +809,13 @@ export class Production extends React.Component<ProductionProps, ProductionState
                         </div>
                         <div className="intervalTimeControls">
                             <div className="intervalTimeControl" data-testid="running-minutes-stepper">
-                                <QuantityPicker initialValue={agitatorIntervalDraft?.runningMinutes ?? agitatorConfig?.runningMinutes}
+                                <QuantityPicker value={agitatorIntervalDraft?.runningMinutes ?? agitatorConfig?.runningMinutes}
                                     min={0} max={Number.MAX_SAFE_INTEGER} onChange={this.onIntervalChangeRunningTime}
                                     isDisabled={settingsDisabled || !agitatorConfig || displayedAgitatorMode !== 'AUTOMATIC'} label="Laufzeit" labelPosition="above"/>
                                 <span className="intervalTimeUnit">min</span>
                             </div>
                             <div className="intervalTimeControl" data-testid="break-minutes-stepper">
-                                <QuantityPicker initialValue={agitatorIntervalDraft?.breakMinutes ?? agitatorConfig?.breakMinutes}
+                                <QuantityPicker value={agitatorIntervalDraft?.breakMinutes ?? agitatorConfig?.breakMinutes}
                                     min={0} max={Number.MAX_SAFE_INTEGER} onChange={this.onIntervalChangeBreakTime}
                                     isDisabled={settingsDisabled || !agitatorConfig || displayedAgitatorMode !== 'AUTOMATIC'} label="Pausenzeit" labelPosition="above"/>
                                 <span className="intervalTimeUnit">min</span>
@@ -773,7 +843,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
                                 {renderSwitch('Wasser aktivieren', waterSwitchState, this.toggleWaterSwitchState)}
                             </div>
                             <div className="rightAligned">
-                                <QuantityPicker initialValue={1} min={1} max={this.MAX_WATER_LEVEL} onChange={this.onSetWaterChangeQuantity}
+                                <QuantityPicker value={this.state.liters} min={1} max={this.MAX_WATER_LEVEL} onChange={this.onSetWaterChangeQuantity}
                                                 isDisabled={settingsDisabled || waterSwitchState} label="Liter" labelPosition="above"/>
                             </div>
                         </div>
