@@ -6,7 +6,6 @@ import {ConfirmStates} from '../../../enums/eConfirmStates';
 const mapStateToProps = (state: any) => ({
     temperature: state.productionReducer.temperature,
     brewingStatus: state.productionReducer.brewingStatus,
-    isPollingRunning: state.productionReducer.isPollingRunning,
     isConfirmPending: state.productionReducer.isConfirmPending,
     confirmError: state.productionReducer.confirmError,
     isBrewingStatusStale: state.productionReducer.isBrewingStatusStale
@@ -15,8 +14,6 @@ const mapStateToProps = (state: any) => ({
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
-    startPolling: () => dispatch(ProductionActions.startPolling()),
-    stopPolling: () => dispatch(ProductionActions.stopPolling()),
     confirm: (confirmState: ConfirmStates) => dispatch(ProductionActions.confirm(confirmState))
 });
 

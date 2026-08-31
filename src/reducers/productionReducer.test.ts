@@ -142,6 +142,7 @@ describe('productionReducer stale status', () => {
 
 it('makes a brewing start failure visible and releases polling pending state', () => {
     const pending = productionReducer(initialProductionState, ProductionActions.sendBrewingData({} as any));
+    expect(pending.isPollingRunning).toBe(false);
     const failed = productionReducer(pending, ProductionActions.brewingStartFailure('HTTP 500'));
     expect(failed.isPollingRunning).toBe(false);
     expect(failed.brewingStartError).toBe('HTTP 500');

@@ -52,10 +52,10 @@ Redux Observable epics drive async API calls and polling. Thunk middleware is co
 
 Epics exist for beer, production, hops, malts, yeast, and additional ingredients. Production epics include:
 
-- Temperature read on `GET_TEMPERATURES`.
+- A legacy one-shot temperature read remains available through `GET_TEMPERATURES`, but Production no longer dispatches it on mount; current temperature and sensor health/ID come from the app-lifetime Socket.IO sensor snapshot.
 - Agitator toggle and speed commands.
 - Automatic water filling command plus a 1 second water-status polling stream while filling.
-- Send brewing recipe, start brewing, then poll brewing status every 1000 ms until process state is `FINISHED`, `ABORTED`, or `ERROR`.
+- Send brewing recipe and start brewing (including the optional connected default-namespace Socket.IO ID as `X-Socket-ID`), then emit `START_POLLING` after success. The single polling epic reads brewing status every 1000 ms until process state is `FINISHED`, `ABORTED`, or `ERROR`; Production view mount/unmount does not own that lifecycle.
 - Backend availability polling every 20000 ms after `CHECK_IS_BACKEND_AVAILABLE`.
 - `POST /next` workflow step advancement.
 - Socket.io connection for `overheat` events. Needs verification: the epic currently tries `JSON.parse(event.data)`, but `WebSocketController` passes an object `{ event, data }`, not a browser `MessageEvent`.

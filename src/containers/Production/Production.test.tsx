@@ -57,7 +57,6 @@ const renderProduction = (aOverrides: Partial<React.ComponentProps<typeof Produc
         currentAgitatorSpeed: 5,
         agitatorSpeed: 5,
         agitatorIsRunning: ToggleState.OFF,
-        getTemperatures: jest.fn(),
         toggleAgitator: jest.fn(),
         setAgitatorSpeed: jest.fn(),
         startWaterFilling: jest.fn(),
@@ -66,8 +65,6 @@ const renderProduction = (aOverrides: Partial<React.ComponentProps<typeof Produc
         sendBrewingData: jest.fn(),
         brewingStatus: createBrewingStatus(),
         isPollingRunning: false,
-        startPolling: jest.fn(),
-        stopPolling: jest.fn(),
         isBackenAvailable: {isBackenAvailable: true, statusText: 'OK'},
         waterStatus: {filledLiters: 0, targetLiters: 0, openClose: false},
         addFinishedBrew: jest.fn(),
@@ -286,8 +283,7 @@ describe('Production finished-brew persistence', () => {
 
     it('keeps the dialog open while saving and completes only after create success', async () => {
         const addFinishedBrew = jest.fn();
-        const stopPolling = jest.fn();
-        const {props, rerender, finishedStatus} = openFinishDialog({addFinishedBrew, stopPolling});
+        const {props, rerender, finishedStatus} = openFinishDialog({addFinishedBrew});
 
         fireEvent.click(await screen.findByRole('button', {name: 'Sud speichern'}));
         fireEvent.click(screen.getByRole('button', {name: 'Sud speichern'}));
@@ -296,12 +292,10 @@ describe('Production finished-brew persistence', () => {
 
         rerender(<Production {...props} brewingStatus={finishedStatus} isAddingFinishedBrew={true} pendingFinishedBrewPayload={actualPayload} />);
         expect(screen.getByRole('button', {name: 'Speichert …'})).toBeDisabled();
-        expect(stopPolling).not.toHaveBeenCalled();
         expect(dataCollector.getMeasurementCount()).toBe(1);
 
         rerender(<Production {...props} brewingStatus={finishedStatus} isAddingFinishedBrew={false} pendingFinishedBrewPayload={undefined} />);
         await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-        expect(stopPolling).toHaveBeenCalledTimes(1);
         expect(dataCollector.getMeasurementCount()).toBe(0);
     });
 
@@ -363,23 +357,16 @@ describe('Production start button', () => {
         expect(screen.getByLabelText('Aktuelle Temperatur: 55,8 °C')).toBeInTheDocument();
     });
 
-    it('starts status polling when the desktop production view is restored', () => {
-        const startPolling = jest.fn();
-        renderProduction({startPolling, isPollingRunning: false});
-        expect(startPolling).toHaveBeenCalledTimes(1);
+    it('does not start status polling when the desktop production view is mounted', () => {
+        renderProduction({isPollingRunning: false});
+        expect(Production.prototype.componentDidMount.toString()).not.toContain('startPolling');
     });
 
-    it('does not start a duplicate poller when polling is already active', () => {
-        const startPolling = jest.fn();
-        renderProduction({startPolling, isPollingRunning: true});
-        expect(startPolling).not.toHaveBeenCalled();
-    });
-
-    it('warns about stale controller data and suppresses the stale heater flame', () => {
+    it('keeps realtime heater feedback independent from stale process status', () => {
         const status = createBrewingStatus(ProcessState.ACTIVE);
         const {container} = renderProduction({brewingStatus: status, isBrewingStatusStale: true});
         expect(screen.getByRole('alert')).toHaveTextContent('Braustatus ist veraltet');
-        expect(container.querySelector('.flame-strip')).toBeNull();
+        expect(container.querySelector('.flame-strip')).not.toBeNull();
     });
 
     it('places the current step above the sole temperature gauge and keeps the process column focused on the upcoming flow', () => {

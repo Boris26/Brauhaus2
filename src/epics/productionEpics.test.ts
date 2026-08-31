@@ -174,8 +174,9 @@ describe('sendBrewingDataEpic$ failures', () => {
   it('emits a visible lifecycle failure when recipe transfer fails', async () => {
     mockedProductionRepository.sendBrewingData.mockResolvedValue(false);
     const action$ = new Subject<ProductionActions.SendBrewingData>();
+    const state$ = new BehaviorSubject(restoreState([]));
     const emitted: ProductionActions.AllProductionActions[] = [];
-    const subscription = sendBrewingDataEpic$(action$).subscribe((action: unknown) => emitted.push(action as ProductionActions.AllProductionActions));
+    const subscription = sendBrewingDataEpic$(action$, state$).subscribe((action: unknown) => emitted.push(action as ProductionActions.AllProductionActions));
     action$.next(ProductionActions.sendBrewingData(createBrewingData()));
     await flushPromises();
     expect(emitted).toEqual([ProductionActions.brewingStartFailure('Das Rezept konnte nicht an den Controller übertragen werden.')]);
@@ -462,84 +463,82 @@ describe('startPollingEpic$', (): void => {
     expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledTimes(1);
     subscription.unsubscribe();
   });
+
+  it('ignores repeated START_POLLING while one loop is active', async (): Promise<void> => {
+    mockedProductionRepository.getBrewingStatus.mockResolvedValue(createStatusResponse(ProcessState.ACTIVE));
+    const action$ = new Subject<ProductionActions.AllProductionActions>();
+    const subscription = startPollingEpic$(action$).subscribe();
+
+    action$.next(ProductionActions.startPolling());
+    action$.next(ProductionActions.startPolling());
+    await flushPromises();
+
+    expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledTimes(1);
+    jest.advanceTimersByTime(1000);
+    await flushPromises();
+    expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledTimes(2);
+    subscription.unsubscribe();
+  });
+
+  it.each([ProcessState.FINISHED, ProcessState.ABORTED, ProcessState.ERROR])('stops for terminal process state %s', async (terminalState): Promise<void> => {
+    mockedProductionRepository.getBrewingStatus.mockResolvedValue(createStatusResponse(terminalState));
+    const action$ = new Subject<ProductionActions.AllProductionActions>();
+    const subscription = startPollingEpic$(action$).subscribe();
+
+    action$.next(ProductionActions.startPolling());
+    await flushPromises();
+    jest.advanceTimersByTime(5000);
+    await flushPromises();
+
+    expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledTimes(1);
+    subscription.unsubscribe();
+  });
 });
 
 describe('sendBrewingDataEpic$', (): void => {
   beforeEach((): void => {
-    jest.useFakeTimers();
     jest.clearAllMocks();
     mockedProductionRepository.sendBrewingData.mockResolvedValue(true);
     mockedProductionRepository.startBrewing.mockResolvedValue(true);
   });
 
-  afterEach((): void => {
-    jest.useRealTimers();
+  const stateWithSocket = (connected: boolean, socketId?: string): any => ({
+    beerDataReducer: initialBeerState,
+    productionReducer: {
+      ...initialProductionState,
+      socketConnection: {connected, socketId},
+    },
   });
 
-  it('does not start another brewing status request while the previous one is still running', async (): Promise<void> => {
-    const aDeferredStatus = createDeferred<{ available: BackendAvailable; brewingStatus: BrewingStatus }>();
-    mockedProductionRepository.getBrewingStatus.mockReturnValue(aDeferredStatus.promise);
-
+  it('emits exactly one START_POLLING after a successful own brew start', async (): Promise<void> => {
     const action$ = new Subject<ProductionActions.SendBrewingData>();
-    const subscription = sendBrewingDataEpic$(action$).subscribe();
+    const state$ = new BehaviorSubject(stateWithSocket(true, 'socket-123'));
+    const emitted: ProductionActions.AllProductionActions[] = [];
+    const subscription = sendBrewingDataEpic$(action$, state$).subscribe((action: unknown) => emitted.push(action as ProductionActions.AllProductionActions));
 
     action$.next(ProductionActions.sendBrewingData(createBrewingData()));
     await flushPromises();
-    jest.advanceTimersByTime(5000);
-    await flushPromises();
 
-    expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledTimes(1);
-    expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledWith(BREWING_STATUS_REQUEST_TIMEOUT);
-
-    aDeferredStatus.resolve(createStatusResponse(ProcessState.ACTIVE));
-    await flushPromises();
-    jest.advanceTimersByTime(1000);
-    await flushPromises();
-
-    expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledTimes(2);
+    expect(mockedProductionRepository.sendBrewingData).toHaveBeenCalledTimes(1);
+    expect(mockedProductionRepository.startBrewing).toHaveBeenCalledWith('socket-123');
+    expect(emitted).toEqual([ProductionActions.startPolling()]);
+    expect(mockedProductionRepository.getBrewingStatus).not.toHaveBeenCalled();
     subscription.unsubscribe();
   });
 
-  it.each([ProcessState.FINISHED, ProcessState.ABORTED, ProcessState.ERROR])('stops polling for terminal state %s', async (aTerminalState: ProcessState): Promise<void> => {
-    mockedProductionRepository.getBrewingStatus.mockResolvedValue(createStatusResponse(aTerminalState));
-
+  it('omits the socket id and does not poll when StartBrewing fails', async (): Promise<void> => {
+    mockedProductionRepository.startBrewing.mockResolvedValue(false);
     const action$ = new Subject<ProductionActions.SendBrewingData>();
-    const emittedActions: ProductionActions.AllProductionActions[] = [];
-    const subscription = sendBrewingDataEpic$(action$).subscribe((aAction: ProductionActions.AllProductionActions): void => {
-      emittedActions.push(aAction);
-    });
-
-    action$.next(ProductionActions.sendBrewingData(createBrewingData()));
-    await flushPromises();
-    jest.advanceTimersByTime(5000);
-    await flushPromises();
-
-    expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledTimes(1);
-    expect(emittedActions).toEqual([ProductionActions.setBrewingStatus(createBrewingStatus(aTerminalState))]);
-    subscription.unsubscribe();
-  });
-
-  it('continues at the configured interval after a failed status request without increasing frequency', async (): Promise<void> => {
-    mockedProductionRepository.getBrewingStatus
-      .mockRejectedValueOnce(new Error('timeout'))
-      .mockResolvedValueOnce(createStatusResponse(ProcessState.ACTIVE));
-
-    const action$ = new Subject<ProductionActions.SendBrewingData>();
-    const emittedActions: ProductionActions.AllProductionActions[] = [];
-    const subscription = sendBrewingDataEpic$(action$).subscribe((aAction: ProductionActions.AllProductionActions): void => {
-      emittedActions.push(aAction);
-    });
+    const state$ = new BehaviorSubject(stateWithSocket(false));
+    const emitted: ProductionActions.AllProductionActions[] = [];
+    const subscription = sendBrewingDataEpic$(action$, state$).subscribe((action: unknown) => emitted.push(action as ProductionActions.AllProductionActions));
 
     action$.next(ProductionActions.sendBrewingData(createBrewingData()));
     await flushPromises();
 
-    expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledTimes(1);
-
-    jest.advanceTimersByTime(1000);
-    await flushPromises();
-
-    expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledTimes(2);
-    expect(emittedActions).toEqual([ProductionActions.setBrewingStatus(createBrewingStatus(ProcessState.ACTIVE))]);
+    expect(mockedProductionRepository.startBrewing).toHaveBeenCalledWith(undefined);
+    expect(emitted).toEqual([ProductionActions.brewingStartFailure('Der Controller konnte den Brauvorgang nicht starten.')]);
+    expect(mockedProductionRepository.getBrewingStatus).not.toHaveBeenCalled();
     subscription.unsubscribe();
   });
 });

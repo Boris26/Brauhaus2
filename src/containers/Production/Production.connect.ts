@@ -9,9 +9,6 @@ import {Production} from './Production';
 import {ConfirmStates} from '../../enums/eConfirmStates';
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
-    getTemperatures: () => {
-        dispatch(ProductionActions.getTemperatures())
-    },
     toggleAgitator: (agitatorState: MashAgitatorStates) => {
         dispatch(ProductionActions.toggleAgitator(agitatorState))
     },
@@ -24,13 +21,6 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
     sendBrewingData: (brewingData: BrewingData) => {
         dispatch(ProductionActions.sendBrewingData(brewingData))
     },
-    startPolling: () => {
-        dispatch(ProductionActions.startPolling())
-    },
-    stopPolling: () => {
-        dispatch(ProductionActions.stopPolling())
-    },
-
     addFinishedBrew: (finishedBrew: FinishedBrewCreatePayload) => {
         dispatch(BeerActions.addFinishedBrew(finishedBrew))
     },
