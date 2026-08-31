@@ -136,8 +136,8 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
         const on = Number(draft.intervalOnMinutes);
         const off = Number(draft.intervalOffMinutes);
         if (!Number.isInteger(speed) || speed < 0 || speed > 100) return 'Geschwindigkeit muss eine Ganzzahl zwischen 0 und 100 sein.';
-        if (!Number.isFinite(on) || on <= 0) return 'Intervall EIN muss größer als 0 sein.';
-        if (!Number.isFinite(off) || off <= 0) return 'Intervall AUS muss größer als 0 sein.';
+        if (!Number.isFinite(on) || on <= 0) return 'Laufzeit muss größer als 0 sein.';
+        if (!Number.isFinite(off) || off <= 0) return 'Pausenzeit muss größer als 0 sein.';
         return null;
     };
 
@@ -364,23 +364,23 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                                     </span>
                                 </label>
                                 <label className="quantity-picker-container">
-                                    <span className="quantity-picker-label">Intervall EIN</span>
+                                    <span className="quantity-picker-label">Laufzeit</span>
                                     <span className="intervalTimeControl">
-                                        <span className={`quantity-picker-content quantity-picker-editable ${agitatorSaving ? 'quantity-picker-content-disabled' : ''} ${this.agitatorValidationError()?.startsWith('Intervall EIN') ? 'quantity-picker-content-error' : ''}`}>
-                                            <button className="decrement-btn" type="button" aria-label="Intervall EIN verringern" disabled={agitatorSaving || Number(agitatorDraft.intervalOnMinutes) <= 0} onClick={() => this.stepAgitatorDraft('intervalOnMinutes', -1, 0, Number.MAX_SAFE_INTEGER)}>-</button>
-                                            <input className="quantity-picker-native-input" style={{textAlign: 'center', background: 'var(--color-input-bg)'}} aria-label="Intervall EIN" aria-invalid={this.agitatorValidationError()?.startsWith('Intervall EIN')} type="number" min="0" step="any" value={agitatorDraft.intervalOnMinutes} disabled={agitatorSaving} onChange={(event) => this.changeAgitatorDraft('intervalOnMinutes', event.target.value)}/>
-                                            <button className="increment-btn" type="button" aria-label="Intervall EIN erhöhen" disabled={agitatorSaving} onClick={() => this.stepAgitatorDraft('intervalOnMinutes', 1, 0, Number.MAX_SAFE_INTEGER)}>+</button>
+                                        <span className={`quantity-picker-content quantity-picker-editable ${agitatorSaving ? 'quantity-picker-content-disabled' : ''} ${this.agitatorValidationError()?.startsWith('Laufzeit') ? 'quantity-picker-content-error' : ''}`}>
+                                            <button className="decrement-btn" type="button" aria-label="Laufzeit verringern" disabled={agitatorSaving || Number(agitatorDraft.intervalOnMinutes) <= 0} onClick={() => this.stepAgitatorDraft('intervalOnMinutes', -1, 0, Number.MAX_SAFE_INTEGER)}>-</button>
+                                            <input className="quantity-picker-native-input" style={{textAlign: 'center', background: 'var(--color-input-bg)'}} aria-label="Laufzeit" aria-invalid={this.agitatorValidationError()?.startsWith('Laufzeit')} type="number" min="0" step="any" value={agitatorDraft.intervalOnMinutes} disabled={agitatorSaving} onChange={(event) => this.changeAgitatorDraft('intervalOnMinutes', event.target.value)}/>
+                                            <button className="increment-btn" type="button" aria-label="Laufzeit erhöhen" disabled={agitatorSaving} onClick={() => this.stepAgitatorDraft('intervalOnMinutes', 1, 0, Number.MAX_SAFE_INTEGER)}>+</button>
                                         </span>
                                         <span className="intervalTimeUnit">min</span>
                                     </span>
                                 </label>
                                 <label className="quantity-picker-container">
-                                    <span className="quantity-picker-label">Intervall AUS</span>
+                                    <span className="quantity-picker-label">Pausenzeit</span>
                                     <span className="intervalTimeControl">
-                                        <span className={`quantity-picker-content quantity-picker-editable ${agitatorSaving ? 'quantity-picker-content-disabled' : ''} ${this.agitatorValidationError()?.startsWith('Intervall AUS') ? 'quantity-picker-content-error' : ''}`}>
-                                            <button className="decrement-btn" type="button" aria-label="Intervall AUS verringern" disabled={agitatorSaving || Number(agitatorDraft.intervalOffMinutes) <= 0} onClick={() => this.stepAgitatorDraft('intervalOffMinutes', -1, 0, Number.MAX_SAFE_INTEGER)}>-</button>
-                                            <input className="quantity-picker-native-input" style={{textAlign: 'center', background: 'var(--color-input-bg)'}} aria-label="Intervall AUS" aria-invalid={this.agitatorValidationError()?.startsWith('Intervall AUS')} type="number" min="0" step="any" value={agitatorDraft.intervalOffMinutes} disabled={agitatorSaving} onChange={(event) => this.changeAgitatorDraft('intervalOffMinutes', event.target.value)}/>
-                                            <button className="increment-btn" type="button" aria-label="Intervall AUS erhöhen" disabled={agitatorSaving} onClick={() => this.stepAgitatorDraft('intervalOffMinutes', 1, 0, Number.MAX_SAFE_INTEGER)}>+</button>
+                                        <span className={`quantity-picker-content quantity-picker-editable ${agitatorSaving ? 'quantity-picker-content-disabled' : ''} ${this.agitatorValidationError()?.startsWith('Pausenzeit') ? 'quantity-picker-content-error' : ''}`}>
+                                            <button className="decrement-btn" type="button" aria-label="Pausenzeit verringern" disabled={agitatorSaving || Number(agitatorDraft.intervalOffMinutes) <= 0} onClick={() => this.stepAgitatorDraft('intervalOffMinutes', -1, 0, Number.MAX_SAFE_INTEGER)}>-</button>
+                                            <input className="quantity-picker-native-input" style={{textAlign: 'center', background: 'var(--color-input-bg)'}} aria-label="Pausenzeit" aria-invalid={this.agitatorValidationError()?.startsWith('Pausenzeit')} type="number" min="0" step="any" value={agitatorDraft.intervalOffMinutes} disabled={agitatorSaving} onChange={(event) => this.changeAgitatorDraft('intervalOffMinutes', event.target.value)}/>
+                                            <button className="increment-btn" type="button" aria-label="Pausenzeit erhöhen" disabled={agitatorSaving} onClick={() => this.stepAgitatorDraft('intervalOffMinutes', 1, 0, Number.MAX_SAFE_INTEGER)}>+</button>
                                         </span>
                                         <span className="intervalTimeUnit">min</span>
                                     </span>

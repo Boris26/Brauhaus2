@@ -44,7 +44,7 @@ Base URL: `BaseURL` (`/api/controller`), `CommandsURL` (`/api/controller/Command
 | GET | `temperatur/0` | Current temperature fallback | `200`, numeric body |
 | GET | `WaterStatus` | Water fill status | `200`, `{ filledLiters, targetLiters, openClose }`; PI control also supports `WaterStatus/` |
 | GET | `Status/` | Runtime brewing status | `200`, structured or legacy status |
-| GET | `Agitator/Status` | Load current production agitator state; it takes priority over defaults | `200`, full `{ config, inputs, runtime }` detail status |
+| GET | `Agitator/Status` | Load current production agitator state; active modes take priority over defaults | `200`, full `{ config, inputs, runtime }` detail status |
 | PUT | `Agitator/Config` | Replace agitator configuration | Full `{ mode, speedPercent, runningMinutes, breakMinutes }` payload |
 | GET | `Agitator/Defaults` | Load persistent agitator defaults for Settings and initial Production runtime values | `{ speed, intervalOnMinutes, intervalOffMinutes }` in percent/minutes |
 | PUT | `Agitator/Defaults` | Replace persistent agitator defaults without changing runtime | Full `{ speed, intervalOnMinutes, intervalOffMinutes }`; response contains the confirmed configuration |

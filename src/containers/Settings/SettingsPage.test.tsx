@@ -117,7 +117,7 @@ describe('Settings agitator defaults', () => {
         renderSettings(false);
         const speed = await screen.findByLabelText('Geschwindigkeit');
         fireEvent.change(speed, {target: {value: '40'}});
-        fireEvent.change(screen.getByLabelText('Intervall EIN'), {target: {value: '3.5'}});
+        fireEvent.change(screen.getByLabelText('Laufzeit'), {target: {value: '3.5'}});
         fireEvent.click(screen.getByRole('button', {name: 'Speichern'}));
         await waitFor(() => expect(mockedUpdateAgitatorSettings).toHaveBeenCalledWith({speed: 40, intervalOnMinutes: 3.5, intervalOffMinutes: 7}));
         expect(await screen.findByDisplayValue('41')).toBeInTheDocument();
@@ -128,7 +128,7 @@ describe('Settings agitator defaults', () => {
     it('keeps edited values and shows a backend PUT error', async () => {
         mockedUpdateAgitatorSettings.mockRejectedValueOnce({response: {data: {error: 'Ungültige Werte'}}});
         renderSettings(false);
-        fireEvent.change(await screen.findByLabelText('Intervall AUS'), {target: {value: '3.75'}});
+        fireEvent.change(await screen.findByLabelText('Pausenzeit'), {target: {value: '3.75'}});
         fireEvent.click(screen.getByRole('button', {name: 'Speichern'}));
         expect(await screen.findByRole('alert')).toHaveTextContent('Ungültige Werte');
         expect(screen.getByDisplayValue('3.75')).toBeInTheDocument();
