@@ -158,7 +158,9 @@ const productionReducer = (
                     connected: aAction.payload.connected,
                     socketId: aAction.payload.connected ? aAction.payload.socketId : undefined
                 },
-                realtimeState: {...aState.realtimeState, temperatureSensor: undefined}
+                realtimeState: aAction.payload.connected
+                    ? aState.realtimeState
+                    : {...aState.realtimeState, temperatureSensor: undefined}
             };
         }
         case ProductionActions.ActionTypes.HEATING_RUNNING_CHANGED:
