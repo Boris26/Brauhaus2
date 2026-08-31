@@ -853,12 +853,6 @@ export class Production extends React.Component<ProductionProps, ProductionState
                         <button className="recipeWaterBtn" disabled={mashWaterDisabled} onClick={this.startMashWaterFilling}>{this.getRecipeWaterButtonLabel('mash')}</button>
                     </div>
                 </section>
-                <div className="startBtnDiv">
-                    <button className="startBtn" disabled={this.isStartButtonDisabled()} onClick={this.startBrewing}>Start</button>
-                    {!isTemperatureSensorReady(this.props.realtimeState?.temperatureSensor, this.props.socketConnected) && <p className="sensorStartWarning" role="alert">
-                        Brauvorgang kann nicht gestartet werden: {getTemperatureSensorMessage(this.props.realtimeState?.temperatureSensor)}.
-                    </p>}
-                </div>
             </div>);
     }
 
@@ -934,7 +928,8 @@ export class Production extends React.Component<ProductionProps, ProductionState
         if (selectedBeer === undefined) {
             return null;
         }
-        return <ProcessList displayMode="current" selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} remainingSeconds={this.state.displayedRemainingSeconds} confirmationPending={this.props.isConfirmPending} confirmationError={this.props.confirmError} onConfirmWaiting={this.confirmCurrentWaitingState} hopReminderName={this.state.showHopsDialog ? this.state.hopName : undefined} onCompleteHopReminder={this.confirmHopDialog} />;
+        const sensorReady = isTemperatureSensorReady(this.props.realtimeState?.temperatureSensor, this.props.socketConnected);
+        return <ProcessList displayMode="current" selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} remainingSeconds={this.state.displayedRemainingSeconds} confirmationPending={this.props.isConfirmPending} confirmationError={this.props.confirmError} onConfirmWaiting={this.confirmCurrentWaitingState} hopReminderName={this.state.showHopsDialog ? this.state.hopName : undefined} onCompleteHopReminder={this.confirmHopDialog} onStartBrewing={this.startBrewing} isStartBrewingDisabled={this.isStartButtonDisabled()} startBrewingWarning={!sensorReady ? `Brauvorgang kann nicht gestartet werden: ${getTemperatureSensorMessage(this.props.realtimeState?.temperatureSensor)}.` : undefined} />;
     }
 
 

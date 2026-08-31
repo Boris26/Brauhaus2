@@ -61,6 +61,9 @@ export interface ProcessListProps {
     onConfirmWaiting?: () => void;
     hopReminderName?: string;
     onCompleteHopReminder?: () => void;
+    onStartBrewing?: () => void;
+    isStartBrewingDisabled?: boolean;
+    startBrewingWarning?: string;
 }
 
 interface ProcessListState {
@@ -333,17 +336,24 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
 
         const currentStepCard = hasRecipeProcess ? (
             <>
-                <div className="current-process-label">Aktiver Schritt</div>
+                <div className="current-process-label">{isProcessStarted ? 'Aktiver Schritt' : 'Brauprozess'}</div>
                 <section className={`current-process-step${confirmationRequest ? ' current-process-step--action-required' : ''}`} aria-label="Aktueller Prozessschritt">
-                    <div className="current-step-heading">
-                        <div>
-                            <h4>{isProcessStarted ? this.getCurrentStepTitle(activeStep) : 'Noch kein Brauvorgang gestartet'}</h4>
-                            {!isProcessStarted && <span className="current-step-badge">Geplanter Ablauf</span>}
+                    {!isProcessStarted ? (
+                        <div className="process-start-state">
+                            <h4>Brauprozess</h4>
+                            <button className="startBtn" type="button" disabled={this.props.isStartBrewingDisabled} onClick={this.props.onStartBrewing}>Brauvorgang starten</button>
+                            {this.props.startBrewingWarning && <p className="sensorStartWarning" role="alert">{this.props.startBrewingWarning}</p>}
                         </div>
-                        {this.getCurrentStepMeta(activeStep, isProcessStarted)}
-                    </div>
-                    {!confirmationRequest && this.renderStatusSection(isProcessStarted)}
-                    {this.renderInlineNotice()}
+                    ) : (
+                        <>
+                            <div className="current-step-heading">
+                                <div><h4>{this.getCurrentStepTitle(activeStep)}</h4></div>
+                                {this.getCurrentStepMeta(activeStep, true)}
+                            </div>
+                            {!confirmationRequest && this.renderStatusSection(true)}
+                            {this.renderInlineNotice()}
+                        </>
+                    )}
                 </section>
             </>
         ) : <div className="process-empty-state">Kein Bier für den Brauvorgang ausgewählt.</div>;
