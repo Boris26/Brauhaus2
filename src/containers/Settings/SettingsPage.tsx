@@ -10,17 +10,15 @@ import PaletteOutlinedIcon from '@mui/icons-material/PaletteOutlined';
 import PrecisionManufacturingOutlinedIcon from '@mui/icons-material/PrecisionManufacturingOutlined';
 import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined';
 import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
-import QuantityPicker from '../../components/Controlls/QuantityPicker/QuantityPicker';
 import {AgitatorSettings} from '../../model/AgitatorSettings';
 import {AgitatorSettingsRepository} from '../../repositorys/AgitatorSettingsRepository';
-
-export const AGITATOR_SETTINGS_SPEED_DEBOUNCE_MS = 300;
 
 interface SettingsPageProps {
     theme: ThemeName;
     setTheme: (theme: ThemeName) => void;
     debug: boolean;
     setDebug: (debug: boolean) => void;
+    agitatorDefaultsSnapshot?: AgitatorSettings;
 }
 
 interface SettingsPageState {
@@ -36,8 +34,8 @@ interface SettingsPageState {
     soundPlaying: SoundType | null;
     soundError: string | null;
     agitatorSettings?: AgitatorSettings;
-    agitatorSpeedDraft?: number;
-    agitatorIntervalDraft?: Pick<AgitatorSettings, 'runningMinutes' | 'breakMinutes'>;
+    agitatorDraft?: {speed: string; intervalOnMinutes: string; intervalOffMinutes: string};
+    pendingAgitatorSnapshot?: AgitatorSettings;
     agitatorLoading: boolean;
     agitatorSaving: boolean;
     agitatorError: string | null;
@@ -60,8 +58,8 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
             soundPlaying: null,
             soundError: null,
             agitatorSettings: undefined,
-            agitatorSpeedDraft: undefined,
-            agitatorIntervalDraft: undefined,
+            agitatorDraft: undefined,
+            pendingAgitatorSnapshot: undefined,
             agitatorLoading: true,
             agitatorSaving: false,
             agitatorError: null,
@@ -69,7 +67,6 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
     }
 
     private soundRequestActive = false;
-    private agitatorSpeedDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
     private isMountedComponent = false;
 
     componentDidMount() {
@@ -80,73 +77,104 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
 
     componentWillUnmount() {
         this.isMountedComponent = false;
-        this.clearAgitatorSpeedDebounce();
     }
 
-    clearAgitatorSpeedDebounce = () => {
-        if (this.agitatorSpeedDebounceTimeout !== null) {
-            clearTimeout(this.agitatorSpeedDebounceTimeout);
-            this.agitatorSpeedDebounceTimeout = null;
+    componentDidUpdate(previousProps: SettingsPageProps) {
+        const snapshot = this.props.agitatorDefaultsSnapshot;
+        if (snapshot && snapshot !== previousProps.agitatorDefaultsSnapshot) {
+            if (this.isAgitatorDirty()) {
+                this.setState({pendingAgitatorSnapshot: snapshot});
+            } else {
+                this.adoptAgitatorSettings(snapshot);
+            }
         }
+    }
+
+    private draftFor = (settings: AgitatorSettings) => ({
+        speed: String(settings.speed),
+        intervalOnMinutes: String(settings.intervalOnMinutes),
+        intervalOffMinutes: String(settings.intervalOffMinutes),
+    });
+
+    private adoptAgitatorSettings = (settings: AgitatorSettings) => this.setState({
+        agitatorSettings: settings,
+        agitatorDraft: this.draftFor(settings),
+        pendingAgitatorSnapshot: undefined,
+        agitatorError: null,
+    });
+
+    private isAgitatorDirty = () => {
+        const {agitatorSettings, agitatorDraft} = this.state;
+        return Boolean(agitatorSettings && agitatorDraft && (
+            agitatorDraft.speed !== String(agitatorSettings.speed)
+            || agitatorDraft.intervalOnMinutes !== String(agitatorSettings.intervalOnMinutes)
+            || agitatorDraft.intervalOffMinutes !== String(agitatorSettings.intervalOffMinutes)
+        ));
     };
 
     loadAgitatorSettings = async () => {
-        this.clearAgitatorSpeedDebounce();
-        this.setState({agitatorLoading: true, agitatorError: null, agitatorSpeedDraft: undefined, agitatorIntervalDraft: undefined});
+        this.setState({agitatorLoading: true, agitatorError: null, agitatorSettings: undefined, agitatorDraft: undefined, pendingAgitatorSnapshot: undefined});
         try {
             const settings = await AgitatorSettingsRepository.get();
-            if (this.isMountedComponent) this.setState({agitatorSettings: settings, agitatorLoading: false});
+            if (this.isMountedComponent) this.setState({agitatorSettings: settings, agitatorDraft: this.draftFor(settings), agitatorLoading: false});
         } catch (error) {
             if (this.isMountedComponent) this.setState({
                 agitatorSettings: undefined,
+                agitatorDraft: undefined,
                 agitatorLoading: false,
                 agitatorError: 'Rührwerk-Standardwerte konnten nicht geladen werden.',
             });
         }
     };
 
-    saveAgitatorSettings = async (settings: AgitatorSettings) => {
-        if (this.state.agitatorSaving) return;
+    private agitatorValidationError = (): string | null => {
+        const draft = this.state.agitatorDraft;
+        if (!draft) return 'Keine Controllerwerte geladen.';
+        if (!draft.speed.trim() || !draft.intervalOnMinutes.trim() || !draft.intervalOffMinutes.trim()) return 'Alle drei Werte sind erforderlich.';
+        const speed = Number(draft.speed);
+        const on = Number(draft.intervalOnMinutes);
+        const off = Number(draft.intervalOffMinutes);
+        if (!Number.isInteger(speed) || speed < 0 || speed > 100) return 'Geschwindigkeit muss eine Ganzzahl zwischen 0 und 100 sein.';
+        if (!Number.isFinite(on) || on <= 0) return 'Intervall EIN muss größer als 0 sein.';
+        if (!Number.isFinite(off) || off <= 0) return 'Intervall AUS muss größer als 0 sein.';
+        return null;
+    };
+
+    saveAgitatorSettings = async () => {
+        const draft = this.state.agitatorDraft;
+        const validationError = this.agitatorValidationError();
+        if (!draft || validationError || this.state.agitatorSaving) return;
+        const settings: AgitatorSettings = {
+            speed: Number(draft.speed),
+            intervalOnMinutes: Number(draft.intervalOnMinutes),
+            intervalOffMinutes: Number(draft.intervalOffMinutes),
+        };
         this.setState({agitatorSaving: true, agitatorError: null});
         try {
             const confirmed = await AgitatorSettingsRepository.update(settings);
             if (this.isMountedComponent) this.setState({
                 agitatorSettings: confirmed,
-                agitatorSpeedDraft: undefined,
-                agitatorIntervalDraft: undefined,
+                agitatorDraft: this.draftFor(confirmed),
+                pendingAgitatorSnapshot: undefined,
                 agitatorSaving: false,
+                statusMessage: 'Rührwerk-Standardwerte gespeichert.',
             });
-        } catch (error) {
+        } catch (error: any) {
+            const backendMessage = error?.response?.data?.error;
             if (this.isMountedComponent) this.setState({
-                agitatorSpeedDraft: undefined,
-                agitatorIntervalDraft: undefined,
                 agitatorSaving: false,
-                agitatorError: 'Rührwerk-Standardwerte konnten nicht gespeichert werden.',
+                agitatorError: typeof backendMessage === 'string' && backendMessage.length > 0
+                    ? backendMessage
+                    : 'Rührwerk-Standardwerte konnten nicht gespeichert werden.',
             });
         }
     };
 
-    changeAgitatorMinutes = (field: 'runningMinutes' | 'breakMinutes', value: number) => {
-        const settings = this.state.agitatorSettings;
-        if (!settings || this.state.agitatorSaving || value < 0) return;
-        const next = {...settings, [field]: value};
-        if (next.runningMinutes === 0 && next.breakMinutes === 0) return;
-        this.setState({agitatorIntervalDraft: {
-            runningMinutes: next.runningMinutes,
-            breakMinutes: next.breakMinutes,
-        }});
-        void this.saveAgitatorSettings(next);
-    };
-
-    changeAgitatorSpeed = (speedPercent: number) => {
-        const settings = this.state.agitatorSettings;
-        if (!settings || this.state.agitatorSaving || speedPercent < 0 || speedPercent > 100) return;
-        this.setState({agitatorSpeedDraft: speedPercent, agitatorError: null});
-        this.clearAgitatorSpeedDebounce();
-        this.agitatorSpeedDebounceTimeout = setTimeout(() => {
-            this.agitatorSpeedDebounceTimeout = null;
-            void this.saveAgitatorSettings({...settings, speedPercent});
-        }, AGITATOR_SETTINGS_SPEED_DEBOUNCE_MS);
+    changeAgitatorDraft = (field: keyof NonNullable<SettingsPageState['agitatorDraft']>, value: string) => {
+        this.setState((state) => state.agitatorDraft ? ({
+            agitatorDraft: {...state.agitatorDraft, [field]: value},
+            agitatorError: null,
+        }) : null);
     };
 
     refreshPushState = async () => {
@@ -277,7 +305,7 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
 
     render() {
         const { theme, debug } = this.props;
-        const { autoConnect, notificationsEnabled, temperatureUnit, statusMessage, pushSupported, pushSubscribed, pushLoading, pushError, pushPermission, soundPlaying, soundError, agitatorSettings, agitatorSpeedDraft, agitatorIntervalDraft, agitatorLoading, agitatorSaving, agitatorError } = this.state;
+        const { autoConnect, notificationsEnabled, temperatureUnit, statusMessage, pushSupported, pushSubscribed, pushLoading, pushError, pushPermission, soundPlaying, soundError, agitatorSettings, agitatorDraft, pendingAgitatorSnapshot, agitatorLoading, agitatorSaving, agitatorError } = this.state;
 
         return (
             <main className="settings-page">
@@ -307,30 +335,25 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                             <p className="settings-error" role="alert">{agitatorError}</p>
                             <button className="settings-secondary" type="button" onClick={this.loadAgitatorSettings}>Erneut versuchen</button>
                         </div>}
-                        {agitatorSettings && <div className="agitator-defaults-controls">
-                            <label className="agitator-default-speed" htmlFor="agitator-default-speed">
-                                <span>Standard-Geschwindigkeit <strong>{agitatorSpeedDraft ?? agitatorSettings.speedPercent} %</strong></span>
-                                <input id="agitator-default-speed" type="range" min="0" max="100"
-                                    value={agitatorSpeedDraft ?? agitatorSettings.speedPercent}
-                                    disabled={agitatorSaving}
-                                    onChange={(event) => this.changeAgitatorSpeed(Number(event.target.value))}/>
-                            </label>
-                            <h3>Intervall</h3>
-                            <div className="agitator-default-intervals">
-                                <div className="agitator-default-stepper" data-testid="settings-running-minutes-stepper">
-                                    <QuantityPicker initialValue={agitatorIntervalDraft?.runningMinutes ?? agitatorSettings.runningMinutes} min={agitatorSettings.breakMinutes === 0 ? 1 : 0}
-                                        max={Number.MAX_SAFE_INTEGER} onChange={(value) => this.changeAgitatorMinutes('runningMinutes', value)}
-                                        isDisabled={agitatorSaving} label="Laufzeit" labelPosition="above"/>
-                                    <span>min</span>
-                                </div>
-                                <div className="agitator-default-stepper" data-testid="settings-break-minutes-stepper">
-                                    <QuantityPicker initialValue={agitatorIntervalDraft?.breakMinutes ?? agitatorSettings.breakMinutes} min={agitatorSettings.runningMinutes === 0 ? 1 : 0}
-                                        max={Number.MAX_SAFE_INTEGER} onChange={(value) => this.changeAgitatorMinutes('breakMinutes', value)}
-                                        isDisabled={agitatorSaving} label="Pausenzeit" labelPosition="above"/>
-                                    <span>min</span>
-                                </div>
+                        {agitatorSettings && agitatorDraft && <div className="agitator-defaults-controls">
+                            <div className="agitator-default-fields">
+                                <label>Geschwindigkeit
+                                    <span><input aria-label="Geschwindigkeit" type="number" min="0" max="100" step="1" value={agitatorDraft.speed} disabled={agitatorSaving} onChange={(event) => this.changeAgitatorDraft('speed', event.target.value)}/> %</span>
+                                </label>
+                                <label>Intervall EIN
+                                    <span><input aria-label="Intervall EIN" type="number" min="0" step="any" value={agitatorDraft.intervalOnMinutes} disabled={agitatorSaving} onChange={(event) => this.changeAgitatorDraft('intervalOnMinutes', event.target.value)}/> min</span>
+                                </label>
+                                <label>Intervall AUS
+                                    <span><input aria-label="Intervall AUS" type="number" min="0" step="any" value={agitatorDraft.intervalOffMinutes} disabled={agitatorSaving} onChange={(event) => this.changeAgitatorDraft('intervalOffMinutes', event.target.value)}/> min</span>
+                                </label>
                             </div>
-                            {agitatorSaving && <p className="agitator-saving" role="status">Wird gespeichert…</p>}
+                            {this.agitatorValidationError() && <p className="settings-error" role="alert">{this.agitatorValidationError()}</p>}
+                            {pendingAgitatorSnapshot && <div className="settings-warning" role="status">Die Controllerwerte wurden extern geändert. Deine ungespeicherten Eingaben bleiben erhalten.
+                                <button className="settings-secondary" type="button" onClick={() => this.adoptAgitatorSettings(pendingAgitatorSnapshot)}>Externe Werte übernehmen</button>
+                            </div>}
+                            <div className="settings-actions">
+                                <button className="settings-primary" type="button" onClick={this.saveAgitatorSettings} disabled={agitatorSaving || Boolean(this.agitatorValidationError()) || !this.isAgitatorDirty()}>{agitatorSaving ? 'Wird gespeichert…' : 'Speichern'}</button>
+                            </div>
                             {agitatorError && <p className="settings-error" role="alert">{agitatorError}</p>}
                         </div>}
                     </section>

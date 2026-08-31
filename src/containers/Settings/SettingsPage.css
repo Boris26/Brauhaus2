@@ -119,3 +119,9 @@
   .settings-actions, .settings-footer { align-items: stretch; flex-direction: column; }
   .settings-actions button, .settings-footer button { width: 100%; }
 }
+.agitator-default-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-md); }
+.agitator-default-fields label { display: grid; gap: var(--spacing-xs); font-weight: 600; }
+.agitator-default-fields label span { display: flex; align-items: center; gap: var(--spacing-xs); color: var(--color-text-secondary); font-weight: 400; }
+.agitator-default-fields input { box-sizing: border-box; width: 100%; min-width: 0; min-height: var(--control-height-compact); padding: var(--spacing-xs); color: var(--color-text); background: var(--color-panel-contrast); border: 1px solid var(--color-border); border-radius: var(--border-radius-medium); font: inherit; }
+.settings-warning .settings-secondary { display: block; margin-top: var(--spacing-sm); }
+@media (max-width: 600px) { .agitator-default-fields { grid-template-columns: minmax(0, 1fr); } }

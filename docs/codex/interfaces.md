@@ -46,8 +46,8 @@ Base URL: `BaseURL` (`/api/controller`), `CommandsURL` (`/api/controller/Command
 | GET | `Status/` | Runtime brewing status | `200`, structured or legacy status |
 | GET | `Agitator/Status` | Initialize the production agitator UI | `200`, full `{ config, inputs, runtime }` detail status |
 | PUT | `Agitator/Config` | Replace agitator configuration | Full `{ mode, speedPercent, runningMinutes, breakMinutes }` payload |
-| GET | `Settings/Agitator` | Load persistent agitator defaults for Settings | `{ speedPercent, runningMinutes, breakMinutes }` in percent/minutes |
-| PUT | `Settings/Agitator` | Replace persistent agitator defaults without changing runtime | Full `{ speedPercent, runningMinutes, breakMinutes }`; response contains the confirmed configuration |
+| GET | `Agitator/Defaults` | Load persistent agitator defaults for Settings | `{ speed, intervalOnMinutes, intervalOffMinutes }` in percent/minutes |
+| PUT | `Agitator/Defaults` | Replace persistent agitator defaults without changing runtime | Full `{ speed, intervalOnMinutes, intervalOffMinutes }`; response contains the confirmed configuration |
 | POST | `Agitator/Pause` | Pause the selected active mode | `200` success |
 | POST | `Agitator/Resume` | Resume the selected active mode | `200` success |
 | GET | `Available/` | Availability heartbeat | `200` means available |
@@ -77,6 +77,7 @@ The desktop header sends `POST /api/system/shutdown` without a request body only
 - On `overheat`, it calls the configured handler with `{ event: 'overheat', data }`.
 - On `brew-session-running`, it calls the same configured handler with `{ event: 'brew-session-running', data }`; `data` may be absent. The UI converts this to `BREW_SESSION_RUNNING_RECEIVED`, loads `GET /BrewSession`, reconstructs the scaled recipe, and starts the existing status poll if it is not already running.
 - The production epic maps the controller's structured handler object directly and ignores unknown event names.
+- `agitator-defaults-changed` carries the complete persistent `{ speed, intervalOnMinutes, intervalOffMinutes }` snapshot on the same default-namespace connection; it updates Settings without a follow-up GET and remains separate from runtime agitator state.
 - The same shared connection reports `connect` as `{ connected: true, socketId: socket.id }` and `disconnect` as `{ connected: false, socketId: undefined }` through the production Redux flow. The Socket.IO ID is transient diagnostic data only; the UI does not persist it or use it as a client/device identity.
 - When this client starts a brew, it sends that transient default-namespace SID as optional `X-Socket-ID` on `POST Command/StartBrewing:""`. The header is omitted while disconnected. This lets the controller suppress only the initiating client's `brew-session-running` notification; the successful REST response starts that client's polling instead.
 

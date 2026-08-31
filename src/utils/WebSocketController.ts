@@ -6,7 +6,7 @@ export interface SocketConnectionStatus {
 }
 
 export type MessageHandler = (event: { event: string; data?: any }) => void;
-const realtimeEvents = ['heating-running-changed', 'agitator-state-changed', 'alarm-state-changed', 'temperature-sensor-state-changed'] as const;
+const realtimeEvents = ['heating-running-changed', 'agitator-state-changed', 'alarm-state-changed', 'temperature-sensor-state-changed', 'agitator-defaults-changed'] as const;
 
 export class WebSocketController {
   private socket: Socket | null = null;

@@ -15,6 +15,7 @@ import { ThemeName, setTheme as applyAndStoreTheme } from "../utils/theme";
 import { pushViewPath } from "../utils/viewRoutes";
 import { setStoredDebugMode } from "../utils/debugMode";
 import {AgitatorRealtimeState, AlarmRealtimeState, HeatingRunningState, TemperatureSensorRealtimeState} from '../model/RealtimeControllerState';
+import {AgitatorSettings} from '../model/AgitatorSettings';
 
 export namespace BeerActions {
 
@@ -639,6 +640,7 @@ export namespace ProductionActions {
         AGITATOR_STATE_CHANGED = 'ProductionActions.AGITATOR_STATE_CHANGED',
         ALARM_STATE_CHANGED = 'ProductionActions.ALARM_STATE_CHANGED',
         TEMPERATURE_SENSOR_STATE_CHANGED = 'ProductionActions.TEMPERATURE_SENSOR_STATE_CHANGED',
+        AGITATOR_DEFAULTS_CHANGED = 'ProductionActions.AGITATOR_DEFAULTS_CHANGED',
     }
 
     export interface SetWaterStatus {
@@ -765,6 +767,7 @@ export namespace ProductionActions {
     export interface AgitatorStateChanged { readonly type: ActionTypes.AGITATOR_STATE_CHANGED; payload: AgitatorRealtimeState; }
     export interface AlarmStateChanged { readonly type: ActionTypes.ALARM_STATE_CHANGED; payload: AlarmRealtimeState; }
     export interface TemperatureSensorStateChanged { readonly type: ActionTypes.TEMPERATURE_SENSOR_STATE_CHANGED; payload: TemperatureSensorRealtimeState; }
+    export interface AgitatorDefaultsChanged { readonly type: ActionTypes.AGITATOR_DEFAULTS_CHANGED; payload: AgitatorSettings; }
 
     export type AllProductionActions =
         GetTemperatures |
@@ -793,7 +796,7 @@ export namespace ProductionActions {
         WebSocketDisconnect |
         OverheatReceived |
         BrewSessionRunningReceived |
-        SocketConnectionChanged | HeatingRunningChanged | AgitatorStateChanged | AlarmStateChanged | TemperatureSensorStateChanged;
+        SocketConnectionChanged | HeatingRunningChanged | AgitatorStateChanged | AlarmStateChanged | TemperatureSensorStateChanged | AgitatorDefaultsChanged;
 
     export function setWaterStatus(aWaterStatus: WaterStatus): ProductionActions.SetWaterStatus {
         return {
@@ -973,4 +976,5 @@ export namespace ProductionActions {
     export const agitatorStateChanged = (payload: AgitatorRealtimeState): AgitatorStateChanged => ({type: ActionTypes.AGITATOR_STATE_CHANGED, payload});
     export const alarmStateChanged = (payload: AlarmRealtimeState): AlarmStateChanged => ({type: ActionTypes.ALARM_STATE_CHANGED, payload});
     export const temperatureSensorStateChanged = (payload: TemperatureSensorRealtimeState): TemperatureSensorStateChanged => ({type: ActionTypes.TEMPERATURE_SENSOR_STATE_CHANGED, payload});
+    export const agitatorDefaultsChanged = (payload: AgitatorSettings): AgitatorDefaultsChanged => ({type: ActionTypes.AGITATOR_DEFAULTS_CHANGED, payload});
 }
