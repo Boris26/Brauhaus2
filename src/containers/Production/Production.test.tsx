@@ -186,7 +186,52 @@ describe('Production agitator controller integration', () => {
         within(screen.getByTestId('break-minutes-stepper')).getAllByRole('button').forEach(button => expect(button).toBeDisabled());
         expect(screen.getByRole('slider')).toBeDisabled();
         expect(screen.getByText('Geschwindigkeit')).toBeInTheDocument();
+        expect(screen.getByRole('button', {name: 'Rührwerk pausieren'})).toBeDisabled();
         expect(ProductionRepository.setAgitatorConfig).not.toHaveBeenCalled();
+    });
+
+    it.each([
+        ['OFF', true],
+        ['CONTINUOUS', false],
+        ['AUTOMATIC', false],
+    ] as const)('always renders the pause action in %s mode and disabled=%s', async (mode, disabled) => {
+        jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockResolvedValue({
+            ...detail,
+            config: {...detail.config, mode},
+            runtime: {...detail.runtime, desiredOperation: mode === 'OFF' ? 'STOPPED' : detail.runtime.desiredOperation},
+        });
+        renderProduction();
+
+        const pauseButton = await screen.findByRole('button', {name: 'Rührwerk pausieren'});
+        if (disabled) expect(pauseButton).toBeDisabled();
+        else expect(pauseButton).toBeEnabled();
+    });
+
+    it('keeps the pause action mounted across mode and paused-state updates', async () => {
+        const {props, rerender} = renderProduction();
+        const pauseButton = await screen.findByRole('button', {name: 'Rührwerk pausieren'});
+
+        rerender(<Production {...props} realtimeState={{...props.realtimeState!, agitator: {
+            mode: 'OFF', paused: false, operation: 'STOPPED', actualOutputOn: false,
+            speedPercent: 36, runningMinutes: 2, breakMinutes: 7,
+        }}} />);
+        expect(screen.getByRole('button', {name: 'Rührwerk pausieren'})).toBe(pauseButton);
+        expect(pauseButton).toBeDisabled();
+
+        rerender(<Production {...props} realtimeState={{...props.realtimeState!, agitator: {
+            mode: 'CONTINUOUS', paused: false, operation: 'CONTINUOUS', actualOutputOn: true,
+            speedPercent: 36, runningMinutes: 2, breakMinutes: 7,
+        }}} />);
+        expect(screen.getByRole('button', {name: 'Rührwerk pausieren'})).toBe(pauseButton);
+        expect(pauseButton).toBeEnabled();
+
+        rerender(<Production {...props} realtimeState={{...props.realtimeState!, agitator: {
+            mode: 'AUTOMATIC', paused: true, operation: 'STOPPED', actualOutputOn: false,
+            speedPercent: 36, runningMinutes: 2, breakMinutes: 7,
+        }}} />);
+        expect(screen.getByRole('button', {name: 'Rührwerk fortsetzen'})).toBe(pauseButton);
+        expect(pauseButton).toBeEnabled();
+        expect(screen.getByRole('progressbar', {name: 'Intervallfortschritt'})).toBeInTheDocument();
     });
 
     it.each([

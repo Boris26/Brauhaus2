@@ -792,79 +792,84 @@ export class Production extends React.Component<ProductionProps, ProductionState
                     <h3>Einstellungen</h3>
                 </div>
 
-                <section className="settingsGroup" aria-labelledby="agitator-settings-title">
-                    <h4 id="agitator-settings-title">Rührwerk</h4>
-                    {(settingsDisabled || !agitatorConfig) && <p className="agitatorAvailability" role="status">
-                        {agitatorStatusLoadFailed || settingsDisabled ? 'Rührwerk-Konfiguration nicht verfügbar' : 'Rührwerk-Konfiguration wird geladen'}
-                    </p>}
-                    <div className="agitatorPrimaryMode">
-                        {renderSwitch('Durchgehend rühren', displayedAgitatorMode === 'CONTINUOUS',
-                            (checked) => this.toggleAgitatorMode('CONTINUOUS', checked), settingsDisabled || !agitatorConfig)}
-                    </div>
-                    <div className={`intervalSettings agitatorAutomaticSettings ${displayedAgitatorMode === 'AUTOMATIC' ? 'is-active' : ''}`} aria-labelledby="interval-settings-title">
-                        <div className="agitatorAutomaticHeader">
-                            <div>
-                                <h5 id="interval-settings-title">Intervallbetrieb</h5>
-                                <p>Beim Heizen durchgehend, sonst im Intervall</p>
+                <div className="settingsContent">
+                    <section className="settingsGroup agitatorSettingsGroup" aria-labelledby="agitator-settings-title">
+                        <h4 id="agitator-settings-title">Rührwerk</h4>
+                        {(settingsDisabled || !agitatorConfig) && <p className="agitatorAvailability" role="status">
+                            {agitatorStatusLoadFailed || settingsDisabled ? 'Rührwerk-Konfiguration nicht verfügbar' : 'Rührwerk-Konfiguration wird geladen'}
+                        </p>}
+                        <div className="agitatorPrimaryMode">
+                            {renderSwitch('Durchgehend rühren', displayedAgitatorMode === 'CONTINUOUS',
+                                (checked) => this.toggleAgitatorMode('CONTINUOUS', checked), settingsDisabled || !agitatorConfig)}
+                        </div>
+                        <div className={`intervalSettings agitatorAutomaticSettings ${displayedAgitatorMode === 'AUTOMATIC' ? 'is-active' : ''}`} aria-labelledby="interval-settings-title">
+                            <div className="agitatorAutomaticHeader">
+                                <div>
+                                    <h5 id="interval-settings-title">Intervallbetrieb</h5>
+                                    <p>Beim Heizen durchgehend, sonst im Intervall</p>
+                                </div>
+                                <div className="agitatorAutomaticActions">
+                                    <AgitatorIntervalProgress active={intervalProgressActive} paused={agitatorRuntime?.paused ?? false}
+                                        progress={agitatorRuntime?.intervalProgressPercent} />
+                                    <Switch className="productionSwitch" onChange={(checked) => this.toggleAgitatorMode('AUTOMATIC', checked)}
+                                        checked={displayedAgitatorMode === 'AUTOMATIC'} height={24} width={44} handleDiameter={18}
+                                        checkedIcon={false} uncheckedIcon={false} disabled={settingsDisabled || !agitatorConfig}
+                                        aria-label="Intervallbetrieb" />
+                                </div>
                             </div>
-                            <div className="agitatorAutomaticActions">
-                                <AgitatorIntervalProgress active={intervalProgressActive} paused={agitatorRuntime?.paused ?? false}
-                                    progress={agitatorRuntime?.intervalProgressPercent} />
-                                <Switch className="productionSwitch" onChange={(checked) => this.toggleAgitatorMode('AUTOMATIC', checked)}
-                                    checked={displayedAgitatorMode === 'AUTOMATIC'} height={24} width={44} handleDiameter={18}
-                                    checkedIcon={false} uncheckedIcon={false} disabled={settingsDisabled || !agitatorConfig}
-                                    aria-label="Intervallbetrieb" />
+                            <div className="intervalTimeControls">
+                                <div className="intervalTimeControl" data-testid="running-minutes-stepper">
+                                    <QuantityPicker value={agitatorIntervalDraft?.runningMinutes ?? agitatorConfig?.runningMinutes}
+                                        min={0} max={Number.MAX_SAFE_INTEGER} onChange={this.onIntervalChangeRunningTime}
+                                        isDisabled={settingsDisabled || !agitatorConfig || displayedAgitatorMode !== 'AUTOMATIC'} label="Laufzeit" labelPosition="above"/>
+                                    <span className="intervalTimeUnit">min</span>
+                                </div>
+                                <div className="intervalTimeControl" data-testid="break-minutes-stepper">
+                                    <QuantityPicker value={agitatorIntervalDraft?.breakMinutes ?? agitatorConfig?.breakMinutes}
+                                        min={0} max={Number.MAX_SAFE_INTEGER} onChange={this.onIntervalChangeBreakTime}
+                                        isDisabled={settingsDisabled || !agitatorConfig || displayedAgitatorMode !== 'AUTOMATIC'} label="Pausenzeit" labelPosition="above"/>
+                                    <span className="intervalTimeUnit">min</span>
+                                </div>
                             </div>
                         </div>
-                        <div className="intervalTimeControls">
-                            <div className="intervalTimeControl" data-testid="running-minutes-stepper">
-                                <QuantityPicker value={agitatorIntervalDraft?.runningMinutes ?? agitatorConfig?.runningMinutes}
-                                    min={0} max={Number.MAX_SAFE_INTEGER} onChange={this.onIntervalChangeRunningTime}
-                                    isDisabled={settingsDisabled || !agitatorConfig || displayedAgitatorMode !== 'AUTOMATIC'} label="Laufzeit" labelPosition="above"/>
-                                <span className="intervalTimeUnit">min</span>
-                            </div>
-                            <div className="intervalTimeControl" data-testid="break-minutes-stepper">
-                                <QuantityPicker value={agitatorIntervalDraft?.breakMinutes ?? agitatorConfig?.breakMinutes}
-                                    min={0} max={Number.MAX_SAFE_INTEGER} onChange={this.onIntervalChangeBreakTime}
-                                    isDisabled={settingsDisabled || !agitatorConfig || displayedAgitatorMode !== 'AUTOMATIC'} label="Pausenzeit" labelPosition="above"/>
-                                <span className="intervalTimeUnit">min</span>
-                            </div>
+                        <label className="agitatorSpeedControl">
+                            <span>Geschwindigkeit <strong>{agitatorConfig ? `${agitatorSpeedDraft ?? agitatorConfig.speedPercent} %` : '–'}</strong></span>
+                            <input type="range" min="0" max="100" value={agitatorSpeedDraft ?? agitatorConfig?.speedPercent ?? 0}
+                                   disabled={settingsDisabled || !agitatorConfig} onChange={(event) => this.onAgitatorSpeedChange(Number(event.target.value))}/>
+                        </label>
+                        <div className="agitatorFooter">
+                            <button className="agitatorPauseButton" type="button"
+                                disabled={settingsDisabled || agitatorRequestPending || !agitatorRuntime || agitatorRuntime.mode === 'OFF'}
+                                onClick={this.toggleAgitatorPause}>
+                                {agitatorRuntime?.paused ? 'Rührwerk fortsetzen' : 'Rührwerk pausieren'}
+                            </button>
+                            {this.state.mainAgitatorError && <p className="agitatorError" role="alert">Rührwerk konnte nicht aktualisiert werden.</p>}
                         </div>
-                    </div>
-                    <label className="agitatorSpeedControl">
-                        <span>Geschwindigkeit <strong>{agitatorConfig ? `${agitatorSpeedDraft ?? agitatorConfig.speedPercent} %` : '–'}</strong></span>
-                        <input type="range" min="0" max="100" value={agitatorSpeedDraft ?? agitatorConfig?.speedPercent ?? 0}
-                               disabled={settingsDisabled || !agitatorConfig} onChange={(event) => this.onAgitatorSpeedChange(Number(event.target.value))}/>
-                    </label>
-                    {agitatorRuntime && agitatorRuntime.mode !== 'OFF' && <button className="agitatorPauseButton" type="button"
-                        disabled={settingsDisabled || agitatorRequestPending} onClick={this.toggleAgitatorPause}>
-                        {agitatorRuntime.paused ? 'Rührwerk fortsetzen' : 'Rührwerk pausieren'}
-                    </button>}
-                    {this.state.mainAgitatorError && <p className="agitatorError" role="alert">Rührwerk konnte nicht aktualisiert werden.</p>}
-                </section>
+                    </section>
 
-                <section className="settingsGroup" aria-labelledby="water-settings-title">
-                    <h4 id="water-settings-title">Wasser</h4>
-                    <div className="intervalSettings manualWaterSettings" aria-labelledby="manual-water-settings-title">
-                        <h5 id="manual-water-settings-title">Manuelle Wasserzufuhr</h5>
-                        <div className="settingsRowWater manualWaterControls">
-                            <div className="leftAligned">
-                                {renderSwitch('Wasser aktivieren', waterSwitchState, this.toggleWaterSwitchState)}
-                            </div>
-                            <div className="rightAligned">
-                                <QuantityPicker value={this.state.liters} min={1} max={this.MAX_WATER_LEVEL} onChange={this.onSetWaterChangeQuantity}
-                                                isDisabled={settingsDisabled || waterSwitchState} label="Liter" labelPosition="above"/>
+                    <section className="settingsGroup waterSettingsGroup" aria-labelledby="water-settings-title">
+                        <h4 id="water-settings-title">Wasser</h4>
+                        <div className="intervalSettings manualWaterSettings" aria-labelledby="manual-water-settings-title">
+                            <h5 id="manual-water-settings-title">Manuelle Wasserzufuhr</h5>
+                            <div className="settingsRowWater manualWaterControls">
+                                <div className="leftAligned">
+                                    {renderSwitch('Wasser aktivieren', waterSwitchState, this.toggleWaterSwitchState)}
+                                </div>
+                                <div className="rightAligned">
+                                    <QuantityPicker value={this.state.liters} min={1} max={this.MAX_WATER_LEVEL} onChange={this.onSetWaterChangeQuantity}
+                                                    isDisabled={settingsDisabled || waterSwitchState} label="Liter" labelPosition="above"/>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div className="recipeWaterGroup" aria-label="Rezeptmengen">
-                        <span className="recipeWaterGroupLabel">Rezeptmengen</span>
-                        <div className="recipeWaterButtons">
-                            <button className="recipeWaterBtn" disabled={spargeWaterDisabled} onClick={this.startSpargeWaterFilling}>{this.getRecipeWaterButtonLabel('sparge')}</button>
-                            <button className="recipeWaterBtn" disabled={mashWaterDisabled} onClick={this.startMashWaterFilling}>{this.getRecipeWaterButtonLabel('mash')}</button>
+                        <div className="recipeWaterGroup" aria-label="Rezeptmengen">
+                            <span className="recipeWaterGroupLabel">Rezeptmengen</span>
+                            <div className="recipeWaterButtons">
+                                <button className="recipeWaterBtn" disabled={spargeWaterDisabled} onClick={this.startSpargeWaterFilling}>{this.getRecipeWaterButtonLabel('sparge')}</button>
+                                <button className="recipeWaterBtn" disabled={mashWaterDisabled} onClick={this.startMashWaterFilling}>{this.getRecipeWaterButtonLabel('mash')}</button>
+                            </div>
                         </div>
-                    </div>
-                </section>
+                    </section>
+                </div>
             </div>);
     }
 
