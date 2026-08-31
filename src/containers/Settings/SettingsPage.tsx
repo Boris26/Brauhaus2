@@ -70,11 +70,11 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
     private soundRequestActive = false;
     private isMountedComponent = false;
 
-    private setStateWhileMounted = (state: Parameters<SettingsPage['setState']>[0]) => {
+    private setStateWhileMounted<K extends keyof SettingsPageState>(state: Pick<SettingsPageState, K>): void {
         if (this.isMountedComponent) {
             this.setState(state);
         }
-    };
+    }
 
     componentDidMount() {
         this.isMountedComponent = true;
