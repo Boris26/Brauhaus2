@@ -50,7 +50,6 @@ export interface ProductionProps {
     currentAgitatorSpeed: number;
     agitatorSpeed: number;
     agitatorIsRunning: ToggleState;
-    getTemperatures: () => void;
     toggleAgitator: (agitatorState: MashAgitatorStates) => void; // legacy Redux connection
     setAgitatorSpeed: (agitatorSpeed: number) => void;
     startWaterFilling: (liters: number) => void;
@@ -58,8 +57,6 @@ export interface ProductionProps {
     isToggleAgitatorSuccess: boolean;
     sendBrewingData: (brewingData: BrewingData) => void;
     brewingStatus?: BrewingStatus;
-    startPolling: () => void;
-    stopPolling: () => void;
     isBackenAvailable: BackendAvailable | boolean;
     waterStatus: WaterStatus;
     addFinishedBrew: (finishedBrew: FinishedBrewCreatePayload) => void;
@@ -146,15 +143,11 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     componentDidMount() {
         this.isMountedComponent = true;
-        const {getTemperatures, selectedBeer, isPollingRunning, startPolling} = this.props;
+        const {selectedBeer} = this.props;
         if (!isUndefined(selectedBeer)) {
             this.calculateTheHopTimes();
         }
-        getTemperatures();
         this.loadAgitatorStatus();
-        if (!isPollingRunning) {
-            startPolling();
-        }
         this.syncRemainingTimeFromStatus();
         this.remainingTimeInterval = setInterval(this.tickRemainingTime, 1000);
     }
@@ -208,6 +201,10 @@ export class Production extends React.Component<ProductionProps, ProductionState
             this.isBrewingStartRequestPending = false;
             this.setState({brewingIsRunning: false});
         }
+        if (prevProps.brewingStartError !== this.props.brewingStartError && this.props.brewingStartError) {
+            this.isBrewingStartRequestPending = false;
+            this.setState({brewingIsRunning: false});
+        }
 
         if (this.state.recipeWaterFill.isFillActive && waterStatus?.openClose === true && !prevProps.waterStatus?.openClose) {
             this.setState((prevState) => ({recipeWaterFill: markValveOpened(prevState.recipeWaterFill)}));
@@ -250,7 +247,6 @@ export class Production extends React.Component<ProductionProps, ProductionState
                 this.setState({showFinishDialog: true, brewingFinished: false});
             } else {
                 dataCollector.reset();
-                this.props.stopPolling();
                 this.setState({showFinishDialog: false, brewingFinished: true});
             }
         }
@@ -588,7 +584,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     renderFlames() {
-        const isHeating = !this.props.isBrewingStatusStale && getHeatingActive(this.props.realtimeState, this.props.socketConnected) === true;
+        const isHeating = getHeatingActive(this.props.realtimeState, this.props.socketConnected) === true;
 
         return (
             <div className='Flame'>

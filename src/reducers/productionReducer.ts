@@ -96,7 +96,7 @@ const productionReducer = (
         }
 
         case ProductionActions.ActionTypes.SEND_BREWING_DATA: {
-            return { ...aState, isPollingRunning: true, brewingStartError: undefined };
+            return { ...aState, brewingStartError: undefined };
         }
         case ProductionActions.ActionTypes.BREWING_START_FAILURE: {
             return {...aState, isPollingRunning: false, brewingStartError: aAction.payload.error};

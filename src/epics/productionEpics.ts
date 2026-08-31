@@ -144,7 +144,9 @@ const createBrewingStatusPolling$ = (action$: any) =>
 export const startPollingEpic$ = (action$: any) =>
   action$.pipe(
     ofType(ProductionActions.ActionTypes.START_POLLING),
-    switchMap(() => createBrewingStatusPolling$(action$))
+    // START_POLLING is a process lifecycle signal. Ignore repeats while the
+    // current process poll is active instead of restarting or duplicating it.
+    exhaustMap(() => createBrewingStatusPolling$(action$))
   );
 
 const isValidBrewSession = (session: BrewSession): boolean =>
@@ -194,7 +196,7 @@ export const restoreBrewSessionEpic$ = (action$: any, state$: {value: RootState}
     ))
   );
 
-export const sendBrewingDataEpic$ = (action$: any) =>
+export const sendBrewingDataEpic$ = (action$: any, state$: {value: RootState}) =>
   action$.pipe(
     ofType(ProductionActions.ActionTypes.SEND_BREWING_DATA),
     switchMap((action: any) =>
@@ -202,8 +204,13 @@ export const sendBrewingDataEpic$ = (action$: any) =>
         switchMap((sendResult) => {
           if (sendResult) {
             // Start the brewing process
-            return from(ProductionRepository.startBrewing()).pipe(
-              switchMap((startResult) => startResult ? createBrewingStatusPolling$(action$) : of(ProductionActions.brewingStartFailure('Der Controller konnte den Brauvorgang nicht starten.')))
+            const socketId = state$.value.productionReducer.socketConnection.connected
+              ? state$.value.productionReducer.socketConnection.socketId
+              : undefined;
+            return from(ProductionRepository.startBrewing(socketId)).pipe(
+              map((startResult) => startResult
+                ? ProductionActions.startPolling()
+                : ProductionActions.brewingStartFailure('Der Controller konnte den Brauvorgang nicht starten.'))
             );
           } else {
             return of(ProductionActions.brewingStartFailure('Das Rezept konnte nicht an den Controller übertragen werden.'));

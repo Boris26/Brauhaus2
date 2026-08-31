@@ -208,6 +208,8 @@ Push notifications are triggered by the control service when `waiting.canConfirm
 
 The existing single Socket.IO connection on namespace `/` and path `/socket.io` publishes complete controller snapshots. REST remains rooted at `/api/controller`; `GET /Status/` continues polling process state, steps, temperatures, timing, waiting/confirmation, and `heating.followsDecoction` every second.
 
+The UI treats `/` as the actual Socket.IO namespace even though REST uses `/api/controller`. On a locally initiated start it passes the connected `/` namespace SID in the optional `X-Socket-ID` header. `/Status/` polling begins only after that start succeeds or after `brew-session-running` restoration, never from a Production view mount; repeated lifecycle signals cannot create parallel polling loops.
+
 ```ts
 // heating-running-changed
 interface HeatingRunningState { running: boolean; }

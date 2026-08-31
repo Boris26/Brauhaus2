@@ -65,6 +65,16 @@ describe('ProductionRepository API method/path usage', () => {
     expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Command/Speed:22'));
   });
 
+  it('sends the namespace socket id only when starting a brew with a connected socket', async () => {
+    await ProductionRepository.startBrewing('socket-123');
+
+    expect(mockedAxios.post).toHaveBeenCalledWith(
+      expect.stringContaining('/Command/StartBrewing:""'),
+      undefined,
+      {headers: {'X-Socket-ID': 'socket-123'}}
+    );
+  });
+
   it('keeps heater commands as no-value aliases', async () => {
     await ProductionRepository.toggleHeater(ToggleState.ON);
     await ProductionRepository.toggleHeater(ToggleState.OFF);

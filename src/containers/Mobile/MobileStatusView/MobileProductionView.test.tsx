@@ -33,11 +33,8 @@ const renderMobileView = (overrides: Partial<React.ComponentProps<typeof MobileP
     const props = {
         temperature: 24,
         brewingStatus: makeStatus(),
-        startPolling: jest.fn(),
-        stopPolling: jest.fn(),
         isConfirmPending: false,
         isBrewingStatusStale: false,
-        isPollingRunning: false,
         confirm: jest.fn(),
         ...overrides,
     };
@@ -168,38 +165,10 @@ describe('MobileProductionView heater status', () => {
 
 
 describe('MobileProductionView polling lifecycle', () => {
-    it('starts polling when the mobile status page opens', () => {
-        const startPolling = jest.fn();
-
-        renderMobileView({startPolling});
-
-        expect(startPolling).toHaveBeenCalledTimes(1);
-    });
-
-    it('does not start a second polling instance when polling is already running', () => {
-        const startPolling = jest.fn();
-
-        renderMobileView({startPolling, isPollingRunning: true});
-
-        expect(startPolling).not.toHaveBeenCalled();
-    });
-
-    it('stops polling when the mobile status page unmounts', () => {
-        const stopPolling = jest.fn();
-        const {unmount} = renderMobileView({stopPolling});
-
+    it('does not start or stop global polling as the mobile view mounts and unmounts', () => {
+        const {unmount} = renderMobileView();
         unmount();
-
-        expect(stopPolling).toHaveBeenCalledTimes(1);
-    });
-
-    it('manual refresh dispatches exactly one START_POLLING request', () => {
-        const startPolling = jest.fn();
-        renderMobileView({startPolling});
-        startPolling.mockClear();
-
-        fireEvent.click(screen.getByRole('button', {name: 'Aktualisieren'}));
-
-        expect(startPolling).toHaveBeenCalledTimes(1);
+        expect((MobileProductionView.prototype as any).componentDidMount).toBeUndefined();
+        expect((MobileProductionView.prototype as any).componentWillUnmount).toBeUndefined();
     });
 });

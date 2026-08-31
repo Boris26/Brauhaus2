@@ -78,6 +78,7 @@ The desktop header sends `POST /api/system/shutdown` without a request body only
 - On `brew-session-running`, it calls the same configured handler with `{ event: 'brew-session-running', data }`; `data` may be absent. The UI converts this to `BREW_SESSION_RUNNING_RECEIVED`, loads `GET /BrewSession`, reconstructs the scaled recipe, and starts the existing status poll if it is not already running.
 - The production epic maps the controller's structured handler object directly and ignores unknown event names.
 - The same shared connection reports `connect` as `{ connected: true, socketId: socket.id }` and `disconnect` as `{ connected: false, socketId: undefined }` through the production Redux flow. The Socket.IO ID is transient diagnostic data only; the UI does not persist it or use it as a client/device identity.
+- When this client starts a brew, it sends that transient default-namespace SID as optional `X-Socket-ID` on `POST Command/StartBrewing:""`. The header is omitted while disconnected. This lets the controller suppress only the initiating client's `brew-session-running` notification; the successful REST response starts that client's polling instead.
 
 ## Normalized brewing status expected by UI
 

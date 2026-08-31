@@ -125,8 +125,8 @@ export class ProductionRepository {
         return await ProductionRepository._doToggleHeater(aIsTurnOn);
     }
 
-    static async startBrewing() {
-        return await ProductionRepository._doStartBrewing();
+    static async startBrewing(aSocketId?: string) {
+        return await ProductionRepository._doStartBrewing(aSocketId);
     }
 
     static async nextProcedureStep() {
@@ -174,9 +174,12 @@ export class ProductionRepository {
         }
     }
 
-    private static async _doStartBrewing() {
+    private static async _doStartBrewing(aSocketId?: string) {
         try {
-            const response = await axios.post(CommandsURL + `StartBrewing:""`);
+            const config = aSocketId ? {headers: {'X-Socket-ID': aSocketId}} : undefined;
+            const response = config
+                ? await axios.post(CommandsURL + `StartBrewing:""`, undefined, config)
+                : await axios.post(CommandsURL + `StartBrewing:""`);
             return response.status === 200;
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);
