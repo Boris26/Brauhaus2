@@ -22,6 +22,71 @@
     border: 1px solid var(--color-border);
     border-radius: var(--border-radius-medium);
 }
+
+/* Shared numeric-control shell. Production's steppers and editable numeric
+   fields elsewhere use the same label, surface, border and unit treatment. */
+.quantity-picker-content.quantity-picker-editable:hover:not(.quantity-picker-content-disabled) {
+    border-color: var(--color-primary);
+}
+
+.quantity-picker-content.quantity-picker-editable:focus-within {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px var(--color-accent-subtle);
+}
+
+.quantity-picker-content.quantity-picker-content-error {
+    border-color: var(--color-error);
+    box-shadow: 0 0 0 1px var(--color-error-subtle);
+}
+
+.quantity-picker-content.quantity-picker-content-disabled {
+    background: var(--color-disabled-bg);
+    border-color: var(--color-disabled-border);
+    cursor: not-allowed;
+}
+
+.quantity-picker-native-input {
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    padding: 0 var(--spacing-sm);
+    color: var(--color-text);
+    background: transparent;
+    border: 0;
+    outline: 0;
+    font: inherit;
+    font-weight: 700;
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.quantity-picker-native-input::-webkit-inner-spin-button,
+.quantity-picker-native-input::-webkit-outer-spin-button {
+    margin: 0;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.quantity-picker-native-input:disabled {
+    color: var(--color-disabled-text);
+    cursor: not-allowed;
+}
+
+.intervalTimeControl {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 0.3rem;
+    min-width: 0;
+}
+
+.intervalTimeControl .quantity-picker-container { min-width: 0; }
+.intervalTimeUnit {
+    padding-bottom: 0.4rem;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-small);
+    white-space: nowrap;
+}
 .decrement-btn,
 .increment-btn {
     width: 2.25rem;

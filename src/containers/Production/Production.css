@@ -242,10 +242,6 @@
     padding-bottom: var(--spacing-xs);
     font-size: 0.8rem;
 }
-.intervalTimeControl { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 0.3rem; }
-.intervalTimeControl .quantity-picker-container { min-width: 0; }
-.intervalTimeUnit { padding-bottom: 0.4rem; color: var(--color-text-secondary); font-size: var(--font-size-small); }
-
 .containerProduction .info {
     grid-area: info;
     background: var(--color-brew-bg);
