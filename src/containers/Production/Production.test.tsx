@@ -96,7 +96,7 @@ describe('Production agitator controller integration', () => {
         jest.spyOn(AgitatorSettingsRepository, 'get').mockResolvedValue({speed: 26, intervalOnMinutes: 2, intervalOffMinutes: 2});
         jest.spyOn(AgitatorSettingsRepository, 'update').mockResolvedValue({speed: 26, intervalOnMinutes: 2, intervalOffMinutes: 2});
         jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockResolvedValue(detail);
-        jest.spyOn(ProductionRepository, 'setAgitatorConfig').mockImplementation(async config => config);
+        jest.spyOn(ProductionRepository, 'setAgitatorConfig').mockResolvedValue();
         jest.spyOn(ProductionRepository, 'pauseAgitator').mockResolvedValue();
         jest.spyOn(ProductionRepository, 'resumeAgitator').mockResolvedValue();
     });
@@ -187,15 +187,15 @@ describe('Production agitator controller integration', () => {
         await waitFor(() => expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledWith({mode: 'OFF', speedPercent: 36, runningMinutes: 2, breakMinutes: 7}));
     });
 
-    it('keeps both mode switches disabled while a config request is pending', async () => {
-        let resolveConfig!: (config: any) => void;
-        jest.spyOn(ProductionRepository, 'setAgitatorConfig').mockImplementation(config => new Promise(resolve => { resolveConfig = resolve; }));
+    it('keeps agitator controls enabled and the optimistic mode visible while a config request is pending', async () => {
+        let resolveConfig!: () => void;
+        jest.spyOn(ProductionRepository, 'setAgitatorConfig').mockImplementation(() => new Promise<void>(resolve => { resolveConfig = resolve; }));
         renderProduction();
         fireEvent.click(await screen.findByRole('switch', {name: 'Durchgehend rühren'}));
-        expect(screen.getByRole('switch', {name: 'Durchgehend rühren'})).toBeDisabled();
-        expect(screen.getByRole('switch', {name: 'Intervallbetrieb'})).toBeDisabled();
-        resolveConfig({...detail.config, mode: 'CONTINUOUS'});
-        await waitFor(() => expect(screen.getByRole('switch', {name: 'Durchgehend rühren'})).toBeEnabled());
+        expect(screen.getByRole('switch', {name: 'Durchgehend rühren'})).toBeEnabled();
+        expect(screen.getByRole('switch', {name: 'Durchgehend rühren'})).toBeChecked();
+        expect(screen.getByRole('switch', {name: 'Intervallbetrieb'})).toBeEnabled();
+        resolveConfig();
     });
 
     it('debounces speed drafts and sends only the latest complete config', async () => {
@@ -243,6 +243,41 @@ describe('Production agitator controller integration', () => {
         expect(await screen.findByText('42 %')).toBeInTheDocument();
         expect(within(screen.getByTestId('running-minutes-stepper')).getByText('4')).toBeInTheDocument();
         expect(within(screen.getByTestId('break-minutes-stepper')).getByText('10')).toBeInTheDocument();
+    });
+
+    it('keeps a speed draft through HTTP success and reconciles it only with the matching socket state', async () => {
+        jest.useFakeTimers();
+        const {props, rerender} = renderProduction();
+        await act(async () => { await Promise.resolve(); });
+        fireEvent.change(screen.getByRole('slider'), {target: {value: '42'}});
+        expect(screen.getByText('42 %')).toBeInTheDocument();
+        act(() => jest.advanceTimersByTime(AGITATOR_SPEED_DEBOUNCE_MS));
+        await act(async () => { await Promise.resolve(); });
+        expect(screen.getByText('42 %')).toBeInTheDocument();
+
+        rerender(<Production {...props} realtimeState={{...props.realtimeState, agitator: {...detail.config, paused: false, operation: 'INTERVAL', actualOutputOn: true, speedPercent: 36}}} />);
+        expect(await screen.findByText('42 %')).toBeInTheDocument();
+        rerender(<Production {...props} realtimeState={{...props.realtimeState, agitator: {...detail.config, paused: false, operation: 'INTERVAL', actualOutputOn: true, speedPercent: 42}}} />);
+        expect(await screen.findByText('42 %')).toBeInTheDocument();
+        jest.useRealTimers();
+    });
+
+    it.each([
+        ['runningMinutes', 'Laufzeit', 'Laufzeit erhöhen', 3, 7],
+        ['breakMinutes', 'Pausenzeit', 'Pausenzeit verringern', 2, 6],
+    ] as const)('keeps the %s draft stable until an identical socket snapshot confirms it', async (_field, label, buttonName, runningMinutes, breakMinutes) => {
+        const {props, rerender} = renderProduction();
+        await screen.findByLabelText(label);
+        const button = screen.getByRole('button', {name: buttonName});
+        fireEvent.mouseDown(button);
+        fireEvent.mouseUp(button);
+        expect(screen.getByLabelText(label)).toHaveTextContent(String(label === 'Laufzeit' ? runningMinutes : breakMinutes));
+        expect(button).toBeEnabled();
+
+        rerender(<Production {...props} realtimeState={{...props.realtimeState, agitator: {...detail.config, paused: false, operation: 'INTERVAL', actualOutputOn: true}}} />);
+        expect(await screen.findByLabelText(label)).toHaveTextContent(String(label === 'Laufzeit' ? runningMinutes : breakMinutes));
+        rerender(<Production {...props} realtimeState={{...props.realtimeState, agitator: {...detail.config, paused: false, operation: 'INTERVAL', actualOutputOn: true, runningMinutes, breakMinutes}}} />);
+        expect(await screen.findByLabelText(label)).toHaveTextContent(String(label === 'Laufzeit' ? runningMinutes : breakMinutes));
     });
 
     it('keeps interval settings visible but only editable in AUTOMATIC mode and places speed afterwards', async () => {

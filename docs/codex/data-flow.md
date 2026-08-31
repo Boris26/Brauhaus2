@@ -46,6 +46,12 @@ Needs verification: backend ordering of `GET beers`, because the UI treats the l
 - Normalized status is stored in `productionReducer.brewingStatus` and in `dataCollector`.
 - Polling stops when normalized process state is `FINISHED`, `ABORTED`, or `ERROR`.
 
+## Production agitator configuration flow
+
+- Production applies speed, interval, and mode edits as local drafts immediately. `PUT /Agitator/Config` is command-only; HTTP success does not confirm or replace controller state.
+- The complete `agitator-state-changed` Socket.IO snapshot remains authoritative and is received by every client, including the client that sent the command. A local field draft is removed only when the snapshot contains the requested value; unrelated or older snapshots update confirmed state without making the edited value jump backwards.
+- Normal configuration requests do not globally disable the agitator controls. The existing 300 ms speed debounce still coalesces slider movement before sending the complete desired configuration.
+
 ## Availability polling
 
 - `CHECK_IS_BACKEND_AVAILABLE` starts a 20000 ms interval with an immediate first check.

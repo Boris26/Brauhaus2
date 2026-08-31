@@ -72,9 +72,8 @@ export class ProductionRepository {
         return response.data;
     }
 
-    static async setAgitatorConfig(config: AgitatorConfig): Promise<AgitatorConfig> {
+    static async setAgitatorConfig(config: AgitatorConfig): Promise<void> {
         await axios.put(`${BaseURL}/Agitator/Config`, config);
-        return config;
     }
 
     static async pauseAgitator(): Promise<void> {

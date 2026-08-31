@@ -20,7 +20,7 @@ describe('ProductionRepository API method/path usage', () => {
     const detail = {config: {mode: 'AUTOMATIC', speedPercent: 36, runningMinutes: 2, breakMinutes: 7}, inputs: {heatingActive: false}, runtime: {paused: false, desiredOperation: 'INTERVAL', actualOutputOn: false}};
     mockedAxios.get.mockResolvedValueOnce({status: 200, data: detail} as any);
     await expect(ProductionRepository.getAgitatorStatus()).resolves.toEqual(detail);
-    await ProductionRepository.setAgitatorConfig(detail.config as any);
+    await expect(ProductionRepository.setAgitatorConfig(detail.config as any)).resolves.toBeUndefined();
     await ProductionRepository.pauseAgitator();
     await ProductionRepository.resumeAgitator();
 

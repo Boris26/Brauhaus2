@@ -83,6 +83,7 @@ interface ProductionState {
     agitatorRuntime?: AgitatorRuntimeStatus;
     agitatorSpeedDraft?: number;
     agitatorIntervalDraft?: Pick<AgitatorConfig, 'runningMinutes' | 'breakMinutes'>;
+    agitatorModeDraft?: AgitatorMode;
     agitatorRequestPending: boolean;
     agitatorStatusLoadFailed: boolean;
     waterSwitchState: boolean
@@ -120,6 +121,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
             agitatorRuntime: undefined,
             agitatorSpeedDraft: undefined,
             agitatorIntervalDraft: undefined,
+            agitatorModeDraft: undefined,
             agitatorRequestPending: false,
             agitatorStatusLoadFailed: false,
             waterSwitchState: false,
@@ -318,35 +320,63 @@ export class Production extends React.Component<ProductionProps, ProductionState
                 ...(typeof poll.runningMinutes === 'number' ? {runningMinutes: poll.runningMinutes} : {}),
                 ...(typeof poll.breakMinutes === 'number' ? {breakMinutes: poll.breakMinutes} : {}),
             } : previous.agitatorConfig,
-            agitatorIntervalDraft: typeof poll.runningMinutes === 'number' || typeof poll.breakMinutes === 'number'
+            agitatorSpeedDraft: previous.agitatorSpeedDraft !== undefined && poll.speedPercent === previous.agitatorSpeedDraft
+                ? undefined
+                : previous.agitatorSpeedDraft,
+            agitatorIntervalDraft: previous.agitatorIntervalDraft
+                && poll.runningMinutes === previous.agitatorIntervalDraft.runningMinutes
+                && poll.breakMinutes === previous.agitatorIntervalDraft.breakMinutes
                 ? undefined
                 : previous.agitatorIntervalDraft,
+            agitatorModeDraft: previous.agitatorModeDraft !== undefined && poll.mode === previous.agitatorModeDraft
+                ? undefined
+                : previous.agitatorModeDraft,
         }));
     }
 
+    getDesiredAgitatorConfig = (): AgitatorConfig | undefined => {
+        const {agitatorConfig, agitatorSpeedDraft, agitatorIntervalDraft, agitatorModeDraft} = this.state;
+        if (!agitatorConfig) return undefined;
+        return {
+            ...agitatorConfig,
+            ...(agitatorModeDraft !== undefined ? {mode: agitatorModeDraft} : {}),
+            ...(agitatorSpeedDraft !== undefined ? {speedPercent: agitatorSpeedDraft} : {}),
+            ...agitatorIntervalDraft,
+        };
+    }
+
     submitAgitatorConfig = async (config: AgitatorConfig): Promise<boolean> => {
-        this.setState({agitatorRequestPending: true, mainAgitatorError: false});
+        this.setState({mainAgitatorError: false});
         try {
-            const confirmed = await ProductionRepository.setAgitatorConfig(config);
-            if (this.isMountedComponent) this.setState((previous) => ({
-                agitatorConfig: confirmed,
-                agitatorRuntime: previous.agitatorRuntime ? {...previous.agitatorRuntime, mode: confirmed.mode} : previous.agitatorRuntime,
-                agitatorSpeedDraft: undefined,
-                agitatorIntervalDraft: undefined,
-                agitatorRequestPending: false,
-            }));
+            await ProductionRepository.setAgitatorConfig(config);
             return true;
         } catch (error) {
-            if (this.isMountedComponent) this.setState({agitatorSpeedDraft: undefined, agitatorIntervalDraft: undefined, agitatorRequestPending: false, mainAgitatorError: true});
+            if (this.isMountedComponent) this.setState((previous) => {
+                const desired = this.getDesiredAgitatorConfig();
+                const requestIsStillCurrent = desired !== undefined
+                    && desired.mode === config.mode
+                    && desired.speedPercent === config.speedPercent
+                    && desired.runningMinutes === config.runningMinutes
+                    && desired.breakMinutes === config.breakMinutes;
+                return {
+                    agitatorSpeedDraft: requestIsStillCurrent ? undefined : previous.agitatorSpeedDraft,
+                    agitatorIntervalDraft: requestIsStillCurrent ? undefined : previous.agitatorIntervalDraft,
+                    agitatorModeDraft: requestIsStillCurrent ? undefined : previous.agitatorModeDraft,
+                    mainAgitatorError: true,
+                };
+            });
             return false;
         }
     }
 
     toggleAgitatorMode = (mode: Exclude<AgitatorMode, 'OFF'>, checked: boolean): void => {
-        const {agitatorConfig, agitatorRequestPending} = this.state;
-        if (!this.isControllerAvailable() || !agitatorConfig || agitatorRequestPending) return;
-        const nextMode: AgitatorMode = checked ? mode : (agitatorConfig.mode === mode ? 'OFF' : agitatorConfig.mode);
-        if (nextMode !== agitatorConfig.mode) void this.submitAgitatorConfig({...agitatorConfig, mode: nextMode});
+        const config = this.getDesiredAgitatorConfig();
+        if (!this.isControllerAvailable() || !config) return;
+        const nextMode: AgitatorMode = checked ? mode : (config.mode === mode ? 'OFF' : config.mode);
+        if (nextMode !== config.mode) this.setState({agitatorModeDraft: nextMode}, () => {
+            const desired = this.getDesiredAgitatorConfig();
+            if (desired) void this.submitAgitatorConfig(desired);
+        });
     }
 
     toggleAgitatorPause = async (): Promise<void> => {
@@ -420,7 +450,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
         this.agitatorSpeedDebounceTimeout = setTimeout(() => {
             this.agitatorSpeedDebounceTimeout = null;
             if (this.isControllerAvailable()) {
-                const config = this.state.agitatorConfig;
+                const config = this.getDesiredAgitatorConfig();
                 if (config) void this.submitAgitatorConfig({...config, speedPercent: value});
             }
         }, AGITATOR_SPEED_DEBOUNCE_MS);
@@ -434,18 +464,20 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     onIntervalChangeBreakTime = (value: number) => {
-        const config = this.state.agitatorConfig;
-        if (!this.isControllerAvailable() || !config || this.state.agitatorRequestPending) return;
+        const config = this.getDesiredAgitatorConfig();
+        if (!this.isControllerAvailable() || !config) return;
         this.setState({agitatorIntervalDraft: {runningMinutes: config.runningMinutes, breakMinutes: value}}, () => {
-            void this.submitAgitatorConfig({...config, breakMinutes: value});
+            const desired = this.getDesiredAgitatorConfig();
+            if (desired) void this.submitAgitatorConfig(desired);
         });
     }
 
     onIntervalChangeRunningTime = (value: number) => {
-        const config = this.state.agitatorConfig;
-        if (!this.isControllerAvailable() || !config || this.state.agitatorRequestPending) return;
+        const config = this.getDesiredAgitatorConfig();
+        if (!this.isControllerAvailable() || !config) return;
         this.setState({agitatorIntervalDraft: {runningMinutes: value, breakMinutes: config.breakMinutes}}, () => {
-            void this.submitAgitatorConfig({...config, runningMinutes: value});
+            const desired = this.getDesiredAgitatorConfig();
+            if (desired) void this.submitAgitatorConfig(desired);
         });
     }
 
@@ -657,7 +689,8 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     renderSettings() {
-        const {waterSwitchState, agitatorConfig, agitatorRuntime, agitatorSpeedDraft, agitatorIntervalDraft, agitatorRequestPending, agitatorStatusLoadFailed} = this.state;
+        const {waterSwitchState, agitatorConfig, agitatorRuntime, agitatorSpeedDraft, agitatorIntervalDraft, agitatorModeDraft, agitatorRequestPending, agitatorStatusLoadFailed} = this.state;
+        const displayedAgitatorMode = agitatorModeDraft ?? agitatorConfig?.mode;
         const settingsDisabled = !this.isControllerAvailable();
         const mashWaterDisabled = settingsDisabled || this.isRecipeWaterButtonDisabled('mash');
         const spargeWaterDisabled = settingsDisabled || this.isRecipeWaterButtonDisabled('sparge');
@@ -690,31 +723,31 @@ export class Production extends React.Component<ProductionProps, ProductionState
                         {agitatorStatusLoadFailed || settingsDisabled ? 'Rührwerk-Konfiguration nicht verfügbar' : 'Rührwerk-Konfiguration wird geladen'}
                     </p>}
                     <div className="agitatorPrimaryMode">
-                        {renderSwitch('Durchgehend rühren', agitatorConfig?.mode === 'CONTINUOUS',
-                            (checked) => this.toggleAgitatorMode('CONTINUOUS', checked), settingsDisabled || !agitatorConfig || agitatorRequestPending)}
+                        {renderSwitch('Durchgehend rühren', displayedAgitatorMode === 'CONTINUOUS',
+                            (checked) => this.toggleAgitatorMode('CONTINUOUS', checked), settingsDisabled || !agitatorConfig)}
                     </div>
-                    <div className={`intervalSettings agitatorAutomaticSettings ${agitatorConfig?.mode === 'AUTOMATIC' ? 'is-active' : ''}`} aria-labelledby="interval-settings-title">
+                    <div className={`intervalSettings agitatorAutomaticSettings ${displayedAgitatorMode === 'AUTOMATIC' ? 'is-active' : ''}`} aria-labelledby="interval-settings-title">
                         <div className="agitatorAutomaticHeader">
                             <div>
                                 <h5 id="interval-settings-title">Intervallbetrieb</h5>
                                 <p>Beim Heizen durchgehend, sonst im Intervall</p>
                             </div>
                             <Switch className="productionSwitch" onChange={(checked) => this.toggleAgitatorMode('AUTOMATIC', checked)}
-                                checked={agitatorConfig?.mode === 'AUTOMATIC'} height={24} width={44} handleDiameter={18}
-                                checkedIcon={false} uncheckedIcon={false} disabled={settingsDisabled || !agitatorConfig || agitatorRequestPending}
+                                checked={displayedAgitatorMode === 'AUTOMATIC'} height={24} width={44} handleDiameter={18}
+                                checkedIcon={false} uncheckedIcon={false} disabled={settingsDisabled || !agitatorConfig}
                                 aria-label="Intervallbetrieb" />
                         </div>
                         <div className="intervalTimeControls">
                             <div className="intervalTimeControl" data-testid="running-minutes-stepper">
                                 <QuantityPicker initialValue={agitatorIntervalDraft?.runningMinutes ?? agitatorConfig?.runningMinutes}
                                     min={0} max={Number.MAX_SAFE_INTEGER} onChange={this.onIntervalChangeRunningTime}
-                                    isDisabled={settingsDisabled || !agitatorConfig || agitatorRequestPending || agitatorConfig.mode !== 'AUTOMATIC'} label="Laufzeit" labelPosition="above"/>
+                                    isDisabled={settingsDisabled || !agitatorConfig || displayedAgitatorMode !== 'AUTOMATIC'} label="Laufzeit" labelPosition="above"/>
                                 <span className="intervalTimeUnit">min</span>
                             </div>
                             <div className="intervalTimeControl" data-testid="break-minutes-stepper">
                                 <QuantityPicker initialValue={agitatorIntervalDraft?.breakMinutes ?? agitatorConfig?.breakMinutes}
                                     min={0} max={Number.MAX_SAFE_INTEGER} onChange={this.onIntervalChangeBreakTime}
-                                    isDisabled={settingsDisabled || !agitatorConfig || agitatorRequestPending || agitatorConfig.mode !== 'AUTOMATIC'} label="Pausenzeit" labelPosition="above"/>
+                                    isDisabled={settingsDisabled || !agitatorConfig || displayedAgitatorMode !== 'AUTOMATIC'} label="Pausenzeit" labelPosition="above"/>
                                 <span className="intervalTimeUnit">min</span>
                             </div>
                         </div>
