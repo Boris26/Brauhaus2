@@ -113,5 +113,15 @@
 }
 .agitator-default-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-md); }
 .agitator-default-fields .quantity-picker-content { height: var(--control-height-compact); }
+.agitator-default-fields .quantity-picker-content,
+.agitator-default-fields .quantity-picker-native-input {
+  background: var(--color-surface-strong) !important;
+  color: var(--color-text);
+}
+.agitator-default-fields .quantity-picker-content.quantity-picker-content-disabled,
+.agitator-default-fields .quantity-picker-content-disabled .quantity-picker-native-input {
+  background: var(--color-disabled-bg) !important;
+  color: var(--color-disabled-text);
+}
 .settings-warning .settings-secondary { display: block; margin-top: var(--spacing-sm); }
 @media (max-width: 600px) { .agitator-default-fields { grid-template-columns: minmax(0, 1fr); } }
