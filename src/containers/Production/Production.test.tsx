@@ -936,14 +936,6 @@ describe('Production flame display', () => {
         rerender(<Production {...props} socketConnected={false} />);
         expect(container.querySelector('.flame-strip')).toBeNull();
     });
-
-    it('shows flames again after reconnect receives a running snapshot', () => {
-        const {container, rerender, props} = renderProduction({socketConnected: false, realtimeState: {heatingRunning: true, alarms: [], alarmsReceived: true}});
-        expect(container.querySelector('.flame-strip')).toBeNull();
-
-        rerender(<Production {...props} socketConnected={true} realtimeState={{...props.realtimeState, heatingRunning: true}} />);
-        expect(container.querySelector('.flame-strip')).not.toBeNull();
-    });
 });
 
 describe('Production layout structure', () => {

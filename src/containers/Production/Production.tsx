@@ -589,7 +589,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
         return (
             <div className='Flame'>
               {isHeating && (
-                    <div className="flame-strip" aria-label="Heizung aktiv">
+                    <div className="flame-strip">
                         <Flame/>
                         <Flame/>
                         <Flame/>
