@@ -17,6 +17,8 @@ export interface AgitatorRuntimeStatus {
     speedPercent?: number;
     runningMinutes?: number;
     breakMinutes?: number;
+    /** Controller-owned progress of the current interval phase (0..100). */
+    intervalProgressPercent?: number;
 }
 
 export interface AgitatorDetailStatus {
@@ -28,5 +30,6 @@ export interface AgitatorDetailStatus {
         actualState?: string;
         actualOutputOn: boolean;
         intervalPhase?: string;
+        intervalProgressPercent?: number;
     };
 }
