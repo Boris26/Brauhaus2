@@ -804,18 +804,15 @@ export class Production extends React.Component<ProductionProps, ProductionState
                         </div>
                         <div className={`intervalSettings agitatorAutomaticSettings ${displayedAgitatorMode === 'AUTOMATIC' ? 'is-active' : ''}`} aria-labelledby="interval-settings-title">
                             <div className="agitatorAutomaticHeader">
-                                <div>
-                                    <h5 id="interval-settings-title">Intervallbetrieb</h5>
-                                    <p>Beim Heizen durchgehend, sonst im Intervall</p>
-                                </div>
-                                <div className="agitatorAutomaticActions">
-                                    <AgitatorIntervalProgress active={intervalProgressActive} paused={agitatorRuntime?.paused ?? false}
-                                        progress={agitatorRuntime?.intervalProgressPercent} />
-                                    <Switch className="productionSwitch" onChange={(checked) => this.toggleAgitatorMode('AUTOMATIC', checked)}
-                                        checked={displayedAgitatorMode === 'AUTOMATIC'} height={24} width={44} handleDiameter={18}
-                                        checkedIcon={false} uncheckedIcon={false} disabled={settingsDisabled || !agitatorConfig}
-                                        aria-label="Intervallbetrieb" />
-                                </div>
+                                <h5 id="interval-settings-title">Intervallbetrieb</h5>
+                                <Switch className="productionSwitch" onChange={(checked) => this.toggleAgitatorMode('AUTOMATIC', checked)}
+                                    checked={displayedAgitatorMode === 'AUTOMATIC'} height={24} width={44} handleDiameter={18}
+                                    checkedIcon={false} uncheckedIcon={false} disabled={settingsDisabled || !agitatorConfig}
+                                    aria-label="Intervallbetrieb" />
+                            </div>
+                            <div className="agitatorIntervalProgressRow">
+                                <AgitatorIntervalProgress active={intervalProgressActive} paused={agitatorRuntime?.paused ?? false}
+                                    progress={agitatorRuntime?.intervalProgressPercent} />
                             </div>
                             <div className="intervalTimeControls">
                                 <div className="intervalTimeControl" data-testid="running-minutes-stepper">
