@@ -7,6 +7,7 @@ import {AlarmType, BrewingStatus, ProcessMode, ProcessPhase, ProcessState, Waiti
 import {ConfirmStates} from '../../enums/eConfirmStates';
 import {dataCollector} from '../../utils/DataCollector/dataCollector';
 import {ProductionRepository} from '../../repositorys/ProductionRepository';
+import {AgitatorSettingsRepository} from '../../repositorys/AgitatorSettingsRepository';
 
 const createBeer = (aMashVolume: number | undefined = 18, aSpargeVolume: number | undefined = 12, aId: string = '1'): Beer => ({
     id: aId,
@@ -92,6 +93,8 @@ describe('Production agitator controller integration', () => {
     };
 
     beforeEach(() => {
+        jest.spyOn(AgitatorSettingsRepository, 'get').mockResolvedValue({speed: 35, intervalOnMinutes: 2, intervalOffMinutes: 4});
+        jest.spyOn(AgitatorSettingsRepository, 'update').mockResolvedValue({speed: 35, intervalOnMinutes: 2, intervalOffMinutes: 4});
         jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockResolvedValue(detail);
         jest.spyOn(ProductionRepository, 'setAgitatorConfig').mockImplementation(async config => config);
         jest.spyOn(ProductionRepository, 'pauseAgitator').mockResolvedValue();
@@ -108,10 +111,23 @@ describe('Production agitator controller integration', () => {
         expect(screen.getAllByRole('switch', {name: 'Automatik'})).toHaveLength(1);
         expect(screen.queryByText('Automatik · Intervallpause')).not.toBeInTheDocument();
         expect(ProductionRepository.getAgitatorStatus).toHaveBeenCalledTimes(1);
+        expect(AgitatorSettingsRepository.get).toHaveBeenCalledTimes(1);
+        expect(AgitatorSettingsRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('uses persistent defaults as the initial runtime config when no current agitator state is available', async () => {
+        jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockRejectedValue(new Error('no runtime state'));
+        renderProduction();
+        expect(await screen.findByText('35 %')).toBeInTheDocument();
+        expect(within(screen.getByTestId('running-minutes-stepper')).getByText('2')).toBeInTheDocument();
+        expect(within(screen.getByTestId('break-minutes-stepper')).getByText('4')).toBeInTheDocument();
+        expect(AgitatorSettingsRepository.get).toHaveBeenCalledTimes(1);
+        expect(AgitatorSettingsRepository.update).not.toHaveBeenCalled();
     });
 
     it('keeps the complete agitator UI visible and disabled when detail status is unavailable', async () => {
         jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockRejectedValue(new Error('offline'));
+        jest.spyOn(AgitatorSettingsRepository, 'get').mockRejectedValue(new Error('offline'));
         renderProduction({isBackenAvailable: {isBackenAvailable: false, statusText: 'Offline'}});
         expect(await screen.findByText('Rührwerk-Konfiguration nicht verfügbar')).toBeInTheDocument();
         expect(screen.getByRole('switch', {name: 'Durchgehend rühren'})).toBeDisabled();
