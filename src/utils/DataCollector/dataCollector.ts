@@ -23,6 +23,7 @@ type BrewingStatusGrouped = {
 };
 
 export const MAX_MEASUREMENTS_PER_STATUS_GROUP = 1000;
+export const MAX_TOTAL_MEASUREMENTS = 5000;
 
 class DataCollector {
   private brewingStatus: BrewingStatus | null = null;
@@ -57,6 +58,7 @@ class DataCollector {
       this.timelineMeasurements.push(aCurrentMeasurement);
       this.collectionSequence += 1;
       this.trimStatusGroup(aStatusKey);
+      this.trimGlobalMeasurements();
       this.timelineVersion += 1;
       this.cachedTimelineSnapshot = null;
     }
@@ -89,6 +91,27 @@ class DataCollector {
       // trimming old temperature detail behind it.
       const removedMeasurements = new Set(aStatusGroup.splice(1, aStatusGroup.length - MAX_MEASUREMENTS_PER_STATUS_GROUP));
       this.timelineMeasurements = this.timelineMeasurements.filter(measurement => !removedMeasurements.has(measurement));
+    }
+  }
+
+  private trimGlobalMeasurements(): void {
+    while (this.timelineMeasurements.length > MAX_TOTAL_MEASUREMENTS) {
+      // Prefer dropping the oldest detail point while retaining the first
+      // process-boundary sample of every status group for export readability.
+      const removableDetails = new Set(
+        Object.values(this.groupedData).flatMap((group) => group.length > 1 ? group.slice(1) : [])
+      );
+      let removalIndex = this.timelineMeasurements.findIndex((measurement) => removableDetails.has(measurement));
+      if (removalIndex < 0) removalIndex = 0;
+
+      const [removed] = this.timelineMeasurements.splice(removalIndex, 1);
+      for (const [statusKey, group] of Object.entries(this.groupedData)) {
+        const groupIndex = group.indexOf(removed);
+        if (groupIndex < 0) continue;
+        group.splice(groupIndex, 1);
+        if (group.length === 0) delete this.groupedData[statusKey];
+        break;
+      }
     }
   }
 

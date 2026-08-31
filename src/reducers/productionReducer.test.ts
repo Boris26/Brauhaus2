@@ -84,6 +84,7 @@ describe('productionReducer brewingStatus alarms', () => {
         const repeated = productionReducer(active, ProductionActions.alarmStateChanged(snapshot));
         const cleared = productionReducer(repeated, ProductionActions.alarmStateChanged({alarms: []}));
         expect(repeated.realtimeState.alarms).toEqual(snapshot.alarms);
+        expect(repeated).toBe(active);
         expect(cleared.realtimeState.alarms).toEqual([]);
     });
     it('keeps realtime alarms independent from process status polling', () => {
@@ -91,6 +92,31 @@ describe('productionReducer brewingStatus alarms', () => {
         const alarmState = productionReducer(initialProductionState, ProductionActions.alarmStateChanged({alarms: [activeAlarm]}));
         const polledState = productionReducer(alarmState, ProductionActions.setBrewingStatus(status()));
         expect(polledState.realtimeState.alarms).toEqual([activeAlarm]);
+    });
+});
+
+describe('productionReducer realtime snapshot deduplication', () => {
+    it('retains the Redux state reference for semantically identical contract snapshots', () => {
+        const agitator = {mode: 'AUTOMATIC' as const, paused: false, operation: 'INTERVAL' as const, intervalPhase: 'RUNNING', actualOutputOn: true, speedPercent: 60, runningMinutes: 2, breakMinutes: 3};
+        const sensor = {current: 65.2, health: 'OK' as const, sensorId: '28-1'};
+        const defaults = {speed: 60, intervalOnMinutes: 2, intervalOffMinutes: 3};
+        const heated = productionReducer(initialProductionState, ProductionActions.heatingRunningChanged({running: true}));
+        const withAgitator = productionReducer(heated, ProductionActions.agitatorStateChanged(agitator));
+        const withSensor = productionReducer(withAgitator, ProductionActions.temperatureSensorStateChanged(sensor));
+        const withDefaults = productionReducer(withSensor, ProductionActions.agitatorDefaultsChanged(defaults));
+
+        expect(productionReducer(heated, ProductionActions.heatingRunningChanged({running: true}))).toBe(heated);
+        expect(productionReducer(withAgitator, ProductionActions.agitatorStateChanged({...agitator}))).toBe(withAgitator);
+        expect(productionReducer(withSensor, ProductionActions.temperatureSensorStateChanged({...sensor}))).toBe(withSensor);
+        expect(productionReducer(withDefaults, ProductionActions.agitatorDefaultsChanged({...defaults}))).toBe(withDefaults);
+    });
+
+    it('creates new state for changed realtime contract fields', () => {
+        const heated = productionReducer(initialProductionState, ProductionActions.heatingRunningChanged({running: true}));
+        expect(productionReducer(heated, ProductionActions.heatingRunningChanged({running: false}))).not.toBe(heated);
+
+        const sensor = productionReducer(initialProductionState, ProductionActions.temperatureSensorStateChanged({current: 65, health: 'OK', sensorId: '28-1'}));
+        expect(productionReducer(sensor, ProductionActions.temperatureSensorStateChanged({current: 66, health: 'OK', sensorId: '28-1'}))).not.toBe(sensor);
     });
 });
 

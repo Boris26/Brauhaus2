@@ -31,7 +31,7 @@ Needs verification: backend ordering of `GET beers`, because the UI treats the l
 
 - Production view reads `beerDataReducer.beerToBrew` as `selectedBeer`.
 - `mapBeerToBrewingData(selectedBeer)` extracts Einmaischen and Abmaischen temperatures, cooking temperature/time, and normalized timed/decoction steps. It emits explicit `RAST`/`DECOCTION` procedure types and upgrades legacy `CONFIRMATION_HOLD` steps to `DECOCTION`. Missing or invalid top-level cooking temperature is replaced with `99` °C in the UI mapping before sending control data.
-- On success, `SEND_BREWING_DATA` posts `BrewingData` to `POST Recipe/` and expects HTTP 201.
+- On success, `SEND_BREWING_DATA` posts `BrewingData` to `POST Recipe/` and expects HTTP 201. Recipe submission and the following `StartBrewing` call are one non-idempotent command lifecycle; repeated submit actions are ignored while that lifecycle is pending.
 - After recipe submission, the UI calls `StartBrewing` with the connected default-namespace Socket.IO SID in the optional `X-Socket-ID` header. Only a successful controller response emits `START_POLLING`; `startPollingEpic$` owns the single `/Status/` loop and ignores repeated starts while it is active.
 - Mounting or unmounting desktop/mobile Production never starts or stops process polling. A remote, refreshed, or reconnected client instead receives `brew-session-running`, restores `GET /BrewSession`, reconstructs the scaled beer, and emits `START_POLLING` when no poll is active.
 - Temperature, sensor health/ID, heater output, agitator output, and alarms remain available without a brew through the app-lifetime Socket.IO connection. A new/reconnected controller snapshot `temperature-sensor-state-changed` replaces the global sensor snapshot; disconnect clears it as unknown. Production does not issue the legacy temperature REST read on mount.
@@ -45,6 +45,8 @@ Needs verification: backend ordering of `GET beers`, because the UI treats the l
 - The desktop production UI derives an active equipment alarm from `alarms` and displays it through the existing production modal and header status components. Dismissing the modal is local presentation state for the current continuous alarm cycle and does not dispatch an action or call an API.
 - Normalized status is stored in `productionReducer.brewingStatus` and in `dataCollector`.
 - Polling stops when normalized process state is `FINISHED`, `ABORTED`, or `ERROR`.
+
+Automatic water filling follows the same at-most-once-while-pending rule: another `START_WATER_FILLING` is ignored until the active controller command and its water-status polling lifecycle finish.
 
 ## Production agitator configuration flow
 

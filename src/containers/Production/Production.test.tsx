@@ -85,6 +85,13 @@ const renderProduction = (aOverrides: Partial<React.ComponentProps<typeof Produc
     return {props, ...render(<Production {...props} />)};
 };
 
+const deferred = <T,>() => {
+    let resolve!: (value: T) => void;
+    let reject!: (reason?: unknown) => void;
+    const promise = new Promise<T>((res, rej) => { resolve = res; reject = rej; });
+    return {promise, resolve, reject};
+};
+
 describe('Production agitator controller integration', () => {
     const detail = {
         config: {mode: 'AUTOMATIC' as const, speedPercent: 36, runningMinutes: 2, breakMinutes: 7},
@@ -198,6 +205,90 @@ describe('Production agitator controller integration', () => {
         resolveConfig();
     });
 
+    it('serializes rapid config changes and sends only the latest queued desired state', async () => {
+        const first = deferred<void>();
+        const second = deferred<void>();
+        jest.spyOn(ProductionRepository, 'setAgitatorConfig')
+            .mockImplementationOnce(() => first.promise)
+            .mockImplementationOnce(() => second.promise);
+        renderProduction();
+        await screen.findByLabelText('Laufzeit');
+
+        const increment = screen.getByRole('button', {name: 'Laufzeit erhöhen'});
+        fireEvent.pointerDown(increment); fireEvent.pointerUp(increment);
+        fireEvent.pointerDown(increment); fireEvent.pointerUp(increment);
+        fireEvent.pointerDown(increment); fireEvent.pointerUp(increment);
+        expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledTimes(1);
+
+        await act(async () => { first.resolve(); await first.promise; });
+        expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledTimes(2);
+        expect(ProductionRepository.setAgitatorConfig).toHaveBeenLastCalledWith({mode: 'AUTOMATIC', speedPercent: 36, runningMinutes: 5, breakMinutes: 7});
+        await act(async () => { second.resolve(); await second.promise; });
+    });
+
+    it('keeps the controlled repeat draft when a socket snapshot arrives during a pending config request', async () => {
+        jest.useFakeTimers();
+        const first = deferred<void>();
+        jest.spyOn(ProductionRepository, 'setAgitatorConfig').mockImplementationOnce(() => first.promise).mockResolvedValue();
+        const {props, rerender} = renderProduction();
+        await act(async () => { await Promise.resolve(); });
+
+        const increment = screen.getByRole('button', {name: 'Laufzeit erhöhen'});
+        fireEvent.pointerDown(increment);
+        act(() => jest.advanceTimersByTime(400));
+        expect(screen.getByLabelText('Laufzeit')).toHaveTextContent('5');
+        expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledTimes(1);
+
+        rerender(<Production {...props} realtimeState={{...props.realtimeState!, agitator: {
+            mode: 'AUTOMATIC', paused: false, operation: 'INTERVAL', actualOutputOn: true,
+            speedPercent: 41, runningMinutes: 4, breakMinutes: 8,
+        }}} />);
+        expect(screen.getByLabelText('Laufzeit')).toHaveTextContent('5');
+        expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledTimes(1);
+
+        fireEvent.pointerUp(increment);
+        await act(async () => { first.resolve(); await first.promise; });
+        expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledTimes(2);
+        expect(ProductionRepository.setAgitatorConfig).toHaveBeenLastCalledWith({
+            mode: 'AUTOMATIC', speedPercent: 41, runningMinutes: 5, breakMinutes: 8,
+        });
+        jest.useRealTimers();
+    });
+
+    it('stops controlled auto-repeat on unmount while a config request is pending', async () => {
+        jest.useFakeTimers();
+        const request = deferred<void>();
+        jest.spyOn(ProductionRepository, 'setAgitatorConfig').mockReturnValue(request.promise);
+        const {unmount} = renderProduction();
+        await act(async () => { await Promise.resolve(); });
+
+        fireEvent.pointerDown(screen.getByRole('button', {name: 'Laufzeit erhöhen'}));
+        expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledTimes(1);
+        unmount();
+        act(() => jest.advanceTimersByTime(1000));
+        await act(async () => { request.resolve(); await request.promise; });
+
+        expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledTimes(1);
+        jest.useRealTimers();
+    });
+
+    it('coalesces speed and interval edits behind an active request', async () => {
+        jest.useFakeTimers();
+        const first = deferred<void>();
+        jest.spyOn(ProductionRepository, 'setAgitatorConfig').mockImplementationOnce(() => first.promise).mockResolvedValue();
+        renderProduction();
+        await act(async () => { await Promise.resolve(); });
+        const increment = screen.getByRole('button', {name: 'Laufzeit erhöhen'});
+        fireEvent.pointerDown(increment); fireEvent.pointerUp(increment);
+        fireEvent.change(screen.getByRole('slider'), {target: {value: '40'}});
+        fireEvent.change(screen.getByRole('slider'), {target: {value: '44'}});
+        act(() => jest.advanceTimersByTime(AGITATOR_SPEED_DEBOUNCE_MS));
+        expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledTimes(1);
+        await act(async () => { first.resolve(); await first.promise; });
+        expect(ProductionRepository.setAgitatorConfig).toHaveBeenLastCalledWith({mode: 'AUTOMATIC', speedPercent: 44, runningMinutes: 3, breakMinutes: 7});
+        jest.useRealTimers();
+    });
+
     it('debounces speed drafts and sends only the latest complete config', async () => {
         jest.useFakeTimers();
         renderProduction();
@@ -221,6 +312,18 @@ describe('Production agitator controller integration', () => {
         expect(screen.getByRole('switch', {name: 'Intervallbetrieb'})).toBeChecked();
         expect(screen.getByRole('button', {name: 'Rührwerk fortsetzen'})).toBeInTheDocument();
         expect(ProductionRepository.setAgitatorConfig).not.toHaveBeenCalled();
+    });
+
+    it('does not let a late bootstrap REST response overwrite a newer socket snapshot', async () => {
+        const status = deferred<typeof detail>();
+        jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockReturnValue(status.promise);
+        const {props, rerender} = renderProduction();
+        const socketAgitator = {mode: 'CONTINUOUS' as const, paused: true, operation: 'CONTINUOUS' as const, intervalPhase: 'RUNNING', actualOutputOn: true, speedPercent: 51, runningMinutes: 4, breakMinutes: 9};
+        rerender(<Production {...props} realtimeState={{...props.realtimeState!, agitator: socketAgitator}} />);
+        expect(await screen.findByText('51 %')).toBeInTheDocument();
+        await act(async () => { status.resolve(detail); await status.promise; });
+        expect(screen.getByText('51 %')).toBeInTheDocument();
+        expect(screen.getByRole('switch', {name: 'Durchgehend rühren'})).toBeChecked();
     });
 
     it('renders realtime multi-client mode changes without sending config', async () => {
@@ -269,8 +372,8 @@ describe('Production agitator controller integration', () => {
         const {props, rerender} = renderProduction();
         await screen.findByLabelText(label);
         const button = screen.getByRole('button', {name: buttonName});
-        fireEvent.mouseDown(button);
-        fireEvent.mouseUp(button);
+        fireEvent.pointerDown(button);
+        fireEvent.pointerUp(button);
         expect(screen.getByLabelText(label)).toHaveTextContent(String(label === 'Laufzeit' ? runningMinutes : breakMinutes));
         expect(button).toBeEnabled();
 
@@ -291,13 +394,37 @@ describe('Production agitator controller integration', () => {
         expect(screen.getByText('36 %')).toBeInTheDocument();
     });
 
-    it('pauses independently without changing the selected mode', async () => {
+    it('treats pause HTTP success as an ACK and waits for socket confirmation', async () => {
         renderProduction();
         fireEvent.click(await screen.findByRole('button', {name: 'Rührwerk pausieren'}));
         await waitFor(() => expect(ProductionRepository.pauseAgitator).toHaveBeenCalledTimes(1));
         expect(screen.getByRole('switch', {name: 'Intervallbetrieb'})).toBeChecked();
         expect(ProductionRepository.setAgitatorConfig).not.toHaveBeenCalled();
+        expect(screen.getByRole('button', {name: 'Rührwerk pausieren'})).toBeInTheDocument();
+    });
+
+    it('keeps socket pause state authoritative when it arrives before the HTTP ACK', async () => {
+        const pause = deferred<void>();
+        jest.spyOn(ProductionRepository, 'pauseAgitator').mockReturnValue(pause.promise);
+        const {props, rerender} = renderProduction();
+        fireEvent.click(await screen.findByRole('button', {name: 'Rührwerk pausieren'}));
+        rerender(<Production {...props} realtimeState={{...props.realtimeState!, agitator: {...detail.config, paused: true, operation: 'STOPPED', actualOutputOn: false}}} />);
+        expect(await screen.findByRole('button', {name: 'Rührwerk fortsetzen'})).toBeInTheDocument();
+        await act(async () => { pause.resolve(); await pause.promise; });
         expect(screen.getByRole('button', {name: 'Rührwerk fortsetzen'})).toBeInTheDocument();
+    });
+
+    it('suppresses an old config error after a newer queued intent succeeds', async () => {
+        const first = deferred<void>();
+        jest.spyOn(ProductionRepository, 'setAgitatorConfig').mockImplementationOnce(() => first.promise).mockResolvedValueOnce();
+        renderProduction();
+        await screen.findByLabelText('Laufzeit');
+        const increment = screen.getByRole('button', {name: 'Laufzeit erhöhen'});
+        fireEvent.pointerDown(increment); fireEvent.pointerUp(increment);
+        fireEvent.pointerDown(increment); fireEvent.pointerUp(increment);
+        await act(async () => { first.reject(new Error('old failure')); try { await first.promise; } catch (_) {} });
+        await waitFor(() => expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledTimes(2));
+        expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     });
 
     it('uses controller minute values and sends the complete config when incrementing runtime', async () => {
@@ -305,8 +432,8 @@ describe('Production agitator controller integration', () => {
         expect(await screen.findByLabelText('Laufzeit')).toHaveTextContent('2');
         expect(screen.getByLabelText('Pausenzeit')).toHaveTextContent('7');
         const increment = screen.getByRole('button', {name: 'Laufzeit erhöhen'});
-        fireEvent.mouseDown(increment);
-        fireEvent.mouseUp(increment);
+        fireEvent.pointerDown(increment);
+        fireEvent.pointerUp(increment);
         await waitFor(() => expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledWith({mode: 'AUTOMATIC', speedPercent: 36, runningMinutes: 3, breakMinutes: 7}));
     });
 
@@ -314,8 +441,8 @@ describe('Production agitator controller integration', () => {
         renderProduction();
         await screen.findByLabelText('Pausenzeit');
         const decrement = screen.getByRole('button', {name: 'Pausenzeit verringern'});
-        fireEvent.mouseDown(decrement);
-        fireEvent.mouseUp(decrement);
+        fireEvent.pointerDown(decrement);
+        fireEvent.pointerUp(decrement);
         await waitFor(() => expect(ProductionRepository.setAgitatorConfig).toHaveBeenCalledWith({mode: 'AUTOMATIC', speedPercent: 36, runningMinutes: 2, breakMinutes: 6}));
     });
 
@@ -324,8 +451,8 @@ describe('Production agitator controller integration', () => {
         renderProduction();
         await screen.findByLabelText('Laufzeit');
         const increment = screen.getByRole('button', {name: 'Laufzeit erhöhen'});
-        fireEvent.mouseDown(increment);
-        fireEvent.mouseUp(increment);
+        fireEvent.pointerDown(increment);
+        fireEvent.pointerUp(increment);
         await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Rührwerk konnte nicht aktualisiert werden.'));
         expect(screen.getByLabelText('Laufzeit')).toHaveTextContent('2');
         expect(screen.getByLabelText('Pausenzeit')).toHaveTextContent('7');
@@ -615,6 +742,33 @@ describe('Production inline confirmations', () => {
         expect(screen.queryByLabelText('Hopfengabe')).not.toBeInTheDocument();
         expect(screen.getByText('Schritt wird ausgeführt')).toBeInTheDocument();
     });
+
+    it('reinitializes the hop plan and announced times when the selected recipe id changes', async () => {
+        const recipeA = {...createBeer(18, 12, 'recipe-a'), wortBoiling: {totalTime: 60, hops: [{id: 'h1', name: 'Cascade', description: '', alpha: 5, quantity: 10, time: 60}]}};
+        const recipeB = {...createBeer(18, 12, 'recipe-b'), wortBoiling: {totalTime: 60, hops: [{id: 'h2', name: 'Saaz', description: '', alpha: 4, quantity: 10, time: 59}]}};
+        const cooking = createBrewingStatus(ProcessState.ACTIVE);
+        cooking.currentStep = {index: 3, phase: ProcessPhase.COOKING, mode: ProcessMode.TIMER_RUNNING, elapsedTime: 61, duration: 3600};
+        const {rerender, props} = renderProduction({selectedBeer: recipeA, brewingStatus: cooking});
+
+        expect(await screen.findByLabelText('Hopfengabe')).toHaveTextContent('Cascade zugeben');
+        rerender(<Production {...props} selectedBeer={recipeB} brewingStatus={cooking} />);
+
+        expect(await screen.findByLabelText('Hopfengabe')).toHaveTextContent('Saaz zugeben');
+        expect(screen.queryByText('Cascade zugeben')).not.toBeInTheDocument();
+    });
+
+    it('does not reinitialize hop reminders for a new object with the same recipe id', async () => {
+        const recipe = {...createBeer(18, 12, 'recipe-a'), wortBoiling: {totalTime: 60, hops: [{id: 'h1', name: 'Cascade', description: '', alpha: 5, quantity: 10, time: 60}]}};
+        const cooking = createBrewingStatus(ProcessState.ACTIVE);
+        cooking.currentStep = {index: 3, phase: ProcessPhase.COOKING, mode: ProcessMode.TIMER_RUNNING, elapsedTime: 1, duration: 3600};
+        const {rerender, props} = renderProduction({selectedBeer: recipe, brewingStatus: cooking});
+
+        expect(await screen.findByLabelText('Hopfengabe')).toHaveTextContent('Cascade zugeben');
+        fireEvent.click(screen.getByRole('button', {name: 'Erledigt'}));
+        rerender(<Production {...props} selectedBeer={{...recipe}} brewingStatus={cooking} />);
+
+        expect(screen.queryByLabelText('Hopfengabe')).not.toBeInTheDocument();
+    });
 });
 
 
@@ -889,6 +1043,29 @@ describe('Production recipe water filling', () => {
         await waitFor(() => expect(getSpargeButton()).not.toBeDisabled());
         expect(getMashButton()).toBeDisabled();
         expect(screen.queryByRole('button', {name: '✓ Nachguss fertig'})).not.toBeInTheDocument();
+    });
+
+    it('keeps only one water failure timeout across repeated updates and clears it after execution', () => {
+        jest.useFakeTimers();
+        const failure = jest.spyOn(Production.prototype, 'failActiveRecipeWaterFill');
+        const {container, rerender, props, unmount} = renderProduction();
+        fireEvent.click(container.querySelector('.settingsRowWater input') as HTMLInputElement);
+
+        rerender(<Production {...props} isWaterFillingSuccessful={false} />);
+        rerender(<Production {...props} isWaterFillingSuccessful={false} brewingStatus={{...props.brewingStatus!, elapsedTime: 1}} />);
+        rerender(<Production {...props} isWaterFillingSuccessful={false} brewingStatus={{...props.brewingStatus!, elapsedTime: 2}}
+                             realtimeState={{...props.realtimeState!, agitator: {
+                                 mode: 'CONTINUOUS', paused: false, operation: 'CONTINUOUS', actualOutputOn: true,
+                                 speedPercent: 40, runningMinutes: 3, breakMinutes: 8,
+                             }}} />);
+        act(() => jest.advanceTimersByTime(300));
+        expect(failure).toHaveBeenCalledTimes(1);
+
+        act(() => jest.advanceTimersByTime(300));
+        expect(failure).toHaveBeenCalledTimes(1);
+        unmount();
+        failure.mockRestore();
+        jest.useRealTimers();
     });
 
     it('keeps Nachguss completed and allows Hauptguss retry after a Hauptguss failure', async () => {

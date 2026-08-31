@@ -82,7 +82,9 @@ export const setAgitatorSpeedEpic$ = (action$: any) =>
 export const startWaterFillingEpic$ = (action$: any) =>
   action$.pipe(
     ofType(ProductionActions.ActionTypes.START_WATER_FILLING),
-    switchMap((action: any) =>
+    // Filling is a non-idempotent controller command. Ignore duplicate UI
+    // dispatches until the command and its status lifecycle have completed.
+    exhaustMap((action: any) =>
       from(ProductionRepository.fillWaterAutomatic(action.payload.liters)).pipe(
         switchMap((result) => {
           if (result) {
@@ -186,7 +188,12 @@ export const restoreBrewSessionEpic$ = (action$: any, state$: {value: RootState}
           if (fetched) actions.push(BeerActions.getBeersSuccess(beers));
           actions.push(BeerActions.setSelectedBeer(reconstructedBeer));
           actions.push(BeerActions.setBeerToBrew(reconstructedBeer));
-          if (!state$.value.productionReducer.isPollingRunning) actions.push(ProductionActions.startPolling());
+          if (!state$.value.productionReducer.isPollingRunning) {
+            // A newly observed controller session must not inherit retained
+            // measurements from an earlier session whose save may have failed.
+            dataCollector.reset();
+            actions.push(ProductionActions.startPolling());
+          }
           return from(actions);
         }));
       }),
@@ -201,7 +208,9 @@ export const restoreBrewSessionEpic$ = (action$: any, state$: {value: RootState}
 export const sendBrewingDataEpic$ = (action$: any, state$: {value: RootState}) =>
   action$.pipe(
     ofType(ProductionActions.ActionTypes.SEND_BREWING_DATA),
-    switchMap((action: any) =>
+    // Recipe transfer plus StartBrewing form one non-idempotent command
+    // lifecycle; a repeated dispatch must not start a second backend request.
+    exhaustMap((action: any) =>
       from(ProductionRepository.sendBrewingData(action.payload.brewingData)).pipe(
         switchMap((sendResult) => {
           if (sendResult) {

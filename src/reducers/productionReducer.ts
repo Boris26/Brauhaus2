@@ -5,8 +5,31 @@ import { BrewingStatus } from '../model/BrewingStatus';
 import { isProcessAborted, isProcessFinished, isProcessIdle, isProcessInError } from '../utils/brewingStatus/selectors';
 import { ConfirmStates } from '../enums/eConfirmStates';
 import { WaterStatus } from '../components/Controlls/WaterControll/WaterControl';
-import {RealtimeControllerState} from '../model/RealtimeControllerState';
+import {AgitatorRealtimeState, AlarmRealtimeState, RealtimeControllerState, TemperatureSensorRealtimeState} from '../model/RealtimeControllerState';
 import {AgitatorSettings} from '../model/AgitatorSettings';
+
+const agitatorSnapshotsEqual = (left?: AgitatorRealtimeState, right?: AgitatorRealtimeState): boolean =>
+    left === right || (!!left && !!right
+        && left.mode === right.mode
+        && left.paused === right.paused
+        && left.operation === right.operation
+        && left.intervalPhase === right.intervalPhase
+        && left.actualOutputOn === right.actualOutputOn
+        && left.speedPercent === right.speedPercent
+        && left.runningMinutes === right.runningMinutes
+        && left.breakMinutes === right.breakMinutes);
+
+const alarmSnapshotsEqual = (left: AlarmRealtimeState['alarms'], right: AlarmRealtimeState['alarms']): boolean =>
+    left === right || (left.length === right.length && left.every((alarm, index) => {
+        const candidate = right[index];
+        return alarm.type === candidate.type && alarm.active === candidate.active;
+    }));
+
+const temperatureSensorSnapshotsEqual = (left?: TemperatureSensorRealtimeState, right?: TemperatureSensorRealtimeState): boolean =>
+    left === right || (!!left && !!right && left.current === right.current && left.health === right.health && left.sensorId === right.sensorId);
+
+const agitatorDefaultsEqual = (left?: AgitatorSettings, right?: AgitatorSettings): boolean =>
+    left === right || (!!left && !!right && left.speed === right.speed && left.intervalOnMinutes === right.intervalOnMinutes && left.intervalOffMinutes === right.intervalOffMinutes);
 
 export interface BackendAvailable {
     isBackenAvailable: boolean;
@@ -166,14 +189,19 @@ const productionReducer = (
             };
         }
         case ProductionActions.ActionTypes.HEATING_RUNNING_CHANGED:
+            if (aState.realtimeState.heatingRunning === aAction.payload.running) return aState;
             return {...aState, realtimeState: {...aState.realtimeState, heatingRunning: aAction.payload.running}};
         case ProductionActions.ActionTypes.AGITATOR_STATE_CHANGED:
+            if (agitatorSnapshotsEqual(aState.realtimeState.agitator, aAction.payload)) return aState;
             return {...aState, realtimeState: {...aState.realtimeState, agitator: aAction.payload}};
         case ProductionActions.ActionTypes.ALARM_STATE_CHANGED:
+            if (aState.realtimeState.alarmsReceived && alarmSnapshotsEqual(aState.realtimeState.alarms, aAction.payload.alarms)) return aState;
             return {...aState, realtimeState: {...aState.realtimeState, alarms: aAction.payload.alarms, alarmsReceived: true}};
         case ProductionActions.ActionTypes.TEMPERATURE_SENSOR_STATE_CHANGED:
+            if (temperatureSensorSnapshotsEqual(aState.realtimeState.temperatureSensor, aAction.payload)) return aState;
             return {...aState, realtimeState: {...aState.realtimeState, temperatureSensor: aAction.payload}};
         case ProductionActions.ActionTypes.AGITATOR_DEFAULTS_CHANGED:
+            if (agitatorDefaultsEqual(aState.agitatorDefaults, aAction.payload)) return aState;
             return {...aState, agitatorDefaults: aAction.payload};
         case ProductionActions.ActionTypes.WEBSOCKET_DISCONNECT: {
             return {...aState, socketConnection: {connected: false}, realtimeState: {...aState.realtimeState, temperatureSensor: undefined}};

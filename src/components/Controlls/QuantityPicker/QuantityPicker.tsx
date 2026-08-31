@@ -1,8 +1,8 @@
-import React, { Component } from 'react';
-import './QuantityPicker.css'; // Passe den Dateipfad entsprechend an
+import React, { useCallback, useEffect, useRef } from 'react';
+import './QuantityPicker.css';
 
 interface QuantityPickerProps {
-    initialValue?: number;
+    value?: number;
     onChange: (value: number) => void;
     label: string;
     labelPosition?: 'left' | 'right' | 'above' | 'below';
@@ -11,153 +11,116 @@ interface QuantityPickerProps {
     isDisabled: boolean;
 }
 
-interface QuantityPickerState {
-    quantity?: number;
-    isIncrementing: boolean;
-    isDecrementing: boolean;
-}
+type RepeatDirection = 'increment' | 'decrement';
 
-class QuantityPicker extends Component<QuantityPickerProps, QuantityPickerState> {
-    private incrementTimer: NodeJS.Timeout | null = null;
-    private decrementTimer: NodeJS.Timeout | null = null;
+const REPEAT_DELAY_MS = 200;
 
-    constructor(props: QuantityPickerProps) {
-        super(props);
-        if(props.initialValue === undefined)
-        {
-            this.state = {
-                quantity: undefined,
-                isIncrementing: false,
-                isDecrementing: false,
-            };
+const QuantityPicker = ({
+    value,
+    onChange,
+    label,
+    labelPosition = 'above',
+    max,
+    min,
+    isDisabled,
+}: QuantityPickerProps) => {
+    const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const repeatDirectionRef = useRef<RepeatDirection | null>(null);
+    const mountedRef = useRef(true);
+    const valueRef = useRef(value);
+    const onChangeRef = useRef(onChange);
+
+    valueRef.current = value;
+    onChangeRef.current = onChange;
+
+    const stopRepeating = useCallback(() => {
+        repeatDirectionRef.current = null;
+        if (timerRef.current !== null) {
+            clearTimeout(timerRef.current);
+            timerRef.current = null;
         }
-        else if(props.initialValue > props.max)
-        {
-            this.state = {
-                quantity: props.max,
-                isIncrementing: false,
-                isDecrementing: false,
-            };
-        }
-        else if(props.initialValue < props.min)
-        {
-            this.state = {
-                quantity: props.min,
-                isIncrementing: false,
-                isDecrementing: false,
-            };
-        }
-        else
-        {
-            this.state = {
-                quantity: props.initialValue,
-                isIncrementing: false,
-                isDecrementing: false,
-            };
+    }, []);
+
+    const changeAndSchedule = useCallback((direction: RepeatDirection) => {
+        if (!mountedRef.current || repeatDirectionRef.current !== direction) return;
+
+        const currentValue = valueRef.current;
+        if (currentValue === undefined) {
+            stopRepeating();
+            return;
         }
 
+        const boundedValue = Math.min(max, Math.max(min, currentValue));
+        const nextValue = direction === 'increment'
+            ? Math.min(max, boundedValue + 1)
+            : Math.max(min, boundedValue - 1);
 
-    }
-
-    componentDidUpdate(prevProps: QuantityPickerProps) {
-        if (prevProps.initialValue !== this.props.initialValue) {
-            this.setState({quantity: this.props.initialValue === undefined
-                ? undefined
-                : Math.min(this.props.max, Math.max(this.props.min, this.props.initialValue))});
+        if (nextValue === boundedValue) {
+            stopRepeating();
+            return;
         }
-    }
 
-    handleIncrementMouseDown = () => {
-        this.setState({ isIncrementing: true });
-        this.incrementQuantity();
+        onChangeRef.current(nextValue);
+        timerRef.current = setTimeout(() => changeAndSchedule(direction), REPEAT_DELAY_MS);
+    }, [max, min, stopRepeating]);
+
+    const startRepeating = useCallback((direction: RepeatDirection) => {
+        if (isDisabled) return;
+        stopRepeating();
+        repeatDirectionRef.current = direction;
+        changeAndSchedule(direction);
+    }, [changeAndSchedule, isDisabled, stopRepeating]);
+
+    useEffect(() => {
+        if (isDisabled) stopRepeating();
+    }, [isDisabled, stopRepeating]);
+
+    useEffect(() => {
+        mountedRef.current = true;
+        return () => {
+            mountedRef.current = false;
+            stopRepeating();
+        };
+    }, [stopRepeating]);
+
+    const labelElement = <div className="quantity-picker-label">{label}</div>;
+    const displayedValue = value === undefined ? '–' : Math.min(max, Math.max(min, value));
+    const stopHandlers = {
+        onPointerUp: stopRepeating,
+        onPointerCancel: stopRepeating,
+        onPointerLeave: stopRepeating,
+        onBlur: stopRepeating,
     };
 
-    handleIncrementMouseUp = () => {
-        this.setState({ isIncrementing: false });
-        this.clearIncrementTimer();
-    };
-
-    handleDecrementMouseDown = () => {
-        this.setState({ isDecrementing: true });
-        this.decrementQuantity();
-    };
-
-    handleDecrementMouseUp = () => {
-        this.setState({ isDecrementing: false });
-        this.clearDecrementTimer();
-    };
-
-    incrementQuantity = () => {
-        if(this.state.quantity !== undefined && this.state.quantity < this.props.max)
-        {
-            const nextQuantity = this.state.quantity + 1;
-            this.props.onChange(nextQuantity);
-            this.setState({quantity: nextQuantity});
-            this.incrementTimer = setTimeout(this.incrementQuantity, 200);
-        }
-
-    };
-
-    decrementQuantity = () => {
-        if (this.state.quantity !== undefined && this.state.quantity > this.props.min) {
-            const nextQuantity = this.state.quantity - 1;
-            this.props.onChange(nextQuantity);
-            this.setState({quantity: nextQuantity});
-            this.decrementTimer = setTimeout(this.decrementQuantity, 200);
-        }
-    };
-
-    clearIncrementTimer = () => {
-        if (this.incrementTimer) {
-            clearTimeout(this.incrementTimer);
-            this.incrementTimer = null;
-        }
-    };
-
-    clearDecrementTimer = () => {
-        if (this.decrementTimer) {
-            clearTimeout(this.decrementTimer);
-            this.decrementTimer = null;
-        }
-    };
-
-    render() {
-        const { label, labelPosition = 'above' ,isDisabled} = this.props;
-
-        const labelElement = <div className="quantity-picker-label">{label}</div>;
-
-        return (
-            <div className={`quantity-picker-container label-${labelPosition}`}>
-                {labelPosition === 'above' && labelElement}
-                <div className="quantity-picker-content">
-                    {labelPosition === 'left' && labelElement}
-                    <button
-                        className={`decrement-btn`}
-                        onMouseDown={this.handleDecrementMouseDown}
-                        onMouseUp={this.handleDecrementMouseUp}
-                        onMouseLeave={this.handleDecrementMouseUp}
-                        disabled={isDisabled}
-                        aria-label={`${label} verringern`}
-                    >
-                        -
-                    </button>
-                    <span className={`quantity-picker-input ${isDisabled ? 'quantity-picker-input-disabled' : ''}`} aria-label={label}>{this.state.quantity ?? '–'}</span>
-                    <button
-                        className={"increment-btn"}
-                        onMouseDown={this.handleIncrementMouseDown}
-                        onMouseUp={this.handleIncrementMouseUp}
-                        onMouseLeave={this.handleIncrementMouseUp}
-                        disabled={isDisabled}
-                        aria-label={`${label} erhöhen`}
-                    >
-                        +
-                    </button>
-                    {labelPosition === 'right' && labelElement}
-                </div>
-                {labelPosition === 'below' && labelElement}
+    return (
+        <div className={`quantity-picker-container label-${labelPosition}`}>
+            {labelPosition === 'above' && labelElement}
+            <div className="quantity-picker-content">
+                {labelPosition === 'left' && labelElement}
+                <button
+                    className="decrement-btn"
+                    onPointerDown={() => startRepeating('decrement')}
+                    {...stopHandlers}
+                    disabled={isDisabled}
+                    aria-label={`${label} verringern`}
+                >
+                    -
+                </button>
+                <span className={`quantity-picker-input ${isDisabled ? 'quantity-picker-input-disabled' : ''}`} aria-label={label}>{displayedValue}</span>
+                <button
+                    className="increment-btn"
+                    onPointerDown={() => startRepeating('increment')}
+                    {...stopHandlers}
+                    disabled={isDisabled}
+                    aria-label={`${label} erhöhen`}
+                >
+                    +
+                </button>
+                {labelPosition === 'right' && labelElement}
             </div>
-        );
-    }
-}
+            {labelPosition === 'below' && labelElement}
+        </div>
+    );
+};
 
 export default QuantityPicker;

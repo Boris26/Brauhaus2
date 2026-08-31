@@ -10,6 +10,7 @@ import {BeerRepository} from '../repositorys/BeerRepository';
 import {BeerRecipeScaler} from '../utils/BeerScaler/ScalingBeerRecipe';
 import {initialBeerState, initialProductionState} from '../reducers/rootReducer';
 import {Beer} from '../model/Beer';
+import {dataCollector} from '../utils/DataCollector/dataCollector';
 
 jest.mock('../repositorys/ProductionRepository', () => ({
   ProductionRepository: {
@@ -222,6 +223,7 @@ describe('restoreBrewSessionEpic$', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    dataCollector.reset();
     mockedProductionRepository.getBrewSession.mockResolvedValue({beerId: 'beer-1', plannedVolume: 20, plannedBrewhouseEfficiency: 60});
   });
 
@@ -236,6 +238,7 @@ describe('restoreBrewSessionEpic$', () => {
   };
 
   it('uses a loaded beer, reconstructs it with BeerRecipeScaler and starts observation only', async () => {
+    dataCollector.setBrewingStatus(createBrewingStatus(ProcessState.ACTIVE));
     const scale = jest.spyOn(BeerRecipeScaler, 'scale');
     const emitted = await runRestore(restoreState([baseBeer()]));
 
@@ -245,6 +248,7 @@ describe('restoreBrewSessionEpic$', () => {
     expect(emitted[0]).toEqual(BeerActions.setSelectedBeer(expect.objectContaining({id: 'beer-1', plannedVolume: 20}) as any));
     expect(emitted[1]).toEqual(BeerActions.setBeerToBrew(expect.objectContaining({id: 'beer-1', plannedBrewhouseEfficiency: 60}) as any));
     expect(emitted[2]).toEqual(ProductionActions.startPolling());
+    expect(dataCollector.getMeasurementCount()).toBe(0);
     expect(emitted).not.toEqual(expect.arrayContaining([expect.objectContaining({type: ProductionActions.ActionTypes.SEND_BREWING_DATA})]));
     scale.mockRestore();
   });
@@ -269,9 +273,11 @@ describe('restoreBrewSessionEpic$', () => {
   });
 
   it('does not restart an already running poll', async () => {
+    dataCollector.setBrewingStatus(createBrewingStatus(ProcessState.ACTIVE));
     const emitted = await runRestore(restoreState([baseBeer()], true));
     expect(emitted).not.toContainEqual(ProductionActions.startPolling());
     expect(emitted).toHaveLength(2);
+    expect(dataCollector.getMeasurementCount()).toBe(1);
   });
 });
 
@@ -283,6 +289,23 @@ describe('startWaterFillingEpic$', () => {
 
   afterEach((): void => {
     jest.useRealTimers();
+  });
+
+  it('ignores a duplicate start command while the first fill lifecycle is pending', async (): Promise<void> => {
+    const fillRequest = createDeferred<boolean>();
+    mockedProductionRepository.fillWaterAutomatic.mockReturnValue(fillRequest.promise);
+    const action$ = new Subject<ProductionActions.StartWaterFilling>();
+    const subscription = startWaterFillingEpic$(action$).subscribe();
+
+    action$.next(ProductionActions.startWaterFilling(20));
+    action$.next(ProductionActions.startWaterFilling(30));
+
+    expect(mockedProductionRepository.fillWaterAutomatic).toHaveBeenCalledTimes(1);
+    expect(mockedProductionRepository.fillWaterAutomatic).toHaveBeenCalledWith(20);
+
+    fillRequest.resolve(false);
+    await flushPromises();
+    subscription.unsubscribe();
   });
 
   it('polls and dispatches every water status while water filling is still open', async (): Promise<void> => {
@@ -510,6 +533,25 @@ describe('sendBrewingDataEpic$', (): void => {
       ...initialProductionState,
       socketConnection: {connected, socketId},
     },
+  });
+
+  it('ignores a duplicate brew start while the first recipe transfer is pending', async (): Promise<void> => {
+    const sendRequest = createDeferred<boolean>();
+    mockedProductionRepository.sendBrewingData.mockReturnValue(sendRequest.promise);
+    const action$ = new Subject<ProductionActions.SendBrewingData>();
+    const state$ = new BehaviorSubject(stateWithSocket(true, 'socket-123'));
+    const subscription = sendBrewingDataEpic$(action$, state$).subscribe();
+
+    action$.next(ProductionActions.sendBrewingData(createBrewingData()));
+    action$.next(ProductionActions.sendBrewingData(createBrewingData()));
+
+    expect(mockedProductionRepository.sendBrewingData).toHaveBeenCalledTimes(1);
+    expect(mockedProductionRepository.startBrewing).not.toHaveBeenCalled();
+
+    sendRequest.resolve(true);
+    await flushPromises();
+    expect(mockedProductionRepository.startBrewing).toHaveBeenCalledTimes(1);
+    subscription.unsubscribe();
   });
 
   it('emits exactly one START_POLLING after a successful own brew start', async (): Promise<void> => {
