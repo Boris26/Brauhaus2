@@ -353,16 +353,6 @@
 .settings .quantity-picker-input-disabled { background: var(--color-disabled-bg); }
 
 /* Buttons */
-.startBtnDiv {
-    margin-top: auto;
-    display: block;
-    position: sticky;
-    bottom: 0;
-    z-index: 2;
-    flex: 0 0 auto;
-    padding-top: var(--spacing-xs);
-    background: var(--color-surface-2);
-}
 .startBtn {
     height: var(--control-height);
     width: 100%;
@@ -618,10 +608,4 @@
         padding-block: 0.35rem;
     }
 
-    .startBtnDiv {
-        position: static;
-        flex: 0 0 auto;
-        margin-top: clamp(0.2rem, 0.45vh, 0.35rem);
-        padding-top: 0;
-    }
 }

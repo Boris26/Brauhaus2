@@ -1,5 +1,5 @@
 import React from 'react';
-import {render, screen} from '@testing-library/react';
+import {fireEvent, render, screen} from '@testing-library/react';
 import '@testing-library/jest-dom';
 import {Beer} from '../../../model/Beer';
 import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../../model/brewingStatus.types';
@@ -345,11 +345,24 @@ describe('ProcessList compact production overview', () => {
     it('shows the selected beer process before an active brewing process starts', () => {
         render(<ProcessList selectedBeer={selectedBeer} currentStepIndex={0} />);
 
-        expect(screen.getByText('Noch kein Brauvorgang gestartet')).toBeInTheDocument();
-        expect(screen.getByText('Geplanter Ablauf')).toBeInTheDocument();
-        expect(screen.getByText('Bereit zum Start')).toBeInTheDocument();
+        expect(screen.getAllByText('Brauprozess')).toHaveLength(2);
+        expect(screen.getByRole('button', {name: 'Brauvorgang starten'})).toBeInTheDocument();
         expect(screen.getAllByText('Aufheizen für Einmaischen').length).toBeGreaterThan(0);
         expect(screen.queryByText(/\d+ \/ \d+/)).not.toBeInTheDocument();
+    });
+
+    it('reuses the supplied start handler and disabled state only before process start', () => {
+        const onStartBrewing = jest.fn();
+        const {rerender} = render(<ProcessList selectedBeer={selectedBeer} currentStepIndex={0} onStartBrewing={onStartBrewing} isStartBrewingDisabled />);
+        expect(screen.getByRole('button', {name: 'Brauvorgang starten'})).toBeDisabled();
+
+        rerender(<ProcessList selectedBeer={selectedBeer} currentStepIndex={0} onStartBrewing={onStartBrewing} />);
+        fireEvent.click(screen.getByRole('button', {name: 'Brauvorgang starten'}));
+        expect(onStartBrewing).toHaveBeenCalledTimes(1);
+
+        rerender(<ProcessList selectedBeer={selectedBeer} currentStepIndex={1} brewingStatus={activeStatus(1)} onStartBrewing={onStartBrewing} />);
+        expect(screen.queryByRole('button', {name: 'Brauvorgang starten'})).not.toBeInTheDocument();
+        expect(screen.getByText('Aktiver Schritt')).toBeInTheDocument();
     });
 
     it('shows a clear empty state if no recipe process is available', () => {

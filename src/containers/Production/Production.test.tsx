@@ -518,7 +518,7 @@ describe('Production start button', () => {
 
     it('blocks startup safely until the first sensor snapshot arrives', () => {
         renderProduction({realtimeState: {alarms: [], alarmsReceived: false}});
-        expect(screen.getByRole('button', {name: 'Start'})).toBeDisabled();
+        expect(screen.getByRole('button', {name: 'Brauvorgang starten'})).toBeDisabled();
         expect(screen.getByRole('alert')).toHaveTextContent('Temperatursensorstatus wird ermittelt');
         expect(screen.getByLabelText('Aktuelle Temperatur: -- °C')).toBeInTheDocument();
     });
@@ -528,9 +528,9 @@ describe('Production start button', () => {
         ['INVALID_READING' as const, 'Ungültiger Temperaturwert'],
     ])('blocks startup for %s and explains the sensor problem', (health, message) => {
         const {props} = renderProduction({realtimeState: {alarms: [], alarmsReceived: true, temperatureSensor: {current: null, health, sensorId: '28-1'}}});
-        fireEvent.click(screen.getByRole('button', {name: 'Start'}));
+        fireEvent.click(screen.getByRole('button', {name: 'Brauvorgang starten'}));
         expect(props.sendBrewingData).not.toHaveBeenCalled();
-        expect(screen.getByRole('button', {name: 'Start'})).toBeDisabled();
+        expect(screen.getByRole('button', {name: 'Brauvorgang starten'})).toBeDisabled();
         expect(screen.getByRole('alert')).toHaveTextContent(message);
         expect(screen.getByLabelText('Aktuelle Temperatur: -- °C')).toBeInTheDocument();
         expect(screen.queryByLabelText('Aktuelle Temperatur: 0 °C')).not.toBeInTheDocument();
@@ -539,11 +539,11 @@ describe('Production start button', () => {
     it('keeps a real zero valid and recovers immediately after a healthy snapshot', () => {
         const missing = {alarms: [], alarmsReceived: true, temperatureSensor: {current: null, health: 'MISSING' as const, sensorId: '28-1'}};
         const {rerender, props} = renderProduction({realtimeState: missing});
-        expect(screen.getByRole('button', {name: 'Start'})).toBeDisabled();
+        expect(screen.getByRole('button', {name: 'Brauvorgang starten'})).toBeDisabled();
         rerender(<Production {...props} realtimeState={{...missing, temperatureSensor: {current: 0, health: 'OK', sensorId: '28-1'}}} />);
         expect(screen.queryByRole('alert')).not.toBeInTheDocument();
         expect(screen.getByLabelText('Aktuelle Temperatur: 0 °C')).toBeInTheDocument();
-        expect(screen.getByRole('button', {name: 'Start'})).toBeEnabled();
+        expect(screen.getByRole('button', {name: 'Brauvorgang starten'})).toBeEnabled();
         rerender(<Production {...props} realtimeState={{...missing, temperatureSensor: {current: 55.8, health: 'OK', sensorId: '28-1'}}} />);
         expect(screen.getByLabelText('Aktuelle Temperatur: 55,8 °C')).toBeInTheDocument();
     });
@@ -568,7 +568,9 @@ describe('Production start button', () => {
         expect(meters.querySelector('.current-step-panel')).toBeInTheDocument();
         expect(meters.querySelector('.Temp')).toBeInTheDocument();
         expect(meters.querySelectorAll('.GaugeContainer')).toHaveLength(1);
-        expect(meters.querySelector('[aria-label="Aktueller Prozessschritt"]')).toHaveTextContent('Noch kein Brauvorgang gestartet');
+        expect(meters.querySelector('[aria-label="Aktueller Prozessschritt"]')).toHaveTextContent('Brauprozess');
+        expect(meters).toContainElement(screen.getByRole('button', {name: 'Brauvorgang starten'}));
+        expect(container.querySelector('.settings')).not.toContainElement(screen.getByRole('button', {name: 'Brauvorgang starten'}));
         expect(processColumn).toHaveTextContent('Ablauf');
         expect(processColumn.querySelector('.current-process-step')).not.toBeInTheDocument();
         expect(container.querySelector('.Water')).toHaveTextContent('0,0 l');
@@ -576,22 +578,24 @@ describe('Production start button', () => {
 
     it('keeps the start button enabled when no brew is running', () => {
         renderProduction({brewingStatus: createBrewingStatus(ProcessState.IDLE), isPollingRunning: false});
-        expect(screen.getByRole('button', {name: 'Start'})).not.toBeDisabled();
+        expect(screen.getByRole('button', {name: 'Brauvorgang starten'})).not.toBeDisabled();
     });
 
-    it('disables the start button while a brew is active', () => {
+    it('hides the start state and shows the existing active-step state while a brew is active', () => {
         renderProduction({brewingStatus: createBrewingStatus(ProcessState.ACTIVE), isPollingRunning: false});
-        expect(screen.getByRole('button', {name: 'Start'})).toBeDisabled();
+        expect(screen.queryByRole('button', {name: 'Brauvorgang starten'})).not.toBeInTheDocument();
+        expect(screen.getByText('Aktiver Schritt')).toBeInTheDocument();
+        expect(screen.getAllByRole('button', {name: 'Brauvorgang starten'})).toHaveLength(0);
     });
 
     it('disables the start button while a start request is running', () => {
         renderProduction({brewingStatus: createBrewingStatus(ProcessState.IDLE), isPollingRunning: true});
-        expect(screen.getByRole('button', {name: 'Start'})).toBeDisabled();
+        expect(screen.getByRole('button', {name: 'Brauvorgang starten'})).toBeDisabled();
     });
 
     it('sends the brewing data only once for fast repeated start clicks', () => {
         const {props} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.IDLE), isPollingRunning: false});
-        const startButton = screen.getByRole('button', {name: 'Start'});
+        const startButton = screen.getByRole('button', {name: 'Brauvorgang starten'});
         fireEvent.click(startButton);
         fireEvent.click(startButton);
         expect(props.sendBrewingData).toHaveBeenCalledTimes(1);
@@ -599,37 +603,35 @@ describe('Production start button', () => {
 
     it('does not send another start request when a brew is already active', () => {
         const {props} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.ACTIVE), isPollingRunning: false});
-        fireEvent.click(screen.getByRole('button', {name: 'Start'}));
+        expect(screen.queryByRole('button', {name: 'Brauvorgang starten'})).not.toBeInTheDocument();
         expect(props.sendBrewingData).not.toHaveBeenCalled();
     });
 
-    it('enables the start button again after finished, aborted, reset, or failed idle states', () => {
+    it('keeps the start state hidden for terminal processes and restores it when control returns to idle', () => {
         const {rerender, props} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.ACTIVE), isPollingRunning: true});
-        expect(screen.getByRole('button', {name: 'Start'})).toBeDisabled();
+        expect(screen.queryByRole('button', {name: 'Brauvorgang starten'})).not.toBeInTheDocument();
         rerender(<Production {...props} brewingStatus={createBrewingStatus(ProcessState.FINISHED)} isPollingRunning={false} />);
-        expect(screen.getByRole('button', {name: 'Start'})).not.toBeDisabled();
+        expect(screen.queryByRole('button', {name: 'Brauvorgang starten'})).not.toBeInTheDocument();
         rerender(<Production {...props} brewingStatus={createBrewingStatus(ProcessState.ABORTED)} isPollingRunning={false} />);
-        expect(screen.getByRole('button', {name: 'Start'})).not.toBeDisabled();
+        expect(screen.queryByRole('button', {name: 'Brauvorgang starten'})).not.toBeInTheDocument();
         rerender(<Production {...props} brewingStatus={createBrewingStatus(ProcessState.IDLE)} isPollingRunning={false} />);
-        expect(screen.getByRole('button', {name: 'Start'})).not.toBeDisabled();
-        rerender(<Production {...props} brewingStatus={createBrewingStatus(ProcessState.IDLE)} isPollingRunning={false} />);
-        expect(screen.getByRole('button', {name: 'Start'})).not.toBeDisabled();
+        expect(screen.getByRole('button', {name: 'Brauvorgang starten'})).not.toBeDisabled();
     });
 
 
     it('enables the start button again after a failed start request without active control status', () => {
         const {rerender, props} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.IDLE), isPollingRunning: false});
-        fireEvent.click(screen.getByRole('button', {name: 'Start'}));
-        expect(screen.getByRole('button', {name: 'Start'})).toBeDisabled();
+        fireEvent.click(screen.getByRole('button', {name: 'Brauvorgang starten'}));
+        expect(screen.getByRole('button', {name: 'Brauvorgang starten'})).toBeDisabled();
         rerender(<Production {...props} brewingStatus={createBrewingStatus(ProcessState.IDLE)} isPollingRunning={true} />);
-        expect(screen.getByRole('button', {name: 'Start'})).toBeDisabled();
+        expect(screen.getByRole('button', {name: 'Brauvorgang starten'})).toBeDisabled();
         rerender(<Production {...props} brewingStatus={createBrewingStatus(ProcessState.IDLE)} isPollingRunning={false} />);
-        expect(screen.getByRole('button', {name: 'Start'})).not.toBeDisabled();
+        expect(screen.getByRole('button', {name: 'Brauvorgang starten'})).not.toBeDisabled();
     });
 
     it('keeps the existing recipe transfer and start flow unchanged', () => {
         const {props} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.IDLE), isPollingRunning: false});
-        fireEvent.click(screen.getByRole('button', {name: 'Start'}));
+        fireEvent.click(screen.getByRole('button', {name: 'Brauvorgang starten'}));
         expect(props.sendBrewingData).toHaveBeenCalledTimes(1);
     });
 
@@ -1121,7 +1123,7 @@ describe('Production recipe water filling', () => {
         expect(screen.getByText('22,0 l')).toBeInTheDocument();
 
         // Starting the brewing process is not a physical water transition.
-        fireEvent.click(screen.getByRole('button', {name: 'Start'}));
+        fireEvent.click(screen.getByRole('button', {name: 'Brauvorgang starten'}));
         expect(screen.getByText('22,0 l')).toBeInTheDocument();
 
         // Leaving the explicit mashing-out confirmation adds actual prepared sparge once.
@@ -1146,7 +1148,7 @@ describe('Production recipe water filling', () => {
         });
 
         expect(container.querySelector('.Settings')).toHaveClass('Settings--disabled');
-        expect(screen.getByRole('button', {name: 'Start'})).toBeDisabled();
+        expect(screen.getByRole('button', {name: 'Brauvorgang starten'})).toBeDisabled();
         expect(screen.getByRole('button', {name: /Nachguss/})).toBeDisabled();
         expect(screen.getByRole('button', {name: /Hauptguss/})).toBeDisabled();
         expect(container.querySelectorAll('.Settings .quantity-picker-content button:not(:disabled)')).toHaveLength(0);
