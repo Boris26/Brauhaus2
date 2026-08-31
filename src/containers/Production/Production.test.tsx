@@ -122,15 +122,21 @@ describe('Production agitator controller integration', () => {
         expect(AgitatorSettingsRepository.update).not.toHaveBeenCalled();
     });
 
-    it('places one interval indicator beside the interval switch without inventing progress', async () => {
+    it('places one interval indicator between the interval header and time controls without inventing progress', async () => {
         const {container} = renderProduction();
         await screen.findByRole('switch', {name: 'Intervallbetrieb'});
 
-        const actions = container.querySelector('.agitatorAutomaticActions');
-        expect(actions).toContainElement(screen.getByRole('progressbar', {name: 'Intervallfortschritt'}));
-        expect(actions).toContainElement(screen.getByRole('switch', {name: 'Intervallbetrieb'}));
+        const header = container.querySelector('.agitatorAutomaticHeader') as HTMLElement;
+        const progressRow = container.querySelector('.agitatorIntervalProgressRow') as HTMLElement;
+        const timeControls = container.querySelector('.intervalTimeControls') as HTMLElement;
+        expect(header).toContainElement(screen.getByRole('switch', {name: 'Intervallbetrieb'}));
+        expect(header).not.toContainElement(screen.getByRole('progressbar', {name: 'Intervallfortschritt'}));
+        expect(progressRow).toContainElement(screen.getByRole('progressbar', {name: 'Intervallfortschritt'}));
+        expect(header.compareDocumentPosition(progressRow) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+        expect(progressRow.compareDocumentPosition(timeControls) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
         expect(screen.getAllByRole('progressbar')).toHaveLength(1);
         expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '0');
+        expect(screen.queryByText('Beim Heizen durchgehend, sonst im Intervall')).not.toBeInTheDocument();
     });
 
     it('uses controller-owned interval progress only while an interval phase is active', async () => {
