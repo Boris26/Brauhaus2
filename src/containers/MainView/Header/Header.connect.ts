@@ -3,14 +3,17 @@ import {Views} from "../../../enums/eViews";
 import {ApplicationActions} from "../../../actions/actions";
 import setViewState = ApplicationActions.setViewState;
 import {Header} from './Header';
+import type {RootState} from '../../../reducers/rootReducer';
 
-const mapStateToProps = (state: any) => ({
+const mapStateToProps = (state: RootState) => ({
     currentView: state.applicationReducer.view,
     messages: state.applicationReducer.message,
     backendStatus: state.productionReducer.isBackenAvailable,
     brewingStatus: state.productionReducer.brewingStatus,
     realtimeState: state.productionReducer.realtimeState,
     socketConnected: state.productionReducer.socketConnection.connected,
+    warnings: state.warningReducer.warnings,
+    warningsReceived: state.warningReducer.warningsReceived,
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
