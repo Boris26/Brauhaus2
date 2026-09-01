@@ -42,7 +42,8 @@ export enum WaitingFor {
 export type WaitingState = WaitingFor | string;
 
 export enum AlarmType {
-    EQUIPMENT_ALARM = "EQUIPMENT_ALARM"
+    EQUIPMENT_ALARM = "EQUIPMENT_ALARM",
+    HEATER_STUCK_ON = "HEATER_STUCK_ON"
 }
 
 export type AlarmTypeValue = AlarmType | string;

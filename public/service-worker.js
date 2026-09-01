@@ -5,7 +5,7 @@
 // - keine Datenbankantworten
 // - keine Build-Metadaten wie index.html, manifest.json, asset-manifest.json oder version.json
 // So bleiben Browser-/Server-Caches und bestehende Versionsmechanismen maßgeblich.
-const SERVICE_WORKER_VERSION = 'brauhaus-push-v2';
+const SERVICE_WORKER_VERSION = 'brauhaus-push-v3';
 
 self.addEventListener('install', function() {
   console.debug('[ServiceWorker] Installed', SERVICE_WORKER_VERSION);
@@ -54,6 +54,22 @@ function getPayloadData(payload) {
   return {};
 }
 
+function getNotificationSeverity(payload) {
+  const supportedSeverities = ['INFO', 'WARNING', 'ALARM'];
+  return supportedSeverities.includes(payload && payload.severity) ? payload.severity : undefined;
+}
+
+function applySeverityOptions(options, severity) {
+  if (severity === 'WARNING') {
+    options.vibrate = [200, 100, 200];
+  }
+
+  if (severity === 'ALARM') {
+    options.requireInteraction = true;
+    options.vibrate = [300, 100, 300, 100, 600];
+  }
+}
+
 function sameOriginUrl(url) {
   try {
     const target = new URL(url || '/', self.location.origin);
@@ -69,6 +85,7 @@ function sameOriginUrl(url) {
 self.addEventListener('push', function(event) {
   console.debug('[ServiceWorker] Push event received');
   const payload = parsePushPayload(event);
+  const severity = getNotificationSeverity(payload);
   const title = typeof payload.title === 'string' && payload.title ? payload.title : DEFAULT_NOTIFICATION.title;
   const options = {
     body: typeof payload.body === 'string' ? payload.body : DEFAULT_NOTIFICATION.body,
@@ -78,9 +95,11 @@ self.addEventListener('push', function(event) {
     renotify: true,
     data: Object.assign({}, getPayloadData(payload), {
       url: sameOriginUrl(payload.url),
+      severity: severity,
       serviceWorkerVersion: SERVICE_WORKER_VERSION
     })
   };
+  applySeverityOptions(options, severity);
 
   const notificationPromise = self.registration.showNotification(title, options)
     .catch(function(error) {
