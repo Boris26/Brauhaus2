@@ -23,6 +23,7 @@ import {HeaterSafetyRepository} from '../../repositorys/HeaterSafetyRepository';
 import {TemperatureSensorRealtimeState} from '../../model/RealtimeControllerState';
 import {getTemperatureSensorMessage} from '../../utils/temperatureSensor';
 import {SettingsNumberField} from './SettingsNumberField';
+import {SettingsAccordion} from './SettingsAccordion';
 
 interface SettingsPageProps {
     theme: ThemeName;
@@ -470,15 +471,18 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                     </div>
                 )}
 
+                <section className="settings-diagnostics" aria-labelledby="settings-diagnostics-title">
+                    <div className="settings-diagnostics-heading"><SensorsOutlinedIcon aria-hidden="true"/><div><h2 id="settings-diagnostics-title">System- und Diagnosestatus</h2><p>Live-Informationen der Brausteuerung (nur lesbar).</p></div></div>
+                    <dl className="diagnosis-list">
+                        <div><dt>Verbindung</dt><dd>{socketConnected ? 'Verbunden' : 'Nicht aktiv'}</dd></div>
+                        <div><dt>Temperatursensor</dt><dd>{socketConnected ? getTemperatureSensorMessage(temperatureSensor) : 'Controllerverbindung nicht aktiv'}</dd></div>
+                        <div><dt>Sensor-ID</dt><dd>{temperatureSensor?.sensorId ?? 'Nicht verfügbar'}</dd></div>
+                        <div><dt>Safety</dt><dd>{this.state.heaterSafetyLoading ? 'Wird geladen…' : this.state.heaterSafety?.state ?? 'Nicht verfügbar'}</dd></div>
+                    </dl>
+                </section>
+
                 <div className="settings-grid">
-                    <section className="settings-card agitator-defaults-card">
-                        <div className="settings-card-header">
-                            <TuneOutlinedIcon aria-hidden="true" />
-                            <div>
-                                <h2>Rührwerk</h2>
-                                <p>Persistente Standardwerte der Brausteuerung.</p>
-                            </div>
-                        </div>
+                    <SettingsAccordion className="agitator-defaults-card" icon={<TuneOutlinedIcon />} title="Rührwerk" description="Persistente Standardwerte der Brausteuerung.">
 
                         {agitatorLoading && <p className="agitator-settings-state" role="status">Rührwerk-Standardwerte werden geladen…</p>}
                         {!agitatorLoading && !agitatorSettings && <div className="agitator-settings-state">
@@ -500,21 +504,19 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                             </div>
                             {agitatorError && <p className="settings-error" role="alert">{agitatorError}</p>}
                         </div>}
-                    </section>
+                    </SettingsAccordion>
 
                     {this.state.operationalLoading && <section className="settings-card operational-loading" aria-live="polite"><p>Betriebseinstellungen werden geladen…</p></section>}
                     {!this.state.operationalLoading && !this.state.operationalSettings && <section className="settings-card"><p className="settings-error" role="alert">{this.state.operationalError}</p><div className="settings-actions"><button className="settings-secondary" type="button" onClick={this.loadOperationalSettingsSnapshot}>Erneut versuchen</button></div></section>}
                     {this.state.operationalSettings && this.state.operationalDrafts && <>
-                        <section className="settings-card">
-                            <div className="settings-card-header"><WaterDropOutlinedIcon aria-hidden="true"/><div><h2>Wasser</h2><p>Kalibrierung der automatischen Wasserfüllung.</p></div></div>
+                        <SettingsAccordion icon={<WaterDropOutlinedIcon />} title="Wasser" description="Kalibrierung der automatischen Wasserfüllung.">
                             <div className="operational-fields">
                                 {this.renderOperationalNumber('waterFilling', 'pulsesPerLiter', 'Impulse pro Liter', 'Impulse/L', 'Kalibrierwert des Durchflusssensors. Gibt an, wie viele Sensorimpulse einem Liter Wasser entsprechen.', 1)}
                             </div>
                             {this.renderSectionAction('waterFilling')}
-                        </section>
+                        </SettingsAccordion>
 
-                        <section className="settings-card">
-                            <div className="settings-card-header"><VolumeUpOutlinedIcon aria-hidden="true"/><div><h2>Audio</h2><p>Persistente Signaltöne der Brausteuerung.</p></div></div>
+                        <SettingsAccordion icon={<VolumeUpOutlinedIcon />} title="Audio" description="Persistente Signaltöne der Brausteuerung.">
                             <div className="setting-row"><div className="setting-label-group"><label htmlFor="audio-enabled">Lautsprecher</label><span className="setting-description">Akustische Hinweise zentral ein- oder ausschalten.</span></div><label className="settings-toggle"><input id="audio-enabled" type="checkbox" checked={Boolean(this.state.operationalDrafts.audio.enabled)} disabled={this.state.sectionSaving === 'audio'} onChange={(event) => this.updateOperationalDraft('audio', 'enabled', event.target.checked)}/><span aria-hidden="true"/></label></div>
                             <div className="operational-fields">
                                 {this.renderOperationalNumber('audio', 'confirmationRepeatSeconds', 'Bestätigung wiederholen alle', 's', 'Intervall für notwendige Benutzerbestätigungen.', 1)}
@@ -523,25 +525,20 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                             <div className="settings-actions"><button className="settings-secondary" type="button" disabled={soundPlaying !== null} onClick={() => this.handleSoundTest(SoundType.CONFIRMATION)}>{soundPlaying === SoundType.CONFIRMATION ? 'Wird abgespielt…' : 'Testton abspielen'}</button></div>
                             {soundError && <p className="settings-error" role="alert">{soundError}</p>}
                             {this.renderSectionAction('audio')}
-                        </section>
+                        </SettingsAccordion>
 
-                        <section className="settings-card safety-card">
-                            <div className="settings-card-header"><HealthAndSafetyOutlinedIcon aria-hidden="true"/><div><h2>Heizung / Sicherheit</h2><p>Safety-Erkennung nach dem Abschalten der Heizung – keine Temperaturregelung.</p></div></div>
+                        <SettingsAccordion className="safety-accordion" icon={<HealthAndSafetyOutlinedIcon />} title="Heizung / Sicherheit" description="Safety-Erkennung nach dem Abschalten der Heizung – keine Temperaturregelung." status={<span className={`settings-status-chip ${this.state.heaterSafety?.latched ? 'critical' : ''}`}>{this.state.heaterSafetyLoading ? 'Wird geladen…' : this.state.heaterSafety?.state ?? 'Nicht verfügbar'}</span>}>
                             <div className="operational-fields">
                                 {this.renderOperationalNumber('heaterSafety', 'offGracePeriodSeconds', 'Nachlaufzeit nach Heizung AUS', 's', 'Zeitraum nach dem Abschalten, in dem ein weiterer Temperaturanstieg durch gespeicherte Wärme noch als normal gilt.', 1)}
                                 {this.renderOperationalNumber('heaterSafety', 'maxOffTemperatureRise', 'Erlaubter Temperaturanstieg', '°C', 'Maximal erlaubter Temperaturanstieg gegenüber der Temperatur beim Abschalten der Heizung.', 0.1)}
                                 {this.renderOperationalNumber('heaterSafety', 'riseObservationWindowSeconds', 'Beobachtungszeit', 's', 'Zeitraum, über den ein weiterer Temperaturanstieg bestätigt werden muss, bevor ein Safety-Alarm ausgelöst wird.', 1)}
                             </div>
                             {this.renderSectionAction('heaterSafety')}
-                            <div className={`heater-safety-status ${this.state.heaterSafety?.latched ? 'critical' : ''}`}>
-                                <strong>Safety-Status:</strong> {this.state.heaterSafetyLoading ? 'Wird geladen…' : this.state.heaterSafety?.state ?? 'Nicht verfügbar'}
-                                {this.state.heaterSafety?.latched && <button className="settings-primary" type="button" disabled={this.state.heaterSafetyResetting} onClick={this.resetLatchedHeaterSafety}>{this.state.heaterSafetyResetting ? 'Wird zurückgesetzt…' : 'Sicherheitsalarm zurücksetzen'}</button>}
-                            </div>
+                            {this.state.heaterSafety?.latched && <div className="settings-actions"><button className="settings-primary" type="button" disabled={this.state.heaterSafetyResetting} onClick={this.resetLatchedHeaterSafety}>{this.state.heaterSafetyResetting ? 'Wird zurückgesetzt…' : 'Sicherheitsalarm zurücksetzen'}</button></div>}
                             {this.state.heaterSafetyError && <p className="settings-error" role="alert">{this.state.heaterSafetyError}</p>}
-                        </section>
+                        </SettingsAccordion>
 
-                        <section className="settings-card advanced-card">
-                            <div className="settings-card-header"><TuneOutlinedIcon aria-hidden="true"/><div><h2>Erweitert</h2><p>Hardware- und Prozess-Safety-Werte für Service und Betrieb.</p></div></div>
+                        <SettingsAccordion className="advanced-accordion" icon={<TuneOutlinedIcon />} title="Erweitert" description="Hardware- und Prozess-Safety-Werte für Service und Betrieb.">
                             <h3>Wasserfüllung</h3><div className="operational-fields">
                                 {this.renderOperationalNumber('waterFilling', 'sensorStartDelaySeconds', 'Startverzögerung Impulszählung', 's', 'Verzögerung nach dem Öffnen des Wasserventils, bevor die Impulszählung beginnt. Dadurch werden Schaltimpulse des Ventils nicht als Wassermenge gezählt.', 0.1)}
                             </div>
@@ -551,22 +548,10 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                             </div>
                             {this.renderSectionAction('processSafety')}
                             <p className="settings-warning">Die Startverzögerung gehört zur Wasser-Section und wird gemeinsam mit „Impulse pro Liter“ gespeichert.</p>
-                        </section>
-
-                        <section className="settings-card diagnosis-card">
-                            <div className="settings-card-header"><SensorsOutlinedIcon aria-hidden="true"/><div><h2>Diagnose</h2><p>Automatisch erkannter Temperatursensor (nur lesbar).</p></div></div>
-                            <dl className="diagnosis-list"><div><dt>Status</dt><dd>{socketConnected ? getTemperatureSensorMessage(temperatureSensor) : 'Controllerverbindung nicht aktiv'}</dd></div><div><dt>Sensor-ID</dt><dd>{temperatureSensor?.sensorId ?? 'Nicht verfügbar'}</dd></div></dl>
-                        </section>
+                        </SettingsAccordion>
                     </>}
 
-                    <section className="settings-card">
-                        <div className="settings-card-header">
-                            <PaletteOutlinedIcon aria-hidden="true" />
-                            <div>
-                                <h2>Oberfläche</h2>
-                                <p>Darstellung und Funktionsumfang dieses Browsers.</p>
-                            </div>
-                        </div>
+                    <SettingsAccordion icon={<PaletteOutlinedIcon />} title="Oberfläche" description="Darstellung und Funktionsumfang dieses Browsers.">
 
                         <div className="setting-block">
                             <div className="setting-label-group">
@@ -589,16 +574,9 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                                 <button className={theme === 'dark-alt' ? 'active' : ''} type="button" aria-pressed={theme === 'dark-alt'} onClick={() => this.handleThemeChange('dark-alt')}>Dunkles Theme</button>
                             </div>
                         </div>
-                    </section>
+                    </SettingsAccordion>
 
-                    <section className="settings-card">
-                        <div className="settings-card-header">
-                            <PrecisionManufacturingOutlinedIcon aria-hidden="true" />
-                            <div>
-                                <h2>Brausteuerung</h2>
-                                <p>Verbindung, Messwerte und Werkzeuge für den Brauprozess.</p>
-                            </div>
-                        </div>
+                    <SettingsAccordion icon={<PrecisionManufacturingOutlinedIcon />} title="Brausteuerung" description="Verbindung, Messwerte und Werkzeuge für den Brauprozess.">
 
                         <div className="setting-row">
                             <div className="setting-label-group">
@@ -648,16 +626,9 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                                 ))}
                             </div>
                         </div>}
-                    </section>
+                    </SettingsAccordion>
 
-                    <section className="settings-card">
-                        <div className="settings-card-header">
-                            <NotificationsNoneOutlinedIcon aria-hidden="true" />
-                            <div>
-                                <h2>Benachrichtigungen</h2>
-                                <p>Systemmeldungen und Hinweise aus der Brausteuerung.</p>
-                            </div>
-                        </div>
+                    <SettingsAccordion icon={<NotificationsNoneOutlinedIcon />} title="Benachrichtigungen" description="Systemmeldungen und Hinweise aus der Brausteuerung.">
                         <div className="setting-row">
                             <div className="setting-label-group">
                                 <label htmlFor="notifications">Systemmeldungen</label>
@@ -691,7 +662,7 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                                 <button className="settings-secondary" type="button" onClick={this.handlePushTest} disabled={!pushSubscribed || pushLoading}>Testnachricht senden</button>
                             </div>
                         </div>
-                    </section>
+                    </SettingsAccordion>
                 </div>
 
             </main>
