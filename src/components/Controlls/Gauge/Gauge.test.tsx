@@ -2,10 +2,10 @@ import React from 'react';
 import {render} from '@testing-library/react';
 import Gauge from './Gauge';
 
-const chartMock = jest.fn(() => <div data-testid="chart" />);
+const chartMock = jest.fn((_props: any) => <div data-testid="chart" />);
 
 jest.mock('react-google-charts', () => ({
-    Chart: (props: any) => chartMock(),
+    Chart: (props: any) => chartMock(props),
 }));
 
 describe('Gauge value formatting', () => {
@@ -32,6 +32,21 @@ describe('Gauge value formatting', () => {
                 ['Label', 'Value'],
                 ['°C', 64.44],
             ],
+        }));
+    });
+
+    it('shows low temperatures as yellow and high temperatures as red', () => {
+        render(<Gauge showAreas={true} value={65} targetValue={65} height={200} offset={1} minValue={0} maxValue={100} label="°C" />);
+
+        const lastChartProps = chartMock.mock.calls[chartMock.mock.calls.length - 1][0];
+
+        expect(lastChartProps.options).toEqual(expect.objectContaining({
+            yellowFrom: 0,
+            yellowTo: 64,
+            greenFrom: 64,
+            greenTo: 66,
+            redFrom: 66,
+            redTo: 100,
         }));
     });
 });
