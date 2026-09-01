@@ -39,4 +39,17 @@ describe('lazy route CSS ownership', () => {
         expect(css).toContain('.ingredients-wrapper');
         expect(css).toContain('.view-loading');
     });
+
+    it('keeps scrolling route-local to Settings without changing the Production shell', () => {
+        const settingsCss = readContainerFile('Settings/SettingsPage.css');
+        const productionCss = readContainerFile('Production/Production.css');
+
+        expect(settingsCss).toMatch(/\.settings-page\s*\{[^}]*height:\s*100%;/s);
+        expect(settingsCss).toMatch(/\.settings-page\s*\{[^}]*min-height:\s*0;/s);
+        expect(settingsCss).toMatch(/\.settings-page\s*\{[^}]*overflow-y:\s*auto;/s);
+        expect(settingsCss).toMatch(/\.settings-page\s*\{[^}]*overflow-x:\s*hidden;/s);
+        expect(settingsCss).toContain('-webkit-overflow-scrolling: touch');
+        expect(settingsCss).toContain('env(safe-area-inset-bottom)');
+        expect(productionCss).toMatch(/\.containerProduction\s*\{[^}]*overflow:\s*hidden;/s);
+    });
 });
