@@ -5,23 +5,7 @@
     overflow: visible !important;
 }
 
-.containerIngredientsForm .ingredients-accordion {
-    background-color: var(--color-brew-bg) !important;
-    box-shadow: none !important;
-    margin-bottom: 8px;
-}
-
-.containerIngredientsForm .ingredients-accordion::before {
-    display: none;
-}
-
-.containerIngredientsForm .ingredients-accordion-summary {
-    background-color: var(--color-accent) !important;
-    min-height: 48px !important;
-}
-
 .containerIngredientsForm .ingredients-accordion-details {
-    background-color: var(--color-brew-bg) !important;
     overflow: visible !important;
 }
 
