@@ -15,7 +15,7 @@ import {getWarningHeaderText} from '../../../utils/warningDisplay';
 
 interface MobileProductionViewProps {
     temperature: number;
-    brewingStatus: BrewingStatus;
+    brewingStatus?: BrewingStatus;
     confirm: (confirmState: ConfirmStates) => void;
     isConfirmPending: boolean;
     confirmError?: string;
