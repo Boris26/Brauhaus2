@@ -309,7 +309,12 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                 operationalDrafts: {...state.operationalDrafts, [section]: this.operationalDraftsFor({...state.operationalSettings, [section]: confirmed} as OperationalSettings)![section]},
                 sectionSaving: null,
                 statusMessage: 'Betriebseinstellungen gespeichert.',
-            }) : ({sectionSaving: null}));
+            }) : ({
+                operationalSettings: state.operationalSettings,
+                operationalDrafts: state.operationalDrafts,
+                sectionSaving: null,
+                statusMessage: state.statusMessage,
+            }));
         } catch (error) {
             if (this.isMountedComponent) this.setState({sectionSaving: null, sectionErrors: {...this.state.sectionErrors, [section]: this.formatApiError(error, 'Einstellungen konnten nicht gespeichert werden.')}});
         }
