@@ -4,6 +4,8 @@ import {HeaterSafetyRepository} from '../../repositorys/HeaterSafetyRepository';
 import {heaterStuckOnAlarmDisplay} from '../../utils/brewingStatus/alarmDisplay';
 import {formatTemperature} from '../../utils/temperatureSensor';
 
+export const GlobalHeaterSafetyDialogOwnedContext = React.createContext(false);
+
 export interface GlobalHeaterSafetyDialogProps {
     open: boolean;
     temperature?: number | null;
