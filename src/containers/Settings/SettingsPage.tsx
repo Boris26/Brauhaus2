@@ -317,6 +317,105 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
         }
     };
 
+    private operationalDraftsFor = (settings: OperationalSettings): SettingsPageState['operationalDrafts'] => ({
+        waterFilling: {
+            pulsesPerLiter: String(settings.waterFilling.pulsesPerLiter),
+            sensorStartDelaySeconds: String(settings.waterFilling.sensorStartDelaySeconds),
+        },
+        audio: {
+            enabled: settings.audio.enabled,
+            confirmationRepeatSeconds: String(settings.audio.confirmationRepeatSeconds),
+            alarmRepeatSeconds: String(settings.audio.alarmRepeatSeconds),
+        },
+        processSafety: {
+            heatingTimeoutMinutes: String(settings.processSafety.heatingTimeoutMinutes),
+            confirmationTimeoutMinutes: String(settings.processSafety.confirmationTimeoutMinutes),
+        },
+        heaterSafety: {
+            offGracePeriodSeconds: String(settings.heaterSafety.offGracePeriodSeconds),
+            maxOffTemperatureRise: String(settings.heaterSafety.maxOffTemperatureRise),
+            riseObservationWindowSeconds: String(settings.heaterSafety.riseObservationWindowSeconds),
+        },
+    });
+
+    loadOperationalSettings = async () => {
+        this.setState({operationalLoading: true, operationalError: null});
+        try {
+            const settings = await OperationalSettingsRepository.get();
+            if (this.isMountedComponent) this.setState({operationalSettings: settings, operationalDrafts: this.operationalDraftsFor(settings), operationalLoading: false});
+        } catch {
+            if (this.isMountedComponent) this.setState({operationalSettings: undefined, operationalDrafts: undefined, operationalLoading: false, operationalError: 'Betriebseinstellungen konnten nicht geladen werden.'});
+        }
+    };
+
+    loadHeaterSafety = async () => {
+        this.setState({heaterSafetyLoading: true, heaterSafetyError: null});
+        try {
+            const heaterSafety = await HeaterSafetyRepository.get();
+            if (this.isMountedComponent) this.setState({heaterSafety, heaterSafetyLoading: false});
+        } catch {
+            if (this.isMountedComponent) this.setState({heaterSafetyLoading: false, heaterSafetyError: 'Heater-Safety-Status konnte nicht geladen werden.'});
+        }
+    };
+
+    private formatApiError = (error: any, fallback: string): string => {
+        const data = error?.response?.data;
+        const message = data?.error?.message ?? data?.error ?? data?.message ?? data?.detail;
+        return typeof message === 'string' && message.trim() ? message : fallback;
+    };
+
+    changeOperationalDraft = (section: OperationalSettingsSection, field: string, value: string | boolean) => {
+        this.setState((state) => state.operationalDrafts ? ({
+            operationalDrafts: {...state.operationalDrafts, [section]: {...state.operationalDrafts[section], [field]: value}},
+            sectionErrors: {...state.sectionErrors, [section]: undefined},
+        }) : null);
+    };
+
+    private sectionPayload = (section: OperationalSettingsSection): OperationalSettings[OperationalSettingsSection] | null => {
+        const draft = this.state.operationalDrafts?.[section];
+        if (!draft) return null;
+        const payload: Record<string, number | boolean> = {};
+        for (const [field, value] of Object.entries(draft)) {
+            if (typeof value === 'boolean') payload[field] = value;
+            else if (!value.trim() || !Number.isFinite(Number(value))) return null;
+            else payload[field] = Number(value);
+        }
+        return payload as unknown as OperationalSettings[OperationalSettingsSection];
+    };
+
+    saveOperationalSection = async (section: OperationalSettingsSection) => {
+        const payload = this.sectionPayload(section);
+        if (!payload || this.state.sectionSaving) return;
+        this.setState({sectionSaving: section, sectionErrors: {...this.state.sectionErrors, [section]: undefined}});
+        try {
+            const confirmed = await OperationalSettingsRepository.updateSection(section, payload as any);
+            if (this.isMountedComponent) this.setState((state) => state.operationalSettings && state.operationalDrafts ? ({
+                operationalSettings: {...state.operationalSettings, [section]: confirmed},
+                operationalDrafts: {...state.operationalDrafts, [section]: this.operationalDraftsFor({...state.operationalSettings, [section]: confirmed} as OperationalSettings)![section]},
+                sectionSaving: null,
+                statusMessage: 'Betriebseinstellungen gespeichert.',
+            }) : ({
+                operationalSettings: state.operationalSettings,
+                operationalDrafts: state.operationalDrafts,
+                sectionSaving: null,
+                statusMessage: state.statusMessage,
+            }));
+        } catch (error) {
+            if (this.isMountedComponent) this.setState({sectionSaving: null, sectionErrors: {...this.state.sectionErrors, [section]: this.formatApiError(error, 'Einstellungen konnten nicht gespeichert werden.')}});
+        }
+    };
+
+    resetHeaterSafety = async () => {
+        if (!this.state.heaterSafety?.latched || this.state.heaterSafetyResetting) return;
+        this.setState({heaterSafetyResetting: true, heaterSafetyError: null});
+        try {
+            const heaterSafety = await HeaterSafetyRepository.reset();
+            if (this.isMountedComponent) this.setState({heaterSafety, heaterSafetyResetting: false, statusMessage: 'Heater-Sicherheitsalarm wurde zurückgesetzt.'});
+        } catch (error) {
+            if (this.isMountedComponent) this.setState({heaterSafetyResetting: false, heaterSafetyError: this.formatApiError(error, 'Sicherheitsalarm konnte nicht zurückgesetzt werden.')});
+        }
+    };
+
     refreshPushState = async () => {
         const pushSupported = isPushSupported();
         if (!pushSupported) {
