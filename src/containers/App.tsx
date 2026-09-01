@@ -17,7 +17,10 @@ const App: React.FC = () => {
     const production = useSelector((state: RootState) => state.productionReducer);
     const socketConnected = production.socketConnection.connected;
     const realtime = production.realtimeState;
-    const alarms = socketConnected && realtime.alarmsReceived ? realtime.alarms : undefined;
+    // HEATER_STUCK_ON is latched controller state. Once received as active,
+    // keep the global warning visible across a temporary socket disconnect
+    // until a later controller snapshot explicitly clears it.
+    const alarms = realtime.alarmsReceived ? realtime.alarms : undefined;
     const heaterSafetyAlarmActive = isHeaterStuckOnAlarmActive(alarms);
     const currentTemperature = socketConnected ? realtime.temperatureSensor?.current : undefined;
     const heatingRunning = socketConnected ? realtime.heatingRunning : undefined;
