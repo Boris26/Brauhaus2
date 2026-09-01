@@ -112,8 +112,8 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
         this.isMountedComponent = true;
         this.refreshPushState();
         void this.loadAgitatorSettings();
-        void this.loadOperationalSettings();
-        void this.loadHeaterSafety();
+        void this.loadOperationalSettingsSnapshot();
+        void this.loadHeaterSafetySnapshot();
     }
 
     componentWillUnmount() {
@@ -218,7 +218,7 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
         }) : null);
     };
 
-    private operationalDraftsFor = (settings: OperationalSettings): SettingsPageState['operationalDrafts'] => ({
+    private createOperationalDrafts = (settings: OperationalSettings): SettingsPageState['operationalDrafts'] => ({
         waterFilling: {
             pulsesPerLiter: String(settings.waterFilling.pulsesPerLiter),
             sensorStartDelaySeconds: String(settings.waterFilling.sensorStartDelaySeconds),
@@ -239,17 +239,17 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
         },
     });
 
-    loadOperationalSettings = async () => {
+    loadOperationalSettingsSnapshot = async () => {
         this.setState({operationalLoading: true, operationalError: null});
         try {
             const settings = await OperationalSettingsRepository.get();
-            if (this.isMountedComponent) this.setState({operationalSettings: settings, operationalDrafts: this.operationalDraftsFor(settings), operationalLoading: false});
+            if (this.isMountedComponent) this.setState({operationalSettings: settings, operationalDrafts: this.createOperationalDrafts(settings), operationalLoading: false});
         } catch {
             if (this.isMountedComponent) this.setState({operationalSettings: undefined, operationalDrafts: undefined, operationalLoading: false, operationalError: 'Betriebseinstellungen konnten nicht geladen werden.'});
         }
     };
 
-    loadHeaterSafety = async () => {
+    loadHeaterSafetySnapshot = async () => {
         this.setState({heaterSafetyLoading: true, heaterSafetyError: null});
         try {
             const heaterSafety = await HeaterSafetyRepository.get();
@@ -259,20 +259,20 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
         }
     };
 
-    private formatApiError = (error: any, fallback: string): string => {
+    private formatOperationalApiError = (error: any, fallback: string): string => {
         const data = error?.response?.data;
         const message = data?.error?.message ?? data?.error ?? data?.message ?? data?.detail;
         return typeof message === 'string' && message.trim() ? message : fallback;
     };
 
-    changeOperationalDraft = (section: OperationalSettingsSection, field: string, value: string | boolean) => {
+    updateOperationalDraft = (section: OperationalSettingsSection, field: string, value: string | boolean) => {
         this.setState((state) => state.operationalDrafts ? ({
             operationalDrafts: {...state.operationalDrafts, [section]: {...state.operationalDrafts[section], [field]: value}},
             sectionErrors: {...state.sectionErrors, [section]: undefined},
         }) : null);
     };
 
-    private sectionPayload = (section: OperationalSettingsSection): OperationalSettings[OperationalSettingsSection] | null => {
+    private buildSectionPayload = (section: OperationalSettingsSection): OperationalSettings[OperationalSettingsSection] | null => {
         const draft = this.state.operationalDrafts?.[section];
         if (!draft) return null;
         const payload: Record<string, number | boolean> = {};
@@ -284,15 +284,15 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
         return payload as unknown as OperationalSettings[OperationalSettingsSection];
     };
 
-    saveOperationalSection = async (section: OperationalSettingsSection) => {
-        const payload = this.sectionPayload(section);
+    saveOperationalSettingsSection = async (section: OperationalSettingsSection) => {
+        const payload = this.buildSectionPayload(section);
         if (!payload || this.state.sectionSaving) return;
         this.setState({sectionSaving: section, sectionErrors: {...this.state.sectionErrors, [section]: undefined}});
         try {
             const confirmed = await OperationalSettingsRepository.updateSection(section, payload as any);
             if (this.isMountedComponent) this.setState((state) => state.operationalSettings && state.operationalDrafts ? ({
                 operationalSettings: {...state.operationalSettings, [section]: confirmed},
-                operationalDrafts: {...state.operationalDrafts, [section]: this.operationalDraftsFor({...state.operationalSettings, [section]: confirmed} as OperationalSettings)![section]},
+                operationalDrafts: {...state.operationalDrafts, [section]: this.createOperationalDrafts({...state.operationalSettings, [section]: confirmed} as OperationalSettings)![section]},
                 sectionSaving: null,
                 statusMessage: 'Betriebseinstellungen gespeichert.',
             }) : ({
@@ -302,117 +302,18 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                 statusMessage: state.statusMessage,
             }));
         } catch (error) {
-            if (this.isMountedComponent) this.setState({sectionSaving: null, sectionErrors: {...this.state.sectionErrors, [section]: this.formatApiError(error, 'Einstellungen konnten nicht gespeichert werden.')}});
+            if (this.isMountedComponent) this.setState({sectionSaving: null, sectionErrors: {...this.state.sectionErrors, [section]: this.formatOperationalApiError(error, 'Einstellungen konnten nicht gespeichert werden.')}});
         }
     };
 
-    resetHeaterSafety = async () => {
+    resetLatchedHeaterSafety = async () => {
         if (!this.state.heaterSafety?.latched || this.state.heaterSafetyResetting) return;
         this.setState({heaterSafetyResetting: true, heaterSafetyError: null});
         try {
             const heaterSafety = await HeaterSafetyRepository.reset();
             if (this.isMountedComponent) this.setState({heaterSafety, heaterSafetyResetting: false, statusMessage: 'Heater-Sicherheitsalarm wurde zurückgesetzt.'});
         } catch (error) {
-            if (this.isMountedComponent) this.setState({heaterSafetyResetting: false, heaterSafetyError: this.formatApiError(error, 'Sicherheitsalarm konnte nicht zurückgesetzt werden.')});
-        }
-    };
-
-    private operationalDraftsFor = (settings: OperationalSettings): SettingsPageState['operationalDrafts'] => ({
-        waterFilling: {
-            pulsesPerLiter: String(settings.waterFilling.pulsesPerLiter),
-            sensorStartDelaySeconds: String(settings.waterFilling.sensorStartDelaySeconds),
-        },
-        audio: {
-            enabled: settings.audio.enabled,
-            confirmationRepeatSeconds: String(settings.audio.confirmationRepeatSeconds),
-            alarmRepeatSeconds: String(settings.audio.alarmRepeatSeconds),
-        },
-        processSafety: {
-            heatingTimeoutMinutes: String(settings.processSafety.heatingTimeoutMinutes),
-            confirmationTimeoutMinutes: String(settings.processSafety.confirmationTimeoutMinutes),
-        },
-        heaterSafety: {
-            offGracePeriodSeconds: String(settings.heaterSafety.offGracePeriodSeconds),
-            maxOffTemperatureRise: String(settings.heaterSafety.maxOffTemperatureRise),
-            riseObservationWindowSeconds: String(settings.heaterSafety.riseObservationWindowSeconds),
-        },
-    });
-
-    loadOperationalSettings = async () => {
-        this.setState({operationalLoading: true, operationalError: null});
-        try {
-            const settings = await OperationalSettingsRepository.get();
-            if (this.isMountedComponent) this.setState({operationalSettings: settings, operationalDrafts: this.operationalDraftsFor(settings), operationalLoading: false});
-        } catch {
-            if (this.isMountedComponent) this.setState({operationalSettings: undefined, operationalDrafts: undefined, operationalLoading: false, operationalError: 'Betriebseinstellungen konnten nicht geladen werden.'});
-        }
-    };
-
-    loadHeaterSafety = async () => {
-        this.setState({heaterSafetyLoading: true, heaterSafetyError: null});
-        try {
-            const heaterSafety = await HeaterSafetyRepository.get();
-            if (this.isMountedComponent) this.setState({heaterSafety, heaterSafetyLoading: false});
-        } catch {
-            if (this.isMountedComponent) this.setState({heaterSafetyLoading: false, heaterSafetyError: 'Heater-Safety-Status konnte nicht geladen werden.'});
-        }
-    };
-
-    private formatApiError = (error: any, fallback: string): string => {
-        const data = error?.response?.data;
-        const message = data?.error?.message ?? data?.error ?? data?.message ?? data?.detail;
-        return typeof message === 'string' && message.trim() ? message : fallback;
-    };
-
-    changeOperationalDraft = (section: OperationalSettingsSection, field: string, value: string | boolean) => {
-        this.setState((state) => state.operationalDrafts ? ({
-            operationalDrafts: {...state.operationalDrafts, [section]: {...state.operationalDrafts[section], [field]: value}},
-            sectionErrors: {...state.sectionErrors, [section]: undefined},
-        }) : null);
-    };
-
-    private sectionPayload = (section: OperationalSettingsSection): OperationalSettings[OperationalSettingsSection] | null => {
-        const draft = this.state.operationalDrafts?.[section];
-        if (!draft) return null;
-        const payload: Record<string, number | boolean> = {};
-        for (const [field, value] of Object.entries(draft)) {
-            if (typeof value === 'boolean') payload[field] = value;
-            else if (!value.trim() || !Number.isFinite(Number(value))) return null;
-            else payload[field] = Number(value);
-        }
-        return payload as unknown as OperationalSettings[OperationalSettingsSection];
-    };
-
-    saveOperationalSection = async (section: OperationalSettingsSection) => {
-        const payload = this.sectionPayload(section);
-        if (!payload || this.state.sectionSaving) return;
-        this.setState({sectionSaving: section, sectionErrors: {...this.state.sectionErrors, [section]: undefined}});
-        try {
-            const confirmed = await OperationalSettingsRepository.updateSection(section, payload as any);
-            if (this.isMountedComponent) this.setState((state) => state.operationalSettings && state.operationalDrafts ? ({
-                operationalSettings: {...state.operationalSettings, [section]: confirmed},
-                operationalDrafts: {...state.operationalDrafts, [section]: this.operationalDraftsFor({...state.operationalSettings, [section]: confirmed} as OperationalSettings)![section]},
-                sectionSaving: null,
-                statusMessage: 'Betriebseinstellungen gespeichert.',
-            }) : ({
-                operationalSettings: state.operationalSettings,
-                operationalDrafts: state.operationalDrafts,
-                sectionSaving: null,
-                statusMessage: state.statusMessage,
-            }));
-        } catch (error) {
-            if (this.isMountedComponent) this.setState({sectionSaving: null, sectionErrors: {...this.state.sectionErrors, [section]: this.formatApiError(error, 'Einstellungen konnten nicht gespeichert werden.')}});
-        }
-    };
-
-    resetHeaterSafety = async () => {
-        if (!this.state.heaterSafety?.latched || this.state.heaterSafetyResetting) return;
-        this.setState({heaterSafetyResetting: true, heaterSafetyError: null});
-        try {
-            const heaterSafety = await HeaterSafetyRepository.reset();
-            if (this.isMountedComponent) this.setState({heaterSafety, heaterSafetyResetting: false, statusMessage: 'Heater-Sicherheitsalarm wurde zurückgesetzt.'});
-        } catch (error) {
-            if (this.isMountedComponent) this.setState({heaterSafetyResetting: false, heaterSafetyError: this.formatApiError(error, 'Sicherheitsalarm konnte nicht zurückgesetzt werden.')});
+            if (this.isMountedComponent) this.setState({heaterSafetyResetting: false, heaterSafetyError: this.formatOperationalApiError(error, 'Sicherheitsalarm konnte nicht zurückgesetzt werden.')});
         }
     };
 
@@ -544,12 +445,12 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
 
     private renderOperationalNumber = (section: OperationalSettingsSection, field: string, label: string, unit: string, description: string, step: number) => {
         const value = this.state.operationalDrafts?.[section]?.[field];
-        return <SettingsNumberField value={typeof value === 'string' ? value : ''} label={label} unit={unit} description={description} step={step} disabled={this.state.sectionSaving === section} onChange={(next) => this.changeOperationalDraft(section, field, next)}/>;
+        return <SettingsNumberField value={typeof value === 'string' ? value : ''} label={label} unit={unit} description={description} step={step} disabled={this.state.sectionSaving === section} onChange={(next) => this.updateOperationalDraft(section, field, next)}/>;
     };
 
     private renderSectionAction = (section: OperationalSettingsSection) => <>
         {this.state.sectionErrors[section] && <p className="settings-error" role="alert">{this.state.sectionErrors[section]}</p>}
-        <div className="settings-actions"><button className="settings-primary" type="button" disabled={!this.sectionPayload(section) || this.state.sectionSaving !== null} onClick={() => this.saveOperationalSection(section)}>{this.state.sectionSaving === section ? 'Wird gespeichert…' : 'Speichern'}</button></div>
+        <div className="settings-actions"><button className="settings-primary" type="button" disabled={!this.buildSectionPayload(section) || this.state.sectionSaving !== null} onClick={() => this.saveOperationalSettingsSection(section)}>{this.state.sectionSaving === section ? 'Wird gespeichert…' : 'Speichern'}</button></div>
     </>;
 
     render() {
@@ -602,7 +503,7 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                     </section>
 
                     {this.state.operationalLoading && <section className="settings-card operational-loading" aria-live="polite"><p>Betriebseinstellungen werden geladen…</p></section>}
-                    {!this.state.operationalLoading && !this.state.operationalSettings && <section className="settings-card"><p className="settings-error" role="alert">{this.state.operationalError}</p><div className="settings-actions"><button className="settings-secondary" type="button" onClick={this.loadOperationalSettings}>Erneut versuchen</button></div></section>}
+                    {!this.state.operationalLoading && !this.state.operationalSettings && <section className="settings-card"><p className="settings-error" role="alert">{this.state.operationalError}</p><div className="settings-actions"><button className="settings-secondary" type="button" onClick={this.loadOperationalSettingsSnapshot}>Erneut versuchen</button></div></section>}
                     {this.state.operationalSettings && this.state.operationalDrafts && <>
                         <section className="settings-card">
                             <div className="settings-card-header"><WaterDropOutlinedIcon aria-hidden="true"/><div><h2>Wasser</h2><p>Kalibrierung der automatischen Wasserfüllung.</p></div></div>
@@ -614,7 +515,7 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
 
                         <section className="settings-card">
                             <div className="settings-card-header"><VolumeUpOutlinedIcon aria-hidden="true"/><div><h2>Audio</h2><p>Persistente Signaltöne der Brausteuerung.</p></div></div>
-                            <div className="setting-row"><div className="setting-label-group"><label htmlFor="audio-enabled">Lautsprecher</label><span className="setting-description">Akustische Hinweise zentral ein- oder ausschalten.</span></div><label className="settings-toggle"><input id="audio-enabled" type="checkbox" checked={Boolean(this.state.operationalDrafts.audio.enabled)} disabled={this.state.sectionSaving === 'audio'} onChange={(event) => this.changeOperationalDraft('audio', 'enabled', event.target.checked)}/><span aria-hidden="true"/></label></div>
+                            <div className="setting-row"><div className="setting-label-group"><label htmlFor="audio-enabled">Lautsprecher</label><span className="setting-description">Akustische Hinweise zentral ein- oder ausschalten.</span></div><label className="settings-toggle"><input id="audio-enabled" type="checkbox" checked={Boolean(this.state.operationalDrafts.audio.enabled)} disabled={this.state.sectionSaving === 'audio'} onChange={(event) => this.updateOperationalDraft('audio', 'enabled', event.target.checked)}/><span aria-hidden="true"/></label></div>
                             <div className="operational-fields">
                                 {this.renderOperationalNumber('audio', 'confirmationRepeatSeconds', 'Bestätigung wiederholen alle', 's', 'Intervall für notwendige Benutzerbestätigungen.', 1)}
                                 {this.renderOperationalNumber('audio', 'alarmRepeatSeconds', 'Alarm wiederholen alle', 's', 'Intervall für wiederholte Alarmtöne.', 1)}
@@ -634,7 +535,7 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                             {this.renderSectionAction('heaterSafety')}
                             <div className={`heater-safety-status ${this.state.heaterSafety?.latched ? 'critical' : ''}`}>
                                 <strong>Safety-Status:</strong> {this.state.heaterSafetyLoading ? 'Wird geladen…' : this.state.heaterSafety?.state ?? 'Nicht verfügbar'}
-                                {this.state.heaterSafety?.latched && <button className="settings-primary" type="button" disabled={this.state.heaterSafetyResetting} onClick={this.resetHeaterSafety}>{this.state.heaterSafetyResetting ? 'Wird zurückgesetzt…' : 'Sicherheitsalarm zurücksetzen'}</button>}
+                                {this.state.heaterSafety?.latched && <button className="settings-primary" type="button" disabled={this.state.heaterSafetyResetting} onClick={this.resetLatchedHeaterSafety}>{this.state.heaterSafetyResetting ? 'Wird zurückgesetzt…' : 'Sicherheitsalarm zurücksetzen'}</button>}
                             </div>
                             {this.state.heaterSafetyError && <p className="settings-error" role="alert">{this.state.heaterSafetyError}</p>}
                         </section>
