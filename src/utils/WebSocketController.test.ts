@@ -52,6 +52,7 @@ describe('WebSocketController', () => {
     expect(socket.on).toHaveBeenCalledWith('heating-running-changed', expect.any(Function));
     expect(socket.on).toHaveBeenCalledWith('agitator-state-changed', expect.any(Function));
     expect(socket.on).toHaveBeenCalledWith('alarm-state-changed', expect.any(Function));
+    expect(socket.on).toHaveBeenCalledWith('warning-state-changed', expect.any(Function));
     expect(socket.on).toHaveBeenCalledWith('temperature-sensor-state-changed', expect.any(Function));
     expect(socket.on).toHaveBeenCalledWith('agitator-defaults-changed', expect.any(Function));
   });
@@ -76,6 +77,18 @@ describe('WebSocketController', () => {
     listeners['brew-session-running']();
 
     expect(handler).toHaveBeenCalledWith({event: 'brew-session-running', data: undefined});
+  });
+
+  it('forwards complete warning snapshots on the shared connection', () => {
+    const handler = jest.fn();
+    const controller = new WebSocketController('ws://controller');
+    controller.onMessage(handler);
+    controller.connect();
+    const snapshot = {warnings: [{type: 'TEMPERATURE_SENSOR', active: true, details: {health: 'MISSING'}}]};
+
+    listeners['warning-state-changed'](snapshot);
+
+    expect(handler).toHaveBeenCalledWith({event: 'warning-state-changed', data: snapshot});
   });
 
   it('forwards complete temperature snapshots on the shared connection', () => {

@@ -15,6 +15,8 @@ import {SystemRepository} from '../../../repositorys/SystemRepository';
 import {RealtimeControllerState} from '../../../model/RealtimeControllerState';
 import {getAlarmSnapshot} from '../../Production/utils/productionStatus';
 import {getTemperatureSensorMessage} from '../../../utils/temperatureSensor';
+import {Warning} from '../../../model/Warning';
+import {getWarningHeaderText} from '../../../utils/warningDisplay';
 
 
 
@@ -27,6 +29,8 @@ interface HeaderProps {
     brewingStatus?: BrewingStatus;
     realtimeState?: RealtimeControllerState;
     socketConnected?: boolean;
+    warnings?: Warning[];
+    warningsReceived?: boolean;
 }
 
 interface HeaderState {
@@ -116,10 +120,17 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
        const alarmText = isHeaterStuckOnAlarmActive(alarms)
            ? heaterStuckOnAlarmDisplay.headerText
            : isEquipmentAlarmActive(alarms) ? equipmentAlarmDisplay.headerText : undefined;
+       const warningText = this.props.socketConnected && this.props.warningsReceived
+           ? getWarningHeaderText(this.props.warnings)
+           : undefined;
        const temperatureSensor = this.props.realtimeState?.temperatureSensor;
-       const sensorWarning = !this.props.socketConnected || temperatureSensor?.health !== 'OK'
+       // Keep the technical sensor state as a compatibility fallback until all
+       // controller versions provide warning-state-changed snapshots.
+       const sensorWarning = !warningText && (!this.props.socketConnected || temperatureSensor?.health !== 'OK')
            ? `⚠ Temperatursensor: ${getTemperatureSensorMessage(temperatureSensor)}`
            : undefined;
+       const priorityMessage = alarmText ?? warningText ?? sensorWarning;
+       const prioritySeverity = alarmText ? 'alarm' : priorityMessage ? 'warning' : undefined;
        const uiMode = getUiMode();
        const navigationViews = getNavigationViews(uiMode);
        const isVisible = (view: Views) => navigationViews.includes(view);
@@ -209,7 +220,14 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
                 </div>
                 <div className="header-status">
                   <div className="status-display-wrapper">
-                    <StatusDisplay backendStatus={backendStatus} messages={messages} priorityMessage={alarmText ?? sensorWarning} disableScrollAnimation={true} removeAllMessages={removeAllMessages}/>
+                    <StatusDisplay
+                      backendStatus={backendStatus}
+                      messages={messages}
+                      priorityMessage={priorityMessage}
+                      prioritySeverity={prioritySeverity}
+                      disableScrollAnimation={true}
+                      removeAllMessages={removeAllMessages}
+                    />
                   </div>
                   <div className="time">
                     <span>{this.state.currentDate}</span>

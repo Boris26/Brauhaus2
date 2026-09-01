@@ -2,6 +2,7 @@ import { ofType } from 'redux-observable';
 import {from, of, interval, EMPTY, filter, takeWhile, startWith, Observable} from 'rxjs';
 import { catchError, exhaustMap, map, mergeMap, switchMap, takeUntil } from 'rxjs/operators';
 import { ApplicationActions, BeerActions, ProductionActions } from '../actions/actions';
+import {WarningActions} from '../actions/warningActions';
 import { ProductionRepository } from '../repositorys/ProductionRepository';
 import { dataCollector } from '../utils/DataCollector/dataCollector';
 import { WebSocketController } from '../utils/WebSocketController';
@@ -17,6 +18,7 @@ import {Beer} from "../model/Beer";
 import type {RootState} from "../reducers/rootReducer";
 import {AgitatorRealtimeState, AlarmRealtimeState, HeatingRunningState, TemperatureSensorRealtimeState} from '../model/RealtimeControllerState';
 import {AgitatorSettings} from '../model/AgitatorSettings';
+import {WarningRealtimeState} from '../model/Warning';
 
 const BREWING_STATUS_POLL_INTERVAL = 1000;
 export const BREWING_STATUS_REQUEST_TIMEOUT = 8000;
@@ -37,6 +39,7 @@ export const mapControlSocketEvent = (event: {event: string; data?: unknown}) =>
     case 'heating-running-changed': return ProductionActions.heatingRunningChanged(event.data as HeatingRunningState);
     case 'agitator-state-changed': return ProductionActions.agitatorStateChanged(event.data as AgitatorRealtimeState);
     case 'alarm-state-changed': return ProductionActions.alarmStateChanged(event.data as AlarmRealtimeState);
+    case 'warning-state-changed': return WarningActions.warningStateChanged(event.data as WarningRealtimeState);
     case 'temperature-sensor-state-changed': return ProductionActions.temperatureSensorStateChanged(event.data as TemperatureSensorRealtimeState);
     case 'agitator-defaults-changed': return ProductionActions.agitatorDefaultsChanged(event.data as AgitatorSettings);
     default:

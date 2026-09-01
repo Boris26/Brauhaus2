@@ -109,3 +109,8 @@
   color: var(--color-error);
   font-weight: bold;
 }
+
+.warning-message .message {
+  color: var(--color-warning);
+  font-weight: bold;
+}
