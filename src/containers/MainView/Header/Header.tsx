@@ -5,7 +5,7 @@ import StatusDisplay from './StatusDisplay';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
 import {BrewingStatus} from '../../../model/brewingStatus.types';
-import {equipmentAlarmDisplay, isEquipmentAlarmActive} from '../../../utils/brewingStatus/alarmDisplay';
+import {equipmentAlarmDisplay, heaterStuckOnAlarmDisplay, isEquipmentAlarmActive, isHeaterStuckOnAlarmActive} from '../../../utils/brewingStatus/alarmDisplay';
 import {isProcessActive} from '../../../utils/brewingStatus/selectors';
 import {getUiMode} from '../../../utils/uiMode';
 import {getNavigationViews} from '../../../utils/viewConfig';
@@ -112,7 +112,10 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
 
     render() {
        const { messages = [] , removeAllMessages, backendStatus, brewingStatus } = this.props; // Default-Wert für messages ist ein leeres Array
-       const equipmentAlarmText = isEquipmentAlarmActive(getAlarmSnapshot(this.props.realtimeState, this.props.socketConnected)) ? equipmentAlarmDisplay.headerText : undefined;
+       const alarms = getAlarmSnapshot(this.props.realtimeState, this.props.socketConnected);
+       const alarmText = isHeaterStuckOnAlarmActive(alarms)
+           ? heaterStuckOnAlarmDisplay.headerText
+           : isEquipmentAlarmActive(alarms) ? equipmentAlarmDisplay.headerText : undefined;
        const temperatureSensor = this.props.realtimeState?.temperatureSensor;
        const sensorWarning = !this.props.socketConnected || temperatureSensor?.health !== 'OK'
            ? `⚠ Temperatursensor: ${getTemperatureSensorMessage(temperatureSensor)}`
@@ -206,7 +209,7 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
                 </div>
                 <div className="header-status">
                   <div className="status-display-wrapper">
-                    <StatusDisplay backendStatus={backendStatus} messages={messages} priorityMessage={equipmentAlarmText ?? sensorWarning} disableScrollAnimation={true} removeAllMessages={removeAllMessages}/>
+                    <StatusDisplay backendStatus={backendStatus} messages={messages} priorityMessage={alarmText ?? sensorWarning} disableScrollAnimation={true} removeAllMessages={removeAllMessages}/>
                   </div>
                   <div className="time">
                     <span>{this.state.currentDate}</span>

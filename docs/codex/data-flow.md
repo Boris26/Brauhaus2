@@ -96,3 +96,9 @@ Automatic water filling follows the same at-most-once-while-pending rule: anothe
 - When normalized process state becomes `FINISHED`, UI shows a finish dialog.
 - Confirming stops polling and creates a `FinishedBrew` with generated UUID, selected beer name/id, date, default metrics, state `FERMENTATION`, active `true`, and `brewValues` JSON from `dataCollector`.
 - It posts this through finished-brew repository via beer epics.
+
+## Operational settings and heater-safety flow
+
+Settings mount performs one `GET /Settings` for all four operational sections and a separate `GET /Safety/Heater` for the current safety latch. Each section owns a draft; only finite, non-empty numeric input can be submitted. Saving sends the complete selected section to `PUT /Settings/{section}` and replaces only that confirmed section with the response. There is no optimistic persistence and no redundant post-save GET.
+
+The heater-safety latch is reset only by `POST /Safety/Heater/Reset`; a failed request leaves the prior latch visible. Independently, `alarm-state-changed` remains the live global alarm source and an active `HEATER_STUCK_ON` snapshot blocks brew start. Sensor ID/health remain read-only values from the existing shared Socket.IO snapshot.
