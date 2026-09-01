@@ -8,7 +8,8 @@ This repository is a Create React App TypeScript UI named `test1`. It presents b
 
 - `src/index.tsx` eagerly imports the global color tokens, Bootstrap base CSS, SimpleBar base CSS, and `index.css` reset/theme defaults before it creates the React tree. It wraps `App` in the Redux `Provider`, dispatches the initial theme, and registers `public/service-worker.js` through `process.env.PUBLIC_URL`. Route components and their page-specific CSS remain lazy-loaded.
 - `src/containers/App.tsx` switches between a mobile-only UI and the desktop UI based on `window.innerWidth < 768`. There is no React Router in the code inspected; navigation is Redux view-state driven, with lightweight browser path synchronization in `src/utils/viewRoutes.ts` for direct links such as `/dashboard`.
-- Desktop shell renders `Header` plus `containers/index.tsx`. Mobile shell renders `MobileProductionView` directly.
+- `App` owns the global `HEATER_STUCK_ON` safety dialog above both desktop and mobile content. It derives visibility from the connected app-lifetime `alarm-state-changed` snapshot, shows current controller temperature/heater feedback when available, and resets only through `POST /api/controller/Safety/Heater/Reset`. The dialog is non-dismissible; it disappears only after the controller clears the global alarm snapshot. Production suppresses its legacy local safety modal while rendered below this app-shell owner. Regular `EQUIPMENT_ALARM` handling remains local to Production.
+- Desktop shell renders the global safety layer plus `Header` and `containers/index.tsx`. Mobile shell renders the same global safety layer plus `MobileProductionView` directly.
 
 ## Navigation/routing model
 
