@@ -1,5 +1,6 @@
 import React from 'react';
 import ModalDialog, {DialogType} from '../../../components/ModalDialog/ModalDialog';
+import {GlobalHeaterSafetyDialogOwnedContext} from '../../../components/GlobalHeaterSafetyDialog/GlobalHeaterSafetyDialog';
 import {heaterStuckOnAlarmDisplay} from '../../../utils/brewingStatus/alarmDisplay';
 
 export interface ProductionDialogsProps {
@@ -14,10 +15,14 @@ export interface ProductionDialogsProps {
 }
 
 export class ProductionDialogs extends React.Component<ProductionDialogsProps> {
+    static contextType = GlobalHeaterSafetyDialogOwnedContext;
+    context!: React.ContextType<typeof GlobalHeaterSafetyDialogOwnedContext>;
+
     render(): React.ReactNode {
         const {showFinishDialog, onConfirmFinish, isSavingFinishedBrew, finishedBrewSaveError,
             showEquipmentAlarmDialog, equipmentAlarmTitle, equipmentAlarmMessage, onDismissEquipmentAlarm} = this.props;
-        const showLocalEquipmentAlarm = showEquipmentAlarmDialog && equipmentAlarmTitle !== heaterStuckOnAlarmDisplay.title;
+        const globalSafetyDialogOwnsAlarm = this.context === true && equipmentAlarmTitle === heaterStuckOnAlarmDisplay.title;
+        const showLocalEquipmentAlarm = showEquipmentAlarmDialog && !globalSafetyDialogOwnsAlarm;
 
         return (
             <>
