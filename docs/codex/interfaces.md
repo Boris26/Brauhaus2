@@ -122,3 +122,22 @@ These paths are consumed through the existing relative UI base URL `/api/control
 The exact events `heating-running-changed`, `agitator-state-changed`, `alarm-state-changed`, and `temperature-sensor-state-changed` use the existing shared connection. The temperature snapshot is `{ current: number | null, health: 'OK' | 'MISSING' | 'STALE' | 'INVALID_READING' | 'MULTIPLE_SENSORS_FOUND' | 'NOT_CONFIGURED', sensorId: string | null }`. Numeric zero is valid; `null` means that no valid reading exists. Alarm arrays replace rather than merge state. Socket disconnect makes received hardware state stale. The controller sends a fresh temperature snapshot to new and reconnected clients; end-to-end behavior on hardware **Needs verification**.
 
 The Production interval indicator is prepared to consume an optional controller-owned `intervalProgressPercent` (number, clamped by the UI to `0..100`) in `GET Agitator/Status.runtime` and `agitator-state-changed`. The currently confirmed controller contract does not provide a phase position, elapsed duration, or start timestamp. Until the controller supplies and resends this value on connect/reconnect, the UI deliberately renders a static, muted ring instead of starting a local timer. Adding and populating this field in Braumeister is **Needs verification**.
+
+## Operational settings and heater-safety contract (Brauhaus2 #230/#231)
+
+The controller owns all defaults and validation. The UI loads the complete snapshot with `GET /Settings`; no operational value is initialized from a UI default. `GET /Settings/{section}` remains available for `waterFilling`, `audio`, `processSafety`, and `heaterSafety`. A section is replaced with `PUT /Settings/{section}` using its complete payload, and the returned persisted section becomes confirmed UI state without a refetch.
+
+| Section | Complete fields and units |
+|---|---|
+| `waterFilling` | `pulsesPerLiter` (impulses/liter), `sensorStartDelaySeconds` (seconds) |
+| `audio` | `enabled` (boolean), `confirmationRepeatSeconds` (seconds), `alarmRepeatSeconds` (seconds) |
+| `processSafety` | `heatingTimeoutMinutes` (minutes), `confirmationTimeoutMinutes` (minutes); zero disables the respective time limit |
+| `heaterSafety` | `offGracePeriodSeconds` (seconds), `maxOffTemperatureRise` (degrees Celsius), `riseObservationWindowSeconds` (seconds) |
+
+Heater-safety state is loaded through `GET /Safety/Heater` and reset only through `POST /Safety/Heater/Reset`. Both return `{ state, latched }`; `state` is one of `DISARMED`, `HEATING`, `OVERSHOOT_GRACE`, `MONITORING`, `SUSPENDED`, or `HEATER_STUCK_ON`. Reset is offered only for `latched: true`, and the response replaces the displayed state.
+
+The complete `alarm-state-changed` snapshot may add the independent alarm type `HEATER_STUCK_ON`; it is never inferred from legacy overheat state. Existing `EQUIPMENT_ALARM` behavior is preserved. An active realtime `HEATER_STUCK_ON` blocks a normal brew start.
+
+Push payloads may add backend-owned `severity: 'INFO' | 'WARNING' | 'ALARM'`. The service worker preserves legacy payload behavior when severity is absent and uses browser-supported notification options to make `ALARM` more prominent. It does not infer severity.
+
+The Settings UI intentionally exposes none of the controller infrastructure fields: temperature tolerance/hysteresis, relay timing, buzzer, GPIO/pins/mode/warnings/debounce, host/port/threading, ALSA/player/sound paths, VAPID secrets, or subscription files. Temperature sensor ID is controller-discovered realtime diagnostic data and remains read-only.
