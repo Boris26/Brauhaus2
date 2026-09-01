@@ -273,6 +273,21 @@ describe('Operational settings', () => {
         expect(screen.getByLabelText('Lautsprecher')).toBeChecked();
     });
 
+    it('separates read-only diagnostics from independently expandable settings', async () => {
+        render(<SettingsPage theme="default" setTheme={jest.fn()} debug={false} setDebug={jest.fn()} socketConnected temperatureSensor={{current: 20, health: 'OK', sensorId: '28-abcdef'}}/>);
+
+        expect(screen.getByRole('heading', {name: 'System- und Diagnosestatus'})).toBeInTheDocument();
+        expect(screen.getByText('28-abcdef')).toBeInTheDocument();
+        expect(screen.queryByRole('button', {name: /System- und Diagnosestatus/})).not.toBeInTheDocument();
+        expect(screen.getByRole('button', {name: /Rührwerk/})).toHaveAttribute('aria-expanded', 'false');
+        expect(await screen.findByRole('button', {name: /Heizung \/ Sicherheit/})).toHaveAttribute('aria-expanded', 'false');
+
+        fireEvent.click(screen.getByRole('button', {name: /Rührwerk/}));
+        fireEvent.click(screen.getByRole('button', {name: /Heizung \/ Sicherheit/}));
+        expect(screen.getByRole('button', {name: /Rührwerk/})).toHaveAttribute('aria-expanded', 'true');
+        expect(screen.getByRole('button', {name: /Heizung \/ Sicherheit/})).toHaveAttribute('aria-expanded', 'true');
+    });
+
     it('sends a complete water section and adopts the confirmed response only', async () => {
         mockedOperational.updateSection.mockResolvedValueOnce({pulsesPerLiter: 500, sensorStartDelaySeconds: 1.25});
         renderSettings(false);
@@ -333,7 +348,7 @@ describe('Operational settings', () => {
         const reset = await screen.findByRole('button', {name: 'Sicherheitsalarm zurücksetzen'});
         fireEvent.click(reset);
         expect(await screen.findByText('Sicherheitsalarm konnte nicht zurückgesetzt werden.')).toBeInTheDocument();
-        expect(screen.getByText(/HEATER_STUCK_ON/)).toBeInTheDocument();
+        expect(screen.getAllByText(/HEATER_STUCK_ON/)).not.toHaveLength(0);
         expect(reset).toBeEnabled();
     });
 });
