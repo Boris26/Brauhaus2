@@ -6,6 +6,8 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import './AppAccordion.css';
 
 interface AppAccordionProps extends Omit<AccordionProps, 'children'> {
+    /** Allows callers to retain MUI's polymorphic root semantics (for example, a settings section). */
+    component?: React.ElementType;
     summary: React.ReactNode;
     children: React.ReactNode;
     summaryProps?: Omit<AccordionSummaryProps, 'children' | 'expandIcon'>;
