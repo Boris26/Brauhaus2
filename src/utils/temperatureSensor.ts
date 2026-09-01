@@ -9,8 +9,11 @@ const healthMessages: Record<TemperatureSensorHealth, string> = {
     NOT_CONFIGURED: 'Temperatursensor nicht konfiguriert',
 };
 
+export const getTemperatureSensorHealthMessage = (health?: TemperatureSensorHealth): string =>
+    health ? healthMessages[health] : 'Temperatursensorstatus wird ermittelt';
+
 export const getTemperatureSensorMessage = (sensor?: TemperatureSensorRealtimeState): string =>
-    sensor ? healthMessages[sensor.health] : 'Temperatursensorstatus wird ermittelt';
+    getTemperatureSensorHealthMessage(sensor?.health);
 
 export const isTemperatureSensorReady = (sensor: TemperatureSensorRealtimeState | undefined, socketConnected: boolean | undefined): sensor is TemperatureSensorRealtimeState & {current: number} =>
     socketConnected === true && sensor?.health === 'OK' && typeof sensor.current === 'number' && Number.isFinite(sensor.current);
