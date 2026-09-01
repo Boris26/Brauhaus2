@@ -81,10 +81,48 @@ describe('Header navigation', () => {
         expect(screen.queryByText('Bereit')).not.toBeInTheDocument();
     });
 
-    it('shows translated sensor failures globally and removes the warning after recovery', () => {
+    it('shows backend warnings globally with warning severity', () => {
+        render(
+            <Header
+                setViewState={jest.fn()}
+                currentView={Views.SETTINGS}
+                removeAllMessages={jest.fn()}
+                backendStatus={true}
+                messages={['Bereit']}
+                socketConnected={true}
+                realtimeState={healthyRealtime}
+                warningsReceived={true}
+                warnings={[{type: 'TEMPERATURE_SENSOR', active: true, details: {health: 'MISSING'}}]}
+            />
+        );
+
+        expect(screen.getByRole('status')).toHaveTextContent('Temperatursensor nicht verfügbar');
+        expect(screen.queryByText('Bereit')).not.toBeInTheDocument();
+    });
+
+    it('keeps alarms above warnings when both are active', () => {
+        render(
+            <Header
+                setViewState={jest.fn()}
+                currentView={Views.PRODUCTION}
+                removeAllMessages={jest.fn()}
+                backendStatus={true}
+                messages={[]}
+                socketConnected={true}
+                realtimeState={{alarms: [{type: AlarmType.EQUIPMENT_ALARM, active: true}], alarmsReceived: true}}
+                warningsReceived={true}
+                warnings={[{type: 'TEMPERATURE_SENSOR', active: true, details: {health: 'MISSING'}}]}
+            />
+        );
+
+        expect(screen.getByRole('alert')).toHaveTextContent('ANLAGENALARM – Anlage prüfen');
+        expect(screen.queryByText('Temperatursensor nicht verfügbar')).not.toBeInTheDocument();
+    });
+
+    it('shows translated sensor failures globally as compatibility fallback and removes the warning after recovery', () => {
         const props = {setViewState: jest.fn(), currentView: Views.SETTINGS, removeAllMessages: jest.fn(), backendStatus: true, messages: []};
         const {rerender} = render(<Header {...props} socketConnected={true} realtimeState={{...healthyRealtime, temperatureSensor: {current: null, health: 'MULTIPLE_SENSORS_FOUND', sensorId: null}}} />);
-        expect(screen.getByRole('alert')).toHaveTextContent('Mehrere Temperatursensoren erkannt');
+        expect(screen.getByRole('status')).toHaveTextContent('Mehrere Temperatursensoren erkannt');
         rerender(<Header {...props} socketConnected={true} realtimeState={healthyRealtime} />);
         expect(screen.queryByText(/Temperatursensor:/)).not.toBeInTheDocument();
     });
