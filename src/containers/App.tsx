@@ -6,7 +6,7 @@ import Index from "./index.connect";
 import {ProductionActions} from '../actions/actions';
 import type {RootState} from '../reducers/rootReducer';
 import {isHeaterStuckOnAlarmActive} from '../utils/brewingStatus/alarmDisplay';
-import GlobalHeaterSafetyDialog from '../components/GlobalHeaterSafetyDialog/GlobalHeaterSafetyDialog';
+import GlobalHeaterSafetyDialog, {GlobalHeaterSafetyDialogOwnedContext} from '../components/GlobalHeaterSafetyDialog/GlobalHeaterSafetyDialog';
 
 const MobileProductionView = React.lazy(() => import('./Mobile/MobileStatusView/MobileProductionView.connect'));
 
@@ -38,18 +38,14 @@ const App: React.FC = () => {
         />
     );
 
-    if (isMobile && !isDashboardRoute) {
-        return (
-            <div className="AppContainer">
-                {globalSafetyDialog}
-                <Suspense fallback={<div className="view-loading" role="status">Lade Ansicht…</div>}>
-                    <MobileProductionView/>
-                </Suspense>
-            </div>
-        );
-    }
-
-    return (
+    const appContent = isMobile && !isDashboardRoute ? (
+        <div className="AppContainer">
+            {globalSafetyDialog}
+            <Suspense fallback={<div className="view-loading" role="status">Lade Ansicht…</div>}>
+                <MobileProductionView/>
+            </Suspense>
+        </div>
+    ) : (
         <div className="AppContainer">
             {globalSafetyDialog}
             <div className="AppHeader">
@@ -59,6 +55,12 @@ const App: React.FC = () => {
                 <Index></Index>
             </div>
         </div>
+    );
+
+    return (
+        <GlobalHeaterSafetyDialogOwnedContext.Provider value={true}>
+            {appContent}
+        </GlobalHeaterSafetyDialogOwnedContext.Provider>
     );
 };
 
