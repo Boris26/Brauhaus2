@@ -1,6 +1,18 @@
-.containerIngredientsForm {
-    margin: 10px;
+.ingredients-page-scroll {
     width: 100%;
+    max-width: 100%;
+}
+
+.ingredients-page-scroll .simplebar-content {
+    min-width: 0;
+}
+
+.containerIngredientsForm {
+    box-sizing: border-box;
+    margin: 10px;
+    width: auto;
+    max-width: calc(100% - 20px);
+    min-width: 0;
     height: auto !important;
     overflow: visible !important;
 }
@@ -24,6 +36,7 @@
 }
 
 .containerIngredientsForm .MuiTableContainer-root {
+    max-width: 100%;
     background-color: var(--color-brew-bg) !important;
     box-shadow: none !important;
     padding: 0 !important;

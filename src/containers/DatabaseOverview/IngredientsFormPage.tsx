@@ -381,6 +381,7 @@ export class IngredientsFormPage extends React.Component<any, any> {
     render() {
         return (
             <SimpleBar
+                className="ingredients-page-scroll"
                 ref={(ref) => { this.simpleBarRef = ref }}
                 style={{ height: "calc(100vh - 0px)" }}
                 autoHide={false}

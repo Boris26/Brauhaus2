@@ -13,6 +13,52 @@ body {
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
+/* Theme-aware native scrollbars for tables and all other overflow regions. */
+* {
+    scrollbar-color: var(--color-primary) var(--color-panel-contrast);
+    scrollbar-width: thin;
+}
+
+*::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+    background: var(--color-panel-contrast);
+}
+
+*::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border: 2px solid var(--color-panel-contrast);
+    border-radius: var(--border-radius-pill);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary-hover);
+}
+
+*::-webkit-scrollbar-corner {
+    background: var(--color-panel-contrast);
+}
+
+/* SimpleBar renders its own track and thumb instead of the browser scrollbar. */
+.simplebar-track {
+    background: var(--color-panel-contrast);
+}
+
+.simplebar-scrollbar::before {
+    background: var(--color-primary);
+    border-radius: var(--border-radius-pill);
+    opacity: .8;
+}
+
+.simplebar-scrollbar.simplebar-visible::before,
+.simplebar-track:hover .simplebar-scrollbar::before {
+    background: var(--color-primary-hover);
+    opacity: 1;
+}
+
 .MainContainer {
     width: 100%;
     height: 100%;
