@@ -69,21 +69,19 @@ class Gauge extends React.Component<GaugeProps,GaugeState> {
 
     calculateAreas() {
         const { targetValue, offset, minValue, maxValue } = this.props;
+        const clampToGaugeRange = (value: number) => Math.min(Math.max(value, minValue), maxValue);
 
-        let greenFrom = Math.max(targetValue - 1, 0);
-        let greenTo = Math.min(targetValue + 1, maxValue);
+        let greenFrom = clampToGaugeRange(targetValue - 1);
+        let greenTo = clampToGaugeRange(targetValue + 1);
 
-        let redFrom = minValue;
-        let redTo = targetValue - offset;
+        let yellowFrom = minValue;
+        let yellowTo = clampToGaugeRange(targetValue - offset);
 
-        let yellowFrom = targetValue + offset;
-        let yellowTo = maxValue;
+        let redFrom = clampToGaugeRange(targetValue + offset);
+        let redTo = maxValue;
 
         if (targetValue === 0) {
             greenFrom = greenTo = yellowFrom = yellowTo = redTo = redFrom = 0;
-        } else if (targetValue + 1 > maxValue) {
-            greenTo = maxValue;
-            yellowFrom = yellowTo = 0;
         }
 
         this.setState({
