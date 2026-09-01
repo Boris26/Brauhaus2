@@ -125,3 +125,20 @@
 }
 .settings-warning .settings-secondary { display: block; margin-top: var(--spacing-sm); }
 @media (max-width: 600px) { .agitator-default-fields { grid-template-columns: minmax(0, 1fr); } }
+
+.operational-fields { display: grid; gap: var(--spacing-md); padding-top: var(--spacing-md); border-top: 1px solid var(--color-border-soft); }
+.operational-field { display: grid; gap: 4px; }
+.operational-input-row { display: flex; align-items: center; gap: var(--spacing-sm); }
+.operational-input-row input { box-sizing: border-box; width: 9rem; min-height: var(--control-height-compact); padding: var(--spacing-xs) var(--spacing-sm); color: var(--color-text); background: var(--color-surface-strong); border: 1px solid var(--color-border); border-radius: var(--border-radius-medium); font: inherit; }
+.operational-input-row input:focus { outline: 2px solid var(--color-primary); outline-offset: 1px; }
+.operational-input-row input:disabled { color: var(--color-disabled-text); background: var(--color-disabled-bg); }
+.safety-card { border-color: var(--color-warning); }
+.advanced-card { background: var(--color-panel-contrast); }
+.advanced-card h3 { margin: var(--spacing-md) 0 var(--spacing-sm); color: var(--color-text-secondary); }
+.heater-safety-status { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-md); margin-top: var(--spacing-md); padding: var(--spacing-sm); background: var(--color-panel-contrast); border-radius: var(--border-radius-medium); }
+.heater-safety-status.critical { color: var(--color-error); background: var(--color-error-subtle); border: 1px solid var(--color-error); }
+.diagnosis-list { display: grid; gap: var(--spacing-sm); margin: var(--spacing-md) 0 0; }
+.diagnosis-list div { display: grid; grid-template-columns: minmax(7rem, .4fr) 1fr; gap: var(--spacing-md); padding-top: var(--spacing-sm); border-top: 1px solid var(--color-border-soft); }
+.diagnosis-list dt { color: var(--color-text-secondary); }
+.diagnosis-list dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+@media (max-width: 600px) { .operational-input-row input { width: min(100%, 12rem); } .diagnosis-list div { grid-template-columns: 1fr; gap: 2px; } }

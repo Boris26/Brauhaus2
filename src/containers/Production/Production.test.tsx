@@ -894,6 +894,17 @@ describe('Production equipment alarm dialog', () => {
         rerender(<Production {...props} socketConnected={true} realtimeState={inactiveRealtime} />);
         expect(screen.queryByRole('dialog', {name: 'Anlagenalarm'})).not.toBeInTheDocument();
     });
+
+    it('shows HEATER_STUCK_ON distinctly and blocks brewing start while active', () => {
+        const heaterAlarmRealtime = {alarms: [{type: AlarmType.HEATER_STUCK_ON, active: true}], alarmsReceived: true};
+        const {props} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.IDLE), socketConnected: true, realtimeState: heaterAlarmRealtime});
+
+        expect(screen.getByRole('dialog', {name: 'Heizungs-Sicherheitsalarm'})).toHaveTextContent('Heizung scheint nach dem Abschalten');
+        expect(screen.getByRole('button', {name: 'Brauvorgang starten'})).toBeDisabled();
+        expect(screen.getByText(/aktiven Heizungs-Sicherheitsalarms/)).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', {name: 'Brauvorgang starten'}));
+        expect(props.sendBrewingData).not.toHaveBeenCalled();
+    });
 });
 
 

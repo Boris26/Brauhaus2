@@ -74,6 +74,13 @@ describe('Header navigation', () => {
         expect(screen.getByText('Aufheizen')).toBeInTheDocument();
     });
 
+    it('shows the heater safety alarm as a distinct high-priority status', (): void => {
+        const realtimeState = {alarms: [{type: AlarmType.HEATER_STUCK_ON, active: true}], alarmsReceived: true};
+        render(<Header setViewState={jest.fn()} currentView={Views.PRODUCTION} removeAllMessages={jest.fn()} backendStatus={true} messages={['Bereit']} socketConnected={true} realtimeState={realtimeState} />);
+        expect(screen.getByRole('alert')).toHaveTextContent('HEIZUNGSALARM – Anlage prüfen');
+        expect(screen.queryByText('Bereit')).not.toBeInTheDocument();
+    });
+
     it('shows translated sensor failures globally and removes the warning after recovery', () => {
         const props = {setViewState: jest.fn(), currentView: Views.SETTINGS, removeAllMessages: jest.fn(), backendStatus: true, messages: []};
         const {rerender} = render(<Header {...props} socketConnected={true} realtimeState={{...healthyRealtime, temperatureSensor: {current: null, health: 'MULTIPLE_SENSORS_FOUND', sensorId: null}}} />);
