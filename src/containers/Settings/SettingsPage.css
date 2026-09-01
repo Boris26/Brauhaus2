@@ -27,8 +27,6 @@
 
 .settings-grid {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
 }
 
 .settings-diagnostics {
