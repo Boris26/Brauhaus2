@@ -1,8 +1,5 @@
 import React from 'react';
 import {
-    Accordion,
-    AccordionDetails,
-    AccordionSummary,
     Typography,
     Table,
     TableBody,
@@ -11,7 +8,6 @@ import {
     TableHead,
     TableRow
 } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddIcon from "@mui/icons-material/Add";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
@@ -26,6 +22,7 @@ import './IngredientsFormPage.css';
 
 import { AdditionalIngredient } from "../../model/AdditionalIngredient";
 import EditIcon from "@mui/icons-material/Edit";
+import {AppAccordion, AppAccordionHeader} from "../../components/AppAccordion/AppAccordion";
 import {IngredientEditDialog, IngredientEditValue, IngredientKind} from "./IngredientEditDialog";
 
 
@@ -80,18 +77,15 @@ export class IngredientsFormPage extends React.Component<any, any> {
         const { expandedAccordion } = this.state;
 
         return (
-            <Accordion
+            <AppAccordion
                 expanded={expandedAccordion === aAccordionKey}
                 onChange={this.handleAccordionChange(aAccordionKey)}
                 className="ingredients-accordion"
+                summary={<AppAccordionHeader title={aTitle} />}
+                detailsProps={{className: 'ingredients-accordion-details'}}
             >
-                <AccordionSummary expandIcon={<ExpandMoreIcon />} className="ingredients-accordion-summary">
-                    <Typography>{aTitle}</Typography>
-                </AccordionSummary>
-                <AccordionDetails className="ingredients-accordion-details">
-                    {aContent}
-                </AccordionDetails>
-            </Accordion>
+                {aContent}
+            </AppAccordion>
         );
     };
 
@@ -387,11 +381,12 @@ export class IngredientsFormPage extends React.Component<any, any> {
     render() {
         return (
             <SimpleBar
+                className="ingredients-page-scroll"
                 ref={(ref) => { this.simpleBarRef = ref }}
                 style={{ height: "calc(100vh - 0px)" }}
                 autoHide={false}
             >
-                <div className='containerIngredientsForm'>
+                <div className='containerIngredientsForm app-accordion-group'>
                     {this.renderIngredientAccordion("malz", "Malz", this.renderMaltContent())}
                     {this.renderIngredientAccordion("hopfen", "Hopfen", this.renderHopContent())}
                     {this.renderIngredientAccordion("hefe", "Hefe", this.renderYeastContent())}
