@@ -1,3 +1,4 @@
+import {ProductionActions} from '../actions/actions';
 import {WarningActions} from '../actions/warningActions';
 import {Warning} from '../model/Warning';
 
@@ -28,9 +29,20 @@ const warningSnapshotsEqual = (left: Warning[], right: Warning[]): boolean =>
             && detailsEqual(warning.details, candidate.details);
     }));
 
+const copyWarnings = (warnings: Warning[]): Warning[] =>
+    warnings.map((warning) => ({
+        ...warning,
+        details: warning.details ? {...warning.details} : undefined,
+    }));
+
+type WarningReducerAction =
+    WarningActions.AllWarningActions
+    | ProductionActions.SocketConnectionChanged
+    | ProductionActions.WebSocketDisconnect;
+
 export const warningReducer = (
     state: WarningReducerState = initialWarningState,
-    action: WarningActions.AllWarningActions,
+    action: WarningReducerAction,
 ): WarningReducerState => {
     switch (action.type) {
         case WarningActions.ActionTypes.WARNING_STATE_CHANGED:
@@ -38,9 +50,13 @@ export const warningReducer = (
                 return state;
             }
             return {
-                warnings: action.payload.warnings,
+                warnings: copyWarnings(action.payload.warnings),
                 warningsReceived: true,
             };
+        case ProductionActions.ActionTypes.SOCKET_CONNECTION_CHANGED:
+            return action.payload.connected ? state : initialWarningState;
+        case ProductionActions.ActionTypes.WEBSOCKET_DISCONNECT:
+            return initialWarningState;
         default:
             return state;
     }
