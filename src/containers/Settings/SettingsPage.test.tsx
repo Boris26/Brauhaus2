@@ -1,5 +1,5 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { SettingsPage } from './SettingsPage';
 import { AudioRepository } from '../../repositorys/AudioRepository';
 import { SoundType } from '../../enums/eSoundType';
@@ -147,7 +147,7 @@ describe('Settings agitator defaults', () => {
         mockedGetAgitatorSettings.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce({speed: 37, intervalOnMinutes: 2, intervalOffMinutes: 8});
         renderSettings(false);
         expect(await screen.findByRole('alert')).toHaveTextContent('konnten nicht geladen werden');
-        expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
+        expect(within(screen.getByText('Rührwerk').closest('section')!).queryByRole('spinbutton')).not.toBeInTheDocument();
         fireEvent.click(screen.getByRole('button', {name: 'Erneut versuchen'}));
         expect(await screen.findByDisplayValue('37')).toBeInTheDocument();
         expect(mockedGetAgitatorSettings).toHaveBeenCalledTimes(2);
@@ -283,6 +283,16 @@ describe('Operational settings', () => {
         expect(await screen.findByDisplayValue('500')).toBeInTheDocument();
         expect(screen.getByDisplayValue('1.25')).toBeInTheDocument();
         expect(screen.getByDisplayValue('12')).toBeInTheDocument();
+    });
+
+    it('uses the configured decimal step without restricting direct input', async () => {
+        renderSettings(false);
+        await screen.findByDisplayValue('411');
+
+        fireEvent.click(screen.getByRole('button', {name: 'Startverzögerung Impulszählung erhöhen'}));
+        expect(screen.getByDisplayValue('0.8')).toBeInTheDocument();
+        fireEvent.change(screen.getByLabelText('Erlaubter Temperaturanstieg'), {target: {value: '2.75'}});
+        expect(screen.getByDisplayValue('2.75')).toBeInTheDocument();
     });
 
     it('sends complete audio, heater-safety, and process-safety sections independently', async () => {

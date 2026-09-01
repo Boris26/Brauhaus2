@@ -16,13 +16,13 @@ import HealthAndSafetyOutlinedIcon from '@mui/icons-material/HealthAndSafetyOutl
 import SensorsOutlinedIcon from '@mui/icons-material/SensorsOutlined';
 import {AgitatorSettings} from '../../model/AgitatorSettings';
 import {AgitatorSettingsRepository} from '../../repositorys/AgitatorSettingsRepository';
-import '../../components/Controlls/QuantityPicker/QuantityPicker.css';
 import {OperationalSettings, OperationalSettingsSection} from '../../model/OperationalSettings';
 import {HeaterSafetyState} from '../../model/HeaterSafetyState';
 import {OperationalSettingsRepository} from '../../repositorys/OperationalSettingsRepository';
 import {HeaterSafetyRepository} from '../../repositorys/HeaterSafetyRepository';
 import {TemperatureSensorRealtimeState} from '../../model/RealtimeControllerState';
 import {getTemperatureSensorMessage} from '../../utils/temperatureSensor';
+import {SettingsNumberField} from './SettingsNumberField';
 
 interface SettingsPageProps {
     theme: ThemeName;
@@ -218,18 +218,103 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
         }) : null);
     };
 
-    stepAgitatorDraft = (
-        field: keyof NonNullable<SettingsPageState['agitatorDraft']>,
-        delta: number,
-        min: number,
-        max: number,
-    ) => {
-        const draft = this.state.agitatorDraft;
-        if (!draft || this.state.agitatorSaving) return;
-        const current = Number(draft[field]);
-        if (!Number.isFinite(current)) return;
-        const next = Math.min(max, Math.max(min, current + delta));
-        this.changeAgitatorDraft(field, String(next));
+    private operationalDraftsFor = (settings: OperationalSettings): SettingsPageState['operationalDrafts'] => ({
+        waterFilling: {
+            pulsesPerLiter: String(settings.waterFilling.pulsesPerLiter),
+            sensorStartDelaySeconds: String(settings.waterFilling.sensorStartDelaySeconds),
+        },
+        audio: {
+            enabled: settings.audio.enabled,
+            confirmationRepeatSeconds: String(settings.audio.confirmationRepeatSeconds),
+            alarmRepeatSeconds: String(settings.audio.alarmRepeatSeconds),
+        },
+        processSafety: {
+            heatingTimeoutMinutes: String(settings.processSafety.heatingTimeoutMinutes),
+            confirmationTimeoutMinutes: String(settings.processSafety.confirmationTimeoutMinutes),
+        },
+        heaterSafety: {
+            offGracePeriodSeconds: String(settings.heaterSafety.offGracePeriodSeconds),
+            maxOffTemperatureRise: String(settings.heaterSafety.maxOffTemperatureRise),
+            riseObservationWindowSeconds: String(settings.heaterSafety.riseObservationWindowSeconds),
+        },
+    });
+
+    loadOperationalSettings = async () => {
+        this.setState({operationalLoading: true, operationalError: null});
+        try {
+            const settings = await OperationalSettingsRepository.get();
+            if (this.isMountedComponent) this.setState({operationalSettings: settings, operationalDrafts: this.operationalDraftsFor(settings), operationalLoading: false});
+        } catch {
+            if (this.isMountedComponent) this.setState({operationalSettings: undefined, operationalDrafts: undefined, operationalLoading: false, operationalError: 'Betriebseinstellungen konnten nicht geladen werden.'});
+        }
+    };
+
+    loadHeaterSafety = async () => {
+        this.setState({heaterSafetyLoading: true, heaterSafetyError: null});
+        try {
+            const heaterSafety = await HeaterSafetyRepository.get();
+            if (this.isMountedComponent) this.setState({heaterSafety, heaterSafetyLoading: false});
+        } catch {
+            if (this.isMountedComponent) this.setState({heaterSafetyLoading: false, heaterSafetyError: 'Heater-Safety-Status konnte nicht geladen werden.'});
+        }
+    };
+
+    private formatApiError = (error: any, fallback: string): string => {
+        const data = error?.response?.data;
+        const message = data?.error?.message ?? data?.error ?? data?.message ?? data?.detail;
+        return typeof message === 'string' && message.trim() ? message : fallback;
+    };
+
+    changeOperationalDraft = (section: OperationalSettingsSection, field: string, value: string | boolean) => {
+        this.setState((state) => state.operationalDrafts ? ({
+            operationalDrafts: {...state.operationalDrafts, [section]: {...state.operationalDrafts[section], [field]: value}},
+            sectionErrors: {...state.sectionErrors, [section]: undefined},
+        }) : null);
+    };
+
+    private sectionPayload = (section: OperationalSettingsSection): OperationalSettings[OperationalSettingsSection] | null => {
+        const draft = this.state.operationalDrafts?.[section];
+        if (!draft) return null;
+        const payload: Record<string, number | boolean> = {};
+        for (const [field, value] of Object.entries(draft)) {
+            if (typeof value === 'boolean') payload[field] = value;
+            else if (!value.trim() || !Number.isFinite(Number(value))) return null;
+            else payload[field] = Number(value);
+        }
+        return payload as unknown as OperationalSettings[OperationalSettingsSection];
+    };
+
+    saveOperationalSection = async (section: OperationalSettingsSection) => {
+        const payload = this.sectionPayload(section);
+        if (!payload || this.state.sectionSaving) return;
+        this.setState({sectionSaving: section, sectionErrors: {...this.state.sectionErrors, [section]: undefined}});
+        try {
+            const confirmed = await OperationalSettingsRepository.updateSection(section, payload as any);
+            if (this.isMountedComponent) this.setState((state) => state.operationalSettings && state.operationalDrafts ? ({
+                operationalSettings: {...state.operationalSettings, [section]: confirmed},
+                operationalDrafts: {...state.operationalDrafts, [section]: this.operationalDraftsFor({...state.operationalSettings, [section]: confirmed} as OperationalSettings)![section]},
+                sectionSaving: null,
+                statusMessage: 'Betriebseinstellungen gespeichert.',
+            }) : ({
+                operationalSettings: state.operationalSettings,
+                operationalDrafts: state.operationalDrafts,
+                sectionSaving: null,
+                statusMessage: state.statusMessage,
+            }));
+        } catch (error) {
+            if (this.isMountedComponent) this.setState({sectionSaving: null, sectionErrors: {...this.state.sectionErrors, [section]: this.formatApiError(error, 'Einstellungen konnten nicht gespeichert werden.')}});
+        }
+    };
+
+    resetHeaterSafety = async () => {
+        if (!this.state.heaterSafety?.latched || this.state.heaterSafetyResetting) return;
+        this.setState({heaterSafetyResetting: true, heaterSafetyError: null});
+        try {
+            const heaterSafety = await HeaterSafetyRepository.reset();
+            if (this.isMountedComponent) this.setState({heaterSafety, heaterSafetyResetting: false, statusMessage: 'Heater-Sicherheitsalarm wurde zurückgesetzt.'});
+        } catch (error) {
+            if (this.isMountedComponent) this.setState({heaterSafetyResetting: false, heaterSafetyError: this.formatApiError(error, 'Sicherheitsalarm konnte nicht zurückgesetzt werden.')});
+        }
     };
 
     private operationalDraftsFor = (settings: OperationalSettings): SettingsPageState['operationalDrafts'] => ({
@@ -457,16 +542,9 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
         this.setState({ temperatureUnit: event.target.value as 'celsius' | 'fahrenheit' });
     };
 
-    private renderOperationalNumber = (section: OperationalSettingsSection, field: string, label: string, unit: string, description: string) => {
+    private renderOperationalNumber = (section: OperationalSettingsSection, field: string, label: string, unit: string, description: string, step: number) => {
         const value = this.state.operationalDrafts?.[section]?.[field];
-        return <label className="operational-field">
-            <span className="setting-label">{label}</span>
-            <span className="operational-input-row">
-                <input aria-label={label} type="number" step="any" value={typeof value === 'string' ? value : ''} disabled={this.state.sectionSaving === section} onChange={(event) => this.changeOperationalDraft(section, field, event.target.value)} />
-                {unit && <span>{unit}</span>}
-            </span>
-            <span className="setting-description">{description}</span>
-        </label>;
+        return <SettingsNumberField value={typeof value === 'string' ? value : ''} label={label} unit={unit} description={description} step={step} disabled={this.state.sectionSaving === section} onChange={(next) => this.changeOperationalDraft(section, field, next)}/>;
     };
 
     private renderSectionAction = (section: OperationalSettingsSection) => <>
@@ -508,39 +586,9 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                         </div>}
                         {agitatorSettings && agitatorDraft && <div className="agitator-defaults-controls">
                             <div className="agitator-default-fields">
-                                <label className="quantity-picker-container">
-                                    <span className="quantity-picker-label">Geschwindigkeit</span>
-                                    <span className="intervalTimeControl">
-                                        <span className={`quantity-picker-content quantity-picker-editable ${agitatorSaving ? 'quantity-picker-content-disabled' : ''} ${this.agitatorValidationError()?.startsWith('Geschwindigkeit') ? 'quantity-picker-content-error' : ''}`}>
-                                            <button className="decrement-btn" type="button" aria-label="Geschwindigkeit verringern" disabled={agitatorSaving || Number(agitatorDraft.speed) <= 0} onClick={() => this.stepAgitatorDraft('speed', -1, 0, 100)}>-</button>
-                                            <input className="quantity-picker-native-input" style={{textAlign: 'center', background: 'var(--color-input-bg)'}} aria-label="Geschwindigkeit" aria-invalid={this.agitatorValidationError()?.startsWith('Geschwindigkeit')} type="number" min="0" max="100" step="1" value={agitatorDraft.speed} disabled={agitatorSaving} onChange={(event) => this.changeAgitatorDraft('speed', event.target.value)}/>
-                                            <button className="increment-btn" type="button" aria-label="Geschwindigkeit erhöhen" disabled={agitatorSaving || Number(agitatorDraft.speed) >= 100} onClick={() => this.stepAgitatorDraft('speed', 1, 0, 100)}>+</button>
-                                        </span>
-                                        <span className="intervalTimeUnit">%</span>
-                                    </span>
-                                </label>
-                                <label className="quantity-picker-container">
-                                    <span className="quantity-picker-label">Laufzeit</span>
-                                    <span className="intervalTimeControl">
-                                        <span className={`quantity-picker-content quantity-picker-editable ${agitatorSaving ? 'quantity-picker-content-disabled' : ''} ${this.agitatorValidationError()?.startsWith('Laufzeit') ? 'quantity-picker-content-error' : ''}`}>
-                                            <button className="decrement-btn" type="button" aria-label="Laufzeit verringern" disabled={agitatorSaving || Number(agitatorDraft.intervalOnMinutes) <= 0} onClick={() => this.stepAgitatorDraft('intervalOnMinutes', -1, 0, Number.MAX_SAFE_INTEGER)}>-</button>
-                                            <input className="quantity-picker-native-input" style={{textAlign: 'center', background: 'var(--color-input-bg)'}} aria-label="Laufzeit" aria-invalid={this.agitatorValidationError()?.startsWith('Laufzeit')} type="number" min="0" step="any" value={agitatorDraft.intervalOnMinutes} disabled={agitatorSaving} onChange={(event) => this.changeAgitatorDraft('intervalOnMinutes', event.target.value)}/>
-                                            <button className="increment-btn" type="button" aria-label="Laufzeit erhöhen" disabled={agitatorSaving} onClick={() => this.stepAgitatorDraft('intervalOnMinutes', 1, 0, Number.MAX_SAFE_INTEGER)}>+</button>
-                                        </span>
-                                        <span className="intervalTimeUnit">min</span>
-                                    </span>
-                                </label>
-                                <label className="quantity-picker-container">
-                                    <span className="quantity-picker-label">Pausenzeit</span>
-                                    <span className="intervalTimeControl">
-                                        <span className={`quantity-picker-content quantity-picker-editable ${agitatorSaving ? 'quantity-picker-content-disabled' : ''} ${this.agitatorValidationError()?.startsWith('Pausenzeit') ? 'quantity-picker-content-error' : ''}`}>
-                                            <button className="decrement-btn" type="button" aria-label="Pausenzeit verringern" disabled={agitatorSaving || Number(agitatorDraft.intervalOffMinutes) <= 0} onClick={() => this.stepAgitatorDraft('intervalOffMinutes', -1, 0, Number.MAX_SAFE_INTEGER)}>-</button>
-                                            <input className="quantity-picker-native-input" style={{textAlign: 'center', background: 'var(--color-input-bg)'}} aria-label="Pausenzeit" aria-invalid={this.agitatorValidationError()?.startsWith('Pausenzeit')} type="number" min="0" step="any" value={agitatorDraft.intervalOffMinutes} disabled={agitatorSaving} onChange={(event) => this.changeAgitatorDraft('intervalOffMinutes', event.target.value)}/>
-                                            <button className="increment-btn" type="button" aria-label="Pausenzeit erhöhen" disabled={agitatorSaving} onClick={() => this.stepAgitatorDraft('intervalOffMinutes', 1, 0, Number.MAX_SAFE_INTEGER)}>+</button>
-                                        </span>
-                                        <span className="intervalTimeUnit">min</span>
-                                    </span>
-                                </label>
+                                <SettingsNumberField value={agitatorDraft.speed} label="Geschwindigkeit" unit="%" step={1} min={0} max={100} disabled={agitatorSaving} invalid={this.agitatorValidationError()?.startsWith('Geschwindigkeit')} onChange={(value) => this.changeAgitatorDraft('speed', value)}/>
+                                <SettingsNumberField value={agitatorDraft.intervalOnMinutes} label="Laufzeit" unit="min" step={1} min={0} disabled={agitatorSaving} invalid={this.agitatorValidationError()?.startsWith('Laufzeit')} onChange={(value) => this.changeAgitatorDraft('intervalOnMinutes', value)}/>
+                                <SettingsNumberField value={agitatorDraft.intervalOffMinutes} label="Pausenzeit" unit="min" step={1} min={0} disabled={agitatorSaving} invalid={this.agitatorValidationError()?.startsWith('Pausenzeit')} onChange={(value) => this.changeAgitatorDraft('intervalOffMinutes', value)}/>
                             </div>
                             {this.agitatorValidationError() && <p className="settings-error" role="alert">{this.agitatorValidationError()}</p>}
                             {pendingAgitatorSnapshot && <div className="settings-warning" role="status">Die Controllerwerte wurden extern geändert. Deine ungespeicherten Eingaben bleiben erhalten.
@@ -559,7 +607,7 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                         <section className="settings-card">
                             <div className="settings-card-header"><WaterDropOutlinedIcon aria-hidden="true"/><div><h2>Wasser</h2><p>Kalibrierung der automatischen Wasserfüllung.</p></div></div>
                             <div className="operational-fields">
-                                {this.renderOperationalNumber('waterFilling', 'pulsesPerLiter', 'Impulse pro Liter', 'Impulse/L', 'Kalibrierwert des Durchflusssensors. Gibt an, wie viele Sensorimpulse einem Liter Wasser entsprechen.')}
+                                {this.renderOperationalNumber('waterFilling', 'pulsesPerLiter', 'Impulse pro Liter', 'Impulse/L', 'Kalibrierwert des Durchflusssensors. Gibt an, wie viele Sensorimpulse einem Liter Wasser entsprechen.', 1)}
                             </div>
                             {this.renderSectionAction('waterFilling')}
                         </section>
@@ -568,8 +616,8 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                             <div className="settings-card-header"><VolumeUpOutlinedIcon aria-hidden="true"/><div><h2>Audio</h2><p>Persistente Signaltöne der Brausteuerung.</p></div></div>
                             <div className="setting-row"><div className="setting-label-group"><label htmlFor="audio-enabled">Lautsprecher</label><span className="setting-description">Akustische Hinweise zentral ein- oder ausschalten.</span></div><label className="settings-toggle"><input id="audio-enabled" type="checkbox" checked={Boolean(this.state.operationalDrafts.audio.enabled)} disabled={this.state.sectionSaving === 'audio'} onChange={(event) => this.changeOperationalDraft('audio', 'enabled', event.target.checked)}/><span aria-hidden="true"/></label></div>
                             <div className="operational-fields">
-                                {this.renderOperationalNumber('audio', 'confirmationRepeatSeconds', 'Bestätigung wiederholen alle', 's', 'Intervall für notwendige Benutzerbestätigungen.')}
-                                {this.renderOperationalNumber('audio', 'alarmRepeatSeconds', 'Alarm wiederholen alle', 's', 'Intervall für wiederholte Alarmtöne.')}
+                                {this.renderOperationalNumber('audio', 'confirmationRepeatSeconds', 'Bestätigung wiederholen alle', 's', 'Intervall für notwendige Benutzerbestätigungen.', 1)}
+                                {this.renderOperationalNumber('audio', 'alarmRepeatSeconds', 'Alarm wiederholen alle', 's', 'Intervall für wiederholte Alarmtöne.', 1)}
                             </div>
                             <div className="settings-actions"><button className="settings-secondary" type="button" disabled={soundPlaying !== null} onClick={() => this.handleSoundTest(SoundType.CONFIRMATION)}>{soundPlaying === SoundType.CONFIRMATION ? 'Wird abgespielt…' : 'Testton abspielen'}</button></div>
                             {soundError && <p className="settings-error" role="alert">{soundError}</p>}
@@ -579,9 +627,9 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                         <section className="settings-card safety-card">
                             <div className="settings-card-header"><HealthAndSafetyOutlinedIcon aria-hidden="true"/><div><h2>Heizung / Sicherheit</h2><p>Safety-Erkennung nach dem Abschalten der Heizung – keine Temperaturregelung.</p></div></div>
                             <div className="operational-fields">
-                                {this.renderOperationalNumber('heaterSafety', 'offGracePeriodSeconds', 'Nachlaufzeit nach Heizung AUS', 's', 'Zeitraum nach dem Abschalten, in dem ein weiterer Temperaturanstieg durch gespeicherte Wärme noch als normal gilt.')}
-                                {this.renderOperationalNumber('heaterSafety', 'maxOffTemperatureRise', 'Erlaubter Temperaturanstieg', '°C', 'Maximal erlaubter Temperaturanstieg gegenüber der Temperatur beim Abschalten der Heizung.')}
-                                {this.renderOperationalNumber('heaterSafety', 'riseObservationWindowSeconds', 'Beobachtungszeit', 's', 'Zeitraum, über den ein weiterer Temperaturanstieg bestätigt werden muss, bevor ein Safety-Alarm ausgelöst wird.')}
+                                {this.renderOperationalNumber('heaterSafety', 'offGracePeriodSeconds', 'Nachlaufzeit nach Heizung AUS', 's', 'Zeitraum nach dem Abschalten, in dem ein weiterer Temperaturanstieg durch gespeicherte Wärme noch als normal gilt.', 1)}
+                                {this.renderOperationalNumber('heaterSafety', 'maxOffTemperatureRise', 'Erlaubter Temperaturanstieg', '°C', 'Maximal erlaubter Temperaturanstieg gegenüber der Temperatur beim Abschalten der Heizung.', 0.1)}
+                                {this.renderOperationalNumber('heaterSafety', 'riseObservationWindowSeconds', 'Beobachtungszeit', 's', 'Zeitraum, über den ein weiterer Temperaturanstieg bestätigt werden muss, bevor ein Safety-Alarm ausgelöst wird.', 1)}
                             </div>
                             {this.renderSectionAction('heaterSafety')}
                             <div className={`heater-safety-status ${this.state.heaterSafety?.latched ? 'critical' : ''}`}>
@@ -594,11 +642,11 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                         <section className="settings-card advanced-card">
                             <div className="settings-card-header"><TuneOutlinedIcon aria-hidden="true"/><div><h2>Erweitert</h2><p>Hardware- und Prozess-Safety-Werte für Service und Betrieb.</p></div></div>
                             <h3>Wasserfüllung</h3><div className="operational-fields">
-                                {this.renderOperationalNumber('waterFilling', 'sensorStartDelaySeconds', 'Startverzögerung Impulszählung', 's', 'Verzögerung nach dem Öffnen des Wasserventils, bevor die Impulszählung beginnt. Dadurch werden Schaltimpulse des Ventils nicht als Wassermenge gezählt.')}
+                                {this.renderOperationalNumber('waterFilling', 'sensorStartDelaySeconds', 'Startverzögerung Impulszählung', 's', 'Verzögerung nach dem Öffnen des Wasserventils, bevor die Impulszählung beginnt. Dadurch werden Schaltimpulse des Ventils nicht als Wassermenge gezählt.', 0.1)}
                             </div>
                             <h3>Prozess-Safety</h3><div className="operational-fields">
-                                {this.renderOperationalNumber('processSafety', 'heatingTimeoutMinutes', 'Maximale Aufheizzeit', 'min', 'Maximale Zeit, in der eine Zieltemperatur erreicht werden muss. 0 deaktiviert das Timeout.')}
-                                {this.renderOperationalNumber('processSafety', 'confirmationTimeoutMinutes', 'Maximale Wartezeit auf Bestätigung', 'min', 'Maximale Zeit für notwendige Benutzerbestätigungen während des Brauprozesses. 0 bedeutet keine Zeitbegrenzung.')}
+                                {this.renderOperationalNumber('processSafety', 'heatingTimeoutMinutes', 'Maximale Aufheizzeit', 'min', 'Maximale Zeit, in der eine Zieltemperatur erreicht werden muss. 0 deaktiviert das Timeout.', 1)}
+                                {this.renderOperationalNumber('processSafety', 'confirmationTimeoutMinutes', 'Maximale Wartezeit auf Bestätigung', 'min', 'Maximale Zeit für notwendige Benutzerbestätigungen während des Brauprozesses. 0 bedeutet keine Zeitbegrenzung.', 1)}
                             </div>
                             {this.renderSectionAction('processSafety')}
                             <p className="settings-warning">Die Startverzögerung gehört zur Wasser-Section und wird gemeinsam mit „Impulse pro Liter“ gespeichert.</p>

@@ -135,11 +135,12 @@
 @media (max-width: 600px) { .agitator-default-fields { grid-template-columns: minmax(0, 1fr); } }
 
 .operational-fields { display: grid; gap: var(--spacing-md); padding-top: var(--spacing-md); border-top: 1px solid var(--color-border-soft); }
-.operational-field { display: grid; gap: 4px; }
-.operational-input-row { display: flex; align-items: center; gap: var(--spacing-sm); }
-.operational-input-row input { box-sizing: border-box; width: 9rem; min-height: var(--control-height-compact); padding: var(--spacing-xs) var(--spacing-sm); color: var(--color-text); background: var(--color-surface-strong); border: 1px solid var(--color-border); border-radius: var(--border-radius-medium); font: inherit; }
-.operational-input-row input:focus { outline: 2px solid var(--color-primary); outline-offset: 1px; }
-.operational-input-row input:disabled { color: var(--color-disabled-text); background: var(--color-disabled-bg); }
+.settings-number-field { gap: 2px; }
+.settings-number-field-control { display: grid; grid-template-columns: 9rem auto; align-items: end; gap: 0.3rem; min-width: 0; }
+.settings-number-field .quantity-picker-content { width: 9rem; background: var(--color-surface-strong); }
+.settings-number-field .quantity-picker-native-input { box-sizing: border-box; text-align: center; background: var(--color-surface-strong); font-size: var(--font-size-normal); font-weight: 700; }
+.settings-number-field .quantity-picker-content-disabled .quantity-picker-native-input { background: var(--color-disabled-bg); }
+.settings-number-field > .setting-description { margin-top: 2px; }
 .safety-card { border-color: var(--color-warning); }
 .advanced-card { background: var(--color-panel-contrast); }
 .advanced-card h3 { margin: var(--spacing-md) 0 var(--spacing-sm); color: var(--color-text-secondary); }
@@ -149,4 +150,4 @@
 .diagnosis-list div { display: grid; grid-template-columns: minmax(7rem, .4fr) 1fr; gap: var(--spacing-md); padding-top: var(--spacing-sm); border-top: 1px solid var(--color-border-soft); }
 .diagnosis-list dt { color: var(--color-text-secondary); }
 .diagnosis-list dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
-@media (max-width: 600px) { .operational-input-row input { width: min(100%, 12rem); } .diagnosis-list div { grid-template-columns: 1fr; gap: 2px; } }
+@media (max-width: 600px) { .diagnosis-list div { grid-template-columns: 1fr; gap: 2px; } }
