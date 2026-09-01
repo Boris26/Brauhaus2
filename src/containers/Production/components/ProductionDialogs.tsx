@@ -1,5 +1,6 @@
 import React from 'react';
 import ModalDialog, {DialogType} from '../../../components/ModalDialog/ModalDialog';
+import {heaterStuckOnAlarmDisplay} from '../../../utils/brewingStatus/alarmDisplay';
 
 export interface ProductionDialogsProps {
     showFinishDialog: boolean;
@@ -16,6 +17,8 @@ export class ProductionDialogs extends React.Component<ProductionDialogsProps> {
     render(): React.ReactNode {
         const {showFinishDialog, onConfirmFinish, isSavingFinishedBrew, finishedBrewSaveError,
             showEquipmentAlarmDialog, equipmentAlarmTitle, equipmentAlarmMessage, onDismissEquipmentAlarm} = this.props;
+        const showLocalEquipmentAlarm = showEquipmentAlarmDialog && equipmentAlarmTitle !== heaterStuckOnAlarmDisplay.title;
+
         return (
             <>
                 <ModalDialog
@@ -31,7 +34,7 @@ export class ProductionDialogs extends React.Component<ProductionDialogsProps> {
                 <ModalDialog
                     onConfirm={onDismissEquipmentAlarm}
                     type={DialogType.ERROR}
-                    open={showEquipmentAlarmDialog}
+                    open={showLocalEquipmentAlarm}
                     content={equipmentAlarmMessage}
                     header={equipmentAlarmTitle}
                     confirmLabel="Schließen"
