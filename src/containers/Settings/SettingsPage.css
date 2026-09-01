@@ -27,8 +27,6 @@
 
 .settings-grid {
   display: flex;
-  flex-direction: column;
-  gap: var(--spacing-sm);
 }
 
 .settings-diagnostics {
@@ -49,36 +47,8 @@
 .settings-diagnostics .diagnosis-list div { display: block; padding: var(--spacing-sm); background: var(--color-panel-contrast); border: 0; border-radius: var(--border-radius-medium); }
 .settings-diagnostics .diagnosis-list dd { margin-top: 2px; }
 
-.settings-accordion.MuiAccordion-root {
-  min-width: 0;
-  color: var(--color-text);
-  background: var(--color-panel-bg);
-  border: 1px solid var(--color-primary);
-  border-left-width: 3px;
-  border-radius: var(--border-radius-large) !important;
-  box-shadow: 0 2px 6px var(--shadow-card-light);
-  overflow: hidden;
-}
-.settings-accordion.MuiAccordion-root::before { display: none; }
-.settings-accordion.MuiAccordion-root.Mui-expanded { margin: 0; }
-.settings-accordion-summary.MuiAccordionSummary-root {
-  min-height: 68px;
-  padding: 0 var(--spacing-lg);
-  transition: background .15s;
-}
-.settings-accordion-summary.MuiAccordionSummary-root:hover { background: var(--color-panel-highlight); }
-.settings-accordion-summary.Mui-focusVisible { background: var(--color-panel-highlight) !important; outline: 2px solid var(--color-primary); outline-offset: -2px; }
-.settings-accordion-summary .MuiAccordionSummary-content { min-width: 0; align-items: center; gap: var(--spacing-md); margin: var(--spacing-sm) 0; }
-.settings-accordion-summary .MuiAccordionSummary-expandIconWrapper { color: var(--color-text-secondary); }
-.settings-accordion-icon { display: flex; flex: 0 0 auto; color: var(--color-primary); }
-.settings-accordion-icon svg { font-size: 1.5rem; }
-.settings-accordion-heading { display: flex; min-width: 0; flex: 1 1 auto; flex-direction: column; }
-.settings-accordion-title { font-size: var(--font-size-section-title); font-weight: 700; line-height: 1.25; }
-.settings-accordion-description { margin-top: 2px; color: var(--color-text-secondary); font-size: var(--font-size-small); line-height: var(--line-height-normal); }
-.settings-accordion-status { flex: 0 0 auto; margin-left: auto; }
 .settings-status-chip { display: inline-flex; padding: 3px var(--spacing-sm); color: var(--color-text-secondary); background: var(--color-panel-contrast); border: 1px solid var(--color-border); border-radius: var(--border-radius-pill); font-size: .75rem; font-weight: 700; white-space: nowrap; }
 .settings-status-chip.critical { color: var(--color-error); background: var(--color-error-subtle); border-color: var(--color-error); }
-.settings-accordion-details.MuiAccordionDetails-root { padding: var(--spacing-md) var(--spacing-lg) var(--spacing-lg); border-top: 1px solid var(--color-border-soft); }
 
 .settings-card {
   min-width: 0;
@@ -164,11 +134,6 @@
   .push-status-list, .sound-list { grid-template-columns: minmax(0, 1fr); }
   .settings-actions, .settings-footer { align-items: stretch; flex-direction: column; }
   .settings-actions button, .settings-footer button { width: 100%; }
-  .settings-accordion-summary.MuiAccordionSummary-root { min-height: 76px; padding-inline: var(--spacing-md); }
-  .settings-accordion-summary .MuiAccordionSummary-content { align-items: flex-start; flex-wrap: wrap; gap: var(--spacing-sm); }
-  .settings-accordion-heading { flex-basis: calc(100% - 2rem - var(--spacing-sm)); }
-  .settings-accordion-status { margin-left: calc(1.5rem + var(--spacing-sm)); }
-  .settings-accordion-details.MuiAccordionDetails-root { padding: var(--spacing-md); }
   .settings-diagnostics { padding: var(--spacing-md); }
   .settings-diagnostics .diagnosis-list { grid-template-columns: minmax(0, 1fr); }
 }

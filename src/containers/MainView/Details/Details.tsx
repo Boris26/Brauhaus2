@@ -3,7 +3,6 @@ import './Details.css';
 import { Beer } from "../../../model/Beer";
 
 import {
-    Accordion, AccordionDetails, AccordionSummary,
     Paper,
     Table,
     TableBody,
@@ -13,9 +12,9 @@ import {
     TableRow,
     Typography
 } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import {BeerRecipeScaler, scalingValues} from "../../../utils/BeerScaler/ScalingBeerRecipe";
-import {COLOR_ACCENT, COLOR_BREW_BG} from "../../../colors";
+import {COLOR_BREW_BG} from "../../../colors";
+import {AppAccordion, AppAccordionHeader} from "../../../components/AppAccordion/AppAccordion";
 
 interface DetailsProps {
     selectedBeer?: Beer;
@@ -145,22 +144,9 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
     // -------------------------------------------------------------
     renderAccordionGeneralData() {
         return (
-            <Accordion defaultExpanded>
-                <AccordionSummary
-                    sx={{
-                        backgroundColor: COLOR_ACCENT,
-                        color: 'white',
-                        '& .MuiTypography-root': { color: 'white' }
-                    }}
-                    expandIcon={<ExpandMoreIcon sx={{ color: 'white' }} />}
-                >
-                    <Typography>Allgemeine Daten</Typography>
-                </AccordionSummary>
-
-                <AccordionDetails sx={{ backgroundColor: COLOR_BREW_BG }}>
-                    {this.renderGeneralData()}
-                </AccordionDetails>
-            </Accordion>
+            <AppAccordion defaultExpanded summary={<AppAccordionHeader title="Allgemeine Daten" />}>
+                {this.renderGeneralData()}
+            </AppAccordion>
         );
     }
 
@@ -188,22 +174,9 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
     // -------------------------------------------------------------
     renderAccordionFermentation() {
         return (
-            <Accordion>
-                <AccordionSummary
-                    sx={{
-                        backgroundColor: COLOR_ACCENT,
-                        color: 'white',
-                        '& .MuiTypography-root': { color: 'white' }
-                    }}
-                    expandIcon={<ExpandMoreIcon sx={{ color: 'white' }} />}
-                >
-                    <Typography>Maischplan</Typography>
-                </AccordionSummary>
-
-                <AccordionDetails sx={{ backgroundColor: COLOR_BREW_BG }}>
-                    {this.renderFermentation()}
-                </AccordionDetails>
-            </Accordion>
+            <AppAccordion summary={<AppAccordionHeader title="Maischplan" />}>
+                {this.renderFermentation()}
+            </AppAccordion>
         );
     }
 
@@ -240,22 +213,9 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
     // -------------------------------------------------------------
     renderAccordionFilling() {
         return (
-            <Accordion>
-                <AccordionSummary
-                    sx={{
-                        backgroundColor: COLOR_ACCENT,
-                        color: 'white',
-                        '& .MuiTypography-root': { color: 'white' }
-                    }}
-                    expandIcon={<ExpandMoreIcon sx={{ color: 'white' }} />}
-                >
-                    <Typography>Schüttung</Typography>
-                </AccordionSummary>
-
-                <AccordionDetails sx={{ backgroundColor: COLOR_BREW_BG }}>
-                    {this.renderFilling()}
-                </AccordionDetails>
-            </Accordion>
+            <AppAccordion summary={<AppAccordionHeader title="Schüttung" />}>
+                {this.renderFilling()}
+            </AppAccordion>
         );
     }
 
@@ -290,22 +250,9 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
     // -------------------------------------------------------------
     renderAccordionWortBoiling() {
         return (
-            <Accordion>
-                <AccordionSummary
-                    sx={{
-                        backgroundColor: COLOR_ACCENT,
-                        color: 'white',
-                        '& .MuiTypography-root': { color: 'white' }
-                    }}
-                    expandIcon={<ExpandMoreIcon sx={{ color: 'white' }} />}
-                >
-                    <Typography>Würzekochen</Typography>
-                </AccordionSummary>
-
-                <AccordionDetails sx={{ backgroundColor: COLOR_BREW_BG }}>
-                    {this.renderWortBoiling()}
-                </AccordionDetails>
-            </Accordion>
+            <AppAccordion summary={<AppAccordionHeader title="Würzekochen" />}>
+                {this.renderWortBoiling()}
+            </AppAccordion>
         );
     }
 
@@ -349,22 +296,9 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
     // -------------------------------------------------------------
     renderAccordionFermentationMaturation() {
         return (
-            <Accordion>
-                <AccordionSummary
-                    sx={{
-                        backgroundColor: COLOR_ACCENT,
-                        color: 'white',
-                        '& .MuiTypography-root': { color: 'white' }
-                    }}
-                    expandIcon={<ExpandMoreIcon sx={{ color: 'white' }} />}
-                >
-                    <Typography>Gärung und Reifung</Typography>
-                </AccordionSummary>
-
-                <AccordionDetails sx={{ backgroundColor: COLOR_BREW_BG }}>
-                    {this.renderFermentationMaturation()}
-                </AccordionDetails>
-            </Accordion>
+            <AppAccordion summary={<AppAccordionHeader title="Gärung und Reifung" />}>
+                {this.renderFermentationMaturation()}
+            </AppAccordion>
         );
     }
 
@@ -410,22 +344,9 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
     // -------------------------------------------------------------
     renderAccordionWater() {
         return (
-            <Accordion>
-                <AccordionSummary
-                    sx={{
-                        backgroundColor: COLOR_ACCENT,
-                        color: 'white',
-                        '& .MuiTypography-root': { color: 'white' }
-                    }}
-                    expandIcon={<ExpandMoreIcon sx={{ color: 'white' }} />}
-                >
-                    <Typography>Wasser</Typography>
-                </AccordionSummary>
-
-                <AccordionDetails sx={{ backgroundColor: COLOR_BREW_BG }}>
-                    {this.renderBrewingWater()}
-                </AccordionDetails>
-            </Accordion>
+            <AppAccordion summary={<AppAccordionHeader title="Wasser" />}>
+                {this.renderBrewingWater()}
+            </AppAccordion>
         );
     }
 
@@ -466,12 +387,14 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
 
                 {/* ONLY THIS PART SCROLLS */}
 
-                    {this.renderAccordionGeneralData()}
-                    {this.renderAccordionFermentation()}
-                    {this.renderAccordionFilling()}
-                    {this.renderAccordionWortBoiling()}
-                    {this.renderAccordionFermentationMaturation()}
-                    {this.renderAccordionWater()}
+                    <div className="app-accordion-group">
+                        {this.renderAccordionGeneralData()}
+                        {this.renderAccordionFermentation()}
+                        {this.renderAccordionFilling()}
+                        {this.renderAccordionWortBoiling()}
+                        {this.renderAccordionFermentationMaturation()}
+                        {this.renderAccordionWater()}
+                    </div>
 
 
             </div>

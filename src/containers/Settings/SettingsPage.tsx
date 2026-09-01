@@ -481,7 +481,7 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                     </dl>
                 </section>
 
-                <div className="settings-grid">
+                <div className="settings-grid app-accordion-group">
                     <SettingsAccordion className="agitator-defaults-card" icon={<TuneOutlinedIcon />} title="Rührwerk" description="Persistente Standardwerte der Brausteuerung.">
 
                         {agitatorLoading && <p className="agitator-settings-state" role="status">Rührwerk-Standardwerte werden geladen…</p>}
