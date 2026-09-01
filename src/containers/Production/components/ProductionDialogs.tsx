@@ -1,5 +1,7 @@
 import React from 'react';
 import ModalDialog, {DialogType} from '../../../components/ModalDialog/ModalDialog';
+import {GlobalHeaterSafetyDialogOwnedContext} from '../../../components/GlobalHeaterSafetyDialog/GlobalHeaterSafetyDialog';
+import {heaterStuckOnAlarmDisplay} from '../../../utils/brewingStatus/alarmDisplay';
 
 export interface ProductionDialogsProps {
     showFinishDialog: boolean;
@@ -13,9 +15,15 @@ export interface ProductionDialogsProps {
 }
 
 export class ProductionDialogs extends React.Component<ProductionDialogsProps> {
+    static contextType = GlobalHeaterSafetyDialogOwnedContext;
+    context!: React.ContextType<typeof GlobalHeaterSafetyDialogOwnedContext>;
+
     render(): React.ReactNode {
         const {showFinishDialog, onConfirmFinish, isSavingFinishedBrew, finishedBrewSaveError,
             showEquipmentAlarmDialog, equipmentAlarmTitle, equipmentAlarmMessage, onDismissEquipmentAlarm} = this.props;
+        const globalSafetyDialogOwnsAlarm = this.context === true && equipmentAlarmTitle === heaterStuckOnAlarmDisplay.title;
+        const showLocalEquipmentAlarm = showEquipmentAlarmDialog && !globalSafetyDialogOwnsAlarm;
+
         return (
             <>
                 <ModalDialog
@@ -31,7 +39,7 @@ export class ProductionDialogs extends React.Component<ProductionDialogsProps> {
                 <ModalDialog
                     onConfirm={onDismissEquipmentAlarm}
                     type={DialogType.ERROR}
-                    open={showEquipmentAlarmDialog}
+                    open={showLocalEquipmentAlarm}
                     content={equipmentAlarmMessage}
                     header={equipmentAlarmTitle}
                     confirmLabel="Schließen"

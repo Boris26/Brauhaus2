@@ -15,6 +15,7 @@ BeerDatabase 2.x returns `RecipeImportResult`, including `replayed`; a replay is
 - `src/index.tsx` dispatches `ApplicationActions.setTheme(resolveInitialTheme())` before rendering.
 - `App` chooses mobile or desktop by viewport width.
 - Desktop `Index` dispatches backend availability polling on mount.
+- `App` is also the global UI owner of a connected `HEATER_STUCK_ON` alarm. When the app-lifetime realtime alarm snapshot contains the active alarm, the same non-dismissible safety dialog overlays whichever view is currently rendered, including mobile/controller mode and Settings.
 
 ## Recipe/database flow
 
@@ -42,7 +43,8 @@ Needs verification: backend ordering of `GET beers`, because the UI treats the l
 - Poll interval is 1000 ms after start brewing.
 - Each `GET Status/` response is passed through `normalizeBrewingStatus`.
 - The normalizer carries the response's `alarms` list into `BrewingStatus.alarms` and defaults a missing legacy node to `[]`.
-- The desktop production UI derives an active equipment alarm from `alarms` and displays it through the existing production modal and header status components. Dismissing the modal is local presentation state for the current continuous alarm cycle and does not dispatch an action or call an API.
+- The desktop production UI continues to derive a regular active `EQUIPMENT_ALARM` for its local production modal. Dismissing that modal is local presentation state for the current continuous equipment-alarm cycle and does not dispatch an action or call an API.
+- `HEATER_STUCK_ON` is not locally dismissible in Production. Its connected realtime snapshot is handled by the app shell, which renders one global modal across all views. The modal calls only `POST /Safety/Heater/Reset`, disables repeat reset while the request is active, keeps displaying any reset error, and remains open until a later global alarm snapshot confirms that `HEATER_STUCK_ON` is no longer active.
 - Normalized status is stored in `productionReducer.brewingStatus` and in `dataCollector`.
 - Polling stops when normalized process state is `FINISHED`, `ABORTED`, or `ERROR`.
 
@@ -99,6 +101,6 @@ Automatic water filling follows the same at-most-once-while-pending rule: anothe
 
 ## Operational settings and heater-safety flow
 
-Settings mount performs one `GET /Settings` for all four operational sections and a separate `GET /Safety/Heater` for the current safety latch. Each section owns a draft; only finite, non-empty numeric input can be submitted. Saving sends the complete selected section to `PUT /Settings/{section}` and replaces only that confirmed section with the response. There is no optimistic persistence and no redundant post-save GET.
+Settings mount performs one `GET /Settings` for all four operational sections. Each section owns a draft; only finite, non-empty numeric input can be submitted. Saving sends the complete selected section to `PUT /Settings/{section}` and replaces only that confirmed section with the response. There is no optimistic persistence and no redundant post-save GET.
 
-The heater-safety latch is reset only by `POST /Safety/Heater/Reset`; a failed request leaves the prior latch visible. Independently, `alarm-state-changed` remains the live global alarm source and an active `HEATER_STUCK_ON` snapshot blocks brew start. Sensor ID/health remain read-only values from the existing shared Socket.IO snapshot.
+Heater-safety reset is intentionally not a Settings-page action. Settings exposes only the persistent `heaterSafety` configuration values. Runtime latch ownership is global: `alarm-state-changed` remains the live source for `HEATER_STUCK_ON`, the app shell performs `POST /Safety/Heater/Reset`, and a failed request leaves the global modal visible. The normal brew-start guard continues to reject an active realtime `HEATER_STUCK_ON`. Sensor ID/health remain read-only values from the existing shared Socket.IO snapshot.

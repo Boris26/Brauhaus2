@@ -17,9 +17,7 @@ import SensorsOutlinedIcon from '@mui/icons-material/SensorsOutlined';
 import {AgitatorSettings} from '../../model/AgitatorSettings';
 import {AgitatorSettingsRepository} from '../../repositorys/AgitatorSettingsRepository';
 import {OperationalSettings, OperationalSettingsSection} from '../../model/OperationalSettings';
-import {HeaterSafetyState} from '../../model/HeaterSafetyState';
 import {OperationalSettingsRepository} from '../../repositorys/OperationalSettingsRepository';
-import {HeaterSafetyRepository} from '../../repositorys/HeaterSafetyRepository';
 import {TemperatureSensorRealtimeState} from '../../model/RealtimeControllerState';
 import {getTemperatureSensorMessage} from '../../utils/temperatureSensor';
 import {SettingsNumberField} from './SettingsNumberField';
@@ -59,10 +57,6 @@ interface SettingsPageState {
     sectionSaving: OperationalSettingsSection | null;
     operationalError: string | null;
     sectionErrors: Partial<Record<OperationalSettingsSection, string>>;
-    heaterSafety?: HeaterSafetyState;
-    heaterSafetyLoading: boolean;
-    heaterSafetyResetting: boolean;
-    heaterSafetyError: string | null;
 }
 
 export class SettingsPage extends React.Component<SettingsPageProps, SettingsPageState> {
@@ -93,10 +87,6 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
             sectionSaving: null,
             operationalError: null,
             sectionErrors: {},
-            heaterSafety: undefined,
-            heaterSafetyLoading: true,
-            heaterSafetyResetting: false,
-            heaterSafetyError: null,
         };
     }
 
@@ -114,7 +104,6 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
         this.refreshPushState();
         void this.loadAgitatorSettings();
         void this.loadOperationalSettingsSnapshot();
-        void this.loadHeaterSafetySnapshot();
     }
 
     componentWillUnmount() {
@@ -250,16 +239,6 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
         }
     };
 
-    loadHeaterSafetySnapshot = async () => {
-        this.setState({heaterSafetyLoading: true, heaterSafetyError: null});
-        try {
-            const heaterSafety = await HeaterSafetyRepository.get();
-            if (this.isMountedComponent) this.setState({heaterSafety, heaterSafetyLoading: false});
-        } catch {
-            if (this.isMountedComponent) this.setState({heaterSafetyLoading: false, heaterSafetyError: 'Heater-Safety-Status konnte nicht geladen werden.'});
-        }
-    };
-
     private formatOperationalApiError = (error: any, fallback: string): string => {
         const data = error?.response?.data;
         const message = data?.error?.message ?? data?.error ?? data?.message ?? data?.detail;
@@ -304,17 +283,6 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
             }));
         } catch (error) {
             if (this.isMountedComponent) this.setState({sectionSaving: null, sectionErrors: {...this.state.sectionErrors, [section]: this.formatOperationalApiError(error, 'Einstellungen konnten nicht gespeichert werden.')}});
-        }
-    };
-
-    resetLatchedHeaterSafety = async () => {
-        if (!this.state.heaterSafety?.latched || this.state.heaterSafetyResetting) return;
-        this.setState({heaterSafetyResetting: true, heaterSafetyError: null});
-        try {
-            const heaterSafety = await HeaterSafetyRepository.reset();
-            if (this.isMountedComponent) this.setState({heaterSafety, heaterSafetyResetting: false, statusMessage: 'Heater-Sicherheitsalarm wurde zurückgesetzt.'});
-        } catch (error) {
-            if (this.isMountedComponent) this.setState({heaterSafetyResetting: false, heaterSafetyError: this.formatOperationalApiError(error, 'Sicherheitsalarm konnte nicht zurückgesetzt werden.')});
         }
     };
 
@@ -477,7 +445,6 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                         <div><dt>Verbindung</dt><dd>{socketConnected ? 'Verbunden' : 'Nicht aktiv'}</dd></div>
                         <div><dt>Temperatursensor</dt><dd>{socketConnected ? getTemperatureSensorMessage(temperatureSensor) : 'Controllerverbindung nicht aktiv'}</dd></div>
                         <div><dt>Sensor-ID</dt><dd>{temperatureSensor?.sensorId ?? 'Nicht verfügbar'}</dd></div>
-                        <div><dt>Safety</dt><dd>{this.state.heaterSafetyLoading ? 'Wird geladen…' : this.state.heaterSafety?.state ?? 'Nicht verfügbar'}</dd></div>
                     </dl>
                 </section>
 
@@ -527,15 +494,13 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                             {this.renderSectionAction('audio')}
                         </SettingsAccordion>
 
-                        <SettingsAccordion className="safety-accordion" icon={<HealthAndSafetyOutlinedIcon />} title="Heizung / Sicherheit" description="Safety-Erkennung nach dem Abschalten der Heizung – keine Temperaturregelung." status={<span className={`settings-status-chip ${this.state.heaterSafety?.latched ? 'critical' : ''}`}>{this.state.heaterSafetyLoading ? 'Wird geladen…' : this.state.heaterSafety?.state ?? 'Nicht verfügbar'}</span>}>
+                        <SettingsAccordion className="safety-accordion" icon={<HealthAndSafetyOutlinedIcon />} title="Heizung / Sicherheit" description="Safety-Erkennung nach dem Abschalten der Heizung – keine Temperaturregelung.">
                             <div className="operational-fields">
                                 {this.renderOperationalNumber('heaterSafety', 'offGracePeriodSeconds', 'Nachlaufzeit nach Heizung AUS', 's', 'Zeitraum nach dem Abschalten, in dem ein weiterer Temperaturanstieg durch gespeicherte Wärme noch als normal gilt.', 1)}
                                 {this.renderOperationalNumber('heaterSafety', 'maxOffTemperatureRise', 'Erlaubter Temperaturanstieg', '°C', 'Maximal erlaubter Temperaturanstieg gegenüber der Temperatur beim Abschalten der Heizung.', 0.1)}
                                 {this.renderOperationalNumber('heaterSafety', 'riseObservationWindowSeconds', 'Beobachtungszeit', 's', 'Zeitraum, über den ein weiterer Temperaturanstieg bestätigt werden muss, bevor ein Safety-Alarm ausgelöst wird.', 1)}
                             </div>
                             {this.renderSectionAction('heaterSafety')}
-                            {this.state.heaterSafety?.latched && <div className="settings-actions"><button className="settings-primary" type="button" disabled={this.state.heaterSafetyResetting} onClick={this.resetLatchedHeaterSafety}>{this.state.heaterSafetyResetting ? 'Wird zurückgesetzt…' : 'Sicherheitsalarm zurücksetzen'}</button></div>}
-                            {this.state.heaterSafetyError && <p className="settings-error" role="alert">{this.state.heaterSafetyError}</p>}
                         </SettingsAccordion>
 
                         <SettingsAccordion className="advanced-accordion" icon={<TuneOutlinedIcon />} title="Erweitert" description="Hardware- und Prozess-Safety-Werte für Service und Betrieb.">

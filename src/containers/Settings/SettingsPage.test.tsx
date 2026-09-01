@@ -6,12 +6,10 @@ import { SoundType } from '../../enums/eSoundType';
 import {AgitatorSettingsRepository} from '../../repositorys/AgitatorSettingsRepository';
 import {PushService} from '../../utils/pushService';
 import {OperationalSettingsRepository} from '../../repositorys/OperationalSettingsRepository';
-import {HeaterSafetyRepository} from '../../repositorys/HeaterSafetyRepository';
 
 jest.mock('../../repositorys/AudioRepository');
 jest.mock('../../repositorys/AgitatorSettingsRepository');
 jest.mock('../../repositorys/OperationalSettingsRepository');
-jest.mock('../../repositorys/HeaterSafetyRepository');
 jest.mock('../../utils/pushService', () => ({
     isPushSupported: jest.fn(() => true),
     getPermissionState: jest.fn(() => 'granted'),
@@ -28,7 +26,6 @@ const mockedGetAgitatorSettings = AgitatorSettingsRepository.get as jest.MockedF
 const mockedUpdateAgitatorSettings = AgitatorSettingsRepository.update as jest.MockedFunction<typeof AgitatorSettingsRepository.update>;
 const mockedPushService = PushService as jest.Mocked<typeof PushService>;
 const mockedOperational = OperationalSettingsRepository as jest.Mocked<typeof OperationalSettingsRepository>;
-const mockedHeaterSafety = HeaterSafetyRepository as jest.Mocked<typeof HeaterSafetyRepository>;
 const operationalSettings = {
     waterFilling: {pulsesPerLiter: 411, sensorStartDelaySeconds: 0.7},
     audio: {enabled: true, confirmationRepeatSeconds: 12, alarmRepeatSeconds: 4},
@@ -39,8 +36,6 @@ const operationalSettings = {
 beforeEach(() => {
     mockedOperational.get.mockResolvedValue(operationalSettings);
     mockedOperational.updateSection.mockImplementation(async (_section, settings) => settings as any);
-    mockedHeaterSafety.get.mockResolvedValue({state: 'MONITORING', latched: false});
-    mockedHeaterSafety.reset.mockResolvedValue({state: 'DISARMED', latched: false});
 });
 
 const deferred = <T,>() => {
@@ -259,7 +254,6 @@ describe('Operational settings', () => {
         jest.clearAllMocks();
         mockedOperational.get.mockResolvedValue(operationalSettings);
         mockedOperational.updateSection.mockImplementation(async (_section, settings) => settings as any);
-        mockedHeaterSafety.get.mockResolvedValue({state: 'MONITORING', latched: false});
         mockedGetAgitatorSettings.mockResolvedValue({speed: 32, intervalOnMinutes: 2.5, intervalOffMinutes: 7});
         mockedPushService.getSubscription.mockResolvedValue(null);
         mockedTestSound.mockResolvedValue();
@@ -341,14 +335,9 @@ describe('Operational settings', () => {
         expect(screen.queryByDisplayValue('28-abcdef')).not.toBeInTheDocument();
     });
 
-    it('offers reset only while latched and keeps the alarm after a failed reset', async () => {
-        mockedHeaterSafety.get.mockResolvedValueOnce({state: 'HEATER_STUCK_ON', latched: true});
-        mockedHeaterSafety.reset.mockRejectedValueOnce(new Error('offline'));
+    it('keeps heater-safety reset out of settings', async () => {
         renderSettings(false);
-        const reset = await screen.findByRole('button', {name: 'Sicherheitsalarm zurücksetzen'});
-        fireEvent.click(reset);
-        expect(await screen.findByText('Sicherheitsalarm konnte nicht zurückgesetzt werden.')).toBeInTheDocument();
-        expect(screen.getAllByText(/HEATER_STUCK_ON/)).not.toHaveLength(0);
-        expect(reset).toBeEnabled();
+        await screen.findByDisplayValue('121');
+        expect(screen.queryByRole('button', {name: 'Sicherheitsalarm zurücksetzen'})).not.toBeInTheDocument();
     });
 });
