@@ -7,6 +7,8 @@ const mapStateToProps = (state: any) => ({
     theme: state.applicationReducer.theme as ThemeName,
     debug: state.applicationReducer.debug as boolean,
     agitatorDefaultsSnapshot: state.productionReducer.agitatorDefaults,
+    temperatureSensor: state.productionReducer.realtimeState.temperatureSensor,
+    socketConnected: state.productionReducer.socketConnection.connected,
 });
 
 const mapDispatchToProps = (dispatch: any) => ({

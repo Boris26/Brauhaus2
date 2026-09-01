@@ -1,13 +1,17 @@
 import React from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { SettingsPage } from './SettingsPage';
 import { AudioRepository } from '../../repositorys/AudioRepository';
 import { SoundType } from '../../enums/eSoundType';
 import {AgitatorSettingsRepository} from '../../repositorys/AgitatorSettingsRepository';
 import {PushService} from '../../utils/pushService';
+import {OperationalSettingsRepository} from '../../repositorys/OperationalSettingsRepository';
+import {HeaterSafetyRepository} from '../../repositorys/HeaterSafetyRepository';
 
 jest.mock('../../repositorys/AudioRepository');
 jest.mock('../../repositorys/AgitatorSettingsRepository');
+jest.mock('../../repositorys/OperationalSettingsRepository');
+jest.mock('../../repositorys/HeaterSafetyRepository');
 jest.mock('../../utils/pushService', () => ({
     isPushSupported: jest.fn(() => true),
     getPermissionState: jest.fn(() => 'granted'),
@@ -23,6 +27,21 @@ const mockedTestSound = AudioRepository.testSound as jest.MockedFunction<typeof 
 const mockedGetAgitatorSettings = AgitatorSettingsRepository.get as jest.MockedFunction<typeof AgitatorSettingsRepository.get>;
 const mockedUpdateAgitatorSettings = AgitatorSettingsRepository.update as jest.MockedFunction<typeof AgitatorSettingsRepository.update>;
 const mockedPushService = PushService as jest.Mocked<typeof PushService>;
+const mockedOperational = OperationalSettingsRepository as jest.Mocked<typeof OperationalSettingsRepository>;
+const mockedHeaterSafety = HeaterSafetyRepository as jest.Mocked<typeof HeaterSafetyRepository>;
+const operationalSettings = {
+    waterFilling: {pulsesPerLiter: 411, sensorStartDelaySeconds: 0.7},
+    audio: {enabled: true, confirmationRepeatSeconds: 12, alarmRepeatSeconds: 4},
+    processSafety: {heatingTimeoutMinutes: 55, confirmationTimeoutMinutes: 0},
+    heaterSafety: {offGracePeriodSeconds: 121, maxOffTemperatureRise: 2.2, riseObservationWindowSeconds: 31},
+};
+
+beforeEach(() => {
+    mockedOperational.get.mockResolvedValue(operationalSettings);
+    mockedOperational.updateSection.mockImplementation(async (_section, settings) => settings as any);
+    mockedHeaterSafety.get.mockResolvedValue({state: 'MONITORING', latched: false});
+    mockedHeaterSafety.reset.mockResolvedValue({state: 'DISARMED', latched: false});
+});
 
 const deferred = <T,>() => {
     let resolve!: (value: T) => void;
@@ -128,7 +147,7 @@ describe('Settings agitator defaults', () => {
         mockedGetAgitatorSettings.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce({speed: 37, intervalOnMinutes: 2, intervalOffMinutes: 8});
         renderSettings(false);
         expect(await screen.findByRole('alert')).toHaveTextContent('konnten nicht geladen werden');
-        expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
+        expect(within(screen.getByText('Rührwerk').closest('section')!).queryByRole('spinbutton')).not.toBeInTheDocument();
         fireEvent.click(screen.getByRole('button', {name: 'Erneut versuchen'}));
         expect(await screen.findByDisplayValue('37')).toBeInTheDocument();
         expect(mockedGetAgitatorSettings).toHaveBeenCalledTimes(2);
@@ -232,5 +251,89 @@ describe('Settings async lifecycle', () => {
         const request = deferred<void>();
         mockedTestSound.mockReturnValue(request.promise);
         await expectNoPostUnmountState(() => page!.handleSoundTest(SoundType.ALARM), () => request.resolve());
+    });
+});
+
+describe('Operational settings', () => {
+    beforeEach(() => {
+        jest.clearAllMocks();
+        mockedOperational.get.mockResolvedValue(operationalSettings);
+        mockedOperational.updateSection.mockImplementation(async (_section, settings) => settings as any);
+        mockedHeaterSafety.get.mockResolvedValue({state: 'MONITORING', latched: false});
+        mockedGetAgitatorSettings.mockResolvedValue({speed: 32, intervalOnMinutes: 2.5, intervalOffMinutes: 7});
+        mockedPushService.getSubscription.mockResolvedValue(null);
+        mockedTestSound.mockResolvedValue();
+    });
+
+    it('loads one complete backend snapshot and displays all sections without frontend defaults', async () => {
+        renderSettings(false);
+        expect(mockedOperational.get).toHaveBeenCalledTimes(1);
+        expect(await screen.findByDisplayValue('411')).toBeInTheDocument();
+        ['0.7', '12', '4', '55', '121', '2.2', '31'].forEach((value) => expect(screen.getByDisplayValue(value)).toBeInTheDocument());
+        expect(screen.getByLabelText('Lautsprecher')).toBeChecked();
+    });
+
+    it('sends a complete water section and adopts the confirmed response only', async () => {
+        mockedOperational.updateSection.mockResolvedValueOnce({pulsesPerLiter: 500, sensorStartDelaySeconds: 1.25});
+        renderSettings(false);
+        fireEvent.change(await screen.findByLabelText('Impulse pro Liter'), {target: {value: '480'}});
+        fireEvent.change(screen.getByLabelText('Startverzögerung Impulszählung'), {target: {value: '1'}});
+        fireEvent.click(screen.getAllByRole('button', {name: 'Speichern'})[1]);
+        await waitFor(() => expect(mockedOperational.updateSection).toHaveBeenCalledWith('waterFilling', {pulsesPerLiter: 480, sensorStartDelaySeconds: 1}));
+        expect(await screen.findByDisplayValue('500')).toBeInTheDocument();
+        expect(screen.getByDisplayValue('1.25')).toBeInTheDocument();
+        expect(screen.getByDisplayValue('12')).toBeInTheDocument();
+    });
+
+    it('uses the configured decimal step without restricting direct input', async () => {
+        renderSettings(false);
+        await screen.findByDisplayValue('411');
+
+        fireEvent.click(screen.getByRole('button', {name: 'Startverzögerung Impulszählung erhöhen'}));
+        expect(screen.getByDisplayValue('0.8')).toBeInTheDocument();
+        fireEvent.change(screen.getByLabelText('Erlaubter Temperaturanstieg'), {target: {value: '2.75'}});
+        expect(screen.getByDisplayValue('2.75')).toBeInTheDocument();
+    });
+
+    it('sends complete audio, heater-safety, and process-safety sections independently', async () => {
+        renderSettings(false);
+        await screen.findByDisplayValue('411');
+        fireEvent.click(screen.getByLabelText('Lautsprecher'));
+        fireEvent.click(screen.getAllByRole('button', {name: 'Speichern'})[2]);
+        await waitFor(() => expect(mockedOperational.updateSection).toHaveBeenCalledWith('audio', {enabled: false, confirmationRepeatSeconds: 12, alarmRepeatSeconds: 4}));
+
+        fireEvent.change(screen.getByLabelText('Erlaubter Temperaturanstieg'), {target: {value: '2.8'}});
+        fireEvent.click(screen.getAllByRole('button', {name: 'Speichern'})[3]);
+        await waitFor(() => expect(mockedOperational.updateSection).toHaveBeenCalledWith('heaterSafety', {offGracePeriodSeconds: 121, maxOffTemperatureRise: 2.8, riseObservationWindowSeconds: 31}));
+
+        fireEvent.change(screen.getByLabelText('Maximale Aufheizzeit'), {target: {value: '60'}});
+        fireEvent.click(screen.getAllByRole('button', {name: 'Speichern'})[4]);
+        await waitFor(() => expect(mockedOperational.updateSection).toHaveBeenCalledWith('processSafety', {heatingTimeoutMinutes: 60, confirmationTimeoutMinutes: 0}));
+    });
+
+    it('keeps other sections usable after a backend validation error', async () => {
+        mockedOperational.updateSection.mockRejectedValueOnce({response: {data: {error: {message: 'Backend-Validierung'}}}});
+        renderSettings(false);
+        await screen.findByDisplayValue('411');
+        fireEvent.click(screen.getAllByRole('button', {name: 'Speichern'})[1]);
+        expect(await screen.findByText('Backend-Validierung')).toBeInTheDocument();
+        expect(screen.getByLabelText('Lautsprecher')).toBeEnabled();
+    });
+
+    it('renders the automatically managed sensor id read-only', async () => {
+        render(<SettingsPage theme="default" setTheme={jest.fn()} debug={false} setDebug={jest.fn()} socketConnected temperatureSensor={{current: 20, health: 'OK', sensorId: '28-abcdef'}}/>);
+        expect(await screen.findByText('28-abcdef')).toBeInTheDocument();
+        expect(screen.queryByDisplayValue('28-abcdef')).not.toBeInTheDocument();
+    });
+
+    it('offers reset only while latched and keeps the alarm after a failed reset', async () => {
+        mockedHeaterSafety.get.mockResolvedValueOnce({state: 'HEATER_STUCK_ON', latched: true});
+        mockedHeaterSafety.reset.mockRejectedValueOnce(new Error('offline'));
+        renderSettings(false);
+        const reset = await screen.findByRole('button', {name: 'Sicherheitsalarm zurücksetzen'});
+        fireEvent.click(reset);
+        expect(await screen.findByText('Sicherheitsalarm konnte nicht zurückgesetzt werden.')).toBeInTheDocument();
+        expect(screen.getByText(/HEATER_STUCK_ON/)).toBeInTheDocument();
+        expect(reset).toBeEnabled();
     });
 });

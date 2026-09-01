@@ -1,7 +1,7 @@
 import {getBrewingStatusLabel, getConfirmButtonLabel, getConfirmationRequestViewModel, getConfirmationType, getCountdownValue, isBrewingProcessActive, shouldShowConfirmButton, shouldShowCountdown, shouldShowWaitingDialog} from './selectors';
 import {AlarmType, BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
 import {ConfirmStates} from '../../enums/eConfirmStates';
-import {isEquipmentAlarmActive} from './alarmDisplay';
+import {isEquipmentAlarmActive, isHeaterStuckOnAlarmActive} from './alarmDisplay';
 
 const makeStatus = (aPart: Partial<BrewingStatus>): BrewingStatus => ({
   elapsedTime: 0,
@@ -17,6 +17,11 @@ describe('brewing selectors', () => {
     expect(isEquipmentAlarmActive([{type: 'FUTURE_ALARM', active: true}])).toBe(false);
     expect(isEquipmentAlarmActive([{type: AlarmType.EQUIPMENT_ALARM, active: false}])).toBe(false);
     expect(isEquipmentAlarmActive([{type: AlarmType.EQUIPMENT_ALARM, active: true}])).toBe(true);
+  });
+  it('recognizes HEATER_STUCK_ON independently from the equipment alarm', () => {
+    expect(isHeaterStuckOnAlarmActive([{type: AlarmType.EQUIPMENT_ALARM, active: true}])).toBe(false);
+    expect(isHeaterStuckOnAlarmActive([{type: AlarmType.HEATER_STUCK_ON, active: false}])).toBe(false);
+    expect(isHeaterStuckOnAlarmActive([{type: AlarmType.HEATER_STUCK_ON, active: true}])).toBe(true);
   });
   it('derives an active brewing process from process.state ACTIVE only', () => {
     expect(isBrewingProcessActive(undefined)).toBe(false);

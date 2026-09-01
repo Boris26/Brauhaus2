@@ -240,3 +240,9 @@ interface TemperatureSensorRealtimeState {
 ```
 
 `running` is the controller-reported heater on/off state, while `actualOutputOn` is agitator hardware feedback. An alarm payload replaces the complete alarm collection. Sensor `health` values are controller-owned and must not be synthesized by the UI; `current: null` means that no valid measurement exists, while numeric zero is valid. These snapshots are the sole UI source of truth for physical heater feedback, agitator output, alarms, and sensor health. After disconnect, received snapshots are stale/unknown; REST process availability remains independent. The controller sends a fresh sensor snapshot after connect/reconnect, so the UI clears the previous sensor snapshot during connection changes and does not add polling. `GET /Agitator/Status` continues only to initialize editable agitator configuration, not as a live-state fallback. Deployment and reconnect snapshot behavior **Needs verification** with Braumeister #109 and two real clients.
+
+## Controller operational settings, heater safety, and push severity
+
+Brauhaus2 #230/#231 consumes the confirmed controller contract at `GET /Settings`, `GET /Settings/{section}`, and full-replacement `PUT /Settings/{section}` for `waterFilling`, `audio`, `processSafety`, and `heaterSafety`. Field names and units are documented in `docs/codex/interfaces.md`. The controller response to each PUT is authoritative; a section update must not modify another section and the UI must not supply defaults.
+
+The controller additionally provides `GET /Safety/Heater` and `POST /Safety/Heater/Reset`. The realtime alarm snapshot additively supports `HEATER_STUCK_ON` alongside `EQUIPMENT_ALARM`. Push payload severity is backend-owned and may be `INFO`, `WARNING`, or `ALARM`; missing severity remains a supported legacy payload. These additions are backward compatible and must not be synthesized from legacy overheat state or notification content.

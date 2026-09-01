@@ -33,7 +33,7 @@ import {completeWaterFill, createInitialRecipeWaterFillStatus, failWaterFill, in
 import {ProductionDialogs} from "./components/ProductionDialogs";
 import {ProductionTemperatureTimeline} from "./TemperatureTimeline/ProductionTemperatureTimeline";
 import {getDisplayedWaterLiters as selectDisplayedWaterLiters, getWaterLabel, getWaterTargetLiters, isRecipeWaterButtonDisabled as selectRecipeWaterButtonDisabled, isWaterFillingActive as selectWaterFillingActive, shouldIncludeSpargeAfterMashingOut as selectShouldIncludeSpargeAfterMashingOut, sanitizeLiters} from "./waterFill/recipeWaterFillSelectors";
-import {equipmentAlarmDisplay, isEquipmentAlarmActive} from '../../utils/brewingStatus/alarmDisplay';
+import {equipmentAlarmDisplay, heaterStuckOnAlarmDisplay, isEquipmentAlarmActive, isHeaterStuckOnAlarmActive} from '../../utils/brewingStatus/alarmDisplay';
 import {getConfirmationRequestViewModel} from '../../utils/brewingStatus/selectors';
 import {ConfirmStates} from '../../enums/eConfirmStates';
 import {AgitatorConfig, AgitatorMode, AgitatorRuntimeStatus} from '../../model/Agitator';
@@ -193,7 +193,10 @@ export class Production extends React.Component<ProductionProps, ProductionState
             this.loadAgitatorStatus();
         }
 
-        if (isEquipmentAlarmActive(getAlarmSnapshot(prevProps.realtimeState, prevProps.socketConnected)) && !isEquipmentAlarmActive(getAlarmSnapshot(this.props.realtimeState, this.props.socketConnected))) {
+        const previousAlarms = getAlarmSnapshot(prevProps.realtimeState, prevProps.socketConnected);
+        const currentAlarms = getAlarmSnapshot(this.props.realtimeState, this.props.socketConnected);
+        if ((isEquipmentAlarmActive(previousAlarms) && !isEquipmentAlarmActive(currentAlarms))
+            || (isHeaterStuckOnAlarmActive(previousAlarms) && !isHeaterStuckOnAlarmActive(currentAlarms))) {
             this.setState({equipmentAlarmDismissed: false});
         }
 
@@ -685,7 +688,8 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     isStartButtonDisabled = (): boolean => {
         const {selectedBeer} = this.props;
-        return isUndefined(selectedBeer) || !this.isControllerAvailable() || !isTemperatureSensorReady(this.props.realtimeState?.temperatureSensor, this.props.socketConnected) || this.state.brewingIsRunning || this.isBrewingStartRequestPending || !this.isControlBrewingStartAvailable();
+        const heaterSafetyAlarmActive = isHeaterStuckOnAlarmActive(getAlarmSnapshot(this.props.realtimeState, this.props.socketConnected));
+        return isUndefined(selectedBeer) || !this.isControllerAvailable() || !isTemperatureSensorReady(this.props.realtimeState?.temperatureSensor, this.props.socketConnected) || heaterSafetyAlarmActive || this.state.brewingIsRunning || this.isBrewingStartRequestPending || !this.isControlBrewingStartAvailable();
     }
 
     startBrewing = (): void => {
@@ -943,13 +947,20 @@ export class Production extends React.Component<ProductionProps, ProductionState
             return null;
         }
         const sensorReady = isTemperatureSensorReady(this.props.realtimeState?.temperatureSensor, this.props.socketConnected);
-        return <ProcessList displayMode="current" selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} remainingSeconds={this.state.displayedRemainingSeconds} confirmationPending={this.props.isConfirmPending} confirmationError={this.props.confirmError} onConfirmWaiting={this.confirmCurrentWaitingState} hopReminderName={this.state.showHopsDialog ? this.state.hopName : undefined} onCompleteHopReminder={this.confirmHopDialog} onStartBrewing={this.startBrewing} isStartBrewingDisabled={this.isStartButtonDisabled()} startBrewingWarning={!sensorReady ? `Brauvorgang kann nicht gestartet werden: ${getTemperatureSensorMessage(this.props.realtimeState?.temperatureSensor)}.` : undefined} />;
+        const heaterSafetyAlarmActive = isHeaterStuckOnAlarmActive(getAlarmSnapshot(this.props.realtimeState, this.props.socketConnected));
+        const startWarning = heaterSafetyAlarmActive
+            ? 'Brauvorgang kann wegen eines aktiven Heizungs-Sicherheitsalarms nicht gestartet werden.'
+            : !sensorReady ? `Brauvorgang kann nicht gestartet werden: ${getTemperatureSensorMessage(this.props.realtimeState?.temperatureSensor)}.` : undefined;
+        return <ProcessList displayMode="current" selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} remainingSeconds={this.state.displayedRemainingSeconds} confirmationPending={this.props.isConfirmPending} confirmationError={this.props.confirmError} onConfirmWaiting={this.confirmCurrentWaitingState} hopReminderName={this.state.showHopsDialog ? this.state.hopName : undefined} onCompleteHopReminder={this.confirmHopDialog} onStartBrewing={this.startBrewing} isStartBrewingDisabled={this.isStartButtonDisabled()} startBrewingWarning={startWarning} />;
     }
 
 
     render() {
         const {showFinishDialog} = this.state;
-        const equipmentAlarmActive = isEquipmentAlarmActive(getAlarmSnapshot(this.props.realtimeState, this.props.socketConnected));
+        const alarms = getAlarmSnapshot(this.props.realtimeState, this.props.socketConnected);
+        const heaterSafetyAlarmActive = isHeaterStuckOnAlarmActive(alarms);
+        const equipmentAlarmActive = isEquipmentAlarmActive(alarms);
+        const activeAlarmDisplay = heaterSafetyAlarmActive ? heaterStuckOnAlarmDisplay : equipmentAlarmDisplay;
         return (
             <div className="containerProduction ">
                 {this.props.isBrewingStatusStale && <div role="alert" className="production-stale-status">Controller nicht erreichbar – angezeigter Braustatus ist veraltet.</div>}
@@ -959,9 +970,9 @@ export class Production extends React.Component<ProductionProps, ProductionState
                     onConfirmFinish={this.confirmFinishDialog}
                     isSavingFinishedBrew={this.props.isAddingFinishedBrew}
                     finishedBrewSaveError={this.props.addFinishedBrewError}
-                    showEquipmentAlarmDialog={equipmentAlarmActive && !this.state.equipmentAlarmDismissed}
-                    equipmentAlarmTitle={equipmentAlarmDisplay.title}
-                    equipmentAlarmMessage={equipmentAlarmDisplay.message}
+                    showEquipmentAlarmDialog={(heaterSafetyAlarmActive || equipmentAlarmActive) && !this.state.equipmentAlarmDismissed}
+                    equipmentAlarmTitle={activeAlarmDisplay.title}
+                    equipmentAlarmMessage={activeAlarmDisplay.message}
                     onDismissEquipmentAlarm={() => this.setState({equipmentAlarmDismissed: true})}
                 />
 

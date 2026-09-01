@@ -62,11 +62,43 @@ describe('service-worker push handling', () => {
             data: expect.objectContaining({
                 url: '/production?step=6',
                 waitingFor: 'MASHING_OUT_CONFIRMATION',
-                serviceWorkerVersion: 'brauhaus-push-v2',
+                serviceWorkerVersion: 'brauhaus-push-v3',
             }),
         }));
         expect(waitUntil).toHaveBeenCalledTimes(1);
         await expect(waitUntil.mock.calls[0][0]).resolves.toBeUndefined();
+    });
+
+    it.each([
+        ['INFO', {}],
+        ['WARNING', { vibrate: [200, 100, 200] }],
+        ['ALARM', { requireInteraction: true, vibrate: [300, 100, 300, 100, 600] }],
+    ])('uses the backend-provided %s severity without deriving it', (severity, expectedOptions) => {
+        const { listeners, showNotification } = loadServiceWorker();
+
+        listeners.push({
+            data: { json: () => ({ title: 'Meldung', severity }) },
+            waitUntil: jest.fn(),
+        });
+
+        expect(showNotification).toHaveBeenCalledWith('Meldung', expect.objectContaining({
+            ...expectedOptions,
+            data: expect.objectContaining({ severity }),
+        }));
+    });
+
+    it('keeps legacy payloads without severity compatible', () => {
+        const { listeners, showNotification } = loadServiceWorker();
+
+        listeners.push({
+            data: { json: () => ({ title: 'Legacy-Meldung' }) },
+            waitUntil: jest.fn(),
+        });
+
+        const options = showNotification.mock.calls[0][1];
+        expect(options.data.severity).toBeUndefined();
+        expect(options.requireInteraction).toBeUndefined();
+        expect(options.vibrate).toBeUndefined();
     });
 
     it('shows a fallback notification for invalid payloads', () => {
