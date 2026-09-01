@@ -18,6 +18,7 @@ import {RecipeImportDialog} from './RecipeImportDialog';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import SaveIcon from '@mui/icons-material/Save';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
+import {AppAccordion, AppAccordionHeader} from '../../components/AppAccordion/AppAccordion';
 
 interface BeerFormProps {
     onSubmitBeer: (beer: BeerDTO) => void;
@@ -789,7 +790,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         }));
     };
 
-    handleSectionKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, section: BeerFormSection) => {
+    handleSectionKeyDown = (event: React.KeyboardEvent<HTMLElement>, section: BeerFormSection) => {
         if (event.key === 'Enter' || event.key === ' ') {
             event.preventDefault();
             this.toggleSection(section);
@@ -809,27 +810,31 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
     renderAccordionSection = (section: BeerFormSection, title: string, summary: string, content: React.ReactNode) => {
         const expanded = this.isSectionExpanded(section);
         const contentId = this.getSectionId(section);
+        const summaryId = `${contentId}-header`;
+        const hasError = this.sectionHasError(section);
+        const status = (hasError || summary) ? (
+            <span className="beer-accordion-meta">
+                {hasError && <span className="beer-accordion-error">Fehler</span>}
+                {summary && <span>{summary}</span>}
+            </span>
+        ) : undefined;
+
         return (
-            <section className={`beer-accordion ${expanded ? 'expanded' : ''} ${this.sectionHasError(section) ? 'has-error' : ''}`}>
-                <button
-                    type="button"
-                    className="beer-accordion-header"
-                    aria-expanded={expanded}
-                    aria-controls={contentId}
-                    onClick={() => this.toggleSection(section)}
-                    onKeyDown={(event) => this.handleSectionKeyDown(event, section)}
-                >
-                    <span className="beer-accordion-title">{title}</span>
-                    <span className="beer-accordion-meta">
-                        {this.sectionHasError(section) && <span className="beer-accordion-error">Fehler</span>}
-                        {summary && <span>{summary}</span>}
-                        <span aria-hidden="true" className="beer-accordion-chevron">{expanded ? '▼' : '▶'}</span>
-                    </span>
-                </button>
-                <div id={contentId} className="beer-accordion-content" hidden={!expanded}>
-                    {content}
-                </div>
-            </section>
+            <AppAccordion
+                component="section"
+                expanded={expanded}
+                onChange={() => this.toggleSection(section)}
+                className={`beer-form-accordion ${hasError ? 'has-error' : ''}`}
+                summary={<AppAccordionHeader title={title} status={status} />}
+                summaryProps={{
+                    id: summaryId,
+                    'aria-controls': contentId,
+                    onKeyDown: (event) => this.handleSectionKeyDown(event, section),
+                }}
+                detailsProps={{id: contentId, 'aria-labelledby': summaryId}}
+            >
+                {content}
+            </AppAccordion>
         );
     };
 
@@ -955,7 +960,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 </div>
                 {(missingMalts.length > 0 || missingHops.length > 0 || missingYeasts.length > 0) && <div className="missing-ingredients-warning">{missingMalts.length > 0 && <div>Fehlende Malze: {missingMalts.join(', ')}</div>}{missingHops.length > 0 && <div>Fehlende Hopfen: {missingHops.join(', ')}</div>}{missingYeasts.length > 0 && <div>Fehlende Hefen: {missingYeasts.join(', ')}</div>}</div>}
                 {info && <div className="beer-form-info">{info}</div>}
-                <div className="beer-form-sections">
+                <div className="beer-form-sections app-accordion-group">
                     {this.renderAccordionSection('basic', 'Grunddaten', '', basicContent)}
                     {this.renderAccordionSection('brewing', 'Brauwasser', '', brewingContent)}
                     {this.renderAccordionSection('mash', 'Brauprozess', `${fermentationSteps.length} Rasten`, mashContent)}

@@ -66,6 +66,6 @@ export const AppAccordionHeader = ({icon, title, description, status}: AppAccord
             <span className="app-accordion-title">{title}</span>
             {description && <span className="app-accordion-description">{description}</span>}
         </span>
-        {status && <span className="app-accordion-status">{status}</span>}
+        {status && <span className={`app-accordion-status ${icon ? '' : 'app-accordion-status--without-icon'}`.trim()}>{status}</span>}
     </>
 );

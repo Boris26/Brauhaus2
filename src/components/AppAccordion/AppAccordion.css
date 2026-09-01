@@ -58,5 +58,6 @@
     .app-accordion-summary .MuiAccordionSummary-content { align-items: flex-start; flex-wrap: wrap; gap: var(--spacing-sm); }
     .app-accordion-heading { flex-basis: calc(100% - 2rem - var(--spacing-sm)); }
     .app-accordion-status { margin-left: calc(1.5rem + var(--spacing-sm)); }
+    .app-accordion-status--without-icon { margin-left: 0; }
     .app-accordion-details.MuiAccordionDetails-root { padding: var(--spacing-md); }
 }

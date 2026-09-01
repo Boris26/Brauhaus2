@@ -107,8 +107,7 @@
 .beer-form input:focus,
 .beer-form select:focus,
 .beer-form textarea:focus,
-.beer-accordion-header:focus-visible,
-.beer-form button:focus-visible {
+.beer-form button:not(.app-accordion-summary):focus-visible {
     outline: 2px solid var(--color-accent);
     outline-offset: 2px;
 }
@@ -135,46 +134,13 @@
 }
 
 .beer-form-sections {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
     min-width: 0;
 }
 
-.beer-accordion {
-    border: 1px solid var(--color-border-strong);
-    border-radius: var(--border-radius-large);
-    background: var(--color-surface-deep);
-    overflow: visible;
-}
-
-.beer-accordion.expanded {
-    box-shadow: 0 1px 5px var(--shadow-secondary);
-}
-
-.beer-accordion.has-error {
+.beer-form-accordion.has-error.MuiAccordion-root {
     border-color: var(--color-error-highlight);
 }
 
-.beer-accordion-header {
-    width: 100%;
-    height: 30px;
-    min-height: 30px;
-    border: none;
-    background: var(--color-accent);
-    color: var(--color-black);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    padding: 4px 12px;
-    cursor: pointer;
-    font: inherit;
-    font-weight: 500;
-    text-align: left;
-}
-
-.beer-accordion-title,
 .beer-accordion-meta {
     min-width: 0;
     overflow-wrap: anywhere;
@@ -185,7 +151,7 @@
     align-items: center;
     justify-content: flex-end;
     gap: 10px;
-    color: var(--color-dark-bg);
+    color: var(--color-text-secondary);
     font-weight: 500;
     flex-wrap: wrap;
 }
@@ -193,13 +159,8 @@
 .beer-accordion-error {
     color: var(--color-error-highlight);
     background: var(--color-dark-bg);
-    border-radius: 999px;
+    border-radius: var(--border-radius-pill);
     padding: var(--spacing-xs) var(--spacing-sm);
-}
-
-.beer-accordion-content {
-    padding: 10px 12px 12px;
-    min-width: 0;
 }
 
 .table-wrapper {
