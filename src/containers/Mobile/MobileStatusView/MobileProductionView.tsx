@@ -9,7 +9,9 @@ import {ConfirmStates} from '../../../enums/eConfirmStates';
 import {ControlConfirmationNotice} from '../../Production/components/InlineProcessNotice';
 import {getAgitatorActive, getHeatingActive} from '../../Production/utils/productionStatus';
 import {RealtimeControllerState} from '../../../model/RealtimeControllerState';
-import {formatTemperature} from '../../../utils/temperatureSensor';
+import {formatTemperature, getTemperatureSensorMessage} from '../../../utils/temperatureSensor';
+import {Warning} from '../../../model/Warning';
+import {getWarningHeaderText} from '../../../utils/warningDisplay';
 
 interface MobileProductionViewProps {
     temperature: number;
@@ -20,6 +22,8 @@ interface MobileProductionViewProps {
     isBrewingStatusStale: boolean;
     realtimeState?: RealtimeControllerState;
     socketConnected?: boolean;
+    warnings?: Warning[];
+    warningsReceived?: boolean;
 }
 
 interface MobileProductionViewState {
@@ -88,6 +92,15 @@ export class MobileProductionView extends React.Component<MobileProductionViewPr
         const { activeTab } = this.state;
         const statusText = this.props.isBrewingStatusStale ? 'Status veraltet – Controller nicht erreichbar' : getBrewingStatusLabel(brewingStatus);
         const confirmationRequest = getConfirmationRequestViewModel(brewingStatus);
+        const warningText = this.props.socketConnected && this.props.warningsReceived
+            ? getWarningHeaderText(this.props.warnings)
+            : undefined;
+        const temperatureSensor = this.props.realtimeState?.temperatureSensor;
+        const sensorWarning = !warningText && this.props.socketConnected && temperatureSensor?.health !== 'OK'
+            ? `⚠ ${getTemperatureSensorMessage(temperatureSensor)}`
+            : undefined;
+        const globalWarningText = warningText ?? sensorWarning;
+
         return (
             <div
                 className="mobile-production-container"
@@ -95,6 +108,11 @@ export class MobileProductionView extends React.Component<MobileProductionViewPr
                 onTouchMove={this.handleTouchMove}
                 onTouchEnd={this.handleTouchEnd}
             >
+                {globalWarningText && (
+                    <div className="mobile-global-warning" role="status">
+                        {globalWarningText}
+                    </div>
+                )}
                 <div className="mobile-tabs">
                     <button className={activeTab === 'status' ? 'active' : ''} onClick={() => this.handleTabChange('status')}>Status</button>
                     <button className={activeTab === 'finishedBrew' ? 'active' : ''} onClick={() => this.handleTabChange('finishedBrew')}>Aktiver Sud</button>
