@@ -778,11 +778,11 @@ export namespace ProductionActions {
     export interface AgitatorDefaultsChanged { readonly type: ActionTypes.AGITATOR_DEFAULTS_CHANGED; payload: AgitatorSettings; }
     export interface BrewRecoveryStateChanged { readonly type: ActionTypes.BREW_RECOVERY_STATE_CHANGED; payload: BrewRecoverySnapshot; }
     export interface ResumeBrewRecovery { readonly type: ActionTypes.RESUME_BREW_RECOVERY; }
-    export interface ResumeBrewRecoverySuccess { readonly type: ActionTypes.RESUME_BREW_RECOVERY_SUCCESS; }
-    export interface ResumeBrewRecoveryFailure { readonly type: ActionTypes.RESUME_BREW_RECOVERY_FAILURE; payload: {error: string}; }
+    export interface ResumeBrewRecoverySuccess { readonly type: ActionTypes.RESUME_BREW_RECOVERY_SUCCESS; payload: {requestGeneration: number}; }
+    export interface ResumeBrewRecoveryFailure { readonly type: ActionTypes.RESUME_BREW_RECOVERY_FAILURE; payload: {error: string; requestGeneration: number}; }
     export interface DiscardBrewRecovery { readonly type: ActionTypes.DISCARD_BREW_RECOVERY; }
-    export interface DiscardBrewRecoverySuccess { readonly type: ActionTypes.DISCARD_BREW_RECOVERY_SUCCESS; }
-    export interface DiscardBrewRecoveryFailure { readonly type: ActionTypes.DISCARD_BREW_RECOVERY_FAILURE; payload: {error: string}; }
+    export interface DiscardBrewRecoverySuccess { readonly type: ActionTypes.DISCARD_BREW_RECOVERY_SUCCESS; payload: {requestGeneration: number}; }
+    export interface DiscardBrewRecoveryFailure { readonly type: ActionTypes.DISCARD_BREW_RECOVERY_FAILURE; payload: {error: string; requestGeneration: number}; }
 
     export type AllProductionActions =
         GetTemperatures |
@@ -996,9 +996,9 @@ export namespace ProductionActions {
     export const agitatorDefaultsChanged = (payload: AgitatorSettings): AgitatorDefaultsChanged => ({type: ActionTypes.AGITATOR_DEFAULTS_CHANGED, payload});
     export const brewRecoveryStateChanged = (payload: BrewRecoverySnapshot): BrewRecoveryStateChanged => ({type: ActionTypes.BREW_RECOVERY_STATE_CHANGED, payload});
     export const resumeBrewRecovery = (): ResumeBrewRecovery => ({type: ActionTypes.RESUME_BREW_RECOVERY});
-    export const resumeBrewRecoverySuccess = (): ResumeBrewRecoverySuccess => ({type: ActionTypes.RESUME_BREW_RECOVERY_SUCCESS});
-    export const resumeBrewRecoveryFailure = (error: string): ResumeBrewRecoveryFailure => ({type: ActionTypes.RESUME_BREW_RECOVERY_FAILURE, payload: {error}});
+    export const resumeBrewRecoverySuccess = (requestGeneration: number): ResumeBrewRecoverySuccess => ({type: ActionTypes.RESUME_BREW_RECOVERY_SUCCESS, payload: {requestGeneration}});
+    export const resumeBrewRecoveryFailure = (error: string, requestGeneration: number): ResumeBrewRecoveryFailure => ({type: ActionTypes.RESUME_BREW_RECOVERY_FAILURE, payload: {error, requestGeneration}});
     export const discardBrewRecovery = (): DiscardBrewRecovery => ({type: ActionTypes.DISCARD_BREW_RECOVERY});
-    export const discardBrewRecoverySuccess = (): DiscardBrewRecoverySuccess => ({type: ActionTypes.DISCARD_BREW_RECOVERY_SUCCESS});
-    export const discardBrewRecoveryFailure = (error: string): DiscardBrewRecoveryFailure => ({type: ActionTypes.DISCARD_BREW_RECOVERY_FAILURE, payload: {error}});
+    export const discardBrewRecoverySuccess = (requestGeneration: number): DiscardBrewRecoverySuccess => ({type: ActionTypes.DISCARD_BREW_RECOVERY_SUCCESS, payload: {requestGeneration}});
+    export const discardBrewRecoveryFailure = (error: string, requestGeneration: number): DiscardBrewRecoveryFailure => ({type: ActionTypes.DISCARD_BREW_RECOVERY_FAILURE, payload: {error, requestGeneration}});
 }
