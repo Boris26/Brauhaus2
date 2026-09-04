@@ -90,7 +90,7 @@ export const initialProductionState: ProductionReducerState = {
     isBrewingStatusStale: false,
     socketConnection: {connected: false},
     realtimeState: {alarms: [], alarmsReceived: false},
-    brewRecovery: {available: false, recovery: null, resumePending: false, discardPending: false}
+    brewRecovery: {available: false, recovery: null, resumePending: false, discardPending: false, requestGeneration: 0}
 };
 
 const productionReducer = (
@@ -212,25 +212,36 @@ const productionReducer = (
             if (aState.brewRecovery.available === next.available
                 && JSON.stringify(aState.brewRecovery.recovery) === JSON.stringify(next.recovery)
                 && aState.brewRecovery.error === next.error) return aState;
-            return {...aState, brewRecovery: {...aState.brewRecovery, ...next, resumePending: false, discardPending: false, error: next.error}};
+            return {...aState, brewRecovery: {...aState.brewRecovery, ...next, resumePending: false, discardPending: false,
+                    requestGeneration: aState.brewRecovery.requestGeneration + 1, error: next.error, errorOperation: undefined}};
         }
         case ProductionActions.ActionTypes.RESUME_BREW_RECOVERY:
-            if (aState.brewRecovery.resumePending) return aState;
-            return {...aState, brewRecovery: {...aState.brewRecovery, resumePending: true, error: undefined}};
+            if (!aState.brewRecovery.available || aState.brewRecovery.resumePending || aState.brewRecovery.discardPending) return aState;
+            return {...aState, brewRecovery: {...aState.brewRecovery, resumePending: true,
+                    requestGeneration: aState.brewRecovery.requestGeneration + 1, error: undefined, errorOperation: undefined}};
         case ProductionActions.ActionTypes.RESUME_BREW_RECOVERY_SUCCESS:
-            return {...aState, brewRecovery: {...aState.brewRecovery, resumePending: false, error: undefined}};
+            if (aAction.payload.requestGeneration !== aState.brewRecovery.requestGeneration) return aState;
+            // The command acknowledgement is not proof that the process runs.
+            return aState;
         case ProductionActions.ActionTypes.RESUME_BREW_RECOVERY_FAILURE:
-            return {...aState, brewRecovery: {...aState.brewRecovery, resumePending: false, error: aAction.payload.error}};
+            if (aAction.payload.requestGeneration !== aState.brewRecovery.requestGeneration || !aState.brewRecovery.available) return aState;
+            return {...aState, brewRecovery: {...aState.brewRecovery, resumePending: false, error: aAction.payload.error, errorOperation: 'resume'}};
         case ProductionActions.ActionTypes.DISCARD_BREW_RECOVERY:
-            if (aState.brewRecovery.discardPending) return aState;
-            return {...aState, brewRecovery: {...aState.brewRecovery, discardPending: true, error: undefined}};
+            if (!aState.brewRecovery.available || aState.brewRecovery.resumePending || aState.brewRecovery.discardPending) return aState;
+            return {...aState, brewRecovery: {...aState.brewRecovery, discardPending: true,
+                    requestGeneration: aState.brewRecovery.requestGeneration + 1, error: undefined, errorOperation: undefined}};
         case ProductionActions.ActionTypes.DISCARD_BREW_RECOVERY_SUCCESS:
-            return {...aState, brewRecovery: {available: false, recovery: null, resumePending: false, discardPending: false}};
+            if (aAction.payload.requestGeneration !== aState.brewRecovery.requestGeneration) return aState;
+            return {...aState, brewRecovery: {available: false, recovery: null, resumePending: false, discardPending: false,
+                    requestGeneration: aState.brewRecovery.requestGeneration + 1}};
         case ProductionActions.ActionTypes.DISCARD_BREW_RECOVERY_FAILURE:
-            return {...aState, brewRecovery: {...aState.brewRecovery, discardPending: false, error: aAction.payload.error}};
+            if (aAction.payload.requestGeneration !== aState.brewRecovery.requestGeneration || !aState.brewRecovery.available) return aState;
+            return {...aState, brewRecovery: {...aState.brewRecovery, discardPending: false, error: aAction.payload.error, errorOperation: 'discard'}};
         case ProductionActions.ActionTypes.BREW_SESSION_RUNNING_RECEIVED:
-            if (!aState.brewRecovery.available && !aState.brewRecovery.recovery && !aState.brewRecovery.error) return aState;
-            return {...aState, brewRecovery: {available: false, recovery: null, resumePending: false, discardPending: false}};
+            if (!aState.brewRecovery.available && !aState.brewRecovery.recovery && !aState.brewRecovery.resumePending
+                && !aState.brewRecovery.discardPending && !aState.brewRecovery.error) return aState;
+            return {...aState, brewRecovery: {available: false, recovery: null, resumePending: false, discardPending: false,
+                    requestGeneration: aState.brewRecovery.requestGeneration + 1}};
         case ProductionActions.ActionTypes.WEBSOCKET_DISCONNECT: {
             return {...aState, socketConnection: {connected: false}, realtimeState: {...aState.realtimeState, temperatureSensor: undefined}};
         }

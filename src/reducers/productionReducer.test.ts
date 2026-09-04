@@ -212,14 +212,29 @@ describe('productionReducer brew recovery lifecycle', () => {
         const active = productionReducer(initialProductionState, ProductionActions.brewRecoveryStateChanged(snapshot));
         const resume = productionReducer(active, ProductionActions.resumeBrewRecovery());
         expect(resume.brewRecovery.resumePending).toBe(true);
-        expect(productionReducer(resume, ProductionActions.resumeBrewRecoveryFailure('HTTP 409')).brewRecovery).toMatchObject({available: true, resumePending: false, error: 'HTTP 409'});
+        expect(productionReducer(resume, ProductionActions.resumeBrewRecoveryFailure('HTTP 409', resume.brewRecovery.requestGeneration)).brewRecovery).toMatchObject({available: true, resumePending: false, error: 'HTTP 409'});
         const discard = productionReducer(active, ProductionActions.discardBrewRecovery());
         expect(discard.brewRecovery.discardPending).toBe(true);
-        expect(productionReducer(discard, ProductionActions.discardBrewRecoveryFailure('offline')).brewRecovery).toMatchObject({available: true, discardPending: false, error: 'offline'});
+        expect(productionReducer(discard, ProductionActions.discardBrewRecoveryFailure('offline', discard.brewRecovery.requestGeneration)).brewRecovery).toMatchObject({available: true, discardPending: false, error: 'offline'});
     });
 
     it('clears stale recovery whenever brew-session-running is received', () => {
         const active = productionReducer(initialProductionState, ProductionActions.brewRecoveryStateChanged(snapshot));
-        expect(productionReducer(active, ProductionActions.brewSessionRunningReceived()).brewRecovery).toEqual({available: false, recovery: null, resumePending: false, discardPending: false});
+        expect(productionReducer(active, ProductionActions.brewSessionRunningReceived()).brewRecovery).toMatchObject({available: false, recovery: null, resumePending: false, discardPending: false});
+    });
+
+    it('ignores stale HTTP failures after a socket transition won the request race', () => {
+        const active = productionReducer(initialProductionState, ProductionActions.brewRecoveryStateChanged(snapshot));
+        const pending = productionReducer(active, ProductionActions.discardBrewRecovery());
+        const generation = pending.brewRecovery.requestGeneration;
+        const socketCleared = productionReducer(pending, ProductionActions.brewRecoveryStateChanged({available: false, recovery: null}));
+        const running = productionReducer(socketCleared, ProductionActions.brewSessionRunningReceived());
+        expect(productionReducer(running, ProductionActions.discardBrewRecoveryFailure('HTTP 409', generation))).toBe(running);
+    });
+
+    it('keeps resume pending after HTTP acknowledgement until a socket lifecycle event arrives', () => {
+        const active = productionReducer(initialProductionState, ProductionActions.brewRecoveryStateChanged(snapshot));
+        const pending = productionReducer(active, ProductionActions.resumeBrewRecovery());
+        expect(productionReducer(pending, ProductionActions.resumeBrewRecoverySuccess(pending.brewRecovery.requestGeneration))).toBe(pending);
     });
 });

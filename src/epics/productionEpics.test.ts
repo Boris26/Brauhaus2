@@ -237,7 +237,7 @@ describe('brew recovery command epics', () => {
   const recoveryState = (beers?: Beer[]): any => ({
     ...restoreState(beers),
     productionReducer: {...initialProductionState, brewRecovery: {
-      available: true, resumePending: false, discardPending: false,
+      available: true, resumePending: false, discardPending: false, requestGeneration: 0,
       recovery: {version: 1, brewSession: {beerId: 'beer-1', plannedVolume: 25, plannedBrewhouseEfficiency: 70}, status: {}, updatedAt: '2026-01-01T00:00:00Z'},
     }},
   });
@@ -256,7 +256,7 @@ describe('brew recovery command epics', () => {
     await flushPromises();
     expect(mockedBeerRepository.getBeers).not.toHaveBeenCalled();
     expect(mockedProductionRepository.resumeBrewRecovery).toHaveBeenCalledWith(expect.objectContaining({beerId: 'beer-1', plannedVolume: 25, plannedBrewhouseEfficiency: 70, MashupTemperature: 52}));
-    expect(emitted).toEqual([ProductionActions.resumeBrewRecoverySuccess()]);
+    expect(emitted).toEqual([ProductionActions.resumeBrewRecoverySuccess(0)]);
     expect(emitted).not.toEqual(expect.arrayContaining([expect.objectContaining({type: ProductionActions.ActionTypes.SEND_BREWING_DATA}), ProductionActions.startPolling()]));
     expect(mockedProductionRepository.startBrewing).not.toHaveBeenCalled();
     subscription.unsubscribe();
@@ -286,7 +286,7 @@ describe('brew recovery command epics', () => {
     actions.next(ProductionActions.resumeBrewRecovery()); actions.next(ProductionActions.resumeBrewRecovery());
     expect(mockedProductionRepository.resumeBrewRecovery).toHaveBeenCalledTimes(1);
     deferred.reject(new Error('HTTP 409')); await flushPromises();
-    expect(emitted[0]).toEqual(ProductionActions.resumeBrewRecoveryFailure('HTTP 409'));
+    expect(emitted[0]).toEqual(ProductionActions.resumeBrewRecoveryFailure('HTTP 409', 0));
     sub.unsubscribe();
 
     const discardDeferred = createDeferred<void>(); mockedProductionRepository.discardBrewRecovery.mockReturnValue(discardDeferred.promise);
@@ -295,7 +295,7 @@ describe('brew recovery command epics', () => {
     discardActions.next(ProductionActions.discardBrewRecovery()); discardActions.next(ProductionActions.discardBrewRecovery());
     expect(mockedProductionRepository.discardBrewRecovery).toHaveBeenCalledTimes(1);
     discardDeferred.reject(new Error('offline')); await flushPromises();
-    expect(discarded).toEqual([ProductionActions.discardBrewRecoveryFailure('offline')]);
+    expect(discarded).toEqual([ProductionActions.discardBrewRecoveryFailure('offline', 0)]);
     discardSub.unsubscribe();
   });
 });

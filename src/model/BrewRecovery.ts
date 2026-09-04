@@ -35,5 +35,8 @@ export interface BrewRecoverySnapshot {
 export interface BrewRecoveryState extends BrewRecoverySnapshot {
     resumePending: boolean;
     discardPending: boolean;
+    /** Invalidates HTTP results when a newer socket snapshot wins the race. */
+    requestGeneration: number;
+    errorOperation?: 'resume' | 'discard';
     error?: string;
 }

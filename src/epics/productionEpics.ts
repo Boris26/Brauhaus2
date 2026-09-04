@@ -242,42 +242,48 @@ export const restoreBrewSessionEpic$ = (action$: any, state$: {value: RootState}
 export const resumeBrewRecoveryEpic$ = (action$: any, state$: {value: RootState}) =>
   action$.pipe(
     ofType(ProductionActions.ActionTypes.RESUME_BREW_RECOVERY),
+    filter(() => !state$.value.productionReducer.brewRecovery.discardPending),
     exhaustMap(() => {
+      const requestGeneration = state$.value.productionReducer.brewRecovery.requestGeneration;
       const envelope = state$.value.productionReducer.brewRecovery.recovery;
       if (!state$.value.productionReducer.brewRecovery.available || !envelope || !isValidBrewSession(envelope.brewSession)) {
-        return of(ProductionActions.resumeBrewRecoveryFailure('Die gespeicherten Recovery- oder Skalierungsdaten sind ungültig.'));
+        return of(ProductionActions.resumeBrewRecoveryFailure('Die gespeicherten Recovery- oder Skalierungsdaten sind ungültig.', requestGeneration));
       }
       return resolveBrewSessionBeer$(envelope.brewSession, state$).pipe(
         switchMap(({beer, beers, fetched}) => {
-          if (!beer) return of(ProductionActions.resumeBrewRecoveryFailure(`Das Bier des unterbrochenen Brauvorgangs (${envelope.brewSession.beerId}) wurde nicht gefunden.`));
+          if (!beer) return of(ProductionActions.resumeBrewRecoveryFailure(`Das Bier des unterbrochenen Brauvorgangs (${envelope.brewSession.beerId}) wurde nicht gefunden.`, requestGeneration));
           const reconstructed = BeerRecipeScaler.scale({
             beer, volume: envelope.brewSession.plannedVolume,
             brewhouseEfficiency: envelope.brewSession.plannedBrewhouseEfficiency,
           });
           const mapped = mapBeerToBrewingData(reconstructed);
           if (!mapped.ok || !mapped.brewingData) {
-            return of(ProductionActions.resumeBrewRecoveryFailure(mapped.error ?? 'Das Rezept konnte nicht für die Fortsetzung aufbereitet werden.'));
+            return of(ProductionActions.resumeBrewRecoveryFailure(mapped.error ?? 'Das Rezept konnte nicht für die Fortsetzung aufbereitet werden.', requestGeneration));
           }
           return from(ProductionRepository.resumeBrewRecovery(mapped.brewingData)).pipe(
             mergeMap(() => from([
               ...(fetched ? [BeerActions.getBeersSuccess(beers)] : []),
-              ProductionActions.resumeBrewRecoverySuccess(),
+              ProductionActions.resumeBrewRecoverySuccess(requestGeneration),
             ])),
-            catchError((error) => of(ProductionActions.resumeBrewRecoveryFailure(errorMessage(error, 'Der Brauvorgang konnte nicht fortgesetzt werden.'))))
+            catchError((error) => of(ProductionActions.resumeBrewRecoveryFailure(errorMessage(error, 'Der Brauvorgang konnte nicht fortgesetzt werden.'), requestGeneration)))
           );
         }),
-        catchError((error) => of(ProductionActions.resumeBrewRecoveryFailure(errorMessage(error, 'Das Bier konnte nicht geladen werden.'))))
+        catchError((error) => of(ProductionActions.resumeBrewRecoveryFailure(errorMessage(error, 'Das Bier konnte nicht geladen werden.'), requestGeneration)))
       );
     })
   );
 
-export const discardBrewRecoveryEpic$ = (action$: any) =>
+export const discardBrewRecoveryEpic$ = (action$: any, state$: {value: RootState}) =>
   action$.pipe(
     ofType(ProductionActions.ActionTypes.DISCARD_BREW_RECOVERY),
-    exhaustMap(() => from(ProductionRepository.discardBrewRecovery()).pipe(
-      map(() => ProductionActions.discardBrewRecoverySuccess()),
-      catchError((error) => of(ProductionActions.discardBrewRecoveryFailure(errorMessage(error, 'Der gespeicherte Brauvorgang konnte nicht verworfen werden.'))))
-    ))
+    filter(() => !state$.value.productionReducer.brewRecovery.resumePending),
+    exhaustMap(() => {
+      const requestGeneration = state$.value.productionReducer.brewRecovery.requestGeneration;
+      return from(ProductionRepository.discardBrewRecovery()).pipe(
+        map(() => ProductionActions.discardBrewRecoverySuccess(requestGeneration)),
+        catchError((error) => of(ProductionActions.discardBrewRecoveryFailure(errorMessage(error, 'Der gespeicherte Brauvorgang konnte nicht verworfen werden.'), requestGeneration)))
+      );
+    })
   );
 
 export const sendBrewingDataEpic$ = (action$: any, state$: {value: RootState}) =>
