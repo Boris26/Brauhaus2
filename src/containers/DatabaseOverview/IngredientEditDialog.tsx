@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from "react";
-import {Alert, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, TextField} from "@mui/material";
+import {Alert, Button, CircularProgress, TextField} from "@mui/material";
+import AppDialog from '../../components/AppDialog/AppDialog';
 
 export type IngredientKind = "malt" | "hop" | "yeast" | "additional";
 export interface IngredientEditValue { id: string | number; name: string; description?: string; ebc?: number; alpha?: number; type?: string; evg?: number; temperature?: number; }
@@ -44,19 +45,14 @@ export const IngredientEditDialog = ({kind, value, open, loading, backendError, 
     };
     const field = (name: string, label: string, numeric = false) => <TextField fullWidth margin="dense" name={name} label={label} value={form[name] ?? ""} onChange={update(name)} error={Boolean(errors[name])} helperText={errors[name]} type={numeric ? "number" : "text"} inputProps={numeric ? {step: "any"} : undefined}/>;
 
-    return <Dialog open={open} onClose={loading ? undefined : onCancel} fullWidth maxWidth="sm" aria-labelledby="ingredient-edit-title">
-        <DialogTitle id="ingredient-edit-title">{titles[kind]}</DialogTitle>
-        <DialogContent>
+    return <AppDialog open={open} onClose={onCancel} disableClose={loading} title={titles[kind]} variant={backendError ? 'error' : 'info'}
+        actions={<><Button onClick={onCancel} disabled={loading}>Abbrechen</Button>
+            <Button color="primary" variant="contained" onClick={submit} disabled={loading}>{loading ? <><CircularProgress size={18} sx={{mr: 1}}/>Speichern</> : "Speichern"}</Button></>}>
             {backendError && <Alert severity="error" sx={{mb: 1}}>{backendError}</Alert>}
             {field("name", "Name")}
             {field("description", "Beschreibung")}
             {kind === "malt" && field("ebc", "EBC", true)}
             {kind === "hop" && <>{field("type", "Typ")}{field("alpha", "Alpha %", true)}</>}
             {kind === "yeast" && <>{field("evg", "EVG %", true)}{field("temperature", "Temperatur °C", true)}{field("type", "Typ")}</>}
-        </DialogContent>
-        <DialogActions>
-            <Button onClick={onCancel} disabled={loading}>Abbrechen</Button>
-            <Button variant="contained" onClick={submit} disabled={loading}>{loading ? <><CircularProgress size={18} sx={{mr: 1}}/>Speichern</> : "Speichern"}</Button>
-        </DialogActions>
-    </Dialog>;
+    </AppDialog>;
 };

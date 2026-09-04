@@ -1,8 +1,12 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography} from '@mui/material';
+import {Alert, Button, LinearProgress, Typography} from '@mui/material';
+import PlayArrowRoundedIcon from '@mui/icons-material/PlayArrowRounded';
+import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import {useDispatch, useSelector} from 'react-redux';
 import {BeerActions, ProductionActions} from '../../actions/actions';
 import type {RootState} from '../../reducers/rootReducer';
+import AppDialog from '../AppDialog/AppDialog';
+import './BrewRecoveryDialog.css';
 
 const minutes = (seconds?: number): number => Math.max(0, Math.round((Number.isFinite(seconds) ? seconds! : 0) / 60));
 
@@ -18,8 +22,12 @@ const BrewRecoveryDialog: React.FC = () => {
     const [confirmDiscard, setConfirmDiscard] = useState(false);
     const requestedBeerId = useRef<string | undefined>(undefined);
     const updatedAt = envelope?.updatedAt && !Number.isNaN(Date.parse(envelope.updatedAt))
-        ? new Intl.DateTimeFormat(undefined, {dateStyle: 'medium', timeStyle: 'medium'}).format(new Date(envelope.updatedAt))
+        ? new Intl.DateTimeFormat('de-DE', {day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'}).format(new Date(envelope.updatedAt)).replace(',', ' ·')
         : envelope?.updatedAt ?? 'Nicht verfügbar';
+    const elapsedMinutes = minutes(step?.elapsedTime);
+    const durationMinutes = minutes(step?.duration);
+    const remainingMinutes = minutes(step?.remainingTime);
+    const progress = step?.duration && step.duration > 0 ? Math.min(100, Math.max(0, (Number(step.elapsedTime) || 0) / step.duration * 100)) : 0;
 
     useEffect(() => {
         if (!recoveryState.available) setConfirmDiscard(false);
@@ -33,21 +41,36 @@ const BrewRecoveryDialog: React.FC = () => {
     }, [beer, beers, dispatch, session?.beerId]);
 
     return (
-        <Dialog open={recoveryState.available} maxWidth="sm" fullWidth disableEscapeKeyDown>
-            <DialogTitle>{confirmDiscard ? 'Brauvorgang wirklich verwerfen?' : 'Unterbrochener Brauvorgang gefunden'}</DialogTitle>
-            <DialogContent>
+        <AppDialog open={recoveryState.available} variant={confirmDiscard ? 'confirm' : 'recovery'} disableClose
+            title={confirmDiscard ? 'Brauvorgang wirklich verwerfen?' : 'Unterbrochener Brauvorgang gefunden'}
+            description={!confirmDiscard ? 'Der letzte Brauvorgang wurde nicht regulär beendet.' : undefined}
+            actions={confirmDiscard ? <>
+                <Button disabled={pending} onClick={() => setConfirmDiscard(false)}>Abbrechen</Button>
+                <Button color="error" variant="outlined" disabled={pending} startIcon={<DeleteOutlineRoundedIcon/>}
+                        onClick={() => dispatch(ProductionActions.discardBrewRecovery())}>
+                    {recoveryState.discardPending ? 'Brauvorgang wird verworfen …' : 'Brauvorgang verwerfen'}
+                </Button>
+            </> : <>
+                <Button color="error" variant="outlined" disabled={pending} startIcon={<DeleteOutlineRoundedIcon/>}
+                        onClick={() => setConfirmDiscard(true)}>Brauvorgang verwerfen</Button>
+                <Button color="primary" variant="contained" disabled={pending || !envelope} startIcon={<PlayArrowRoundedIcon/>}
+                        onClick={() => dispatch(ProductionActions.resumeBrewRecovery())}>
+                    {recoveryState.resumePending ? 'Brauvorgang wird wiederhergestellt …' : 'Brauvorgang fortsetzen'}
+                </Button>
+            </>}>
                 {confirmDiscard ? <Typography paragraph>
                     Der gespeicherte Fortschritt dieses unterbrochenen Brauvorgangs wird gelöscht und kann anschließend nicht mehr fortgesetzt werden.
                 </Typography> : envelope ? <>
-                    <Typography paragraph>Der letzte Brauvorgang wurde nicht regulär beendet.</Typography>
-                    <Typography paragraph><strong>Bier:</strong> {beer?.name ?? session?.beerId ?? 'Nicht auflösbar'}</Typography>
-                    <Typography paragraph><strong>Schritt:</strong> {step?.name ?? 'Nicht verfügbar'}</Typography>
-                    <Typography paragraph>
-                        <strong>Fortschritt:</strong><br/>
-                        {minutes(step?.elapsedTime)} von {minutes(step?.duration)} Minuten abgeschlossen<br/>
-                        {minutes(step?.remainingTime)} Minuten verbleibend
-                    </Typography>
-                    <Typography paragraph><strong>Letzter gespeicherter Stand:</strong><br/>{updatedAt}</Typography>
+                    <section className="recovery-dialog__brew">
+                        <h3>{beer?.name ?? session?.beerId ?? 'Nicht auflösbar'}</h3>
+                        <p>{step?.name ?? 'Nicht verfügbar'}</p>
+                    </section>
+                    <section className="recovery-dialog__progress" aria-label="Fortschritt">
+                        <div className="recovery-dialog__label-row"><span>Fortschritt</span><strong>{elapsedMinutes} / {durationMinutes} Minuten</strong></div>
+                        <LinearProgress variant="determinate" value={progress} aria-label={`${Math.round(progress)} Prozent abgeschlossen`}/>
+                        <p>Noch etwa {remainingMinutes} Minuten</p>
+                    </section>
+                    <section className="recovery-dialog__timestamp"><span>Letzter gespeicherter Stand</span><strong>{updatedAt}</strong></section>
                 </> : <Typography paragraph>Die Recovery-Daten konnten nicht gelesen werden.</Typography>}
                 {recoveryState.error && <Alert severity="error">
                     <strong>{recoveryState.errorOperation === 'discard'
@@ -55,24 +78,7 @@ const BrewRecoveryDialog: React.FC = () => {
                         : 'Der Brauvorgang konnte nicht wiederhergestellt werden.'}</strong>
                     <Typography variant="body2">{recoveryState.error}</Typography>
                 </Alert>}
-            </DialogContent>
-            <DialogActions>
-                {confirmDiscard ? <>
-                    <Button disabled={pending} onClick={() => setConfirmDiscard(false)}>Zurück</Button>
-                    <Button color="error" variant="contained" disabled={pending}
-                            onClick={() => dispatch(ProductionActions.discardBrewRecovery())}>
-                        {recoveryState.discardPending ? 'Brauvorgang wird verworfen …' : 'Endgültig verwerfen'}
-                    </Button>
-                </> : <>
-                    <Button color="error" variant="outlined" disabled={pending}
-                            onClick={() => setConfirmDiscard(true)}>Brauvorgang verwerfen</Button>
-                    <Button color="primary" variant="contained" disabled={pending || !envelope}
-                            onClick={() => dispatch(ProductionActions.resumeBrewRecovery())}>
-                        {recoveryState.resumePending ? 'Brauvorgang wird wiederhergestellt …' : 'Brauvorgang fortsetzen'}
-                    </Button>
-                </>}
-            </DialogActions>
-        </Dialog>
+        </AppDialog>
     );
 };
 

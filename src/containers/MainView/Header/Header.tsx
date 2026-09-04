@@ -245,17 +245,17 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
                   </button>
                 </div>
                 <ModalDialog
-                  type={this.state.shutdownState === 'error' ? DialogType.ERROR : DialogType.INFO}
+                  type={this.state.shutdownState === 'error' ? DialogType.ERROR : this.state.shutdownState === 'pending' || this.state.shutdownState === 'success' ? DialogType.PROGRESS : DialogType.CONFIRM}
                   open={this.state.showShutdownDialog}
-                  header="Brauhaus herunterfahren?"
+                  header={this.state.shutdownState === 'pending' || this.state.shutdownState === 'success' ? 'Braumeister wird heruntergefahren' : 'Brauhaus herunterfahren?'}
                   content={shutdownDialogContent}
-                  showCancelButton={this.state.shutdownState === 'idle' || this.state.shutdownState === 'pending'}
+                  showCancelButton={this.state.shutdownState === 'idle'}
                   cancelLabel="Abbrechen"
                   confirmLabel={this.state.shutdownState === 'error' ? 'Schließen' : 'Herunterfahren'}
                   confirmColor="error"
                   confirmVariant="contained"
                   actionsDisabled={this.state.shutdownState === 'pending'}
-                  showConfirmButton={this.state.shutdownState !== 'success'}
+                  showConfirmButton={this.state.shutdownState === 'idle' || this.state.shutdownState === 'error'}
                   disableClose={this.state.shutdownState === 'pending' || this.state.shutdownState === 'success'}
                   onCancel={this.closeShutdownDialog}
                   onConfirm={this.state.shutdownState === 'error' ? this.closeShutdownDialog : this.handleShutdownConfirmed}

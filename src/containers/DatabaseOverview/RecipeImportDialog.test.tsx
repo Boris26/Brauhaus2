@@ -17,7 +17,7 @@ describe('RecipeImportDialog', () => {
         render(<RecipeImportDialog open onCancel={jest.fn()} onImport={jest.fn()} />);
 
         expect(screen.getByRole('dialog')).toHaveClass('recipe-import-dialog');
-        expect(screen.getByText('Rezept importieren')).toHaveClass('recipe-import-dialog__title');
+        expect(screen.getByText('Rezept importieren')).toHaveClass('app-dialog__title');
         expect(screen.getByRole('button', {name: 'Datei auswählen'})).toHaveClass('recipe-import-dialog__file-button');
         expect(screen.getByRole('button', {name: 'Abbrechen'})).toHaveClass('recipe-import-dialog__cancel-button');
         expect(screen.getByRole('button', {name: 'Importieren'})).toHaveClass('recipe-import-dialog__import-button');

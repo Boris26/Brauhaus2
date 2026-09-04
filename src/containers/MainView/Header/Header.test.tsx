@@ -180,7 +180,8 @@ describe('Header navigation', () => {
 
         expect(mockedShutdown).toHaveBeenCalledTimes(1);
         expect(screen.getByText('Herunterfahren wird gestartet …')).toBeInTheDocument();
-        expect(confirmButton).toBeDisabled();
+        expect(screen.queryByRole('button', {name: 'Herunterfahren'})).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', {name: 'Abbrechen'})).not.toBeInTheDocument();
 
         resolveShutdown();
         await waitFor(() => expect(screen.getByText('Brauhaus wird heruntergefahren …')).toBeInTheDocument());
