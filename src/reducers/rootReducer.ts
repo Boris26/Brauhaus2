@@ -7,6 +7,7 @@ import {maltsReducer, MaltsReducerState, initialMaltsState} from './maltsReducer
 import {yeastReducer, YeastReducerState, initialYeastState} from './yeastReducer';
 import {additionalIngredientsReducer, AdditionalIngredientsReducerState, initialAdditionalIngredientsState} from './additionalIngredientsReducer';
 import {initialWarningState, warningReducer, WarningReducerState} from './warningReducer';
+import {fermentationReducer, FermentationState, initialFermentationState} from './fermentationReducer';
 
 export const rootReducer = combineReducers({
     applicationReducer: applicationReducer,
@@ -16,7 +17,8 @@ export const rootReducer = combineReducers({
     hopsReducer: hopsReducer,
     maltsReducer: maltsReducer,
     yeastReducer: yeastReducer,
-    additionalIngredientsReducer: additionalIngredientsReducer
+    additionalIngredientsReducer: additionalIngredientsReducer,
+    fermentationReducer
 
 });
 
@@ -29,6 +31,9 @@ export interface RootState {
     maltsReducer: MaltsReducerState;
     yeastReducer: YeastReducerState;
     additionalIngredientsReducer: AdditionalIngredientsReducerState;
+    fermentationReducer: FermentationState;
 }
 export type { ApplicationReducerState, BeerDataReducerState, ProductionReducerState, WarningReducerState, HopsReducerState, MaltsReducerState, YeastReducerState, AdditionalIngredientsReducerState };
 export { initialApplicationState, initialBeerState, initialProductionState, initialWarningState, initialHopsState, initialMaltsState, initialYeastState, initialAdditionalIngredientsState};
+export type {FermentationState};
+export {initialFermentationState};

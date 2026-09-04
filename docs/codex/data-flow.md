@@ -112,3 +112,7 @@ Heater-safety reset is intentionally not a Settings-page action. Settings expose
 3. The controller broadcasts recovery false to all clients. Its separate `brew-session-running` lifecycle signal clears stale recovery locally, then the established restore flow reads `GET /BrewSession`, reconstructs selectedBeer/beerToBrew, and starts the single exhaust-mapped poll.
 4. Discard first requires an explicit destructive confirmation and then sends one serialized `DELETE /BrewRecovery`; local success closes the initiator while the socket false snapshot synchronizes peers. Failures preserve the snapshot and dialog.
 5. Each accepted local command increments a recovery request generation. A changed socket snapshot, `brew-session-running`, or successful local discard advances it again, so a delayed HTTP success/failure from an older generation is ignored. An identical socket snapshot is reducer-idempotent and does not cancel the active intent.
+
+## Fermentation data (#249)
+
+Finished-beer detail/dashboard → Redux action → fermentation epic → `FermentationRepository` → BeerDataStore. Successful measurement, completion, or assignment commands trigger a fresh aggregate read; reducers never optimistically claim domain success. Redux contains current API/UI state only. Sensor hardware communicates with BeerDataStore, never Brauhaus2. BeerDataStore supplies assignments; only ambiguous `unassigned` devices require UI interaction.

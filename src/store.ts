@@ -9,10 +9,11 @@ import { hopsEpic} from "./epics/hopsEpic";
 import { maltsEpic} from "./epics/maltsEpic";
 import {yeastEpic} from "./epics/yeastEpic";
 import {additionalIngredientsEpic} from "./epics/additionalIngredientsEpic";
+import {fermentationEpics} from './epics/fermentationEpics';
 
 const epicMiddleware = createEpicMiddleware<any, any, RootState>();
 
-const rootEpic = combineEpics(...beerEpics, ...productionEpics, ...hopsEpic, ...maltsEpic, ...yeastEpic, ...additionalIngredientsEpic);
+const rootEpic = combineEpics(...beerEpics, ...productionEpics, ...hopsEpic, ...maltsEpic, ...yeastEpic, ...additionalIngredientsEpic, ...fermentationEpics);
 
 // Erstellen Sie den Store mit der Middleware
 const store = configureStore({

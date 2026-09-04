@@ -147,3 +147,9 @@ The Settings UI intentionally exposes none of the controller infrastructure fiel
 The existing default-namespace Socket.IO connection also consumes `brew-recovery-state-changed`. Its replacement payload is `{ available: false, recovery: null }` or `{ available: true, recovery: { version, brewSession, status, updatedAt } }`. `brewSession` uses the existing `beerId`, liter-valued `plannedVolume`, and percent-valued `plannedBrewhouseEfficiency`; recovery status contains only the saved process/current-step/waiting/heating snapshot required for display. Durations are controller-owned seconds.
 
 The control command endpoints are `POST /BrewRecovery/Resume` with normal `BrewingData`, and `DELETE /BrewRecovery`. HTTP success acknowledges a command only. Only the existing `brew-session-running` event confirms that the process runs and triggers `GET /BrewSession` plus the existing status polling restoration.
+
+## Fermentation contract (Brauhaus2 #249 / BeerDataStore #42)
+
+BeerDataStore is the sole persistent source of truth. Brauhaus2 keeps only request and display state. The UI uses additive `GET fermentation/finishedbeers/{finishedBeerId}`, `POST fermentation/measurements`, `POST fermentation/actions/{actionId}/complete`, `GET fermentation/devices`, `GET fermentation/sensor-measurements?finishedBeerId={id}`, and `PUT fermentation/devices/{deviceId}/assignment` routes. Deployment with these exact routes and DTOs **Needs verification** against BeerDataStore #42.
+
+Temperatures are Celsius, Plato values are degrees Plato, timestamps are ISO-8601, and `windowSeconds` is seconds. Server `bubbleRatePerMinute` wins; otherwise the UI derives `bubbleCount * 60 / windowSeconds`. Action states are `PLANNED`, `ACTIVE`, and `COMPLETED`. Error envelopes, online threshold, and inclusion of globally unassigned devices in the aggregate **Needs verification**.

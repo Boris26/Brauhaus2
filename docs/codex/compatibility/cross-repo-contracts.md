@@ -250,3 +250,7 @@ The controller additionally provides `GET /Safety/Heater` and `POST /Safety/Heat
 ## Brew recovery contract (BeerDataStore #40 / Braumeister #146 / Brauhaus2 #246)
 
 The additive recovery contract uses the existing Socket.IO namespace/path and event `brew-recovery-state-changed`, plus control routes `POST /BrewRecovery/Resume` and `DELETE /BrewRecovery`. Resume receives the existing `BrewingData` shape. Saved `duration`, `elapsedTime`, and `remainingTime` are seconds; volume is liters and efficiency is percent. `brew-session-running` remains the only confirmation of a running workflow and must clear stale recovery before the established `GET /BrewSession` restoration. No database API changes are introduced. Raspberry Pi multi-client/reconnect deployment **Needs verification**.
+
+## Fermentation: Brauhaus2 #249 / BeerDataStore #42
+
+BeerDataStore is the source of truth for fermentation measurements, actions, devices, assignments, sensor readings, and completion timestamps. Brauhaus2 is display and interaction only; hardware does not call Brauhaus2. The additive contract is rooted at `fermentation/*`, keyed by existing `FinishedBrew.id`, and does not alter the finished-beer lifecycle. Exact route/DTO deployment and errors **Needs verification** with Boris26/BeerDataStore#42.
