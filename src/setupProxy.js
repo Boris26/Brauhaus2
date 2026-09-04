@@ -1,6 +1,6 @@
 const { createProxyMiddleware } = require("http-proxy-middleware");
 
-const target = "https://192.168.178.72";
+const target = "https://braumeister.boris-mahne.de";
 
 module.exports = function setupProxy(app) {
     app.use(
