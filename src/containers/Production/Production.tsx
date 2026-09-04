@@ -808,11 +808,11 @@ export class Production extends React.Component<ProductionProps, ProductionState
                         </div>
                         <div className={`intervalSettings agitatorAutomaticSettings ${displayedAgitatorMode === 'AUTOMATIC' ? 'is-active' : ''}`} aria-labelledby="interval-settings-title">
                             <div className="agitatorAutomaticHeader">
-                                <h5 id="interval-settings-title">Intervallbetrieb</h5>
+                                <h5 id="interval-settings-title">Automatik</h5>
                                 <Switch className="productionSwitch" onChange={(checked) => this.toggleAgitatorMode('AUTOMATIC', checked)}
                                     checked={displayedAgitatorMode === 'AUTOMATIC'} height={24} width={44} handleDiameter={18}
                                     checkedIcon={false} uncheckedIcon={false} disabled={settingsDisabled || !agitatorConfig}
-                                    aria-label="Intervallbetrieb" />
+                                    aria-label="Automatik" />
                             </div>
                             <div className="agitatorIntervalProgressRow">
                                 <AgitatorIntervalProgress active={intervalProgressActive} paused={agitatorRuntime?.paused ?? false}
