@@ -1,11 +1,15 @@
 import React from 'react';
-import {Button, ButtonProps, Dialog, DialogTitle, DialogContent, DialogActions} from '@mui/material';
+import {Button, ButtonProps} from '@mui/material';
+import AppDialog, {AppDialogVariant} from '../AppDialog/AppDialog';
 import './ModalDialog.css';
 
 export enum DialogType {
     CONFIRM = "confirm",
     ERROR = "error",
-    INFO = "info"
+    INFO = "info",
+    WARNING = "warning",
+    SUCCESS = "success",
+    PROGRESS = "progress"
 }
 
 interface ModalDialogProps {
@@ -62,14 +66,9 @@ class ModalDialog extends React.Component<ModalDialogProps, ModalDialogState> {
             actionsDisabled, showConfirmButton = true, disableClose} = this.props;
 
         return (
-            <Dialog open={open} maxWidth={'md'} onClose={disableClose ? undefined : (showCancelButton ? this.handleCancel : this.handleClose)}>
-                <DialogTitle className={type}>
-                    {header}
-                </DialogTitle>
-                <DialogContent style={{ width: '300px', minHeight: '80px' }}>
-                    <p>{this.contentWithLineBreaks(content)}</p>
-                </DialogContent>
-                <DialogActions>
+            <AppDialog open={open} title={header} variant={type as AppDialogVariant}
+                disableClose={disableClose} onClose={showCancelButton ? this.handleCancel : this.handleClose}
+                actions={showCancelButton || showConfirmButton ? <>
                     {showCancelButton && (
                         <Button onClick={this.handleCancel} color="primary" disabled={actionsDisabled}>
                             {cancelLabel ?? "Abbrechen"}
@@ -78,9 +77,9 @@ class ModalDialog extends React.Component<ModalDialogProps, ModalDialogState> {
                     {showConfirmButton && <Button onClick={this.handleClose} color={confirmColor ?? "primary"} variant={confirmVariant ?? "text"} disabled={actionsDisabled}>
                         {confirmLabel ?? "Ok"}
                     </Button>}
-                </DialogActions>
-
-            </Dialog>
+                </> : undefined}>
+                <p>{this.contentWithLineBreaks(content)}</p>
+            </AppDialog>
         );
     }
 }

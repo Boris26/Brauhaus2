@@ -1,5 +1,6 @@
 import React from 'react';
-import {Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent} from '@mui/material';
+import {Button, CircularProgress, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent} from '@mui/material';
+import AppDialog from '../../components/AppDialog/AppDialog';
 import {JsonObject, RecipeImportFormat, RecipeImportRequest} from '../../model/RecipeImport';
 import {createImportIdempotencyKey} from '../../utils/recipeImport';
 import './RecipeImportDialog.css';
@@ -66,9 +67,15 @@ export const RecipeImportDialog: React.FC<RecipeImportDialogProps> = ({open, loa
     const canImport = Boolean(format && recipe && idempotencyKey && !parseError && !loading);
 
     return (
-        <Dialog open={open} onClose={loading ? undefined : resetAndCancel} maxWidth="sm" fullWidth PaperProps={{className: 'recipe-import-dialog'}}>
-            <DialogTitle className="recipe-import-dialog__title">Rezept importieren</DialogTitle>
-            <DialogContent className="recipe-import-dialog__content">
+        <AppDialog open={open} onClose={resetAndCancel} disableClose={loading} title="Rezept importieren" variant={backendError && submitted ? 'error' : loading ? 'progress' : 'info'} className="recipe-import-dialog"
+            actions={<>
+                <Button className="recipe-import-dialog__cancel-button" onClick={resetAndCancel} disabled={loading}>Abbrechen</Button>
+                <Button className="recipe-import-dialog__import-button" onClick={() => {
+                    if (format && recipe && idempotencyKey) { setSubmitted(true); onImport({format, recipe, idempotencyKey}); }
+                }} color="primary" variant="contained" disabled={!canImport}>
+                    {loading ? <><CircularProgress size={18} />&nbsp;Importieren…</> : 'Importieren'}
+                </Button>
+            </>}>
                 <FormControl className="recipe-import-dialog__format" fullWidth margin="normal">
                     <InputLabel id="recipe-import-format-label">Importformat</InputLabel>
                     <Select labelId="recipe-import-format-label" label="Importformat" value={format} disabled={loading}
@@ -88,18 +95,6 @@ export const RecipeImportDialog: React.FC<RecipeImportDialogProps> = ({open, loa
                 </Button>
                 {parseError && <p className="recipe-import-dialog__error" role="alert">{parseError}</p>}
                 {backendError && submitted && <p className="recipe-import-dialog__error" role="alert">{backendError}</p>}
-            </DialogContent>
-            <DialogActions className="recipe-import-dialog__actions">
-                <Button className="recipe-import-dialog__cancel-button" onClick={resetAndCancel} disabled={loading}>Abbrechen</Button>
-                <Button className="recipe-import-dialog__import-button" onClick={() => {
-                    if (format && recipe && idempotencyKey) {
-                        setSubmitted(true);
-                        onImport({format, recipe, idempotencyKey});
-                    }
-                }} variant="contained" disabled={!canImport}>
-                    {loading ? <><CircularProgress size={18} />&nbsp;Importieren…</> : 'Importieren'}
-                </Button>
-            </DialogActions>
-        </Dialog>
+        </AppDialog>
     );
 };
