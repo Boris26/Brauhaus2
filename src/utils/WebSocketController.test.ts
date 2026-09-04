@@ -55,6 +55,20 @@ describe('WebSocketController', () => {
     expect(socket.on).toHaveBeenCalledWith('warning-state-changed', expect.any(Function));
     expect(socket.on).toHaveBeenCalledWith('temperature-sensor-state-changed', expect.any(Function));
     expect(socket.on).toHaveBeenCalledWith('agitator-defaults-changed', expect.any(Function));
+    expect(socket.on).toHaveBeenCalledWith('brew-recovery-state-changed', expect.any(Function));
+  });
+
+  it('forwards recovery true and false snapshots on the same connection', () => {
+    const handler = jest.fn();
+    const controller = new WebSocketController('/api/controller');
+    controller.onMessage(handler);
+    controller.connect();
+    const active = {available: true, recovery: {version: 1}};
+    listeners['brew-recovery-state-changed'](active);
+    listeners['brew-recovery-state-changed']({available: false, recovery: null});
+    expect(handler).toHaveBeenNthCalledWith(1, {event: 'brew-recovery-state-changed', data: active});
+    expect(handler).toHaveBeenNthCalledWith(2, {event: 'brew-recovery-state-changed', data: {available: false, recovery: null}});
+    expect(io).toHaveBeenCalledTimes(1);
   });
 
   it('forwards brew-session-running with its payload to the message handler', () => {

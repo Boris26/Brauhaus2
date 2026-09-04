@@ -197,3 +197,29 @@ describe('productionReducer persistent agitator defaults', () => {
         expect(nextState.realtimeState.agitator).toBeUndefined();
     });
 });
+
+describe('productionReducer brew recovery lifecycle', () => {
+    const snapshot: any = {available: true, recovery: {version: 1, brewSession: {beerId: 'beer-1', plannedVolume: 25, plannedBrewhouseEfficiency: 70}, status: {currentStep: {name: 'Maltoserast'}}, updatedAt: '2026-01-01T12:00:00Z'}};
+
+    it('replaces and clears snapshots idempotently', () => {
+        const active = productionReducer(initialProductionState, ProductionActions.brewRecoveryStateChanged(snapshot));
+        expect(active.brewRecovery).toMatchObject(snapshot);
+        expect(productionReducer(active, ProductionActions.brewRecoveryStateChanged({...snapshot, recovery: {...snapshot.recovery}}))).toBe(active);
+        expect(productionReducer(active, ProductionActions.brewRecoveryStateChanged({available: false, recovery: null})).brewRecovery.available).toBe(false);
+    });
+
+    it('tracks resume and discard pending failures without clearing recovery', () => {
+        const active = productionReducer(initialProductionState, ProductionActions.brewRecoveryStateChanged(snapshot));
+        const resume = productionReducer(active, ProductionActions.resumeBrewRecovery());
+        expect(resume.brewRecovery.resumePending).toBe(true);
+        expect(productionReducer(resume, ProductionActions.resumeBrewRecoveryFailure('HTTP 409')).brewRecovery).toMatchObject({available: true, resumePending: false, error: 'HTTP 409'});
+        const discard = productionReducer(active, ProductionActions.discardBrewRecovery());
+        expect(discard.brewRecovery.discardPending).toBe(true);
+        expect(productionReducer(discard, ProductionActions.discardBrewRecoveryFailure('offline')).brewRecovery).toMatchObject({available: true, discardPending: false, error: 'offline'});
+    });
+
+    it('clears stale recovery whenever brew-session-running is received', () => {
+        const active = productionReducer(initialProductionState, ProductionActions.brewRecoveryStateChanged(snapshot));
+        expect(productionReducer(active, ProductionActions.brewSessionRunningReceived()).brewRecovery).toEqual({available: false, recovery: null, resumePending: false, discardPending: false});
+    });
+});

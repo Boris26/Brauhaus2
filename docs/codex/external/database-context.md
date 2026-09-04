@@ -244,3 +244,7 @@ The UI uses the database/backend service for persistent brewing data, not hardwa
 - Whether `FinishedBrew` date fields should be ISO strings, localized strings, or `Date`-parseable values.
 - Whether recipe import returns a full `Beer` compatible with UI state.
 - Whether ingredient ID and numeric field casing/types should be normalized across standalone ingredients and recipe ingredients.
+
+## Recovery recipe lookup (BeerDataStore #40 / Brauhaus2 #246)
+
+Recovery persists the stable Beer identifier and scaling plan through the coordinated BeerDataStore #40 contract. Brauhaus2 resolves that ID using the unchanged `GET beers` contract; it performs no recovery-specific database write and never discards controller recovery merely because the recipe cannot be found. Deployment with recipes preserving `referenceVolume` and `referenceBrewhouseEfficiency` **Needs verification** end to end.

@@ -35,3 +35,12 @@ When a compatibility-relevant change is requested, Codex must:
 - Do not assume clients ignore unknown or missing fields.
 - Do not assume HTTP trailing slash changes are harmless.
 - Do not assume startup empty values are unused.
+
+## Recovery additions checked for #246
+
+- [x] Reuses the single default-namespace Socket.IO connection.
+- [x] Preserves BrewSession IDs, liters, efficiency percent, and recovery timing seconds.
+- [x] Treats REST resume/discard as serialized commands and socket snapshots as shared state.
+- [x] Keeps `brew-session-running` as the sole trigger for BrewSession restoration and polling.
+- [x] Introduces no BeerDataStore endpoint or DTO change; BeerDataStore #40 and Braumeister #146 are prerequisites.
+- [ ] Verify two-client resume/discard and reconnect races on the deployed Raspberry Pi.

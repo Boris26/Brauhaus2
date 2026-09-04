@@ -104,3 +104,10 @@ Automatic water filling follows the same at-most-once-while-pending rule: anothe
 Settings mount performs one `GET /Settings` for all four operational sections. Each section owns a draft; only finite, non-empty numeric input can be submitted. Saving sends the complete selected section to `PUT /Settings/{section}` and replaces only that confirmed section with the response. There is no optimistic persistence and no redundant post-save GET.
 
 Heater-safety reset is intentionally not a Settings-page action. Settings exposes only the persistent `heaterSafety` configuration values. Runtime latch ownership is global: `alarm-state-changed` remains the live source for `HEATER_STUCK_ON`, the app shell performs `POST /Safety/Heater/Reset`, and a failed request leaves the global modal visible. The normal brew-start guard continues to reject an active realtime `HEATER_STUCK_ON`. Sensor ID/health remain read-only values from the existing shared Socket.IO snapshot.
+
+## Interrupted brew recovery
+
+1. The app-lifetime, shared Socket.IO connection receives `brew-recovery-state-changed`; Redux replaces the complete recovery snapshot and the app shell shows the route-independent dialog.
+2. Resume validates the saved BrewSession, resolves the Beer from Redux or `BeerRepository.getBeers()`, applies `BeerRecipeScaler.scale()`, and calls `mapBeerToBrewingData()` before one serialized `POST /BrewRecovery/Resume` command. It does not send `/Recipe/`, `StartBrewing`, or `START_POLLING`.
+3. The controller broadcasts recovery false to all clients. Its separate `brew-session-running` lifecycle signal clears stale recovery locally, then the established restore flow reads `GET /BrewSession`, reconstructs selectedBeer/beerToBrew, and starts the single exhaust-mapped poll.
+4. Discard is one serialized `DELETE /BrewRecovery`; local success closes the initiator while the socket false snapshot synchronizes peers. Failures preserve the snapshot and dialog.
