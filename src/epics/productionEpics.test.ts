@@ -291,7 +291,7 @@ describe('brew recovery command epics', () => {
 
     const discardDeferred = createDeferred<void>(); mockedProductionRepository.discardBrewRecovery.mockReturnValue(discardDeferred.promise);
     const discardActions = new Subject<any>(); const discarded: any[] = [];
-    const discardSub = discardBrewRecoveryEpic$(discardActions).subscribe((a: any) => discarded.push(a));
+    const discardSub = discardBrewRecoveryEpic$(discardActions, new BehaviorSubject(recoveryState([recoverableBeer()]))).subscribe((a: any) => discarded.push(a));
     discardActions.next(ProductionActions.discardBrewRecovery()); discardActions.next(ProductionActions.discardBrewRecovery());
     expect(mockedProductionRepository.discardBrewRecovery).toHaveBeenCalledTimes(1);
     discardDeferred.reject(new Error('offline')); await flushPromises();
