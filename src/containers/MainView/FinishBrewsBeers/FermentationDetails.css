@@ -1,0 +1,15 @@
+.fermentation-details { display: grid; gap: var(--spacing-md); color: var(--color-text); }
+.fermentation-details h3, .fermentation-details h4, .fermentation-details h5, .fermentation-details p { margin-top: 0; }
+.fermentation-phase { color: var(--color-text-secondary); font-weight: 700; }
+.fermentation-card { padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--border-radius-large); background: var(--color-panel-bg); }
+.fermentation-heading, .fermentation-device, .fermentation-list li { display: flex; justify-content: space-between; gap: var(--spacing-sm); align-items: center; }
+.fermentation-card button { border: 0; border-radius: var(--border-radius-small); padding: .45rem .8rem; color: var(--color-button-text); background: var(--color-primary); font-weight: 700; }
+.fermentation-card button:disabled { opacity: .55; }
+.fermentation-latest { display: grid; grid-template-columns: 1fr auto auto; gap: var(--spacing-sm) var(--spacing-lg); padding: var(--spacing-md); margin-bottom: var(--spacing-md); background: var(--color-panel-contrast); border-radius: var(--border-radius-medium); }
+.fermentation-latest span, .fermentation-latest small { grid-column: 1 / -1; color: var(--color-text-secondary); }.fermentation-latest strong { font-size: 1.4rem; }
+.fermentation-form { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--spacing-sm); padding: var(--spacing-md); margin-bottom: var(--spacing-md); border: 1px solid var(--color-accent-border); border-radius: var(--border-radius-medium); }
+.fermentation-form label { display: grid; gap: var(--spacing-xs); }.fermentation-form input, .fermentation-form textarea { padding: .5rem; color: var(--color-text); background: var(--color-input-bg); border: 1px solid var(--color-border); border-radius: var(--border-radius-small); }.fermentation-form div, .fermentation-form p { grid-column: 1 / -1; }
+.fermentation-list { list-style: none; padding: 0; }.fermentation-list li { flex-wrap: wrap; padding: var(--spacing-sm) 0; border-bottom: 1px solid var(--color-border-soft); }.fermentation-list time { min-width: 9rem; color: var(--color-text-secondary); }.fermentation-list li.is-overdue time { color: var(--color-error); font-weight: 700; }.fermentation-list li.is-due { background: var(--color-warning-subtle); }
+.fermentation-metrics, .fermentation-sensor-values { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--spacing-xs) var(--spacing-md); }.fermentation-metrics div, .fermentation-sensor-values div { display: flex; justify-content: space-between; }.fermentation-metrics dd, .fermentation-sensor-values dd { margin: 0; font-weight: 700; }
+.fermentation-device { padding: var(--spacing-sm); background: var(--color-panel-contrast); border-radius: var(--border-radius-medium); }.is-online { color: var(--color-success); }.is-offline, .fermentation-error { color: var(--color-error); }.fermentation-notice { color: var(--color-warning); }
+@media (max-width: 600px) { .fermentation-form, .fermentation-metrics, .fermentation-sensor-values { grid-template-columns: 1fr; }.fermentation-latest { grid-template-columns: 1fr 1fr; } }

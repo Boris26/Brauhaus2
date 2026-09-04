@@ -70,3 +70,7 @@ Needs verification: backend/database canonical casing for malt `ebc` vs recipe m
 ## Brew recovery
 
 `BrewRecoveryState` belongs to `productionReducer`, alongside controller lifecycle state. It contains the authoritative `available` flag and optional `BrewRecoveryEnvelope`, plus UI command flags (`resumePending`, `discardPending`), a controlled error, and a monotonically advancing local `requestGeneration`. The generation prevents a delayed REST result from changing state after a newer socket lifecycle snapshot. The envelope reuses `BrewSession` rather than duplicating its scaling contract and contains a deliberately small saved-status projection (`process`, `currentStep`, `waiting`, `heating`) plus ISO `updatedAt`. Recovery timing values are immutable snapshot seconds; the UI does not advance them locally.
+
+## Fermentation records (#249)
+
+`FinishedBrew` remains the beer/batch identity and status model; no parallel beer entity or status machine is introduced. Measurements, generic actions, BeerDataStore-registered devices/assignments, and sensor measurements reference `FinishedBrew.id`. BeerDataStore owns records and actual timestamps. Brauhaus2 displays them and sends explicit user commands. Sensor availability never implies that fermentation ended. Displayed alcohol and attenuation are approximate and never trigger status changes.

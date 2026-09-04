@@ -44,3 +44,11 @@ When a compatibility-relevant change is requested, Codex must:
 - [x] Keeps `brew-session-running` as the sole trigger for BrewSession restoration and polling.
 - [x] Introduces no BeerDataStore endpoint or DTO change; BeerDataStore #40 and Braumeister #146 are prerequisites.
 - [ ] Verify two-client resume/discard and reconnect races on the deployed Raspberry Pi.
+
+## Fermentation additions checked for #249
+
+- [x] Existing `FinishedBrew.id` and `eBrewState` remain authoritative; no second beer/status model.
+- [x] Celsius, degrees Plato, ISO-8601 timestamps, and sensor-window seconds are explicit.
+- [x] Writes are backend-confirmed and followed by reload; no optimistic completion/assignment.
+- [x] Hardware communicates with BeerDataStore, not this UI.
+- [ ] Verify exact routes, aggregate DTO, action strings, and errors against BeerDataStore #42.

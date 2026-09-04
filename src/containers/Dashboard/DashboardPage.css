@@ -21,6 +21,7 @@
 .dashboard-active-row:last-child { border-bottom: 0; }
 .dashboard-active-row h3 { font-size: var(--font-size-normal); }
 .dashboard-active-row p { margin: 2px 0 0; color: var(--color-text-secondary); font-size: var(--font-size-small); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dashboard-active-row .dashboard-next-action { margin-top: var(--spacing-xs); white-space: normal; }.dashboard-next-action.is-due { color: var(--color-warning); }.dashboard-next-action.is-overdue { color: var(--color-error); }
 .dashboard-state-dot { width: .55rem; height: .55rem; border-radius: 50%; background: var(--color-success); }
 .dashboard-state-dot.is-maturation { background: var(--color-info); }
 .dashboard-badge { border-radius: var(--border-radius-pill); padding: .16rem .55rem; background: var(--color-success-subtle); color: var(--color-success); font-size: .78rem; font-weight: 700; white-space: nowrap; }
