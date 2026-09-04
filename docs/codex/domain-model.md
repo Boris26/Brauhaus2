@@ -66,3 +66,7 @@ Fields: `id`, `name`, `startDate`, optional `endDate`, `liters`, `originalwort`,
 - `AdditionalIngredient`: `id`, `name`, optional `description`; recipe additional ingredient has `quantity`, `unit`, `phase`, optional `time`, `timeUnit`, `description`.
 
 Needs verification: backend/database canonical casing for malt `ebc` vs recipe malt `EBC`, yeast `evg` vs recipe yeast `EVG`, and hop `alpha` string vs number.
+
+## Brew recovery
+
+`BrewRecoveryState` belongs to `productionReducer`, alongside controller lifecycle state. It contains the authoritative `available` flag and optional `BrewRecoveryEnvelope`, plus UI command flags (`resumePending`, `discardPending`) and a controlled error. The envelope reuses `BrewSession` rather than duplicating its scaling contract and contains a deliberately small saved-status projection (`process`, `currentStep`, `waiting`, `heating`) plus ISO `updatedAt`. Recovery timing values are immutable snapshot seconds; the UI does not advance them locally.

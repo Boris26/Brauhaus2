@@ -7,6 +7,7 @@ import {ProductionActions} from '../actions/actions';
 import type {RootState} from '../reducers/rootReducer';
 import {isHeaterStuckOnAlarmActive} from '../utils/brewingStatus/alarmDisplay';
 import GlobalHeaterSafetyDialog, {GlobalHeaterSafetyDialogOwnedContext} from '../components/GlobalHeaterSafetyDialog/GlobalHeaterSafetyDialog';
+import BrewRecoveryDialog from '../components/BrewRecoveryDialog/BrewRecoveryDialog';
 
 const MobileProductionView = React.lazy(() => import('./Mobile/MobileStatusView/MobileProductionView.connect'));
 
@@ -40,10 +41,12 @@ const App: React.FC = () => {
             heatingRunning={heatingRunning}
         />
     );
+    const brewRecoveryDialog = <BrewRecoveryDialog/>;
 
     const appContent = isMobile && !isDashboardRoute ? (
         <div className="AppContainer">
             {globalSafetyDialog}
+            {brewRecoveryDialog}
             <Suspense fallback={<div className="view-loading" role="status">Lade Ansicht…</div>}>
                 <MobileProductionView/>
             </Suspense>
@@ -51,6 +54,7 @@ const App: React.FC = () => {
     ) : (
         <div className="AppContainer">
             {globalSafetyDialog}
+            {brewRecoveryDialog}
             <div className="AppHeader">
                 <Header></Header>
             </div>

@@ -7,6 +7,7 @@ import { ConfirmStates } from '../enums/eConfirmStates';
 import { WaterStatus } from '../components/Controlls/WaterControll/WaterControl';
 import {AgitatorRealtimeState, AlarmRealtimeState, RealtimeControllerState, TemperatureSensorRealtimeState} from '../model/RealtimeControllerState';
 import {AgitatorSettings} from '../model/AgitatorSettings';
+import {BrewRecoveryState} from '../model/BrewRecovery';
 
 const agitatorSnapshotsEqual = (left?: AgitatorRealtimeState, right?: AgitatorRealtimeState): boolean =>
     left === right || (!!left && !!right
@@ -64,6 +65,7 @@ export interface ProductionReducerState {
     };
     realtimeState: RealtimeControllerState;
     agitatorDefaults?: AgitatorSettings;
+    brewRecovery: BrewRecoveryState;
 }
 
 export const initialProductionState: ProductionReducerState = {
@@ -87,7 +89,8 @@ export const initialProductionState: ProductionReducerState = {
     nextProcedureStepError: undefined,
     isBrewingStatusStale: false,
     socketConnection: {connected: false},
-    realtimeState: {alarms: [], alarmsReceived: false}
+    realtimeState: {alarms: [], alarmsReceived: false},
+    brewRecovery: {available: false, recovery: null, resumePending: false, discardPending: false}
 };
 
 const productionReducer = (
@@ -204,6 +207,30 @@ const productionReducer = (
         case ProductionActions.ActionTypes.AGITATOR_DEFAULTS_CHANGED:
             if (agitatorDefaultsEqual(aState.agitatorDefaults, aAction.payload)) return aState;
             return {...aState, agitatorDefaults: aAction.payload};
+        case ProductionActions.ActionTypes.BREW_RECOVERY_STATE_CHANGED: {
+            const next = aAction.payload;
+            if (aState.brewRecovery.available === next.available
+                && JSON.stringify(aState.brewRecovery.recovery) === JSON.stringify(next.recovery)
+                && aState.brewRecovery.error === next.error) return aState;
+            return {...aState, brewRecovery: {...aState.brewRecovery, ...next, resumePending: false, discardPending: false, error: next.error}};
+        }
+        case ProductionActions.ActionTypes.RESUME_BREW_RECOVERY:
+            if (aState.brewRecovery.resumePending) return aState;
+            return {...aState, brewRecovery: {...aState.brewRecovery, resumePending: true, error: undefined}};
+        case ProductionActions.ActionTypes.RESUME_BREW_RECOVERY_SUCCESS:
+            return {...aState, brewRecovery: {...aState.brewRecovery, resumePending: false, error: undefined}};
+        case ProductionActions.ActionTypes.RESUME_BREW_RECOVERY_FAILURE:
+            return {...aState, brewRecovery: {...aState.brewRecovery, resumePending: false, error: aAction.payload.error}};
+        case ProductionActions.ActionTypes.DISCARD_BREW_RECOVERY:
+            if (aState.brewRecovery.discardPending) return aState;
+            return {...aState, brewRecovery: {...aState.brewRecovery, discardPending: true, error: undefined}};
+        case ProductionActions.ActionTypes.DISCARD_BREW_RECOVERY_SUCCESS:
+            return {...aState, brewRecovery: {available: false, recovery: null, resumePending: false, discardPending: false}};
+        case ProductionActions.ActionTypes.DISCARD_BREW_RECOVERY_FAILURE:
+            return {...aState, brewRecovery: {...aState.brewRecovery, discardPending: false, error: aAction.payload.error}};
+        case ProductionActions.ActionTypes.BREW_SESSION_RUNNING_RECEIVED:
+            if (!aState.brewRecovery.available && !aState.brewRecovery.recovery && !aState.brewRecovery.error) return aState;
+            return {...aState, brewRecovery: {available: false, recovery: null, resumePending: false, discardPending: false}};
         case ProductionActions.ActionTypes.WEBSOCKET_DISCONNECT: {
             return {...aState, socketConnection: {connected: false}, realtimeState: {...aState.realtimeState, temperatureSensor: undefined}};
         }

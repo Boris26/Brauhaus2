@@ -1,6 +1,6 @@
 import { BehaviorSubject, Subject } from 'rxjs';
 import { BeerActions, ProductionActions } from '../actions/actions';
-import { BREWING_STATUS_REQUEST_TIMEOUT, confirmEpic$, mapControlSocketEvent, nextProcedureStepEpic$, restoreBrewSessionEpic$, sendBrewingDataEpic$, startPollingEpic$, startWaterFillingEpic$, WATER_FILLING_MAX_DURATION, WATER_STATUS_REQUEST_TIMEOUT } from './productionEpics';
+import { BREWING_STATUS_REQUEST_TIMEOUT, confirmEpic$, discardBrewRecoveryEpic$, mapControlSocketEvent, nextProcedureStepEpic$, restoreBrewSessionEpic$, resumeBrewRecoveryEpic$, sendBrewingDataEpic$, startPollingEpic$, startWaterFillingEpic$, WATER_FILLING_MAX_DURATION, WATER_STATUS_REQUEST_TIMEOUT } from './productionEpics';
 import { ProductionRepository } from '../repositorys/ProductionRepository';
 import {BackendAvailable} from '../reducers/productionReducer';
 import {BrewingData} from '../model/BrewingData';
@@ -22,6 +22,8 @@ jest.mock('../repositorys/ProductionRepository', () => ({
     confirm: jest.fn(),
     nextProcedureStep: jest.fn(),
     getBrewSession: jest.fn(),
+    resumeBrewRecovery: jest.fn(),
+    discardBrewRecovery: jest.fn(),
   },
 }));
 
@@ -206,6 +208,13 @@ describe('mapControlSocketEvent', () => {
     expect(mapControlSocketEvent({event: 'brew-session-running'})).toEqual(ProductionActions.brewSessionRunningReceived());
   });
 
+  it('maps recovery replacement snapshots and rejects malformed payloads visibly', () => {
+    const active: any = {available: true, recovery: {version: 1, brewSession: {}, status: {}, updatedAt: 'now'}};
+    expect(mapControlSocketEvent({event: 'brew-recovery-state-changed', data: active})).toEqual(ProductionActions.brewRecoveryStateChanged(active));
+    expect(mapControlSocketEvent({event: 'brew-recovery-state-changed', data: {available: false, recovery: null}})).toEqual(ProductionActions.brewRecoveryStateChanged({available: false, recovery: null}));
+    expect((mapControlSocketEvent({event: 'brew-recovery-state-changed', data: {}}) as any).payload.error).toMatch(/ungültige/);
+  });
+
   it('maps socket connection changes without affecting existing control events', () => {
     expect(mapControlSocketEvent({event: 'connection-status', data: {connected: true, socketId: 'abc123'}}))
       .toEqual(ProductionActions.socketConnectionChanged(true, 'abc123'));
@@ -215,6 +224,79 @@ describe('mapControlSocketEvent', () => {
 
   it('ignores unknown socket events', () => {
     expect(mapControlSocketEvent({event: 'other', data: {}})).toBeUndefined();
+  });
+});
+
+describe('brew recovery command epics', () => {
+  const mockedBeerRepository = BeerRepository as jest.Mocked<typeof BeerRepository>;
+  const recoverableBeer = (): Beer => ({...baseBeer(), fermentation: [
+    {type: 'Einmaischen', temperature: 52},
+    {type: 'Maltoserast', temperature: 64, time: 20},
+    {type: 'Abmaischen', temperature: 76},
+  ] as any});
+  const recoveryState = (beers?: Beer[]): any => ({
+    ...restoreState(beers),
+    productionReducer: {...initialProductionState, brewRecovery: {
+      available: true, resumePending: false, discardPending: false,
+      recovery: {version: 1, brewSession: {beerId: 'beer-1', plannedVolume: 25, plannedBrewhouseEfficiency: 70}, status: {}, updatedAt: '2026-01-01T00:00:00Z'},
+    }},
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockedProductionRepository.resumeBrewRecovery.mockResolvedValue(undefined);
+    mockedProductionRepository.discardBrewRecovery.mockResolvedValue(undefined);
+  });
+
+  it('uses loaded beer, scaling and mapped BrewingData without start, recipe POST or poll actions', async () => {
+    const action$ = new Subject<any>();
+    const emitted: any[] = [];
+    const subscription = resumeBrewRecoveryEpic$(action$, new BehaviorSubject(recoveryState([recoverableBeer()]))).subscribe((action: any) => emitted.push(action));
+    action$.next(ProductionActions.resumeBrewRecovery());
+    await flushPromises();
+    expect(mockedBeerRepository.getBeers).not.toHaveBeenCalled();
+    expect(mockedProductionRepository.resumeBrewRecovery).toHaveBeenCalledWith(expect.objectContaining({beerId: 'beer-1', plannedVolume: 25, plannedBrewhouseEfficiency: 70, MashupTemperature: 52}));
+    expect(emitted).toEqual([ProductionActions.resumeBrewRecoverySuccess()]);
+    expect(emitted).not.toEqual(expect.arrayContaining([expect.objectContaining({type: ProductionActions.ActionTypes.SEND_BREWING_DATA}), ProductionActions.startPolling()]));
+    expect(mockedProductionRepository.startBrewing).not.toHaveBeenCalled();
+    subscription.unsubscribe();
+  });
+
+  it('loads a missing Redux beer and reports unknown beer without sending resume', async () => {
+    mockedBeerRepository.getBeers.mockResolvedValueOnce([recoverableBeer()]);
+    const actions = new Subject<any>(); const emitted: any[] = [];
+    const sub = resumeBrewRecoveryEpic$(actions, new BehaviorSubject(recoveryState(undefined))).subscribe((a: any) => emitted.push(a));
+    actions.next(ProductionActions.resumeBrewRecovery()); await flushPromises();
+    expect(emitted[0]).toEqual(BeerActions.getBeersSuccess([recoverableBeer()]));
+    sub.unsubscribe();
+
+    jest.clearAllMocks(); mockedBeerRepository.getBeers.mockResolvedValueOnce([]);
+    const missingActions = new Subject<any>(); const missing: any[] = [];
+    const missingSub = resumeBrewRecoveryEpic$(missingActions, new BehaviorSubject(recoveryState(undefined))).subscribe((a: any) => missing.push(a));
+    missingActions.next(ProductionActions.resumeBrewRecovery()); await flushPromises();
+    expect(missing[0].type).toBe(ProductionActions.ActionTypes.RESUME_BREW_RECOVERY_FAILURE);
+    expect(mockedProductionRepository.resumeBrewRecovery).not.toHaveBeenCalled();
+    missingSub.unsubscribe();
+  });
+
+  it('serializes resume and discard clicks and preserves recovery on failures', async () => {
+    const deferred = createDeferred<void>(); mockedProductionRepository.resumeBrewRecovery.mockReturnValue(deferred.promise);
+    const actions = new Subject<any>(); const emitted: any[] = [];
+    const sub = resumeBrewRecoveryEpic$(actions, new BehaviorSubject(recoveryState([recoverableBeer()]))).subscribe((a: any) => emitted.push(a));
+    actions.next(ProductionActions.resumeBrewRecovery()); actions.next(ProductionActions.resumeBrewRecovery());
+    expect(mockedProductionRepository.resumeBrewRecovery).toHaveBeenCalledTimes(1);
+    deferred.reject(new Error('HTTP 409')); await flushPromises();
+    expect(emitted[0]).toEqual(ProductionActions.resumeBrewRecoveryFailure('HTTP 409'));
+    sub.unsubscribe();
+
+    const discardDeferred = createDeferred<void>(); mockedProductionRepository.discardBrewRecovery.mockReturnValue(discardDeferred.promise);
+    const discardActions = new Subject<any>(); const discarded: any[] = [];
+    const discardSub = discardBrewRecoveryEpic$(discardActions).subscribe((a: any) => discarded.push(a));
+    discardActions.next(ProductionActions.discardBrewRecovery()); discardActions.next(ProductionActions.discardBrewRecovery());
+    expect(mockedProductionRepository.discardBrewRecovery).toHaveBeenCalledTimes(1);
+    discardDeferred.reject(new Error('offline')); await flushPromises();
+    expect(discarded).toEqual([ProductionActions.discardBrewRecoveryFailure('offline')]);
+    discardSub.unsubscribe();
   });
 });
 

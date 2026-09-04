@@ -67,6 +67,24 @@ export class ProductionRepository {
         return response.data;
     }
 
+    static async resumeBrewRecovery(aBrewingData: BrewingData): Promise<void> {
+        const request = createRequestConfig();
+        try {
+            await axios.post(`${BaseURL}/BrewRecovery/Resume`, aBrewingData, request.config);
+        } finally {
+            clearRequestTimeout(request);
+        }
+    }
+
+    static async discardBrewRecovery(): Promise<void> {
+        const request = createRequestConfig();
+        try {
+            await axios.delete(`${BaseURL}/BrewRecovery`, request.config);
+        } finally {
+            clearRequestTimeout(request);
+        }
+    }
+
     static async getAgitatorStatus(): Promise<AgitatorDetailStatus> {
         const response = await axios.get<AgitatorDetailStatus>(`${BaseURL}/Agitator/Status`);
         return response.data;

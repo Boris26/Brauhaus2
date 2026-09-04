@@ -16,6 +16,7 @@ import { pushViewPath } from "../utils/viewRoutes";
 import { setStoredDebugMode } from "../utils/debugMode";
 import {AgitatorRealtimeState, AlarmRealtimeState, HeatingRunningState, TemperatureSensorRealtimeState} from '../model/RealtimeControllerState';
 import {AgitatorSettings} from '../model/AgitatorSettings';
+import {BrewRecoverySnapshot} from '../model/BrewRecovery';
 
 export namespace BeerActions {
 
@@ -641,6 +642,13 @@ export namespace ProductionActions {
         ALARM_STATE_CHANGED = 'ProductionActions.ALARM_STATE_CHANGED',
         TEMPERATURE_SENSOR_STATE_CHANGED = 'ProductionActions.TEMPERATURE_SENSOR_STATE_CHANGED',
         AGITATOR_DEFAULTS_CHANGED = 'ProductionActions.AGITATOR_DEFAULTS_CHANGED',
+        BREW_RECOVERY_STATE_CHANGED = 'ProductionActions.BREW_RECOVERY_STATE_CHANGED',
+        RESUME_BREW_RECOVERY = 'ProductionActions.RESUME_BREW_RECOVERY',
+        RESUME_BREW_RECOVERY_SUCCESS = 'ProductionActions.RESUME_BREW_RECOVERY_SUCCESS',
+        RESUME_BREW_RECOVERY_FAILURE = 'ProductionActions.RESUME_BREW_RECOVERY_FAILURE',
+        DISCARD_BREW_RECOVERY = 'ProductionActions.DISCARD_BREW_RECOVERY',
+        DISCARD_BREW_RECOVERY_SUCCESS = 'ProductionActions.DISCARD_BREW_RECOVERY_SUCCESS',
+        DISCARD_BREW_RECOVERY_FAILURE = 'ProductionActions.DISCARD_BREW_RECOVERY_FAILURE',
     }
 
     export interface SetWaterStatus {
@@ -768,6 +776,13 @@ export namespace ProductionActions {
     export interface AlarmStateChanged { readonly type: ActionTypes.ALARM_STATE_CHANGED; payload: AlarmRealtimeState; }
     export interface TemperatureSensorStateChanged { readonly type: ActionTypes.TEMPERATURE_SENSOR_STATE_CHANGED; payload: TemperatureSensorRealtimeState; }
     export interface AgitatorDefaultsChanged { readonly type: ActionTypes.AGITATOR_DEFAULTS_CHANGED; payload: AgitatorSettings; }
+    export interface BrewRecoveryStateChanged { readonly type: ActionTypes.BREW_RECOVERY_STATE_CHANGED; payload: BrewRecoverySnapshot; }
+    export interface ResumeBrewRecovery { readonly type: ActionTypes.RESUME_BREW_RECOVERY; }
+    export interface ResumeBrewRecoverySuccess { readonly type: ActionTypes.RESUME_BREW_RECOVERY_SUCCESS; }
+    export interface ResumeBrewRecoveryFailure { readonly type: ActionTypes.RESUME_BREW_RECOVERY_FAILURE; payload: {error: string}; }
+    export interface DiscardBrewRecovery { readonly type: ActionTypes.DISCARD_BREW_RECOVERY; }
+    export interface DiscardBrewRecoverySuccess { readonly type: ActionTypes.DISCARD_BREW_RECOVERY_SUCCESS; }
+    export interface DiscardBrewRecoveryFailure { readonly type: ActionTypes.DISCARD_BREW_RECOVERY_FAILURE; payload: {error: string}; }
 
     export type AllProductionActions =
         GetTemperatures |
@@ -796,7 +811,9 @@ export namespace ProductionActions {
         WebSocketDisconnect |
         OverheatReceived |
         BrewSessionRunningReceived |
-        SocketConnectionChanged | HeatingRunningChanged | AgitatorStateChanged | AlarmStateChanged | TemperatureSensorStateChanged | AgitatorDefaultsChanged;
+        SocketConnectionChanged | HeatingRunningChanged | AgitatorStateChanged | AlarmStateChanged | TemperatureSensorStateChanged | AgitatorDefaultsChanged |
+        BrewRecoveryStateChanged | ResumeBrewRecovery | ResumeBrewRecoverySuccess | ResumeBrewRecoveryFailure |
+        DiscardBrewRecovery | DiscardBrewRecoverySuccess | DiscardBrewRecoveryFailure;
 
     export function setWaterStatus(aWaterStatus: WaterStatus): ProductionActions.SetWaterStatus {
         return {
@@ -977,4 +994,11 @@ export namespace ProductionActions {
     export const alarmStateChanged = (payload: AlarmRealtimeState): AlarmStateChanged => ({type: ActionTypes.ALARM_STATE_CHANGED, payload});
     export const temperatureSensorStateChanged = (payload: TemperatureSensorRealtimeState): TemperatureSensorStateChanged => ({type: ActionTypes.TEMPERATURE_SENSOR_STATE_CHANGED, payload});
     export const agitatorDefaultsChanged = (payload: AgitatorSettings): AgitatorDefaultsChanged => ({type: ActionTypes.AGITATOR_DEFAULTS_CHANGED, payload});
+    export const brewRecoveryStateChanged = (payload: BrewRecoverySnapshot): BrewRecoveryStateChanged => ({type: ActionTypes.BREW_RECOVERY_STATE_CHANGED, payload});
+    export const resumeBrewRecovery = (): ResumeBrewRecovery => ({type: ActionTypes.RESUME_BREW_RECOVERY});
+    export const resumeBrewRecoverySuccess = (): ResumeBrewRecoverySuccess => ({type: ActionTypes.RESUME_BREW_RECOVERY_SUCCESS});
+    export const resumeBrewRecoveryFailure = (error: string): ResumeBrewRecoveryFailure => ({type: ActionTypes.RESUME_BREW_RECOVERY_FAILURE, payload: {error}});
+    export const discardBrewRecovery = (): DiscardBrewRecovery => ({type: ActionTypes.DISCARD_BREW_RECOVERY});
+    export const discardBrewRecoverySuccess = (): DiscardBrewRecoverySuccess => ({type: ActionTypes.DISCARD_BREW_RECOVERY_SUCCESS});
+    export const discardBrewRecoveryFailure = (error: string): DiscardBrewRecoveryFailure => ({type: ActionTypes.DISCARD_BREW_RECOVERY_FAILURE, payload: {error}});
 }

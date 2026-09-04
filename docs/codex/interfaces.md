@@ -141,3 +141,9 @@ The complete `alarm-state-changed` snapshot may add the independent alarm type `
 Push payloads may add backend-owned `severity: 'INFO' | 'WARNING' | 'ALARM'`. The service worker preserves legacy payload behavior when severity is absent and uses browser-supported notification options to make `ALARM` more prominent. It does not infer severity.
 
 The Settings UI intentionally exposes none of the controller infrastructure fields: temperature tolerance/hysteresis, relay timing, buzzer, GPIO/pins/mode/warnings/debounce, host/port/threading, ALSA/player/sound paths, VAPID secrets, or subscription files. Temperature sensor ID is controller-discovered realtime diagnostic data and remains read-only.
+
+## Interrupted-brew recovery (BeerDataStore #40 / Braumeister #146 / Brauhaus2 #246)
+
+The existing default-namespace Socket.IO connection also consumes `brew-recovery-state-changed`. Its replacement payload is `{ available: false, recovery: null }` or `{ available: true, recovery: { version, brewSession, status, updatedAt } }`. `brewSession` uses the existing `beerId`, liter-valued `plannedVolume`, and percent-valued `plannedBrewhouseEfficiency`; recovery status contains only the saved process/current-step/waiting/heating snapshot required for display. Durations are controller-owned seconds.
+
+The control command endpoints are `POST /BrewRecovery/Resume` with normal `BrewingData`, and `DELETE /BrewRecovery`. HTTP success acknowledges a command only. Only the existing `brew-session-running` event confirms that the process runs and triggers `GET /BrewSession` plus the existing status polling restoration.

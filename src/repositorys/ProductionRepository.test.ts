@@ -14,6 +14,17 @@ describe('ProductionRepository API method/path usage', () => {
     mockedAxios.get.mockResolvedValue({ status: 200, data: 42, statusText: 'OK' } as any);
     mockedAxios.post.mockResolvedValue({ status: 200, data: {}, statusText: 'OK' } as any);
     mockedAxios.put.mockResolvedValue({ status: 200, data: {}, statusText: 'OK' } as any);
+    mockedAxios.delete.mockResolvedValue({ status: 200, data: {}, statusText: 'OK' } as any);
+  });
+
+  it('uses the recovery command endpoints with the normal BrewingData', async () => {
+    const brewingData = {beerId: 'beer-1', plannedVolume: 25, plannedBrewhouseEfficiency: 70,
+      MashdownTemperature: 76, MashupTemperature: 52, CookingTemperature: 99, CookingTime: 60, Rasten: []};
+    await ProductionRepository.resumeBrewRecovery(brewingData);
+    await ProductionRepository.discardBrewRecovery();
+    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/BrewRecovery/Resume'), brewingData, expect.objectContaining({timeout: expect.any(Number)}));
+    expect(mockedAxios.delete).toHaveBeenCalledWith(expect.stringContaining('/BrewRecovery'), expect.objectContaining({timeout: expect.any(Number)}));
+    expect(mockedAxios.post).not.toHaveBeenCalledWith(expect.stringContaining('/Recipe/'), expect.anything());
   });
 
   it('uses the agitator detail/config and pause/resume contracts', async () => {

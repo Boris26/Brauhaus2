@@ -19,6 +19,8 @@ import type {RootState} from "../reducers/rootReducer";
 import {AgitatorRealtimeState, AlarmRealtimeState, HeatingRunningState, TemperatureSensorRealtimeState} from '../model/RealtimeControllerState';
 import {AgitatorSettings} from '../model/AgitatorSettings';
 import {WarningRealtimeState} from '../model/Warning';
+import {BrewRecoverySnapshot} from '../model/BrewRecovery';
+import {mapBeerToBrewingData} from '../utils/productionRecipe';
 
 const BREWING_STATUS_POLL_INTERVAL = 1000;
 export const BREWING_STATUS_REQUEST_TIMEOUT = 8000;
@@ -33,6 +35,20 @@ export const mapControlSocketEvent = (event: {event: string; data?: unknown}) =>
       return ProductionActions.overheatReceived(event.data);
     case 'brew-session-running':
       return ProductionActions.brewSessionRunningReceived();
+    case 'brew-recovery-state-changed': {
+      const recovery = event.data as Partial<BrewRecoverySnapshot> | undefined;
+      if (recovery?.available === false && recovery.recovery === null) {
+        return ProductionActions.brewRecoveryStateChanged({available: false, recovery: null});
+      }
+      if (recovery?.available === true && recovery.recovery && typeof recovery.recovery === 'object') {
+        return ProductionActions.brewRecoveryStateChanged(recovery as BrewRecoverySnapshot);
+      }
+      return ProductionActions.brewRecoveryStateChanged({
+        available: true,
+        recovery: null,
+        error: 'Der Controller hat ungültige Recovery-Daten gesendet.',
+      });
+    }
     case 'connection-status':
       const connection = event.data as {connected: boolean; socketId?: string};
       return ProductionActions.socketConnectionChanged(connection.connected, connection.socketId);
@@ -156,11 +172,32 @@ export const startPollingEpic$ = (action$: any) =>
     exhaustMap(() => createBrewingStatusPolling$(action$))
   );
 
-const isValidBrewSession = (session: BrewSession): boolean =>
-  typeof session.beerId === 'string' && session.beerId.length > 0
-  && Number.isFinite(session.plannedVolume) && session.plannedVolume > 0
-  && Number.isFinite(session.plannedBrewhouseEfficiency)
-  && session.plannedBrewhouseEfficiency > 0 && session.plannedBrewhouseEfficiency <= 100;
+const isValidBrewSession = (session: unknown): session is BrewSession =>
+  typeof session === 'object' && session !== null
+  && typeof (session as BrewSession).beerId === 'string' && (session as BrewSession).beerId.length > 0
+  && Number.isFinite((session as BrewSession).plannedVolume) && (session as BrewSession).plannedVolume > 0
+  && Number.isFinite((session as BrewSession).plannedBrewhouseEfficiency)
+  && (session as BrewSession).plannedBrewhouseEfficiency > 0 && (session as BrewSession).plannedBrewhouseEfficiency <= 100;
+
+const errorMessage = (error: unknown, fallback: string): string => {
+  const responseMessage = (error as any)?.response?.data?.error?.message
+    ?? (error as any)?.response?.data?.error
+    ?? (error as any)?.response?.data?.message
+    ?? (error as any)?.response?.data?.detail;
+  return typeof responseMessage === 'string' && responseMessage.trim()
+    ? responseMessage
+    : error instanceof Error ? error.message : fallback;
+};
+
+const resolveBrewSessionBeer$ = (session: BrewSession, state$: {value: RootState}) => {
+  const loadedBeers = state$.value.beerDataReducer.beers;
+  const beerRequest = loadedBeers?.some((beer) => beer.id === session.beerId)
+    ? of({beers: loadedBeers, fetched: false})
+    : from(BeerRepository.getBeers()).pipe(map((beers) => ({beers, fetched: true})));
+  return beerRequest.pipe(map(({beers, fetched}: {beers: Beer[]; fetched: boolean}) => ({
+    beer: beers.find((beer) => beer.id === session.beerId), beers, fetched,
+  })));
+};
 
 export const restoreBrewSessionEpic$ = (action$: any, state$: {value: RootState}) =>
   action$.pipe(
@@ -171,13 +208,7 @@ export const restoreBrewSessionEpic$ = (action$: any, state$: {value: RootState}
           return of(ApplicationActions.openErrorDialog(true, 'BrewSession konnte nicht übernommen werden', 'Die Skalierungsdaten der laufenden BrewSession sind ungültig.'));
         }
 
-        const loadedBeers = state$.value.beerDataReducer.beers;
-        const beerRequest = loadedBeers?.some((beer) => beer.id === session.beerId)
-          ? of({beers: loadedBeers, fetched: false})
-          : from(BeerRepository.getBeers()).pipe(map((beers) => ({beers, fetched: true})));
-
-        return beerRequest.pipe(mergeMap(({beers, fetched}: {beers: Beer[]; fetched: boolean}) => {
-          const baseBeer = beers.find((beer) => beer.id === session.beerId);
+        return resolveBrewSessionBeer$(session, state$).pipe(mergeMap(({beer: baseBeer, beers, fetched}) => {
           if (!baseBeer) {
             return of(ApplicationActions.openErrorDialog(true, 'BrewSession konnte nicht übernommen werden', `Das Bier der laufenden BrewSession (${session.beerId}) wurde nicht gefunden.`));
           }
@@ -205,6 +236,47 @@ export const restoreBrewSessionEpic$ = (action$: any, state$: {value: RootState}
         'BrewSession konnte nicht übernommen werden',
         error instanceof Error ? error.message : 'Die laufende BrewSession konnte nicht geladen werden.'
       )))
+    ))
+  );
+
+export const resumeBrewRecoveryEpic$ = (action$: any, state$: {value: RootState}) =>
+  action$.pipe(
+    ofType(ProductionActions.ActionTypes.RESUME_BREW_RECOVERY),
+    exhaustMap(() => {
+      const envelope = state$.value.productionReducer.brewRecovery.recovery;
+      if (!state$.value.productionReducer.brewRecovery.available || !envelope || !isValidBrewSession(envelope.brewSession)) {
+        return of(ProductionActions.resumeBrewRecoveryFailure('Die gespeicherten Recovery- oder Skalierungsdaten sind ungültig.'));
+      }
+      return resolveBrewSessionBeer$(envelope.brewSession, state$).pipe(
+        switchMap(({beer, beers, fetched}) => {
+          if (!beer) return of(ProductionActions.resumeBrewRecoveryFailure(`Das Bier des unterbrochenen Brauvorgangs (${envelope.brewSession.beerId}) wurde nicht gefunden.`));
+          const reconstructed = BeerRecipeScaler.scale({
+            beer, volume: envelope.brewSession.plannedVolume,
+            brewhouseEfficiency: envelope.brewSession.plannedBrewhouseEfficiency,
+          });
+          const mapped = mapBeerToBrewingData(reconstructed);
+          if (!mapped.ok || !mapped.brewingData) {
+            return of(ProductionActions.resumeBrewRecoveryFailure(mapped.error ?? 'Das Rezept konnte nicht für die Fortsetzung aufbereitet werden.'));
+          }
+          return from(ProductionRepository.resumeBrewRecovery(mapped.brewingData)).pipe(
+            mergeMap(() => from([
+              ...(fetched ? [BeerActions.getBeersSuccess(beers)] : []),
+              ProductionActions.resumeBrewRecoverySuccess(),
+            ])),
+            catchError((error) => of(ProductionActions.resumeBrewRecoveryFailure(errorMessage(error, 'Der Brauvorgang konnte nicht fortgesetzt werden.'))))
+          );
+        }),
+        catchError((error) => of(ProductionActions.resumeBrewRecoveryFailure(errorMessage(error, 'Das Bier konnte nicht geladen werden.'))))
+      );
+    })
+  );
+
+export const discardBrewRecoveryEpic$ = (action$: any) =>
+  action$.pipe(
+    ofType(ProductionActions.ActionTypes.DISCARD_BREW_RECOVERY),
+    exhaustMap(() => from(ProductionRepository.discardBrewRecovery()).pipe(
+      map(() => ProductionActions.discardBrewRecoverySuccess()),
+      catchError((error) => of(ProductionActions.discardBrewRecoveryFailure(errorMessage(error, 'Der gespeicherte Brauvorgang konnte nicht verworfen werden.'))))
     ))
   );
 
@@ -322,6 +394,8 @@ export const productionEpics = [
   setAgitatorSpeedEpic$,
   sendBrewingDataEpic$,
   restoreBrewSessionEpic$,
+  resumeBrewRecoveryEpic$,
+  discardBrewRecoveryEpic$,
   startPollingEpic$,
   startWaterFillingEpic$,
   confirmEpic$,
