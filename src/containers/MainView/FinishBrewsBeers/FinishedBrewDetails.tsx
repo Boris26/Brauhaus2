@@ -3,12 +3,14 @@ import {connect} from 'react-redux';
 import {FinishedBrew} from '../../../model/FinishedBrew';
 import {BrewStateGerman, eBrewState} from '../../../enums/eBrewState';
 import {FermentationActions} from '../../../actions/fermentation.actions';
+import {ApplicationActions} from '../../../actions/actions';
 import {CreateFermentationMeasurement, FermentationAction, FermentationDetails, FermentationMeasurement} from '../../../model/Fermentation';
 import {actionDueLabel, fermentationDay, isDeviceOnline, latestByDate, latestFermentationReadings} from '../../../utils/fermentation';
 import BrewProcessChart from './BrewProcessChart';
+import FermentationMeasurementsChart from './FermentationMeasurementsChart';
 import './FermentationDetails.css';
 
-interface Props { brew: FinishedBrew; details?: FermentationDetails; activeBrews: FinishedBrew[]; loading: boolean; saving: boolean; completing: string[]; assigning: string[]; error?: string; load: (id: string) => void; save: (value: CreateFermentationMeasurement) => void; complete: (brewId: string, actionId: string) => void; assign: (deviceId: string, brewId: string) => void; }
+interface Props { brew: FinishedBrew; details?: FermentationDetails; activeBrews: FinishedBrew[]; loading: boolean; saving: boolean; completing: string[]; assigning: string[]; error?: string; viewMode?: 'dashboard' | 'measurements'; load: (id: string) => void; save: (value: CreateFermentationMeasurement) => void; complete: (brewId: string, actionId: string) => void; assign: (deviceId: string, brewId: string) => void; openMeasurements?: (id: string) => void; closeMeasurements?: () => void; }
 const number = (value?: number | null, unit = '') => typeof value === 'number' && Number.isFinite(value) ? `${value.toLocaleString('de-DE', {maximumFractionDigits: 1})}${unit}` : '–';
 const date = (value?: string) => value && Number.isFinite(Date.parse(value)) ? new Intl.DateTimeFormat('de-DE', {dateStyle: 'short', timeStyle: 'short'}).format(new Date(value)) : '–';
 const actionText = (action: FermentationAction) => [action.amount, action.unit, action.ingredientName, action.type?.toLowerCase()].filter(Boolean).join(' ');
@@ -26,7 +28,6 @@ const FermentationTrend: React.FC<{measurements: FermentationMeasurement[]}> = (
 };
 
 export const FinishedBrewDetailsView: React.FC<Props> = props => {
-  const [measurementPageOpen, setMeasurementPageOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [measuredAt, setMeasuredAt] = useState(() => new Date().toISOString().slice(0, 16));
   const [temperature, setTemperature] = useState(''); const [plato, setPlato] = useState(''); const [note, setNote] = useState(''); const [validation, setValidation] = useState('');
@@ -45,10 +46,11 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
   const save = () => { if (!temperature && !plato) { setValidation('Mindestens Temperatur oder Plato ist erforderlich.'); return; } setValidation(''); props.save({finishedBeerId: props.brew.id, measuredAt: new Date(measuredAt).toISOString(), temperature: temperature === '' ? undefined : Number(temperature), plato: plato === '' ? undefined : Number(plato), note}); };
   let groupedData: any; try { groupedData = props.brew.brewValues && JSON.parse(props.brew.brewValues as string).groupedData; } catch (_) { groupedData = undefined; }
 
-  if (measurementPageOpen) return <div className="finished-brew-details fermentation-details fermentation-measurements-page">
-    <header className="fermentation-page-header"><div><button className="fermentation-back-button" onClick={() => setMeasurementPageOpen(false)}>← Übersicht</button><h3>Messdaten · {props.brew.name}</h3></div><button onClick={() => setFormOpen(true)}>Neue Messung</button></header>
-    {props.loading && <p>Daten werden geladen …</p>}{props.error && <p className="fermentation-error">{props.error}</p>}
+  if (props.viewMode === 'measurements') return <div className="finished-brew-details fermentation-details fermentation-measurements-page">
+    <header className="fermentation-page-header"><div><button className="fermentation-back-button" onClick={props.closeMeasurements}>← Bier-Detailansicht</button><h3>Messdaten · {props.brew.name}</h3><p className="fermentation-phase">{BrewStateGerman[props.brew.state]}{day ? ` · Tag ${day}` : ''}</p></div><button onClick={() => setFormOpen(true)}>Neue Messung</button></header>
+    {props.loading && <p role="status">Messdaten werden geladen …</p>}{props.error && <p className="fermentation-error" role="alert">Die Messdaten konnten nicht geladen werden.</p>}
     {formOpen && <section className="fermentation-card"><div className="fermentation-form" role="dialog" aria-label="Neue Gärungsmessung"><label>Datum / Uhrzeit<input type="datetime-local" value={measuredAt} onChange={event => setMeasuredAt(event.target.value)} /></label><label>Temperatur °C<input type="number" step="0.1" value={temperature} onChange={event => setTemperature(event.target.value)} /></label><label>Plato °P<input type="number" step="0.1" value={plato} onChange={event => setPlato(event.target.value)} /></label><label>Notiz<textarea value={note} onChange={event => setNote(event.target.value)} /></label>{validation && <p className="fermentation-error">{validation}</p>}<div><button onClick={() => setFormOpen(false)} disabled={props.saving}>Abbrechen</button><button onClick={save} disabled={props.saving}>{props.saving ? 'Speichert …' : 'Speichern'}</button></div></div></section>}
+    <section className="fermentation-card"><h4>Temperatur- und Plato-Verlauf</h4><FermentationMeasurementsChart measurements={details.measurements} sensorMeasurements={details.sensorMeasurements} /></section>
     <div className="fermentation-measurements-grid"><section className="fermentation-card"><h4>Messverlauf</h4>{measurements.length === 0 ? <p>Keine Messwerte vorhanden.</p> : <ul className="fermentation-list">{measurements.map(measurement => <li key={measurement.id}><time>{date(measurement.measuredAt)}</time><strong>{[number(measurement.temperature, ' °C'), number(measurement.plato, ' °P')].join(' · ')}</strong>{measurement.note && <span>{measurement.note}</span>}</li>)}</ul>}</section>
       <section className="fermentation-card"><h4>Gärsensor-Messungen</h4>{details.sensorMeasurements.length === 0 ? <p>Keine Sensormesswerte vorhanden.</p> : <ul className="fermentation-list">{[...details.sensorMeasurements].sort((a,b) => Date.parse(b.measuredAt)-Date.parse(a.measuredAt)).map(sensor => <li key={sensor.id}><time>{date(sensor.measuredAt)}</time><strong>{number(sensor.beerTemperature, ' °C')} · Außen {number(sensor.ambientTemperature, ' °C')}</strong></li>)}</ul>}</section>
       <section className="fermentation-card"><h4>Gärungsaktionen</h4>{details.actions.length === 0 ? <p>Keine Aktionen vorhanden.</p> : <ul className="fermentation-list">{[...details.actions].sort((a,b) => Date.parse(a.scheduledAt)-Date.parse(b.scheduledAt)).map(action => <li key={action.id}><time>{action.state === 'COMPLETED' ? `Erledigt ${date(action.completedAt || undefined)}` : actionDueLabel(action).label}</time><strong>{actionText(action)}</strong>{action.state === 'PLANNED' && <button disabled={props.completing.includes(action.id)} onClick={() => props.complete(props.brew.id, action.id)}>Erledigt</button>}</li>)}</ul>}</section></div>
@@ -56,8 +58,8 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
   </div>;
 
   return <div className="finished-brew-details fermentation-details fermentation-dashboard">
-    <header className="fermentation-dashboard-header"><div><h3>{props.brew.name}</h3><p className="fermentation-phase">{BrewStateGerman[props.brew.state]}{day ? ` · Tag ${day}` : ''}</p></div><button onClick={() => setMeasurementPageOpen(true)}>Messdaten öffnen</button></header>
-    {props.loading && <p>Daten werden geladen …</p>}{props.error && <p className="fermentation-error">{props.error}</p>}
+    <header className="fermentation-dashboard-header"><div><h3>{props.brew.name}</h3><p className="fermentation-phase">{BrewStateGerman[props.brew.state]}{day ? ` · Tag ${day}` : ''}</p></div><button onClick={() => props.openMeasurements?.(props.brew.id)}>Messdaten öffnen</button></header>
+    {props.loading && <p role="status">Messdaten werden geladen …</p>}{props.error && <p className="fermentation-error" role="alert">Die Messdaten konnten nicht geladen werden.</p>}
     <section className="fermentation-reading-grid" aria-label="Aktuelle Gärungswerte"><div><span>Biertemperatur</span><strong>{number(readings.beerTemperature, ' °C')}</strong></div><div><span>Außentemperatur</span><strong>{number(readings.ambientTemperature, ' °C')}</strong></div><div><span>Plato</span><strong>{number(readings.plato, ' °P')}</strong></div></section>
     <div className="fermentation-dashboard-grid">
       <section className="fermentation-card fermentation-status-card"><h4>Gärsensor</h4>{details.devices.length === 0 ? <p>Kein Sensor zugeordnet.</p> : details.devices.map(device => <div key={device.id} className="fermentation-device"><strong>{device.name}</strong><span className={isDeviceOnline(device.lastSeenAt) ? 'is-online' : 'is-offline'}>{isDeviceOnline(device.lastSeenAt) ? '● Online' : '● Offline'}</span>{!device.assignedFinishedBeerId && <div className="fermentation-assignment"><span>Bier zuordnen:</span>{props.activeBrews.map(brew => <button key={brew.id} disabled={props.assigning.includes(device.id)} onClick={() => props.assign(device.id, brew.id)}>{brew.name}</button>)}</div>}</div>)}</section>
@@ -68,5 +70,5 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
   </div>;
 };
 const mapState = (state: any, own: {brew: FinishedBrew}) => ({details: state.fermentationReducer.byBrewId[own.brew.id], activeBrews: (state.beerDataReducer.finishedBrews || []).filter((brew: FinishedBrew) => brew.active && brew.state !== eBrewState.FINISHED), loading: state.fermentationReducer.loadingIds.includes(own.brew.id), saving: state.fermentationReducer.savingMeasurementIds.includes(own.brew.id), completing: state.fermentationReducer.completingActionIds, assigning: state.fermentationReducer.assigningDeviceIds, error: state.fermentationReducer.errors[own.brew.id]});
-const mapDispatch = (dispatch: any) => ({load: (id: string) => dispatch(FermentationActions.load(id)), save: (value: CreateFermentationMeasurement) => dispatch(FermentationActions.createMeasurement(value)), complete: (brewId: string, actionId: string) => dispatch(FermentationActions.completeAction(brewId, actionId)), assign: (deviceId: string, brewId: string) => dispatch(FermentationActions.assignDevice(deviceId, brewId))});
+const mapDispatch = (dispatch: any) => ({load: (id: string) => dispatch(FermentationActions.load(id)), save: (value: CreateFermentationMeasurement) => dispatch(FermentationActions.createMeasurement(value)), complete: (brewId: string, actionId: string) => dispatch(FermentationActions.completeAction(brewId, actionId)), assign: (deviceId: string, brewId: string) => dispatch(FermentationActions.assignDevice(deviceId, brewId)), openMeasurements: (id: string) => dispatch(ApplicationActions.openMeasurementData(id))});
 export default connect(mapState, mapDispatch)(FinishedBrewDetailsView);

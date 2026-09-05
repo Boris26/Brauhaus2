@@ -44,9 +44,8 @@ describe('fermentation details dashboard', () => {
   });
 
   it('moves full histories and measurement entry to the separate measurements view', () => {
-    const save = jest.fn();
-    render(<FinishedBrewDetailsView {...base} save={save} />);
-    fireEvent.click(screen.getByText('Messdaten öffnen'));
+    const save = jest.fn(); const closeMeasurements = jest.fn();
+    render(<FinishedBrewDetailsView {...base} save={save} viewMode="measurements" closeMeasurements={closeMeasurements} />);
 
     expect(screen.getByText('Messdaten · West Coast IPA')).toBeInTheDocument();
     expect(screen.getByText('Messverlauf')).toBeInTheDocument();
@@ -57,7 +56,15 @@ describe('fermentation details dashboard', () => {
     fireEvent.change(screen.getByLabelText('Temperatur °C'), {target: {value: '18.3'}});
     fireEvent.click(screen.getByText('Speichern'));
     expect(save).toHaveBeenCalledWith(expect.objectContaining({finishedBeerId: 'brew-1', temperature: 18.3, plato: undefined, measuredAt: expect.stringContaining('2026-09-04')}));
-    fireEvent.click(screen.getByText('← Übersicht'));
-    expect(screen.getByText('Messdaten öffnen')).toBeInTheDocument();
+    fireEvent.click(screen.getByText('← Bier-Detailansicht'));
+    expect(closeMeasurements).toHaveBeenCalledTimes(1);
+  });
+
+  it('navigates from the compact beer detail to its measurement route', () => {
+    const openMeasurements = jest.fn();
+    render(<FinishedBrewDetailsView {...base} openMeasurements={openMeasurements} />);
+
+    fireEvent.click(screen.getByText('Messdaten öffnen'));
+    expect(openMeasurements).toHaveBeenCalledWith('brew-1');
   });
 });

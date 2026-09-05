@@ -13,12 +13,25 @@ const viewToPath: Record<Views, string> = {
   [Views.INGREDIENTS]: '/ingredients',
   [Views.SETTINGS]: '/settings',
   [Views.VERSION]: '/version',
+  [Views.MEASUREMENT_DATA]: '/finished-brews/measurements',
+};
+
+const measurementPathPattern = /^\/finished-brews\/([^/]+)\/measurements$/;
+
+export const getMeasurementDataPath = (finishedBeerId: string): string =>
+  `/finished-brews/${encodeURIComponent(finishedBeerId)}/measurements`;
+
+export const getFinishedBeerIdFromPath = (path: string): string | undefined => {
+  const match = path.replace(/\/$/, '').match(measurementPathPattern);
+  if (!match) return undefined;
+  try { return decodeURIComponent(match[1]); } catch (_) { return undefined; }
 };
 
 export const getPathForView = (view: Views): string => viewToPath[view];
 
 export const getViewForPath = (path: string, mode: UiMode = getUiMode()): Views => {
   const normalized = path.toLowerCase().replace(/\/$/, '') || '/';
+  if (measurementPathPattern.test(normalized)) return mode === UiMode.DESKTOP ? Views.MEASUREMENT_DATA : CONTROLLER_HOME_VIEW;
   if (mode === UiMode.CONTROLLER && normalized === '/beers') return Views.MAIN;
   const match = (Object.entries(viewToPath) as Array<[string, string]>).find(([, route]) => route === normalized);
   const matchedView = match ? Number(match[0]) as Views : undefined;

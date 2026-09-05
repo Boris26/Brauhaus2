@@ -12,7 +12,7 @@ import {BackendAvailable} from "../reducers/productionReducer";
 import {scalingValues} from "../utils/BeerScaler/ScalingBeerRecipe";
 import {RecipeImportRequest, RecipeImportResult} from '../model/RecipeImport';
 import { ThemeName, setTheme as applyAndStoreTheme } from "../utils/theme";
-import { pushViewPath } from "../utils/viewRoutes";
+import { getMeasurementDataPath, pushViewPath } from "../utils/viewRoutes";
 import { setStoredDebugMode } from "../utils/debugMode";
 import {AgitatorRealtimeState, AlarmRealtimeState, HeatingRunningState, TemperatureSensorRealtimeState} from '../model/RealtimeControllerState';
 import {AgitatorSettings} from '../model/AgitatorSettings';
@@ -567,6 +567,16 @@ export namespace ApplicationActions {
         return {
             type: ActionTypes.SET_VIEW,
             payload: {view: aView},
+        };
+    }
+
+    export function openMeasurementData(finishedBeerId: string): SetView {
+        if (typeof window !== 'undefined' && window.history?.pushState) {
+            window.history.pushState(null, '', getMeasurementDataPath(finishedBeerId));
+        }
+        return {
+            type: ActionTypes.SET_VIEW,
+            payload: {view: Views.MEASUREMENT_DATA},
         };
     }
 

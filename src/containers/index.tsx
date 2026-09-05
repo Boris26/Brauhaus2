@@ -14,6 +14,7 @@ const IngredientsFormPage = React.lazy(() => import('./DatabaseOverview/Ingredie
 const SettingsPage = React.lazy(() => import('./Settings/SettingsPage.connect'));
 const VersionPage = React.lazy(() => import('./Version/VersionPage'));
 const DashboardPage = React.lazy(() => import('./Dashboard/DashboardPage.connect'));
+const FermentationMeasurementsPage = React.lazy(() => import('./MainView/FinishBrewsBeers/FermentationMeasurementsPage'));
 
 interface indexMainProps {
     viewState: Views;
@@ -66,6 +67,7 @@ export class Index extends React.Component<indexMainProps> {
                 {activeView === Views.FINISHED_BREWS && <FinishedBrewsTable />}
                 {activeView === Views.BREWING_CALCULATIONS && <BrewingCalculations />}
                 {activeView === Views.VERSION && <VersionPage socketConnected={socketConnected} socketId={socketId} />}
+                {activeView === Views.MEASUREMENT_DATA && <FermentationMeasurementsPage />}
             </div>
             </Suspense>
 
