@@ -1,6 +1,6 @@
 import { BehaviorSubject, Subject } from 'rxjs';
 import { BeerActions, ProductionActions } from '../actions/actions';
-import { BREWING_STATUS_REQUEST_TIMEOUT, confirmEpic$, discardBrewRecoveryEpic$, mapControlSocketEvent, nextProcedureStepEpic$, restoreBrewSessionEpic$, resumeBrewRecoveryEpic$, sendBrewingDataEpic$, startPollingEpic$, startWaterFillingEpic$, WATER_FILLING_MAX_DURATION, WATER_STATUS_REQUEST_TIMEOUT } from './productionEpics';
+import { BREWING_STATUS_POLL_INTERVAL, BREWING_STATUS_REQUEST_TIMEOUT, confirmEpic$, discardBrewRecoveryEpic$, mapControlSocketEvent, nextProcedureStepEpic$, restoreBrewSessionEpic$, resumeBrewRecoveryEpic$, sendBrewingDataEpic$, startPollingEpic$, startWaterFillingEpic$, WATER_FILLING_MAX_DURATION, WATER_STATUS_REQUEST_TIMEOUT } from './productionEpics';
 import { ProductionRepository } from '../repositorys/ProductionRepository';
 import {BackendAvailable} from '../reducers/productionReducer';
 import {BrewingData} from '../model/BrewingData';
@@ -520,7 +520,11 @@ describe('startPollingEpic$', (): void => {
     expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledTimes(1);
     expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledWith(BREWING_STATUS_REQUEST_TIMEOUT);
 
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(BREWING_STATUS_POLL_INTERVAL - 1);
+    await flushPromises();
+    expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledTimes(1);
+
+    jest.advanceTimersByTime(1);
     await flushPromises();
 
     expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledTimes(2);
@@ -547,11 +551,31 @@ describe('startPollingEpic$', (): void => {
 
     expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledTimes(1);
 
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(BREWING_STATUS_POLL_INTERVAL);
     await flushPromises();
 
     expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledTimes(2);
     expect(emittedActions).toEqual([ProductionActions.setBrewingStatus(createBrewingStatus(ProcessState.ACTIVE))]);
+    subscription.unsubscribe();
+  });
+
+  it('does not overlap brewing status requests', async (): Promise<void> => {
+    const pendingStatus = createDeferred<{available: BackendAvailable; brewingStatus: BrewingStatus}>();
+    mockedProductionRepository.getBrewingStatus.mockReturnValue(pendingStatus.promise);
+    const action$ = new Subject<ProductionActions.AllProductionActions>();
+    const subscription = startPollingEpic$(action$).subscribe();
+
+    action$.next(ProductionActions.startPolling());
+    await flushPromises();
+    jest.advanceTimersByTime(BREWING_STATUS_POLL_INTERVAL * 2);
+    await flushPromises();
+    expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledTimes(1);
+
+    pendingStatus.resolve(createStatusResponse(ProcessState.ACTIVE));
+    await flushPromises();
+    jest.advanceTimersByTime(BREWING_STATUS_POLL_INTERVAL);
+    await flushPromises();
+    expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledTimes(2);
     subscription.unsubscribe();
   });
 
@@ -581,7 +605,7 @@ describe('startPollingEpic$', (): void => {
     await flushPromises();
 
     expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledTimes(1);
-    jest.advanceTimersByTime(1000);
+    jest.advanceTimersByTime(BREWING_STATUS_POLL_INTERVAL);
     await flushPromises();
     expect(mockedProductionRepository.getBrewingStatus).toHaveBeenCalledTimes(2);
     subscription.unsubscribe();

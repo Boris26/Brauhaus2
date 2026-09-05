@@ -15,7 +15,7 @@ Needs verification: sorting/order guarantees, finished-beer update semantics, ID
 
 - `POST Recipe/` returns 201 only when recipe is accepted.
 - `POST Command/StartBrewing:""` starts the accepted recipe.
-- `GET Status/` returns complete enough status every second.
+- `GET Status/` returns a complete authoritative status on the immediate initial request and subsequent ten-second polls; the UI only interpolates timed-step display values between responses.
 - Status terminal states stop polling.
 - `WaitingFor` enum values match UI mappings.
 - `WaterStatus` is an object `{ filledLiters, targetLiters, openClose }`; `openClose !== true` means water filling is no longer open/running.

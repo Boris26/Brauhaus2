@@ -29,6 +29,9 @@ export interface TemperatureTimelineModel {
 export interface TemperatureTimelineModelOptions {
     /** Skip defensive input sorting only for collectionSequence-ordered snapshots. */
     measurementsOrderedByCollection?: boolean;
+    /** Locally projected marker positions; measurements remain controller samples. */
+    displayNowSeconds?: number;
+    displayCurrentStepElapsedSeconds?: number;
 }
 
 const DEFAULT_UNTIMED_STEP_SECONDS = 5 * 60;
@@ -109,14 +112,15 @@ export const buildTemperatureTimelineModel = (
         observedStarts.set(index, Math.min(observedStarts.get(index) ?? Number.POSITIVE_INFINITY, measurement.timelineSeconds));
     });
 
-    const statusElapsed = Math.max(0, safeNumber(brewingStatus?.elapsedTime) ?? 0);
+    const authoritativeStatusElapsed = Math.max(0, safeNumber(brewingStatus?.elapsedTime) ?? 0);
+    const statusElapsed = Math.max(authoritativeStatusElapsed, safeNumber(options.displayNowSeconds) ?? authoritativeStatusElapsed);
     const lastObserved = normalized.at(-1)?.timelineSeconds ?? 0;
     let nowSeconds = Math.max(statusElapsed, lastObserved);
 
     // If collection started in the middle of a brew and elapsedTime is step-local,
     // place the current step after all preceding planned bands instead of at x=0.
     const plannedBeforeCurrent = processSteps.slice(0, Math.max(0, activeIndex)).reduce((sum, step) => sum + getPlannedDuration(step), 0);
-    const currentStepElapsed = Math.max(0, safeNumber(brewingStatus?.currentStep.elapsedTime) ?? statusElapsed);
+    const currentStepElapsed = Math.max(0, safeNumber(options.displayCurrentStepElapsedSeconds) ?? safeNumber(brewingStatus?.currentStep.elapsedTime) ?? statusElapsed);
     if (activeIndex > 0 && !Array.from(observedStarts.keys()).some(index => index < activeIndex)) {
         const shift = Math.max(0, plannedBeforeCurrent + currentStepElapsed - nowSeconds);
         normalized.forEach(measurement => { measurement.timelineSeconds += shift; });
@@ -181,8 +185,10 @@ export const buildTemperatureTimelineModel = (
             targetTemperature: safeNumber(measurement.TargetTemperature)
         });
     });
-    pointsBySecond.set(Math.floor(nowSeconds), {
-        ...(pointsBySecond.get(Math.floor(nowSeconds)) ?? {elapsedSeconds: Math.floor(nowSeconds)}),
+    // Keep the current temperature point at the last authoritative status time;
+    // only the separate "now" marker is allowed to advance locally.
+    pointsBySecond.set(Math.floor(authoritativeStatusElapsed), {
+        ...(pointsBySecond.get(Math.floor(authoritativeStatusElapsed)) ?? {elapsedSeconds: Math.floor(authoritativeStatusElapsed)}),
         actualTemperature: currentActual,
         targetTemperature: currentTarget
     });

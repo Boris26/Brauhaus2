@@ -47,12 +47,25 @@ export class DashboardPage extends React.Component<DashboardPageProps> {
     if (this.props.beers === undefined) this.props.getBeers(true);
     if (this.props.finishedBrews === undefined) this.props.getFinishedBrews(true);
     (this.props.finishedBrews ?? []).filter(b => b.active && b.state !== eBrewState.FINISHED).forEach(b => this.props.loadFermentation?.(b.id));
+    this.synchronizeDisplayTime();
+    this.displayInterval = setInterval(() => {
+      if (this.displayTimeAnchor) this.setState(({displayTick}) => ({displayTick: displayTick + 1}));
+    }, 1000);
   }
 
   componentDidUpdate(previous: DashboardPageProps): void {
     if (previous.finishedBrews !== this.props.finishedBrews) {
       (this.props.finishedBrews ?? []).filter(b => b.active && b.state !== eBrewState.FINISHED).forEach(b => this.props.loadFermentation?.(b.id));
     }
+    if (previous.brewingStatus !== this.props.brewingStatus) this.synchronizeDisplayTime();
+  }
+
+  componentWillUnmount(): void {
+    if (this.displayInterval !== undefined) clearInterval(this.displayInterval);
+  }
+
+  private synchronizeDisplayTime(): void {
+    this.displayTimeAnchor = createBrewingDisplayTimeAnchor(this.props.brewingStatus, Date.now());
   }
 
   private renderProductionStatus(): React.ReactNode {
@@ -61,7 +74,7 @@ export class DashboardPage extends React.Component<DashboardPageProps> {
     const currentTemp = this.props.socketConnected ? this.props.realtimeState?.temperatureSensor?.current : null;
     const targetTemp = safeNumber(brewingStatus?.temperature.target, NaN);
     const duration = safeNumber(brewingStatus?.currentStep.duration);
-    const elapsed = safeNumber(brewingStatus?.currentStep.elapsedTime);
+    const elapsed = safeNumber(projectBrewingDisplayTime(brewingStatus, this.displayTimeAnchor, Date.now()).stepElapsedSeconds);
     const canShowProgress = brewingStatus?.currentStep.mode === ProcessMode.TIMER_RUNNING && duration > 0;
     const progress = canShowProgress ? Math.min(100, Math.max(0, Math.round(elapsed * 100 / duration))) : 0;
 

@@ -37,6 +37,16 @@ const expectMonotonicSteps = (model: ReturnType<typeof buildTemperatureTimelineM
 };
 
 describe('temperature timeline model', () => {
+    it('advances only the now marker while retaining authoritative temperature-point time', () => {
+        const timed = status({
+            elapsedTime: 120,
+            currentStep: {index: 3, phase: ProcessPhase.RAST, mode: ProcessMode.TIMER_RUNNING, duration: 600, elapsedTime: 120, remainingTime: 480},
+        });
+        const model = buildTemperatureTimelineModel(undefined, timed, [], 34, {displayNowSeconds: 125, displayCurrentStepElapsedSeconds: 125});
+
+        expect(model.nowSeconds).toBe(125);
+        expect(model.points).toEqual([{elapsedSeconds: 120, actualTemperature: 34, targetTemperature: 45}]);
+    });
     it('keeps multiple and consecutive decoctions as independent fallback-duration bands', () => {
         const decoctionBeer = {...beer, fermentation: [
             {type: 'Einmaischen', temperature: 57},

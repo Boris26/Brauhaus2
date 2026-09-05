@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { DashboardPage } from './DashboardPage';
 import { Beer } from '../../model/Beer';
 import { FinishedBrew } from '../../model/FinishedBrew';
@@ -64,6 +64,7 @@ const renderDashboard = (overrides: Partial<React.ComponentProps<typeof Dashboar
 );
 
 describe('DashboardPage', () => {
+  afterEach(() => jest.useRealTimers());
   it('renders KPI cards and empty production status', () => {
     renderDashboard();
 
@@ -82,6 +83,27 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Heizung')).toBeInTheDocument();
     expect(screen.getByText('Rührwerk')).toBeInTheDocument();
     expect(screen.getByText('50 %')).toBeInTheDocument();
+  });
+
+  it('projects timed-step progress locally and accepts authoritative resync', () => {
+    jest.useFakeTimers();
+    const {rerender} = renderDashboard({brewingStatus: activeStatus});
+    expect(screen.getByText('5:00 / 10:00')).toBeInTheDocument();
+
+    act(() => jest.advanceTimersByTime(5000));
+    expect(screen.getByText('5:05 / 10:00')).toBeInTheDocument();
+
+    const resynced = {...activeStatus, currentStep: {...activeStatus.currentStep, elapsedTime: 290, remainingTime: 310}};
+    rerender(<DashboardPage beers={[beer]} finishedBrews={[brew]} isFetching={false} beerToBrew={beer} brewingStatus={resynced} isBackendAvailable={true} getBeers={jest.fn()} getFinishedBrews={jest.fn()} />);
+    expect(screen.getByText('4:50 / 10:00')).toBeInTheDocument();
+  });
+
+  it('does not advance a waiting step locally', () => {
+    jest.useFakeTimers();
+    const waiting = {...activeStatus, currentStep: {...activeStatus.currentStep, mode: ProcessMode.WAITING}};
+    renderDashboard({brewingStatus: waiting});
+    act(() => jest.advanceTimersByTime(5000));
+    expect(screen.queryByText('5:05 / 10:00')).not.toBeInTheDocument();
   });
 
   it('keeps partial backend errors local to production card', () => {
