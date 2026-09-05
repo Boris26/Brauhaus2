@@ -51,6 +51,6 @@ No `.env`-based URL configuration was found in inspected source. Changing deploy
 2. Desktop index dispatches backend availability polling.
 3. Recipe main view fetches beers and selects the last beer returned as default.
 4. User marks a recipe as the beer to brew.
-5. Production view maps the selected recipe into `BrewingData`, sends it to control, starts brewing, then polls status every second until terminal state.
+5. Production view maps the selected recipe into `BrewingData`, sends it to control, starts brewing, then polls status immediately and every ten seconds until terminal state while timed-step displays advance from a local wall-clock projection.
 6. Runtime status updates drive progress display, confirm dialogs, timeline grouping, hop-addition reminders, finish dialog, and saved finished-brew records.
 7. Finished brew completion stores collected status samples as JSON in `FinishedBrew.brewValues`.

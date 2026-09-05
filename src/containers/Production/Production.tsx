@@ -26,7 +26,7 @@ import { dataCollector } from '../../utils/DataCollector/dataCollector';
 import {isBrewingProcessActive, isProcessActive} from "../../utils/brewingStatus/selectors";
 import {getVesselContentType} from "../../utils/brewingStatus/vesselContent";
 import {calculateHopSchedule, getDueHopAddition, HopAddition} from "./utils/hopSchedule";
-import {getRemainingSecondsFromStatus, shouldCountdownLocally, tickRemainingSeconds} from "./utils/productionCountdown";
+import {BrewingDisplayTimeAnchor, createBrewingDisplayTimeAnchor, projectBrewingDisplayTime, shouldCountdownLocally} from "./utils/productionCountdown";
 import {getAlarmSnapshot, getAgitatorActive, getHeatingActive, isControllerAvailable as getIsControllerAvailable} from "./utils/productionStatus";
 import {RecipeWaterFill, RecipeWaterFillStatus} from "./waterFill/recipeWaterFill.types";
 import {completeWaterFill, createInitialRecipeWaterFillStatus, failWaterFill, includePreparedSpargeAfterMashingOut, markValveOpened, resetWaterFill, startManualWaterFill, startWaterFill} from "./waterFill/recipeWaterFillState";
@@ -103,6 +103,8 @@ interface ProductionState {
     announcedHopTimes: number[];
     recipeWaterFill: RecipeWaterFillStatus;
     displayedRemainingSeconds: number | undefined;
+    displayedStepElapsedSeconds: number | undefined;
+    displayedProcessElapsedSeconds: number | undefined;
     equipmentAlarmDismissed: boolean;
 }
 
@@ -111,6 +113,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
     private isFinishedBrewSaveRequestPending = false;
     private readonly MAX_WATER_LEVEL = 70;
     private remainingTimeInterval: NodeJS.Timeout | null = null;
+    private brewingDisplayTimeAnchor: BrewingDisplayTimeAnchor | undefined;
     private agitatorSpeedDebounceTimeout: NodeJS.Timeout | null = null;
     private waterErrorTimeout: NodeJS.Timeout | null = null;
     private isMountedComponent = false;
@@ -146,6 +149,8 @@ export class Production extends React.Component<ProductionProps, ProductionState
             announcedHopTimes: [],
             recipeWaterFill: createInitialRecipeWaterFillStatus(),
             displayedRemainingSeconds: undefined,
+            displayedStepElapsedSeconds: undefined,
+            displayedProcessElapsedSeconds: undefined,
             equipmentAlarmDismissed: false
         }
     }
@@ -175,7 +180,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     componentDidUpdate(prevProps: Readonly<ProductionProps>, prevState: Readonly<ProductionState>) {
         const {brewingStatus,isWaterFillingSuccessful, waterStatus} = this.props;
-        const {waterSwitchState,showHopsDialog,showFinishDialog} = this.state;
+        const {waterSwitchState,showFinishDialog} = this.state;
         const selectedRecipeChanged = prevProps.selectedBeer?.id !== this.props.selectedBeer?.id;
 
 
@@ -248,9 +253,6 @@ export class Production extends React.Component<ProductionProps, ProductionState
         }
 
 
-        if (!selectedRecipeChanged && brewingStatus?.currentStep?.phase === ProcessPhase.COOKING && !showHopsDialog) {
-            this.checkForHopAddition()
-        }
         if (brewingStatus?.process?.state === ProcessState.FINISHED && !showFinishDialog && !this.state.brewingFinished)
         {
             this.setState({showFinishDialog: true})
@@ -463,10 +465,14 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     syncRemainingTimeFromStatus = (): void => {
-        const remainingSeconds = this.getRemainingSecondsFromStatus();
-        if (remainingSeconds !== this.state.displayedRemainingSeconds) {
-            this.setState({displayedRemainingSeconds: remainingSeconds});
-        }
+        const nowMs = Date.now();
+        this.brewingDisplayTimeAnchor = createBrewingDisplayTimeAnchor(this.props.brewingStatus, nowMs);
+        const displayTime = projectBrewingDisplayTime(this.props.brewingStatus, this.brewingDisplayTimeAnchor, nowMs);
+        this.setState({
+            displayedRemainingSeconds: displayTime.remainingSeconds,
+            displayedStepElapsedSeconds: displayTime.stepElapsedSeconds,
+            displayedProcessElapsedSeconds: displayTime.processElapsedSeconds,
+        }, () => this.checkForHopAddition(displayTime.stepElapsedSeconds));
     }
 
     tickRemainingTime = (): void => {
@@ -474,24 +480,23 @@ export class Production extends React.Component<ProductionProps, ProductionState
         if (!this.shouldCountdownLocally(brewingStatus)) {
             return;
         }
-        this.setState((prevState) => {
-            if (typeof prevState.displayedRemainingSeconds !== 'number') {
-                return null;
-            }
-            return {displayedRemainingSeconds: tickRemainingSeconds(prevState.displayedRemainingSeconds)};
-        });
+        const displayTime = projectBrewingDisplayTime(brewingStatus, this.brewingDisplayTimeAnchor, Date.now());
+        this.setState({
+            displayedRemainingSeconds: displayTime.remainingSeconds,
+            displayedStepElapsedSeconds: displayTime.stepElapsedSeconds,
+            displayedProcessElapsedSeconds: displayTime.processElapsedSeconds,
+        }, () => this.checkForHopAddition(displayTime.stepElapsedSeconds));
     }
 
     shouldCountdownLocally = (aBrewingStatus?: BrewingStatus): boolean => {
         return shouldCountdownLocally(aBrewingStatus);
     }
 
-    getRemainingSecondsFromStatus = (): number | undefined => {
-        return getRemainingSecondsFromStatus(this.props.brewingStatus);
-    }
-    checkForHopAddition() {
-        const {hopSchedule, announcedHopTimes} = this.state;
-        const aCookingElapsed = Math.floor(this.props.brewingStatus?.currentStep?.elapsedTime ?? 0);
+    checkForHopAddition(aDisplayedStepElapsed?: number) {
+        const {hopSchedule, announcedHopTimes, showHopsDialog} = this.state;
+        if (showHopsDialog) return;
+        if (this.props.brewingStatus?.currentStep?.phase !== ProcessPhase.COOKING || !this.shouldCountdownLocally(this.props.brewingStatus)) return;
+        const aCookingElapsed = Math.floor(aDisplayedStepElapsed ?? this.props.brewingStatus.currentStep.elapsedTime ?? 0);
         const dueAddition = getDueHopAddition(hopSchedule, aCookingElapsed, announcedHopTimes);
         if (dueAddition === undefined) {
             return;
@@ -747,6 +752,8 @@ export class Production extends React.Component<ProductionProps, ProductionState
                     brewingStatus={this.props.brewingStatus}
                     measurements={dataCollector.getTimelineSnapshot().measurements}
                     fallbackTemperature={this.props.temperature}
+                    displayNowSeconds={this.state.displayedProcessElapsedSeconds}
+                    displayCurrentStepElapsedSeconds={this.state.displayedStepElapsedSeconds}
                 />
             </div>
         );

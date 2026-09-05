@@ -22,7 +22,7 @@ import {WarningRealtimeState} from '../model/Warning';
 import {BrewRecoverySnapshot} from '../model/BrewRecovery';
 import {mapBeerToBrewingData} from '../utils/productionRecipe';
 
-const BREWING_STATUS_POLL_INTERVAL = 1000;
+export const BREWING_STATUS_POLL_INTERVAL = 10_000;
 export const BREWING_STATUS_REQUEST_TIMEOUT = 8000;
 export const WATER_STATUS_REQUEST_TIMEOUT = 8000;
 export const WATER_FILLING_MAX_DURATION = 30 * 60 * 1000;
