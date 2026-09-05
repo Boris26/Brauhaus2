@@ -1,6 +1,7 @@
 import { HopTimeUnit } from '../../enums/eHopTimeUnit';
 import { HopUsage } from '../../enums/eHopUsage';
 import { HopDTO } from '../../model/BeerDTO';
+import {clearRecipeAction, isValidRecipeAction, normalizeRecipeAction} from '../../model/FermentationRecipeAction';
 
 export const hopTimeUnitsByUsage: Record<HopUsage, readonly HopTimeUnit[]> = {
     [HopUsage.FIRST_WORT]: [HopTimeUnit.MINUTES, HopTimeUnit.HOURS],
@@ -26,7 +27,7 @@ export const normalizeHopDto = (aHop: Partial<HopDTO>): HopDTO => {
     const hasTime = aHop.time !== undefined && aHop.time !== null;
     const timeUnit = hasTime ? getValidTimeUnit(usage, aHop.timeUnit) : undefined;
 
-    return {
+    const normalized = normalizeRecipeAction({
         ...aHop,
         id: aHop.id ?? '',
         name: aHop.name ?? '',
@@ -34,22 +35,25 @@ export const normalizeHopDto = (aHop: Partial<HopDTO>): HopDTO => {
         ...(hasTime ? { time: Number(aHop.time) } : {}),
         usage,
         ...(timeUnit ? { timeUnit } : {}),
-    };
+    });
+    return usage === HopUsage.DRY_HOP ? normalized : clearRecipeAction(normalized);
 };
 
 export const updateHopUsage = (aHop: HopDTO, aUsage: HopUsage): HopDTO => {
     const hasTime = aHop.time !== undefined && aHop.time !== null;
-    return {
+    const updated = {
         ...aHop,
         usage: aUsage,
         timeUnit: hasTime ? getValidTimeUnit(aUsage, aHop.timeUnit) : undefined,
     };
+    return aUsage === HopUsage.DRY_HOP ? normalizeRecipeAction(updated) : clearRecipeAction(updated);
 };
 
 export const validateHopDto = (aHop: HopDTO): boolean => {
     const usage = aHop.usage ?? HopUsage.BOIL;
     if (!Object.values(HopUsage).includes(usage)) return false;
     if (!Number.isFinite(Number(aHop.quantity)) || Number(aHop.quantity) <= 0) return false;
+    if (usage === HopUsage.DRY_HOP && !isValidRecipeAction(aHop)) return false;
 
     const hasTime = aHop.time !== undefined && aHop.time !== null;
     const hasTimeUnit = aHop.timeUnit !== undefined && aHop.timeUnit !== null;

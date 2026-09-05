@@ -60,7 +60,7 @@ Fields: `id`, `name`, `startDate`, optional timezone-bearing `fermentationStarte
 ## Ingredients
 
 - `Hops`: `id`, `name`, `type`, `alpha`, `description`.
-- Recipe hop entries: `id`, `name`, `description`, numeric `alpha`, `quantity`, optional `time`, optional `usage`, optional `timeUnit`. BRAUHAUS-v1 hop usage values are `FIRST_WORT`, `BOIL`, `WHIRLPOOL`, and `DRY_HOP`; a supplied time requires one of `MINUTES`, `HOURS`, or `DAYS`, while an untimed addition has no unit. Missing legacy `usage` remains `BOIL`. The recipe editor currently applies a stricter UI-only rule: `FIRST_WORT`, `BOIL`, and `WHIRLPOOL` allow `MINUTES` or `HOURS`, while `DRY_HOP` allows `HOURS` or `DAYS`. Existing invalid combinations are corrected in UI state without changing the usage or converting the numeric time. The backend contract and BRAUHAUS-v1 schema remain unchanged pending the separate schema work.
+- Recipe hop entries keep brew-day `time`/`timeUnit` separate from optional `DRY_HOP` action fields. Action fields are `actionId`, `triggerType`, `triggerValue`, `triggerUnit`, `contactTime`, and `contactTimeUnit`; non-dry-hop usages contain none of them. BRAUHAUS-v1 imports are interpreted by BeerDataStore and returned to this UI in the canonical model. Brauhaus2 has no BRAUHAUS recipe exporter; its PDF exports are presentation documents only.
 - `Malts`: `id`, `name`, `description`, `ebc`; recipe malt uses uppercase `EBC` and `quantity`.
 - `Yeasts`: `id`, `name`, `description`, `temperature`, `type`, `evg`; recipe yeast uses `EVG`, `temperature`, `type`, and `quantity`.
 - `AdditionalIngredient`: `id`, `name`, optional `description`; recipe additional ingredient has `quantity`, `unit`, `phase`, optional `time`, `timeUnit`, `description`.
@@ -74,3 +74,5 @@ Needs verification: backend/database canonical casing for malt `ebc` vs recipe m
 ## Fermentation records (#249)
 
 `FinishedBrew` remains the beer/batch identity and status model; no parallel beer entity or status machine is introduced. Measurements, generic actions, BeerDataStore-registered devices/assignments, and sensor measurements reference `FinishedBrew.id`. BeerDataStore owns records and actual timestamps. Brauhaus2 displays them and sends explicit user commands. Sensor availability never implies that fermentation ended. Displayed alcohol and attenuation are approximate and never trigger status changes.
+
+Recipe actions have identity independent of ingredient master data: `actionId` is preserved when editing, while `Hop.id` and `AdditionalIngredient.id` remain master-data IDs. The canonical trigger fields are `triggerType`, `triggerValue`, and `triggerUnit`; optional contact fields are `contactTime` and `contactTimeUnit`. Leaving a recipe-action-capable usage/phase removes all six fields, so returning creates a new action identity when a trigger is selected.
