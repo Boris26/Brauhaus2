@@ -7,6 +7,7 @@ import {FinishedBrewCreatePayload} from "../../model/FinishedBrew";
 import {RootState} from "../../reducers/rootReducer";
 import {Production} from './Production';
 import {ConfirmStates} from '../../enums/eConfirmStates';
+import {withFinishedBrewCreateId} from '../../utils/finishedBrewCreateId';
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
     toggleAgitator: (agitatorState: MashAgitatorStates) => {
@@ -22,7 +23,7 @@ const mapDispatchToProps = (dispatch: Dispatch) => ({
         dispatch(ProductionActions.sendBrewingData(brewingData))
     },
     addFinishedBrew: (finishedBrew: FinishedBrewCreatePayload) => {
-        dispatch(BeerActions.addFinishedBrew(finishedBrew))
+        dispatch(BeerActions.addFinishedBrew(withFinishedBrewCreateId(finishedBrew)))
     },
     nextProcedureStep: () => {
         dispatch(ProductionActions.nextProcedureStep())
