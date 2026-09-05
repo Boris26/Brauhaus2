@@ -3,6 +3,7 @@ import {FinishedBrew, FinishedBrewCreatePayload} from "../../../model/FinishedBr
 import {finishedBrewsTestData} from "../../../model/finishedBrewsTestData";
 import {BeerActions} from "../../../actions/actions";
 import {FinishedBrewsTable} from './FinishedBrewsTable';
+import {withFinishedBrewCreateId} from '../../../utils/finishedBrewCreateId';
 
 const mapStateToProps = (state: any) => ({
     brews: state.beerDataReducer.finishedBrews || finishedBrewsTestData,
@@ -19,7 +20,7 @@ const mapDispatchToProps = (dispatch: any) => ({
         dispatch(BeerActions.updateActiveBeer(brew));
     },
     onCreate: (brew: FinishedBrewCreatePayload) => {
-        dispatch(BeerActions.addFinishedBrew(brew));
+        dispatch(BeerActions.addFinishedBrew(withFinishedBrewCreateId(brew)));
     },
     exportPdf: (brews: FinishedBrew[]) => {
         dispatch(BeerActions.generateFinishedBrewsPdf(brews));
