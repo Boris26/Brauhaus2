@@ -6,6 +6,7 @@ import {HopTimeUnit} from '../../enums/eHopTimeUnit';
 import {ProcedureType} from '../../enums/eProcedureType';
 import {RestExecutionMode} from '../../enums/eRestExecutionMode';
 import {Beer} from '../../model/Beer';
+import {FermentationTriggerType, FermentationTriggerUnit} from '../../model/FermentationRecipeAction';
 
 const baseProps: React.ComponentProps<typeof BeerForm> = {
     onSubmitBeer: jest.fn(),
@@ -251,6 +252,26 @@ describe('BeerForm accordions', () => {
 
         expect(props.onSubmitBeer).toHaveBeenCalledTimes(1);
         expect(props.onSubmitBeer).toHaveBeenCalledWith(expect.objectContaining({id: 'beer-1', name: 'Altbier'}));
+    });
+
+    it('round-trips a complete dry-hop action without confusing master and action ids', () => {
+        const existingBeer: Beer = {
+            id: 'beer-1', name: 'IPA', type: 'Ale', color: 'amber', alcohol: 6, originalwort: 14, bitterness: 50, description: '', rating: 4,
+            mashVolume: 20, spargeVolume: 10, cookingTime: 60, cookingTemperatur: 100,
+            fermentation: [{type: 'Einmaischen', temperature: 57}, {type: 'Abmaischen', temperature: 78}, {type: 'Kochen', temperature: 100, time: 60}],
+            malts: [{id: 'm1', name: 'Pilsner Malz', description: '', EBC: 4, quantity: 4000}],
+            wortBoiling: {totalTime: 60, hops: [{id: 'h1', actionId: 'recipe-action-uuid', name: 'Hallertauer Mittelfrüh', description: '', alpha: 4, quantity: 80, usage: HopUsage.DRY_HOP, triggerType: FermentationTriggerType.PLATO_THRESHOLD, triggerValue: 5, triggerUnit: FermentationTriggerUnit.PLATO, contactTime: 3, contactTimeUnit: FermentationTriggerUnit.DAYS}]},
+            fermentationMaturation: {fermentationTemperature: 18, carbonation: 5, yeast: [{id: 'y1', name: 'SafAle US-05', description: '', EVG: '75', temperature: '18', type: 'Obergärig', quantity: 1}]},
+            additionalIngredients: [],
+        };
+        const {props} = renderBeerForm({beers: [existingBeer]});
+        fireEvent.change(screen.getByLabelText(/Bier auswählen/), {target: {value: existingBeer.id}});
+        fireEvent.click(screen.getByRole('button', {name: /Rezept speichern/}));
+        const submittedHop = (props.onSubmitBeer as jest.Mock).mock.calls[0][0].wortBoiling.hops[0];
+        expect(submittedHop).toMatchObject({id: 'h1', actionId: 'recipe-action-uuid', triggerType: FermentationTriggerType.PLATO_THRESHOLD, triggerValue: 5, triggerUnit: FermentationTriggerUnit.PLATO, contactTime: 3, contactTimeUnit: FermentationTriggerUnit.DAYS});
+        expect(submittedHop.id).not.toBe(submittedHop.actionId);
+        expect(submittedHop).not.toHaveProperty('triggerOffset');
+        expect(submittedHop).not.toHaveProperty('triggerPlato');
     });
 
     it('restores saved fixed steps when cancelling edits to an existing recipe', () => {

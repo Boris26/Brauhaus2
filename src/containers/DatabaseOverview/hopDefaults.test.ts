@@ -2,6 +2,7 @@ import { HopTimeUnit } from '../../enums/eHopTimeUnit';
 import { HopUsage } from '../../enums/eHopUsage';
 import { HopDTO } from '../../model/BeerDTO';
 import { hopTimeUnitsByUsage, normalizeHopDto, updateHopUsage, validateHopDto } from './hopDefaults';
+import {FermentationTriggerType, FermentationTriggerUnit} from '../../model/FermentationRecipeAction';
 
 const hop = (overrides: Partial<HopDTO> = {}): HopDTO => ({
     id: '1', name: 'Cascade', quantity: 10, usage: HopUsage.BOIL, ...overrides,
@@ -77,5 +78,11 @@ describe('hopDefaults', () => {
         [HopUsage.WHIRLPOOL, 20, HopTimeUnit.MINUTES],
     ])('import-style normalization preserves %s + %s + %s', (usage, time, timeUnit) => {
         expect(normalizeHopDto(hop({usage, time, timeUnit}))).toMatchObject({usage, time, timeUnit});
+    });
+
+    test('leaving DRY_HOP removes only recipe-action metadata', () => {
+        const updated = updateHopUsage(hop({usage: HopUsage.DRY_HOP, time: 3, timeUnit: HopTimeUnit.DAYS, actionId: 'action', triggerType: FermentationTriggerType.TIME_OFFSET, triggerValue: 2, triggerUnit: FermentationTriggerUnit.DAYS, contactTime: 1, contactTimeUnit: FermentationTriggerUnit.HOURS}), HopUsage.BOIL);
+        expect(updated).toMatchObject({id: '1', time: 3, timeUnit: HopTimeUnit.MINUTES, usage: HopUsage.BOIL});
+        for (const field of ['actionId', 'triggerType', 'triggerValue', 'triggerUnit', 'contactTime', 'contactTimeUnit']) expect(updated).not.toHaveProperty(field);
     });
 });

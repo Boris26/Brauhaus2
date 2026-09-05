@@ -3,7 +3,7 @@ import {FinishedBrewDetailsView} from './FinishedBrewDetails';
 import {eBrewState} from '../../../enums/eBrewState';
 
 const brew: any = {id: 'brew-1', name: 'West Coast IPA', startDate: '2026-09-01', fermentationStartedAt: '2026-09-01T12:00:00+02:00', liters: 20, originalwort: 13.2, residual_extract: null, note: '', active: true, state: eBrewState.FERMENTATION};
-const base: any = {brew, details: {measurements: [], actions: [], devices: [], sensorMeasurements: []}, activeBrews: [brew], loading: false, saving: false, savingLifecycle: false, completing: [], assigning: [], load: jest.fn(), save: jest.fn(), complete: jest.fn(), transition: jest.fn(), assign: jest.fn()};
+const base: any = {brew, details: {measurements: [], actions: [], devices: [], sensorMeasurements: []}, activeBrews: [brew], loading: false, saving: false, savingLifecycle: false, completing: [], skipping: [], assigning: [], load: jest.fn(), save: jest.fn(), complete: jest.fn(), skip: jest.fn(), transition: jest.fn(), assign: jest.fn()};
 
 describe('fermentation details dashboard', () => {
   it('shows the compact current-state dashboard with neutral missing values', () => {
@@ -29,7 +29,7 @@ describe('fermentation details dashboard', () => {
         {id: 'm1', finishedBeerId: 'brew-1', measuredAt: '2026-09-02T18:00:00Z', temperature: 18.1, plato: 7.2},
         {id: 'm2', finishedBeerId: 'brew-1', measuredAt: '2026-09-04T18:00:00Z', plato: 4.2},
       ],
-      actions: [{id: 'a', finishedBeerId: 'brew-1', scheduledAt: '2099-09-06', state: 'PENDING', due: true, type: 'HINZUFÜGEN', ingredientName: 'Citra', amount: 80, unit: 'g'}],
+      actions: [{actionId: 'a', status: 'PENDING', due: true, sourceType: 'HINZUFÜGEN', name: 'Citra', amount: 80, unit: 'g'}],
       devices: [{id: 'd', name: 'FERM-01', lastSeenAt: new Date().toISOString()}],
       sensorMeasurements: [{id: 's', deviceId: 'd', measuredAt: '2026-09-03T18:00:00Z', beerTemperature: 18.3, ambientTemperature: 17.6}],
     };
@@ -85,14 +85,18 @@ describe('fermentation details dashboard', () => {
 
   it('allows MANUAL + PENDING without due and never offers skipped actions', () => {
     const complete = jest.fn();
+    const skip = jest.fn();
     const details: any = {measurements: [], devices: [], sensorMeasurements: [], actions: [
-      {id: 'manual', finishedBeerId: brew.id, state: 'PENDING', due: false, triggerType: 'MANUAL', type: 'ZUGABE'},
-      {id: 'skipped', finishedBeerId: brew.id, state: 'SKIPPED', due: true, triggerType: 'MANUAL', type: 'ZUGABE'},
+      {actionId: 'manual', status: 'PENDING', due: false, triggerType: 'MANUAL', sourceType: 'ZUGABE'},
+      {actionId: 'skipped', status: 'SKIPPED', due: true, triggerType: 'MANUAL', sourceType: 'ZUGABE'},
     ]};
-    render(<FinishedBrewDetailsView {...base} details={details} complete={complete} viewMode="measurements" />);
+    render(<FinishedBrewDetailsView {...base} details={details} complete={complete} skip={skip} viewMode="measurements" />);
     expect(screen.getAllByText('Als ausgeführt bestätigen')).toHaveLength(1);
     fireEvent.click(screen.getByText('Als ausgeführt bestätigen'));
     expect(complete).toHaveBeenCalledWith(brew.id, 'manual');
+    expect(screen.getAllByText('Überspringen')).toHaveLength(1);
+    fireEvent.click(screen.getByText('Überspringen'));
+    expect(skip).toHaveBeenCalledWith(brew.id, 'manual');
   });
   it('does not infer fermentationStartedAt or a fermentation day from legacy startDate', () => {
     render(<FinishedBrewDetailsView {...base} brew={{...brew, fermentationStartedAt: undefined, startDate: '2020-01-01'}} />);

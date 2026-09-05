@@ -1,8 +1,7 @@
-import {FermentationTriggerTimeUnit, FermentationTriggerType} from './FermentationRecipeAction';
+import {ContactTimeUnit, FermentationTriggerType, FermentationTriggerUnit} from './FermentationRecipeAction';
 
 /** Persisted runtime truth. Fälligkeit is returned separately and is never persisted by this UI. */
 export type FermentationActionState = 'PENDING' | 'COMPLETED' | 'SKIPPED';
-export type FermentationActionDisplayStatus = FermentationActionState | 'DUE';
 
 export interface FermentationMeasurement {
   id: string;
@@ -16,28 +15,52 @@ export interface FermentationMeasurement {
 export type CreateFermentationMeasurement = Omit<FermentationMeasurement, 'id'>;
 
 export interface FermentationAction {
-  id: string;
-  finishedBeerId: string;
-  type: string;
-  ingredientName?: string;
+  actionId: string;
+  sourceType: string;
+  name?: string;
   amount?: number;
   unit?: string;
-  scheduledAt?: string | null;
   triggerType?: FermentationTriggerType;
-  triggerOffset?: number;
-  triggerUnit?: FermentationTriggerTimeUnit;
-  triggerPlato?: number;
+  triggerValue?: number;
+  triggerUnit?: FermentationTriggerUnit;
   contactTime?: number;
-  contactTimeUnit?: FermentationTriggerTimeUnit;
+  contactTimeUnit?: ContactTimeUnit;
   contactEndsAt?: string | null;
-  state: FermentationActionState;
+  status: FermentationActionState;
   /** Backend-calculated projection from the current trigger inputs. */
   due?: boolean;
-  /** Optional virtual status for APIs representing `due` as `DUE`. */
-  status?: FermentationActionDisplayStatus;
   completedAt?: string | null;
-  removeAt?: string | null;
+  skippedAt?: string | null;
+  latestPlato?: number | null;
 }
+
+/** Wire shape returned by BeerDataStore. MANUAL actions may encode absent trigger data as null. */
+export interface FermentationActionDTO extends Omit<FermentationAction, 'triggerType' | 'triggerValue' | 'triggerUnit' | 'contactTime' | 'contactTimeUnit'> {
+  triggerType?: FermentationTriggerType | null;
+  triggerValue?: number | null;
+  triggerUnit?: FermentationTriggerUnit | null;
+  contactTime?: number | null;
+  contactTimeUnit?: ContactTimeUnit | null;
+}
+
+export const mapFermentationAction = (dto: FermentationActionDTO): FermentationAction => ({
+  actionId: dto.actionId,
+  sourceType: dto.sourceType,
+  name: dto.name,
+  amount: dto.amount,
+  unit: dto.unit,
+  triggerType: dto.triggerType ?? undefined,
+  triggerValue: dto.triggerValue ?? undefined,
+  triggerUnit: dto.triggerUnit ?? undefined,
+  contactTime: dto.contactTime ?? undefined,
+  contactTimeUnit: dto.contactTimeUnit ?? undefined,
+  status: dto.status,
+  due: dto.due,
+  completedAt: dto.completedAt,
+  skippedAt: dto.skippedAt,
+  contactEndsAt: dto.contactEndsAt,
+  latestPlato: dto.latestPlato,
+});
 
 export interface FermentationDevice {
   id: string;

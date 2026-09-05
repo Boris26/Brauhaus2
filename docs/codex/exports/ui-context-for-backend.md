@@ -4,7 +4,7 @@
 
 The UI uses the database/backend service for persistent brewing data, not hardware control. Expected resources:
 
-- Beer recipes: list, create, delete, import.
+- Beer recipes: list, create, update, delete, import.
 - Finished brews: list, create, update, delete.
 - Ingredients: hops, malts, yeasts, additional ingredients list/create/delete.
 
@@ -27,3 +27,8 @@ The UI uses the database/backend service for persistent brewing data, not hardwa
 - Whether recipe import returns a full `Beer` compatible with UI state.
 - Whether ingredient ID and numeric field casing/types should be normalized across standalone ingredients and recipe ingredients.
 
+## Final Recipe Action contract
+
+Dry-hop and fermentation-addition definitions use only `actionId`, `triggerType`, `triggerValue`, `triggerUnit`, `contactTime`, and `contactTimeUnit`. `triggerType` defines the trigger condition, `triggerValue` its numeric value, and `triggerUnit` the value's unit. Trigger units are `MINUTES | HOURS | DAYS | PLATO`; contact units exclude `PLATO`. `Hop.id` and additional-ingredient `id` remain master-data identities and are never action identities.
+
+Runtime routes are `GET /fermentation/beers/{finishedBeerId}/recipe-actions`, `POST .../{actionId}/complete`, `POST .../{actionId}/skip`, and `GET|POST /fermentation/beers/{finishedBeerId}/measurements`. Runtime status is `PENDING | COMPLETED | SKIPPED`; `due` and `contactEndsAt` are backend-owned projections. The UI reloads actions after commands and never persists a `DUE` state.

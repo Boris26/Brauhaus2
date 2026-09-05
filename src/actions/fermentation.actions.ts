@@ -4,6 +4,7 @@ export enum FermentationActionTypes {
   LOAD = 'Fermentation.LOAD', LOAD_SUCCESS = 'Fermentation.LOAD_SUCCESS', LOAD_FAILURE = 'Fermentation.LOAD_FAILURE',
   CREATE_MEASUREMENT = 'Fermentation.CREATE_MEASUREMENT', CREATE_MEASUREMENT_SUCCESS = 'Fermentation.CREATE_MEASUREMENT_SUCCESS', CREATE_MEASUREMENT_FAILURE = 'Fermentation.CREATE_MEASUREMENT_FAILURE',
   COMPLETE_ACTION = 'Fermentation.COMPLETE_ACTION', COMPLETE_ACTION_SUCCESS = 'Fermentation.COMPLETE_ACTION_SUCCESS', COMPLETE_ACTION_FAILURE = 'Fermentation.COMPLETE_ACTION_FAILURE',
+  SKIP_ACTION = 'Fermentation.SKIP_ACTION', SKIP_ACTION_SUCCESS = 'Fermentation.SKIP_ACTION_SUCCESS', SKIP_ACTION_FAILURE = 'Fermentation.SKIP_ACTION_FAILURE',
   ASSIGN_DEVICE = 'Fermentation.ASSIGN_DEVICE', ASSIGN_DEVICE_SUCCESS = 'Fermentation.ASSIGN_DEVICE_SUCCESS', ASSIGN_DEVICE_FAILURE = 'Fermentation.ASSIGN_DEVICE_FAILURE',
 }
 export const FermentationActions = {
@@ -16,6 +17,9 @@ export const FermentationActions = {
   completeAction: (brewId: string, actionId: string) => ({type: FermentationActionTypes.COMPLETE_ACTION, payload: {brewId, actionId}}),
   completeActionSuccess: (brewId: string, actionId: string) => ({type: FermentationActionTypes.COMPLETE_ACTION_SUCCESS, payload: {brewId, actionId}}),
   completeActionFailure: (brewId: string, actionId: string, error: string) => ({type: FermentationActionTypes.COMPLETE_ACTION_FAILURE, payload: {brewId, actionId, error}}),
+  skipAction: (brewId: string, actionId: string) => ({type: FermentationActionTypes.SKIP_ACTION, payload: {brewId, actionId}}),
+  skipActionSuccess: (brewId: string, actionId: string) => ({type: FermentationActionTypes.SKIP_ACTION_SUCCESS, payload: {brewId, actionId}}),
+  skipActionFailure: (brewId: string, actionId: string, error: string) => ({type: FermentationActionTypes.SKIP_ACTION_FAILURE, payload: {brewId, actionId, error}}),
   assignDevice: (deviceId: string, brewId: string) => ({type: FermentationActionTypes.ASSIGN_DEVICE, payload: {deviceId, brewId}}),
   assignDeviceSuccess: (deviceId: string, brewId: string) => ({type: FermentationActionTypes.ASSIGN_DEVICE_SUCCESS, payload: {deviceId, brewId}}),
   assignDeviceFailure: (deviceId: string, brewId: string, error: string) => ({type: FermentationActionTypes.ASSIGN_DEVICE_FAILURE, payload: {deviceId, brewId, error}}),

@@ -1,5 +1,5 @@
 import {FermentationAction, FermentationMeasurement, SensorMeasurement} from '../model/Fermentation';
-import {FermentationTriggerType} from '../model/FermentationRecipeAction';
+import {fermentationUnitLabel, FermentationTriggerType} from '../model/FermentationRecipeAction';
 
 export interface LatestFermentationReadings {
   beerTemperature?: number;
@@ -62,43 +62,35 @@ export const fermentationDay = (startedAt?: string, now = Date.now()): number | 
   const start = startedAt ? Date.parse(startedAt) : NaN;
   return Number.isFinite(start) ? Math.max(1, Math.floor((now - start) / 86_400_000) + 1) : undefined;
 };
-export const actionDueLabel = (action: FermentationAction, now = new Date()): {label: string; severity: 'future' | 'due' | 'overdue'} => {
-  if (action.due === true || action.status === 'DUE') return {label: 'Fällig', severity: 'due'};
+export const actionDueLabel = (action: FermentationAction): {label: string; severity: 'future' | 'due'} => {
+  if (action.due === true) return {label: 'Fällig', severity: 'due'};
   if (action.triggerType === FermentationTriggerType.MANUAL) return {label: 'Manuell', severity: 'future'};
-  if (!action.scheduledAt || !Number.isFinite(Date.parse(action.scheduledAt))) return {label: 'Trigger offen', severity: 'future'};
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const dueDate = new Date(action.scheduledAt as string); const due = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate()).getTime();
-  const days = Math.round((due - today) / 86_400_000);
-  if (days < 0) return {label: 'Trigger wird vom Backend geprüft', severity: 'future'};
-  if (days === 0) return {label: 'Für heute geplant', severity: 'future'};
-  if (days === 1) return {label: 'Morgen', severity: 'future'};
-  return {label: `In ${days} Tagen`, severity: 'future'};
+  return {label: 'Trigger offen', severity: 'future'};
 };
 
-export const isActionDue = (action: FermentationAction): boolean => action.due === true || action.status === 'DUE';
+export const isActionDue = (action: FermentationAction): boolean => action.due === true;
 
 export const canCompleteAction = (action: FermentationAction): boolean =>
-  action.state === 'PENDING' && (isActionDue(action) || action.triggerType === FermentationTriggerType.MANUAL);
+  action.status === 'PENDING' && (isActionDue(action) || action.triggerType === FermentationTriggerType.MANUAL);
 
 export const actionTriggerLabel = (action: FermentationAction): string => {
-  if (action.triggerType === FermentationTriggerType.TIME_OFFSET && Number.isFinite(action.triggerOffset)) {
-    const unit = action.triggerUnit === 'HOURS' ? 'Stunden' : 'Tage';
-    return `${action.triggerOffset} ${unit} nach Gärbeginn`;
+  if (action.triggerType === FermentationTriggerType.TIME_OFFSET && Number.isFinite(action.triggerValue)) {
+    return `${action.triggerValue} ${fermentationUnitLabel(action.triggerUnit)} nach Gärbeginn`;
   }
-  if (action.triggerType === FermentationTriggerType.PLATO_THRESHOLD && Number.isFinite(action.triggerPlato)) {
-    return `bei ≤ ${Number(action.triggerPlato).toLocaleString('de-DE')} °P`;
+  if (action.triggerType === FermentationTriggerType.PLATO_THRESHOLD && Number.isFinite(action.triggerValue)) {
+    return `bei ≤ ${Number(action.triggerValue).toLocaleString('de-DE')} °P`;
   }
-  if (action.triggerType === FermentationTriggerType.MANUAL) return 'manuell';
+  if (action.triggerType === FermentationTriggerType.MANUAL) return 'Manuell';
   return 'Kein Zugabe-Trigger definiert';
 };
 
 export const contactTimeLabel = (action: FermentationAction): string | undefined =>
   Number.isFinite(action.contactTime)
-    ? `${action.contactTime} ${action.contactTimeUnit === 'HOURS' ? 'Stunden' : 'Tage'}`
+    ? `${action.contactTime} ${fermentationUnitLabel(action.contactTimeUnit)}`
     : undefined;
 
 export const contactStatus = (action: FermentationAction, now = Date.now()): 'running' | 'ended' | undefined => {
-  if (action.state !== 'COMPLETED' || !action.contactEndsAt || !Number.isFinite(Date.parse(action.contactEndsAt))) return undefined;
+  if (action.status !== 'COMPLETED' || !action.contactEndsAt || !Number.isFinite(Date.parse(action.contactEndsAt))) return undefined;
   return Date.parse(action.contactEndsAt) <= now ? 'ended' : 'running';
 };
 export const missingPlatoDays = (values: FermentationMeasurement[], now = Date.now()): number | undefined => {

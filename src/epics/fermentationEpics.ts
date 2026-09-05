@@ -29,11 +29,22 @@ export const createMeasurementEpic = (action$: any) => action$.pipe(
 
 export const completeFermentationActionEpic = (action$: any) => action$.pipe(
   ofType(FermentationActionTypes.COMPLETE_ACTION),
-  groupBy((action: any) => action.payload.actionId),
+  groupBy((action: any) => `${action.payload.brewId}/${action.payload.actionId}`),
   mergeMap((group$: any) => group$.pipe(exhaustMap((action: any) =>
-    from(FermentationRepository.completeAction(action.payload.actionId)).pipe(
+    from(FermentationRepository.completeAction(action.payload.brewId, action.payload.actionId)).pipe(
       mergeMap(() => of(FermentationActions.completeActionSuccess(action.payload.brewId, action.payload.actionId), FermentationActions.load(action.payload.brewId))),
       catchError(error => of(FermentationActions.completeActionFailure(action.payload.brewId, action.payload.actionId, error.message)))
+    )
+  )))
+);
+
+export const skipFermentationActionEpic = (action$: any) => action$.pipe(
+  ofType(FermentationActionTypes.SKIP_ACTION),
+  groupBy((action: any) => `${action.payload.brewId}/${action.payload.actionId}`),
+  mergeMap((group$: any) => group$.pipe(exhaustMap((action: any) =>
+    from(FermentationRepository.skipAction(action.payload.brewId, action.payload.actionId)).pipe(
+      mergeMap(() => of(FermentationActions.skipActionSuccess(action.payload.brewId, action.payload.actionId), FermentationActions.load(action.payload.brewId))),
+      catchError(error => of(FermentationActions.skipActionFailure(action.payload.brewId, action.payload.actionId, error.message)))
     )
   )))
 );
@@ -49,4 +60,4 @@ export const assignDeviceEpic = (action$: any) => action$.pipe(
   )))
 );
 
-export const fermentationEpics = [loadFermentationEpic, createMeasurementEpic, completeFermentationActionEpic, assignDeviceEpic];
+export const fermentationEpics = [loadFermentationEpic, createMeasurementEpic, completeFermentationActionEpic, skipFermentationActionEpic, assignDeviceEpic];
