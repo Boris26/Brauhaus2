@@ -254,3 +254,7 @@ The additive recovery contract uses the existing Socket.IO namespace/path and ev
 ## Fermentation: Brauhaus2 #249 / BeerDataStore #42
 
 BeerDataStore is the source of truth for fermentation measurements, actions, devices, assignments, sensor readings, and completion timestamps. Brauhaus2 is display and interaction only; hardware does not call Brauhaus2. The additive contract is rooted at `fermentation/*`, keyed by existing `FinishedBrew.id`, and does not alter the finished-beer lifecycle. Exact route/DTO deployment and errors **Needs verification** with Boris26/BeerDataStore#42.
+
+## Fermentation lifecycle/actions (Brauhaus2)
+
+The UI normal lifecycle is `FERMENTATION -> MATURATION | FINISHED`, `MATURATION -> FINISHED`. There is no regular main/secondary-fermentation state: `FERMENTATION` covers the entire vessel period. Dry hop and fermentation additions use optional recipe trigger/contact fields and separate BeerDataStore runtime actions. BeerDataStore persistence, due calculation, completion/contact timestamps, conflict response, and push event ownership are **Needs verification**. PI control owns neither lifecycle validation nor recipe-action completion.

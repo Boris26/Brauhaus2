@@ -97,3 +97,11 @@ Scripts from `package.json`:
 ## Application version
 
 The desktop UI has a `Version` view in the header information area. The page displays the frontend build version from `REACT_APP_VERSION`, injected before `react-scripts` runs. `scripts/resolve-app-version.js` prefers explicit CI variables (`BRAUHAUS_APP_VERSION`, `REACT_APP_VERSION`, `APP_VERSION`, `BUILD_BUILDNUMBER`, or an Azure `refs/tags/*` source branch), then `git describe --tags --always --dirty`, and finally `unknown` when Git metadata is unavailable.
+
+## Finished-brew lifecycle and fermentation actions
+
+The normal UI lifecycle is centrally restricted to `FERMENTATION -> MATURATION | FINISHED` and `MATURATION -> FINISHED`; `FINISHED` is terminal. **Gärung bezeichnet die gesamte Zeit im Gärbehälter. Es gibt keinen regulären globalen Status für Hauptgärung oder Nachgärung. Dry Hop und weitere Zugaben werden über einzelne Rezeptaktionen innerhalb der Gärung gesteuert.** Lifecycle controls live in the fermentation/detail view. `finished-brews` shows status read-only for existing rows; only manual historic creation exposes an explicitly labelled administrative status.
+
+The detail view reloads the BeerDataStore fermentation aggregate after saving Plato/temperature measurements and after completing actions. Due/pending/completed actions and contact-time status are in-app notifications. Existing PI/control Web Push remains unchanged; delivery of fermentation action/contact-time push events is **Needs verification** in BeerDataStore and the deployment push owner.
+
+Production sets the concrete `FinishedBrew.fermentationStartedAt` once, as a timezone-bearing ISO timestamp, when the completed brewing workflow creates the fermentation record. Retry reuses the same payload/timestamp. Detail displays never substitute `startDate`; legacy records without the canonical timestamp show no inferred fermentation day.

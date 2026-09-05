@@ -3,7 +3,7 @@ import {FinishedBrew} from '../model/FinishedBrew';
 import {completeFinishedBrew, enforceFinishedBrewStateInvariant, mergeFinishedBrewChanges} from './finishedBrewChanges';
 
 const brew: FinishedBrew = {
-    id: 'ABC', name: 'Testbier', startDate: '2026-08-20', liters: 20,
+    id: 'ABC', name: 'Testbier', startDate: '2026-08-20', fermentationStartedAt: '2026-08-21T08:30:00+02:00', liters: 20,
     originalwort: 12, residual_extract: 3, note: 'bestehend', active: true,
     beer_id: 'recipe-1', state: eBrewState.FERMENTATION, brewValues: '{"temperature":20}',
 };
@@ -14,6 +14,7 @@ describe('finished brew changes', () => {
 
         expect(updated).toEqual({...brew, state: eBrewState.MATURATION});
         expect(updated.id).toBe('ABC');
+        expect(updated.fermentationStartedAt).toBe('2026-08-21T08:30:00+02:00');
     });
 
     it('finishes the currently edited record and sets a missing end date', () => {

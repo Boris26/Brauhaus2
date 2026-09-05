@@ -561,6 +561,8 @@ describe('Production finished-brew persistence', () => {
         fireEvent.click(screen.getByRole('button', {name: 'Sud speichern'}));
         expect(addFinishedBrew).toHaveBeenCalledTimes(1);
         const actualPayload = addFinishedBrew.mock.calls[0][0];
+        expect(actualPayload.fermentationStartedAt).toMatch(/Z$/);
+        expect(actualPayload.startDate).toBe(actualPayload.fermentationStartedAt.slice(0, 10));
 
         rerender(<Production {...props} brewingStatus={finishedStatus} isAddingFinishedBrew={true} pendingFinishedBrewPayload={actualPayload} />);
         expect(screen.getByRole('button', {name: 'Speichert …'})).toBeDisabled();
@@ -586,6 +588,7 @@ describe('Production finished-brew persistence', () => {
 
         expect(addFinishedBrew).toHaveBeenCalledTimes(2);
         expect(addFinishedBrew.mock.calls[1][0]).toBe(payload);
+        expect(addFinishedBrew.mock.calls[1][0].fermentationStartedAt).toBe(payload.fermentationStartedAt);
         expect(addFinishedBrew.mock.calls[1][0].brewValues).toBe(payload.brewValues);
 
         rerender(<Production {...props} brewingStatus={finishedStatus} addFinishedBrew={addFinishedBrew} isAddingFinishedBrew={true} pendingFinishedBrewPayload={payload} />);

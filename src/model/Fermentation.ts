@@ -1,4 +1,8 @@
-export type FermentationActionState = 'PLANNED' | 'ACTIVE' | 'COMPLETED';
+import {FermentationTriggerTimeUnit, FermentationTriggerType} from './FermentationRecipeAction';
+
+/** Persisted runtime truth. Fälligkeit is returned separately and is never persisted by this UI. */
+export type FermentationActionState = 'PENDING' | 'COMPLETED' | 'SKIPPED';
+export type FermentationActionDisplayStatus = FermentationActionState | 'DUE';
 
 export interface FermentationMeasurement {
   id: string;
@@ -18,8 +22,19 @@ export interface FermentationAction {
   ingredientName?: string;
   amount?: number;
   unit?: string;
-  scheduledAt: string;
+  scheduledAt?: string | null;
+  triggerType?: FermentationTriggerType;
+  triggerOffset?: number;
+  triggerUnit?: FermentationTriggerTimeUnit;
+  triggerPlato?: number;
+  contactTime?: number;
+  contactTimeUnit?: FermentationTriggerTimeUnit;
+  contactEndsAt?: string | null;
   state: FermentationActionState;
+  /** Backend-calculated projection from the current trigger inputs. */
+  due?: boolean;
+  /** Optional virtual status for APIs representing `due` as `DUE`. */
+  status?: FermentationActionDisplayStatus;
   completedAt?: string | null;
   removeAt?: string | null;
 }
@@ -50,5 +65,4 @@ export interface FermentationDetails {
   actions: FermentationAction[];
   devices: FermentationDevice[];
   sensorMeasurements: SensorMeasurement[];
-  phaseStartedAt?: string;
 }

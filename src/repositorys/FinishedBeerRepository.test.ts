@@ -25,6 +25,7 @@ const mockedApi = api as unknown as {post: jest.Mock; put: jest.Mock};
 const createPayload: FinishedBrewCreatePayload = {
     name: 'Testbier',
     startDate: '2026-08-27',
+    fermentationStartedAt: '2026-08-27T20:15:00+02:00',
     liters: 20,
     originalwort: 12,
     residual_extract: 3,
@@ -56,6 +57,7 @@ describe('FinishedBeerRepository', () => {
         await FinishedBeerRepository.updateFinishedBeer(existing);
 
         expect(mockedApi.put).toHaveBeenCalledWith('finishedbeer', existing);
+        expect(mockedApi.put.mock.calls[0][1]).toMatchObject({fermentationStartedAt: '2026-08-27T20:15:00+02:00'});
         expect(mockedApi.post).not.toHaveBeenCalled();
     });
 });

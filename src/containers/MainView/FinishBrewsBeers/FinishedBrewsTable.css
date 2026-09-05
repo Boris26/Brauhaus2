@@ -307,3 +307,5 @@
 .FinishedBrewsTable .table-edit-field input[type=number] {
   -moz-appearance: textfield;
 }
+
+.administrative-status-label { display: grid; gap: .2rem; font-size: .72rem; }

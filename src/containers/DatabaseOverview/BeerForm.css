@@ -435,3 +435,6 @@
         flex-wrap: wrap;
     }
 }
+
+.fermentation-action-fields { display: grid; gap: .45rem; min-width: 13rem; }
+.fermentation-action-fields label { display: grid; gap: .2rem; font-size: .8rem; }

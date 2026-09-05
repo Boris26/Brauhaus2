@@ -1,6 +1,6 @@
 import { Beer } from '../../model/Beer';
 import { FinishedBrew } from '../../model/FinishedBrew';
-import { eBrewState, BrewStateGerman } from '../../enums/eBrewState';
+import { eBrewState, brewStateLabel } from '../../enums/eBrewState';
 import { DashboardActiveBrewRow, DashboardAdditionalStats, DashboardCareHints, DashboardConsumption, DashboardIngredientSummary, DashboardIngredientUsage, DashboardKpis, DashboardMonthlyStat, DashboardRecipeHistory, DashboardYeastUsage } from './dashboardTypes';
 
 const TOP_LIMIT = 5;
@@ -184,7 +184,7 @@ export const buildActiveBrewRows = (brews: FinishedBrew[] = [], now = new Date()
     return {
       id: brew.id,
       name: brew.name || 'Unbenannter Sud',
-      stateLabel: BrewStateGerman[brew.state] ?? String(brew.state ?? '-'),
+      stateLabel: brewStateLabel(brew.state),
       state: brew.state,
       startDateLabel: formatDateGerman(brew.startDate),
       daysSinceStartLabel: days === undefined ? '-' : `${days} Tage`,

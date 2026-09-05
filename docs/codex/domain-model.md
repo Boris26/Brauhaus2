@@ -53,9 +53,9 @@ Runtime status is normalized into process state, current step, temperature, hard
 
 ## Finished brew (`FinishedBrew`)
 
-Fields: `id`, `name`, `startDate`, optional `endDate`, `liters`, `originalwort`, nullable `residual_extract`, `note`, `active`, optional `beer_id`, `state`, optional `brewValues`.
+Fields: `id`, `name`, `startDate`, optional timezone-bearing `fermentationStartedAt`, optional `endDate`, `liters`, `originalwort`, nullable `residual_extract`, `note`, `active`, optional `beer_id`, `state`, optional `brewValues`. `startDate` is historical/calendar metadata and is never an automatic substitute for `fermentationStartedAt`.
 
-`state` values are `FERMENTATION`, `MATURATION`, and `FINISHED`, with German labels `Hauptgärung`, `Reifung`, and `Fertig`.
+`state` values are `FERMENTATION`, `MATURATION`, and `FINISHED`, with German labels `Gärung`, `Reifung`, and `Fertig`. `FERMENTATION` covers the complete time in the fermentation vessel; additions are recipe actions, not global states.
 
 ## Ingredients
 

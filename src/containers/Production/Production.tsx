@@ -923,13 +923,15 @@ export class Production extends React.Component<ProductionProps, ProductionState
         }
 
         this.isFinishedBrewSaveRequestPending = true;
+        const fermentationStartedAt = new Date().toISOString();
         const finishedBrew = pendingFinishedBrewPayload ?? {
                 name: selectedBeer.name || 'Unknown Beer',
                 liters: 0,
                 originalwort:  0,
                 residual_extract:  0, // Default value added
                 note: '', // Default value added
-                startDate: new Date().toISOString().slice(0, 10),
+                startDate: fermentationStartedAt.slice(0, 10),
+                fermentationStartedAt,
                 beer_id: selectedBeer.id.toString(), // Assuming beer_id is a string
                 active: true,
                 state: eBrewState.FERMENTATION,

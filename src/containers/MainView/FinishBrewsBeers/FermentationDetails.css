@@ -35,3 +35,6 @@
 .fermentation-route-state button { border: 0; border-radius: var(--border-radius-small); padding: .45rem .8rem; color: var(--color-button-text); background: var(--color-primary); font-weight: 700; }
 @media (max-width: 800px) { .fermentation-reading-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }.fermentation-reading-grid > div { flex-direction: column; align-items: flex-start; padding: var(--spacing-sm); }.fermentation-dashboard-grid, .fermentation-measurements-grid { grid-template-columns: 1fr; } }
 @media (max-width: 520px) { .fermentation-dashboard-header, .fermentation-page-header { align-items: flex-start; }.fermentation-reading-grid { grid-template-columns: 1fr; }.fermentation-reading-grid > div { flex-direction: row; align-items: center; }.fermentation-form { grid-template-columns: 1fr; } }
+
+.fermentation-lifecycle > div { display: flex; flex-wrap: wrap; gap: .75rem; }
+.fermentation-list li > span { display: block; }
