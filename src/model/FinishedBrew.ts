@@ -15,4 +15,10 @@ export interface FinishedBrew {
     brewValues?: string;
 }
 
-export type FinishedBrewCreatePayload = Omit<FinishedBrew, 'id'>;
+/**
+ * Create payload for a finished-brew record.
+ *
+ * `id` is optional for backwards compatibility, but Brauhaus2 assigns one before
+ * dispatching the create action so retries can reuse the same create-operation ID.
+ */
+export type FinishedBrewCreatePayload = Omit<FinishedBrew, 'id'> & { id?: string };
