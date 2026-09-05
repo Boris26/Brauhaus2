@@ -15,6 +15,7 @@ import { eBrewState, BrewStateGerman } from '../../../enums/eBrewState';
 import Panel from '../../Panel/Panel';
 import FinishedBrewDetails from './FinishedBrewDetails';
 import {completeFinishedBrew, mergeFinishedBrewChanges} from '../../../utils/finishedBrewChanges';
+import {createFinishedBrewId} from '../../../utils/finishedBrewCreateId';
 import ModalDialog, {DialogType} from '../../../components/ModalDialog/ModalDialog';
 
 
@@ -255,7 +256,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                 <button
                     className="finish-btn"
                     style={{ marginLeft: '2rem', height: '2.2rem', display: 'flex', alignItems: 'center' }}
-                    onClick={() => this.setState({ newRowActive: true, newRowData: {} })}
+                    onClick={() => this.setState({ newRowActive: true, newRowData: {id: createFinishedBrewId()} })}
                     title="Neuen Eintrag hinzufügen"
                     aria-label="Neuen Eintrag hinzufügen"
                 >
