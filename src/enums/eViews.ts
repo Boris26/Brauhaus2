@@ -8,4 +8,5 @@ export enum Views {
     SETTINGS = 6,
     VERSION = 7,
     DASHBOARD = 8,
+    MEASUREMENT_DATA = 9,
 }

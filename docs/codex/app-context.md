@@ -20,6 +20,7 @@ The app does not use URL routes. Navigation is an enum in `src/enums/eViews.ts` 
 - `PRODUCTION`: active brewing controls and status.
 - `DATABASE`: beer recipe form.
 - `FINISHED_BREWS`: finished-brew table.
+- `MEASUREMENT_DATA`: deep-linked fermentation history for one finished brew at `/finished-brews/{finishedBeerId}/measurements`; direct entry first restores the existing finished-brew list and the shared fermentation detail component owns the aggregate load.
 - `BREWING_CALCULATIONS`: calculators.
 - `INGREDIENTS`: ingredient maintenance.
 - `SETTINGS`: theme/settings.

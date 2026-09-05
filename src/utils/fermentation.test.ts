@@ -1,4 +1,4 @@
-import {actionDueLabel, approximateAlcohol, attenuation, bubbleRate, isDeviceOnline, missingPlatoDays, temperatureDelta} from './fermentation';
+import {actionDueLabel, approximateAlcohol, attenuation, bubbleRate, isDeviceOnline, latestFermentationReadings, missingPlatoDays, temperatureDelta} from './fermentation';
 
 describe('fermentation domain helpers', () => {
   it('uses server bubble rate and otherwise derives bubbles per minute centrally', () => {
@@ -17,5 +17,21 @@ describe('fermentation domain helpers', () => {
     expect(isDeviceOnline('2026-09-04T11:50:00Z', Date.parse('2026-09-04T12:00:00Z'))).toBe(true);
     expect(attenuation(13.2, 3)).toBeCloseTo(77.27);
     expect(approximateAlcohol(13.2, 3)).toBeCloseTo(5.406);
+  });
+  it('selects the newest valid fermentation value per metric across manual and sensor records', () => {
+    const readings = latestFermentationReadings(
+      [
+        {id: 'm1', finishedBeerId: 'b', measuredAt: '2026-09-03T10:00:00Z', temperature: 18.1, plato: 4.2},
+        {id: 'm2', finishedBeerId: 'b', measuredAt: '2026-09-05T10:00:00Z', temperature: Number.NaN, plato: null},
+        {id: 'm3', finishedBeerId: 'b', measuredAt: 'invalid', temperature: 99, plato: 99},
+      ],
+      [
+        {id: 's1', deviceId: 'd', measuredAt: '2026-09-04T10:00:00Z', beerTemperature: 18.6, ambientTemperature: 16.4},
+        {id: 's2', deviceId: 'd', measuredAt: '2026-09-05T11:00:00Z', beerTemperature: null, ambientTemperature: 16.1},
+      ],
+    );
+
+    expect(readings).toEqual({beerTemperature: 18.6, ambientTemperature: 16.1, plato: 4.2});
+    expect(latestFermentationReadings()).toEqual({beerTemperature: undefined, ambientTemperature: undefined, plato: undefined});
   });
 });

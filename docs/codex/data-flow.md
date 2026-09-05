@@ -116,3 +116,5 @@ Heater-safety reset is intentionally not a Settings-page action. Settings expose
 ## Fermentation data (#249)
 
 Finished-beer detail/dashboard → Redux action → fermentation epic → `FermentationRepository` → BeerDataStore. Successful measurement, completion, or assignment commands trigger a fresh aggregate read; reducers never optimistically claim domain success. Redux contains current API/UI state only. Sensor hardware communicates with BeerDataStore, never Brauhaus2. BeerDataStore supplies assignments; only ambiguous `unassigned` devices require UI interaction.
+
+The compact finished-beer detail links to `/finished-brews/{finishedBeerId}/measurements`. The route resolves the existing `FinishedBrew.id`, restores the finished-brew list only for direct entry, and reuses `FinishedBrewDetails` in measurement mode. That shared component remains the single owner of the fermentation aggregate load, so opening the analysis view does not introduce a second measurement-loading path or endpoint.

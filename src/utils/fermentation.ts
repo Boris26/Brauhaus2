@@ -1,5 +1,47 @@
 import {FermentationAction, FermentationMeasurement, SensorMeasurement} from '../model/Fermentation';
 
+export interface LatestFermentationReadings {
+  beerTemperature?: number;
+  ambientTemperature?: number;
+  plato?: number;
+}
+
+const latestValidValue = <T>(
+  values: T[],
+  getDate: (value: T) => string,
+  getValue: (value: T) => number | null | undefined,
+): number | undefined => {
+  const latest = [...values]
+    .filter(value => Number.isFinite(Date.parse(getDate(value))) && Number.isFinite(getValue(value)))
+    .sort((a, b) => Date.parse(getDate(b)) - Date.parse(getDate(a)))[0];
+  return latest === undefined ? undefined : getValue(latest) as number;
+};
+
+/** Selects each dashboard value independently so an incomplete newer record cannot hide an older valid value. */
+export const latestFermentationReadings = (
+  measurements: FermentationMeasurement[] = [],
+  sensorMeasurements: SensorMeasurement[] = [],
+): LatestFermentationReadings => {
+  const manualTemperatures = measurements.map(value => ({
+    measuredAt: value.measuredAt,
+    temperature: value.temperature,
+  }));
+  const sensorTemperatures = sensorMeasurements.map(value => ({
+    measuredAt: value.measuredAt,
+    temperature: value.beerTemperature,
+  }));
+
+  return {
+    beerTemperature: latestValidValue(
+      [...manualTemperatures, ...sensorTemperatures],
+      value => value.measuredAt,
+      value => value.temperature,
+    ),
+    ambientTemperature: latestValidValue(sensorMeasurements, value => value.measuredAt, value => value.ambientTemperature),
+    plato: latestValidValue(measurements, value => value.measuredAt, value => value.plato),
+  };
+};
+
 export const latestByDate = <T>(values: T[], getDate: (value: T) => string): T | undefined =>
   [...values].sort((a, b) => Date.parse(getDate(b)) - Date.parse(getDate(a)))[0];
 export const bubbleRate = (value?: SensorMeasurement): number | undefined => {
