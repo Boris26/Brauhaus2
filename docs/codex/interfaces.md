@@ -83,7 +83,7 @@ The desktop header sends `POST /api/system/shutdown` without a request body only
 
 ## Normalized brewing status expected by UI
 
-`BrewingStatus` is exclusively the process model returned by the one-second `GET /Status/` poll:
+`BrewingStatus` is exclusively the authoritative process model returned immediately when polling starts and then every ten seconds by `GET /Status/`. Timed-step displays may interpolate elapsed and remaining step time locally between responses, but every response replaces that display projection and only the controller can declare step or process-state transitions:
 
 ```ts
 interface BrewingStatus {
@@ -102,7 +102,7 @@ interface BrewingStatus {
 }
 ```
 
-`RealtimeControllerState` is the separate event-oriented hardware, alarm, and sensor model. Heater running feedback, agitator output, alarms, and temperature-sensor health have no polling fallback. Legacy normalization remains only for independent process fields such as temperature, phase, mode, waiting, index, and elapsed time.
+`RealtimeControllerState` is the separate event-oriented hardware, alarm, and sensor model. Heater running feedback, agitator output, alarms, and temperature-sensor health have no polling fallback and are not slowed by the brewing-status interval. Water filling also retains its independent one-second `WaterStatus` poll. Legacy normalization remains only for independent process fields such as temperature, phase, mode, waiting, index, and elapsed time.
 
 ## PI/control Web Push endpoints
 

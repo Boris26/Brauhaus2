@@ -22,6 +22,8 @@ interface ProductionTemperatureTimelineProps {
     brewingStatus?: BrewingStatus;
     measurements: readonly TimelineMeasurement[];
     fallbackTemperature: number;
+    displayNowSeconds?: number;
+    displayCurrentStepElapsedSeconds?: number;
 }
 
 export class ProductionTemperatureTimeline extends React.Component<ProductionTemperatureTimelineProps> {
@@ -34,7 +36,11 @@ export class ProductionTemperatureTimeline extends React.Component<ProductionTem
     }
 
     render() {
-        const model = buildTemperatureTimelineModel(this.props.selectedBeer, this.props.brewingStatus, this.props.measurements, this.props.fallbackTemperature, {measurementsOrderedByCollection: true});
+        const model = buildTemperatureTimelineModel(this.props.selectedBeer, this.props.brewingStatus, this.props.measurements, this.props.fallbackTemperature, {
+            measurementsOrderedByCollection: true,
+            displayNowSeconds: this.props.displayNowSeconds,
+            displayCurrentStepElapsedSeconds: this.props.displayCurrentStepElapsedSeconds,
+        });
         const {steps, points, nowSeconds, axisEndSeconds, axisTicks, progressPercent} = model;
         const hasChartData = steps.length > 0 || points.some((point) => point.actualTemperature !== undefined || point.targetTemperature !== undefined);
 

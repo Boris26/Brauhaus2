@@ -197,7 +197,7 @@ Current Status Contract 2.0 is process-only:
 }
 ```
 
-Timing fields are seconds. Hardware running state, agitator state, alarms, and temperature-sensor health are supplied only through Realtime State Contract v1 Socket.IO snapshots. The one-second poll remains active for the process fields above.
+Timing fields are seconds. Hardware running state, agitator state, alarms, and temperature-sensor health are supplied only through Realtime State Contract v1 Socket.IO snapshots. The process-field poll runs immediately at startup and every ten seconds thereafter; timed-step display values are locally interpolated and resynchronized without deriving state transitions.
 
 ## Logs and diagnostics
 
@@ -239,7 +239,7 @@ Needs verification in control repository: socket.io event shape, initial empty `
 
 ## Realtime State Contract v1
 
-Brauhaus2 #194 consumes Braumeister #109 on the existing Socket.IO connection: `heating-running-changed`, `agitator-state-changed`, `alarm-state-changed`, and `temperature-sensor-state-changed`. Agitator `operation` is exactly `STOPPED | CONTINUOUS | INTERVAL` (`OFF` is only a mode), and `actualOutputOn` is physical output truth. Alarm snapshots replace the entire alarm list. The UI retains `overheat` and `brew-session-running`, retains the one-second process poll, and treats realtime state as stale after disconnect. End-to-end reconnect and two-client behavior **Needs verification** on real hardware.
+Brauhaus2 #194 consumes Braumeister #109 on the existing Socket.IO connection: `heating-running-changed`, `agitator-state-changed`, `alarm-state-changed`, and `temperature-sensor-state-changed`. Agitator `operation` is exactly `STOPPED | CONTINUOUS | INTERVAL` (`OFF` is only a mode), and `actualOutputOn` is physical output truth. Alarm snapshots replace the entire alarm list. The UI retains `overheat` and `brew-session-running`, polls process state every ten seconds after an immediate initial request, and treats realtime state as stale after disconnect. End-to-end reconnect and two-client behavior **Needs verification** on real hardware.
 
 The UI's interval progress ring can consume an optional controller-owned `intervalProgressPercent` from both `GET Agitator/Status.runtime` and `agitator-state-changed`. Braumeister does not expose reliable within-phase progress in the currently documented contract, so it must calculate this value from its own phase clock and include it in initial/reconnect snapshots before live progress can be shown. This coordinated controller extension is **Needs verification**; the UI does not infer progress from `intervalPhase` or a client-local start time.
 

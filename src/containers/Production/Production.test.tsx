@@ -1414,6 +1414,30 @@ describe('Production process overview countdown', () => {
         expect(screen.getByText('00:01:30')).toBeInTheDocument();
     });
 
+    it('stops local projection for WAITING without deriving a process transition', () => {
+        const running = createActiveTimedStatus(120);
+        const {rerender, props} = renderProduction({selectedBeer: createProcessBeer(), brewingStatus: running});
+        jest.advanceTimersByTime(5000);
+        expect(screen.getByText('00:01:55')).toBeInTheDocument();
+
+        const waiting = {...running, currentStep: {...running.currentStep, mode: ProcessMode.WAITING, remainingTime: 115, elapsedTime: 1085}};
+        rerender(<Production {...props} brewingStatus={waiting} />);
+        jest.advanceTimersByTime(5000);
+        expect(screen.queryByText('00:01:50')).not.toBeInTheDocument();
+        expect(screen.queryByText('Brauvorgang abgeschlossen')).not.toBeInTheDocument();
+    });
+
+    it('uses local cooking elapsed time for hop reminders without a REST update', () => {
+        const beer = {...createProcessBeer(), cookingTime: 60, wortBoiling: {totalTime: 60, hops: [{id: 'h1', name: 'Cascade', description: '', alpha: 5, quantity: 10, time: 59}]}};
+        const cooking = createActiveTimedStatus(3542);
+        cooking.currentStep = {...cooking.currentStep, phase: ProcessPhase.COOKING, duration: 3600, elapsedTime: 58, remainingTime: 3542};
+        renderProduction({selectedBeer: beer, brewingStatus: cooking});
+
+        expect(screen.queryByLabelText('Hopfengabe')).not.toBeInTheDocument();
+        jest.advanceTimersByTime(2000);
+        expect(screen.getByLabelText('Hopfengabe')).toHaveTextContent('Cascade zugeben');
+    });
+
     it('updates the active process card and remaining list on step changes', () => {
         const {rerender, props} = renderProduction({selectedBeer: createProcessBeer(), brewingStatus: createActiveTimedStatus(120, 2)});
         expect(screen.getAllByText('Rast 1').length).toBeGreaterThan(0);
