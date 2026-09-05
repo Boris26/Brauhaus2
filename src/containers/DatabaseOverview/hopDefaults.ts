@@ -27,6 +27,7 @@ export const normalizeHopDto = (aHop: Partial<HopDTO>): HopDTO => {
     const timeUnit = hasTime ? getValidTimeUnit(usage, aHop.timeUnit) : undefined;
 
     return {
+        ...aHop,
         id: aHop.id ?? '',
         name: aHop.name ?? '',
         quantity: Number(aHop.quantity ?? 0),

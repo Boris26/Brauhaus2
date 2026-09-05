@@ -11,6 +11,7 @@ import {PdfGenerator} from "../utils/pdf/PdfGenerator";
 import { BeerPdfStrategy } from '../utils/pdf/shoppingListPdfStrategy';
 import {FinishedBeerRepository} from "../repositorys/FinishedBeerRepository";
 import {getRecipeImportErrorMessage} from '../utils/recipeImport';
+import {lifecycleErrorMessage} from '../utils/brewLifecycle';
 
 /**
  * Epic to handle the GET_BEERS action.
@@ -111,8 +112,8 @@ export const updateFinishedBeerEpic = (action$: any) =>
         from(FinishedBeerRepository.updateFinishedBeer(action.payload.beer)).pipe(
           map((beer) => BeerActions.updateFinishedBrewSuccess({...action.payload.beer, ...beer}, action.payload.beer.id)),
           catchError((aError: Error) => from([
-              BeerActions.updateFinishedBrewFailure(action.payload.beer.id, aError.message),
-              ApplicationActions.openErrorDialog(true, "Bier fehler", "Submit Bier: " + aError.message)
+              BeerActions.updateFinishedBrewFailure(action.payload.beer.id, lifecycleErrorMessage(aError)),
+              ApplicationActions.openErrorDialog(true, "Statuswechsel nicht möglich", lifecycleErrorMessage(aError))
           ]))
         )
       )

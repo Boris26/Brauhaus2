@@ -153,3 +153,13 @@ The control command endpoints are `POST /BrewRecovery/Resume` with normal `Brewi
 BeerDataStore is the sole persistent source of truth. Brauhaus2 keeps only request and display state. The UI uses additive `GET fermentation/finishedbeers/{finishedBeerId}`, `POST fermentation/measurements`, `POST fermentation/actions/{actionId}/complete`, `GET fermentation/devices`, `GET fermentation/sensor-measurements?finishedBeerId={id}`, and `PUT fermentation/devices/{deviceId}/assignment` routes. Deployment with these exact routes and DTOs **Needs verification** against BeerDataStore #42.
 
 Temperatures are Celsius, Plato values are degrees Plato, timestamps are ISO-8601, and `windowSeconds` is seconds. Server `bubbleRatePerMinute` wins; otherwise the UI derives `bubbleCount * 60 / windowSeconds`. Action states are `PLANNED`, `ACTIVE`, and `COMPLETED`. Error envelopes, online threshold, and inclusion of globally unassigned devices in the aggregate **Needs verification**.
+
+## Finished-brew lifecycle and recipe-action additions
+
+Normal state values are exactly `FERMENTATION`, `MATURATION`, and `FINISHED`. UI transitions are `FERMENTATION -> MATURATION | FINISHED` and `MATURATION -> FINISHED`; BeerDataStore is authoritative and may reject stale/invalid writes with HTTP 409 and code `INVALID_FINISHED_BEER_TRANSITION`. Unknown historic state strings are rendered defensively and are not offered as transitions.
+
+Dry-hop and fermentation-phase additional-ingredient DTOs add optional `triggerType` (`TIME_OFFSET | PLATO_THRESHOLD | MANUAL`), `triggerOffset`, `triggerUnit` (`HOURS | DAYS`), `triggerPlato` (degrees Plato), `contactTime`, and `contactTimeUnit` (`HOURS | DAYS`). Existing `Hop.time/timeUnit` retains boil/whirlpool semantics and is not migrated into a trigger. Persistence/read-back of these additive fields is **Needs verification** in BeerDataStore.
+
+`FinishedBrew.fermentationStartedAt` is the optional, timezone-bearing canonical basis for `TIME_OFFSET`; it is not inferred from `startDate`. The normal production-completion workflow sets it to the current ISO-8601 instant, while legacy/manual records may leave it absent. Complete PUT payloads preserve the value unchanged.
+
+Persisted action runtime states are `PENDING | COMPLETED | SKIPPED`. Fälligkeit is a backend-calculated projection exposed as `due: boolean` or optional virtual `status: DUE`; Brauhaus2 does not persist it. The aggregate action DTO also carries the trigger/contact fields, backend-owned `completedAt`, and backend-calculated `contactEndsAt`. Exact deployed DTO, the `RecipeActionRuntime` foreign key/unique constraint, due calculation, and generation of runtime actions from recipe definitions are **Needs verification** against BeerDataStore.

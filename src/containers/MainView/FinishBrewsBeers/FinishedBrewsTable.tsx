@@ -4,17 +4,16 @@ import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
-import CheckIcon from '@mui/icons-material/Check';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import SimpleBar from 'simplebar-react';
 import './FinishedBrewsTable.css';
 import {FinishedBrew, FinishedBrewCreatePayload} from "../../../model/FinishedBrew";
 import {isNil} from "lodash";
-import { eBrewState, BrewStateGerman } from '../../../enums/eBrewState';
+import { eBrewState, BrewStateGerman, brewStateLabel } from '../../../enums/eBrewState';
 import Panel from '../../Panel/Panel';
 import FinishedBrewDetails from './FinishedBrewDetails';
-import {completeFinishedBrew, mergeFinishedBrewChanges} from '../../../utils/finishedBrewChanges';
+import {mergeFinishedBrewChanges} from '../../../utils/finishedBrewChanges';
 import {createFinishedBrewId} from '../../../utils/finishedBrewCreateId';
 import ModalDialog, {DialogType} from '../../../components/ModalDialog/ModalDialog';
 
@@ -39,7 +38,6 @@ interface FinishedBrewsTableState {
     filterYear: string;
     showOnlyActive: boolean;
     filterOutActive: boolean;
-    clickedFinishBtn: Record<string, boolean>;
     newRowActive?: boolean;
     newRowData?: Partial<FinishedBrew>;
     panelBrewId?: string | null;
@@ -57,7 +55,7 @@ const calcAlcohol = (w1: number, w2: number | null) => {
 export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, FinishedBrewsTableState> {
     constructor(props: FinishedBrewsTableProps) {
         super(props);
-        this.state = { editRows: {}, filterYear: '', showOnlyActive: false, filterOutActive: false, clickedFinishBtn: {}, panelBrewId: null, submittingRows: {}, newRowSubmitting: false };
+        this.state = { editRows: {}, filterYear: '', showOnlyActive: false, filterOutActive: false, panelBrewId: null, submittingRows: {}, newRowSubmitting: false };
     }
 
     componentDidMount() {
@@ -76,13 +74,11 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
             this.setState(prevState => {
                 const editRows = {...prevState.editRows};
                 const submittingRows = {...prevState.submittingRows};
-                const clickedFinishBtn = {...prevState.clickedFinishBtn};
                 successfulIds.forEach(id => delete editRows[id]);
                 completedIds.forEach(id => {
                     delete submittingRows[id];
-                    delete clickedFinishBtn[id];
                 });
-                return {editRows, submittingRows, clickedFinishBtn};
+                return {editRows, submittingRows};
             });
         }
 
@@ -162,15 +158,6 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
         const { filterYear, showOnlyActive, filterOutActive } = this.state;
         const filteredBrews = this.filterBrewsByYearAndActive(brews, filterYear, showOnlyActive, filterOutActive);
         exportPdf(filteredBrews);
-    };
-
-    handleFinishClick = (brew: FinishedBrew) => {
-        if (this.state.submittingRows[brew.id] || this.props.savingFinishedBrewIds.includes(brew.id)) return;
-        const updated = completeFinishedBrew(mergeFinishedBrewChanges(brew, this.state.editRows[brew.id]));
-        this.setState(prev => ({
-            clickedFinishBtn: { ...prev.clickedFinishBtn, [brew.id]: true },
-            submittingRows: {...prev.submittingRows, [brew.id]: true},
-        }), () => this.props.onSave(updated));
     };
 
     handleDelete = (id: string) => {
@@ -346,6 +333,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                     -
                 </TableCell>
                 <TableCell className="table-cell">
+                    <label className="administrative-status-label">Administrativer Status
                     <select
                         value={newRowData?.state || eBrewState.FERMENTATION}
                         onChange={e => this.setState(prev => ({ newRowData: { ...prev.newRowData, state: e.target.value as eBrewState } }))}
@@ -355,6 +343,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                             <option key={state} value={state}>{BrewStateGerman[state]}</option>
                         ))}
                     </select>
+                    </label>
                 </TableCell>
                 <TableCell className="table-cell beschreibung">
                     <input
@@ -402,7 +391,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
     }
 
     renderBrewRow(brew: FinishedBrew, beers: { id: string; name: string }[]) {
-        const { editRows, clickedFinishBtn, submittingRows } = this.state;
+        const { editRows, submittingRows } = this.state;
         const brewId = brew.id;
         const isEdited = !!editRows[brewId];
         const row = { ...brew, ...editRows[brewId] };
@@ -478,16 +467,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                 </TableCell>
                 <TableCell className="table-cell alcohol">{calcAlcohol(row.originalwort, row.residual_extract)}</TableCell>
                 <TableCell className="table-cell">
-                    <select
-                        value={row.state}
-                        onChange={e => this.handleChange(brewId, 'state', e.target.value as eBrewState)}
-                        className="table-edit-field"
-                        disabled={!isActive}
-                    >
-                        {Object.values(eBrewState).filter(state => state !== eBrewState.FINISHED).map(state => (
-                            <option key={state} value={state}>{BrewStateGerman[state]}</option>
-                        ))}
-                    </select>
+                    <span>{brewStateLabel(row.state)}</span>
                 </TableCell>
                 <TableCell className="table-cell beschreibung">
                     <TextField
@@ -509,17 +489,6 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                                 aria-label="Speichern"
                             >
                                 <SaveIcon sx={{fontSize: 22}} />
-                            </button>
-                        )}
-                        {isActive && (
-                            <button
-                                className={`finish-btn${clickedFinishBtn[brewId] ? ' clicked' : ''}`}
-                                title="Endgültig fertigstellen"
-                                aria-label="Endgültig fertigstellen"
-                                onClick={() => this.handleFinishClick(row as FinishedBrew)}
-                                disabled={isSaving || row.residual_extract === null || row.residual_extract === undefined}
-                            >
-                                <CheckIcon sx={{fontSize: 22}} />
                             </button>
                         )}
                         <button

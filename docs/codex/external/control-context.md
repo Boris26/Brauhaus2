@@ -246,3 +246,7 @@ The UI's interval progress ring can consume an optional controller-owned `interv
 ## Confirmed recovery contract (Braumeister #146 / Brauhaus2 #246)
 
 Braumeister publishes `brew-recovery-state-changed` on the already shared default Socket.IO connection and accepts `POST /BrewRecovery/Resume` (normal `BrewingData`) and `DELETE /BrewRecovery`. The socket payload fully replaces recovery availability. Resume HTTP 200 is only command acknowledgement; `brew-session-running` remains the sole running-process signal and drives `GET /BrewSession`. Multi-client and reconnect behavior still **Needs verification** against the deployed Raspberry Pi controller.
+
+## Fermentation lifecycle/action boundary
+
+The three-state finished-brew lifecycle and fermentation recipe-action evaluation belong to BeerDataStore, not PI control. Temperature remains a measurement and `TEMPERATURE_THRESHOLD` is not part of action v1. Existing controller Web Push must not be duplicated; cross-service delivery of BeerDataStore-owned `recipe action due` and `contact time ended` notifications is **Needs verification**.

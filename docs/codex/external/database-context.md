@@ -248,3 +248,9 @@ The UI uses the database/backend service for persistent brewing data, not hardwa
 ## Recovery recipe lookup (BeerDataStore #40 / Brauhaus2 #246)
 
 Recovery persists the stable Beer identifier and scaling plan through the coordinated BeerDataStore #40 contract. Brauhaus2 resolves that ID using the unchanged `GET beers` contract; it performs no recovery-specific database write and never discards controller recovery merely because the recipe cannot be found. Deployment with recipes preserving `referenceVolume` and `referenceBrewhouseEfficiency` **Needs verification** end to end.
+
+## Required BeerDataStore lifecycle/action contract
+
+Brauhaus2 now exposes only `FERMENTATION`, `MATURATION`, and `FINISHED` as normal global lifecycle values. Gärung is the entire time in the fermentation vessel; dry hop and other additions are per-brew recipe actions, not lifecycle states. Invalid transitions should return HTTP 409 with `INVALID_FINISHED_BEER_TRANSITION`.
+
+`FinishedBrew.fermentationStartedAt` is the timezone-bearing `TIME_OFFSET` epoch and must be stored/read unchanged; `startDate` must not be substituted. Persisted runtime is only `PENDING | COMPLETED | SKIPPED`; `due`/virtual `DUE` is recalculated from the current trigger inputs. Runtime rows must reference the concrete `FinishedBrew.id`, with uniqueness semantically `(finished_beer_id, recipe_action_id)`, because multiple brews may share one recipe `beer_id`. Recipe DTO persistence, that foreign key/constraint, aggregate due evaluation after Plato writes, server `completedAt`, and server-derived `contactEndsAt` are all **Needs verification** in BeerDataStore. Finished-brew create idempotency remains unchanged: the client operation ID is created before dispatch/retry and `beer_id` is only a recipe reference.
