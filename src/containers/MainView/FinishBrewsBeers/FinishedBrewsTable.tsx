@@ -483,7 +483,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                         className="table-edit-field"
                         disabled={!isActive}
                     >
-                        {Object.values(eBrewState).map(state => (
+                        {Object.values(eBrewState).filter(state => state !== eBrewState.FINISHED).map(state => (
                             <option key={state} value={state}>{BrewStateGerman[state]}</option>
                         ))}
                     </select>
