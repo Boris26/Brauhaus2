@@ -8,8 +8,8 @@ export class YeastRepository extends BaseRepository {
         return this.get<Yeasts[]>("yeasts");
     }
 
-    static submitYeast(aYeast: Yeasts): Promise<void> {
-        return this.post("yeast", aYeast);
+    static submitYeast(aYeast: Omit<Yeasts, 'id'>): Promise<Yeasts> {
+        return this.post<Yeasts>("yeast", aYeast);
     }
 
     static deleteYeastById(aId: string): Promise<void> {

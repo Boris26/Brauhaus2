@@ -19,6 +19,9 @@ import {AppAccordion, AppAccordionHeader} from "../../../components/AppAccordion
 interface DetailsProps {
     selectedBeer?: Beer;
     updateRecipeScaling: (aScalingValues: scalingValues) => void;
+    malts?: Array<{id: string | number; name: string}>;
+    hops?: Array<{id: string | number; name: string}>;
+    yeasts?: Array<{id: string | number; name: string}>;
 }
 
 interface DetailsState {
@@ -28,6 +31,9 @@ interface DetailsState {
 }
 
 export class Details extends React.Component<DetailsProps, DetailsState> {
+
+    ingredientName = (items: Array<{id: string | number; name: string}> | undefined, id: string | number, kind: string) =>
+        items?.find(item => String(item.id) === String(id))?.name ?? `Unbekannte ${kind} (ID ${id})`;
 
     constructor(props: DetailsProps) {
         super(props);
@@ -235,7 +241,7 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
                     <TableBody>
                         {selectedBeer.malts.map((item, index) => (
                             <TableRow key={index}>
-                                <TableCell>{item.name}</TableCell>
+                                <TableCell>{this.ingredientName(this.props.malts, item.id, 'Zutat')}</TableCell>
                                 <TableCell>{item.quantity}</TableCell>
                             </TableRow>
                         ))}
@@ -279,7 +285,7 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
                         <TableBody>
                             {selectedBeer.wortBoiling.hops.map((item, index) => (
                                 <TableRow key={index}>
-                                    <TableCell>{item.name}</TableCell>
+                                    <TableCell>{this.ingredientName(this.props.hops, item.id, 'Zutat')}</TableCell>
                                     <TableCell>{item.additionTime}</TableCell>
                                     <TableCell>{item.quantity}</TableCell>
                                 </TableRow>
@@ -328,7 +334,7 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
                     <ul className="inputTextGeneral">
                         {yeasts.map((y, index) => (
                             <li key={index}>
-                                {y?.name ?? 'Unbekannte Hefe'}
+                                {this.ingredientName(this.props.yeasts, y.id, 'Hefe')}
                             </li>
                         ))}
                     </ul>

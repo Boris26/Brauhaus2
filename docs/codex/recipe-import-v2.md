@@ -29,3 +29,9 @@ The UI generates a UUID when a valid source file is prepared and generates a new
 The Flask blueprint owns `/importbeer`. The browser calls `/api/database/importbeer` because the shared Axios instance has `baseURL: /api/database`; the development proxy forwards `/api/*` unchanged, and deployment routing removes/routes the external prefix. No endpoint change is required.
 
 **Needs verification:** the BeerDatabase source repository is not present in this workspace, so its implementation could not be independently inspected here. The UI types and behavior use the final BeerDatabase 2.x request, response, mapping, error, status, and idempotency contract supplied for this migration.
+
+## Stateless ingredient resolution (current BeerDataStore contract)
+
+The import response can now return `resolutionRequired: true` plus unresolved `ingredients` (`ingredientType`, `sourceName`, `candidates`). Such a response contains no persisted recipe. The existing dialog retains the original parsed source document and its idempotency key. It requires an explicit selection for fuzzy candidates; an empty candidate list additionally offers every local ingredient of the same type and an explicit master-data create form. Creation uses the normal type-specific master-data endpoint. The final retry sends the original `{format, recipe, idempotencyKey}` plus `ingredientMappings` made only of `{ingredientType, sourceName, ingredientId}`. The idempotency key is deliberately reused across analysis and resolution retry; a new source file creates a new key. Exact and alias imports that return a recipe complete without another confirmation.
+
+Recipe ingredient DTOs are now references only. Malt and yeast entries contain `id` and `quantity`; hop and additional-ingredient entries add recipe-use fields. Names and properties are resolved from the separately loaded master-data collections. Missing IDs remain visible and block save.

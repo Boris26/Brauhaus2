@@ -53,7 +53,7 @@ Important compatibility assumptions:
 - `GET /beer/<beer_id>` -> recipe object or `404 { "error": "Beer not found" }`.
 - `POST /beer` -> create recipe from JSON; success currently returns `200 { "message": "Beer added successfully" }`.
 - `DELETE /beer/<beer_id>` -> success returns `{ "message": "Beer deleted successfully", "id": beer_id }`.
-- `POST /importbeer` is the BeerDatabase 2.x Recipe Import V2 route. It accepts only JSON `{ format, recipe, idempotencyKey? }` and returns `RecipeImportResult` with `recipe`, `warnings`, `ingredientMappings`, `createdMasterData`, and `replayed`. Multipart is rejected with HTTP 415 / `INVALID_IMPORT_REQUEST`.
+- `POST /importbeer` is the BeerDatabase 2.x Recipe Import V2 route. It accepts only JSON `{ format, recipe, idempotencyKey?, ingredientMappings? }` and returns `RecipeImportResult` with `recipe`, `warnings`, `ingredientMappings`, `createdMasterData`, and `replayed`. Multipart is rejected with HTTP 415 / `INVALID_IMPORT_REQUEST`.
 
 UI compatibility note: this UI requires BeerDatabase 2.x, sends a UUID idempotency key for every prepared import, and has no legacy multipart fallback.
 
@@ -254,3 +254,7 @@ Recovery persists the stable Beer identifier and scaling plan through the coordi
 Brauhaus2 now exposes only `FERMENTATION`, `MATURATION`, and `FINISHED` as normal global lifecycle values. Gärung is the entire time in the fermentation vessel; dry hop and other additions are per-brew recipe actions, not lifecycle states. Invalid transitions should return HTTP 409 with `INVALID_FINISHED_BEER_TRANSITION`.
 
 `FinishedBrew.fermentationStartedAt` is the timezone-bearing `TIME_OFFSET` epoch and must be stored/read unchanged; `startDate` must not be substituted. Recipe actions use the final BeerDataStore fields `actionId`, `triggerType`, `triggerValue`, `triggerUnit`, `contactTime`, and `contactTimeUnit`. Persisted runtime is only `PENDING | COMPLETED | SKIPPED`; `due` is a recalculated boolean projection, never a persisted `DUE` state. Runtime rows reference concrete `FinishedBrew.id`, because multiple brews may share one recipe `beer_id`. Due evaluation after Plato writes, `completedAt`, `skippedAt`, and `contactEndsAt` are server-owned. Finished-brew create idempotency remains unchanged: the client operation ID is created before dispatch/retry and `beer_id` is only a recipe reference.
+
+## Normalized ingredient/reference contract (current)
+
+Recipe ingredients no longer embed master names or properties. Malt/yeast uses contain `{id, quantity}`; hop uses contain `{id, quantity, usage, additionTime?, timeUnit?, trigger...}`; additional uses contain `{id, quantity, unit, phase, additionTime?, timeUnit?, note?, trigger...}`. Recipe trigger/contact instructions have no `actionId`; only generated runtime fermentation actions do. `POST /importbeer` may return `resolutionRequired: true` with unresolved ingredients and candidates. It persists nothing in that case. The caller retries the original source and the same idempotency key with explicit ingredient mappings. Exact/alias resolution can complete directly. Fuzzy/unknown values require an explicit mapping, and master creation uses the regular master-data POST routes.

@@ -6,7 +6,7 @@ The existing Socket.IO transport maps the payload-free `brew-session-running` ev
 
 ## Recipe import
 
-The recipe editor opens a format/file dialog. The user selects `BRAUHAUS` or `MMUM`; `BRAUREKA` is not offered. The UI reads the file with `File.text()`, accepts only a syntactically valid JSON object, and passes that object unchanged as `recipe` in `{ format, recipe, idempotencyKey }` to `POST /api/database/importbeer`. The backend owns all source interpretation and persistence. The `RecipeImportResult.recipe` response flows through `ADD_IMPORTED_BEER` into the list/editor, while warnings, non-exact mappings, and created master data remain available for a user notice. Structured errors keep the dialog open. See `recipe-import-v2.md` for the audit.
+The recipe editor opens a format/file dialog. The user selects `BRAUHAUS` or `MMUM`; `BRAUREKA` is not offered. The UI reads the file with `File.text()`, accepts only a syntactically valid JSON object, and passes that object unchanged as `recipe` in `{ format, recipe, idempotencyKey, ingredientMappings? }` to `POST /api/database/importbeer`. The backend owns all source interpretation and persistence. The `RecipeImportResult.recipe` response flows through `ADD_IMPORTED_BEER` into the list/editor, while warnings, non-exact mappings, and created master data remain available for a user notice. Structured errors keep the dialog open. See `recipe-import-v2.md` for the audit.
 
 BeerDatabase 2.x returns `RecipeImportResult`, including `replayed`; a replay is handled as a successful, non-duplicating import.
 

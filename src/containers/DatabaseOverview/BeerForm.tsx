@@ -1,5 +1,5 @@
 import React, { ChangeEvent, FormEvent } from 'react';
-import {AdditionalIngredientPhase, AdditionalIngredientTimeUnit, Beer, FermentationSteps, Hop, Malt, Yeast} from "../../model/Beer";
+import {AdditionalIngredientPhase, AdditionalIngredientTimeUnit, Beer, FermentationSteps} from "../../model/Beer";
 import {AdditionalIngredientDTO, BeerDTO, HopDTO, MaltDTO, YeastDTO} from "../../model/BeerDTO";
 import { HopUsage } from "../../enums/eHopUsage";
 import { HopTimeUnit } from "../../enums/eHopTimeUnit";
@@ -11,15 +11,22 @@ import {isEqual} from "lodash";
 import {RestExecutionMode} from "../../enums/eRestExecutionMode";
 import './BeerForm.css'
 import {AdditionalIngredient} from "../../model/AdditionalIngredient";
+import {Malts} from '../../model/Malt';
+import {Hops} from '../../model/Hops';
+import {Yeasts} from '../../model/Yeasts';
 import ModalDialog, {DialogType} from "../../components/ModalDialog/ModalDialog";
 import { isRequiredPositiveQuantity } from "../../utils/beerSubmission";
-import {RecipeImportRequest, RecipeImportResult} from '../../model/RecipeImport';
+import {IngredientType, RecipeImportRequest, RecipeImportResult} from '../../model/RecipeImport';
 import {RecipeImportDialog} from './RecipeImportDialog';
+import {MaltRepository} from '../../repositorys/MaltRepository';
+import {HopRepository} from '../../repositorys/HopRepository';
+import {YeastRepository} from '../../repositorys/YeastRepository';
+import {AdditionalIngredientRepository} from '../../repositorys/AdditionalIngredientRepository';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import SaveIcon from '@mui/icons-material/Save';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
 import {AppAccordion, AppAccordionHeader} from '../../components/AppAccordion/AppAccordion';
-import {CONTACT_TIME_UNITS, TIME_TRIGGER_UNITS, clearRecipeAction, createRecipeActionId, unitLabel, RecipeActionFields, TriggerType, TriggerUnit, TimeUnit, hasRecipeAction, normalizeRecipeAction} from '../../model/FermentationRecipeAction';
+import {CONTACT_TIME_UNITS, TIME_TRIGGER_UNITS, clearRecipeAction, unitLabel, RecipeActionFields, TriggerType, TriggerUnit, TimeUnit, hasRecipeAction, normalizeRecipeAction} from '../../model/FermentationRecipeAction';
 
 interface BeerFormProps {
     onSubmitBeer: (beer: BeerDTO) => void;
@@ -28,9 +35,9 @@ interface BeerFormProps {
     getYeast: (isFetching: boolean) => void;
     getAdditionalIngredients: (isFetching: boolean) => void;
     saveBeerFormState: (formState: any) => void;
-    malts: Malt[];
-    hops: Hop[];
-    yeasts: Yeast[];
+    malts: Malts[];
+    hops: Hops[];
+    yeasts: Yeasts[];
     additionalIngredients: AdditionalIngredient[];
     isSubmitSuccessful?: boolean;
     messageType?: string;
@@ -114,9 +121,9 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             cookingTime: 0,
             cookingTemperatur: DEFAULT_COOKING_TEMPERATURE,
             fermentationSteps: createDefaultFermentationSteps(),
-            maltsDTO: [{ id: '', name: '', quantity: undefined as any }],
-            hopsDTO: [{ id: '', name: '', quantity: undefined as any, usage: HopUsage.BOIL }],
-            yeastsDTO: [{ id: '', name: '', quantity: undefined as any }],
+            maltsDTO: [{ id: '', quantity: undefined as any }],
+            hopsDTO: [{ id: '', quantity: undefined as any, usage: HopUsage.BOIL }],
+            yeastsDTO: [{ id: '', quantity: undefined as any }],
             additionalIngredientsDTO: [],
             isSubmitSuccessful: undefined,
             showValidationDialog: false,
@@ -166,6 +173,21 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         getAdditionalIngredients(true);
     }
 
+    createImportMasterData = async (type: IngredientType, values: Record<string, string | number>) => {
+        if (type === 'MALT') {
+            const created = await MaltRepository.submitMalt(values as any); this.props.getMalt(true); return created;
+        }
+        if (type === 'HOP') {
+            const created = await HopRepository.submitHop(values as any); this.props.getHop(true); return created;
+        }
+        if (type === 'YEAST') {
+            const created = await YeastRepository.submitYeast(values as any); this.props.getYeast(true); return created;
+        }
+        const created = await AdditionalIngredientRepository.submitAdditionalIngredient(values as any);
+        this.props.getAdditionalIngredients(true);
+        return created;
+    };
+
     componentDidUpdate(prevProps: Readonly<BeerFormProps>, prevState: Readonly<BeerFormState>, snapshot?: any) {
         const {isSubmitSuccessful, importedBeer} = this.props;
         if (!isEqual(isSubmitSuccessful, prevProps.isSubmitSuccessful)) {
@@ -194,10 +216,10 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 cookingTemperatur: importedBeer.cookingTemperatur || 0,
                 // Mash-plan normalization is independent of the BRAUHAUS v2 Recipe Action contract.
                 fermentationSteps: normalizeMashPlan(importedBeer.fermentation || []),
-                maltsDTO: importedBeer.malts ? importedBeer.malts.map(m => ({ id: m.id, name: m.name, quantity: m.quantity })) : [],
+                maltsDTO: importedBeer.malts ? importedBeer.malts.map(m => ({ id: m.id, quantity: m.quantity })) : [],
                 // BRAUHAUS v2 hop data is consumed without recipe-action fallback.
                 hopsDTO: importedBeer.wortBoiling && importedBeer.wortBoiling.hops ? importedBeer.wortBoiling.hops.map(aHop => normalizeHopDto(aHop)) : [],
-                yeastsDTO: importedBeer.fermentationMaturation && importedBeer.fermentationMaturation.yeast ? importedBeer.fermentationMaturation.yeast.map(y => ({ id: y.id, name: y.name, quantity: y.quantity })) : [],
+                yeastsDTO: importedBeer.fermentationMaturation && importedBeer.fermentationMaturation.yeast ? importedBeer.fermentationMaturation.yeast.map(y => ({ id: y.id, quantity: y.quantity })) : [],
                 // Additional ingredients are optional in the BRAUHAUS v2 recipe response.
                 additionalIngredientsDTO: importedBeer.additionalIngredients ? importedBeer.additionalIngredients.map(aIngredient => this.normalizeAdditionalIngredient(aIngredient)) : [],
                 isSubmitSuccessful: undefined,
@@ -315,7 +337,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             } else if (aName === "timeUnit") {
                 step.timeUnit = aValue === '' ? undefined : aValue as HopTimeUnit;
             } else if (aName === 'triggerType') {
-                hopsDTO[aIndex] = aValue === '' ? clearRecipeAction(step) : normalizeRecipeAction({...step, actionId: step.actionId ?? createRecipeActionId(), triggerType: aValue as TriggerType});
+                hopsDTO[aIndex] = aValue === '' ? clearRecipeAction(step) : normalizeRecipeAction({...step, triggerType: aValue as TriggerType});
             } else if (aName === 'triggerUnit' || aName === 'contactTimeUnit') {
                 (step as any)[aName] = aValue as TriggerUnit | TimeUnit;
             } else {
@@ -345,18 +367,17 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         const normalized: AdditionalIngredientDTO = {
             ...action,
             id: aIngredient.id,
-            name: aIngredient.name ?? '',
             quantity: Number(aIngredient.quantity ?? 0),
             unit: aIngredient.unit ?? 'g',
             phase,
-            time: phase === AdditionalIngredientPhase.FERMENTATION ? undefined : (aIngredient.time == null ? undefined : Number(aIngredient.time)),
+            additionTime: phase === AdditionalIngredientPhase.FERMENTATION ? undefined : (aIngredient.additionTime == null ? undefined : Number(aIngredient.additionTime)),
             timeUnit: phase === AdditionalIngredientPhase.FERMENTATION ? undefined : (Object.values(AdditionalIngredientTimeUnit).includes(aIngredient.timeUnit as AdditionalIngredientTimeUnit)
                 ? aIngredient.timeUnit
                 : AdditionalIngredientTimeUnit.DAYS),
-            description: aIngredient.description ?? '',
+            note: aIngredient.note ?? '',
         };
         if (phase === AdditionalIngredientPhase.FERMENTATION) {
-            delete normalized.time;
+            delete normalized.additionTime;
             delete normalized.timeUnit;
             return normalized;
         }
@@ -368,7 +389,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             const additionalIngredientsDTO = [...prevState.additionalIngredientsDTO];
             const aStep = additionalIngredientsDTO[aIndex];
 
-            if (["quantity", "time", "triggerValue", "contactTime"].includes(aName)) {
+            if (["quantity", "additionTime", "triggerValue", "contactTime"].includes(aName)) {
                 const aParsed = Number(aValue);
                 // time ist optional; leeres Feld bleibt undefined statt 0 als Marker.
                 // @ts-ignore
@@ -377,21 +398,17 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             } else if (aName === "phase") {
                 aStep.phase = aValue as AdditionalIngredientPhase;
                 if (aStep.phase === AdditionalIngredientPhase.FERMENTATION) {
-                    delete aStep.time;
+                    delete aStep.additionTime;
                     delete aStep.timeUnit;
                 } else additionalIngredientsDTO[aIndex] = clearRecipeAction(aStep);
             } else if (aName === "timeUnit") {
                 aStep.timeUnit = aValue as AdditionalIngredientTimeUnit;
             } else if (aName === 'triggerType') {
-                additionalIngredientsDTO[aIndex] = aValue === '' ? clearRecipeAction(aStep) : normalizeRecipeAction({...aStep, actionId: aStep.actionId ?? createRecipeActionId(), triggerType: aValue as TriggerType});
+                additionalIngredientsDTO[aIndex] = aValue === '' ? clearRecipeAction(aStep) : normalizeRecipeAction({...aStep, triggerType: aValue as TriggerType});
             } else if (aName === 'triggerUnit' || aName === 'contactTimeUnit') {
                 (aStep as any)[aName] = aValue as TriggerUnit | TimeUnit;
-            } else if (aName === "name") {
-                const aMasterIngredient = this.props.additionalIngredients.find((aIngredient) => aIngredient.name === aValue);
-                aStep.name = aValue;
-                if (aMasterIngredient) {
-                    aStep.id = aMasterIngredient.id;
-                }
+            } else if (aName === "id") {
+                aStep.id = aValue;
             } else {
                 // @ts-ignore
                 aStep[aName] = aValue;
@@ -403,12 +420,12 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
     validateAdditionalIngredients = (aIngredients: AdditionalIngredientDTO[]): boolean => {
         for (const aIngredient of aIngredients) {
-            const aHasIdOrName = !!aIngredient.id || !!(aIngredient.name && aIngredient.name.trim().length > 0);
-            if (!aHasIdOrName) return false;
+            const aHasId = aIngredient.id !== undefined && aIngredient.id !== null && String(aIngredient.id) !== '';
+            if (!aHasId) return false;
             if (!this.isValidQuantity(aIngredient.quantity)) return false;
             if (!aIngredient.unit || aIngredient.unit.trim().length === 0) return false;
             if (!Object.values(AdditionalIngredientPhase).includes(aIngredient.phase)) return false;
-            if (aIngredient.time !== undefined && !(Number(aIngredient.time) > 0)) return false;
+            if (aIngredient.additionTime !== undefined && !(Number(aIngredient.additionTime) > 0)) return false;
             if (aIngredient.timeUnit !== undefined && !Object.values(AdditionalIngredientTimeUnit).includes(aIngredient.timeUnit)) return false;
             if (aIngredient.phase === AdditionalIngredientPhase.FERMENTATION && !hasRecipeAction(aIngredient)) return false;
         }
@@ -532,54 +549,24 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             return this.fixedTypes.includes(step.type) ? step : normalizeFermentationStep(step);
         });
 
-        const malts_DTO = maltsDTO
-            .map((aMalt) => {
-                const malt = malts.find((malt) => malt.name === aMalt.name);
-                if (!malt) return undefined;
-                const quantity = Number(aMalt.quantity);
-                return { name: malt.name, id: malt.id, quantity: quantity };
-            })
-            .filter((m): m is MaltDTO => m !== undefined);
-
-        const normalizedHops = hopsDTO.map((aHop) => normalizeHopDto(aHop));
-        if (!normalizedHops.every((aHop) => validateHopDto(aHop))) {
+        const missing = (items: Array<{id: string | number}>, masters: Array<{id: string | number}>) =>
+            items.filter(item => !masters.some(master => String(master.id) === String(item.id)));
+        const missingMalts = missing(maltsDTO, malts);
+        const normalizedHops = hopsDTO.map(normalizeHopDto);
+        const missingHops = missing(normalizedHops, hops);
+        const missingYeasts = missing(yeastsDTO, yeasts);
+        const missingAdditional = missing(additionalIngredientsDTO, this.props.additionalIngredients);
+        if (missingMalts.length || missingHops.length || missingYeasts.length || missingAdditional.length) {
+            this.openValidationDialog('Mindestens eine Rezeptzutat ist nicht mehr in den Stammdaten vorhanden. Bitte ordne alle als unbekannt markierten Zutaten neu zu.');
+            return;
+        }
+        const malts_DTO: MaltDTO[] = maltsDTO.map(malt => ({id: malt.id, quantity: Number(malt.quantity)}));
+        if (!normalizedHops.every(validateHopDto)) {
             this.openValidationDialog('Bitte prüfe die Hopfengaben. Die Menge muss größer als 0 sein. Eine Zeitangabe ist optional; wenn eine Zeit angegeben wird, muss auch eine Einheit gewählt sein.');
             return;
         }
-
-        const hops_DTO = normalizedHops
-            .map((aHop): HopDTO | undefined => {
-                const hop = hops.find((hop) => hop.name === aHop.name);
-                if (!hop) return undefined;
-                const quantity = Number(aHop.quantity);
-                const additionTime = aHop.additionTime;
-                return {
-                    id: hop.id,
-                    name: hop.name,
-                    quantity,
-                    additionTime,
-                    usage: aHop.usage,
-                    timeUnit: aHop.timeUnit,
-                    ...(aHop.usage === HopUsage.DRY_HOP ? {
-                        actionId: aHop.actionId,
-                        triggerType: aHop.triggerType,
-                        triggerValue: aHop.triggerValue,
-                        triggerUnit: aHop.triggerUnit,
-                        contactTime: aHop.contactTime,
-                        contactTimeUnit: aHop.contactTimeUnit,
-                    } : {}),
-                };
-            })
-            .filter((h): h is HopDTO => h !== undefined);
-
-        const yeasts_DTO = yeastsDTO
-            .map((aYeast) => {
-                const yeast = yeasts.find((yeast) => yeast.name === aYeast.name);
-                if (!yeast) return undefined;
-                const quantity = Number(aYeast.quantity);
-                return { name: yeast.name, id: yeast.id, quantity: quantity };
-            })
-            .filter((y): y is YeastDTO => y !== undefined);
+        const hops_DTO: HopDTO[] = normalizedHops.map(hop => ({...hop, id: hop.id, quantity: Number(hop.quantity)}));
+        const yeasts_DTO: YeastDTO[] = yeastsDTO.map(yeast => ({id: yeast.id, quantity: Number(yeast.quantity)}));
 
         if (!this.validateAdditionalIngredients(additionalIngredientsDTO)) {
             this.openValidationDialog('Bitte prüfe weitere Zutaten: Zutat (ID/Name), Menge > 0, Einheit und gültige Phase sind erforderlich. Zeit darf nur > 0 gesetzt werden.');
@@ -681,9 +668,9 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             cookingTime: selectedBeer.cookingTime || 0,
             cookingTemperatur: selectedBeer.cookingTemperatur || 0,
             fermentationSteps: normalizeMashPlan(selectedBeer.fermentation || []),
-            maltsDTO: selectedBeer.malts.map((malt) => ({id: malt.id, name: malt.name, quantity: malt.quantity})),
+            maltsDTO: selectedBeer.malts.map((malt) => ({id: malt.id, quantity: malt.quantity})),
             hopsDTO: selectedBeer.wortBoiling?.hops.map((hop) => normalizeHopDto(hop)) || [],
-            yeastsDTO: selectedBeer.fermentationMaturation?.yeast.map((yeast) => ({id: yeast.id, name: yeast.name, quantity: yeast.quantity})) || [],
+            yeastsDTO: selectedBeer.fermentationMaturation?.yeast.map((yeast) => ({id: yeast.id, quantity: yeast.quantity})) || [],
             additionalIngredientsDTO: selectedBeer.additionalIngredients?.map((ingredient) => this.normalizeAdditionalIngredient(ingredient)) || [],
             validationErrors: {},
         }, () => {
@@ -705,19 +692,19 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
     addMalts = () => {
         this.setState((prevState) => ({
-            maltsDTO: [...prevState.maltsDTO, { id: '', name: '', quantity: undefined as any }],
+            maltsDTO: [...prevState.maltsDTO, { id: '', quantity: undefined as any }],
         }));
     }
 
     addHops = () => {
         this.setState((prevState) => ({
-            hopsDTO: [...prevState.hopsDTO, { id: '', name: '', quantity: undefined as any, usage: HopUsage.BOIL }],
+            hopsDTO: [...prevState.hopsDTO, { id: '', quantity: undefined as any, usage: HopUsage.BOIL }],
         }));
     }
 
     addYeast = () => {
         this.setState((prevState) => ({
-            yeastsDTO: [...prevState.yeastsDTO, {id: '', name: '', quantity: undefined as any}],
+            yeastsDTO: [...prevState.yeastsDTO, {id: '', quantity: undefined as any}],
         }));
     }
 
@@ -727,9 +714,9 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 quantity: undefined as any,
                 unit: 'g',
                 phase: AdditionalIngredientPhase.MATURATION,
-                time: undefined,
+                additionTime: undefined,
                 timeUnit: AdditionalIngredientTimeUnit.DAYS,
-                description: ''
+                note: ''
             }],
         }));
     }
@@ -807,10 +794,10 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 cookingTime: selectedBeer.cookingTime || 0,
                 cookingTemperatur: selectedBeer.cookingTemperatur || 0,
                 fermentationSteps: normalizeMashPlan(selectedBeer.fermentation || []),
-                maltsDTO: selectedBeer.malts ? selectedBeer.malts.map(m => ({ id: m.id, name: m.name, quantity: m.quantity })) : [],
+                maltsDTO: selectedBeer.malts ? selectedBeer.malts.map(m => ({ id: m.id, quantity: m.quantity })) : [],
                 // Bestehende Rezepte ohne neue Felder werden im UI als Kochhopfen in Minuten dargestellt.
                 hopsDTO: selectedBeer.wortBoiling && selectedBeer.wortBoiling.hops ? selectedBeer.wortBoiling.hops.map(aHop => normalizeHopDto(aHop)) : [],
-                yeastsDTO: selectedBeer.fermentationMaturation && selectedBeer.fermentationMaturation.yeast ? selectedBeer.fermentationMaturation.yeast.map(y => ({ id: y.id, name: y.name, quantity: y.quantity })) : [],
+                yeastsDTO: selectedBeer.fermentationMaturation && selectedBeer.fermentationMaturation.yeast ? selectedBeer.fermentationMaturation.yeast.map(y => ({ id: y.id, quantity: y.quantity })) : [],
                 // Für alte DB-Einträge ohne Feld wird bewusst [] gesetzt.
                 additionalIngredientsDTO: selectedBeer.additionalIngredients ? selectedBeer.additionalIngredients.map(aIngredient => this.normalizeAdditionalIngredient(aIngredient)) : [],
                 isSubmitSuccessful: undefined,
@@ -957,7 +944,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         const maltsContent = (
             <>
-                <div className="table-wrapper"><table className="ingredient-table"><thead><tr><th>Name</th><th>Menge (g)</th><th className="action-column">Aktion</th></tr></thead><tbody>{maltsDTO?.map((step, index) => <tr key={index}><td><select name="name" value={step.name} onChange={(e) => this.handleMaltChange(e.target.value, e.target.name, index)} required={true}><option value="">Malz</option>{malts.map((malt) => <option key={malt.id} value={malt.name}>{malt.name}</option>)}</select></td><td><input type="number" name="quantity" min={0} value={step.quantity} onChange={(e) => this.handleMaltChange(e.target.value, e.target.name, index)} required={true} />{this.renderFieldError(`maltsDTO.${index}.quantity`)}</td><td className="action-column"><button type="button" className="cancel-btn brauhaus-button brauhaus-button-danger brauhaus-icon-button" onClick={() => this.removeMalts(index)} title="Malz löschen" aria-label="Malz löschen"><DeleteOutlineIcon fontSize="small" /></button></td></tr>)}</tbody></table></div>
+                <div className="table-wrapper"><table className="ingredient-table"><thead><tr><th>Name</th><th>Menge (g)</th><th className="action-column">Aktion</th></tr></thead><tbody>{maltsDTO?.map((step, index) => <tr key={index}><td><select name="id" value={String(step.id)} onChange={(e) => this.handleMaltChange(e.target.value, e.target.name, index)} required={true}><option value="">Malz</option>{!malts.some(malt => String(malt.id) === String(step.id)) && step.id !== '' && <option value={String(step.id)}>Unbekanntes Malz (ID {step.id})</option>}{malts.map((malt) => <option key={malt.id} value={String(malt.id)}>{malt.name}</option>)}</select></td><td><input type="number" name="quantity" min={0} value={step.quantity} onChange={(e) => this.handleMaltChange(e.target.value, e.target.name, index)} required={true} />{this.renderFieldError(`maltsDTO.${index}.quantity`)}</td><td className="action-column"><button type="button" className="cancel-btn brauhaus-button brauhaus-button-danger brauhaus-icon-button" onClick={() => this.removeMalts(index)} title="Malz löschen" aria-label="Malz löschen"><DeleteOutlineIcon fontSize="small" /></button></td></tr>)}</tbody></table></div>
                 {maltsDTO.length === 0 && <p className="empty-section-note">Noch kein Malz hinzugefügt.</p>}
                 <button type="button" className="add-button brauhaus-button brauhaus-button-secondary section-add-button" onClick={this.addMalts}>+ Malz hinzufügen</button>
             </>
@@ -965,7 +952,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         const hopsContent = (
             <>
-                <div className="table-wrapper"><table className="ingredient-table"><thead><tr><th>Name</th><th>Menge (g)</th><th>Verwendung</th><th>Zeitangabe</th><th>Einheit</th><th>Gärungsaktion</th><th className="action-column">Aktion</th></tr></thead><tbody>{hopsDTO?.map((step, index) => <tr key={index}><td><select name="name" value={step.name} onChange={(e) => this.handleHopChange(e.target.value, "name", index)} required={true}><option value="">Hopfen</option>{hops.map((hop) => <option key={hop.id} value={hop.name}>{hop.name}</option>)}</select></td><td><input type="number" name="quantity" min={0} value={step.quantity} onChange={(e) => this.handleHopChange(e.target.value, "quantity", index)} required={true} />{this.renderFieldError(`hopsDTO.${index}.quantity`)}</td><td><select name="usage" value={step.usage ?? HopUsage.BOIL} onChange={(e) => this.handleHopChange(e.target.value, "usage", index)} required={true}><option value={HopUsage.FIRST_WORT}>Vorderwürze</option><option value={HopUsage.BOIL}>Kochhopfen</option><option value={HopUsage.WHIRLPOOL}>Whirlpool</option><option value={HopUsage.DRY_HOP}>Hopfen stopfen</option></select></td><td>{step.usage === HopUsage.DRY_HOP ? '–' : <input type="number" name="additionTime" min={0} value={step.additionTime ?? ''} onChange={(e) => this.handleHopChange(e.target.value, "additionTime", index)} />}</td><td>{step.usage === HopUsage.DRY_HOP ? '–' : <select name="timeUnit" value={step.timeUnit ?? ''} onChange={(e) => this.handleHopChange(e.target.value, "timeUnit", index)}><option value="">Keine Einheit</option>{hopTimeUnitsByUsage[step.usage ?? HopUsage.BOIL].map((timeUnit) => <option key={timeUnit} value={timeUnit}>{timeUnit === HopTimeUnit.MINUTES ? 'Minuten' : timeUnit === HopTimeUnit.HOURS ? 'Stunden' : 'Tage'}</option>)}</select>}</td><td>{step.usage === HopUsage.DRY_HOP ? <FermentationActionFields value={step} onChange={(value, field) => this.handleHopChange(value, field, index)} /> : '–'}</td><td className="action-column"><button type="button" className="cancel-btn brauhaus-button brauhaus-button-danger brauhaus-icon-button" onClick={() => this.removeHops(index)} title="Hopfen löschen" aria-label="Hopfen löschen"><DeleteOutlineIcon fontSize="small" /></button></td></tr>)}</tbody></table></div>
+                <div className="table-wrapper"><table className="ingredient-table"><thead><tr><th>Name</th><th>Menge (g)</th><th>Verwendung</th><th>Zeitangabe</th><th>Einheit</th><th>Gärungsaktion</th><th className="action-column">Aktion</th></tr></thead><tbody>{hopsDTO?.map((step, index) => <tr key={index}><td><select name="id" value={String(step.id)} onChange={(e) => this.handleHopChange(e.target.value, "id", index)} required={true}><option value="">Hopfen</option>{!hops.some(hop => String(hop.id) === String(step.id)) && step.id !== '' && <option value={String(step.id)}>Unbekannter Hopfen (ID {step.id})</option>}{hops.map((hop) => <option key={hop.id} value={String(hop.id)}>{hop.name}</option>)}</select></td><td><input type="number" name="quantity" min={0} value={step.quantity} onChange={(e) => this.handleHopChange(e.target.value, "quantity", index)} required={true} />{this.renderFieldError(`hopsDTO.${index}.quantity`)}</td><td><select name="usage" value={step.usage ?? HopUsage.BOIL} onChange={(e) => this.handleHopChange(e.target.value, "usage", index)} required={true}><option value={HopUsage.FIRST_WORT}>Vorderwürze</option><option value={HopUsage.BOIL}>Kochhopfen</option><option value={HopUsage.WHIRLPOOL}>Whirlpool</option><option value={HopUsage.DRY_HOP}>Hopfen stopfen</option></select></td><td>{step.usage === HopUsage.DRY_HOP ? '–' : <input type="number" name="additionTime" min={0} value={step.additionTime ?? ''} onChange={(e) => this.handleHopChange(e.target.value, "additionTime", index)} />}</td><td>{step.usage === HopUsage.DRY_HOP ? '–' : <select name="timeUnit" value={step.timeUnit ?? ''} onChange={(e) => this.handleHopChange(e.target.value, "timeUnit", index)}><option value="">Keine Einheit</option>{hopTimeUnitsByUsage[step.usage ?? HopUsage.BOIL].map((timeUnit) => <option key={timeUnit} value={timeUnit}>{timeUnit === HopTimeUnit.MINUTES ? 'Minuten' : timeUnit === HopTimeUnit.HOURS ? 'Stunden' : 'Tage'}</option>)}</select>}</td><td>{step.usage === HopUsage.DRY_HOP ? <FermentationActionFields value={step} onChange={(value, field) => this.handleHopChange(value, field, index)} /> : '–'}</td><td className="action-column"><button type="button" className="cancel-btn brauhaus-button brauhaus-button-danger brauhaus-icon-button" onClick={() => this.removeHops(index)} title="Hopfen löschen" aria-label="Hopfen löschen"><DeleteOutlineIcon fontSize="small" /></button></td></tr>)}</tbody></table></div>
                 {hopsDTO.length === 0 && <p className="empty-section-note">Noch kein Hopfen hinzugefügt.</p>}
                 <button type="button" className="add-button brauhaus-button brauhaus-button-secondary section-add-button" onClick={this.addHops}>+ Hopfen hinzufügen</button>
             </>
@@ -973,7 +960,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         const yeastContent = (
             <>
-                <div className="table-wrapper"><table className="ingredient-table"><thead><tr><th>Name</th><th>Menge (g)</th><th className="action-column">Aktion</th></tr></thead><tbody>{yeastsDTO?.map((step, index) => <tr key={index}><td><select name="name" value={step.name} onChange={(e) => this.handleYeastChange(e.target.value, e.target.name, index)} required={true}><option value="">Hefe</option>{yeasts.map((yeast) => <option key={yeast.id} value={yeast.name}>{yeast.name}</option>)}</select></td><td><input type="number" name="quantity" min={0} value={step.quantity} onChange={(e) => this.handleYeastChange(e.target.value, e.target.name, index)} required={true} />{this.renderFieldError(`yeastsDTO.${index}.quantity`)}</td><td className="action-column"><button type="button" className="cancel-btn brauhaus-button brauhaus-button-danger brauhaus-icon-button" onClick={() => this.removeYeast(index)} title="Hefe löschen" aria-label="Hefe löschen"><DeleteOutlineIcon fontSize="small" /></button></td></tr>)}</tbody></table></div>
+                <div className="table-wrapper"><table className="ingredient-table"><thead><tr><th>Name</th><th>Menge (g)</th><th className="action-column">Aktion</th></tr></thead><tbody>{yeastsDTO?.map((step, index) => <tr key={index}><td><select name="id" value={String(step.id)} onChange={(e) => this.handleYeastChange(e.target.value, e.target.name, index)} required={true}><option value="">Hefe</option>{!yeasts.some(yeast => String(yeast.id) === String(step.id)) && step.id !== '' && <option value={String(step.id)}>Unbekannte Hefe (ID {step.id})</option>}{yeasts.map((yeast) => <option key={yeast.id} value={String(yeast.id)}>{yeast.name}</option>)}</select></td><td><input type="number" name="quantity" min={0} value={step.quantity} onChange={(e) => this.handleYeastChange(e.target.value, e.target.name, index)} required={true} />{this.renderFieldError(`yeastsDTO.${index}.quantity`)}</td><td className="action-column"><button type="button" className="cancel-btn brauhaus-button brauhaus-button-danger brauhaus-icon-button" onClick={() => this.removeYeast(index)} title="Hefe löschen" aria-label="Hefe löschen"><DeleteOutlineIcon fontSize="small" /></button></td></tr>)}</tbody></table></div>
                 {yeastsDTO.length === 0 && <p className="empty-section-note">Noch keine Hefe hinzugefügt.</p>}
                 <button type="button" className="add-button brauhaus-button brauhaus-button-secondary section-add-button" onClick={this.addYeast}>+ Hefe hinzufügen</button>
             </>
@@ -981,7 +968,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         const additionalContent = (
             <>
-                <div className="table-wrapper"><table className="ingredient-table"><thead><tr><th>Zutat</th><th>Menge</th><th>Einheit</th><th>Phase</th><th>Zeit</th><th>Zeiteinheit</th><th>Gärungsaktion</th><th>Hinweis</th><th className="action-column">Aktion</th></tr></thead><tbody>{additionalIngredientsDTO?.map((aStep, aIndex) => <tr key={aIndex}><td><select name="name" value={aStep.name || ''} onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "name", aIndex)}><option value="">Zutat</option>{additionalIngredients.map((aIngredient) => <option key={aIngredient.id} value={aIngredient.name}>{aIngredient.name}</option>)}</select></td><td><input type="number" min={0} name="quantity" value={aStep.quantity} onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "quantity", aIndex)} />{this.renderFieldError(`additionalIngredientsDTO.${aIndex}.quantity`)}</td><td><input type="text" name="unit" value={aStep.unit} onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "unit", aIndex)} /></td><td><select name="phase" value={aStep.phase} onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "phase", aIndex)}><option value={AdditionalIngredientPhase.MASH}>Maische</option><option value={AdditionalIngredientPhase.BOIL}>Kochen</option><option value={AdditionalIngredientPhase.WHIRLPOOL}>Whirlpool</option><option value={AdditionalIngredientPhase.FERMENTATION}>Gärung</option><option value={AdditionalIngredientPhase.MATURATION}>Reifung</option><option value={AdditionalIngredientPhase.PACKAGING}>Abfüllung</option></select></td><td><input type="number" min={1} name="time" value={aStep.time ?? ''} onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "time", aIndex)} /></td><td><select name="timeUnit" value={aStep.timeUnit ?? AdditionalIngredientTimeUnit.DAYS} onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "timeUnit", aIndex)}><option value={AdditionalIngredientTimeUnit.MINUTES}>Minuten</option><option value={AdditionalIngredientTimeUnit.HOURS}>Stunden</option><option value={AdditionalIngredientTimeUnit.DAYS}>Tage</option></select></td><td>{aStep.phase === AdditionalIngredientPhase.FERMENTATION ? <FermentationActionFields value={aStep} onChange={(value, field) => this.handleAdditionalIngredientChange(value, field, aIndex)} /> : '–'}</td><td><input type="text" name="description" value={aStep.description ?? ''} onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "description", aIndex)} /></td><td className="action-column"><button type="button" className="cancel-btn brauhaus-button brauhaus-button-danger brauhaus-icon-button" onClick={() => this.removeAdditionalIngredient(aIndex)} title="Zutat löschen" aria-label="Zutat löschen"><DeleteOutlineIcon fontSize="small" /></button></td></tr>)}</tbody></table></div>
+                <div className="table-wrapper"><table className="ingredient-table"><thead><tr><th>Zutat</th><th>Menge</th><th>Einheit</th><th>Phase</th><th>Zeit</th><th>Zeiteinheit</th><th>Gärungsaktion</th><th>Hinweis</th><th className="action-column">Aktion</th></tr></thead><tbody>{additionalIngredientsDTO?.map((aStep, aIndex) => <tr key={aIndex}><td><select name="id" value={String(aStep.id ?? '')} onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "id", aIndex)}><option value="">Zutat</option>{!additionalIngredients.some(item => String(item.id) === String(aStep.id)) && aStep.id != null && String(aStep.id) !== '' && <option value={String(aStep.id)}>Unbekannte Zutat (ID {aStep.id})</option>}{additionalIngredients.map((aIngredient) => <option key={aIngredient.id} value={String(aIngredient.id)}>{aIngredient.name}</option>)}</select></td><td><input type="number" min={0} name="quantity" value={aStep.quantity} onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "quantity", aIndex)} />{this.renderFieldError(`additionalIngredientsDTO.${aIndex}.quantity`)}</td><td><input type="text" name="unit" value={aStep.unit} onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "unit", aIndex)} /></td><td><select name="phase" value={aStep.phase} onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "phase", aIndex)}><option value={AdditionalIngredientPhase.MASH}>Maische</option><option value={AdditionalIngredientPhase.BOIL}>Kochen</option><option value={AdditionalIngredientPhase.WHIRLPOOL}>Whirlpool</option><option value={AdditionalIngredientPhase.FERMENTATION}>Gärung</option><option value={AdditionalIngredientPhase.MATURATION}>Reifung</option><option value={AdditionalIngredientPhase.PACKAGING}>Abfüllung</option></select></td><td><input type="number" min={1} name="additionTime" value={aStep.additionTime ?? ''} onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "additionTime", aIndex)} /></td><td><select name="timeUnit" value={aStep.timeUnit ?? AdditionalIngredientTimeUnit.DAYS} onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "timeUnit", aIndex)}><option value={AdditionalIngredientTimeUnit.MINUTES}>Minuten</option><option value={AdditionalIngredientTimeUnit.HOURS}>Stunden</option><option value={AdditionalIngredientTimeUnit.DAYS}>Tage</option></select></td><td>{aStep.phase === AdditionalIngredientPhase.FERMENTATION ? <FermentationActionFields value={aStep} onChange={(value, field) => this.handleAdditionalIngredientChange(value, field, aIndex)} /> : '–'}</td><td><input type="text" name="note" value={aStep.note ?? ''} onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "note", aIndex)} /></td><td className="action-column"><button type="button" className="cancel-btn brauhaus-button brauhaus-button-danger brauhaus-icon-button" onClick={() => this.removeAdditionalIngredient(aIndex)} title="Zutat löschen" aria-label="Zutat löschen"><DeleteOutlineIcon fontSize="small" /></button></td></tr>)}</tbody></table></div>
                 {additionalIngredientsDTO.length === 0 && <p className="empty-section-note">Noch keine weitere Zutat hinzugefügt.</p>}
                 <button type="button" className="add-button brauhaus-button brauhaus-button-secondary section-add-button" onClick={this.addAdditionalIngredient}>+ Zutat hinzufügen</button>
             </>
@@ -1033,6 +1020,9 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                     backendError={this.props.importError}
                     onCancel={() => this.setState({showImportDialog: false})}
                     onImport={this.props.importBeer}
+                    result={this.props.importResult}
+                    masterData={{MALT: this.props.malts ?? [], HOP: this.props.hops ?? [], YEAST: this.props.yeasts ?? [], ADDITIONAL_INGREDIENT: this.props.additionalIngredients ?? []}}
+                    onCreateMasterData={this.createImportMasterData}
                 />
                 <div className="beer-form-panel">
                     <div className="beer-form-panel-header">

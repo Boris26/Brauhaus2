@@ -39,9 +39,9 @@ const makeBeer = (id: string): BeerDTO => ({
     cookingTime: 60,
     cookingTemperatur: 99,
     fermentationSteps: [],
-    malts: [{id: '26', name: 'Pilsener Malz', quantity: 7}],
-    wortBoiling: {totalTime: 60, hops: [{id: '10', name: 'Hallertau', quantity: 50, additionTime: 60}]},
-    fermentationMaturation: {fermentationTemperature: 18, carbonation: 5, yeast: [{id: '1', name: 'Ale', quantity: 1}]},
+    malts: [{id: '26', quantity: 7}],
+    wortBoiling: {totalTime: 60, hops: [{id: '10', quantity: 50, additionTime: 60, usage: 'BOIL' as any}]},
+    fermentationMaturation: {fermentationTemperature: 18, carbonation: 5, yeast: [{id: '1', quantity: 1}]},
 });
 
 describe('BeerRepository.submitBeer', () => {
@@ -75,7 +75,7 @@ describe('BeerRepository.importBeer', () => {
     it('posts the typed source and untouched recipe as JSON', async () => {
         const recipe = {NAME: 'Extern', AMOUNT: '20 l'};
         const importedBeer = {id: 'imported-id', name: 'Extern'} as Beer;
-        const importResult = {recipe: importedBeer, warnings: [], ingredientMappings: [], createdMasterData: [], replayed: false};
+        const importResult = {resolutionRequired: false, recipe: importedBeer, warnings: [], ingredientMappings: [], createdMasterData: [], replayed: false};
         mockedApi.post.mockResolvedValueOnce({data: importResult});
 
         const result = await BeerRepository.importBeer({

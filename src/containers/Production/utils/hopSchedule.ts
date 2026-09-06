@@ -9,7 +9,7 @@ export const calculateHopSchedule = (aBeer: Beer): HopAddition[] => {
     aBeer.wortBoiling.hops.forEach((hop) => {
         const timeSeconds = Math.max(0, Math.floor((totalCookingTime - Number(hop.additionTime)) * 60));
         const names = schedule.get(timeSeconds) ?? [];
-        schedule.set(timeSeconds, [...names, hop.name]);
+        schedule.set(timeSeconds, [...names, `Hopfen ID ${hop.id}`]);
     });
     return Array.from(schedule.entries()).map(([timeSeconds, names]) => ({timeSeconds, names})).sort((a, b) => a.timeSeconds - b.timeSeconds);
 };

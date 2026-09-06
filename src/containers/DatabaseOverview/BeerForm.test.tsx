@@ -15,9 +15,9 @@ const baseProps: React.ComponentProps<typeof BeerForm> = {
     getYeast: jest.fn(),
     getAdditionalIngredients: jest.fn(),
     saveBeerFormState: jest.fn(),
-    malts: [{id: 'm1', name: 'Pilsner Malz', description: '', EBC: 4, quantity: 0}],
-    hops: [{id: 'h1', name: 'Hallertauer Mittelfrüh', description: '', alpha: 4, quantity: 0}],
-    yeasts: [{id: 'y1', name: 'SafAle US-05', description: '', EVG: '75', temperature: '18', type: 'Obergärig', quantity: 0}],
+    malts: [{id: 'm1', name: 'Pilsner Malz', description: '', ebc: 4}],
+    hops: [{id: 'h1', name: 'Hallertauer Mittelfrüh', description: '', alpha: 4}],
+    yeasts: [{id: 'y1', name: 'SafAle US-05', description: '', evg: 75, temperature: 18, type: 'Obergärig'}],
     additionalIngredients: [{id: 'a1', name: 'Koriandersamen', description: ''}],
     isSubmitSuccessful: undefined,
     messageType: '',
@@ -57,17 +57,17 @@ const fillValidRecipe = () => {
     fireEvent.change(within(screen.getByText('Abmaischen').closest('tr')!).getByRole('spinbutton'), {target: {value: '78'}});
 
     fireEvent.click(screen.getByRole('button', {name: /Malze/}));
-    fireEvent.change(screen.getByDisplayValue('Malz'), {target: {value: 'Pilsner Malz'}});
+    fireEvent.change(screen.getByDisplayValue('Malz'), {target: {value: 'm1'}});
     fireEvent.change(screen.getAllByRole('spinbutton').find((input) => input.getAttribute('name') === 'quantity')!, {target: {value: '4000'}});
 
     fireEvent.click(screen.getByRole('button', {name: /Hopfen/}));
-    fireEvent.change(screen.getByDisplayValue('Hopfen'), {target: {value: 'Hallertauer Mittelfrüh'}});
+    fireEvent.change(screen.getByDisplayValue('Hopfen'), {target: {value: 'h1'}});
     const hopQuantity = screen.getAllByRole('spinbutton').filter((input) => input.getAttribute('name') === 'quantity')[1];
     fireEvent.change(hopQuantity, {target: {value: '50'}});
     fireEvent.change(screen.getByDisplayValue('0'), {target: {value: '60'}});
 
     fireEvent.click(screen.getByRole('button', {name: /Hefe/}));
-    fireEvent.change(screen.getByDisplayValue('Hefe'), {target: {value: 'SafAle US-05'}});
+    fireEvent.change(screen.getByDisplayValue('Hefe'), {target: {value: 'y1'}});
     const yeastQuantity = screen.getAllByRole('spinbutton').filter((input) => input.getAttribute('name') === 'quantity')[2];
     fireEvent.change(yeastQuantity, {target: {value: '1'}});
 };
@@ -96,7 +96,7 @@ const expectProcedureTypeOptions = (select: HTMLElement) => {
 describe('BeerForm accordions', () => {
     it('separates brew-day timing from DRY_HOP Recipe Actions on usage changes', () => {
         renderBeerForm({beerFormState: {hopsDTO: [{
-            id: 'h1', name: 'Hallertauer Mittelfrüh', quantity: 10, additionTime: 3,
+            id: 'h1', quantity: 10, additionTime: 3,
             usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES,
         }]}});
         fireEvent.click(screen.getByRole('button', {name: /Hopfen/}));
@@ -228,9 +228,9 @@ describe('BeerForm accordions', () => {
             cookingTime: 60,
             cookingTemperatur: 100,
             fermentationSteps: expect.arrayContaining([expect.objectContaining({type: 'Kochen', temperature: 100, time: 60})]),
-            malts: [{id: 'm1', name: 'Pilsner Malz', quantity: 4000}],
-            wortBoiling: {totalTime: 0, hops: [{id: 'h1', name: 'Hallertauer Mittelfrüh', quantity: 50, additionTime: 60, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES}]},
-            fermentationMaturation: {fermentationTemperature: 0, carbonation: 0, yeast: [{id: 'y1', name: 'SafAle US-05', quantity: 1}]},
+            malts: [{id: 'm1', quantity: 4000}],
+            wortBoiling: {totalTime: 0, hops: [{id: 'h1', quantity: 50, additionTime: 60, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES}]},
+            fermentationMaturation: {fermentationTemperature: 0, carbonation: 0, yeast: [{id: 'y1', quantity: 1}]},
         }));
     });
 
@@ -239,9 +239,9 @@ describe('BeerForm accordions', () => {
             id: 'beer-1', name: 'Alt', type: 'Ale', color: 'amber', alcohol: 5, originalwort: 12, bitterness: 30, description: '', rating: 3,
             mashVolume: 18, spargeVolume: 8, cookingTime: 60, cookingTemperatur: 99,
             fermentation: [{type: 'Einmaischen', temperature: 65, time: 0}, {type: 'Abmaischen', temperature: 78, time: 0}, {type: 'Kochen', temperature: 99, time: 0}],
-            malts: [{id: 'm1', name: 'Pilsner Malz', description: '', EBC: 4, quantity: 4000}],
-            wortBoiling: {totalTime: 60, hops: [{id: 'h1', name: 'Hallertauer Mittelfrüh', description: '', alpha: 4, quantity: 50, additionTime: 60, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES}]},
-            fermentationMaturation: {fermentationTemperature: 18, carbonation: 5, yeast: [{id: 'y1', name: 'SafAle US-05', description: '', EVG: '75', temperature: '18', type: 'Obergärig', quantity: 1}]},
+            malts: [{id: 'm1', quantity: 4000}],
+            wortBoiling: {totalTime: 60, hops: [{id: 'h1', quantity: 50, additionTime: 60, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES}]},
+            fermentationMaturation: {fermentationTemperature: 18, carbonation: 5, yeast: [{id: 'y1', quantity: 1}]},
             additionalIngredients: [],
         };
         const {props} = renderBeerForm({beers: [existingBeer]});
@@ -254,22 +254,36 @@ describe('BeerForm accordions', () => {
         expect(props.onSubmitBeer).toHaveBeenCalledWith(expect.objectContaining({id: 'beer-1', name: 'Altbier'}));
     });
 
-    it('round-trips a complete dry-hop action without confusing master and action ids', () => {
+    it('round-trips a complete dry-hop instruction without creating a recipe action id', () => {
         const existingBeer: Beer = {
             id: 'beer-1', name: 'IPA', type: 'Ale', color: 'amber', alcohol: 6, originalwort: 14, bitterness: 50, description: '', rating: 4,
             mashVolume: 20, spargeVolume: 10, cookingTime: 60, cookingTemperatur: 100,
             fermentation: [{type: 'Einmaischen', temperature: 57}, {type: 'Abmaischen', temperature: 78}, {type: 'Kochen', temperature: 100, time: 60}],
-            malts: [{id: 'm1', name: 'Pilsner Malz', description: '', EBC: 4, quantity: 4000}],
-            wortBoiling: {totalTime: 60, hops: [{id: 'h1', actionId: 'recipe-action-uuid', name: 'Hallertauer Mittelfrüh', description: '', alpha: 4, quantity: 80, usage: HopUsage.DRY_HOP, triggerType: TriggerType.PLATO_THRESHOLD, triggerValue: 5, triggerUnit: TriggerUnit.PLATO, contactTime: 3, contactTimeUnit: TimeUnit.DAYS}]},
-            fermentationMaturation: {fermentationTemperature: 18, carbonation: 5, yeast: [{id: 'y1', name: 'SafAle US-05', description: '', EVG: '75', temperature: '18', type: 'Obergärig', quantity: 1}]},
+            malts: [{id: 'm1', quantity: 4000}],
+            wortBoiling: {totalTime: 60, hops: [{id: 'h1', quantity: 80, usage: HopUsage.DRY_HOP, triggerType: TriggerType.PLATO_THRESHOLD, triggerValue: 5, triggerUnit: TriggerUnit.PLATO, contactTime: 3, contactTimeUnit: TimeUnit.DAYS}]},
+            fermentationMaturation: {fermentationTemperature: 18, carbonation: 5, yeast: [{id: 'y1', quantity: 1}]},
             additionalIngredients: [],
         };
         const {props} = renderBeerForm({beers: [existingBeer]});
         fireEvent.change(screen.getByLabelText(/Bier auswählen/), {target: {value: existingBeer.id}});
         fireEvent.click(screen.getByRole('button', {name: /Rezept speichern/}));
         const submittedHop = (props.onSubmitBeer as jest.Mock).mock.calls[0][0].wortBoiling.hops[0];
-        expect(submittedHop).toMatchObject({id: 'h1', actionId: 'recipe-action-uuid', triggerType: TriggerType.PLATO_THRESHOLD, triggerValue: 5, triggerUnit: TriggerUnit.PLATO, contactTime: 3, contactTimeUnit: TimeUnit.DAYS});
-        expect(submittedHop.id).not.toBe(submittedHop.actionId);
+        expect(submittedHop).toMatchObject({id: 'h1', triggerType: TriggerType.PLATO_THRESHOLD, triggerValue: 5, triggerUnit: TriggerUnit.PLATO, contactTime: 3, contactTimeUnit: TimeUnit.DAYS});
+        expect(submittedHop).not.toHaveProperty('actionId');
+    });
+
+    it('shows imported hop additionTime and resolves its name by master-data id', () => {
+        renderBeerForm({beerFormState: {hopsDTO: [{id: 'h1', quantity: 20, usage: HopUsage.BOIL, additionTime: 45, timeUnit: HopTimeUnit.MINUTES}]}});
+        fireEvent.click(screen.getByRole('button', {name: /Hopfen/}));
+        const row = screen.getByDisplayValue('Hallertauer Mittelfrüh').closest('tr')!;
+        expect(within(row).getByDisplayValue('45')).toBeInTheDocument();
+        expect(within(row).getByDisplayValue('Minuten')).toBeInTheDocument();
+    });
+
+    it('keeps a missing master id visible instead of removing the recipe item', () => {
+        renderBeerForm({beerFormState: {maltsDTO: [{id: 17, quantity: 3800}]}});
+        fireEvent.click(screen.getByRole('button', {name: /Malze/}));
+        expect(screen.getByRole('option', {name: 'Unbekanntes Malz (ID 17)'})).toBeInTheDocument();
     });
 
     it('restores saved fixed steps when cancelling edits to an existing recipe', () => {
@@ -346,6 +360,7 @@ describe('BeerForm accordions', () => {
     });
     it('shows the concise success message for an import without metadata', () => {
         renderBeerForm({importResult: {
+            resolutionRequired: false,
             recipe: {id: 'beer-1', name: 'Import'} as Beer,
             warnings: [],
             ingredientMappings: [],
@@ -358,6 +373,7 @@ describe('BeerForm accordions', () => {
 
     it('does not include warnings, mappings or created master data in the success message', () => {
         renderBeerForm({importResult: {
+            resolutionRequired: false,
             recipe: {id: 'beer-1', name: 'Import'} as Beer,
             warnings: [{code: 'SOURCE_INFORMATION_IGNORED', message: 'Eine Quellenangabe wurde ignoriert.'}],
             ingredientMappings: [{sourceName: 'Pilsner Malt', resolvedName: 'Pilsener Malz', ingredientId: 'm1', ingredientType: 'MALT', matchType: 'ALIAS'}],
