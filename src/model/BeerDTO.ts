@@ -4,7 +4,7 @@ import { HopTimeUnit } from '../enums/eHopTimeUnit';
 import { HopUsage } from '../enums/eHopUsage';
 import {AdditionalIngredientPhase, AdditionalIngredientTimeUnit} from "./Beer";
 import { ProcedureType } from '../enums/eProcedureType';
-import {FermentationRecipeActionFields} from './FermentationRecipeAction';
+import {RecipeActionFields} from './FermentationRecipeAction';
 export interface FermentationStepsDTO {
     stepId?: string;
     relatedRastId?: string;
@@ -21,11 +21,11 @@ export interface MaltDTO {
     quantity: number;
 }
 
-export interface HopDTO extends FermentationRecipeActionFields {
+export interface HopDTO extends Partial<RecipeActionFields> {
     name: string;
     id: string;
     quantity: number;
-    time?: number;
+    additionTime?: number;
     usage?: HopUsage;
     timeUnit?: HopTimeUnit;
 }
@@ -47,7 +47,7 @@ export interface FermentationMaturationDTO {
     yeast: YeastDTO[];
 }
 
-export interface AdditionalIngredientDTO extends FermentationRecipeActionFields {
+export interface AdditionalIngredientDTO extends Partial<RecipeActionFields> {
     id?: string | number;
     name?: string;
     quantity: number;

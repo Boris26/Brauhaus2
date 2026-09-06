@@ -5,9 +5,9 @@ const beer = {
     cookingTime: 60,
     wortBoiling: {
         hops: [
-            {name: 'A', time: 10},
-            {name: 'B', time: 10},
-            {name: 'C', time: 5}
+            {name: 'A', additionTime: 10},
+            {name: 'B', additionTime: 10},
+            {name: 'C', additionTime: 5}
         ]
     }
 } as unknown as Beer;

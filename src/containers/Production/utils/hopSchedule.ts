@@ -7,7 +7,7 @@ export const calculateHopSchedule = (aBeer: Beer): HopAddition[] => {
     const totalCookingTime = Number(aBeer.cookingTime);
     if (!Number.isFinite(totalCookingTime) || !aBeer.wortBoiling?.hops) return [];
     aBeer.wortBoiling.hops.forEach((hop) => {
-        const timeSeconds = Math.max(0, Math.floor((totalCookingTime - Number(hop.time)) * 60));
+        const timeSeconds = Math.max(0, Math.floor((totalCookingTime - Number(hop.additionTime)) * 60));
         const names = schedule.get(timeSeconds) ?? [];
         schedule.set(timeSeconds, [...names, hop.name]);
     });

@@ -2,7 +2,7 @@ import { RestExecutionMode } from '../enums/eRestExecutionMode';
 import { HopTimeUnit } from '../enums/eHopTimeUnit';
 import { HopUsage } from '../enums/eHopUsage';
 import { ProcedureType } from '../enums/eProcedureType';
-import {FermentationRecipeActionFields} from './FermentationRecipeAction';
+import {RecipeActionFields} from './FermentationRecipeAction';
 export interface FermentationSteps {
     stepId?: string;
     relatedRastId?: string;
@@ -21,13 +21,13 @@ export interface Malt {
     quantity: number;
 }
 
-export interface Hop extends FermentationRecipeActionFields {
+export interface Hop extends Partial<RecipeActionFields> {
     id: string;
     name: string;
     description: string;
     alpha: number;
     quantity: number;
-    time?: number;
+    additionTime?: number;
     usage?: HopUsage;
     timeUnit?: HopTimeUnit;
 }
@@ -68,7 +68,7 @@ export enum AdditionalIngredientTimeUnit {
     DAYS = "DAYS"
 }
 
-export interface BeerAdditionalIngredient extends FermentationRecipeActionFields {
+export interface BeerAdditionalIngredient extends Partial<RecipeActionFields> {
     id?: string | number;
     name?: string;
     quantity: number;

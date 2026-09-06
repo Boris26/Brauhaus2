@@ -8,7 +8,7 @@ Visible recipe fields:
 - Recipe details use recipe metrics, description, fermentation steps, malts, hops, yeast, and additional ingredients.
 - `Beer.id` drives row selection, deletion, shopping-list export matching, and `beer_id` in finished brew.
 - `Beer.cookingTime`, `cookingTemperatur`, and fermentation steps drive production recipe mapping.
-- `wortBoiling.hops[].name` and `time` drive hop reminder dialogs.
+- `wortBoiling.hops[].name` and `additionTime` drive hop reminder dialogs.
 
 Visible finished-brew fields:
 

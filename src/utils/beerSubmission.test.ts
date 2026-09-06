@@ -17,7 +17,7 @@ const makeBeer = (id: any): BeerDTO => ({
   cookingTemperatur: 99,
   fermentationSteps: [],
   malts: [{ id: '26', name: 'Pilsener Malz', quantity: 7 }],
-  wortBoiling: { totalTime: 60, hops: [{ id: '10', name: 'Hallertau', quantity: 50, time: 60 }] },
+  wortBoiling: { totalTime: 60, hops: [{ id: '10', name: 'Hallertau', quantity: 50, additionTime: 60 }] },
   fermentationMaturation: { fermentationTemperature: 18, carbonation: 5, yeast: [{ id: '1', name: 'Ale', quantity: 1 }] },
   additionalIngredients: [{ id: 'a1', name: 'Orange', quantity: 2, unit: 'g', phase: 'BOIL' as any }],
 });

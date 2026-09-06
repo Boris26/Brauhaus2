@@ -20,7 +20,7 @@ const makeBeer = (id: string, name: string): Beer => ({
   cookingTemperatur: 99,
   fermentation: [],
   malts: [{ id: 'm1', name: 'Pilsner Malz', description: '', EBC: 4, quantity: 5000 }],
-  wortBoiling: { totalTime: 60, hops: [{ id: 'h1', name: 'Hallertau', description: '', alpha: 4, quantity: 50, time: 60 }] },
+  wortBoiling: { totalTime: 60, hops: [{ id: 'h1', name: 'Hallertau', description: '', alpha: 4, quantity: 50, additionTime: 60 }] },
   fermentationMaturation: { fermentationTemperature: 18, carbonation: 5, yeast: [
     { id: 'y1', name: 'US-05', description: '', EVG: '75', temperature: '18', type: 'Obergärig', quantity: 1 },
     { id: 'y2', name: 'US-05', description: '', EVG: '75', temperature: '18', type: 'Obergärig', quantity: 1 },

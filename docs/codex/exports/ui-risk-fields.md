@@ -10,7 +10,7 @@ Changing these fields or meanings can break UI behavior.
 - `Beer.fermentation[].type`: strings `Einmaischen`, `Abmaischen`, and `Kochen` are significant in production mapping.
 - `Beer.fermentation[].temperature`, `time`, `executionMode`: production validation and payload.
 - `Beer.cookingTime`, `cookingTemperatur`: required for `BrewingData`.
-- `Beer.wortBoiling.hops[].time`, `name`: hop reminders.
+- `Beer.wortBoiling.hops[].additionTime`, `name`: hop reminders.
 - Ingredient casing: `ebc` vs `EBC`, `evg` vs `EVG`, `alpha` string vs number.
 - `FinishedBrew.id`, `state`, `brewValues`, `beer_id`, `startDate`, `endDate`.
 
