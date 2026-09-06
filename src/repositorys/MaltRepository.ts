@@ -7,8 +7,8 @@ export class MaltRepository extends BaseRepository {
         return this.get<Malts[]>("malts");
     }
 
-    static submitMalt(aMalt: Malts): Promise<void> {
-        return this.post("malt", aMalt);
+    static submitMalt(aMalt: Omit<Malts, 'id'>): Promise<Malts> {
+        return this.post<Malts>("malt", aMalt);
     }
 
     static deleteMaltById(aId: string): Promise<void> {

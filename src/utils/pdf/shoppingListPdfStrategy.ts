@@ -72,16 +72,10 @@ export class BeerPdfStrategy implements PdfRenderStrategy<Beer> {
             style: 'table',
             table: {
                 headerRows: 1,
-                widths: ['*', 'auto', 'auto', '*', '*'],
+                widths: ['*', 'auto'],
                 body: [
-                    ['Name', 'EBC', 'Menge (kg)', 'Beschreibung', 'ID'],
-                    ...beer.malts.map(m => [
-                        m.name != null ? String(m.name) : '',
-                        m.EBC != null ? String(m.EBC) : '',
-                        m.quantity != null ? String(m.quantity) : '',
-                        m.description != null ? String(m.description) : '',
-                        m.id != null ? String(m.id) : ''
-                    ])
+                    ['ID', 'Menge (kg)'],
+                    ...beer.malts.map(m => [String(m.id), String(m.quantity)])
                 ]
             }
         };
@@ -96,17 +90,10 @@ export class BeerPdfStrategy implements PdfRenderStrategy<Beer> {
                     style: 'table',
                     table: {
                         headerRows: 1,
-                        widths: ['*', 'auto', 'auto', 'auto', '*', '*'],
+                        widths: ['*', 'auto', 'auto'],
                         body: [
-                            ['Name', 'Alpha (%)', 'Menge (g)', 'Kochzeit (min)', 'Beschreibung', 'ID'],
-                            ...beer.wortBoiling.hops.map(h => [
-                                h.name != null ? String(h.name) : '',
-                                h.alpha != null ? String(h.alpha) : '',
-                                h.quantity != null ? String(h.quantity) : '',
-                                h.additionTime != null ? String(h.additionTime) : '',
-                                h.description != null ? String(h.description) : '',
-                                h.id != null ? String(h.id) : ''
-                            ])
+                            ['ID', 'Menge (g)', 'Zugabezeit'],
+                            ...beer.wortBoiling.hops.map(h => [String(h.id), String(h.quantity), h.additionTime == null ? '' : String(h.additionTime)])
                         ]
                     }
                 }
@@ -123,20 +110,14 @@ export class BeerPdfStrategy implements PdfRenderStrategy<Beer> {
                     style: 'table',
                     table: {
                         headerRows: 1,
-                        widths: ['*', '*', '*', 'auto', 'auto', 'auto', '*'],
+                        widths: ['*', 'auto', 'auto', 'auto'],
                         body: [
-                            [
-                                'Hefe', 'Typ', 'EVG', 'Gärtemperatur (°C)',
-                                'Karbonisierung (g/l)', 'Menge', 'Beschreibung'
-                            ],
-                            ...beer.fermentationMaturation.yeast.map((y: any) => [
-                                y.name != null ? String(y.name) : '',
-                                y.type != null ? String(y.type) : '',
-                                y.EVG != null ? String(y.EVG) : '',
+                            ['Hefe-ID', 'Gärtemperatur (°C)', 'Karbonisierung (g/l)', 'Menge'],
+                            ...beer.fermentationMaturation.yeast.map(y => [
+                                String(y.id),
                                 beer.fermentationMaturation.fermentationTemperature != null ? String(beer.fermentationMaturation.fermentationTemperature) : '',
                                 beer.fermentationMaturation.carbonation != null ? String(beer.fermentationMaturation.carbonation) : '',
-                                y.quantity != null ? String(y.quantity) : '',
-                                y.description != null ? String(y.description) : ''
+                                y.quantity != null ? String(y.quantity) : ''
                             ])
                         ]
                     }

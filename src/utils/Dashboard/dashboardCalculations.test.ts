@@ -19,13 +19,13 @@ const makeBeer = (id: string, name: string): Beer => ({
   cookingTime: 60,
   cookingTemperatur: 99,
   fermentation: [],
-  malts: [{ id: 'm1', name: 'Pilsner Malz', description: '', EBC: 4, quantity: 5000 }],
-  wortBoiling: { totalTime: 60, hops: [{ id: 'h1', name: 'Hallertau', description: '', alpha: 4, quantity: 50, additionTime: 60 }] },
+  malts: [{ id: 'm1', quantity: 5000 }],
+  wortBoiling: { totalTime: 60, hops: [{ id: 'h1', quantity: 50, additionTime: 60, usage: 'BOIL' as any }] },
   fermentationMaturation: { fermentationTemperature: 18, carbonation: 5, yeast: [
-    { id: 'y1', name: 'US-05', description: '', EVG: '75', temperature: '18', type: 'Obergärig', quantity: 1 },
-    { id: 'y2', name: 'US-05', description: '', EVG: '75', temperature: '18', type: 'Obergärig', quantity: 1 },
+    { id: 'y1', quantity: 1 },
+    { id: 'y2', quantity: 1 },
   ] },
-  additionalIngredients: [{ id: 'a1', name: 'Koriander', quantity: 100, unit: 'g', phase: AdditionalIngredientPhase.BOIL }],
+  additionalIngredients: [{ id: 'a1', quantity: 100, unit: 'g', phase: AdditionalIngredientPhase.BOIL }],
 });
 
 const makeBrew = (id: string, beerId: string | undefined, state: eBrewState, liters: number, startDate = '2026-07-01'): FinishedBrew => ({
@@ -54,7 +54,7 @@ describe('dashboard calculations', () => {
 
   it('aggregates ingredients only for valid recipe links and separates additional ingredient units', () => {
     const beer = makeBeer('b1', 'Pils');
-    const beerWithDifferentUnit = { ...makeBeer('b2', 'Weizen'), additionalIngredients: [{ id: 'a2', name: 'Koriander', quantity: 2, unit: 'Stück', phase: AdditionalIngredientPhase.BOIL }] };
+    const beerWithDifferentUnit = { ...makeBeer('b2', 'Weizen'), additionalIngredients: [{ id: 'a2', quantity: 2, unit: 'Stück', phase: AdditionalIngredientPhase.BOIL }] };
     const result = calculateIngredientSummary([beer, beerWithDifferentUnit], [
       makeBrew('f1', 'b1', eBrewState.FINISHED, 20),
       makeBrew('f2', 'b1', eBrewState.FINISHED, 20),
@@ -64,12 +64,12 @@ describe('dashboard calculations', () => {
     ]);
 
     expect(result.linkedBrewCount).toBe(3);
-    expect(result.malts[0]).toMatchObject({ name: 'Pilsner Malz', quantity: 10000, brewCount: 2 });
-    expect(result.hops[0]).toMatchObject({ name: 'Hallertau', quantity: 100, brewCount: 2 });
-    expect(result.yeasts[0]).toMatchObject({ name: 'US-05', brewCount: 3, type: 'Obergärig' });
+    expect(result.malts[0]).toMatchObject({ name: 'Malz ID m1', quantity: 10000, brewCount: 2 });
+    expect(result.hops[0]).toMatchObject({ name: 'Hopfen ID h1', quantity: 100, brewCount: 2 });
+    expect(result.yeasts[0]).toMatchObject({ name: 'Hefe ID y1', brewCount: 3, type: '' });
     expect(result.additionalIngredients).toEqual(expect.arrayContaining([
-      expect.objectContaining({ name: 'Koriander', unit: 'g', quantity: 200 }),
-      expect.objectContaining({ name: 'Koriander', unit: 'Stück', quantity: 2 }),
+      expect.objectContaining({ name: 'Zutat ID a1', unit: 'g', quantity: 200 }),
+      expect.objectContaining({ name: 'Zutat ID a2', unit: 'Stück', quantity: 2 }),
     ]));
   });
 

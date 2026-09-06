@@ -249,6 +249,9 @@ const beerDataReducer = (
     case BeerActions.ActionTypes.ADD_IMPORTED_BEER: {
         const result = aAction.payload.result;
         const importedBeer = result.recipe;
+        if (result.resolutionRequired || !importedBeer) {
+            return {...aState, importResult: result, importError: undefined, isImportingBeer: false};
+        }
         const beers = aState.beers ?? [];
         const alreadyStored = beers.some(beer => beer.id === importedBeer.id);
         const aNewList = alreadyStored

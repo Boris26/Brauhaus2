@@ -79,16 +79,16 @@ export const calculateIngredientSummary = (beers: Beer[] = [], brews: FinishedBr
     linkedBrewCount += 1;
     const brewId = brew.id;
 
-    recipe.malts?.forEach((malt) => addIngredientUsage(malts, malt.name, malt.quantity, brewId));
-    recipe.wortBoiling?.hops?.forEach((hop) => addIngredientUsage(hops, hop.name, hop.quantity, brewId));
-    recipe.additionalIngredients?.forEach((ingredient) => addIngredientUsage(additionalIngredients, ingredient.name, ingredient.quantity, brewId, ingredient.unit));
+    recipe.malts?.forEach((malt) => addIngredientUsage(malts, `Malz ID ${malt.id}`, malt.quantity, brewId));
+    recipe.wortBoiling?.hops?.forEach((hop) => addIngredientUsage(hops, `Hopfen ID ${hop.id}`, hop.quantity, brewId));
+    recipe.additionalIngredients?.forEach((ingredient) => addIngredientUsage(additionalIngredients, `Zutat ID ${ingredient.id}`, ingredient.quantity, brewId, ingredient.unit));
 
     const yeastNamesInBrew = new Set<string>();
     recipe.fermentationMaturation?.yeast?.forEach((yeast) => {
-      const name = yeast.name?.trim();
+      const name = `Hefe ID ${yeast.id}`;
       if (!name || yeastNamesInBrew.has(name)) return;
       yeastNamesInBrew.add(name);
-      const existing = yeasts.get(name) ?? { name, brewCount: 0, type: yeast.type, brewCountIds: new Set<string>() };
+      const existing = yeasts.get(name) ?? { name, brewCount: 0, type: '', brewCountIds: new Set<string>() };
       if (!existing.brewCountIds.has(brewId)) {
         existing.brewCount += 1;
         existing.brewCountIds.add(brewId);

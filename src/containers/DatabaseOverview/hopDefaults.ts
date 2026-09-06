@@ -31,7 +31,6 @@ export const normalizeHopDto = (aHop: Partial<HopDTO>): HopDTO => {
     const normalized = normalizeRecipeAction({
         ...(usage === HopUsage.DRY_HOP ? hopWithoutBrewDayTime : aHop),
         id: aHop.id ?? '',
-        name: aHop.name ?? '',
         quantity: Number(aHop.quantity ?? 0),
         ...(hasTime ? { additionTime: Number(aHop.additionTime) } : {}),
         usage,

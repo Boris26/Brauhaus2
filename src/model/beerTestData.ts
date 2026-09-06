@@ -10,7 +10,7 @@ export const testBeers: Beer[] = [
         alcohol: 6.5,
         originalwort: 14,
         bitterness: 60,
-        description: "A hoppy and flavorful India Pale Ale",
+        description: '',
         rating: 4.5,
         mashVolume: 16,
         spargeVolume: 4,
@@ -46,9 +46,6 @@ export const testBeers: Beer[] = [
         malts: [
             {
                 id: "1",
-                name: "Pale Ale Malt",
-                description: "Base malt for a rich malt profile",
-                EBC: 8,
                 quantity: 4,
             },
         ],
@@ -57,19 +54,15 @@ export const testBeers: Beer[] = [
             hops: [
                 {
                     id: "1",
-                    name: "Cascade",
-                    description: "Citrusy and floral hop variety",
-                    alpha: 7,
                     quantity: 30,
-                    additionTime: 10
+                    additionTime: 10,
+                    usage: 'BOIL' as any
                 },
                 {
                     id: "2",
-                    name: "Centennial",
-                    description: "Classic American hop with a strong aroma",
-                    alpha: 10,
                     quantity: 50,
-                    additionTime: 10
+                    additionTime: 10,
+                    usage: 'BOIL' as any
                 },
             ],
         },
@@ -79,11 +72,6 @@ export const testBeers: Beer[] = [
             yeast: [
                 {
                     id: "1",
-                    name: "US-05",
-                    description: "Clean and neutral ale yeast",
-                    EVG: "High",
-                    temperature: "18-22°C",
-                    type: "Dry",
                     quantity: 50,
                 },
             ],
@@ -97,7 +85,7 @@ export const testBeers: Beer[] = [
         alcohol: 6.5,
         originalwort: 14,
         bitterness: 60,
-        description: "A hoppy and flavorful India Pale Ale",
+        description: '',
         rating: 4.5,
         mashVolume: 16,
         spargeVolume: 4,
@@ -128,9 +116,6 @@ export const testBeers: Beer[] = [
         malts: [
             {
                 id: "1",
-                name: "Pale Ale Malt",
-                description: "Base malt for a rich malt profile",
-                EBC: 8,
                 quantity: 4,
             },
         ],
@@ -139,19 +124,15 @@ export const testBeers: Beer[] = [
             hops: [
                 {
                     id: "1",
-                    name: "Cascade",
-                    description: "Citrusy and floral hop variety",
-                    alpha: 7,
                     quantity: 30,
-                    additionTime: 10
+                    additionTime: 10,
+                    usage: 'BOIL' as any
                 },
                 {
                     id: "2",
-                    name: "Centennial",
-                    description: "Classic American hop with a strong aroma",
-                    alpha: 10,
                     quantity: 50,
-                    additionTime: 10
+                    additionTime: 10,
+                    usage: 'BOIL' as any
                 },
             ],
         },
@@ -161,11 +142,6 @@ export const testBeers: Beer[] = [
             yeast: [
                 {
                     id: "1",
-                    name: "US-05",
-                    description: "Clean and neutral ale yeast",
-                    EVG: "High",
-                    temperature: "18-22°C",
-                    type: "Dry",
                     quantity: 50,
                 },
             ],

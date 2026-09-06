@@ -24,7 +24,6 @@ export const TIME_TRIGGER_UNITS = [TriggerUnit.MINUTES, TriggerUnit.HOURS, Trigg
 export const CONTACT_TIME_UNITS = [TimeUnit.MINUTES, TimeUnit.HOURS, TimeUnit.DAYS] as const;
 
 export interface RecipeActionFields {
-    actionId: string;
     triggerType: TriggerType;
     triggerValue?: number | null;
     triggerUnit?: TriggerUnit | null;
@@ -32,21 +31,12 @@ export interface RecipeActionFields {
     contactTimeUnit?: TimeUnit | null;
 }
 
-export const createRecipeActionId = (): string => {
-    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, character => {
-        const random = Math.floor(Math.random() * 16);
-        return (character === 'x' ? random : (random & 0x3) | 0x8).toString(16);
-    });
-};
-
 export const isTimeTriggerUnit = (unit: unknown): unit is TriggerUnit.MINUTES | TriggerUnit.HOURS | TriggerUnit.DAYS =>
     TIME_TRIGGER_UNITS.includes(unit as typeof TIME_TRIGGER_UNITS[number]);
 export const isTimeUnit = (unit: unknown): unit is TimeUnit => Object.values(TimeUnit).includes(unit as TimeUnit);
 
 export const isValidRecipeAction = (value: Partial<RecipeActionFields>): boolean => {
     if (!value.triggerType) return true;
-    if (!value.actionId) return false;
     if (value.contactTime == null) {
         if (value.contactTimeUnit != null) return false;
     } else if (!Number.isFinite(value.contactTime) || value.contactTime < 0 || !isTimeUnit(value.contactTimeUnit)) return false;
@@ -58,7 +48,7 @@ export const isValidRecipeAction = (value: Partial<RecipeActionFields>): boolean
 };
 
 export const hasRecipeAction = (value: Partial<RecipeActionFields>): boolean =>
-    Boolean(value.actionId && value.triggerType && isValidRecipeAction(value));
+    Boolean(value.triggerType && isValidRecipeAction(value));
 
 /** Normalizes only the current BRAUHAUS v2 contract when an editor field changes. */
 export const normalizeRecipeAction = <T extends Partial<RecipeActionFields>>(value: T): T => {
@@ -74,7 +64,7 @@ export const normalizeRecipeAction = <T extends Partial<RecipeActionFields>>(val
 };
 
 export const clearRecipeAction = <T extends Partial<RecipeActionFields>>(value: T): Omit<T, keyof RecipeActionFields> => {
-    const {actionId, triggerType, triggerValue, triggerUnit, contactTime, contactTimeUnit, ...rest} = value;
+    const {triggerType, triggerValue, triggerUnit, contactTime, contactTimeUnit, ...rest} = value;
     return rest;
 };
 

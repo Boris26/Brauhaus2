@@ -5,6 +5,9 @@ import {Details} from './Details';
 
 const mapStateToProps = (state: any) => ({
     selectedBeer: state.beerDataReducer.selectedBeer,
+    malts: state.maltsReducer.malts,
+    hops: state.hopsReducer.hops,
+    yeasts: state.yeastReducer.yeasts,
 });
 
 const mapDispatchToProps = (dispatch: any) => ({
