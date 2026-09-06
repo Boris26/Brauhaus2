@@ -28,7 +28,7 @@ describe('fermentationReducer', () => {
     expect(afterB.byBrewId['brew-b'].actions[0].status).toBe('PENDING');
   });
   it('replaces the backend due projection after Plato reload without completing the action', () => {
-    const details = (due: boolean) => ({measurements: [], devices: [], sensorMeasurements: [], actions: [{actionId: 'plato-action', status: 'PENDING' as const, due, triggerType: 'PLATO_THRESHOLD' as any, triggerValue: 5}]});
+    const details = (due: boolean) => ({measurements: [], devices: [], sensorMeasurements: [], actions: [{actionId: 'plato-action', sourceType: 'ADDITIONAL_INGREDIENT', status: 'PENDING' as const, due, triggerType: 'PLATO_THRESHOLD' as any, triggerValue: 5}]});
     const before = fermentationReducer(initialFermentationState, FermentationActions.loadSuccess('brew-a', details(false)));
     const after = fermentationReducer(before, FermentationActions.loadSuccess('brew-a', details(true)));
     expect(before.byBrewId['brew-a'].actions[0]).toMatchObject({status: 'PENDING', due: false});

@@ -89,9 +89,9 @@ Automatic water filling follows the same at-most-once-while-pending rule: anothe
 
 ## Hop reminder flow
 
-- Production view computes reminder times from selected recipe hops as `(selectedBeer.cookingTime - hop.time) * 60`.
+- Production view computes reminder times from selected recipe hops as `(selectedBeer.cookingTime - hop.additionTime) * 60`.
 - During `COOKING`, it compares `brewingStatus.currentStep.elapsedTime` to those second offsets and shows a non-blocking inline reminder with the hop name once per offset. Control waiting confirmations have priority over this reminder.
-- This means `hop.time` is assumed to be minutes before the end of boil, and `currentStep.elapsedTime` is assumed to be seconds elapsed in the cooking phase. Needs verification.
+- This means `hop.additionTime` is assumed to be minutes before the end of boil, and `currentStep.elapsedTime` is assumed to be seconds elapsed in the cooking phase. Needs verification.
 
 ## Finished-brew completion flow
 

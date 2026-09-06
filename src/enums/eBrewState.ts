@@ -18,6 +18,6 @@ export const BrewStateTransitions: Readonly<Record<eBrewState, readonly eBrewSta
 };
 
 export const brewStateLabel = (state: unknown): string =>
-    Object.prototype.hasOwnProperty.call(BrewStateGerman, state)
+    typeof state === 'string' && Object.prototype.hasOwnProperty.call(BrewStateGerman, state)
         ? BrewStateGerman[state as eBrewState]
         : `Unbekannter Status (${String(state || '–')})`;

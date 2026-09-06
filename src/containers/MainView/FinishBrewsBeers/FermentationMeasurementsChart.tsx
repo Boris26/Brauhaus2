@@ -18,7 +18,7 @@ export const buildFermentationChartData = (measurements: FermentationMeasurement
   };
   measurements.forEach(measurement => { const point = pointFor(measurement.measuredAt); if (!point) return; if (finite(measurement.temperature)) point.beerTemperature = measurement.temperature; if (finite(measurement.plato)) point.plato = measurement.plato; });
   sensorMeasurements.forEach(measurement => { const point = pointFor(measurement.measuredAt); if (!point) return; if (finite(measurement.beerTemperature)) point.beerTemperature = measurement.beerTemperature; if (finite(measurement.ambientTemperature)) point.ambientTemperature = measurement.ambientTemperature; });
-  return [...points.values()].sort((a, b) => a.timestamp - b.timestamp);
+  return Array.from(points.values()).sort((a, b) => a.timestamp - b.timestamp);
 };
 
 const FermentationMeasurementsChart: React.FC<Props> = props => {

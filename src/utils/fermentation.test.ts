@@ -1,5 +1,5 @@
 import {actionDueLabel, actionTriggerLabel, approximateAlcohol, attenuation, bubbleRate, canCompleteAction, contactStatus, contactTimeLabel, isDeviceOnline, latestFermentationReadings, missingPlatoDays, temperatureDelta} from './fermentation';
-import {FermentationTriggerType, FermentationTriggerUnit} from '../model/FermentationRecipeAction';
+import {TriggerType, TriggerUnit} from '../model/FermentationRecipeAction';
 
 describe('fermentation domain helpers', () => {
   it('uses server bubble rate and otherwise derives bubbles per minute centrally', () => {
@@ -13,20 +13,20 @@ describe('fermentation domain helpers', () => {
     expect(actionDueLabel({...action, due: true})).toMatchObject({label: 'Fällig', severity: 'due'});
   });
   it.each([
-    [FermentationTriggerUnit.MINUTES, '4 Minuten nach Gärbeginn'],
-    [FermentationTriggerUnit.HOURS, '4 Stunden nach Gärbeginn'],
-    [FermentationTriggerUnit.DAYS, '4 Tage nach Gärbeginn'],
+    [TriggerUnit.MINUTES, '4 Minuten nach Gärbeginn'],
+    [TriggerUnit.HOURS, '4 Stunden nach Gärbeginn'],
+    [TriggerUnit.DAYS, '4 Tage nach Gärbeginn'],
   ])('labels TIME_OFFSET in %s', (triggerUnit, label) => {
-    expect(actionTriggerLabel({triggerType: FermentationTriggerType.TIME_OFFSET, triggerValue: 4, triggerUnit} as any)).toBe(label);
+    expect(actionTriggerLabel({triggerType: TriggerType.TIME_OFFSET, triggerValue: 4, triggerUnit} as any)).toBe(label);
   });
   it('allows only backend-due or manual pending actions to complete', () => {
     expect(canCompleteAction({status: 'PENDING', due: true} as any)).toBe(true);
-    expect(canCompleteAction({status: 'PENDING', due: false, triggerType: FermentationTriggerType.MANUAL} as any)).toBe(true);
+    expect(canCompleteAction({status: 'PENDING', due: false, triggerType: TriggerType.MANUAL} as any)).toBe(true);
     expect(canCompleteAction({status: 'PENDING', due: false} as any)).toBe(false);
-    expect(canCompleteAction({status: 'SKIPPED', due: true, triggerType: FermentationTriggerType.MANUAL} as any)).toBe(false);
+    expect(canCompleteAction({status: 'SKIPPED', due: true, triggerType: TriggerType.MANUAL} as any)).toBe(false);
   });
   it('keeps triggers separate from contact time and uses server contact timestamps', () => {
-    const action: any = {status: 'COMPLETED', triggerType: FermentationTriggerType.PLATO_THRESHOLD, triggerValue: 5, contactTime: 3, contactTimeUnit: 'DAYS', contactEndsAt: '2026-09-07T00:00:00Z'};
+    const action: any = {status: 'COMPLETED', triggerType: TriggerType.PLATO_THRESHOLD, triggerValue: 5, contactTime: 3, contactTimeUnit: 'DAYS', contactEndsAt: '2026-09-07T00:00:00Z'};
     expect(actionTriggerLabel(action)).toBe('bei ≤ 5 °P');
     expect(contactTimeLabel(action)).toBe('3 Tage');
     expect(contactStatus(action, Date.parse('2026-09-06'))).toBe('running');

@@ -61,9 +61,9 @@ Before changing any database/backend field or endpoint, check whether the UI use
 - `Beer.fermentation[].stepId` (stable UI-generated UUID for configurable mash steps)
 - `Beer.fermentation[].relatedRastId` (DECOCTION reference to a RAST `stepId`)
 - `Beer.wortBoiling.hops[].name`
-- `Beer.wortBoiling.hops[].time`
+- `Beer.wortBoiling.hops[].additionTime`
 - `Beer.wortBoiling.hops[].usage` (`FIRST_WORT`, `BOIL`, `WHIRLPOOL`, or `DRY_HOP`; missing legacy value defaults to `BOIL`)
-- `Beer.wortBoiling.hops[].timeUnit` (`MINUTES`, `HOURS`, or `DAYS` when optional `time` is present)
+- `Beer.wortBoiling.hops[].timeUnit` (`MINUTES`, `HOURS`, or `DAYS` when optional `additionTime` is present)
 - `FinishedBrew.id`
 - `FinishedBrew.beer_id`
 - `FinishedBrew.name`
@@ -78,7 +78,7 @@ The database/import service must preserve or derive `referenceVolume` and `refer
 
 The UI now persists `stepId` and `relatedRastId` in recipe mash steps. Database/backend DTO validation, storage, and read-back of both fields **Needs cross-repository update**; dropping either field would break stable decoction relationships.
 
-The recipe editor restricts hop time-unit choices by usage as a UI-only rule: `FIRST_WORT`, `BOIL`, and `WHIRLPOOL` accept `MINUTES` or `HOURS`; `DRY_HOP` accepts `HOURS` or `DAYS`. This does not change the API payload shape or BRAUHAUS-v1 schema. Alignment of the authoritative schema with these restrictions is **Needs verification** in the separate BeerDataStore schema work.
+The BRAUHAUS v2 recipe editor uses `additionTime` plus `timeUnit` only for `FIRST_WORT`, `BOIL`, and `WHIRLPOOL`. `DRY_HOP` carries no brew-day timing fields and uses Recipe Action fields exclusively.
 
 ## UI ↔ PI control
 

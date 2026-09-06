@@ -18,6 +18,11 @@ import {getAgitatorActive, getHeatingActive} from '../Production/utils/productio
 import {formatTemperature} from '../../utils/temperatureSensor';
 import {FermentationDetails} from '../../model/Fermentation';
 import {actionDueLabel, actionTriggerLabel, latestFermentationReadings} from '../../utils/fermentation';
+import {
+  BrewingDisplayTimeAnchor,
+  createBrewingDisplayTimeAnchor,
+  projectBrewingDisplayTime,
+} from '../Production/utils/productionCountdown';
 
 interface DashboardPageProps {
   beers?: Beer[];
@@ -34,6 +39,10 @@ interface DashboardPageProps {
   loadFermentation?: (id: string) => void;
 }
 
+interface DashboardPageState {
+  displayTick: number;
+}
+
 const formatSeconds = (value: unknown): string => {
   const seconds = Math.max(0, Math.round(safeNumber(value)));
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
@@ -42,7 +51,11 @@ const formatSeconds = (value: unknown): string => {
 const formatFermentationValue = (value: number | undefined, unit: string): string =>
   typeof value === 'number' && Number.isFinite(value) ? `${value.toLocaleString('de-DE', {maximumFractionDigits: 1})} ${unit}` : '–';
 
-export class DashboardPage extends React.Component<DashboardPageProps> {
+export class DashboardPage extends React.Component<DashboardPageProps, DashboardPageState> {
+  state: DashboardPageState = {displayTick: 0};
+  private displayInterval?: ReturnType<typeof setInterval>;
+  private displayTimeAnchor?: BrewingDisplayTimeAnchor;
+
   componentDidMount(): void {
     if (this.props.beers === undefined) this.props.getBeers(true);
     if (this.props.finishedBrews === undefined) this.props.getFinishedBrews(true);

@@ -7,7 +7,7 @@ import {ApplicationActions, BeerActions} from '../../../actions/actions';
 import {CreateFermentationMeasurement, FermentationAction, FermentationDetails, FermentationMeasurement} from '../../../model/Fermentation';
 import {actionDueLabel, actionTriggerLabel, canCompleteAction, contactStatus, contactTimeLabel, fermentationDay, isActionDue, isDeviceOnline, latestByDate, latestFermentationReadings} from '../../../utils/fermentation';
 import {transitionFinishedBrew} from '../../../utils/brewLifecycle';
-import {FermentationTriggerType} from '../../../model/FermentationRecipeAction';
+import {TriggerType} from '../../../model/FermentationRecipeAction';
 import BrewProcessChart from './BrewProcessChart';
 import FermentationMeasurementsChart from './FermentationMeasurementsChart';
 import './FermentationDetails.css';
@@ -49,7 +49,7 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
   );
   const readings = latestFermentationReadings(details.measurements, details.sensorMeasurements);
   const nextAction = [...details.actions].filter(action => action.status === 'PENDING').sort((a, b) => Number(isActionDue(b)) - Number(isActionDue(a)))[0];
-  const dueActions = details.actions.filter(action => action.status === 'PENDING' && (isActionDue(action) || action.triggerType === FermentationTriggerType.MANUAL));
+  const dueActions = details.actions.filter(action => action.status === 'PENDING' && (isActionDue(action) || action.triggerType === TriggerType.MANUAL));
   const pendingActions = details.actions.filter(action => !dueActions.includes(action) && action.status !== 'COMPLETED' && action.status !== 'SKIPPED');
   const completedActions = details.actions.filter(action => action.status === 'COMPLETED');
   const day = fermentationDay(props.brew.fermentationStartedAt || undefined);
@@ -75,7 +75,7 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
     <div className="fermentation-dashboard-grid">
       <section className="fermentation-card fermentation-status-card"><h4>Gärsensor</h4>{details.devices.length === 0 ? <p>Kein Sensor zugeordnet.</p> : details.devices.map(device => <div key={device.id} className="fermentation-device"><strong>{device.name}</strong><span className={isDeviceOnline(device.lastSeenAt) ? 'is-online' : 'is-offline'}>{isDeviceOnline(device.lastSeenAt) ? '● Online' : '● Offline'}</span>{!device.assignedFinishedBeerId && <div className="fermentation-assignment"><span>Bier zuordnen:</span>{props.activeBrews.map(brew => <button key={brew.id} disabled={props.assigning.includes(device.id)} onClick={() => props.assign(device.id, brew.id)}>{brew.name}</button>)}</div>}</div>)}</section>
       <section className="fermentation-card fermentation-status-card"><h4>Letzte Messung</h4><strong className="fermentation-prominent">{date(latestMeasurement?.measuredAt)}</strong><p>{latestSensor ? `Sensor zuletzt ${date(latestSensor.measuredAt)}` : 'Noch keine Sensormessung vorhanden.'}</p></section>
-      <section className="fermentation-card fermentation-status-card"><h4>Nächste Aktion</h4>{nextAction ? <><strong className={`fermentation-prominent is-${actionDueLabel(nextAction).severity}`}>{actionDueLabel(nextAction).label}</strong><p>{actionText(nextAction)}</p><p>Zugabe: {actionTriggerLabel(nextAction)}</p>{canCompleteAction(nextAction) && <button disabled={props.completing.includes(nextAction.id)} onClick={() => props.complete(props.brew.id, nextAction.id)}>{props.completing.includes(nextAction.id) ? 'Wird gespeichert …' : 'Als ausgeführt bestätigen'}</button>}</> : <p>Keine Aktion geplant.</p>}</section>
+      <section className="fermentation-card fermentation-status-card"><h4>Nächste Aktion</h4>{nextAction ? <><strong className={`fermentation-prominent is-${actionDueLabel(nextAction).severity}`}>{actionDueLabel(nextAction).label}</strong><p>{actionText(nextAction)}</p><p>Zugabe: {actionTriggerLabel(nextAction)}</p>{canCompleteAction(nextAction) && <button disabled={props.completing.includes(nextAction.actionId)} onClick={() => props.complete(props.brew.id, nextAction.actionId)}>{props.completing.includes(nextAction.actionId) ? 'Wird gespeichert …' : 'Als ausgeführt bestätigen'}</button>}</> : <p>Keine Aktion geplant.</p>}</section>
       <section className="fermentation-card fermentation-trend-card"><h4>Gärungsverlauf</h4><FermentationTrend measurements={details.measurements} /></section>
     </div>
   </div>;

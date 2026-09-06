@@ -103,7 +103,7 @@ export class BeerPdfStrategy implements PdfRenderStrategy<Beer> {
                                 h.name != null ? String(h.name) : '',
                                 h.alpha != null ? String(h.alpha) : '',
                                 h.quantity != null ? String(h.quantity) : '',
-                                h.time != null ? String(h.time) : '',
+                                h.additionTime != null ? String(h.additionTime) : '',
                                 h.description != null ? String(h.description) : '',
                                 h.id != null ? String(h.id) : ''
                             ])
