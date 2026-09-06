@@ -280,7 +280,7 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
                             {selectedBeer.wortBoiling.hops.map((item, index) => (
                                 <TableRow key={index}>
                                     <TableCell>{item.name}</TableCell>
-                                    <TableCell>{item.time}</TableCell>
+                                    <TableCell>{item.additionTime}</TableCell>
                                     <TableCell>{item.quantity}</TableCell>
                                 </TableRow>
                             ))}

@@ -61,7 +61,7 @@ export const testBeers: Beer[] = [
                     description: "Citrusy and floral hop variety",
                     alpha: 7,
                     quantity: 30,
-                    time: 10
+                    additionTime: 10
                 },
                 {
                     id: "2",
@@ -69,7 +69,7 @@ export const testBeers: Beer[] = [
                     description: "Classic American hop with a strong aroma",
                     alpha: 10,
                     quantity: 50,
-                    time: 10
+                    additionTime: 10
                 },
             ],
         },
@@ -143,7 +143,7 @@ export const testBeers: Beer[] = [
                     description: "Citrusy and floral hop variety",
                     alpha: 7,
                     quantity: 30,
-                    time: 10
+                    additionTime: 10
                 },
                 {
                     id: "2",
@@ -151,7 +151,7 @@ export const testBeers: Beer[] = [
                     description: "Classic American hop with a strong aroma",
                     alpha: 10,
                     quantity: 50,
-                    time: 10
+                    additionTime: 10
                 },
             ],
         },
