@@ -6,6 +6,7 @@ import {getIngredientUpdateError} from "./ingredientUpdateError";
 import {MaltsActions} from "../actions/malt.actions";
 import {Malts} from "../model/Malt";
 import {MaltRepository} from "../repositorys/MaltRepository";
+import {validIngredientMasterData} from "../utils/ingredientId";
 
 /**
  * Epic to handle the GET_MALTS action.
@@ -15,7 +16,7 @@ export const getMaltsEpic = (action$: any) =>
     action$.pipe(
         ofType(MaltsActions.ActionTypes.GET_MALTS),
         mergeMap(() =>
-            from(MaltRepository.getMalts()).pipe(map((malts: Malts[]) => MaltsActions.getMaltsSuccess(malts)
+            from(MaltRepository.getMalts()).pipe(map((malts: Malts[]) => MaltsActions.getMaltsSuccess(validIngredientMasterData(malts))
                 ),
                 catchError((aError: Error) =>
                     from([

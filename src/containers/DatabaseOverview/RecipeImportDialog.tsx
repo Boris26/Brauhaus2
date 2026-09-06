@@ -3,6 +3,7 @@ import {Button, CircularProgress, FormControl, InputLabel, MenuItem, Select, Sel
 import AppDialog from '../../components/AppDialog/AppDialog';
 import {IngredientMappingRequest, IngredientResolution, IngredientType, JsonObject, RecipeImportFormat, RecipeImportRequest, RecipeImportResult} from '../../model/RecipeImport';
 import {createImportIdempotencyKey} from '../../utils/recipeImport';
+import {IngredientId, isValidIngredientId} from '../../utils/ingredientId';
 import './RecipeImportDialog.css';
 
 export interface ImportMasterIngredient { id: string | number; name: string; }
@@ -21,6 +22,30 @@ interface RecipeImportDialogProps {
 
 const typeLabel: Record<IngredientType, string> = {MALT: 'Malz', HOP: 'Hopfen', YEAST: 'Hefe', ADDITIONAL_INGREDIENT: 'Weitere Zutat'};
 const keyFor = (ingredient: IngredientResolution) => `${ingredient.ingredientType}:${ingredient.sourceName}`;
+
+interface ResolutionOption {
+    id: IngredientId;
+    name: string;
+    matchType?: string;
+}
+
+const resolutionOptions = (item: IngredientResolution, masterData: ImportMasterData): ResolutionOption[] => {
+    const options: ResolutionOption[] = [
+        ...item.candidates
+            .filter(candidate => isValidIngredientId(candidate.ingredientId))
+            .map(candidate => ({id: candidate.ingredientId, name: candidate.name, matchType: candidate.matchType})),
+        ...masterData[item.ingredientType]
+            .filter(master => isValidIngredientId(master.id))
+            .map(master => ({id: master.id, name: master.name})),
+    ];
+    const seen = new Set<string>();
+    return options.filter(option => {
+        const id = String(option.id);
+        if (seen.has(id)) return false;
+        seen.add(id);
+        return true;
+    });
+};
 
 export const RecipeImportDialog: React.FC<RecipeImportDialogProps> = ({open, loading = false, backendError, result, masterData = {MALT: [], HOP: [], YEAST: [], ADDITIONAL_INGREDIENT: []}, onCancel, onImport, onCreateMasterData}) => {
     const [format, setFormat] = React.useState<RecipeImportFormat | ''>('');
@@ -54,7 +79,7 @@ export const RecipeImportDialog: React.FC<RecipeImportDialogProps> = ({open, loa
     };
     const unresolved = result?.resolutionRequired ? (result.ingredients ?? []) : [];
     const retry = () => {
-        if (!format || !recipe || !idempotencyKey || unresolved.some(item => mappings[keyFor(item)] == null || mappings[keyFor(item)] === '')) return;
+        if (!format || !recipe || !idempotencyKey || unresolved.some(item => !isValidIngredientId(mappings[keyFor(item)]))) return;
         const ingredientMappings: IngredientMappingRequest[] = unresolved.map(item => ({ingredientType: item.ingredientType, sourceName: item.sourceName, ingredientId: mappings[keyFor(item)]}));
         setSubmitted(true); onImport({format, recipe, idempotencyKey, ingredientMappings});
     };
@@ -65,10 +90,11 @@ export const RecipeImportDialog: React.FC<RecipeImportDialogProps> = ({open, loa
         try {
             if (!onCreateMasterData) throw new Error('Master-data creation is not configured');
             const created = await onCreateMasterData(item.ingredientType, createValues);
+            if (!isValidIngredientId(created.id)) throw new Error('Created master data has no valid id');
             setMappings(current => ({...current, [keyFor(item)]: created.id})); setCreating(undefined); setCreateError('');
         } catch (_error) { setCreateError('Die Stammdaten-Zutat konnte nicht angelegt werden.'); }
     };
-    const resolutionComplete = unresolved.length > 0 && unresolved.every(item => mappings[keyFor(item)] != null && mappings[keyFor(item)] !== '');
+    const resolutionComplete = unresolved.length > 0 && unresolved.every(item => isValidIngredientId(mappings[keyFor(item)]));
     const busy = loading || Boolean(creating && submitted);
 
     return <AppDialog open={open} onClose={resetAndCancel} disableClose={busy} title={unresolved.length ? 'Zutaten zuordnen' : 'Rezept importieren'} variant={backendError && submitted ? 'error' : busy ? 'progress' : 'info'} className="recipe-import-dialog"
@@ -77,9 +103,9 @@ export const RecipeImportDialog: React.FC<RecipeImportDialogProps> = ({open, loa
             : <Button className="recipe-import-dialog__import-button" onClick={() => { if (format && recipe && idempotencyKey) { setSubmitted(true); onImport({format, recipe, idempotencyKey}); } }} color="primary" variant="contained" disabled={!format || !recipe || !idempotencyKey || !!parseError || loading}>{loading ? <><CircularProgress size={18}/>&nbsp;Importieren…</> : 'Importieren'}</Button>}</>}>
         {unresolved.length ? <div className="recipe-import-dialog__resolutions" aria-label="Nicht eindeutig zugeordnete Zutaten">
             <p>Bitte ordne jede problematische Import-Zutat ausdrücklich lokalen Stammdaten zu.</p>
-            {unresolved.map(item => { const key = keyFor(item); const options = [...item.candidates, ...masterData[item.ingredientType].filter(master => !item.candidates.some(candidate => String(candidate.ingredientId) === String(master.id))).map(master => ({ingredientId: master.id, name: master.name, matchType: 'UNKNOWN' as const}))]; return <section className="recipe-import-dialog__resolution" key={key}>
+            {unresolved.map(item => { const key = keyFor(item); const options = resolutionOptions(item, masterData); return <section className="recipe-import-dialog__resolution" key={key}>
                 <strong>{typeLabel[item.ingredientType]}</strong><div>Importwert: „{item.sourceName}“</div>
-                <FormControl fullWidth margin="dense"><InputLabel id={`${key}-label`}>Lokale Zuordnung</InputLabel><Select labelId={`${key}-label`} label="Lokale Zuordnung" value={String(mappings[key] ?? '')} onChange={event => setMappings(current => ({...current, [key]: event.target.value}))}><MenuItem value=""><em>Bitte bewusst auswählen</em></MenuItem>{options.map(option => <MenuItem key={option.ingredientId} value={String(option.ingredientId)}>{option.name}{option.matchType === 'FUZZY' ? ' (ähnlich)' : ''}</MenuItem>)}</Select></FormControl>
+                <FormControl fullWidth margin="dense"><InputLabel id={`${key}-label`}>Lokale Zuordnung</InputLabel><Select labelId={`${key}-label`} label="Lokale Zuordnung" value={isValidIngredientId(mappings[key]) ? String(mappings[key]) : ''} onChange={event => { if (isValidIngredientId(event.target.value)) setMappings(current => ({...current, [key]: event.target.value})); }}><MenuItem value=""><em>Bitte bewusst auswählen</em></MenuItem>{options.map(option => <MenuItem key={String(option.id)} value={String(option.id)}>{option.name}{option.matchType === 'FUZZY' ? ' (ähnlich)' : ''}</MenuItem>)}</Select></FormControl>
                 {creating === key ? <div className="recipe-import-dialog__create"><TextField label="Name" value={createValues.name} onChange={event => setCreateValues(v => ({...v, name: event.target.value}))}/><TextField label="Beschreibung" value={createValues.description} onChange={event => setCreateValues(v => ({...v, description: event.target.value}))}/>{item.ingredientType === 'MALT' && <TextField label="EBC" type="number" value={createValues.ebc ?? ''} onChange={event => setCreateValues(v => ({...v, ebc: Number(event.target.value)}))}/>} {item.ingredientType === 'HOP' && <><TextField label="Typ" value={createValues.type ?? ''} onChange={event => setCreateValues(v => ({...v, type: event.target.value}))}/><TextField label="Alpha (%)" type="number" value={createValues.alpha ?? ''} onChange={event => setCreateValues(v => ({...v, alpha: Number(event.target.value)}))}/></>} {item.ingredientType === 'YEAST' && <><TextField label="Typ" value={createValues.type ?? ''} onChange={event => setCreateValues(v => ({...v, type: event.target.value}))}/><TextField label="EVG (%)" type="number" value={createValues.evg ?? ''} onChange={event => setCreateValues(v => ({...v, evg: Number(event.target.value)}))}/><TextField label="Temperatur (°C)" type="number" value={createValues.temperature ?? ''} onChange={event => setCreateValues(v => ({...v, temperature: Number(event.target.value)}))}/></>}<Button onClick={() => void create(item)} disabled={!String(createValues.name ?? '').trim()}>Anlegen und zuordnen</Button>{createError && <p role="alert" className="recipe-import-dialog__error">{createError}</p>}</div> : <Button onClick={() => startCreate(item)}>Neue Zutat anlegen</Button>}
             </section>; })}
         </div> : <><FormControl className="recipe-import-dialog__format" fullWidth margin="normal"><InputLabel id="recipe-import-format-label">Importformat</InputLabel><Select labelId="recipe-import-format-label" label="Importformat" value={format} disabled={loading} MenuProps={{PaperProps: {className: 'recipe-import-dialog__menu'}}} onChange={(event: SelectChangeEvent) => { setFormat(event.target.value as RecipeImportFormat); if (recipe) setIdempotencyKey(createImportIdempotencyKey()); }}><MenuItem value={RecipeImportFormat.BRAUHAUS}>Brauhaus</MenuItem><MenuItem value={RecipeImportFormat.MMUM}>MaischeMalzundMehr (MMuM)</MenuItem></Select></FormControl><Button className="recipe-import-dialog__file-button" component="label" variant="outlined" fullWidth disabled={loading}>{fileName || 'Datei auswählen'}<input hidden type="file" accept=".json,application/json" onChange={event => { void readFile(event.target.files?.[0]); event.target.value = ''; }}/></Button></>}
