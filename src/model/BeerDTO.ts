@@ -16,17 +16,15 @@ export interface FermentationStepsDTO {
 }
 
 export interface MaltDTO {
-    name: string;
-    id: string;
+    id: string | number;
     quantity: number;
 }
 
 export interface HopDTO extends Partial<RecipeActionFields> {
-    name: string;
-    id: string;
+    id: string | number;
     quantity: number;
     additionTime?: number;
-    usage?: HopUsage;
+    usage: HopUsage;
     timeUnit?: HopTimeUnit;
 }
 
@@ -36,8 +34,7 @@ export interface WortBoilingDTO {
 }
 
 export interface YeastDTO {
-    name: string;
-    id: string;
+    id: string | number;
     quantity: number;
 }
 
@@ -48,14 +45,13 @@ export interface FermentationMaturationDTO {
 }
 
 export interface AdditionalIngredientDTO extends Partial<RecipeActionFields> {
-    id?: string | number;
-    name?: string;
+    id: string | number;
     quantity: number;
     unit: string;
     phase: AdditionalIngredientPhase;
-    time?: number;
+    additionTime?: number;
     timeUnit?: AdditionalIngredientTimeUnit;
-    description?: string;
+    note?: string;
 }
 
 export interface BeerDTO {

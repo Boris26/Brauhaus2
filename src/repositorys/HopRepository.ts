@@ -8,8 +8,8 @@ export class HopRepository extends BaseRepository {
         return this.get<Hops[]>("hops");
     }
 
-    static submitHop(aHop: Hops): Promise<void> {
-        return this.post("hop", aHop);
+    static submitHop(aHop: Omit<Hops, 'id'>): Promise<Hops> {
+        return this.post<Hops>("hop", aHop);
     }
 
     static deleteHopById(aId: string): Promise<void> {

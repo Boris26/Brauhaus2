@@ -9,7 +9,7 @@ jest.mock('../repositorys/BeerRepository', () => ({BeerRepository: {importBeer: 
 
 describe('importBeerEpic', () => {
     it('passes result.recipe and preserves import metadata in the success action', async () => {
-        const result = {recipe: {id: 'beer-1', name: 'Import'} as Beer, warnings: [{code: 'SOURCE_INFORMATION_IGNORED', message: 'Info'}], ingredientMappings: [], createdMasterData: [], replayed: true};
+        const result = {resolutionRequired: false, recipe: {id: 'beer-1', name: 'Import'} as Beer, warnings: [{code: 'SOURCE_INFORMATION_IGNORED', message: 'Info'}], ingredientMappings: [], createdMasterData: [], replayed: true};
         const request = {format: RecipeImportFormat.MMUM, recipe: {name: 'Import'}, idempotencyKey: 'key-a'};
         (BeerRepository.importBeer as jest.Mock).mockResolvedValueOnce(result);
         const action = await firstValueFrom(importBeerEpic(of(BeerActions.importBeer(request))));

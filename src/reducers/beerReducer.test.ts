@@ -6,6 +6,7 @@ import {FinishedBrew} from '../model/FinishedBrew';
 import {eBrewState} from '../enums/eBrewState';
 
 const result = (replayed: boolean): RecipeImportResult => ({
+    resolutionRequired: false,
     recipe: {id: 'beer-1', name: replayed ? 'Replay' : 'Import'} as Beer,
     warnings: [],
     ingredientMappings: [],
@@ -14,6 +15,12 @@ const result = (replayed: boolean): RecipeImportResult => ({
 });
 
 describe('beerDataReducer recipe import', () => {
+    it('keeps a resolution-required analysis out of persisted recipe state', () => {
+        const state = beerDataReducer(initialBeerState, BeerActions.addImportedBeer({resolutionRequired: true, ingredients: [{ingredientType: 'MALT', sourceName: 'Unknown', candidates: []}], warnings: [], ingredientMappings: [], createdMasterData: [], replayed: false}));
+        expect(state.importResult?.resolutionRequired).toBe(true);
+        expect(state.importedBeer).toBeUndefined();
+        expect(state.beers).toBeUndefined();
+    });
     it('stores result.recipe and keeps result metadata', () => {
         const state = beerDataReducer(initialBeerState, BeerActions.addImportedBeer(result(false)));
         expect(state.importedBeer?.id).toBe('beer-1');

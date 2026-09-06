@@ -12,6 +12,7 @@ export interface RecipeImportRequest {
     format: RecipeImportFormat;
     recipe: JsonObject;
     idempotencyKey?: string;
+    ingredientMappings?: IngredientMappingRequest[];
 }
 
 export interface RecipeImportWarning {
@@ -29,16 +30,39 @@ export interface IngredientMapping {
     score?: number;
 }
 
+export interface IngredientMappingRequest {
+    ingredientType: IngredientType;
+    sourceName: string;
+    ingredientId: string | number;
+}
+
+export type IngredientType = 'MALT' | 'HOP' | 'YEAST' | 'ADDITIONAL_INGREDIENT';
+
+export interface IngredientResolutionCandidate {
+    ingredientId: string | number;
+    name: string;
+    matchType: IngredientMatchType;
+    score?: number;
+}
+
+export interface IngredientResolution {
+    ingredientType: IngredientType;
+    sourceName: string;
+    candidates: IngredientResolutionCandidate[];
+}
+
 export interface CreatedMasterData {
     ingredientId: string;
     ingredientType: string;
     name: string;
 }
 
-export type IngredientMatchType = 'EXACT' | 'ALIAS' | 'FUZZY' | 'CREATED';
+export type IngredientMatchType = 'EXACT' | 'ALIAS' | 'FUZZY' | 'UNKNOWN' | 'CREATED';
 
 export interface RecipeImportResult {
-    recipe: Beer;
+    resolutionRequired: boolean;
+    ingredients?: IngredientResolution[];
+    recipe?: Beer;
     warnings: RecipeImportWarning[];
     ingredientMappings: IngredientMapping[];
     createdMasterData: CreatedMasterData[];

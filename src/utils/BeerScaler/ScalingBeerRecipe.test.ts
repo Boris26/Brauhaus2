@@ -6,10 +6,10 @@ const recipe = (overrides: Partial<Beer> = {}): Beer => ({
     originalwort: 12, bitterness: 25, description: '', rating: 4,
     mashVolume: 20, spargeVolume: 10, cookingTime: 60, cookingTemperatur: 100,
     fermentation: [],
-    malts: [{id: 'm1', name: 'Pilsner', description: '', EBC: 3, quantity: 6000}],
-    wortBoiling: {totalTime: 60, hops: [{id: 'h1', name: 'Hopfen', description: '', alpha: 5, quantity: 60}]},
-    fermentationMaturation: {fermentationTemperature: 20, carbonation: 5, yeast: [{id: 'y1', name: 'Hefe', description: '', EVG: '75', temperature: '20', type: 'Ale', quantity: 3}]},
-    additionalIngredients: [{name: 'Zucker', quantity: 300, unit: 'g', phase: AdditionalIngredientPhase.BOIL}],
+    malts: [{id: 'm1', quantity: 6000}],
+    wortBoiling: {totalTime: 60, hops: [{id: 'h1', quantity: 60, usage: 'BOIL' as any}]},
+    fermentationMaturation: {fermentationTemperature: 20, carbonation: 5, yeast: [{id: 'y1', quantity: 3}]},
+    additionalIngredients: [{id: 'a1', quantity: 300, unit: 'g', phase: AdditionalIngredientPhase.BOIL}],
     ...overrides,
 });
 
