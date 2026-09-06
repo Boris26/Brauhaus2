@@ -16,7 +16,7 @@ const baseProps: React.ComponentProps<typeof BeerForm> = {
     getAdditionalIngredients: jest.fn(),
     saveBeerFormState: jest.fn(),
     malts: [{id: 'm1', name: 'Pilsner Malz', description: '', ebc: 4}],
-    hops: [{id: 1, name: 'Hallertauer Mittelfrüh', description: '', alpha: 4}],
+    hops: [{id: 1, name: 'Hallertauer Mittelfrüh', description: '', type: 'Aromahopfen', alpha: 4}],
     yeasts: [{id: 1, name: 'SafAle US-05', description: '', evg: 75, temperature: 18, type: 'Obergärig'}],
     additionalIngredients: [{id: 'a1', name: 'Koriandersamen', description: ''}],
     isSubmitSuccessful: undefined,
