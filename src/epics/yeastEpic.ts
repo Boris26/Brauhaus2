@@ -6,6 +6,7 @@ import {getIngredientUpdateError} from "./ingredientUpdateError";
 import {YeastActions} from "../actions/yeast.actions";
 import {Yeasts} from "../model/Yeasts";
 import {YeastRepository} from "../repositorys/YeastRepository";
+import {validIngredientMasterData} from "../utils/ingredientId";
 
 /**
  * Epic to handle the GET_YEASTS action.
@@ -15,7 +16,7 @@ export const getYeastsEpic = (action$: any) =>
     action$.pipe(
         ofType(YeastActions.ActionTypes.GET_YEASTS),
         mergeMap((action: any) =>
-            from(YeastRepository.getYeasts()).pipe(map((yeasts : Yeasts[]) => YeastActions.getYeastsSuccess(yeasts)
+            from(YeastRepository.getYeasts()).pipe(map((yeasts : Yeasts[]) => YeastActions.getYeastsSuccess(validIngredientMasterData(yeasts))
                 ),
                 catchError((aError) =>
                     from([

@@ -6,6 +6,7 @@ import {getIngredientUpdateError} from "./ingredientUpdateError";
 import {HopsActions} from "../actions/hops.actions";
 import {Hops} from "../model/Hops";
 import {HopRepository} from "../repositorys/HopRepository";
+import {validIngredientMasterData} from "../utils/ingredientId";
 
 /**
  * Epic to handle the GET_HOPS action.
@@ -15,7 +16,7 @@ export const getHopsEpic = (action$: any) =>
     action$.pipe(
         ofType(HopsActions.ActionTypes.GET_HOPS),
         mergeMap(() =>
-            from(HopRepository.getHops()).pipe(map((hops: Hops[]) => HopsActions.getHopsSuccess(hops)
+            from(HopRepository.getHops()).pipe(map((hops: Hops[]) => HopsActions.getHopsSuccess(validIngredientMasterData(hops))
                 ),
                 catchError((aError: Error)=>
                     from([

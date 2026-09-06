@@ -1,7 +1,7 @@
 import React from 'react';
 import {fireEvent, render, screen, waitFor} from '@testing-library/react';
 import {RecipeImportDialog} from './RecipeImportDialog';
-import {RecipeImportFormat} from '../../model/RecipeImport';
+import {IngredientResolution, RecipeImportFormat, RecipeImportResult} from '../../model/RecipeImport';
 
 jest.mock('../../utils/recipeImport', () => ({createImportIdempotencyKey: jest.fn()}));
 import {createImportIdempotencyKey} from '../../utils/recipeImport';
@@ -9,6 +9,18 @@ import {createImportIdempotencyKey} from '../../utils/recipeImport';
 const jsonFile = (content: string) => ({name: 'recipe.json', text: jest.fn().mockResolvedValue(content)}) as unknown as File;
 const selectFormat = (label: string) => { fireEvent.mouseDown(screen.getByLabelText('Importformat')); fireEvent.click(screen.getByRole('option', {name: label})); };
 const selectFile = (file: File) => fireEvent.change(document.querySelector('input[type="file"]') as HTMLInputElement, {target: {files: [file]}});
+const resolutionResult = (ingredients: IngredientResolution[]): RecipeImportResult => ({resolutionRequired: true, ingredients, warnings: [], ingredientMappings: [], createdMasterData: [], replayed: false});
+
+const startResolution = async (ingredients: IngredientResolution[], masterData?: React.ComponentProps<typeof RecipeImportDialog>['masterData']) => {
+    const onImport = jest.fn();
+    const props = {open: true, onCancel: jest.fn(), onImport, masterData};
+    const view = render(<RecipeImportDialog {...props} />);
+    selectFormat('Brauhaus'); selectFile(jsonFile('{"name":"Extern"}'));
+    await waitFor(() => expect(screen.getByRole('button', {name: 'Importieren'})).toBeEnabled());
+    fireEvent.click(screen.getByRole('button', {name: 'Importieren'}));
+    view.rerender(<RecipeImportDialog {...props} result={resolutionResult(ingredients)} />);
+    return {onImport, ...view};
+};
 
 describe('RecipeImportDialog', () => {
     beforeEach(() => (createImportIdempotencyKey as jest.Mock).mockReset().mockReturnValue('key-a'));
@@ -96,5 +108,72 @@ describe('RecipeImportDialog', () => {
         fireEvent.click(screen.getByRole('option', {name: /Hallertauer Mittelfrüh/}));
         fireEvent.click(screen.getByRole('button', {name: 'Import abschließen'}));
         expect(onImport).toHaveBeenLastCalledWith({format: RecipeImportFormat.BRAUHAUS, recipe, idempotencyKey: 'key-a', ingredientMappings: [{ingredientType: 'HOP', sourceName: 'Hallertau Mittelfruh', ingredientId: '8'}]});
+    });
+
+    it('sends a valid candidate ingredientId', async () => {
+        const {onImport} = await startResolution([{ingredientType: 'HOP', sourceName: 'Hallertau', candidates: [{ingredientId: 8, name: 'Hallertauer', matchType: 'FUZZY'}]}]);
+        fireEvent.mouseDown(screen.getByLabelText('Lokale Zuordnung'));
+        fireEvent.click(screen.getByRole('option', {name: /Hallertauer/}));
+        fireEvent.click(screen.getByRole('button', {name: 'Import abschließen'}));
+        expect(onImport).toHaveBeenLastCalledWith(expect.objectContaining({ingredientMappings: [{ingredientType: 'HOP', sourceName: 'Hallertau', ingredientId: '8'}]}));
+    });
+
+    it('normalizes and sends a valid master-data id', async () => {
+        const {onImport} = await startResolution([{ingredientType: 'ADDITIONAL_INGREDIENT', sourceName: 'Holz', candidates: []}], {MALT: [], HOP: [], YEAST: [], ADDITIONAL_INGREDIENT: [{id: 'oak-1', name: 'Eichenholzchips'}]});
+        fireEvent.mouseDown(screen.getByLabelText('Lokale Zuordnung'));
+        fireEvent.click(screen.getByRole('option', {name: 'Eichenholzchips'}));
+        fireEvent.click(screen.getByRole('button', {name: 'Import abschließen'}));
+        expect(onImport).toHaveBeenLastCalledWith(expect.objectContaining({ingredientMappings: [{ingredientType: 'ADDITIONAL_INGREDIENT', sourceName: 'Holz', ingredientId: 'oak-1'}]}));
+    });
+
+    it('does not offer candidates or master data with missing ids', async () => {
+        await startResolution([{ingredientType: 'HOP', sourceName: 'Hopfen', candidates: [{ingredientId: undefined as any, name: 'Ungültiger Kandidat', matchType: 'UNKNOWN'}]}], {MALT: [], HOP: [{id: undefined as any, name: 'Ungültige Stammdaten'}], YEAST: [], ADDITIONAL_INGREDIENT: []});
+        fireEvent.mouseDown(screen.getByLabelText('Lokale Zuordnung'));
+        expect(screen.queryByRole('option', {name: 'Ungültiger Kandidat'})).not.toBeInTheDocument();
+        expect(screen.queryByRole('option', {name: 'Ungültige Stammdaten'})).not.toBeInTheDocument();
+    });
+
+    it.each(['undefined', 'null'])('does not complete resolution for invalid mapping %s', async invalidId => {
+        const {onImport} = await startResolution([{ingredientType: 'HOP', sourceName: 'Hopfen', candidates: [{ingredientId: invalidId, name: `Ungültig ${invalidId}`, matchType: 'UNKNOWN'}]}]);
+        expect(screen.queryByText(`Ungültig ${invalidId}`)).not.toBeInTheDocument();
+        const retry = screen.getByRole('button', {name: 'Import abschließen'});
+        expect(retry).toBeDisabled();
+        fireEvent.click(retry);
+        expect(onImport).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not retry when one of mixed mappings is invalid', async () => {
+        const {onImport} = await startResolution([
+            {ingredientType: 'MALT', sourceName: 'Malz', candidates: [{ingredientId: 'm-1', name: 'Pilsener', matchType: 'EXACT'}]},
+            {ingredientType: 'HOP', sourceName: 'Hopfen', candidates: [{ingredientId: 'undefined', name: 'Defekt', matchType: 'UNKNOWN'}]},
+        ]);
+        fireEvent.mouseDown(screen.getAllByLabelText('Lokale Zuordnung')[0]);
+        fireEvent.click(screen.getByRole('option', {name: 'Pilsener'}));
+        const retry = screen.getByRole('button', {name: 'Import abschließen'});
+        expect(retry).toBeDisabled();
+        fireEvent.click(retry);
+        expect(onImport).toHaveBeenCalledTimes(1);
+    });
+
+    it('sends valid mappings for multiple ingredient types unchanged', async () => {
+        const {onImport} = await startResolution([
+            {ingredientType: 'MALT', sourceName: 'Malz', candidates: [{ingredientId: 4, name: 'Pilsener', matchType: 'EXACT'}]},
+            {ingredientType: 'YEAST', sourceName: 'Hefe', candidates: []},
+        ], {MALT: [], HOP: [], YEAST: [{id: 'y-2', name: 'Lagerhefe'}], ADDITIONAL_INGREDIENT: []});
+        for (const [select, option] of [[screen.getAllByLabelText('Lokale Zuordnung')[0], 'Pilsener'], [screen.getAllByLabelText('Lokale Zuordnung')[1], 'Lagerhefe']] as const) {
+            fireEvent.mouseDown(select); fireEvent.click(screen.getByRole('option', {name: option}));
+        }
+        fireEvent.click(screen.getByRole('button', {name: 'Import abschließen'}));
+        expect(onImport).toHaveBeenLastCalledWith(expect.objectContaining({ingredientMappings: [
+            {ingredientType: 'MALT', sourceName: 'Malz', ingredientId: '4'},
+            {ingredientType: 'YEAST', sourceName: 'Hefe', ingredientId: 'y-2'},
+        ]}));
+    });
+
+    it('deduplicates candidates and master data by id', async () => {
+        await startResolution([{ingredientType: 'HOP', sourceName: 'Hopfen', candidates: [{ingredientId: 8, name: 'Kandidat', matchType: 'FUZZY'}]}], {MALT: [], HOP: [{id: 8, name: 'Stammdaten-Duplikat'}], YEAST: [], ADDITIONAL_INGREDIENT: []});
+        fireEvent.mouseDown(screen.getByLabelText('Lokale Zuordnung'));
+        expect(screen.getAllByRole('option', {name: /Kandidat/})).toHaveLength(1);
+        expect(screen.queryByRole('option', {name: 'Stammdaten-Duplikat'})).not.toBeInTheDocument();
     });
 });

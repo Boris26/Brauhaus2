@@ -6,6 +6,7 @@ import {getIngredientUpdateError} from "./ingredientUpdateError";
 import {AdditionalIngredientsActions} from "../actions/additionalIngredients.actions";
 import {AdditionalIngredientRepository} from "../repositorys/AdditionalIngredientRepository";
 import {AdditionalIngredient} from "../model/AdditionalIngredient";
+import {validIngredientMasterData} from "../utils/ingredientId";
 
 export const getAdditionalIngredientsEpic = (action$: any) =>
     action$.pipe(
@@ -13,7 +14,7 @@ export const getAdditionalIngredientsEpic = (action$: any) =>
         mergeMap(() =>
             from(AdditionalIngredientRepository.getAdditionalIngredients()).pipe(
                 mergeMap((aIngredients: AdditionalIngredient[]) => from([
-                    AdditionalIngredientsActions.getAdditionalIngredientsSuccess(aIngredients)
+                    AdditionalIngredientsActions.getAdditionalIngredientsSuccess(validIngredientMasterData(aIngredients))
                 ])),
                 catchError((aError: Error) =>
                     from([
