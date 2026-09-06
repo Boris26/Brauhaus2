@@ -1,5 +1,5 @@
 import {FermentationAction, FermentationMeasurement, SensorMeasurement} from '../model/Fermentation';
-import {fermentationUnitLabel, FermentationTriggerType} from '../model/FermentationRecipeAction';
+import {unitLabel, TriggerType} from '../model/FermentationRecipeAction';
 
 export interface LatestFermentationReadings {
   beerTemperature?: number;
@@ -64,29 +64,29 @@ export const fermentationDay = (startedAt?: string, now = Date.now()): number | 
 };
 export const actionDueLabel = (action: FermentationAction): {label: string; severity: 'future' | 'due'} => {
   if (action.due === true) return {label: 'Fällig', severity: 'due'};
-  if (action.triggerType === FermentationTriggerType.MANUAL) return {label: 'Manuell', severity: 'future'};
+  if (action.triggerType === TriggerType.MANUAL) return {label: 'Manuell', severity: 'future'};
   return {label: 'Trigger offen', severity: 'future'};
 };
 
 export const isActionDue = (action: FermentationAction): boolean => action.due === true;
 
 export const canCompleteAction = (action: FermentationAction): boolean =>
-  action.status === 'PENDING' && (isActionDue(action) || action.triggerType === FermentationTriggerType.MANUAL);
+  action.status === 'PENDING' && (isActionDue(action) || action.triggerType === TriggerType.MANUAL);
 
 export const actionTriggerLabel = (action: FermentationAction): string => {
-  if (action.triggerType === FermentationTriggerType.TIME_OFFSET && Number.isFinite(action.triggerValue)) {
-    return `${action.triggerValue} ${fermentationUnitLabel(action.triggerUnit)} nach Gärbeginn`;
+  if (action.triggerType === TriggerType.TIME_OFFSET && Number.isFinite(action.triggerValue)) {
+    return `${action.triggerValue} ${unitLabel(action.triggerUnit)} nach Gärbeginn`;
   }
-  if (action.triggerType === FermentationTriggerType.PLATO_THRESHOLD && Number.isFinite(action.triggerValue)) {
+  if (action.triggerType === TriggerType.PLATO_THRESHOLD && Number.isFinite(action.triggerValue)) {
     return `bei ≤ ${Number(action.triggerValue).toLocaleString('de-DE')} °P`;
   }
-  if (action.triggerType === FermentationTriggerType.MANUAL) return 'Manuell';
+  if (action.triggerType === TriggerType.MANUAL) return 'Manuell';
   return 'Kein Zugabe-Trigger definiert';
 };
 
 export const contactTimeLabel = (action: FermentationAction): string | undefined =>
   Number.isFinite(action.contactTime)
-    ? `${action.contactTime} ${fermentationUnitLabel(action.contactTimeUnit)}`
+    ? `${action.contactTime} ${unitLabel(action.contactTimeUnit)}`
     : undefined;
 
 export const contactStatus = (action: FermentationAction, now = Date.now()): 'running' | 'ended' | undefined => {

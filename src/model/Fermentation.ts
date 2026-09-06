@@ -1,4 +1,4 @@
-import {ContactTimeUnit, FermentationTriggerType, FermentationTriggerUnit} from './FermentationRecipeAction';
+import {TimeUnit, TriggerType, TriggerUnit} from './FermentationRecipeAction';
 
 /** Persisted runtime truth. Fälligkeit is returned separately and is never persisted by this UI. */
 export type FermentationActionState = 'PENDING' | 'COMPLETED' | 'SKIPPED';
@@ -20,11 +20,11 @@ export interface FermentationAction {
   name?: string;
   amount?: number;
   unit?: string;
-  triggerType?: FermentationTriggerType;
+  triggerType?: TriggerType;
   triggerValue?: number;
-  triggerUnit?: FermentationTriggerUnit;
+  triggerUnit?: TriggerUnit;
   contactTime?: number;
-  contactTimeUnit?: ContactTimeUnit;
+  contactTimeUnit?: TimeUnit;
   contactEndsAt?: string | null;
   status: FermentationActionState;
   /** Backend-calculated projection from the current trigger inputs. */
@@ -36,11 +36,11 @@ export interface FermentationAction {
 
 /** Wire shape returned by BeerDataStore. MANUAL actions may encode absent trigger data as null. */
 export interface FermentationActionDTO extends Omit<FermentationAction, 'triggerType' | 'triggerValue' | 'triggerUnit' | 'contactTime' | 'contactTimeUnit'> {
-  triggerType?: FermentationTriggerType | null;
+  triggerType?: TriggerType | null;
   triggerValue?: number | null;
-  triggerUnit?: FermentationTriggerUnit | null;
+  triggerUnit?: TriggerUnit | null;
   contactTime?: number | null;
-  contactTimeUnit?: ContactTimeUnit | null;
+  contactTimeUnit?: TimeUnit | null;
 }
 
 export const mapFermentationAction = (dto: FermentationActionDTO): FermentationAction => ({

@@ -1,23 +1,36 @@
-export enum FermentationTriggerType {
+/** Trigger kinds supported by the BRAUHAUS v2 recipe-action contract. */
+export enum TriggerType {
     TIME_OFFSET = 'TIME_OFFSET',
     PLATO_THRESHOLD = 'PLATO_THRESHOLD',
     MANUAL = 'MANUAL',
 }
 
-export enum FermentationTriggerUnit {
+/** Units for a trigger value. PLATO is intentionally not a time unit. */
+export enum TriggerUnit {
     MINUTES = 'MINUTES',
     HOURS = 'HOURS',
     DAYS = 'DAYS',
     PLATO = 'PLATO',
 }
 
-export const CONTACT_TIME_UNITS = [
-    FermentationTriggerUnit.MINUTES,
-    FermentationTriggerUnit.HOURS,
-    FermentationTriggerUnit.DAYS,
-] as const;
+/** Units accepted by duration fields such as contactTime. */
+export enum TimeUnit {
+    MINUTES = 'MINUTES',
+    HOURS = 'HOURS',
+    DAYS = 'DAYS',
+}
 
-export type ContactTimeUnit = typeof CONTACT_TIME_UNITS[number];
+export const TIME_TRIGGER_UNITS = [TriggerUnit.MINUTES, TriggerUnit.HOURS, TriggerUnit.DAYS] as const;
+export const CONTACT_TIME_UNITS = [TimeUnit.MINUTES, TimeUnit.HOURS, TimeUnit.DAYS] as const;
+
+export interface RecipeActionFields {
+    actionId: string;
+    triggerType: TriggerType;
+    triggerValue?: number | null;
+    triggerUnit?: TriggerUnit | null;
+    contactTime?: number | null;
+    contactTimeUnit?: TimeUnit | null;
+}
 
 export const createRecipeActionId = (): string => {
     if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
@@ -27,80 +40,44 @@ export const createRecipeActionId = (): string => {
     });
 };
 
-export interface FermentationRecipeActionFields {
-    actionId?: string;
-    triggerType?: FermentationTriggerType;
-    triggerValue?: number;
-    triggerUnit?: FermentationTriggerUnit;
-    contactTime?: number;
-    contactTimeUnit?: ContactTimeUnit;
-}
+export const isTimeTriggerUnit = (unit: unknown): unit is TriggerUnit.MINUTES | TriggerUnit.HOURS | TriggerUnit.DAYS =>
+    TIME_TRIGGER_UNITS.includes(unit as typeof TIME_TRIGGER_UNITS[number]);
+export const isTimeUnit = (unit: unknown): unit is TimeUnit => Object.values(TimeUnit).includes(unit as TimeUnit);
 
-type LegacyRecipeActionFields = FermentationRecipeActionFields & {
-    triggerOffset?: number;
-    triggerOffsetUnit?: FermentationTriggerUnit;
-    triggerPlato?: number;
-};
-
-export const isTimeTriggerUnit = (unit: unknown): unit is ContactTimeUnit =>
-    CONTACT_TIME_UNITS.includes(unit as ContactTimeUnit);
-
-export const isValidRecipeAction = (value: FermentationRecipeActionFields): boolean => {
+export const isValidRecipeAction = (value: Partial<RecipeActionFields>): boolean => {
     if (!value.triggerType) return true;
     if (!value.actionId) return false;
-    if (value.contactTime === undefined) {
-        if (value.contactTimeUnit !== undefined) return false;
-    } else if (!Number.isFinite(value.contactTime) || value.contactTime < 0 || !isTimeTriggerUnit(value.contactTimeUnit)) return false;
-    if (value.triggerType === FermentationTriggerType.MANUAL) return value.triggerValue === undefined && value.triggerUnit === undefined;
+    if (value.contactTime == null) {
+        if (value.contactTimeUnit != null) return false;
+    } else if (!Number.isFinite(value.contactTime) || value.contactTime < 0 || !isTimeUnit(value.contactTimeUnit)) return false;
+    if (value.triggerType === TriggerType.MANUAL) return value.triggerValue == null && value.triggerUnit == null;
     if (!Number.isFinite(value.triggerValue) || Number(value.triggerValue) < 0) return false;
-    return value.triggerType === FermentationTriggerType.PLATO_THRESHOLD
-        ? value.triggerUnit === FermentationTriggerUnit.PLATO
+    return value.triggerType === TriggerType.PLATO_THRESHOLD
+        ? value.triggerUnit === TriggerUnit.PLATO
         : isTimeTriggerUnit(value.triggerUnit);
 };
 
-export const normalizeRecipeAction = <T extends LegacyRecipeActionFields>(value: T): T & FermentationRecipeActionFields => {
-    const {triggerOffset: _offset, triggerOffsetUnit: _offsetUnit, triggerPlato: _plato, ...current} = value;
-    const triggerType = current.triggerType;
-    const legacyValue = triggerType === FermentationTriggerType.PLATO_THRESHOLD ? _plato : _offset;
-    const triggerValue = current.triggerValue ?? legacyValue;
-    const normalizedContact = current.contactTime === undefined || current.contactTime === null
-        ? {...current, contactTime: undefined, contactTimeUnit: undefined}
-        : {...current, contactTime: Number(current.contactTime), contactTimeUnit: isTimeTriggerUnit(current.contactTimeUnit) ? current.contactTimeUnit : FermentationTriggerUnit.DAYS};
-    if (triggerType === FermentationTriggerType.MANUAL) {
-        return {...normalizedContact, triggerValue: undefined, triggerUnit: undefined} as T & FermentationRecipeActionFields;
+export const hasRecipeAction = (value: Partial<RecipeActionFields>): boolean =>
+    Boolean(value.actionId && value.triggerType && isValidRecipeAction(value));
+
+/** Normalizes only the current BRAUHAUS v2 contract when an editor field changes. */
+export const normalizeRecipeAction = <T extends Partial<RecipeActionFields>>(value: T): T => {
+    const normalizedContact = value.contactTime === undefined || value.contactTime === null
+        ? {...value, contactTime: null, contactTimeUnit: null}
+        : {...value, contactTime: Number(value.contactTime), contactTimeUnit: isTimeUnit(value.contactTimeUnit) ? value.contactTimeUnit : TimeUnit.DAYS};
+    if (value.triggerType === TriggerType.MANUAL) return {...normalizedContact, triggerValue: null, triggerUnit: null} as T;
+    if (value.triggerType === TriggerType.PLATO_THRESHOLD) return {...normalizedContact, triggerUnit: TriggerUnit.PLATO} as T;
+    if (value.triggerType === TriggerType.TIME_OFFSET) {
+        return {...normalizedContact, triggerUnit: isTimeTriggerUnit(value.triggerUnit) ? value.triggerUnit : TriggerUnit.DAYS} as T;
     }
-    if (triggerType === FermentationTriggerType.PLATO_THRESHOLD) {
-        return {...normalizedContact, triggerValue, triggerUnit: FermentationTriggerUnit.PLATO} as T & FermentationRecipeActionFields;
-    }
-    if (triggerType === FermentationTriggerType.TIME_OFFSET) {
-        const candidate = normalizedContact.triggerUnit ?? _offsetUnit;
-        return {...normalizedContact, triggerValue, triggerUnit: isTimeTriggerUnit(candidate) ? candidate : FermentationTriggerUnit.DAYS} as T & FermentationRecipeActionFields;
-    }
-    return {...normalizedContact, triggerValue: undefined, triggerUnit: undefined} as T & FermentationRecipeActionFields;
+    return {...normalizedContact, triggerValue: null, triggerUnit: null} as T;
 };
 
-/** One-way browser-state compatibility boundary; callers receive canonical fields only. */
-export const normalizeRecipeActionInput = (value: unknown): FermentationRecipeActionFields => {
-    const candidate = (value && typeof value === 'object' ? value : {}) as LegacyRecipeActionFields;
-    const normalized = normalizeRecipeAction(candidate);
-    return {
-        actionId: normalized.actionId,
-        triggerType: normalized.triggerType,
-        triggerValue: normalized.triggerValue,
-        triggerUnit: normalized.triggerUnit,
-        contactTime: normalized.contactTime,
-        contactTimeUnit: normalized.contactTimeUnit,
-    };
-};
-
-export const clearRecipeAction = <T extends FermentationRecipeActionFields>(value: T): T => {
+export const clearRecipeAction = <T extends Partial<RecipeActionFields>>(value: T): Omit<T, keyof RecipeActionFields> => {
     const {actionId, triggerType, triggerValue, triggerUnit, contactTime, contactTimeUnit, ...rest} = value;
-    return rest as T;
+    return rest;
 };
 
-export const fermentationUnitLabel = (unit?: FermentationTriggerUnit): string => ({
-    [FermentationTriggerUnit.MINUTES]: 'Minuten',
-    [FermentationTriggerUnit.HOURS]: 'Stunden',
-    [FermentationTriggerUnit.DAYS]: 'Tage',
-    [FermentationTriggerUnit.PLATO]: '°P',
-}[unit ?? FermentationTriggerUnit.DAYS]);
+export const unitLabel = (unit?: TriggerUnit | TimeUnit): string => ({
+    MINUTES: 'Minuten', HOURS: 'Stunden', DAYS: 'Tage', PLATO: '°P',
+}[unit ?? TimeUnit.DAYS]);

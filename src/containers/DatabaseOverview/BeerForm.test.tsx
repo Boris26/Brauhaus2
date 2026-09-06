@@ -6,7 +6,7 @@ import {HopTimeUnit} from '../../enums/eHopTimeUnit';
 import {ProcedureType} from '../../enums/eProcedureType';
 import {RestExecutionMode} from '../../enums/eRestExecutionMode';
 import {Beer} from '../../model/Beer';
-import {FermentationTriggerType, FermentationTriggerUnit} from '../../model/FermentationRecipeAction';
+import {TimeUnit, TriggerType, TriggerUnit} from '../../model/FermentationRecipeAction';
 
 const baseProps: React.ComponentProps<typeof BeerForm> = {
     onSubmitBeer: jest.fn(),
@@ -16,7 +16,7 @@ const baseProps: React.ComponentProps<typeof BeerForm> = {
     getAdditionalIngredients: jest.fn(),
     saveBeerFormState: jest.fn(),
     malts: [{id: 'm1', name: 'Pilsner Malz', description: '', EBC: 4, quantity: 0}],
-    hops: [{id: 'h1', name: 'Hallertauer Mittelfrüh', description: '', alpha: 4, quantity: 0, time: 0}],
+    hops: [{id: 'h1', name: 'Hallertauer Mittelfrüh', description: '', alpha: 4, quantity: 0}],
     yeasts: [{id: 'y1', name: 'SafAle US-05', description: '', EVG: '75', temperature: '18', type: 'Obergärig', quantity: 0}],
     additionalIngredients: [{id: 'a1', name: 'Koriandersamen', description: ''}],
     isSubmitSuccessful: undefined,
@@ -94,25 +94,25 @@ const expectProcedureTypeOptions = (select: HTMLElement) => {
 };
 
 describe('BeerForm accordions', () => {
-    it('shows only usage-specific hop time units and defaults invalid units after usage changes', () => {
+    it('separates brew-day timing from DRY_HOP Recipe Actions on usage changes', () => {
         renderBeerForm({beerFormState: {hopsDTO: [{
-            id: 'h1', name: 'Hallertauer Mittelfrüh', quantity: 10, time: 3,
-            usage: HopUsage.DRY_HOP, timeUnit: HopTimeUnit.DAYS,
+            id: 'h1', name: 'Hallertauer Mittelfrüh', quantity: 10, additionTime: 3,
+            usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES,
         }]}});
         fireEvent.click(screen.getByRole('button', {name: /Hopfen/}));
 
         const hopRow = screen.getByDisplayValue('Hallertauer Mittelfrüh').closest('tr')!;
-        const usageSelect = within(hopRow).getByDisplayValue('Hopfen stopfen');
-        const unitSelect = within(hopRow).getByDisplayValue('Tage');
-        expect(within(unitSelect).getAllByRole('option').map((option) => option.textContent)).toEqual([
-            'Keine Einheit', 'Stunden', 'Tage',
-        ]);
+        const usageSelect = within(hopRow).getByDisplayValue('Kochhopfen');
+        expect(within(hopRow).getByDisplayValue('Minuten')).toBeInTheDocument();
+
+        fireEvent.change(usageSelect, {target: {value: HopUsage.DRY_HOP}});
+        expect(within(hopRow).queryByRole('spinbutton', {name: 'additionTime'})).not.toBeInTheDocument();
+        expect(within(hopRow).getByText('Kein Zugabe-Trigger definiert')).toBeInTheDocument();
 
         fireEvent.change(usageSelect, {target: {value: HopUsage.WHIRLPOOL}});
-
-        expect(within(hopRow).getByDisplayValue('Whirlpool')).toBeInTheDocument();
-        expect(within(hopRow).getByDisplayValue('Minuten')).toBeInTheDocument();
-        expect(within(unitSelect).getAllByRole('option').map((option) => option.textContent)).toEqual([
+        const unitSelect = within(hopRow).getAllByRole('combobox').find(select =>
+            within(select).queryByRole('option', {name: 'Keine Einheit'}))!;
+        expect(within(unitSelect).getAllByRole('option').map(option => option.textContent)).toEqual([
             'Keine Einheit', 'Minuten', 'Stunden',
         ]);
     });
@@ -229,7 +229,7 @@ describe('BeerForm accordions', () => {
             cookingTemperatur: 100,
             fermentationSteps: expect.arrayContaining([expect.objectContaining({type: 'Kochen', temperature: 100, time: 60})]),
             malts: [{id: 'm1', name: 'Pilsner Malz', quantity: 4000}],
-            wortBoiling: {totalTime: 0, hops: [{id: 'h1', name: 'Hallertauer Mittelfrüh', quantity: 50, time: 60, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES}]},
+            wortBoiling: {totalTime: 0, hops: [{id: 'h1', name: 'Hallertauer Mittelfrüh', quantity: 50, additionTime: 60, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES}]},
             fermentationMaturation: {fermentationTemperature: 0, carbonation: 0, yeast: [{id: 'y1', name: 'SafAle US-05', quantity: 1}]},
         }));
     });
@@ -240,7 +240,7 @@ describe('BeerForm accordions', () => {
             mashVolume: 18, spargeVolume: 8, cookingTime: 60, cookingTemperatur: 99,
             fermentation: [{type: 'Einmaischen', temperature: 65, time: 0}, {type: 'Abmaischen', temperature: 78, time: 0}, {type: 'Kochen', temperature: 99, time: 0}],
             malts: [{id: 'm1', name: 'Pilsner Malz', description: '', EBC: 4, quantity: 4000}],
-            wortBoiling: {totalTime: 60, hops: [{id: 'h1', name: 'Hallertauer Mittelfrüh', description: '', alpha: 4, quantity: 50, time: 60, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES}]},
+            wortBoiling: {totalTime: 60, hops: [{id: 'h1', name: 'Hallertauer Mittelfrüh', description: '', alpha: 4, quantity: 50, additionTime: 60, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES}]},
             fermentationMaturation: {fermentationTemperature: 18, carbonation: 5, yeast: [{id: 'y1', name: 'SafAle US-05', description: '', EVG: '75', temperature: '18', type: 'Obergärig', quantity: 1}]},
             additionalIngredients: [],
         };
@@ -260,7 +260,7 @@ describe('BeerForm accordions', () => {
             mashVolume: 20, spargeVolume: 10, cookingTime: 60, cookingTemperatur: 100,
             fermentation: [{type: 'Einmaischen', temperature: 57}, {type: 'Abmaischen', temperature: 78}, {type: 'Kochen', temperature: 100, time: 60}],
             malts: [{id: 'm1', name: 'Pilsner Malz', description: '', EBC: 4, quantity: 4000}],
-            wortBoiling: {totalTime: 60, hops: [{id: 'h1', actionId: 'recipe-action-uuid', name: 'Hallertauer Mittelfrüh', description: '', alpha: 4, quantity: 80, usage: HopUsage.DRY_HOP, triggerType: FermentationTriggerType.PLATO_THRESHOLD, triggerValue: 5, triggerUnit: FermentationTriggerUnit.PLATO, contactTime: 3, contactTimeUnit: FermentationTriggerUnit.DAYS}]},
+            wortBoiling: {totalTime: 60, hops: [{id: 'h1', actionId: 'recipe-action-uuid', name: 'Hallertauer Mittelfrüh', description: '', alpha: 4, quantity: 80, usage: HopUsage.DRY_HOP, triggerType: TriggerType.PLATO_THRESHOLD, triggerValue: 5, triggerUnit: TriggerUnit.PLATO, contactTime: 3, contactTimeUnit: TimeUnit.DAYS}]},
             fermentationMaturation: {fermentationTemperature: 18, carbonation: 5, yeast: [{id: 'y1', name: 'SafAle US-05', description: '', EVG: '75', temperature: '18', type: 'Obergärig', quantity: 1}]},
             additionalIngredients: [],
         };
@@ -268,10 +268,8 @@ describe('BeerForm accordions', () => {
         fireEvent.change(screen.getByLabelText(/Bier auswählen/), {target: {value: existingBeer.id}});
         fireEvent.click(screen.getByRole('button', {name: /Rezept speichern/}));
         const submittedHop = (props.onSubmitBeer as jest.Mock).mock.calls[0][0].wortBoiling.hops[0];
-        expect(submittedHop).toMatchObject({id: 'h1', actionId: 'recipe-action-uuid', triggerType: FermentationTriggerType.PLATO_THRESHOLD, triggerValue: 5, triggerUnit: FermentationTriggerUnit.PLATO, contactTime: 3, contactTimeUnit: FermentationTriggerUnit.DAYS});
+        expect(submittedHop).toMatchObject({id: 'h1', actionId: 'recipe-action-uuid', triggerType: TriggerType.PLATO_THRESHOLD, triggerValue: 5, triggerUnit: TriggerUnit.PLATO, contactTime: 3, contactTimeUnit: TimeUnit.DAYS});
         expect(submittedHop.id).not.toBe(submittedHop.actionId);
-        expect(submittedHop).not.toHaveProperty('triggerOffset');
-        expect(submittedHop).not.toHaveProperty('triggerPlato');
     });
 
     it('restores saved fixed steps when cancelling edits to an existing recipe', () => {

@@ -7,7 +7,7 @@ import {ApplicationActions, BeerActions} from '../../../actions/actions';
 import {CreateFermentationMeasurement, FermentationAction, FermentationDetails, FermentationMeasurement} from '../../../model/Fermentation';
 import {actionDueLabel, actionTriggerLabel, canCompleteAction, contactStatus, contactTimeLabel, fermentationDay, isActionDue, isDeviceOnline, latestByDate, latestFermentationReadings} from '../../../utils/fermentation';
 import {transitionFinishedBrew} from '../../../utils/brewLifecycle';
-import {FermentationTriggerType} from '../../../model/FermentationRecipeAction';
+import {TriggerType} from '../../../model/FermentationRecipeAction';
 import BrewProcessChart from './BrewProcessChart';
 import FermentationMeasurementsChart from './FermentationMeasurementsChart';
 import './FermentationDetails.css';
@@ -49,7 +49,7 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
   );
   const readings = latestFermentationReadings(details.measurements, details.sensorMeasurements);
   const nextAction = [...details.actions].filter(action => action.status === 'PENDING').sort((a, b) => Number(isActionDue(b)) - Number(isActionDue(a)))[0];
-  const dueActions = details.actions.filter(action => action.status === 'PENDING' && (isActionDue(action) || action.triggerType === FermentationTriggerType.MANUAL));
+  const dueActions = details.actions.filter(action => action.status === 'PENDING' && (isActionDue(action) || action.triggerType === TriggerType.MANUAL));
   const pendingActions = details.actions.filter(action => !dueActions.includes(action) && action.status !== 'COMPLETED' && action.status !== 'SKIPPED');
   const completedActions = details.actions.filter(action => action.status === 'COMPLETED');
   const day = fermentationDay(props.brew.fermentationStartedAt || undefined);

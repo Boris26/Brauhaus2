@@ -25,7 +25,7 @@ describe('FermentationRepository BeerDataStore routes', () => {
       .mockResolvedValueOnce({data: [{actionId: 'action', sourceType: 'HOP', status: 'PENDING', triggerType: 'MANUAL', triggerValue: null, triggerUnit: null}]})
       .mockResolvedValue({data: []});
     const details = await FermentationRepository.getDetails('brew');
-    expect(details.actions[0]).toMatchObject({actionId: 'action', status: 'PENDING', triggerValue: undefined, triggerUnit: undefined});
+    expect(details.actions[0]).toMatchObject({actionId: 'action', status: 'PENDING', triggerValue: null, triggerUnit: null});
     expect(details.actions[0]).not.toHaveProperty('id');
   });
   it('uses finished beer and action identity for complete and skip', async () => {
