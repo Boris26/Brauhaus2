@@ -14,21 +14,15 @@ export interface FermentationSteps {
 }
 
 export interface Malt {
-    id: string;
-    name: string;
-    description: string;
-    EBC: number;
+    id: string | number;
     quantity: number;
 }
 
 export interface Hop extends Partial<RecipeActionFields> {
-    id: string;
-    name: string;
-    description: string;
-    alpha: number;
+    id: string | number;
     quantity: number;
     additionTime?: number;
-    usage?: HopUsage;
+    usage: HopUsage;
     timeUnit?: HopTimeUnit;
 }
 
@@ -38,12 +32,7 @@ export interface WortBoiling {
 }
 
 export interface Yeast {
-    id: string;
-    name: string;
-    description: string;
-    EVG: string;
-    temperature: string;
-    type: string;
+    id: string | number;
     quantity: number;
 }
 
@@ -69,14 +58,13 @@ export enum AdditionalIngredientTimeUnit {
 }
 
 export interface BeerAdditionalIngredient extends Partial<RecipeActionFields> {
-    id?: string | number;
-    name?: string;
+    id: string | number;
     quantity: number;
     unit: string;
     phase: AdditionalIngredientPhase;
-    time?: number;
+    additionTime?: number;
     timeUnit?: AdditionalIngredientTimeUnit;
-    description?: string;
+    note?: string;
 }
 
 export interface Beer {

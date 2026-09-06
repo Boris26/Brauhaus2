@@ -81,4 +81,20 @@ describe('RecipeImportDialog', () => {
         fireEvent.click(screen.getByRole('button', {name: 'Importieren'}));
         expect(onImport.mock.calls[2][0].idempotencyKey).toBe('key-b');
     });
+
+    it('requires an explicit fuzzy mapping and retries statelessly with the original key and document', async () => {
+        const onImport = jest.fn();
+        const recipe = {name: 'Extern'};
+        const {rerender} = render(<RecipeImportDialog open onCancel={jest.fn()} onImport={onImport} />);
+        selectFormat('Brauhaus'); selectFile(jsonFile(JSON.stringify(recipe)));
+        await waitFor(() => expect(screen.getByRole('button', {name: 'Importieren'})).toBeEnabled());
+        fireEvent.click(screen.getByRole('button', {name: 'Importieren'}));
+        rerender(<RecipeImportDialog open onCancel={jest.fn()} onImport={onImport} result={{resolutionRequired: true, ingredients: [{ingredientType: 'HOP', sourceName: 'Hallertau Mittelfruh', candidates: [{ingredientId: 8, name: 'Hallertauer Mittelfrüh', matchType: 'FUZZY'}]}], warnings: [], ingredientMappings: [], createdMasterData: [], replayed: false}} />);
+
+        expect(screen.getByRole('button', {name: 'Import abschließen'})).toBeDisabled();
+        fireEvent.mouseDown(screen.getByLabelText('Lokale Zuordnung'));
+        fireEvent.click(screen.getByRole('option', {name: /Hallertauer Mittelfrüh/}));
+        fireEvent.click(screen.getByRole('button', {name: 'Import abschließen'}));
+        expect(onImport).toHaveBeenLastCalledWith({format: RecipeImportFormat.BRAUHAUS, recipe, idempotencyKey: 'key-a', ingredientMappings: [{ingredientType: 'HOP', sourceName: 'Hallertau Mittelfruh', ingredientId: '8'}]});
+    });
 });

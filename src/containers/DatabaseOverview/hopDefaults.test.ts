@@ -5,7 +5,7 @@ import { hopTimeUnitsByUsage, normalizeHopDto, updateHopUsage, validateHopDto } 
 import {TimeUnit, TriggerType, TriggerUnit} from '../../model/FermentationRecipeAction';
 
 const hop = (overrides: Partial<HopDTO> = {}): HopDTO => ({
-    id: '1', name: 'Cascade', quantity: 10, usage: HopUsage.BOIL, ...overrides,
+    id: '1', quantity: 10, usage: HopUsage.BOIL, ...overrides,
 });
 
 const expectedUnits: Record<HopUsage, readonly HopTimeUnit[]> = {
@@ -26,7 +26,7 @@ describe('hopDefaults', () => {
 
     test('DRY_HOP requires a complete Recipe Action', () => {
         expect(validateHopDto(hop({usage: HopUsage.DRY_HOP}))).toBe(false);
-        expect(validateHopDto(hop({usage: HopUsage.DRY_HOP, actionId: 'action', triggerType: TriggerType.MANUAL, triggerValue: null, triggerUnit: null}))).toBe(true);
+        expect(validateHopDto(hop({usage: HopUsage.DRY_HOP, triggerType: TriggerType.MANUAL, triggerValue: null, triggerUnit: null}))).toBe(true);
     });
 
     test.each(Object.values(HopUsage).flatMap((usage) =>
@@ -68,7 +68,6 @@ describe('hopDefaults', () => {
         expect(updated).not.toHaveProperty('triggerUnit');
         expect(updated.additionTime).toBeUndefined();
         expect(updated.timeUnit).toBeUndefined();
-        expect(updated.actionId).toBeUndefined();
     });
 
     test.each([
@@ -80,7 +79,7 @@ describe('hopDefaults', () => {
     });
 
     test('a brew-day hop defaults to BOIL and MINUTES', () => {
-        expect(normalizeHopDto({id: '1', name: 'Cascade', quantity: 10, additionTime: 15})).toMatchObject({
+        expect(normalizeHopDto({id: '1', quantity: 10, additionTime: 15})).toMatchObject({
             usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES,
         });
     });
@@ -92,8 +91,8 @@ describe('hopDefaults', () => {
     });
 
     test('leaving DRY_HOP removes only recipe-action metadata', () => {
-        const updated = updateHopUsage(hop({usage: HopUsage.DRY_HOP, additionTime: 3, timeUnit: HopTimeUnit.DAYS, actionId: 'action', triggerType: TriggerType.TIME_OFFSET, triggerValue: 2, triggerUnit: TriggerUnit.DAYS, contactTime: 1, contactTimeUnit: TimeUnit.HOURS}), HopUsage.BOIL);
+        const updated = updateHopUsage(hop({usage: HopUsage.DRY_HOP, additionTime: 3, timeUnit: HopTimeUnit.DAYS, triggerType: TriggerType.TIME_OFFSET, triggerValue: 2, triggerUnit: TriggerUnit.DAYS, contactTime: 1, contactTimeUnit: TimeUnit.HOURS}), HopUsage.BOIL);
         expect(updated).toMatchObject({id: '1', additionTime: 3, timeUnit: HopTimeUnit.MINUTES, usage: HopUsage.BOIL});
-        for (const field of ['actionId', 'triggerType', 'triggerValue', 'triggerUnit', 'contactTime', 'contactTimeUnit']) expect(updated).not.toHaveProperty(field);
+        for (const field of ['triggerType', 'triggerValue', 'triggerUnit', 'contactTime', 'contactTimeUnit']) expect(updated).not.toHaveProperty(field);
     });
 });

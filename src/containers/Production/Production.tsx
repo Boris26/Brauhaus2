@@ -47,6 +47,7 @@ export const AGITATOR_SPEED_DEBOUNCE_MS = 300;
 
 export interface ProductionProps {
     selectedBeer?: Beer;
+    hops?: Array<{id: string | number; name: string}>;
     temperature: number;
     currentAgitatorState: ToggleState;
     currentAgitatorSpeed: number;
@@ -511,7 +512,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
     calculateTheHopTimes() {
         const {selectedBeer} = this.props;
         this.setState({
-            hopSchedule: selectedBeer ? calculateHopSchedule(selectedBeer) : [],
+            hopSchedule: selectedBeer ? calculateHopSchedule(selectedBeer, this.props.hops) : [],
             announcedHopTimes: [],
             showHopsDialog: false,
             hopName: ''

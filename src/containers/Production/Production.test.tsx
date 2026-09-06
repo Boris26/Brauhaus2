@@ -8,6 +8,7 @@ import {ConfirmStates} from '../../enums/eConfirmStates';
 import {dataCollector} from '../../utils/DataCollector/dataCollector';
 import {ProductionRepository} from '../../repositorys/ProductionRepository';
 import {AgitatorSettingsRepository} from '../../repositorys/AgitatorSettingsRepository';
+import {HopUsage} from '../../enums/eHopUsage';
 
 const createBeer = (aMashVolume: number | undefined = 18, aSpargeVolume: number | undefined = 12, aId: string = '1'): Beer => ({
     id: aId,
@@ -53,6 +54,7 @@ const createBrewingStatus = (aProcessState: ProcessState = ProcessState.IDLE): B
 const renderProduction = (aOverrides: Partial<React.ComponentProps<typeof Production>> = {}) => {
     const props: React.ComponentProps<typeof Production> = {
         selectedBeer: createBeer(),
+        hops: [{id: 1, name: 'Cascade'}, {id: 2, name: 'Saaz'}],
         temperature: 20,
         currentAgitatorState: ToggleState.OFF,
         currentAgitatorSpeed: 5,
@@ -814,7 +816,7 @@ describe('Production inline confirmations', () => {
     });
 
     it('renders hop additions as a non-blocking reminder and dismisses only the reminder', () => {
-        const beer = {...createBeer(), wortBoiling: {totalTime: 60, hops: [{id: 'h1', name: 'Cascade', description: '', alpha: 5, quantity: 10, additionTime: 60}]}};
+        const beer = {...createBeer(), wortBoiling: {totalTime: 60, hops: [{id: 1, quantity: 10, additionTime: 60, usage: HopUsage.BOIL}]}};
         const beforeCooking = createBrewingStatus(ProcessState.ACTIVE);
         const cooking = createBrewingStatus(ProcessState.ACTIVE);
         cooking.currentStep = {index: 3, phase: ProcessPhase.COOKING, mode: ProcessMode.TIMER_RUNNING, elapsedTime: 1, duration: 3600};
@@ -830,8 +832,8 @@ describe('Production inline confirmations', () => {
     });
 
     it('reinitializes the hop plan and announced times when the selected recipe id changes', async () => {
-        const recipeA = {...createBeer(18, 12, 'recipe-a'), wortBoiling: {totalTime: 60, hops: [{id: 'h1', name: 'Cascade', description: '', alpha: 5, quantity: 10, additionTime: 60}]}};
-        const recipeB = {...createBeer(18, 12, 'recipe-b'), wortBoiling: {totalTime: 60, hops: [{id: 'h2', name: 'Saaz', description: '', alpha: 4, quantity: 10, additionTime: 59}]}};
+        const recipeA = {...createBeer(18, 12, 'recipe-a'), wortBoiling: {totalTime: 60, hops: [{id: 1, quantity: 10, additionTime: 60, usage: HopUsage.BOIL}]}};
+        const recipeB = {...createBeer(18, 12, 'recipe-b'), wortBoiling: {totalTime: 60, hops: [{id: 2, quantity: 10, additionTime: 59, usage: HopUsage.BOIL}]}};
         const cooking = createBrewingStatus(ProcessState.ACTIVE);
         cooking.currentStep = {index: 3, phase: ProcessPhase.COOKING, mode: ProcessMode.TIMER_RUNNING, elapsedTime: 61, duration: 3600};
         const {rerender, props} = renderProduction({selectedBeer: recipeA, brewingStatus: cooking});
@@ -844,7 +846,7 @@ describe('Production inline confirmations', () => {
     });
 
     it('does not reinitialize hop reminders for a new object with the same recipe id', async () => {
-        const recipe = {...createBeer(18, 12, 'recipe-a'), wortBoiling: {totalTime: 60, hops: [{id: 'h1', name: 'Cascade', description: '', alpha: 5, quantity: 10, additionTime: 60}]}};
+        const recipe = {...createBeer(18, 12, 'recipe-a'), wortBoiling: {totalTime: 60, hops: [{id: 1, quantity: 10, additionTime: 60, usage: HopUsage.BOIL}]}};
         const cooking = createBrewingStatus(ProcessState.ACTIVE);
         cooking.currentStep = {index: 3, phase: ProcessPhase.COOKING, mode: ProcessMode.TIMER_RUNNING, elapsedTime: 1, duration: 3600};
         const {rerender, props} = renderProduction({selectedBeer: recipe, brewingStatus: cooking});
@@ -1431,7 +1433,7 @@ describe('Production process overview countdown', () => {
     });
 
     it('uses local cooking elapsed time for hop reminders without a REST update', () => {
-        const beer = {...createProcessBeer(), cookingTime: 60, wortBoiling: {totalTime: 60, hops: [{id: 'h1', name: 'Cascade', description: '', alpha: 5, quantity: 10, additionTime: 59}]}};
+        const beer = {...createProcessBeer(), cookingTime: 60, wortBoiling: {totalTime: 60, hops: [{id: 1, quantity: 10, additionTime: 59, usage: HopUsage.BOIL}]}};
         const cooking = createActiveTimedStatus(3542);
         cooking.currentStep = {...cooking.currentStep, phase: ProcessPhase.COOKING, duration: 3600, elapsedTime: 58, remainingTime: 3542};
         renderProduction({selectedBeer: beer, brewingStatus: cooking});
