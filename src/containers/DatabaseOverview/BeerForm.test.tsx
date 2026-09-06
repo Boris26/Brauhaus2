@@ -16,8 +16,8 @@ const baseProps: React.ComponentProps<typeof BeerForm> = {
     getAdditionalIngredients: jest.fn(),
     saveBeerFormState: jest.fn(),
     malts: [{id: 'm1', name: 'Pilsner Malz', description: '', ebc: 4}],
-    hops: [{id: 'h1', name: 'Hallertauer Mittelfrüh', description: '', alpha: 4}],
-    yeasts: [{id: 'y1', name: 'SafAle US-05', description: '', evg: 75, temperature: 18, type: 'Obergärig'}],
+    hops: [{id: 1, name: 'Hallertauer Mittelfrüh', description: '', alpha: 4}],
+    yeasts: [{id: 1, name: 'SafAle US-05', description: '', evg: 75, temperature: 18, type: 'Obergärig'}],
     additionalIngredients: [{id: 'a1', name: 'Koriandersamen', description: ''}],
     isSubmitSuccessful: undefined,
     messageType: '',
@@ -61,13 +61,13 @@ const fillValidRecipe = () => {
     fireEvent.change(screen.getAllByRole('spinbutton').find((input) => input.getAttribute('name') === 'quantity')!, {target: {value: '4000'}});
 
     fireEvent.click(screen.getByRole('button', {name: /Hopfen/}));
-    fireEvent.change(screen.getByDisplayValue('Hopfen'), {target: {value: 'h1'}});
+    fireEvent.change(screen.getByDisplayValue('Hopfen'), {target: {value: '1'}});
     const hopQuantity = screen.getAllByRole('spinbutton').filter((input) => input.getAttribute('name') === 'quantity')[1];
     fireEvent.change(hopQuantity, {target: {value: '50'}});
     fireEvent.change(screen.getByDisplayValue('0'), {target: {value: '60'}});
 
     fireEvent.click(screen.getByRole('button', {name: /Hefe/}));
-    fireEvent.change(screen.getByDisplayValue('Hefe'), {target: {value: 'y1'}});
+    fireEvent.change(screen.getByDisplayValue('Hefe'), {target: {value: '1'}});
     const yeastQuantity = screen.getAllByRole('spinbutton').filter((input) => input.getAttribute('name') === 'quantity')[2];
     fireEvent.change(yeastQuantity, {target: {value: '1'}});
 };
@@ -96,7 +96,7 @@ const expectProcedureTypeOptions = (select: HTMLElement) => {
 describe('BeerForm accordions', () => {
     it('separates brew-day timing from DRY_HOP Recipe Actions on usage changes', () => {
         renderBeerForm({beerFormState: {hopsDTO: [{
-            id: 'h1', quantity: 10, additionTime: 3,
+            id: 1, quantity: 10, additionTime: 3,
             usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES,
         }]}});
         fireEvent.click(screen.getByRole('button', {name: /Hopfen/}));
@@ -229,8 +229,8 @@ describe('BeerForm accordions', () => {
             cookingTemperatur: 100,
             fermentationSteps: expect.arrayContaining([expect.objectContaining({type: 'Kochen', temperature: 100, time: 60})]),
             malts: [{id: 'm1', quantity: 4000}],
-            wortBoiling: {totalTime: 0, hops: [{id: 'h1', quantity: 50, additionTime: 60, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES}]},
-            fermentationMaturation: {fermentationTemperature: 0, carbonation: 0, yeast: [{id: 'y1', quantity: 1}]},
+            wortBoiling: {totalTime: 0, hops: [{id: 1, quantity: 50, additionTime: 60, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES}]},
+            fermentationMaturation: {fermentationTemperature: 0, carbonation: 0, yeast: [{id: 1, quantity: 1}]},
         }));
     });
 
@@ -240,8 +240,8 @@ describe('BeerForm accordions', () => {
             mashVolume: 18, spargeVolume: 8, cookingTime: 60, cookingTemperatur: 99,
             fermentation: [{type: 'Einmaischen', temperature: 65, time: 0}, {type: 'Abmaischen', temperature: 78, time: 0}, {type: 'Kochen', temperature: 99, time: 0}],
             malts: [{id: 'm1', quantity: 4000}],
-            wortBoiling: {totalTime: 60, hops: [{id: 'h1', quantity: 50, additionTime: 60, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES}]},
-            fermentationMaturation: {fermentationTemperature: 18, carbonation: 5, yeast: [{id: 'y1', quantity: 1}]},
+            wortBoiling: {totalTime: 60, hops: [{id: 1, quantity: 50, additionTime: 60, usage: HopUsage.BOIL, timeUnit: HopTimeUnit.MINUTES}]},
+            fermentationMaturation: {fermentationTemperature: 18, carbonation: 5, yeast: [{id: 1, quantity: 1}]},
             additionalIngredients: [],
         };
         const {props} = renderBeerForm({beers: [existingBeer]});
@@ -260,20 +260,20 @@ describe('BeerForm accordions', () => {
             mashVolume: 20, spargeVolume: 10, cookingTime: 60, cookingTemperatur: 100,
             fermentation: [{type: 'Einmaischen', temperature: 57}, {type: 'Abmaischen', temperature: 78}, {type: 'Kochen', temperature: 100, time: 60}],
             malts: [{id: 'm1', quantity: 4000}],
-            wortBoiling: {totalTime: 60, hops: [{id: 'h1', quantity: 80, usage: HopUsage.DRY_HOP, triggerType: TriggerType.PLATO_THRESHOLD, triggerValue: 5, triggerUnit: TriggerUnit.PLATO, contactTime: 3, contactTimeUnit: TimeUnit.DAYS}]},
-            fermentationMaturation: {fermentationTemperature: 18, carbonation: 5, yeast: [{id: 'y1', quantity: 1}]},
+            wortBoiling: {totalTime: 60, hops: [{id: 1, quantity: 80, usage: HopUsage.DRY_HOP, triggerType: TriggerType.PLATO_THRESHOLD, triggerValue: 5, triggerUnit: TriggerUnit.PLATO, contactTime: 3, contactTimeUnit: TimeUnit.DAYS}]},
+            fermentationMaturation: {fermentationTemperature: 18, carbonation: 5, yeast: [{id: 1, quantity: 1}]},
             additionalIngredients: [],
         };
         const {props} = renderBeerForm({beers: [existingBeer]});
         fireEvent.change(screen.getByLabelText(/Bier auswählen/), {target: {value: existingBeer.id}});
         fireEvent.click(screen.getByRole('button', {name: /Rezept speichern/}));
         const submittedHop = (props.onSubmitBeer as jest.Mock).mock.calls[0][0].wortBoiling.hops[0];
-        expect(submittedHop).toMatchObject({id: 'h1', triggerType: TriggerType.PLATO_THRESHOLD, triggerValue: 5, triggerUnit: TriggerUnit.PLATO, contactTime: 3, contactTimeUnit: TimeUnit.DAYS});
+        expect(submittedHop).toMatchObject({id: 1, triggerType: TriggerType.PLATO_THRESHOLD, triggerValue: 5, triggerUnit: TriggerUnit.PLATO, contactTime: 3, contactTimeUnit: TimeUnit.DAYS});
         expect(submittedHop).not.toHaveProperty('actionId');
     });
 
     it('shows imported hop additionTime and resolves its name by master-data id', () => {
-        renderBeerForm({beerFormState: {hopsDTO: [{id: 'h1', quantity: 20, usage: HopUsage.BOIL, additionTime: 45, timeUnit: HopTimeUnit.MINUTES}]}});
+        renderBeerForm({beerFormState: {hopsDTO: [{id: 1, quantity: 20, usage: HopUsage.BOIL, additionTime: 45, timeUnit: HopTimeUnit.MINUTES}]}});
         fireEvent.click(screen.getByRole('button', {name: /Hopfen/}));
         const row = screen.getByDisplayValue('Hallertauer Mittelfrüh').closest('tr')!;
         expect(within(row).getByDisplayValue('45')).toBeInTheDocument();

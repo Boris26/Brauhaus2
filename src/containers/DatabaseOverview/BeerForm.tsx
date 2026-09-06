@@ -711,6 +711,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
     addAdditionalIngredient = () => {
         this.setState((prevState) => ({
             additionalIngredientsDTO: [...prevState.additionalIngredientsDTO, {
+                id: '',
                 quantity: undefined as any,
                 unit: 'g',
                 phase: AdditionalIngredientPhase.MATURATION,
