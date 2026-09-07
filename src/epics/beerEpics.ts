@@ -1,7 +1,7 @@
 import { ofType } from 'redux-observable';
 import {of, from} from 'rxjs';
-import { catchError, exhaustMap, groupBy, map, mergeMap, switchMap } from 'rxjs/operators';
-import {ApplicationActions, BeerActions} from '../actions/actions';
+import { catchError, concatMap, exhaustMap, groupBy, map, mergeMap, switchMap } from 'rxjs/operators';
+import {ApplicationActions, BeerActions, ProductionActions} from '../actions/actions';
 import { BeerRepository } from '../repositorys/BeerRepository';
 import {Beer} from "../model/Beer";
 import { extractBeerErrorMessage, resolveSubmittedBeer } from "../utils/beerSubmission";
@@ -74,14 +74,6 @@ export const submitBeerEpic = (aAction$: any) =>
         )
     );
 
-
-
-
-
-
-
-
-
 export const deleteFinishedBeerEpic = (action$: any) =>
   action$.pipe(
     ofType(BeerActions.ActionTypes.DELETE_FINISHED_BEER),
@@ -122,23 +114,38 @@ export const updateFinishedBeerEpic = (action$: any) =>
 ;
 
 export const sendNewFinishedBeerEpic = (action$: any) =>
-  action$.pipe(
-    ofType(BeerActions.ActionTypes.ADD_FINISHED_BREW),
-    exhaustMap((action: any) =>
-      from(FinishedBeerRepository.sendNewFinishedBeer(action.payload.finishedBrew)).pipe(
-        map((beer) => BeerActions.addFinishedBrewSuccess({...action.payload.finishedBrew, ...beer})),
-        catchError((aError: Error) =>  from([
-            BeerActions.addFinishedBrewFailure(aError.message),
-            ApplicationActions.openErrorDialog(
-                true,
-                "Bier fehler",
-                "Fertiges Bier: " + aError.message
+    action$.pipe(
+        ofType(BeerActions.ActionTypes.ADD_FINISHED_BREW),
+        exhaustMap((action: any) =>
+            from(
+                FinishedBeerRepository.sendNewFinishedBeer(
+                    action.payload.finishedBrew
+                )
+            ).pipe(
+                concatMap((beer) =>
+                    from([
+                        BeerActions.addFinishedBrewSuccess({
+                            ...action.payload.finishedBrew,
+                            ...beer
+                        }),
+                        ProductionActions.setBrewingStatus(undefined),
+                        BeerActions.setBeerToBrew(undefined),
+
+                    ])
+                ),
+                catchError((aError: Error) =>
+                    from([
+                        BeerActions.addFinishedBrewFailure(aError.message),
+                        ApplicationActions.openErrorDialog(
+                            true,
+                            "Bier fehler",
+                            "Fertiges Bier: " + aError.message
+                        )
+                    ])
+                )
             )
-        ])
-      )
-    )
-  )
-  );
+        )
+    );
 
 export const generateFinishedBrewsPdfEpic = (action$: any) =>
   action$.pipe(

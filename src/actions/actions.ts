@@ -700,7 +700,7 @@ export namespace ProductionActions {
 
     export interface SetBrewingStatus {
         readonly type: ActionTypes.SET_BREWING_STATUS
-        payload: { brewingStatus: BrewingStatus }
+        payload: { brewingStatus: BrewingStatus | undefined }
     }
 
     export interface SendBrewingData {
@@ -874,7 +874,7 @@ export namespace ProductionActions {
         }
     }
 
-    export function setBrewingStatus(aBrewingStatus: BrewingStatus): SetBrewingStatus {
+    export function setBrewingStatus(aBrewingStatus: BrewingStatus | undefined): SetBrewingStatus {
         return {
             type: ActionTypes.SET_BREWING_STATUS,
             payload: {brewingStatus: aBrewingStatus}

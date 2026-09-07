@@ -3,7 +3,8 @@ export enum ProcessState {
     ACTIVE = "ACTIVE",
     FINISHED = "FINISHED",
     ABORTED = "ABORTED",
-    ERROR = "ERROR"
+    ERROR = "ERROR",
+    DONE = "DONE"
 }
 
 export enum ProcessPhase {
