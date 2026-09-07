@@ -17,8 +17,17 @@ export class FermentationRepository extends BaseRepository {
     return this.get(`fermentation/sensor-measurements?finishedBeerId=${encodeURIComponent(finishedBeerId)}`);
   }
   static createMeasurement(value: CreateFermentationMeasurement): Promise<FermentationMeasurement> {
-    const {finishedBeerId, ...measurement} = value;
-    return this.post(`fermentation/beers/${encodeURIComponent(finishedBeerId)}/measurements`, measurement);
+    const {finishedBeerId, ...measurement} = value as any;
+    // Map UI model fields to BeerDataStore fermentation API expectations:
+    // - UI uses `temperature` for manual measurements; backend expects `temperatureC`.
+    // - Keep `measuredAt`, `plato`, and `note` as-is.
+    const payload: Record<string, unknown> = {};
+    if (measurement.measuredAt !== undefined) payload.measuredAt = measurement.measuredAt;
+    if (measurement.plato !== undefined) payload.plato = measurement.plato;
+    if (measurement.note !== undefined) payload.note = measurement.note;
+    if (measurement.temperature !== undefined) payload.temperatureC = measurement.temperature;
+
+    return this.post(`fermentation/beers/${encodeURIComponent(finishedBeerId)}/measurements`, payload);
   }
   static completeAction(finishedBeerId: string, actionId: string): Promise<FermentationAction> {
     return this.post(`fermentation/beers/${encodeURIComponent(finishedBeerId)}/recipe-actions/${encodeURIComponent(actionId)}/complete`, {});
