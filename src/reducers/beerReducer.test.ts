@@ -1,6 +1,6 @@
 import {BeerActions} from '../actions/actions';
 import {Beer} from '../model/Beer';
-import {RecipeImportResult} from '../model/RecipeImport';
+import {RecipeImportFormat, RecipeImportResult} from '../model/RecipeImport';
 import {beerDataReducer, initialBeerState} from './beerReducer';
 import {FinishedBrew} from '../model/FinishedBrew';
 import {eBrewState} from '../enums/eBrewState';
@@ -20,6 +20,17 @@ describe('beerDataReducer recipe import', () => {
         expect(state.importResult?.resolutionRequired).toBe(true);
         expect(state.importedBeer).toBeUndefined();
         expect(state.beers).toBeUndefined();
+    });
+
+    it('keeps resolution visible during a mapped retry and clears it for a new source', () => {
+        const resolution: RecipeImportResult = {resolutionRequired: true, ingredients: [{ingredientType: 'MALT', sourceName: 'Caramünch II', candidates: []}], warnings: [], ingredientMappings: [], createdMasterData: [], replayed: false};
+        const resolvedState = beerDataReducer(initialBeerState, BeerActions.addImportedBeer(resolution));
+        const retryState = beerDataReducer(resolvedState, BeerActions.importBeer({format: RecipeImportFormat.BRAUHAUS, recipe: {name: 'Original'}, idempotencyKey: 'same-key', ingredientMappings: [{ingredientType: 'MALT', sourceName: 'Caramünch II', ingredientId: 'm-2'}]}));
+        expect(retryState.importResult).toBe(resolution);
+        expect(retryState.isImportingBeer).toBe(true);
+
+        const newSourceState = beerDataReducer(resolvedState, BeerActions.importBeer({format: RecipeImportFormat.BRAUHAUS, recipe: {name: 'Neu'}, idempotencyKey: 'new-key'}));
+        expect(newSourceState.importResult).toBeUndefined();
     });
     it('stores result.recipe and keeps result metadata', () => {
         const state = beerDataReducer(initialBeerState, BeerActions.addImportedBeer(result(false)));

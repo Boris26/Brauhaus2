@@ -72,6 +72,8 @@ describe('BeerRepository.submitBeer', () => {
 });
 
 describe('BeerRepository.importBeer', () => {
+    beforeEach(() => mockedApi.post.mockReset());
+
     it('posts the typed source and untouched recipe as JSON', async () => {
         const recipe = {NAME: 'Extern', AMOUNT: '20 l'};
         const importedBeer = {id: 'imported-id', name: 'Extern'} as Beer;
@@ -90,5 +92,22 @@ describe('BeerRepository.importBeer', () => {
             idempotencyKey: 'import-key',
         }, {headers: {'Content-Type': 'application/json'}});
         expect(result).toBe(importResult);
+    });
+
+    it('posts a stateless resolution retry with its original source, key and mappings', async () => {
+        const recipe = {name: 'Extern', rawIngredient: 'Caramünch II'};
+        const request = {
+            format: RecipeImportFormat.BRAUHAUS,
+            recipe,
+            idempotencyKey: 'same-import-key',
+            ingredientMappings: [{ingredientType: 'MALT' as const, sourceName: 'Caramünch II', ingredientId: 'm-2'}],
+        };
+        mockedApi.post.mockResolvedValueOnce({data: {resolutionRequired: false, recipe: {id: 'beer-2'}, warnings: [], ingredientMappings: [], createdMasterData: [], replayed: false}});
+
+        await BeerRepository.importBeer(request);
+
+        expect(mockedApi.post).toHaveBeenCalledTimes(1);
+        expect(mockedApi.post).toHaveBeenCalledWith('importbeer', request, {headers: {'Content-Type': 'application/json'}});
+        expect(mockedApi.post.mock.calls[0][1].recipe).toBe(recipe);
     });
 });
