@@ -213,6 +213,25 @@ describe('RecipeImportDialog', () => {
         expect(screen.getByText('Manuell gewählt')).toBeInTheDocument();
     });
 
+    it('does not attach a cancelled resolution response to a newly opened dialog', async () => {
+        const onCancel = jest.fn();
+        const result = resolutionResult([{ingredientType: 'MALT', sourceName: 'Altes Malz', candidates: []}]);
+        const {rerender} = render(<RecipeImportDialog open onCancel={onCancel} onImport={jest.fn()} result={result} />);
+
+        expect(screen.getByText('Rezept importieren')).toBeInTheDocument();
+        expect(screen.queryByText('Altes Malz')).not.toBeInTheDocument();
+        selectFormat('Brauhaus');
+        selectFile(jsonFile('{"name":"Neu"}'));
+        await waitFor(() => expect(screen.getByRole('button', {name: 'Importieren'})).toBeEnabled());
+
+        rerender(<RecipeImportDialog open={false} onCancel={onCancel} onImport={jest.fn()} result={result} />);
+        rerender(<RecipeImportDialog open onCancel={onCancel} onImport={jest.fn()} result={result} />);
+
+        expect(screen.getByText('Rezept importieren')).toBeInTheDocument();
+        expect(screen.queryByText('Altes Malz')).not.toBeInTheDocument();
+        expect(screen.getByRole('button', {name: 'Importieren'})).toBeDisabled();
+    });
+
     it('blocks a second retry while the first request is pending', async () => {
         const {onImport} = await startResolution([{ingredientType: 'HOP', sourceName: 'Hallertau', candidates: [{ingredientId: 'h-1', name: 'Hallertauer', matchType: 'FUZZY'}]}]);
         const retry = await screen.findByRole('button', {name: 'Import abschließen'});

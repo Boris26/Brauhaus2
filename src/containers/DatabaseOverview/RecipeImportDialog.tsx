@@ -64,6 +64,7 @@ export const RecipeImportDialog: React.FC<RecipeImportDialogProps> = ({open, loa
     const [idempotencyKey, setIdempotencyKey] = React.useState('');
     const [parseError, setParseError] = React.useState('');
     const [submitted, setSubmitted] = React.useState(false);
+    const [activeResolution, setActiveResolution] = React.useState<RecipeImportResult>();
     const [mappings, setMappings] = React.useState<Record<string, string | number>>({});
     const [mappingStates, setMappingStates] = React.useState<Record<string, 'suggested' | 'manual' | 'created'>>({});
     const [creating, setCreating] = React.useState<string>();
@@ -73,11 +74,11 @@ export const RecipeImportDialog: React.FC<RecipeImportDialogProps> = ({open, loa
 
     const reset = React.useCallback(() => {
         setFormat(''); setFileName(''); setRecipe(undefined); setIdempotencyKey(''); setParseError('');
-        setSubmitted(false); setMappings({}); setMappingStates({}); setCreating(undefined); setCreateValues({name: '', description: ''}); setCreateError('');
+        setSubmitted(false); setActiveResolution(undefined); setMappings({}); setMappingStates({}); setCreating(undefined); setCreateValues({name: '', description: ''}); setCreateError('');
     }, []);
     React.useEffect(() => { if (open && !wasOpen.current) reset(); wasOpen.current = open; }, [open, reset]);
     React.useEffect(() => {
-        if (!result?.resolutionRequired) return;
+        if (!result?.resolutionRequired || !recipe || !idempotencyKey) return;
         const initialMappings: Record<string, string | number> = {};
         const initialStates: Record<string, 'suggested'> = {};
         (result.ingredients ?? []).forEach(item => {
@@ -89,6 +90,7 @@ export const RecipeImportDialog: React.FC<RecipeImportDialogProps> = ({open, loa
         });
         setMappings(initialMappings);
         setMappingStates(initialStates);
+        setActiveResolution(result);
         setSubmitted(false);
         setCreating(undefined);
     }, [result]); // A new backend response starts a new resolution; ordinary renders retain user choices.
@@ -97,7 +99,7 @@ export const RecipeImportDialog: React.FC<RecipeImportDialogProps> = ({open, loa
 
     const resetAndCancel = () => { reset(); onCancel(); };
     const readFile = async (file?: File) => {
-        setFileName(file?.name || ''); setRecipe(undefined); setIdempotencyKey(''); setParseError(''); setSubmitted(false); setMappings({}); setMappingStates({});
+        setFileName(file?.name || ''); setRecipe(undefined); setIdempotencyKey(''); setParseError(''); setSubmitted(false); setActiveResolution(undefined); setMappings({}); setMappingStates({});
         if (!file) return;
         try {
             const parsed: unknown = JSON.parse(await file.text());
@@ -105,7 +107,9 @@ export const RecipeImportDialog: React.FC<RecipeImportDialogProps> = ({open, loa
             setRecipe(parsed as JsonObject); setIdempotencyKey(createImportIdempotencyKey());
         } catch (_error) { setParseError('Die ausgewählte Datei enthält kein gültiges JSON.'); }
     };
-    const unresolved = result?.resolutionRequired ? (result.ingredients ?? []) : [];
+    // A cancelled resolution may still be present in Redux when the dialog is opened
+    // again. Only a response received for the source held by this dialog becomes active.
+    const unresolved = activeResolution?.ingredients ?? [];
     const retry = () => {
         if (!format || !recipe || !idempotencyKey || unresolved.some(item => !isValidIngredientId(mappings[keyFor(item)]))) return;
         const ingredientMappings: IngredientMappingRequest[] = unresolved.map(item => ({ingredientType: item.ingredientType, sourceName: item.sourceName, ingredientId: mappings[keyFor(item)]}));
