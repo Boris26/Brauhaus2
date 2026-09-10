@@ -21,24 +21,10 @@ const latestValidValue = <T>(
 /** Selects each dashboard value independently so an incomplete newer record cannot hide an older valid value. */
 export const latestFermentationReadings = (
   measurements: FermentationMeasurement[] = [],
-  sensorMeasurements: SensorMeasurement[] = [],
 ): LatestFermentationReadings => {
-  const manualTemperatures = measurements.map(value => ({
-    measuredAt: value.measuredAt,
-    temperature: value.temperature,
-  }));
-  const sensorTemperatures = sensorMeasurements.map(value => ({
-    measuredAt: value.measuredAt,
-    temperature: value.beerTemperature,
-  }));
-
   return {
-    beerTemperature: latestValidValue(
-      [...manualTemperatures, ...sensorTemperatures],
-      value => value.measuredAt,
-      value => value.temperature,
-    ),
-    ambientTemperature: latestValidValue(sensorMeasurements, value => value.measuredAt, value => value.ambientTemperature),
+    beerTemperature: latestValidValue(measurements, value => value.measuredAt, value => value.beerTemperatureC),
+    ambientTemperature: latestValidValue(measurements, value => value.measuredAt, value => value.ambientTemperatureC),
     plato: latestValidValue(measurements, value => value.measuredAt, value => value.plato),
   };
 };

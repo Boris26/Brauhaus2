@@ -7,12 +7,27 @@ export interface FermentationMeasurement {
   id: string;
   finishedBeerId: string;
   measuredAt: string;
-  temperature?: number | null;
+  beerTemperatureC?: number | null;
+  ambientTemperatureC?: number | null;
   plato?: number | null;
+  source: 'MANUAL' | 'SENSOR';
+  sensorId?: string | null;
+  sourceId?: string | null;
   note?: string;
 }
 
-export type CreateFermentationMeasurement = Omit<FermentationMeasurement, 'id'>;
+export type CreateFermentationMeasurement = Omit<FermentationMeasurement, 'id' | 'source' | 'sensorId' | 'sourceId'>;
+
+/** Wire DTO. `temperatureC` is retained only as a read alias for older responses. */
+export interface FermentationMeasurementDTO extends Omit<FermentationMeasurement, 'beerTemperatureC'> {
+  beerTemperatureC?: number | null;
+  temperatureC?: number | null;
+}
+
+export const mapFermentationMeasurement = (dto: FermentationMeasurementDTO): FermentationMeasurement => {
+  const {temperatureC, ...measurement} = dto;
+  return {...measurement, beerTemperatureC: measurement.beerTemperatureC ?? temperatureC};
+};
 
 export interface FermentationAction {
   actionId: string;

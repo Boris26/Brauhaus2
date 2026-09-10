@@ -10,7 +10,7 @@ jest.mock('../repositorys/FermentationRepository', () => ({FermentationRepositor
 const repository = FermentationRepository as jest.Mocked<typeof FermentationRepository>;
 
 it('reloads backend due projection after a Plato measurement without completing an action', done => {
-  repository.createMeasurement.mockResolvedValue({id: 'm2', finishedBeerId: 'brew-a', measuredAt: '2026-09-05T10:00:00Z', plato: 4.9});
+  repository.createMeasurement.mockResolvedValue({id: 'm2', finishedBeerId: 'brew-a', measuredAt: '2026-09-05T10:00:00Z', plato: 4.9, source: 'MANUAL'});
   createMeasurementEpic(of(FermentationActions.createMeasurement({finishedBeerId: 'brew-a', measuredAt: '2026-09-05T10:00:00Z', plato: 4.9}))).pipe(toArray()).subscribe((actions: any[]) => {
     expect(actions.map(action => action.type)).toEqual([
       FermentationActionTypes.CREATE_MEASUREMENT_SUCCESS,

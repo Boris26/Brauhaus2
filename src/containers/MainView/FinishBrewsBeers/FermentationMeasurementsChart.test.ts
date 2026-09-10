@@ -1,12 +1,12 @@
 import {buildFermentationChartData} from './FermentationMeasurementsChart';
 
 describe('buildFermentationChartData', () => {
-  it('combines manual and sensor values chronologically and ignores invalid records', () => {
+  it('renders manual and sensor values from the unified measurement history', () => {
     const data = buildFermentationChartData(
-      [{id: 'm', finishedBeerId: 'b', measuredAt: '2026-09-04T10:00:00Z', temperature: 18.4, plato: 4.2}],
       [
-        {id: 's', deviceId: 'd', measuredAt: '2026-09-03T10:00:00Z', beerTemperature: 18.1, ambientTemperature: 16.2},
-        {id: 'invalid', deviceId: 'd', measuredAt: 'invalid', beerTemperature: 99},
+        {id: 's', finishedBeerId: 'b', measuredAt: '2026-09-03T10:00:00Z', beerTemperatureC: 18.1, ambientTemperatureC: 16.2, source: 'SENSOR'},
+        {id: 'm', finishedBeerId: 'b', measuredAt: '2026-09-04T10:00:00Z', beerTemperatureC: 18.4, plato: 4.2, source: 'MANUAL'},
+        {id: 'invalid', finishedBeerId: 'b', measuredAt: 'invalid', beerTemperatureC: 99, source: 'SENSOR'},
       ],
     );
 

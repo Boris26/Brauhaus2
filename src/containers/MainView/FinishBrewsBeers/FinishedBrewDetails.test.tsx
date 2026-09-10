@@ -26,8 +26,8 @@ describe('fermentation details dashboard', () => {
     const complete = jest.fn(); const assign = jest.fn();
     const details: any = {
       measurements: [
-        {id: 'm1', finishedBeerId: 'brew-1', measuredAt: '2026-09-02T18:00:00Z', temperature: 18.1, plato: 7.2},
-        {id: 'm2', finishedBeerId: 'brew-1', measuredAt: '2026-09-04T18:00:00Z', plato: 4.2},
+        {id: 'm1', finishedBeerId: 'brew-1', measuredAt: '2026-09-02T18:00:00Z', beerTemperatureC: 18.1, plato: 7.2, source: 'MANUAL'},
+        {id: 'm2', finishedBeerId: 'brew-1', measuredAt: '2026-09-04T18:00:00Z', beerTemperatureC: 18.3, ambientTemperatureC: 17.6, plato: 4.2, source: 'SENSOR'},
       ],
       actions: [{actionId: 'a', status: 'PENDING', due: true, sourceType: 'HINZUFÜGEN', name: 'Citra', amount: 80, unit: 'g'}],
       devices: [{id: 'd', name: 'FERM-01', lastSeenAt: new Date().toISOString()}],
@@ -51,13 +51,17 @@ describe('fermentation details dashboard', () => {
 
     expect(screen.getByText('Messdaten · West Coast IPA')).toBeInTheDocument();
     expect(screen.getByText('Messverlauf')).toBeInTheDocument();
-    expect(screen.getByText('Gärsensor-Messungen')).toBeInTheDocument();
+    expect(screen.queryByText('Gärsensor-Messungen')).not.toBeInTheDocument();
     fireEvent.click(screen.getByText('Neue Messung')); fireEvent.click(screen.getByText('Speichern'));
-    expect(screen.getByText('Mindestens Temperatur oder Plato ist erforderlich.')).toBeInTheDocument();
+    expect(screen.getByText('Mindestens eine Temperatur oder Plato ist erforderlich.')).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Datum / Uhrzeit'), {target: {value: '2026-09-04T18:30'}});
-    fireEvent.change(screen.getByLabelText('Temperatur °C'), {target: {value: '18.3'}});
+    fireEvent.change(screen.getByLabelText('Biertemperatur °C'), {target: {value: '18.3'}});
     fireEvent.click(screen.getByText('Speichern'));
-    expect(save).toHaveBeenCalledWith(expect.objectContaining({finishedBeerId: 'brew-1', temperature: 18.3, plato: undefined, measuredAt: expect.stringContaining('2026-09-04')}));
+    expect(save).toHaveBeenCalledWith(expect.objectContaining({finishedBeerId: 'brew-1', beerTemperatureC: 18.3, ambientTemperatureC: undefined, plato: undefined, measuredAt: expect.stringContaining('2026-09-04')}));
+    fireEvent.change(screen.getByLabelText('Biertemperatur °C'), {target: {value: ''}});
+    fireEvent.change(screen.getByLabelText('Außentemperatur °C'), {target: {value: '17.2'}});
+    fireEvent.click(screen.getByText('Speichern'));
+    expect(save).toHaveBeenLastCalledWith(expect.objectContaining({beerTemperatureC: undefined, ambientTemperatureC: 17.2, plato: undefined}));
     fireEvent.click(screen.getByText('← Bier-Detailansicht'));
     expect(closeMeasurements).toHaveBeenCalledTimes(1);
   });

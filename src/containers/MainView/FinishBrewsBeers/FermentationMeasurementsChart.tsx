@@ -1,14 +1,14 @@
 import React from 'react';
 import {CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
-import {FermentationMeasurement, SensorMeasurement} from '../../../model/Fermentation';
+import {FermentationMeasurement} from '../../../model/Fermentation';
 import {COLOR_ACCENT, COLOR_CHART_BLUE, COLOR_CHART_GREEN, COLOR_CHART_YELLOW} from '../../../colors';
 
-interface Props { measurements: FermentationMeasurement[]; sensorMeasurements: SensorMeasurement[]; }
+interface Props { measurements: FermentationMeasurement[]; }
 interface ChartPoint { timestamp: number; label: string; beerTemperature?: number; ambientTemperature?: number; plato?: number; }
 
 const finite = (value?: number | null): value is number => typeof value === 'number' && Number.isFinite(value);
 
-export const buildFermentationChartData = (measurements: FermentationMeasurement[], sensorMeasurements: SensorMeasurement[]): ChartPoint[] => {
+export const buildFermentationChartData = (measurements: FermentationMeasurement[]): ChartPoint[] => {
   const points = new Map<number, ChartPoint>();
   const pointFor = (measuredAt: string): ChartPoint | undefined => {
     const timestamp = Date.parse(measuredAt);
@@ -16,13 +16,12 @@ export const buildFermentationChartData = (measurements: FermentationMeasurement
     const current = points.get(timestamp) ?? {timestamp, label: new Intl.DateTimeFormat('de-DE', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'}).format(new Date(timestamp))};
     points.set(timestamp, current); return current;
   };
-  measurements.forEach(measurement => { const point = pointFor(measurement.measuredAt); if (!point) return; if (finite(measurement.temperature)) point.beerTemperature = measurement.temperature; if (finite(measurement.plato)) point.plato = measurement.plato; });
-  sensorMeasurements.forEach(measurement => { const point = pointFor(measurement.measuredAt); if (!point) return; if (finite(measurement.beerTemperature)) point.beerTemperature = measurement.beerTemperature; if (finite(measurement.ambientTemperature)) point.ambientTemperature = measurement.ambientTemperature; });
+  measurements.forEach(measurement => { const point = pointFor(measurement.measuredAt); if (!point) return; if (finite(measurement.beerTemperatureC)) point.beerTemperature = measurement.beerTemperatureC; if (finite(measurement.ambientTemperatureC)) point.ambientTemperature = measurement.ambientTemperatureC; if (finite(measurement.plato)) point.plato = measurement.plato; });
   return Array.from(points.values()).sort((a, b) => a.timestamp - b.timestamp);
 };
 
 const FermentationMeasurementsChart: React.FC<Props> = props => {
-  const data = buildFermentationChartData(props.measurements, props.sensorMeasurements);
+  const data = buildFermentationChartData(props.measurements);
   if (data.length === 0) return <p>Keine Diagrammdaten vorhanden.</p>;
   return <div className="fermentation-history-chart" role="img" aria-label="Zeitlicher Verlauf von Temperatur und Plato">
     <ResponsiveContainer width="100%" height="100%"><LineChart data={data} margin={{top: 8, right: 8, bottom: 8, left: 0}}>

@@ -253,7 +253,7 @@ The additive recovery contract uses the existing Socket.IO namespace/path and ev
 
 ## Fermentation: Brauhaus2 #249 / BeerDataStore #42
 
-BeerDataStore is the source of truth for fermentation measurements, actions, devices, assignments, sensor readings, and completion timestamps. Brauhaus2 is display and interaction only; hardware does not call Brauhaus2. The additive contract is rooted at `fermentation/*`, keyed by existing `FinishedBrew.id`, and does not alter the finished-beer lifecycle. Exact route/DTO deployment and errors **Needs verification** with Boris26/BeerDataStore#42.
+BeerDataStore is the source of truth for fermentation measurements, actions, devices, assignments, sensor readings, and completion timestamps. Brauhaus2 is display and interaction only; hardware does not call Brauhaus2. `GET fermentation/beers/{finishedBeerId}/measurements` is the single read contract for `beerTemperatureC`, `ambientTemperatureC`, and manually entered `plato`; `temperatureC` is accepted as a beer-temperature response alias. `source` (`MANUAL | SENSOR`) and optional `sensorId`/`sourceId` are provenance metadata and never gate manual entry. `/sensor-measurements` remains separate for blubbs and is not a temperature source for the UI. The contract is keyed by existing `FinishedBrew.id` and does not alter the finished-beer lifecycle. Deployment of this updated DTO and exact errors **Needs verification** with BeerDataStore.
 
 ## Fermentation lifecycle/actions (Brauhaus2)
 
