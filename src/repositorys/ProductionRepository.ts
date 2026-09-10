@@ -122,7 +122,7 @@ export class ProductionRepository {
          return await this._doGetWaterFillStatus(aTimeoutMs, aFailOnError);
     }
 
-    static async confirm(aConfirmState: ConfirmStates) {
+    static async confirm(aConfirmState: ConfirmStates): Promise<BrewingStatus> {
         return await ProductionRepository._doConfirm(aConfirmState);
     }
 
@@ -142,17 +142,18 @@ export class ProductionRepository {
         return await ProductionRepository._doToggleHeater(aIsTurnOn);
     }
 
-    static async startBrewing(aSocketId?: string) {
+    static async startBrewing(aSocketId?: string): Promise<BrewingStatus | undefined> {
         return await ProductionRepository._doStartBrewing(aSocketId);
     }
 
-    static async nextProcedureStep() {
+    static async nextProcedureStep(): Promise<BrewingStatus | undefined> {
         return await ProductionRepository._doNextProcedureStep();
     }
 
 
-    private static async _doConfirm(aConfirmState: ConfirmStates) {
-        await axios.post(ConfirmURL + aConfirmState);
+    private static async _doConfirm(aConfirmState: ConfirmStates): Promise<BrewingStatus> {
+        const response = await axios.post(ConfirmURL + aConfirmState);
+        return normalizeBrewingStatus(response.data);
     }
 
     private static async _doGetTemperature(): Promise<number> {
@@ -191,13 +192,13 @@ export class ProductionRepository {
         }
     }
 
-    private static async _doStartBrewing(aSocketId?: string) {
+    private static async _doStartBrewing(aSocketId?: string): Promise<BrewingStatus | undefined> {
         try {
             const config = aSocketId ? {headers: {'X-Socket-ID': aSocketId}} : undefined;
             const response = config
                 ? await axios.post(CommandsURL + `StartBrewing:""`, undefined, config)
                 : await axios.post(CommandsURL + `StartBrewing:""`);
-            return response.status === 200;
+            return response.status === 200 ? normalizeBrewingStatus(response.data) : undefined;
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);
         }
@@ -318,13 +319,13 @@ export class ProductionRepository {
         }
     }
 
-    private static async _doNextProcedureStep() {
+    private static async _doNextProcedureStep(): Promise<BrewingStatus | undefined> {
         try {
             const response = await axios.post(`${BaseURL}/next`);
-            return response.status === 200;
+            return response.status === 200 ? normalizeBrewingStatus(response.data) : undefined;
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);
-            return false;
+            return undefined;
         }
     }
 

@@ -300,9 +300,12 @@ export const sendBrewingDataEpic$ = (action$: any, state$: {value: RootState}) =
               ? state$.value.productionReducer.socketConnection.socketId
               : undefined;
             return from(ProductionRepository.startBrewing(socketId)).pipe(
-              map((startResult) => startResult
-                ? ProductionActions.startPolling()
-                : ProductionActions.brewingStartFailure('Der Controller konnte den Brauvorgang nicht starten.'))
+              mergeMap((brewingStatus) => brewingStatus
+                ? from([
+                    ProductionActions.setBrewingStatus(brewingStatus),
+                    ProductionActions.startPolling(),
+                  ])
+                : of(ProductionActions.brewingStartFailure('Der Controller konnte den Brauvorgang nicht starten.')))
             );
           } else {
             return of(ProductionActions.brewingStartFailure('Das Rezept konnte nicht an den Controller übertragen werden.'));
@@ -318,7 +321,10 @@ export const confirmEpic$ = (action$: any) =>
     ofType(ProductionActions.ActionTypes.CONFIRM),
     exhaustMap((action: any) =>
       from(ProductionRepository.confirm(action.payload.confirmState)).pipe(
-        map(() => ProductionActions.confirmSuccess()),
+        mergeMap((brewingStatus) => from([
+          ProductionActions.setBrewingStatus(brewingStatus),
+          ProductionActions.confirmSuccess(),
+        ])),
         catchError((error) => {
           const message = error instanceof Error ? error.message : 'Bestätigung fehlgeschlagen';
           return from([
@@ -351,10 +357,12 @@ export const nextProcedureStepEpic$ = (action$: any) =>
     ofType(ProductionActions.ActionTypes.NEXT_PROCEDURE_STEP),
     exhaustMap(() =>
       from(ProductionRepository.nextProcedureStep()).pipe(
-        map((result) =>
-          result
-            ? ProductionActions.nextProcedureStepSuccess()
-            : ProductionActions.nextProcedureStepFailure('Fehler beim nächsten Schritt')
+        mergeMap((brewingStatus) => brewingStatus
+          ? from([
+              ProductionActions.setBrewingStatus(brewingStatus),
+              ProductionActions.nextProcedureStepSuccess(),
+            ])
+          : of(ProductionActions.nextProcedureStepFailure('Fehler beim nächsten Schritt'))
         ),
         catchError((error) => of(ProductionActions.nextProcedureStepFailure(error)))
       )
