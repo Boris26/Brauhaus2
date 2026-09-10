@@ -268,7 +268,12 @@ const beerDataReducer = (
       };
     }
     case BeerActions.ActionTypes.IMPORT_BEER:
-      return {...aState, isImportingBeer: true, importError: undefined, importResult: undefined};
+      return {
+          ...aState,
+          isImportingBeer: true,
+          importError: undefined,
+          importResult: aAction.payload.request.ingredientMappings ? aState.importResult : undefined,
+      };
     case BeerActions.ActionTypes.IMPORT_BEER_FAILED:
       return {...aState, isImportingBeer: false, importError: aAction.payload.message};
 

@@ -18,8 +18,9 @@ const startResolution = async (ingredients: IngredientResolution[], masterData?:
     selectFormat('Brauhaus'); selectFile(jsonFile('{"name":"Extern"}'));
     await waitFor(() => expect(screen.getByRole('button', {name: 'Importieren'})).toBeEnabled());
     fireEvent.click(screen.getByRole('button', {name: 'Importieren'}));
-    view.rerender(<RecipeImportDialog {...props} result={resolutionResult(ingredients)} />);
-    return {onImport, ...view};
+    const result = resolutionResult(ingredients);
+    view.rerender(<RecipeImportDialog {...props} result={result} />);
+    return {onImport, result, ...view};
 };
 
 describe('RecipeImportDialog', () => {
@@ -84,6 +85,7 @@ describe('RecipeImportDialog', () => {
         selectFile(jsonFile('{"name":"first"}'));
         await waitFor(() => expect(screen.getByRole('button', {name: 'Importieren'})).toBeEnabled());
         fireEvent.click(screen.getByRole('button', {name: 'Importieren'}));
+        rerender(<RecipeImportDialog open backendError="Netzwerkfehler" onCancel={jest.fn()} onImport={onImport} />);
         fireEvent.click(screen.getByRole('button', {name: 'Importieren'}));
         expect(onImport.mock.calls[0][0].idempotencyKey).toBe('key-a');
         expect(onImport.mock.calls[1][0].idempotencyKey).toBe('key-a');
@@ -94,7 +96,7 @@ describe('RecipeImportDialog', () => {
         expect(onImport.mock.calls[2][0].idempotencyKey).toBe('key-b');
     });
 
-    it('requires an explicit fuzzy mapping and retries statelessly with the original key and document', async () => {
+    it('preselects a single fuzzy candidate and retries statelessly with the original key and document', async () => {
         const onImport = jest.fn();
         const recipe = {name: 'Extern'};
         const {rerender} = render(<RecipeImportDialog open onCancel={jest.fn()} onImport={onImport} />);
@@ -103,17 +105,16 @@ describe('RecipeImportDialog', () => {
         fireEvent.click(screen.getByRole('button', {name: 'Importieren'}));
         rerender(<RecipeImportDialog open onCancel={jest.fn()} onImport={onImport} result={{resolutionRequired: true, ingredients: [{ingredientType: 'HOP', sourceName: 'Hallertau Mittelfruh', candidates: [{ingredientId: 8, name: 'Hallertauer Mittelfrüh', matchType: 'FUZZY'}]}], warnings: [], ingredientMappings: [], createdMasterData: [], replayed: false}} />);
 
-        expect(screen.getByRole('button', {name: 'Import abschließen'})).toBeDisabled();
-        fireEvent.mouseDown(screen.getByLabelText('Lokale Zuordnung'));
-        fireEvent.click(screen.getByRole('option', {name: /Hallertauer Mittelfrüh/}));
+        await waitFor(() => expect(screen.getByLabelText('Lokale Zuordnung')).toHaveTextContent('Hallertauer Mittelfrüh'));
+        expect(screen.getByText('Vorschlag')).toBeInTheDocument();
+        expect(screen.getByRole('button', {name: 'Import abschließen'})).toBeEnabled();
         fireEvent.click(screen.getByRole('button', {name: 'Import abschließen'}));
         expect(onImport).toHaveBeenLastCalledWith({format: RecipeImportFormat.BRAUHAUS, recipe, idempotencyKey: 'key-a', ingredientMappings: [{ingredientType: 'HOP', sourceName: 'Hallertau Mittelfruh', ingredientId: '8'}]});
     });
 
     it('sends a valid candidate ingredientId', async () => {
         const {onImport} = await startResolution([{ingredientType: 'HOP', sourceName: 'Hallertau', candidates: [{ingredientId: 8, name: 'Hallertauer', matchType: 'FUZZY'}]}]);
-        fireEvent.mouseDown(screen.getByLabelText('Lokale Zuordnung'));
-        fireEvent.click(screen.getByRole('option', {name: /Hallertauer/}));
+        await waitFor(() => expect(screen.getByRole('button', {name: 'Import abschließen'})).toBeEnabled());
         fireEvent.click(screen.getByRole('button', {name: 'Import abschließen'}));
         expect(onImport).toHaveBeenLastCalledWith(expect.objectContaining({ingredientMappings: [{ingredientType: 'HOP', sourceName: 'Hallertau', ingredientId: '8'}]}));
     });
@@ -147,8 +148,7 @@ describe('RecipeImportDialog', () => {
             {ingredientType: 'MALT', sourceName: 'Malz', candidates: [{ingredientId: 'm-1', name: 'Pilsener', matchType: 'EXACT'}]},
             {ingredientType: 'HOP', sourceName: 'Hopfen', candidates: [{ingredientId: 'undefined', name: 'Defekt', matchType: 'UNKNOWN'}]},
         ]);
-        fireEvent.mouseDown(screen.getAllByLabelText('Lokale Zuordnung')[0]);
-        fireEvent.click(screen.getByRole('option', {name: 'Pilsener'}));
+        await waitFor(() => expect(screen.getByText('1 von 2 zugeordnet.')).toBeInTheDocument());
         const retry = screen.getByRole('button', {name: 'Import abschließen'});
         expect(retry).toBeDisabled();
         fireEvent.click(retry);
@@ -160,9 +160,8 @@ describe('RecipeImportDialog', () => {
             {ingredientType: 'MALT', sourceName: 'Malz', candidates: [{ingredientId: 4, name: 'Pilsener', matchType: 'EXACT'}]},
             {ingredientType: 'YEAST', sourceName: 'Hefe', candidates: []},
         ], {MALT: [], HOP: [], YEAST: [{id: 'y-2', name: 'Lagerhefe'}], ADDITIONAL_INGREDIENT: []});
-        for (const [select, option] of [[screen.getAllByLabelText('Lokale Zuordnung')[0], 'Pilsener'], [screen.getAllByLabelText('Lokale Zuordnung')[1], 'Lagerhefe']] as const) {
-            fireEvent.mouseDown(select); fireEvent.click(screen.getByRole('option', {name: option}));
-        }
+        await waitFor(() => expect(screen.getByText('1 von 2 zugeordnet.')).toBeInTheDocument());
+        fireEvent.mouseDown(screen.getAllByLabelText('Lokale Zuordnung')[1]); fireEvent.click(screen.getByRole('option', {name: 'Lagerhefe'}));
         fireEvent.click(screen.getByRole('button', {name: 'Import abschließen'}));
         expect(onImport).toHaveBeenLastCalledWith(expect.objectContaining({ingredientMappings: [
             {ingredientType: 'MALT', sourceName: 'Malz', ingredientId: '4'},
@@ -175,5 +174,50 @@ describe('RecipeImportDialog', () => {
         fireEvent.mouseDown(screen.getByLabelText('Lokale Zuordnung'));
         expect(screen.getAllByRole('option', {name: /Kandidat/})).toHaveLength(1);
         expect(screen.queryByRole('option', {name: 'Stammdaten-Duplikat'})).not.toBeInTheDocument();
+    });
+
+    it('preselects the unique highest scored backend candidate', async () => {
+        await startResolution([{ingredientType: 'MALT', sourceName: 'Caramünch II', candidates: [
+            {ingredientId: 'm-2', name: 'Caramünch 2', matchType: 'FUZZY', score: 0.94},
+            {ingredientId: 'm-3', name: 'Caramünch 3', matchType: 'FUZZY', score: 0.71},
+        ]}]);
+        await waitFor(() => expect(screen.getByLabelText('Lokale Zuordnung')).toHaveTextContent('Caramünch 2'));
+        expect(screen.getByRole('button', {name: 'Import abschließen'})).toBeEnabled();
+    });
+
+    it('does not preselect tied candidates and explains why completion is disabled', async () => {
+        const {onImport} = await startResolution([{ingredientType: 'MALT', sourceName: 'Caramalz', candidates: [
+            {ingredientId: 'm-2', name: 'Caramünch 2', matchType: 'FUZZY', score: 0.9},
+            {ingredientId: 'm-3', name: 'Caramünch 3', matchType: 'FUZZY', score: 0.9},
+        ]}]);
+        await waitFor(() => expect(screen.getByText('Noch 1 Zutat muss zugeordnet werden.')).toBeInTheDocument());
+        expect(screen.getByText('Zuordnung erforderlich')).toBeInTheDocument();
+        const retry = screen.getByRole('button', {name: 'Import abschließen'});
+        expect(retry).toBeDisabled(); fireEvent.click(retry);
+        expect(onImport).toHaveBeenCalledTimes(1);
+    });
+
+    it('leaves an ingredient without candidates open for a manual choice', async () => {
+        await startResolution([{ingredientType: 'ADDITIONAL_INGREDIENT', sourceName: 'Eichenholzchips', candidates: []}]);
+        await waitFor(() => expect(screen.getByText('0 von 1 zugeordnet.')).toBeInTheDocument());
+        expect(screen.getByLabelText('Lokale Zuordnung')).toHaveTextContent('Bitte auswählen');
+    });
+
+    it('keeps a manual choice instead of restoring the suggested candidate on rerender', async () => {
+        const masterData = {MALT: [{id: 'm-3', name: 'Caramünch 3'}], HOP: [], YEAST: [], ADDITIONAL_INGREDIENT: []};
+        const {rerender, result} = await startResolution([{ingredientType: 'MALT', sourceName: 'Caramünch II', candidates: [{ingredientId: 'm-2', name: 'Caramünch 2', matchType: 'FUZZY'}]}], masterData);
+        await waitFor(() => expect(screen.getByLabelText('Lokale Zuordnung')).toHaveTextContent('Caramünch 2'));
+        fireEvent.mouseDown(screen.getByLabelText('Lokale Zuordnung')); fireEvent.click(screen.getByRole('option', {name: 'Caramünch 3'}));
+        rerender(<RecipeImportDialog open onCancel={jest.fn()} onImport={jest.fn()} result={result} masterData={masterData} />);
+        expect(screen.getByLabelText('Lokale Zuordnung')).toHaveTextContent('Caramünch 3');
+        expect(screen.getByText('Manuell gewählt')).toBeInTheDocument();
+    });
+
+    it('blocks a second retry while the first request is pending', async () => {
+        const {onImport} = await startResolution([{ingredientType: 'HOP', sourceName: 'Hallertau', candidates: [{ingredientId: 'h-1', name: 'Hallertauer', matchType: 'FUZZY'}]}]);
+        const retry = await screen.findByRole('button', {name: 'Import abschließen'});
+        fireEvent.click(retry); fireEvent.click(retry);
+        expect(onImport).toHaveBeenCalledTimes(2); // initial analysis plus exactly one retry
+        expect(screen.getByRole('button', {name: /Import abschließen/})).toBeDisabled();
     });
 });
