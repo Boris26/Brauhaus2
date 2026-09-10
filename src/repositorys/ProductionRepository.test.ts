@@ -8,6 +8,15 @@ jest.mock('axios');
 
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
+const canonicalStatus = {
+  elapsedTime: 12,
+  process: {state: 'ACTIVE'},
+  currentStep: {index: 2, phase: 'RAST', mode: 'HEATING', name: 'Rast 1'},
+  temperature: {current: 61, target: 64},
+  waiting: {waitingFor: 'NONE', canConfirm: false},
+  error: {},
+};
+
 describe('ProductionRepository API method/path usage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -42,11 +51,20 @@ describe('ProductionRepository API method/path usage', () => {
   });
 
   it('uses POST only for concrete confirm actions', async () => {
+    mockedAxios.post.mockResolvedValueOnce({status: 200, data: canonicalStatus} as any);
     await ProductionRepository.confirm(ConfirmStates.IODINE);
 
     expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Confirm/Iodine'));
     expect(mockedAxios.post).not.toHaveBeenCalledWith(expect.stringContaining('/Confirm/Wait'));
     expect(mockedAxios.get).not.toHaveBeenCalledWith(expect.stringContaining('/Confirm/'));
+  });
+
+  it('normalizes and returns canonical process status from workflow mutations', async () => {
+    mockedAxios.post.mockResolvedValue({status: 200, data: canonicalStatus} as any);
+
+    await expect(ProductionRepository.confirm(ConfirmStates.IODINE)).resolves.toMatchObject({process: {state: 'ACTIVE'}, currentStep: {index: 2}});
+    await expect(ProductionRepository.startBrewing()).resolves.toMatchObject({process: {state: 'ACTIVE'}, currentStep: {index: 2}});
+    await expect(ProductionRepository.nextProcedureStep()).resolves.toMatchObject({process: {state: 'ACTIVE'}, currentStep: {index: 2}});
   });
 
   it('uses POST for decoction confirm action', async () => {

@@ -53,14 +53,14 @@ Base URL: `BaseURL` (`/api/controller`), `CommandsURL` (`/api/controller/Command
 | GET | `Available/` | Availability heartbeat | `200` means available |
 | POST | `Recipe/` | Send `BrewingData` | `201` |
 | GET | `BrewSession` | Restore the currently running brew after the payload-free Socket.IO signal | `{ beerId, plannedVolume, plannedBrewhouseEfficiency }`; errors including `404` are propagated and do not start polling |
-| POST | `Command/StartBrewing:""` | Start brew | `200` |
+| POST | `Command/StartBrewing:""` | Start brew | `200`, complete canonical brewing status (same contract as `GET Status/`) |
 | POST | `Command/FillWaterAutomatic:{liters}` | Water fill | `200` |
 | POST | `Command/TurnOn` | Heater on using no-value command alias | `200` |
 | POST | `Command/TurnOff` | Heater off using no-value command alias | `200` |
 | POST | `Command/Speed:{speed}` | Set agitator speed | `200` |
 | POST | `Command/AgitatorInterval:""` | Set agitator interval body | `200` |
-| POST | `next` | Advance process step | `200` |
-| POST | `Confirm/{confirmState}` | Confirm concrete waiting state only (`Iodine`, `Mashup`, `Cooking`, `Boiling`, `Decoction`, `DecoctionReturned`) | `200`; `DECOCTION_RETURN_CONFIRMATION` maps to `Confirm/DecoctionReturned`; UI must not send `Confirm/Wait` |
+| POST | `next` | Advance process step | `200`, complete canonical brewing status (same contract as `GET Status/`) |
+| POST | `Confirm/{confirmState}` | Confirm concrete waiting state only (`Iodine`, `Mashup`, `Cooking`, `Boiling`, `Decoction`, `DecoctionReturned`) | `200`, complete canonical brewing status (same contract as `GET Status/`); `DECOCTION_RETURN_CONFIRMATION` maps to `Confirm/DecoctionReturned`; UI must not send `Confirm/Wait` |
 
 ## Audio REST endpoint
 
