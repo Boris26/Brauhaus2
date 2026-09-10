@@ -125,10 +125,11 @@ describe('DashboardPage', () => {
   it('shows the newest valid beer, ambient and Plato readings compactly without exposing their source', () => {
     renderDashboard({fermentationByBrewId: {'finished-1': {
       measurements: [
-        {id: 'm1', finishedBeerId: 'finished-1', measuredAt: '2026-09-01T10:00:00Z', temperature: 18.2, plato: 5.1},
-        {id: 'm2', finishedBeerId: 'finished-1', measuredAt: '2026-09-03T10:00:00Z', plato: 4.4},
+        {id: 'm1', finishedBeerId: 'finished-1', measuredAt: '2026-09-01T10:00:00Z', beerTemperatureC: 18.2, plato: 5.1, source: 'MANUAL'},
+        {id: 's1', finishedBeerId: 'finished-1', measuredAt: '2026-09-02T10:00:00Z', beerTemperatureC: 18.7, ambientTemperatureC: 16.3, source: 'SENSOR'},
+        {id: 'm2', finishedBeerId: 'finished-1', measuredAt: '2026-09-03T10:00:00Z', plato: 4.4, source: 'MANUAL'},
       ],
-      sensorMeasurements: [{id: 's1', deviceId: 'd1', measuredAt: '2026-09-02T10:00:00Z', beerTemperature: 18.7, ambientTemperature: 16.3}],
+      sensorMeasurements: [],
       actions: [], devices: [],
     }}});
 

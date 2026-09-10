@@ -34,23 +34,18 @@ describe('fermentation domain helpers', () => {
     expect(actionTriggerLabel({} as any)).toBe('Kein Zugabe-Trigger definiert');
   });
   it('handles missing Plato, online state and approximate metrics', () => {
-    expect(missingPlatoDays([{id: '1', finishedBeerId: 'b', measuredAt: '2026-09-01T00:00:00Z', plato: 4}], Date.parse('2026-09-04T00:00:00Z'))).toBe(3);
+    expect(missingPlatoDays([{id: '1', finishedBeerId: 'b', measuredAt: '2026-09-01T00:00:00Z', plato: 4, source: 'MANUAL'}], Date.parse('2026-09-04T00:00:00Z'))).toBe(3);
     expect(isDeviceOnline('2026-09-04T11:50:00Z', Date.parse('2026-09-04T12:00:00Z'))).toBe(true);
     expect(attenuation(13.2, 3)).toBeCloseTo(77.27);
     expect(approximateAlcohol(13.2, 3)).toBeCloseTo(5.406);
   });
-  it('selects the newest valid fermentation value per metric across manual and sensor records', () => {
-    const readings = latestFermentationReadings(
-      [
-        {id: 'm1', finishedBeerId: 'b', measuredAt: '2026-09-03T10:00:00Z', temperature: 18.1, plato: 4.2},
-        {id: 'm2', finishedBeerId: 'b', measuredAt: '2026-09-05T10:00:00Z', temperature: Number.NaN, plato: null},
-        {id: 'm3', finishedBeerId: 'b', measuredAt: 'invalid', temperature: 99, plato: 99},
-      ],
-      [
-        {id: 's1', deviceId: 'd', measuredAt: '2026-09-04T10:00:00Z', beerTemperature: 18.6, ambientTemperature: 16.4},
-        {id: 's2', deviceId: 'd', measuredAt: '2026-09-05T11:00:00Z', beerTemperature: null, ambientTemperature: 16.1},
-      ],
-    );
+  it('selects each newest valid value from the backend-unified measurement history regardless of source', () => {
+    const readings = latestFermentationReadings([
+      {id: 'm1', finishedBeerId: 'b', measuredAt: '2026-09-03T10:00:00Z', beerTemperatureC: 18.1, plato: 4.2, source: 'MANUAL'},
+      {id: 's1', finishedBeerId: 'b', measuredAt: '2026-09-04T10:00:00Z', beerTemperatureC: 18.6, ambientTemperatureC: 16.4, source: 'SENSOR'},
+      {id: 'm2', finishedBeerId: 'b', measuredAt: '2026-09-05T11:00:00Z', beerTemperatureC: null, ambientTemperatureC: 16.1, plato: null, source: 'MANUAL'},
+      {id: 'invalid', finishedBeerId: 'b', measuredAt: 'invalid', beerTemperatureC: 99, plato: 99, source: 'SENSOR'},
+    ]);
 
     expect(readings).toEqual({beerTemperature: 18.6, ambientTemperature: 16.1, plato: 4.2});
     expect(latestFermentationReadings()).toEqual({beerTemperature: undefined, ambientTemperature: undefined, plato: undefined});

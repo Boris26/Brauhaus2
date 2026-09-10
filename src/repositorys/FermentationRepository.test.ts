@@ -18,6 +18,7 @@ describe('FermentationRepository BeerDataStore routes', () => {
     await FermentationRepository.getDetails('brew/a');
     expect(mocked.get).toHaveBeenCalledWith('fermentation/beers/brew%2Fa/recipe-actions');
     expect(mocked.get).toHaveBeenCalledWith('fermentation/beers/brew%2Fa/measurements');
+    expect(mocked.get).toHaveBeenCalledWith('fermentation/sensor-measurements?finishedBeerId=brew%2Fa');
     expect(mocked.get).not.toHaveBeenCalledWith(expect.stringContaining('finishedbeers'));
   });
   it('maps nullable API trigger fields without renaming actionId', async () => {
@@ -28,6 +29,14 @@ describe('FermentationRepository BeerDataStore routes', () => {
     expect(details.actions[0]).toMatchObject({actionId: 'action', status: 'PENDING', triggerValue: null, triggerUnit: null});
     expect(details.actions[0]).not.toHaveProperty('id');
   });
+  it('maps the legacy temperatureC response alias into the unified model', async () => {
+    mocked.get
+      .mockResolvedValueOnce({data: []})
+      .mockResolvedValueOnce({data: [{id: 'm', finishedBeerId: 'brew', measuredAt: '2026-09-05T12:00:00Z', temperatureC: 18.2, ambientTemperatureC: 16.8, source: 'SENSOR'}]})
+      .mockResolvedValue({data: []});
+    const details = await FermentationRepository.getDetails('brew');
+    expect(details.measurements[0]).toMatchObject({beerTemperatureC: 18.2, ambientTemperatureC: 16.8, source: 'SENSOR'});
+  });
   it('uses finished beer and action identity for complete and skip', async () => {
     mocked.post.mockResolvedValue({data: {}});
     await FermentationRepository.completeAction('brew/a', 'action/b');
@@ -36,9 +45,9 @@ describe('FermentationRepository BeerDataStore routes', () => {
     expect(mocked.post).toHaveBeenNthCalledWith(2, 'fermentation/beers/brew%2Fa/recipe-actions/action%2Fb/skip', {});
   });
   it('posts measurements below the finished beer resource', async () => {
-    const value = {finishedBeerId: 'brew/a', measuredAt: '2026-09-05T12:00:00Z', plato: 5};
+    const value = {finishedBeerId: 'brew/a', measuredAt: '2026-09-05T12:00:00Z', beerTemperatureC: 18.4, ambientTemperatureC: 17.1, plato: 5};
     mocked.post.mockResolvedValue({data: {...value, id: 'm'}});
     await FermentationRepository.createMeasurement(value);
-    expect(mocked.post).toHaveBeenCalledWith('fermentation/beers/brew%2Fa/measurements', {measuredAt: value.measuredAt, plato: 5});
+    expect(mocked.post).toHaveBeenCalledWith('fermentation/beers/brew%2Fa/measurements', {measuredAt: value.measuredAt, plato: 5, beerTemperatureC: 18.4, ambientTemperatureC: 17.1});
   });
 });

@@ -1,16 +1,16 @@
 import {BaseRepository} from './BaseRepository';
-import {CreateFermentationMeasurement, FermentationAction, FermentationActionDTO, FermentationDetails, FermentationDevice, FermentationMeasurement, mapFermentationAction, SensorMeasurement} from '../model/Fermentation';
+import {CreateFermentationMeasurement, FermentationAction, FermentationActionDTO, FermentationDetails, FermentationDevice, FermentationMeasurement, FermentationMeasurementDTO, mapFermentationAction, mapFermentationMeasurement, SensorMeasurement} from '../model/Fermentation';
 
 export class FermentationRepository extends BaseRepository {
   static async getDetails(finishedBeerId: string): Promise<FermentationDetails> {
     const id = encodeURIComponent(finishedBeerId);
     const [actions, measurements, devices, sensorMeasurements] = await Promise.all([
       this.get<FermentationActionDTO[]>(`fermentation/beers/${id}/recipe-actions`),
-      this.get<FermentationMeasurement[]>(`fermentation/beers/${id}/measurements`),
+      this.get<FermentationMeasurementDTO[]>(`fermentation/beers/${id}/measurements`),
       this.getDevices(),
       this.getSensorMeasurements(finishedBeerId),
     ]);
-    return {actions: actions.map(mapFermentationAction), measurements, devices, sensorMeasurements};
+    return {actions: actions.map(mapFermentationAction), measurements: measurements.map(mapFermentationMeasurement), devices, sensorMeasurements};
   }
   static getDevices(): Promise<FermentationDevice[]> { return this.get('fermentation/devices'); }
   static getSensorMeasurements(finishedBeerId: string): Promise<SensorMeasurement[]> {
@@ -18,14 +18,12 @@ export class FermentationRepository extends BaseRepository {
   }
   static createMeasurement(value: CreateFermentationMeasurement): Promise<FermentationMeasurement> {
     const {finishedBeerId, ...measurement} = value as any;
-    // Map UI model fields to BeerDataStore fermentation API expectations:
-    // - UI uses `temperature` for manual measurements; backend expects `temperatureC`.
-    // - Keep `measuredAt`, `plato`, and `note` as-is.
     const payload: Record<string, unknown> = {};
     if (measurement.measuredAt !== undefined) payload.measuredAt = measurement.measuredAt;
     if (measurement.plato !== undefined) payload.plato = measurement.plato;
     if (measurement.note !== undefined) payload.note = measurement.note;
-    if (measurement.temperature !== undefined) payload.temperatureC = measurement.temperature;
+    if (measurement.beerTemperatureC !== undefined) payload.beerTemperatureC = measurement.beerTemperatureC;
+    if (measurement.ambientTemperatureC !== undefined) payload.ambientTemperatureC = measurement.ambientTemperatureC;
 
     return this.post(`fermentation/beers/${encodeURIComponent(finishedBeerId)}/measurements`, payload);
   }
