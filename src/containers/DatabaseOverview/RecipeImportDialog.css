@@ -1,32 +1,61 @@
+.recipe-import-dialog.MuiPaper-root {
+    width: min(100% - calc(2 * var(--spacing-lg)), 720px);
+    max-height: min(760px, calc(100% - calc(2 * var(--spacing-lg))));
+    overflow: hidden;
+}
+
+.recipe-import-dialog .app-dialog__header,
+.recipe-import-dialog .app-dialog__actions {
+    flex: 0 0 auto;
+}
+
+.recipe-import-dialog .app-dialog__content {
+    min-height: 0;
+    overflow-y: auto;
+}
+
 .recipe-import-dialog__format .MuiInputLabel-root,
-.recipe-import-dialog__format .MuiSelect-icon {
+.recipe-import-dialog__mapping .MuiInputLabel-root,
+.recipe-import-dialog__create .MuiInputLabel-root,
+.recipe-import-dialog__format .MuiSelect-icon,
+.recipe-import-dialog__mapping .MuiSelect-icon {
     color: var(--color-text-secondary);
 }
 
-.recipe-import-dialog__format .MuiOutlinedInput-root {
+.recipe-import-dialog__format .MuiOutlinedInput-root,
+.recipe-import-dialog__mapping .MuiOutlinedInput-root,
+.recipe-import-dialog__create .MuiOutlinedInput-root {
     color: var(--color-text);
     background: var(--color-surface-strong);
     border-radius: var(--border-radius-medium);
 }
 
-.recipe-import-dialog__format .MuiOutlinedInput-notchedOutline {
+.recipe-import-dialog__format .MuiOutlinedInput-notchedOutline,
+.recipe-import-dialog__mapping .MuiOutlinedInput-notchedOutline,
+.recipe-import-dialog__create .MuiOutlinedInput-notchedOutline {
     border-color: var(--color-border-strong);
 }
 
-.recipe-import-dialog__format .MuiOutlinedInput-root:hover:not(.Mui-disabled) .MuiOutlinedInput-notchedOutline {
+.recipe-import-dialog__format .MuiOutlinedInput-root:hover:not(.Mui-disabled) .MuiOutlinedInput-notchedOutline,
+.recipe-import-dialog__mapping .MuiOutlinedInput-root:hover:not(.Mui-disabled) .MuiOutlinedInput-notchedOutline,
+.recipe-import-dialog__create .MuiOutlinedInput-root:hover:not(.Mui-disabled) .MuiOutlinedInput-notchedOutline {
     border-color: var(--color-accent-border);
 }
 
-.recipe-import-dialog__format .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+.recipe-import-dialog__format .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline,
+.recipe-import-dialog__mapping .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline,
+.recipe-import-dialog__create .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
     border-color: var(--color-primary);
     border-width: 2px;
 }
 
-.recipe-import-dialog__format .MuiInputLabel-root.Mui-focused {
+.recipe-import-dialog__format .MuiInputLabel-root.Mui-focused,
+.recipe-import-dialog__mapping .MuiInputLabel-root.Mui-focused,
+.recipe-import-dialog__create .MuiInputLabel-root.Mui-focused {
     color: var(--color-accent-hover);
 }
 
-.recipe-import-dialog__format .Mui-disabled {
+.recipe-import-dialog .Mui-disabled {
     color: var(--color-disabled-text);
     -webkit-text-fill-color: var(--color-disabled-text);
 }
@@ -45,38 +74,33 @@
 
 .recipe-import-dialog__file-button.MuiButton-root,
 .recipe-import-dialog__cancel-button.MuiButton-root,
-.recipe-import-dialog__import-button.MuiButton-root {
-    min-height: var(--control-height-compact);
+.recipe-import-dialog__import-button.MuiButton-root,
+.recipe-import-dialog__create-button.MuiButton-root,
+.recipe-import-dialog__create .MuiButton-root {
     border-radius: var(--border-radius-medium);
     font-weight: 700;
     text-transform: none;
 }
 
-.recipe-import-dialog__file-button.MuiButton-root,
-.recipe-import-dialog__cancel-button.MuiButton-root {
-    color: var(--color-accent-hover);
-    border-color: var(--color-accent-border);
+.recipe-import-dialog__file-button.MuiButton-root {
+    min-height: var(--control-height-large);
+    margin-top: var(--spacing-sm);
+    color: var(--color-text);
+    background: var(--color-surface-raised);
+    border-color: var(--color-border-strong);
 }
 
-.recipe-import-dialog__file-button.MuiButton-root:hover,
-.recipe-import-dialog__cancel-button.MuiButton-root:hover {
-    color: var(--color-white);
+.recipe-import-dialog__file-button.MuiButton-root:hover {
+    color: var(--color-text);
     background: var(--color-accent-subtle-hover);
     border-color: var(--color-accent-hover);
 }
 
-.recipe-import-dialog__import-button.MuiButton-root {
-    color: var(--color-text-on-primary);
-    background: var(--color-primary);
-}
-
-.recipe-import-dialog__import-button.MuiButton-root:hover {
-    background: var(--color-primary-hover);
-}
-
 .recipe-import-dialog__file-button.MuiButton-root:focus-visible,
 .recipe-import-dialog__cancel-button.MuiButton-root:focus-visible,
-.recipe-import-dialog__import-button.MuiButton-root:focus-visible {
+.recipe-import-dialog__import-button.MuiButton-root:focus-visible,
+.recipe-import-dialog__create-button.MuiButton-root:focus-visible,
+.recipe-import-dialog__create .MuiButton-root:focus-visible {
     outline: 2px solid var(--color-accent-hover);
     outline-offset: 2px;
 }
@@ -95,28 +119,161 @@
     border: 1px solid var(--color-error);
     border-radius: var(--border-radius-medium);
     font-size: var(--font-size-small);
+    line-height: var(--line-height-normal);
 }
 
-.recipe-import-dialog.MuiPaper-root { max-height: min(760px, calc(100% - calc(2 * var(--spacing-lg)))); }
-.recipe-import-dialog .app-dialog__content { overflow-y: auto; }
-.recipe-import-dialog__resolutions { display: grid; gap: var(--spacing-sm); }
-.recipe-import-dialog__resolution-summary { display:flex; justify-content:space-between; gap:var(--spacing-sm); padding:var(--spacing-sm) 0 var(--spacing-md); color:var(--color-text-secondary); font-size:var(--font-size-small); border-bottom:1px solid var(--color-border-soft); }
-.recipe-import-dialog__resolution-summary strong { color:var(--color-text); }
-.recipe-import-dialog__resolution { display:grid; grid-template-columns:minmax(130px, .8fr) minmax(220px, 1.2fr); gap:var(--spacing-sm) var(--spacing-lg); align-items:start; padding:var(--spacing-md) 0; border-bottom:1px solid var(--color-border-soft); }
-.recipe-import-dialog__source { display:flex; flex-direction:column; gap:var(--spacing-xs); min-width:0; }
-.recipe-import-dialog__source span { color:var(--color-text-secondary); overflow-wrap:anywhere; }
-.recipe-import-dialog__mapping { display:flex; flex-direction:column; gap:var(--spacing-xs); min-width:0; }
-.recipe-import-dialog__mapping .MuiOutlinedInput-root { color:var(--color-text); background:var(--color-surface-strong); }
-.recipe-import-dialog__mapping-status { color:var(--color-text-secondary); font-size:var(--font-size-small); }
-.recipe-import-dialog__mapping-status--required { color:var(--color-error); }
-.recipe-import-dialog__mapping-status--suggested { color:var(--color-accent-hover); }
-.recipe-import-dialog__mapping-status--created { color:var(--color-success); }
-.recipe-import-dialog__resolution > .MuiButton-root { grid-column:2; justify-self:start; min-height:var(--control-height-compact); padding:0; color:var(--color-accent-hover); text-transform:none; }
-.recipe-import-dialog__create { display: grid; gap: var(--spacing-sm); margin-top: var(--spacing-sm); }
-.recipe-import-dialog__resolution > .recipe-import-dialog__create { grid-column:1 / -1; }
+.recipe-import-dialog__resolutions {
+    display: grid;
+    gap: var(--spacing-md);
+}
+
+.recipe-import-dialog__resolution-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    color: var(--color-text-secondary);
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border-soft);
+    border-left: 3px solid var(--color-accent);
+    border-radius: var(--border-radius-medium);
+    font-size: var(--font-size-small);
+    line-height: var(--line-height-normal);
+}
+
+.recipe-import-dialog__resolution-summary strong {
+    color: var(--color-text);
+    font-size: var(--font-size-normal);
+    white-space: nowrap;
+}
+
+.recipe-import-dialog__resolution {
+    display: grid;
+    grid-template-columns: minmax(140px, .75fr) minmax(250px, 1.25fr);
+    gap: var(--spacing-sm) var(--spacing-lg);
+    align-items: start;
+    padding: var(--spacing-md);
+    background: var(--color-surface-secondary);
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--border-radius-medium);
+}
+
+.recipe-import-dialog__source {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    min-width: 0;
+    padding-top: var(--spacing-xs);
+}
+
+.recipe-import-dialog__source strong {
+    color: var(--color-text);
+    font-size: var(--font-size-small);
+}
+
+.recipe-import-dialog__source span {
+    color: var(--color-text-secondary);
+    line-height: var(--line-height-normal);
+    overflow-wrap: anywhere;
+}
+
+.recipe-import-dialog__mapping {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-sm);
+    min-width: 0;
+}
+
+.recipe-import-dialog__mapping-status {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 2px var(--spacing-sm);
+    color: var(--color-text-secondary);
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius-pill);
+    font-size: var(--font-size-small);
+    font-weight: 700;
+    line-height: var(--line-height-normal);
+}
+
+.recipe-import-dialog__mapping-status--required {
+    color: var(--color-warning);
+    background: var(--color-warning-subtle);
+    border-color: var(--color-warning);
+}
+
+.recipe-import-dialog__mapping-status--suggested {
+    color: var(--color-accent-hover);
+    background: var(--color-accent-subtle);
+    border-color: var(--color-accent-border);
+}
+
+.recipe-import-dialog__mapping-status--created {
+    color: var(--color-success);
+    background: var(--color-success-subtle);
+    border-color: var(--color-success);
+}
+
+.recipe-import-dialog__resolution > .recipe-import-dialog__create-button.MuiButton-root {
+    grid-column: 2;
+    justify-self: start;
+    min-height: var(--control-height-compact);
+    padding: var(--spacing-xs) var(--spacing-md);
+}
+
+.recipe-import-dialog__create {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-xs);
+    padding-top: var(--spacing-lg);
+    border-top: 1px solid var(--color-border-soft);
+}
+
+.recipe-import-dialog__create .MuiButton-root,
+.recipe-import-dialog__create .recipe-import-dialog__error {
+    grid-column: 1 / -1;
+}
+
+.recipe-import-dialog__create .MuiButton-root {
+    justify-self: end;
+    min-height: var(--control-height);
+}
 
 @media (max-width: 600px) {
-    .recipe-import-dialog__resolution { grid-template-columns:1fr; }
-    .recipe-import-dialog__resolution > .MuiButton-root { grid-column:1; }
-    .recipe-import-dialog__resolution-summary { flex-direction:column; }
+    .recipe-import-dialog.MuiPaper-root {
+        width: calc(100% - calc(2 * var(--spacing-sm)));
+        max-height: calc(100% - calc(2 * var(--spacing-sm)));
+        margin: var(--spacing-sm);
+    }
+
+    .recipe-import-dialog__resolution,
+    .recipe-import-dialog__create {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .recipe-import-dialog__resolution > .recipe-import-dialog__create-button.MuiButton-root,
+    .recipe-import-dialog__create .MuiButton-root,
+    .recipe-import-dialog__create .recipe-import-dialog__error {
+        grid-column: 1;
+    }
+
+    .recipe-import-dialog__resolution-summary {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: var(--spacing-xs);
+    }
+
+    .recipe-import-dialog__resolution-summary strong {
+        white-space: normal;
+    }
+
+    .recipe-import-dialog__create .MuiButton-root {
+        justify-self: stretch;
+    }
 }
