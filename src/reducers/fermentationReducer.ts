@@ -1,8 +1,9 @@
 import {FermentationActionTypes} from '../actions/fermentation.actions';
-import {FermentationDetails, FermentationGatewaySensorStatus} from '../model/Fermentation';
+import {BubbleActivity, BubbleActivityRange, FermentationDetails, FermentationGatewaySensorStatus} from '../model/Fermentation';
 
-export interface FermentationState { byBrewId: Record<string, FermentationDetails>; loadingIds: string[]; savingMeasurementIds: string[]; completingActionIds: string[]; skippingActionIds: string[]; assigningDeviceIds: string[]; errors: Record<string, string>; gatewayConnected: boolean; sensorsByDeviceUid: Record<string, FermentationGatewaySensorStatus>; }
-export const initialFermentationState: FermentationState = {byBrewId: {}, loadingIds: [], savingMeasurementIds: [], completingActionIds: [], skippingActionIds: [], assigningDeviceIds: [], errors: {}, gatewayConnected: false, sensorsByDeviceUid: {}};
+export interface BubbleActivityState {activity: BubbleActivity[]; loading: boolean; error?: string; selectedRange: BubbleActivityRange;}
+export interface FermentationState { byBrewId: Record<string, FermentationDetails>; bubbleActivityByBrewId: Record<string, BubbleActivityState>; loadingIds: string[]; savingMeasurementIds: string[]; completingActionIds: string[]; skippingActionIds: string[]; assigningDeviceIds: string[]; errors: Record<string, string>; gatewayConnected: boolean; sensorsByDeviceUid: Record<string, FermentationGatewaySensorStatus>; }
+export const initialFermentationState: FermentationState = {byBrewId: {}, bubbleActivityByBrewId: {}, loadingIds: [], savingMeasurementIds: [], completingActionIds: [], skippingActionIds: [], assigningDeviceIds: [], errors: {}, gatewayConnected: false, sensorsByDeviceUid: {}};
 const add = (xs: string[], id: string) => xs.includes(id) ? xs : [...xs, id];
 const remove = (xs: string[], id: string) => xs.filter(value => value !== id);
 export const fermentationReducer = (state = initialFermentationState, action: any): FermentationState => {
@@ -26,6 +27,13 @@ export const fermentationReducer = (state = initialFermentationState, action: an
     case FermentationActionTypes.GATEWAY_CONNECTION_CHANGED: return {...state, gatewayConnected: p.connected};
     case FermentationActionTypes.GATEWAY_SNAPSHOT_RECEIVED: return {...state, sensorsByDeviceUid: Object.fromEntries((p.sensors || []).map((sensor: FermentationGatewaySensorStatus) => [sensor.deviceUid, sensor]))};
     case FermentationActionTypes.GATEWAY_SENSOR_STATUS_CHANGED: return p.sensor?.deviceUid ? {...state, sensorsByDeviceUid: {...state.sensorsByDeviceUid, [p.sensor.deviceUid]: p.sensor}} : state;
+    case FermentationActionTypes.LOAD_BUBBLE_ACTIVITY: return {...state, bubbleActivityByBrewId: {...state.bubbleActivityByBrewId, [p.brewId]: {activity: state.bubbleActivityByBrewId[p.brewId]?.activity ?? [], loading: true, selectedRange: p.range}}};
+    case FermentationActionTypes.LOAD_BUBBLE_ACTIVITY_SUCCESS:
+      if (state.bubbleActivityByBrewId[p.brewId]?.selectedRange !== p.range) return state;
+      return {...state, bubbleActivityByBrewId: {...state.bubbleActivityByBrewId, [p.brewId]: {activity: p.activity, loading: false, selectedRange: p.range}}};
+    case FermentationActionTypes.LOAD_BUBBLE_ACTIVITY_FAILURE:
+      if (state.bubbleActivityByBrewId[p.brewId]?.selectedRange !== p.range) return state;
+      return {...state, bubbleActivityByBrewId: {...state.bubbleActivityByBrewId, [p.brewId]: {activity: [], loading: false, error: p.error, selectedRange: p.range}}};
     default: return state;
   }
 };

@@ -29,6 +29,11 @@
 .fermentation-list { list-style: none; padding: 0; margin-bottom: 0; }.fermentation-list li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--spacing-sm); padding: var(--spacing-sm) 0; border-bottom: 1px solid var(--color-border-soft); }.fermentation-list time { color: var(--color-text-secondary); }
 .fermentation-analysis { overflow: auto; }
 .fermentation-history-chart { width: 100%; height: clamp(18rem, 42vh, 30rem); margin-top: var(--spacing-sm); }
+.fermentation-bubble-chart { width: 100%; height: clamp(18rem, 42vh, 30rem); margin-top: var(--spacing-sm); }
+.fermentation-chart-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--spacing-sm); }
+.fermentation-range-selector { display: flex; flex-wrap: wrap; gap: var(--spacing-xs); }
+.fermentation-range-selector button { color: var(--color-text); background: var(--color-panel-contrast); }
+.fermentation-range-selector button.is-selected { color: var(--color-button-text); background: var(--color-primary); }
 .fermentation-section-title { margin-bottom: var(--spacing-sm) !important; text-transform: uppercase; letter-spacing: .08em; color: var(--color-text-secondary); }
 .fermentation-current-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid var(--color-border); border-radius: var(--border-radius-large); background: var(--color-panel-bg); }
 .fermentation-current-grid > div { display: grid; align-content: center; gap: var(--spacing-xs); min-width: 0; padding: var(--spacing-md); border-right: 1px solid var(--color-border-soft); }

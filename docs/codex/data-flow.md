@@ -1,5 +1,11 @@
 # Data flow
 
+## Finished-beer bubble activity
+
+The finished-beer measurement view dispatches a separate BubbleActivity load with a default range of 24 hours. The redux-observable flow cancels an older request for the same finished beer when its range changes and calls the BeerDataStore repository with inclusive ISO `from`/`to` filters. `Alles` calls the same endpoint without filters. Loading and failure state are isolated from the existing temperature/Plato aggregate so those measurements remain usable.
+
+The single column chart combines windows from every returned `deviceId`, orders them by `windowEndedAt`, and computes Blubbs/min using each row's own `windowSeconds`. A returned zero count remains a zero column. No rows are synthesized for absent timestamps, so a gap is distinct from a measured zero. Invalid timestamps, non-finite values, and non-positive window durations are defensively excluded rather than interpreted.
+
 ## Running BrewSession restoration
 
 The existing Socket.IO transport maps the payload-free `brew-session-running` event to `BREW_SESSION_RUNNING_RECEIVED`. A production epic then reads `GET /api/controller/BrewSession`, reuses a matching beer from Redux or refreshes recipes through `BeerRepository.getBeers()`, and reconstructs the temporary plan with `BeerRecipeScaler` from `plannedVolume` and `plannedBrewhouseEfficiency`. Only after successful reconstruction does it set both `selectedBeer` and `beerToBrew` and dispatch `START_POLLING` when no poll is already active. This recovery path never posts a recipe or sends a brewing start command.

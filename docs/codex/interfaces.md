@@ -4,6 +4,12 @@
 
 Base URL: `DatabaseURL` (`/api/database`).
 
+### Bubble activity history
+
+`GET fermentation/beers/{finishedBeerId}/bubble-activity` returns the BeerDataStore-owned technical bubble windows as a chronologically ordered array. Each item uses the wire fields `deviceId`, `sequence`, `bubbleCount`, `windowSeconds`, and `windowEndedAt`. Optional inclusive `from` and `to` query parameters are timezone-aware ISO-8601 instants. The UI requests 6-hour, 24-hour, and 7-day ranges with both filters; `Alles` omits both filters.
+
+The UI converts each valid window to `bubbleCount * 60 / windowSeconds` Blubbs/min. It does not display `deviceId` or `sequence`, infer missing windows, or derive a fermentation assessment. BeerDataStore remains the source of the stored technical history. Deployment of this additive endpoint and exact DTO is **Needs verification** against the BeerDataStore version deployed behind `/api/database`.
+
 Recipe scaling requires optional numeric `referenceVolume` (liters) and `referenceBrewhouseEfficiency` (percent) on `Beer`/`BeerDTO`. The UI preserves supplied import/existing-recipe values and sends defaults of `10` and `52` for recipes newly created in the UI. Database DTO validation, storage, read-back, and import extraction of the source recipe volume/efficiency are **Needs verification**. Until confirmed, legacy responses without these fields use a compatibility fallback and cannot safely distinguish an originally imported 20-/30-l basis.
 
 | Method | Path | UI use | Payload/response expected |

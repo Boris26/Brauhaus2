@@ -109,6 +109,17 @@ export interface SensorMeasurement {
   windowSeconds?: number | null;
 }
 
+/** Technical bubble window returned by BeerDataStore. Sequence and deviceId are transport provenance only. */
+export interface BubbleActivity {
+  deviceId: string;
+  sequence: number;
+  bubbleCount: number;
+  windowSeconds: number;
+  windowEndedAt: string;
+}
+
+export type BubbleActivityRange = '6h' | '24h' | '7d' | 'all';
+
 export interface FermentationDetails {
   measurements: FermentationMeasurement[];
   actions: FermentationAction[];

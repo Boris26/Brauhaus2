@@ -3,7 +3,7 @@ import {FinishedBrewDetailsView} from './FinishedBrewDetails';
 import {eBrewState} from '../../../enums/eBrewState';
 
 const brew: any = {id: 'brew-1', name: 'West Coast IPA', startDate: '2026-09-01', fermentationStartedAt: '2026-09-01T12:00:00+02:00', liters: 20, originalwort: 13.2, residual_extract: null, note: '', active: true, state: eBrewState.FERMENTATION};
-const base: any = {brew, details: {measurements: [], actions: [], devices: [], sensorMeasurements: []}, activeBrews: [brew], loading: false, saving: false, savingLifecycle: false, completing: [], skipping: [], assigning: [], load: jest.fn(), save: jest.fn(), complete: jest.fn(), skip: jest.fn(), transition: jest.fn(), assign: jest.fn()};
+const base: any = {brew, details: {measurements: [], actions: [], devices: [], sensorMeasurements: []}, bubbleActivity: [], bubbleActivityRange: '24h', bubbleActivityLoading: false, activeBrews: [brew], loading: false, saving: false, savingLifecycle: false, completing: [], skipping: [], assigning: [], load: jest.fn(), loadBubbleActivity: jest.fn(), save: jest.fn(), complete: jest.fn(), skip: jest.fn(), transition: jest.fn(), assign: jest.fn()};
 
 describe('fermentation details dashboard', () => {
   it('shows the compact current-state dashboard with neutral missing values', () => {
@@ -52,6 +52,8 @@ describe('fermentation details dashboard', () => {
     expect(screen.getByText('Messdaten · West Coast IPA')).toBeInTheDocument();
     expect(screen.getByText('Aktueller Zustand')).toBeInTheDocument();
     expect(screen.getByText('Verlauf')).toBeInTheDocument();
+    expect(screen.getByText('Gäraktivität')).toBeInTheDocument();
+    expect(screen.getByText('Noch keine Gäraktivität gemessen.')).toBeInTheDocument();
     expect(screen.queryByText('Messhistorie')).not.toBeInTheDocument();
     expect(screen.queryByText('Gärsensor-Messungen')).not.toBeInTheDocument();
     fireEvent.click(screen.getByText('Neue Messung')); fireEvent.click(screen.getByText('Speichern'));
@@ -66,6 +68,19 @@ describe('fermentation details dashboard', () => {
     expect(save).toHaveBeenLastCalledWith(expect.objectContaining({beerTemperatureC: undefined, ambientTemperatureC: 17.2, plato: undefined}));
     fireEvent.click(screen.getByText('← Fertige Biere'));
     expect(closeMeasurements).toHaveBeenCalledTimes(1);
+  });
+
+  it('loads bubble activity ranges and keeps its loading and error states local', () => {
+    const loadBubbleActivity = jest.fn();
+    const {rerender} = render(<FinishedBrewDetailsView {...base} viewMode="measurements" loadBubbleActivity={loadBubbleActivity} bubbleActivityLoading />);
+    expect(loadBubbleActivity).toHaveBeenCalledWith('brew-1', '24h');
+    expect(screen.getByText('Gäraktivität wird geladen …')).toBeInTheDocument();
+    for (const [label, range] of [['6 h', '6h'], ['7 Tage', '7d'], ['Alles', 'all']]) {
+      fireEvent.click(screen.getByText(label)); expect(loadBubbleActivity).toHaveBeenCalledWith('brew-1', range);
+    }
+    rerender(<FinishedBrewDetailsView {...base} viewMode="measurements" loadBubbleActivity={loadBubbleActivity} bubbleActivityError="HTTP 500" />);
+    expect(screen.getByText('Die Gäraktivität konnte nicht geladen werden.')).toBeInTheDocument();
+    expect(screen.getByText('Verlauf')).toBeInTheDocument();
   });
 
   it('navigates from the compact beer detail to its measurement route', () => {
