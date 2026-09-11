@@ -17,6 +17,8 @@ import {getAlarmSnapshot} from '../../Production/utils/productionStatus';
 import {getTemperatureSensorMessage} from '../../../utils/temperatureSensor';
 import {Warning} from '../../../model/Warning';
 import {getWarningHeaderText} from '../../../utils/warningDisplay';
+import {FermentationGatewaySensorStatus} from '../../../model/Fermentation';
+import {getFermentationGatewayWarning} from '../../../utils/fermentationGatewayStatus';
 
 
 
@@ -31,6 +33,8 @@ interface HeaderProps {
     socketConnected?: boolean;
     warnings?: Warning[];
     warningsReceived?: boolean;
+    fermentationGatewayConnected?: boolean;
+    fermentationGatewaySensors?: Record<string, FermentationGatewaySensorStatus>;
 }
 
 interface HeaderState {
@@ -124,12 +128,16 @@ export class Header extends React.Component<HeaderProps, HeaderState> {
            ? getWarningHeaderText(this.props.warnings)
            : undefined;
        const temperatureSensor = this.props.realtimeState?.temperatureSensor;
+       const fermentationGatewayWarning = this.props.fermentationGatewayConnected === undefined ? undefined : getFermentationGatewayWarning(
+           this.props.fermentationGatewayConnected,
+           this.props.fermentationGatewaySensors || {},
+       );
        // Keep the technical sensor state as a compatibility fallback until all
        // controller versions provide warning-state-changed snapshots.
        const sensorWarning = !warningText && (!this.props.socketConnected || temperatureSensor?.health !== 'OK')
            ? `⚠ Temperatursensor: ${getTemperatureSensorMessage(temperatureSensor)}`
            : undefined;
-       const priorityMessage = alarmText ?? warningText ?? sensorWarning;
+       const priorityMessage = alarmText ?? warningText ?? fermentationGatewayWarning ?? sensorWarning;
        const prioritySeverity = alarmText ? 'alarm' : priorityMessage ? 'warning' : undefined;
        const uiMode = getUiMode();
        const navigationViews = getNavigationViews(uiMode);

@@ -85,6 +85,17 @@ export interface FermentationDevice {
   assignedFinishedBeerId?: string | null;
 }
 
+export type FermentationGatewaySensorState = 'REGISTERED' | 'ASSIGNED' | 'UNASSIGNED' | 'DISCONNECTED' | 'BACKEND_UNAVAILABLE' | 'BACKEND_ERROR';
+
+/** Runtime integration state from FermentationSensorGateway; BeerDataStore remains authoritative for assignments and measurements. */
+export interface FermentationGatewaySensorStatus {
+  deviceUid: string;
+  deviceName?: string;
+  status: FermentationGatewaySensorState;
+  updatedAt: string;
+  beerId?: string;
+}
+
 export interface SensorMeasurement {
   id: string;
   deviceId: string;

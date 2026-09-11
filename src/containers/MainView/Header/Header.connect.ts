@@ -14,6 +14,8 @@ const mapStateToProps = (state: RootState) => ({
     socketConnected: state.productionReducer.socketConnection.connected,
     warnings: state.warningReducer.warnings,
     warningsReceived: state.warningReducer.warningsReceived,
+    fermentationGatewayConnected: state.fermentationReducer.gatewayConnected,
+    fermentationGatewaySensors: state.fermentationReducer.sensorsByDeviceUid,
 });
 
 const mapDispatchToProps = (dispatch: any) => ({

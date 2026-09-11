@@ -54,3 +54,9 @@ No `.env`-based URL configuration was found in inspected source. Changing deploy
 5. Production view maps the selected recipe into `BrewingData`, sends it to control, starts brewing, then polls status immediately and every ten seconds until terminal state while timed-step displays advance from a local wall-clock projection.
 6. Runtime status updates drive progress display, confirm dialogs, timeline grouping, hop-addition reminders, finish dialog, and saved finished-brew records.
 7. Finished brew completion stores collected status samples as JSON in `FinishedBrew.brewValues`.
+
+## Fermentation gateway realtime channel (Brauhaus2)
+
+The UI owns two independent realtime connections. During brewing, the existing default-namespace Socket.IO connection communicates with BrewmasterController and remains unchanged. During fermentation, a separate native RFC WebSocket connects to FermentationSensorGateway at the same-origin public path `/api/fermentation/ui`; either service may be offline without controlling the other connection.
+
+BeerDataStore remains the REST source of truth for fermentation devices, assignments, measurements, and recipe actions. It has no UI WebSocket. FermentationSensorGateway publishes only live integration/connectivity status and does not provide measurements as UI truth or perform UI-side fermentation assessment.

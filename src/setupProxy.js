@@ -4,6 +4,21 @@ const target = "https://braumeister.boris-mahne.de";
 
 module.exports = function setupProxy(app) {
     app.use(
+        createProxyMiddleware("/api/fermentation/ui", {
+            target: "http://localhost:5001",
+            changeOrigin: true,
+            ws: true,
+            pathRewrite: {"^/api/fermentation/ui": "/fermentation/ui"},
+            onError(aError, aRequest) {
+                console.error(
+                    `Development fermentation gateway proxy failed for ${aRequest.method} ${aRequest.url}:`,
+                    aError.message
+                );
+            },
+        })
+    );
+
+    app.use(
         "/api",
         createProxyMiddleware({
             target,

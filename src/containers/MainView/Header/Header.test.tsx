@@ -100,6 +100,15 @@ describe('Header navigation', () => {
         expect(screen.queryByText('Bereit')).not.toBeInTheDocument();
     });
 
+    it('shows and clears the persistent fermentation gateway assignment warning', () => {
+        const props = {setViewState: jest.fn(), currentView: Views.FINISHED_BREWS, removeAllMessages: jest.fn(), backendStatus: true, messages: [], fermentationGatewayConnected: true};
+        const unassigned = {deviceUid: 'sensor-1', deviceName: 'FERM-123', status: 'UNASSIGNED' as const, updatedAt: '2026-09-11T07:23:11Z'};
+        const {rerender} = render(<Header {...props} fermentationGatewaySensors={{'sensor-1': unassigned}} />);
+        expect(screen.getByRole('status')).toHaveTextContent('Gärsensor FERM-123 ist keinem Bier zugeordnet.');
+        rerender(<Header {...props} fermentationGatewaySensors={{'sensor-1': {...unassigned, status: 'ASSIGNED' as const}}} />);
+        expect(screen.queryByText(/ist keinem Bier zugeordnet/)).not.toBeInTheDocument();
+    });
+
     it('keeps alarms above warnings when both are active', () => {
         render(
             <Header

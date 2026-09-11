@@ -2,6 +2,7 @@ import {connect} from "react-redux";
 import {Views} from '../enums/eViews';
 import {ProductionActions} from "../actions/actions";
 import {Index} from './index';
+import {FermentationActions} from '../actions/fermentation.actions';
 
 const mapStateToProps = (state: any) => ({
     viewState: state.applicationReducer.view as Views,
@@ -20,7 +21,9 @@ const mapDispatchToProps = (dispatch: any) => ({
     },
     webSocketDisconnect: () => {
         dispatch(ProductionActions.webSocketDisconnect());
-    }
+    },
+    fermentationGatewayConnect: () => dispatch(FermentationActions.gatewayConnect()),
+    fermentationGatewayDisconnect: () => dispatch(FermentationActions.gatewayDisconnect()),
 
 
 
