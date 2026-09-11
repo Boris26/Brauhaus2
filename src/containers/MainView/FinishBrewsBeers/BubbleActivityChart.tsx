@@ -46,7 +46,7 @@ export class BubbleActivityChart extends React.PureComponent<{activity: BubbleAc
           `${Number(value).toLocaleString('de-DE', {maximumFractionDigits: 2})} Blubbs/min${item.payload.bubbleCount !== undefined && item.payload.windowSeconds !== undefined ? ` · ${item.payload.bubbleCount.toLocaleString('de-DE')} Blubbs in ${item.payload.windowSeconds.toLocaleString('de-DE')} s` : ''}`,
           'Gäraktivität',
         ]} />
-        <Line dataKey="bubblesPerMinute" name="Gäraktivität" type="linear" stroke={COLOR_CHART_BLUE} strokeWidth={2} dot={data.length <= 48 ? {r: 2} : false} activeDot={{r: 4}} connectNulls={false} isAnimationActive={false} />
+        <Line dataKey="bubblesPerMinute" name="Gäraktivität" type="linear" stroke={COLOR_CHART_BLUE} strokeWidth={2} dot={false} activeDot={{r: 4}} connectNulls isAnimationActive={false} />
       </LineChart></ResponsiveContainer>
     </div>;
   }
