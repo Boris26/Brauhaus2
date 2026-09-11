@@ -50,4 +50,14 @@ describe('FermentationRepository BeerDataStore routes', () => {
     await FermentationRepository.createMeasurement(value);
     expect(mocked.post).toHaveBeenCalledWith('fermentation/beers/brew%2Fa/measurements', {measuredAt: value.measuredAt, plato: 5, beerTemperatureC: 18.4, ambientTemperatureC: 17.1});
   });
+  it('loads bubble activity by finished beer with ISO time filters', async () => {
+    mocked.get.mockResolvedValue({data: []});
+    await FermentationRepository.getBubbleActivity('brew/a', '2026-09-10T10:00:00.000Z', '2026-09-11T10:00:00.000Z');
+    expect(mocked.get).toHaveBeenCalledWith('fermentation/beers/brew%2Fa/bubble-activity?from=2026-09-10T10%3A00%3A00.000Z&to=2026-09-11T10%3A00%3A00.000Z');
+  });
+  it('loads all bubble activity without unnecessary filters', async () => {
+    mocked.get.mockResolvedValue({data: []});
+    await FermentationRepository.getBubbleActivity('brew');
+    expect(mocked.get).toHaveBeenCalledWith('fermentation/beers/brew/bubble-activity');
+  });
 });

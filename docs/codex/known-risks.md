@@ -1,5 +1,7 @@
 # Known risks
 
+- The BubbleActivity endpoint currently returns raw windows. A seven-day range can contain roughly 10,000 columns. The UI disables chart animation and does not discard or aggregate measurements; if deployed browser performance proves insufficient, server-supported aggregation must be designed as a separate cross-repository contract rather than invented client-side.
+
 - URLs are hard-coded LAN IP addresses in source; there is no discovered environment-based override.
 - `productionWebSocketEpic$` appears to parse `event.data` as JSON although `WebSocketController` passes `{ event, data }`. Overheat handling may not work. Needs verification.
 - `checkIsBackendAvailable` checks the PI/control `Available/` endpoint but the header labels it `Backend`; this can confuse database-backend availability with control availability.

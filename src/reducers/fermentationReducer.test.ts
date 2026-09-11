@@ -44,4 +44,10 @@ describe('fermentationReducer', () => {
     expect(before.byBrewId['brew-a'].actions[0]).toMatchObject({status: 'PENDING', due: false});
     expect(after.byBrewId['brew-a'].actions[0]).toMatchObject({status: 'PENDING', due: true});
   });
+  it('defaults bubble activity to 24 h and ignores stale range responses', () => {
+    const loading = fermentationReducer(initialFermentationState, FermentationActions.loadBubbleActivity('b', '24h'));
+    expect(loading.bubbleActivityByBrewId.b).toMatchObject({activity: [], loading: true, selectedRange: '24h'});
+    const changed = fermentationReducer(loading, FermentationActions.loadBubbleActivity('b', '6h'));
+    expect(fermentationReducer(changed, FermentationActions.loadBubbleActivitySuccess('b', '24h', []))).toBe(changed);
+  });
 });

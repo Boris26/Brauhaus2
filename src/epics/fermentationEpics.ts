@@ -7,6 +7,7 @@ import {FermentationGatewayWebSocketController, FermentationGatewayMessage} from
 import {RootState} from '../reducers/rootReducer';
 import {Views} from '../enums/eViews';
 import {getFinishedBeerIdFromPath} from '../utils/viewRoutes';
+import {BubbleActivityRange} from '../model/Fermentation';
 
 let gatewayController: FermentationGatewayWebSocketController | null = null;
 
@@ -107,4 +108,23 @@ export const refreshFermentationAfterGatewayStatusEpic = (action$: any, state$: 
   }),
 );
 
-export const fermentationEpics = [loadFermentationEpic, createMeasurementEpic, completeFermentationActionEpic, skipFermentationActionEpic, assignDeviceEpic, fermentationGatewayWebSocketEpic, refreshFermentationAfterGatewayStatusEpic];
+export const bubbleActivityBounds = (range: BubbleActivityRange, now = new Date()): {from?: string; to?: string} => {
+  if (range === 'all') return {};
+  const hours = range === '6h' ? 6 : range === '24h' ? 24 : 7 * 24;
+  return {from: new Date(now.getTime() - hours * 60 * 60 * 1000).toISOString(), to: now.toISOString()};
+};
+
+export const loadBubbleActivityEpic = (action$: any) => action$.pipe(
+  ofType(FermentationActionTypes.LOAD_BUBBLE_ACTIVITY),
+  groupBy((action: any) => action.payload.brewId),
+  mergeMap((group$: any) => group$.pipe(switchMap((action: any) => {
+    const {brewId, range} = action.payload;
+    const bounds = bubbleActivityBounds(range);
+    return from(FermentationRepository.getBubbleActivity(brewId, bounds.from, bounds.to)).pipe(
+      map(activity => FermentationActions.loadBubbleActivitySuccess(brewId, range, activity)),
+      catchError(error => of(FermentationActions.loadBubbleActivityFailure(brewId, range, error.message)))
+    );
+  })))
+);
+
+export const fermentationEpics = [loadFermentationEpic, createMeasurementEpic, completeFermentationActionEpic, skipFermentationActionEpic, assignDeviceEpic, fermentationGatewayWebSocketEpic, refreshFermentationAfterGatewayStatusEpic, loadBubbleActivityEpic];
