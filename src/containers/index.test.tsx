@@ -33,6 +33,8 @@ const renderIndex = (brewingStatus: BrewingStatus, viewState = Views.VERSION, li
             checkIsBackenAvailable={jest.fn()}
             webSocketConnect={lifecycle.connect}
             webSocketDisconnect={lifecycle.disconnect}
+            fermentationGatewayConnect={jest.fn()}
+            fermentationGatewayDisconnect={jest.fn()}
             socketConnected={false}
         />
     );
