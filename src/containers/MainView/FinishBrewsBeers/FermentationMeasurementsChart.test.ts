@@ -1,4 +1,4 @@
-import {buildFermentationChartData} from './FermentationMeasurementsChart';
+import {buildFermentationActionMarkers, buildFermentationChartData} from './FermentationMeasurementsChart';
 
 describe('buildFermentationChartData', () => {
   it('renders manual and sensor values from the unified measurement history', () => {
@@ -13,5 +13,13 @@ describe('buildFermentationChartData', () => {
     expect(data).toHaveLength(2);
     expect(data[0]).toMatchObject({beerTemperature: 18.1, ambientTemperature: 16.2});
     expect(data[1]).toMatchObject({beerTemperature: 18.4, plato: 4.2});
+  });
+  it('marks only completed actions with a concrete backend timestamp', () => {
+    const markers = buildFermentationActionMarkers([
+      {actionId: 'done', status: 'COMPLETED', completedAt: '2026-09-11T10:22:00Z', sourceType: 'DRY_HOP', name: 'Mosaic', amount: 50, unit: 'GRAMS'},
+      {actionId: 'future', status: 'PENDING', completedAt: '2026-09-12T10:22:00Z', sourceType: 'DRY_HOP'},
+      {actionId: 'missing', status: 'COMPLETED', sourceType: 'DRY_HOP'},
+    ] as any);
+    expect(markers).toEqual([{actionId: 'done', timestamp: Date.parse('2026-09-11T10:22:00Z'), label: 'Mosaic 50 g'}]);
   });
 });

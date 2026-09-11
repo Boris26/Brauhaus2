@@ -6,6 +6,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import ShowChartIcon from '@mui/icons-material/ShowChart';
 import SimpleBar from 'simplebar-react';
 import './FinishedBrewsTable.css';
 import {FinishedBrew, FinishedBrewCreatePayload} from "../../../model/FinishedBrew";
@@ -31,6 +32,7 @@ interface FinishedBrewsTableProps {
     isAddingFinishedBrew: boolean;
     addFinishedBrewError?: string;
     deletingFinishedBrewIds: string[];
+    openMeasurements: (id: string) => void;
 }
 
 interface FinishedBrewsTableState {
@@ -507,6 +509,9 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                             aria-label="Details"
                         >
                             <VisibilityIcon sx={{fontSize: 22}} />
+                        </button>
+                        <button className="cancel-btn" onClick={() => this.props.openMeasurements(brewId)} title="Messdaten" aria-label={`Messdaten für ${row.name}`}>
+                            <ShowChartIcon sx={{fontSize: 22}} />
                         </button>
                     </div>
                 </TableCell>

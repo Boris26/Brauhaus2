@@ -1,7 +1,7 @@
 import {connect} from "react-redux";
 import {FinishedBrew, FinishedBrewCreatePayload} from "../../../model/FinishedBrew";
 import {finishedBrewsTestData} from "../../../model/finishedBrewsTestData";
-import {BeerActions} from "../../../actions/actions";
+import {ApplicationActions, BeerActions} from "../../../actions/actions";
 import {FinishedBrewsTable} from './FinishedBrewsTable';
 import {withFinishedBrewCreateId} from '../../../utils/finishedBrewCreateId';
 
@@ -30,7 +30,8 @@ const mapDispatchToProps = (dispatch: any) => ({
     },
     onDelete: (id: string) => {
         dispatch(BeerActions.deleteFinishedBeer(id));
-    }
+    },
+    openMeasurements: (id: string) => dispatch(ApplicationActions.openMeasurementData(id)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(FinishedBrewsTable);

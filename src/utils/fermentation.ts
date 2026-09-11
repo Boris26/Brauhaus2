@@ -70,10 +70,36 @@ export const actionTriggerLabel = (action: FermentationAction): string => {
   return 'Kein Zugabe-Trigger definiert';
 };
 
-export const contactTimeLabel = (action: FermentationAction): string | undefined =>
-  Number.isFinite(action.contactTime)
-    ? `${action.contactTime} ${unitLabel(action.contactTimeUnit)}`
-    : undefined;
+const amountUnitLabels: Record<string, {one: string; many: string}> = {
+  G: {one: 'g', many: 'g'}, GRAM: {one: 'g', many: 'g'}, GRAMS: {one: 'g', many: 'g'},
+  KG: {one: 'kg', many: 'kg'}, KILOGRAM: {one: 'kg', many: 'kg'}, KILOGRAMS: {one: 'kg', many: 'kg'},
+  ML: {one: 'ml', many: 'ml'}, MILLILITER: {one: 'ml', many: 'ml'}, MILLILITERS: {one: 'ml', many: 'ml'},
+  L: {one: 'l', many: 'l'}, LITER: {one: 'l', many: 'l'}, LITERS: {one: 'l', many: 'l'},
+  PIECE: {one: 'Stück', many: 'Stück'}, PIECES: {one: 'Stück', many: 'Stück'}, STUECK: {one: 'Stück', many: 'Stück'},
+};
+
+/** Presentation-only labels; wire enum/string values remain untouched. */
+export const actionTypeLabel = (sourceType?: string): string => {
+  const normalized = sourceType?.trim().toUpperCase();
+  if (normalized === 'DRY_HOP') return 'Hopfen';
+  if (normalized === 'ADDITIONAL_INGREDIENT') return 'Zutat';
+  return sourceType || 'Aktion';
+};
+
+export const actionAmountLabel = (amount?: number, unit?: string): string | undefined => {
+  if (!Number.isFinite(amount)) return undefined;
+  const numeric = Number(amount);
+  const mapped = amountUnitLabels[unit?.trim().toUpperCase() || ''];
+  const label = mapped ? (numeric === 1 ? mapped.one : mapped.many) : unit?.toLowerCase();
+  return `${numeric.toLocaleString('de-DE')} ${label || ''}`.trim();
+};
+
+export const contactTimeLabel = (action: FermentationAction): string | undefined => {
+  if (!Number.isFinite(action.contactTime)) return undefined;
+  const value = Number(action.contactTime);
+  if (action.contactTimeUnit === 'HOURS' && value > 0 && value % 24 === 0) return `${value / 24} ${value === 24 ? 'Tag' : 'Tage'}`;
+  return `${value.toLocaleString('de-DE')} ${unitLabel(action.contactTimeUnit)}`;
+};
 
 export const contactStatus = (action: FermentationAction, now = Date.now()): 'running' | 'ended' | undefined => {
   if (action.status !== 'COMPLETED' || !action.contactEndsAt || !Number.isFinite(Date.parse(action.contactEndsAt))) return undefined;
