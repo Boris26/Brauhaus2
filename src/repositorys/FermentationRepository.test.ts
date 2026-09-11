@@ -18,7 +18,7 @@ describe('FermentationRepository BeerDataStore routes', () => {
     await FermentationRepository.getDetails('brew/a');
     expect(mocked.get).toHaveBeenCalledWith('fermentation/beers/brew%2Fa/recipe-actions');
     expect(mocked.get).toHaveBeenCalledWith('fermentation/beers/brew%2Fa/measurements');
-    expect(mocked.get).toHaveBeenCalledWith('fermentation/sensor-measurements?finishedBeerId=brew%2Fa');
+    expect(mocked.get).toHaveBeenCalledWith('fermentation/beers/brew%2Fa/sensor-measurements');
     expect(mocked.get).not.toHaveBeenCalledWith(expect.stringContaining('finishedbeers'));
   });
   it('maps nullable API trigger fields without renaming actionId', async () => {
