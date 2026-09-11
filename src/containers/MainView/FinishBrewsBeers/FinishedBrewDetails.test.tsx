@@ -50,7 +50,9 @@ describe('fermentation details dashboard', () => {
     render(<FinishedBrewDetailsView {...base} save={save} viewMode="measurements" closeMeasurements={closeMeasurements} />);
 
     expect(screen.getByText('Messdaten · West Coast IPA')).toBeInTheDocument();
-    expect(screen.getByText('Messverlauf')).toBeInTheDocument();
+    expect(screen.getByText('Aktueller Zustand')).toBeInTheDocument();
+    expect(screen.getByText('Verlauf')).toBeInTheDocument();
+    expect(screen.queryByText('Messhistorie')).not.toBeInTheDocument();
     expect(screen.queryByText('Gärsensor-Messungen')).not.toBeInTheDocument();
     fireEvent.click(screen.getByText('Neue Messung')); fireEvent.click(screen.getByText('Speichern'));
     expect(screen.getByText('Mindestens eine Temperatur oder Plato ist erforderlich.')).toBeInTheDocument();
@@ -62,7 +64,7 @@ describe('fermentation details dashboard', () => {
     fireEvent.change(screen.getByLabelText('Außentemperatur °C'), {target: {value: '17.2'}});
     fireEvent.click(screen.getByText('Speichern'));
     expect(save).toHaveBeenLastCalledWith(expect.objectContaining({beerTemperatureC: undefined, ambientTemperatureC: 17.2, plato: undefined}));
-    fireEvent.click(screen.getByText('← Bier-Detailansicht'));
+    fireEvent.click(screen.getByText('← Fertige Biere'));
     expect(closeMeasurements).toHaveBeenCalledTimes(1);
   });
 
@@ -95,12 +97,28 @@ describe('fermentation details dashboard', () => {
       {actionId: 'skipped', status: 'SKIPPED', due: true, triggerType: 'MANUAL', sourceType: 'ZUGABE'},
     ]};
     render(<FinishedBrewDetailsView {...base} details={details} complete={complete} skip={skip} viewMode="measurements" />);
-    expect(screen.getAllByText('Als ausgeführt bestätigen')).toHaveLength(1);
-    fireEvent.click(screen.getByText('Als ausgeführt bestätigen'));
+    expect(screen.getAllByText('Als zugegeben markieren')).toHaveLength(1);
+    fireEvent.click(screen.getByText('Als zugegeben markieren'));
     expect(complete).toHaveBeenCalledWith(brew.id, 'manual');
     expect(screen.getAllByText('Überspringen')).toHaveLength(1);
     fireEvent.click(screen.getByText('Überspringen'));
     expect(skip).toHaveBeenCalledWith(brew.id, 'manual');
+  });
+  it('shows localized pending and completed fermentation actions with backend timestamps', () => {
+    const details: any = {measurements: [], devices: [], sensorMeasurements: [], actions: [
+      {actionId: 'hop', status: 'PENDING', due: false, triggerType: 'TIME_OFFSET', triggerValue: 4, triggerUnit: 'DAYS', sourceType: 'DRY_HOP', name: 'Citra', amount: 50, unit: 'GRAMS', contactTime: 72, contactTimeUnit: 'HOURS'},
+      {actionId: 'spice', status: 'COMPLETED', triggerType: 'PLATO_THRESHOLD', triggerValue: 5, triggerUnit: 'PLATO', sourceType: 'ADDITIONAL_INGREDIENT', name: 'Koriandersamen', amount: 1, unit: 'PIECES', completedAt: '2026-09-11T10:22:00Z', contactEndsAt: '2026-09-14T10:22:00Z'},
+    ]};
+    render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" />);
+    expect(screen.getByText('Citra · 50 g')).toBeInTheDocument();
+    expect(screen.getByText('Hopfen')).toBeInTheDocument();
+    expect(screen.getByText('4 Tage nach Gärbeginn')).toBeInTheDocument();
+    expect(screen.getByText('3 Tage')).toBeInTheDocument();
+    expect(screen.getByText('Koriandersamen · 1 Stück')).toBeInTheDocument();
+    expect(screen.getByText('Zutat')).toBeInTheDocument();
+    expect(screen.getByText('bei ≤ 5 °P')).toBeInTheDocument();
+    expect(screen.getByText(/11\.09\.26, 10:22/)).toBeInTheDocument();
+    expect(screen.getByText(/Kontaktzeit (läuft|beendet)/)).toBeInTheDocument();
   });
   it('does not infer fermentationStartedAt or a fermentation day from legacy startDate', () => {
     render(<FinishedBrewDetailsView {...base} brew={{...brew, fermentationStartedAt: undefined, startDate: '2020-01-01'}} />);

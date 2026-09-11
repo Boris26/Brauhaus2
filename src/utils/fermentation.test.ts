@@ -1,4 +1,4 @@
-import {actionDueLabel, actionTriggerLabel, approximateAlcohol, attenuation, bubbleRate, canCompleteAction, contactStatus, contactTimeLabel, isDeviceOnline, latestFermentationReadings, missingPlatoDays, temperatureDelta} from './fermentation';
+import {actionAmountLabel, actionDueLabel, actionTriggerLabel, actionTypeLabel, approximateAlcohol, attenuation, bubbleRate, canCompleteAction, contactStatus, contactTimeLabel, isDeviceOnline, latestFermentationReadings, missingPlatoDays, temperatureDelta} from './fermentation';
 import {TriggerType, TriggerUnit} from '../model/FermentationRecipeAction';
 
 describe('fermentation domain helpers', () => {
@@ -32,6 +32,13 @@ describe('fermentation domain helpers', () => {
     expect(contactStatus(action, Date.parse('2026-09-06'))).toBe('running');
     expect(contactStatus(action, Date.parse('2026-09-08'))).toBe('ended');
     expect(actionTriggerLabel({} as any)).toBe('Kein Zugabe-Trigger definiert');
+  });
+  it('presents action types, amounts and durations without exposing wire labels', () => {
+    expect(actionTypeLabel('dry_hop')).toBe('Hopfen');
+    expect(actionTypeLabel('ADDITIONAL_INGREDIENT')).toBe('Zutat');
+    expect(actionAmountLabel(50, 'GRAMS')).toBe('50 g');
+    expect(actionAmountLabel(1, 'PIECES')).toBe('1 Stück');
+    expect(contactTimeLabel({contactTime: 48, contactTimeUnit: 'HOURS'} as any)).toBe('2 Tage');
   });
   it('handles missing Plato, online state and approximate metrics', () => {
     expect(missingPlatoDays([{id: '1', finishedBeerId: 'b', measuredAt: '2026-09-01T00:00:00Z', plato: 4, source: 'MANUAL'}], Date.parse('2026-09-04T00:00:00Z'))).toBe(3);
