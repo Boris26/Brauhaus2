@@ -14,7 +14,7 @@ export class FermentationRepository extends BaseRepository {
   }
   static getDevices(): Promise<FermentationDevice[]> { return this.get('fermentation/devices'); }
   static getSensorMeasurements(finishedBeerId: string): Promise<SensorMeasurement[]> {
-    return this.get(`fermentation/sensor-measurements?finishedBeerId=${encodeURIComponent(finishedBeerId)}`);
+    return this.get(`fermentation/beers/${encodeURIComponent(finishedBeerId)}/sensor-measurements`);
   }
   static createMeasurement(value: CreateFermentationMeasurement): Promise<FermentationMeasurement> {
     const {finishedBeerId, ...measurement} = value as any;
