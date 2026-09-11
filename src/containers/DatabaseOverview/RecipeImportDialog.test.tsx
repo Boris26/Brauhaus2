@@ -80,7 +80,7 @@ describe('RecipeImportDialog', () => {
     it('retains the key for another send of the same request and creates a new key for a new file', async () => {
         (createImportIdempotencyKey as jest.Mock).mockReturnValueOnce('key-a').mockReturnValueOnce('key-b');
         const onImport = jest.fn();
-        render(<RecipeImportDialog open backendError="Netzwerkfehler" onCancel={jest.fn()} onImport={onImport} />);
+        const {rerender} = render(<RecipeImportDialog open backendError="Netzwerkfehler" onCancel={jest.fn()} onImport={onImport} />);
         selectFormat('Brauhaus');
         selectFile(jsonFile('{"name":"first"}'));
         await waitFor(() => expect(screen.getByRole('button', {name: 'Importieren'})).toBeEnabled());
