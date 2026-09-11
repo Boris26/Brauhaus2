@@ -51,9 +51,17 @@ describe('FermentationRepository BeerDataStore routes', () => {
     expect(mocked.post).toHaveBeenCalledWith('fermentation/beers/brew%2Fa/measurements', {measuredAt: value.measuredAt, plato: 5, beerTemperatureC: 18.4, ambientTemperatureC: 17.1});
   });
   it('loads bubble activity by finished beer with ISO time filters', async () => {
-    mocked.get.mockResolvedValue({data: []});
-    await FermentationRepository.getBubbleActivity('brew/a', '2026-09-10T10:00:00.000Z', '2026-09-11T10:00:00.000Z');
+    mocked.get.mockResolvedValue({data: [
+      {deviceId: 'sensor', sequence: 1, bubbleCount: 8, windowSeconds: 60, averagePressureDeltaPa: 1.42, windowEndedAt: '2026-09-11T10:00:00Z'},
+      {deviceId: 'sensor', sequence: 2, bubbleCount: 0, windowSeconds: 60, averagePressureDeltaPa: 0, windowEndedAt: '2026-09-11T10:01:00Z'},
+      {deviceId: 'sensor', sequence: 3, bubbleCount: 1, windowSeconds: 60, averagePressureDeltaPa: -0.2, windowEndedAt: '2026-09-11T10:02:00Z'},
+      {deviceId: 'sensor', sequence: 4, bubbleCount: 1, windowSeconds: 60, averagePressureDeltaPa: null, windowEndedAt: '2026-09-11T10:03:00Z'},
+      {deviceId: 'legacy', sequence: 5, bubbleCount: 1, windowSeconds: 60, windowEndedAt: '2026-09-11T10:04:00Z'},
+    ]});
+    const result = await FermentationRepository.getBubbleActivity('brew/a', '2026-09-10T10:00:00.000Z', '2026-09-11T10:00:00.000Z');
     expect(mocked.get).toHaveBeenCalledWith('fermentation/beers/brew%2Fa/bubble-activity?from=2026-09-10T10%3A00%3A00.000Z&to=2026-09-11T10%3A00%3A00.000Z');
+    expect(result.map(value => value.averagePressureDeltaPa)).toEqual([1.42, 0, -0.2, null, undefined]);
+    expect(result[4]).not.toHaveProperty('averagePressureDeltaPa');
   });
   it('loads all bubble activity without unnecessary filters', async () => {
     mocked.get.mockResolvedValue({data: []});

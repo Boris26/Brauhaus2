@@ -1,5 +1,5 @@
 import {BaseRepository} from './BaseRepository';
-import {BubbleActivity, CreateFermentationMeasurement, FermentationAction, FermentationActionDTO, FermentationDetails, FermentationDevice, FermentationMeasurement, FermentationMeasurementDTO, mapFermentationAction, mapFermentationMeasurement, SensorMeasurement} from '../model/Fermentation';
+import {BubbleActivity, BubbleActivityDTO, CreateFermentationMeasurement, FermentationAction, FermentationActionDTO, FermentationDetails, FermentationDevice, FermentationMeasurement, FermentationMeasurementDTO, mapBubbleActivity, mapFermentationAction, mapFermentationMeasurement, SensorMeasurement} from '../model/Fermentation';
 
 export class FermentationRepository extends BaseRepository {
   static async getDetails(finishedBeerId: string): Promise<FermentationDetails> {
@@ -16,12 +16,13 @@ export class FermentationRepository extends BaseRepository {
   static getSensorMeasurements(finishedBeerId: string): Promise<SensorMeasurement[]> {
     return this.get(`fermentation/beers/${encodeURIComponent(finishedBeerId)}/sensor-measurements`);
   }
-  static getBubbleActivity(finishedBeerId: string, from?: string, to?: string): Promise<BubbleActivity[]> {
+  static async getBubbleActivity(finishedBeerId: string, from?: string, to?: string): Promise<BubbleActivity[]> {
     const query = new URLSearchParams();
     if (from) query.set('from', from);
     if (to) query.set('to', to);
     const suffix = query.toString();
-    return this.get(`fermentation/beers/${encodeURIComponent(finishedBeerId)}/bubble-activity${suffix ? `?${suffix}` : ''}`);
+    const activity = await this.get<BubbleActivityDTO[]>(`fermentation/beers/${encodeURIComponent(finishedBeerId)}/bubble-activity${suffix ? `?${suffix}` : ''}`);
+    return activity.map(mapBubbleActivity);
   }
   static createMeasurement(value: CreateFermentationMeasurement): Promise<FermentationMeasurement> {
     const {finishedBeerId, ...measurement} = value as any;

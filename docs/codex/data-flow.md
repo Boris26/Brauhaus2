@@ -4,7 +4,9 @@
 
 The finished-beer measurement view dispatches a separate BubbleActivity load with a default range of 24 hours. The redux-observable flow cancels an older request for the same finished beer when its range changes and calls the BeerDataStore repository with inclusive ISO `from`/`to` filters. `Alles` calls the same endpoint without filters. Loading and failure state are isolated from the existing temperature/Plato aggregate so those measurements remain usable.
 
-The single column chart combines windows from every returned `deviceId`, orders them by `windowEndedAt`, and computes Blubbs/min using each row's own `windowSeconds`. A returned zero count remains a zero column. No rows are synthesized for absent timestamps, so a gap is distinct from a measured zero. Invalid timestamps, non-finite values, and non-positive window durations are defensively excluded rather than interpreted.
+Each returned window supplies both the bubble count and its optional average differential pressure. The single chart maps the shared `windowEndedAt` to Blubbs/min on its left Y-axis and `averagePressureDeltaPa` in Pa on its right Y-axis. No second request, state collection, temporal merge, client-side averaging, or fermentation interpretation is introduced; missing legacy pressure remains a gap while measured zero and negative values remain numeric points.
+
+The single line chart combines windows from every returned `deviceId`, orders them by `windowEndedAt`, and computes Blubbs/min using each row's own `windowSeconds`. A returned zero count remains a zero point. Existing visual gap markers remain presentation-only and carry null for both series, so a gap is distinct from a measured zero. Invalid timestamps, non-finite values, and non-positive window durations are defensively excluded rather than interpreted.
 
 ## Running BrewSession restoration
 

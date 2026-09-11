@@ -115,8 +115,21 @@ export interface BubbleActivity {
   sequence: number;
   bubbleCount: number;
   windowSeconds: number;
+  averagePressureDeltaPa?: number | null;
   windowEndedAt: string;
 }
+
+/** BeerDataStore wire DTO. Legacy rows may omit the pressure average. */
+export type BubbleActivityDTO = BubbleActivity;
+
+export const mapBubbleActivity = (dto: BubbleActivityDTO): BubbleActivity => ({
+  deviceId: dto.deviceId,
+  sequence: dto.sequence,
+  bubbleCount: dto.bubbleCount,
+  windowSeconds: dto.windowSeconds,
+  ...('averagePressureDeltaPa' in dto ? {averagePressureDeltaPa: dto.averagePressureDeltaPa} : {}),
+  windowEndedAt: dto.windowEndedAt,
+});
 
 export type BubbleActivityRange = '6h' | '24h' | '7d' | 'all';
 
