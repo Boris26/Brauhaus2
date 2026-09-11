@@ -2,7 +2,7 @@
 
 ## BubbleActivity
 
-`BubbleActivity` is a technical BeerDataStore measurement window identified in transport by `deviceId` and `sequence`, with `bubbleCount`, `windowSeconds`, and timezone-aware `windowEndedAt`. Its UI projection is Blubbs/min (`bubbleCount * 60 / windowSeconds`). Zero is a valid measured value; an absent row is a data gap. Multiple devices contribute to one finished beer's chronological history, and neither device provenance nor sequence is a user-facing fermentation value. The UI makes no strong/weak/slowing/finished or Plato-stability interpretation from this data.
+`BubbleActivity` is a technical BeerDataStore measurement window identified in transport by `deviceId` and `sequence`, with `bubbleCount`, `windowSeconds`, `averagePressureDeltaPa`, and timezone-aware `windowEndedAt`. Its UI projections are Blubbs/min (`bubbleCount * 60 / windowSeconds`) and the average differential pressure in Pa relative to the calibrated sensor baseline. Pressure may be positive, negative, or exactly zero; null or an omitted field means that a legacy row has no pressure measurement and must not become zero. Multiple devices contribute to one finished beer's chronological history, and neither device provenance nor sequence is a user-facing fermentation value. The UI makes no strong/weak/slowing/finished or Plato-stability interpretation from this data.
 
 ## Beer recipe (`Beer`)
 
