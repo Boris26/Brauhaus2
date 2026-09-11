@@ -1,4 +1,4 @@
-import {CreateFermentationMeasurement, FermentationDetails} from '../model/Fermentation';
+import {CreateFermentationMeasurement, FermentationDetails, FermentationGatewaySensorStatus} from '../model/Fermentation';
 
 export enum FermentationActionTypes {
   LOAD = 'Fermentation.LOAD', LOAD_SUCCESS = 'Fermentation.LOAD_SUCCESS', LOAD_FAILURE = 'Fermentation.LOAD_FAILURE',
@@ -6,6 +6,8 @@ export enum FermentationActionTypes {
   COMPLETE_ACTION = 'Fermentation.COMPLETE_ACTION', COMPLETE_ACTION_SUCCESS = 'Fermentation.COMPLETE_ACTION_SUCCESS', COMPLETE_ACTION_FAILURE = 'Fermentation.COMPLETE_ACTION_FAILURE',
   SKIP_ACTION = 'Fermentation.SKIP_ACTION', SKIP_ACTION_SUCCESS = 'Fermentation.SKIP_ACTION_SUCCESS', SKIP_ACTION_FAILURE = 'Fermentation.SKIP_ACTION_FAILURE',
   ASSIGN_DEVICE = 'Fermentation.ASSIGN_DEVICE', ASSIGN_DEVICE_SUCCESS = 'Fermentation.ASSIGN_DEVICE_SUCCESS', ASSIGN_DEVICE_FAILURE = 'Fermentation.ASSIGN_DEVICE_FAILURE',
+  GATEWAY_CONNECT = 'Fermentation.GATEWAY_CONNECT', GATEWAY_DISCONNECT = 'Fermentation.GATEWAY_DISCONNECT', GATEWAY_CONNECTION_CHANGED = 'Fermentation.GATEWAY_CONNECTION_CHANGED',
+  GATEWAY_SNAPSHOT_RECEIVED = 'Fermentation.GATEWAY_SNAPSHOT_RECEIVED', GATEWAY_SENSOR_STATUS_CHANGED = 'Fermentation.GATEWAY_SENSOR_STATUS_CHANGED',
 }
 export const FermentationActions = {
   load: (brewId: string) => ({type: FermentationActionTypes.LOAD, payload: {brewId}}),
@@ -23,4 +25,9 @@ export const FermentationActions = {
   assignDevice: (deviceId: string, brewId: string) => ({type: FermentationActionTypes.ASSIGN_DEVICE, payload: {deviceId, brewId}}),
   assignDeviceSuccess: (deviceId: string, brewId: string) => ({type: FermentationActionTypes.ASSIGN_DEVICE_SUCCESS, payload: {deviceId, brewId}}),
   assignDeviceFailure: (deviceId: string, brewId: string, error: string) => ({type: FermentationActionTypes.ASSIGN_DEVICE_FAILURE, payload: {deviceId, brewId, error}}),
+  gatewayConnect: () => ({type: FermentationActionTypes.GATEWAY_CONNECT}),
+  gatewayDisconnect: () => ({type: FermentationActionTypes.GATEWAY_DISCONNECT}),
+  gatewayConnectionChanged: (connected: boolean) => ({type: FermentationActionTypes.GATEWAY_CONNECTION_CHANGED, payload: {connected}}),
+  gatewaySnapshotReceived: (sensors: FermentationGatewaySensorStatus[]) => ({type: FermentationActionTypes.GATEWAY_SNAPSHOT_RECEIVED, payload: {sensors}}),
+  gatewaySensorStatusChanged: (sensor: FermentationGatewaySensorStatus) => ({type: FermentationActionTypes.GATEWAY_SENSOR_STATUS_CHANGED, payload: {sensor}}),
 };

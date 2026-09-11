@@ -2,6 +2,16 @@ import {FermentationActions} from '../actions/fermentation.actions';
 import {fermentationReducer, initialFermentationState} from './fermentationReducer';
 
 describe('fermentationReducer', () => {
+  it('replaces a gateway snapshot and updates exactly one sensor status', () => {
+    const first = {deviceUid: 'one', deviceName: 'FERM-1', status: 'UNASSIGNED' as const, updatedAt: '2026-09-11T07:23:11Z'};
+    const second = {deviceUid: 'two', deviceName: 'FERM-2', status: 'REGISTERED' as const, updatedAt: '2026-09-11T07:23:11Z'};
+    const snapshot = fermentationReducer(initialFermentationState, FermentationActions.gatewaySnapshotReceived([first, second]));
+    expect(snapshot.sensorsByDeviceUid).toEqual({one: first, two: second});
+    const assigned = {...first, status: 'ASSIGNED' as const};
+    const changed = fermentationReducer(snapshot, FermentationActions.gatewaySensorStatusChanged(assigned));
+    expect(changed.sensorsByDeviceUid).toEqual({one: assigned, two: second});
+    expect(changed.sensorsByDeviceUid.two).toBe(snapshot.sensorsByDeviceUid.two);
+  });
   it('does not optimistically add measurements', () => {
     const state = fermentationReducer(initialFermentationState, FermentationActions.createMeasurement({finishedBeerId: 'b', measuredAt: '', plato: 4}));
     expect(state.savingMeasurementIds).toEqual(['b']); expect(state.byBrewId.b).toBeUndefined();

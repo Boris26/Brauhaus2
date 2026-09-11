@@ -1,8 +1,8 @@
 import {FermentationActionTypes} from '../actions/fermentation.actions';
-import {FermentationDetails} from '../model/Fermentation';
+import {FermentationDetails, FermentationGatewaySensorStatus} from '../model/Fermentation';
 
-export interface FermentationState { byBrewId: Record<string, FermentationDetails>; loadingIds: string[]; savingMeasurementIds: string[]; completingActionIds: string[]; skippingActionIds: string[]; assigningDeviceIds: string[]; errors: Record<string, string>; }
-export const initialFermentationState: FermentationState = {byBrewId: {}, loadingIds: [], savingMeasurementIds: [], completingActionIds: [], skippingActionIds: [], assigningDeviceIds: [], errors: {}};
+export interface FermentationState { byBrewId: Record<string, FermentationDetails>; loadingIds: string[]; savingMeasurementIds: string[]; completingActionIds: string[]; skippingActionIds: string[]; assigningDeviceIds: string[]; errors: Record<string, string>; gatewayConnected: boolean; sensorsByDeviceUid: Record<string, FermentationGatewaySensorStatus>; }
+export const initialFermentationState: FermentationState = {byBrewId: {}, loadingIds: [], savingMeasurementIds: [], completingActionIds: [], skippingActionIds: [], assigningDeviceIds: [], errors: {}, gatewayConnected: false, sensorsByDeviceUid: {}};
 const add = (xs: string[], id: string) => xs.includes(id) ? xs : [...xs, id];
 const remove = (xs: string[], id: string) => xs.filter(value => value !== id);
 export const fermentationReducer = (state = initialFermentationState, action: any): FermentationState => {
@@ -23,6 +23,9 @@ export const fermentationReducer = (state = initialFermentationState, action: an
     case FermentationActionTypes.ASSIGN_DEVICE: return {...state, assigningDeviceIds: add(state.assigningDeviceIds, p.deviceId)};
     case FermentationActionTypes.ASSIGN_DEVICE_SUCCESS: return {...state, assigningDeviceIds: remove(state.assigningDeviceIds, p.deviceId)};
     case FermentationActionTypes.ASSIGN_DEVICE_FAILURE: return {...state, assigningDeviceIds: remove(state.assigningDeviceIds, p.deviceId), errors: {...state.errors, [p.brewId]: p.error}};
+    case FermentationActionTypes.GATEWAY_CONNECTION_CHANGED: return {...state, gatewayConnected: p.connected};
+    case FermentationActionTypes.GATEWAY_SNAPSHOT_RECEIVED: return {...state, sensorsByDeviceUid: Object.fromEntries((p.sensors || []).map((sensor: FermentationGatewaySensorStatus) => [sensor.deviceUid, sensor]))};
+    case FermentationActionTypes.GATEWAY_SENSOR_STATUS_CHANGED: return p.sensor?.deviceUid ? {...state, sensorsByDeviceUid: {...state.sensorsByDeviceUid, [p.sensor.deviceUid]: p.sensor}} : state;
     default: return state;
   }
 };

@@ -118,3 +118,11 @@ Heater-safety reset is intentionally not a Settings-page action. Settings expose
 Finished-beer detail/dashboard → Redux action → fermentation epic → `FermentationRepository` → BeerDataStore. A load combines recipe actions and the unified measurement history from their per-finished-beer routes with the existing device/sensor reads. Beer temperature, ambient temperature, and Plato flow exclusively from `/measurements` into one Redux history; the UI does not merge temperatures from `/sensor-measurements`. The sensor route remains loaded for sensor-specific blubb data. Successful measurement, completion, or assignment commands reload backend truth; reducers never optimistically claim domain success. Sensor hardware communicates with BeerDataStore, never Brauhaus2.
 
 The compact finished-beer detail links to `/finished-brews/{finishedBeerId}/measurements`. The route resolves the existing `FinishedBrew.id`, restores the finished-brew list only for direct entry, and reuses `FinishedBrewDetails` in measurement mode. That shared component remains the single owner of the fermentation aggregate load, so opening the analysis view does not introduce a second measurement-loading path or endpoint.
+
+## Fermentation gateway live status
+
+1. At app-shell startup, the UI independently opens the native same-origin WebSocket `/api/fermentation/ui` while retaining the existing BrewmasterController Socket.IO connection.
+2. A gateway snapshot completely replaces `fermentationReducer.sensorsByDeviceUid`; a status-change message replaces only the entry identified by `deviceUid`.
+3. Redux derives a persistent header warning for gateway disconnect, assignment, sensor connectivity, or BeerDataStore integration errors. Identical state does not create toasts or dialogs.
+4. A meaningful sensor status change may trigger at most one reload of an already visible fermentation aggregate. That reload uses existing BeerDataStore REST methods; assignments and measurements never come from the gateway message.
+5. Disconnect uses bounded backoff (2, 5, 10, 20, then at most 30 seconds), reset after open. App unmount closes only this gateway socket.

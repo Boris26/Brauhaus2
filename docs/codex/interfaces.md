@@ -163,3 +163,9 @@ Dry-hop and fermentation-phase additional-ingredient DTOs use one Recipe Action 
 `FinishedBrew.fermentationStartedAt` is the optional, timezone-bearing canonical basis for `TIME_OFFSET`; it is not inferred from `startDate`. The normal production-completion workflow sets it to the current ISO-8601 instant, while legacy/manual records may leave it absent. Complete PUT payloads preserve the value unchanged.
 
 Runtime actions retain the API field `actionId` (never silently renamed to `id`) and contain `sourceType`, `name`, `amount`, `unit`, the generic trigger/contact fields, `status`, `due`, `completedAt`, `skippedAt`, `contactEndsAt`, and `latestPlato`. `contactEndsAt` and `due` are backend-owned projections. Only the separately retained device/sensor route deployment and exact error envelopes remain **Needs verification**.
+
+## UI ↔ FermentationSensorGateway WebSocket
+
+The browser opens a native RFC WebSocket (not Socket.IO) at same-origin `/api/fermentation/ui`, using `ws://` for an HTTP page and `wss://` for an HTTPS page. Caddy owns production routing. The initial `FERMENTATION_GATEWAY_SNAPSHOT` carries `sensors[]`; `FERMENTATION_SENSOR_STATUS_CHANGED` carries one `sensor`. A sensor is keyed by `deviceUid`, has optional `deviceName` and `beerId`, an ISO-8601 `updatedAt`, and one of `REGISTERED | ASSIGNED | UNASSIGNED | DISCONNECTED | BACKEND_UNAVAILABLE | BACKEND_ERROR`. Unknown messages are ignored. The UI must not infer assignments from optional `beerId`.
+
+This additive live-status contract does not change BeerDataStore REST DTOs or controller Socket.IO. Caddy routing and deployed gateway support are **Needs verification** outside this repository.

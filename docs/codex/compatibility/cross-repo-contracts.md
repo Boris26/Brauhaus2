@@ -262,3 +262,7 @@ The UI normal lifecycle is `FERMENTATION -> MATURATION | FINISHED`, `MATURATION 
 ### BeerDataStore normalized recipe ingredients and Import V2 resolution
 
 The UI now requires the hard-cut normalized BeerDataStore recipe contract: ingredient uses identify master data only by `id`; hop/additional timing is `additionTime`; recipe additional notes are `note`; and recipe uses have no `actionId`. Runtime `FermentationAction.actionId` remains unchanged. Import resolution is stateless: `resolutionRequired` responses are not inserted into recipe state, and the retry resends the unchanged source document and idempotency key with explicit `{ingredientType, sourceName, ingredientId}` mappings. Deployment against the matching BeerDataStore refactor is required.
+
+## UI ↔ FermentationSensorGateway live integration status (Brauhaus2)
+
+Brauhaus2 additively consumes the gateway's native RFC WebSocket through Caddy at `/api/fermentation/ui`; it must not use the existing BrewmasterController Socket.IO client for this endpoint. Snapshot/status DTOs and the six documented status strings are preserved without deriving assignment or fermentation decisions in the UI. BeerDataStore remains the REST source of truth and exposes no UI WebSocket. Local CRA development rewrites this public path to `http://localhost:5001/fermentation/ui` with WebSocket upgrade support. Production Caddy route and gateway deployment are **Needs verification**.

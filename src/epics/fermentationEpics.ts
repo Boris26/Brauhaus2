@@ -1,8 +1,14 @@
 import {ofType} from 'redux-observable';
-import {from, of} from 'rxjs';
+import {EMPTY, from, Observable, of} from 'rxjs';
 import {catchError, exhaustMap, groupBy, map, mergeMap, switchMap} from 'rxjs/operators';
 import {FermentationActions, FermentationActionTypes} from '../actions/fermentation.actions';
 import {FermentationRepository} from '../repositorys/FermentationRepository';
+import {FermentationGatewayWebSocketController, FermentationGatewayMessage} from '../utils/FermentationGatewayWebSocketController';
+import {RootState} from '../reducers/rootReducer';
+import {Views} from '../enums/eViews';
+import {getFinishedBeerIdFromPath} from '../utils/viewRoutes';
+
+let gatewayController: FermentationGatewayWebSocketController | null = null;
 
 export const loadFermentationEpic = (action$: any) => action$.pipe(
   ofType(FermentationActionTypes.LOAD),
@@ -60,4 +66,45 @@ export const assignDeviceEpic = (action$: any) => action$.pipe(
   )))
 );
 
-export const fermentationEpics = [loadFermentationEpic, createMeasurementEpic, completeFermentationActionEpic, skipFermentationActionEpic, assignDeviceEpic];
+const gatewayMessageAction = (message: FermentationGatewayMessage) => message.type === 'FERMENTATION_GATEWAY_SNAPSHOT'
+  ? FermentationActions.gatewaySnapshotReceived(message.sensors)
+  : FermentationActions.gatewaySensorStatusChanged(message.sensor);
+
+export const fermentationGatewayWebSocketEpic = (action$: any) => action$.pipe(
+  ofType(FermentationActionTypes.GATEWAY_CONNECT, FermentationActionTypes.GATEWAY_DISCONNECT),
+  switchMap((action: any) => {
+    if (action.type === FermentationActionTypes.GATEWAY_DISCONNECT) {
+      gatewayController?.disconnect();
+      gatewayController = null;
+      return EMPTY;
+    }
+    return new Observable<any>(observer => {
+      gatewayController ??= new FermentationGatewayWebSocketController(
+        message => observer.next(gatewayMessageAction(message)),
+        connected => observer.next(FermentationActions.gatewayConnectionChanged(connected)),
+      );
+      gatewayController.connect();
+      return () => {
+        gatewayController?.disconnect();
+        gatewayController = null;
+      };
+    });
+  }),
+);
+
+/** Refresh only the already visible fermentation aggregate; the gateway never becomes its data source. */
+export const refreshFermentationAfterGatewayStatusEpic = (action$: any, state$: {value: RootState}) => action$.pipe(
+  ofType(FermentationActionTypes.GATEWAY_SENSOR_STATUS_CHANGED),
+  mergeMap((action: any) => {
+    if (!['REGISTERED', 'ASSIGNED', 'UNASSIGNED', 'DISCONNECTED'].includes(action.payload.sensor.status)) return EMPTY;
+    const state = state$.value;
+    const loadedIds = Object.keys(state.fermentationReducer.byBrewId);
+    const pathId = state.applicationReducer.view === Views.MEASUREMENT_DATA && typeof window !== 'undefined'
+      ? getFinishedBeerIdFromPath(window.location.pathname)
+      : undefined;
+    const brewId = pathId && loadedIds.includes(pathId) ? pathId : loadedIds.length === 1 ? loadedIds[0] : undefined;
+    return brewId ? of(FermentationActions.load(brewId)) : EMPTY;
+  }),
+);
+
+export const fermentationEpics = [loadFermentationEpic, createMeasurementEpic, completeFermentationActionEpic, skipFermentationActionEpic, assignDeviceEpic, fermentationGatewayWebSocketEpic, refreshFermentationAfterGatewayStatusEpic];
