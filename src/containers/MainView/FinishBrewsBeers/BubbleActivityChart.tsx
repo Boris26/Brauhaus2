@@ -1,5 +1,5 @@
 import React from 'react';
-import {Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
+import {CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
 import {BubbleActivity} from '../../../model/Fermentation';
 import {COLOR_CHART_BLUE} from '../../../colors';
 
@@ -28,7 +28,7 @@ export class BubbleActivityChart extends React.PureComponent<{activity: BubbleAc
   render() {
     const data = buildBubbleActivityChartData(this.props.activity);
     return <div className="fermentation-bubble-chart" role="img" aria-label="Zeitlicher Verlauf der Gäraktivität in Blubbs pro Minute">
-      <ResponsiveContainer width="100%" height="100%"><BarChart data={data} margin={{top: 8, right: 12, bottom: 8, left: 4}}>
+      <ResponsiveContainer width="100%" height="100%"><LineChart data={data} margin={{top: 8, right: 12, bottom: 8, left: 4}}>
         <CartesianGrid strokeDasharray="3 3" opacity={0.25} />
         <XAxis dataKey="timestamp" type="number" scale="time" domain={['dataMin', 'dataMax']} minTickGap={30} tickFormatter={localDateTime} />
         <YAxis width={72} label={{value: 'Blubbs/min', angle: -90, position: 'insideLeft'}} allowDecimals />
@@ -36,8 +36,8 @@ export class BubbleActivityChart extends React.PureComponent<{activity: BubbleAc
           `${Number(value).toLocaleString('de-DE', {maximumFractionDigits: 2})} Blubbs/min · ${item.payload.bubbleCount.toLocaleString('de-DE')} Blubbs in ${item.payload.windowSeconds.toLocaleString('de-DE')} s`,
           'Gäraktivität',
         ]} />
-        <Bar dataKey="bubblesPerMinute" name="Gäraktivität" fill={COLOR_CHART_BLUE} isAnimationActive={false} />
-      </BarChart></ResponsiveContainer>
+        <Line dataKey="bubblesPerMinute" name="Gäraktivität" type="linear" stroke={COLOR_CHART_BLUE} strokeWidth={2} dot={false} activeDot={{r: 4}} connectNulls isAnimationActive={false} />
+      </LineChart></ResponsiveContainer>
     </div>;
   }
 }
