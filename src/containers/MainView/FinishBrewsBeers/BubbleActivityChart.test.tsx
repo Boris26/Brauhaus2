@@ -20,7 +20,7 @@ const activity: any[] = [
 describe('bubble activity chart', () => {
   it('normalizes windows, preserves zero and chronological gaps, and combines devices', () => {
     const data = buildBubbleActivityChartData(activity);
-    expect(data.map(point => [point.timestamp, point.bubblesPerMinute])).toEqual([
+    expect(data.filter(point => point.bubblesPerMinute !== null).map(point => [point.timestamp, point.bubblesPerMinute])).toEqual([
       [Date.parse('2026-09-11T10:00:00Z'), 8], [Date.parse('2026-09-11T10:01:00Z'), 0], [Date.parse('2026-09-11T10:04:00Z'), 7],
     ]);
     expect(data.some(point => point.timestamp === Date.parse('2026-09-11T10:02:00Z'))).toBe(false);

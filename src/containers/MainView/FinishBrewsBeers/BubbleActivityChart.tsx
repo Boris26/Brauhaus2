@@ -5,16 +5,18 @@ import {COLOR_CHART_BLUE} from '../../../colors';
 
 export interface BubbleActivityChartPoint {
   timestamp: number;
-  bubblesPerMinute: number;
-  bubbleCount: number;
-  windowSeconds: number;
+  bubblesPerMinute: number | null;
+  bubbleCount?: number;
+  windowSeconds?: number;
 }
+
+type BubbleActivityMeasurementPoint = Required<BubbleActivityChartPoint>;
 
 const localDateTime = (value: number): string => new Intl.DateTimeFormat('de-DE', {
   dateStyle: 'short', timeStyle: 'short',
 }).format(new Date(value));
 
-export const buildBubbleActivityChartData = (activity: BubbleActivity[]): BubbleActivityChartPoint[] => activity
+const normalizedBubbleActivity = (activity: BubbleActivity[]): BubbleActivityMeasurementPoint[] => activity
   .filter(value => Number.isFinite(Date.parse(value.windowEndedAt)) && Number.isFinite(value.bubbleCount) && Number.isFinite(value.windowSeconds) && value.windowSeconds > 0)
   .map(value => ({
     timestamp: Date.parse(value.windowEndedAt),
@@ -23,6 +25,14 @@ export const buildBubbleActivityChartData = (activity: BubbleActivity[]): Bubble
     windowSeconds: value.windowSeconds,
   }))
   .sort((left, right) => left.timestamp - right.timestamp);
+
+export const buildBubbleActivityChartData = (activity: BubbleActivity[]): BubbleActivityChartPoint[] => normalizedBubbleActivity(activity)
+  .flatMap((point, index, points) => {
+    const previous = points[index - 1];
+    if (!previous || point.timestamp - previous.timestamp <= Math.max(previous.windowSeconds, point.windowSeconds) * 1000) return [point];
+
+    return [{timestamp: previous.timestamp + (point.timestamp - previous.timestamp) / 2, bubblesPerMinute: null}, point];
+  });
 
 export class BubbleActivityChart extends React.PureComponent<{activity: BubbleActivity[]}> {
   render() {
@@ -33,7 +43,7 @@ export class BubbleActivityChart extends React.PureComponent<{activity: BubbleAc
         <XAxis dataKey="timestamp" type="number" scale="time" domain={['dataMin', 'dataMax']} minTickGap={30} tickFormatter={localDateTime} />
         <YAxis width={72} label={{value: 'Blubbs/min', angle: -90, position: 'insideLeft'}} allowDecimals />
         <Tooltip labelFormatter={value => localDateTime(Number(value))} formatter={(value, _name, item) => [
-          `${Number(value).toLocaleString('de-DE', {maximumFractionDigits: 2})} Blubbs/min · ${item.payload.bubbleCount.toLocaleString('de-DE')} Blubbs in ${item.payload.windowSeconds.toLocaleString('de-DE')} s`,
+          `${Number(value).toLocaleString('de-DE', {maximumFractionDigits: 2})} Blubbs/min${item.payload.bubbleCount !== undefined && item.payload.windowSeconds !== undefined ? ` · ${item.payload.bubbleCount.toLocaleString('de-DE')} Blubbs in ${item.payload.windowSeconds.toLocaleString('de-DE')} s` : ''}`,
           'Gäraktivität',
         ]} />
         <Line dataKey="bubblesPerMinute" name="Gäraktivität" type="linear" stroke={COLOR_CHART_BLUE} strokeWidth={2} dot={false} activeDot={{r: 4}} connectNulls isAnimationActive={false} />
