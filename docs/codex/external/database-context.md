@@ -251,6 +251,8 @@ Recovery persists the stable Beer identifier and scaling plan through the coordi
 
 ## Required BeerDataStore lifecycle/action contract
 
+New production-created records use `WAITING_FOR_FERMENTATION`, `fermentationStartedAt: null`, and a concrete `fermentationActions` snapshot. Create action fields are `sourceType`, optional `recipeRelationId`, optional `ingredientId`, `name`, `amount`, `unit`, `triggerType`, nullable `triggerValue`/`triggerUnit`, and nullable `contactTime`/`contactTimeUnit`. Amounts are copied from Brauhaus2's already scaled plan. Extended DTO deployment is **Needs verification**.
+
 Brauhaus2 now exposes only `FERMENTATION`, `MATURATION`, and `FINISHED` as normal global lifecycle values. Gärung is the entire time in the fermentation vessel; dry hop and other additions are per-brew recipe actions, not lifecycle states. Invalid transitions should return HTTP 409 with `INVALID_FINISHED_BEER_TRANSITION`.
 
 `FinishedBrew.fermentationStartedAt` is the timezone-bearing `TIME_OFFSET` epoch and must be stored/read unchanged; `startDate` must not be substituted. Recipe actions use the final BeerDataStore fields `actionId`, `triggerType`, `triggerValue`, `triggerUnit`, `contactTime`, and `contactTimeUnit`. Persisted runtime is only `PENDING | COMPLETED | SKIPPED`; `due` is a recalculated boolean projection, never a persisted `DUE` state. Runtime rows reference concrete `FinishedBrew.id`, because multiple brews may share one recipe `beer_id`. Due evaluation after Plato writes, `completedAt`, `skippedAt`, and `contactEndsAt` are server-owned. Finished-brew create idempotency remains unchanged: the client operation ID is created before dispatch/retry and `beer_id` is only a recipe reference.

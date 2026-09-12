@@ -102,6 +102,10 @@ describe('fermentation details dashboard', () => {
     rerender(<FinishedBrewDetailsView {...base} brew={{...brew, state: eBrewState.FINISHED, active: false}} transition={transition} />);
     expect(screen.queryByText('Reifung starten')).not.toBeInTheDocument();
     expect(screen.queryByText('Bier fertigstellen')).not.toBeInTheDocument();
+    rerender(<FinishedBrewDetailsView {...base} brew={{...brew, state: eBrewState.WAITING_FOR_FERMENTATION, fermentationStartedAt: null}} transition={transition} />);
+    expect(screen.getByText(/Wartet auf Gärstart/)).toBeInTheDocument();
+    expect(screen.queryByText('Reifung starten')).not.toBeInTheDocument();
+    expect(screen.queryByText('Bier fertigstellen')).not.toBeInTheDocument();
   });
 
   it('allows MANUAL + PENDING without due and never offers skipped actions', () => {
@@ -139,5 +143,19 @@ describe('fermentation details dashboard', () => {
     render(<FinishedBrewDetailsView {...base} brew={{...brew, fermentationStartedAt: undefined, startDate: '2020-01-01'}} />);
     expect(screen.getByText(/Gärbeginn:/)).toHaveTextContent('Gärbeginn: –');
     expect(screen.queryByText(/Gärtag/)).not.toBeInTheDocument();
+  });
+
+  it('uses the FinishedBeer action snapshot, including an explicitly empty array', () => {
+    const endpointDetails: any = {measurements: [], devices: [], sensorMeasurements: [], actions: [
+      {actionId: 'old', status: 'PENDING', sourceType: 'DRY_HOP', name: 'Altes Rezept', amount: 10, unit: 'GRAMS'},
+    ]};
+    const snapshot: any[] = [{actionId: 'snapshot', status: 'PENDING', sourceType: 'DRY_HOP', name: 'Sud-Snapshot', amount: 30, unit: 'GRAMS'}];
+    const {rerender} = render(<FinishedBrewDetailsView {...base} brew={{...brew, fermentationActions: snapshot}} details={endpointDetails} viewMode="measurements" />);
+    expect(screen.getByText('Sud-Snapshot · 30 g')).toBeInTheDocument();
+    expect(screen.queryByText(/Altes Rezept/)).not.toBeInTheDocument();
+
+    rerender(<FinishedBrewDetailsView {...base} brew={{...brew, fermentationActions: []}} details={endpointDetails} viewMode="measurements" />);
+    expect(screen.getByText('Keine Aktionen vorhanden.')).toBeInTheDocument();
+    expect(screen.queryByText(/Altes Rezept/)).not.toBeInTheDocument();
   });
 });

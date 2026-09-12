@@ -19,6 +19,7 @@ export interface Malt {
 }
 
 export interface Hop extends Partial<RecipeActionFields> {
+    recipeRelationId?: string | number;
     id: string | number;
     quantity: number;
     additionTime?: number;
@@ -58,6 +59,7 @@ export enum AdditionalIngredientTimeUnit {
 }
 
 export interface BeerAdditionalIngredient extends Partial<RecipeActionFields> {
+    recipeRelationId?: string | number;
     id: string | number;
     quantity: number;
     unit: string;

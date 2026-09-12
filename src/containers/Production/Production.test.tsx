@@ -9,6 +9,7 @@ import {dataCollector} from '../../utils/DataCollector/dataCollector';
 import {ProductionRepository} from '../../repositorys/ProductionRepository';
 import {AgitatorSettingsRepository} from '../../repositorys/AgitatorSettingsRepository';
 import {HopUsage} from '../../enums/eHopUsage';
+import {eBrewState} from '../../enums/eBrewState';
 
 const createBeer = (aMashVolume: number | undefined = 18, aSpargeVolume: number | undefined = 12, aId: string = '1'): Beer => ({
     id: aId,
@@ -563,8 +564,9 @@ describe('Production finished-brew persistence', () => {
         fireEvent.click(screen.getByRole('button', {name: 'Sud speichern'}));
         expect(addFinishedBrew).toHaveBeenCalledTimes(1);
         const actualPayload = addFinishedBrew.mock.calls[0][0];
-        expect(actualPayload.fermentationStartedAt).toMatch(/Z$/);
-        expect(actualPayload.startDate).toBe(actualPayload.fermentationStartedAt.slice(0, 10));
+        expect(actualPayload.state).toBe('WAITING_FOR_FERMENTATION');
+        expect(actualPayload.fermentationStartedAt).toBeNull();
+        expect(actualPayload.startDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
 
         rerender(<Production {...props} brewingStatus={finishedStatus} isAddingFinishedBrew={true} pendingFinishedBrewPayload={actualPayload} />);
         expect(screen.getByRole('button', {name: 'Speichert …'})).toBeDisabled();
@@ -597,6 +599,27 @@ describe('Production finished-brew persistence', () => {
         rerender(<Production {...props} brewingStatus={finishedStatus} addFinishedBrew={addFinishedBrew} isAddingFinishedBrew={false} pendingFinishedBrewPayload={undefined} />);
         await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
         expect(dataCollector.getMeasurementCount()).toBe(0);
+    });
+
+    it('sends the concrete scaled fermentation-action snapshot without scaling it again', async () => {
+        const addFinishedBrew = jest.fn();
+        const selectedBeer = {
+            ...createBeer(), plannedVolume: 30,
+            wortBoiling: {totalTime: 60, hops: [{id: 1, quantity: 30, usage: HopUsage.DRY_HOP, triggerType: 'TIME_OFFSET', triggerValue: 4, triggerUnit: 'DAYS', contactTime: 72, contactTimeUnit: 'HOURS'}]},
+            additionalIngredients: [{id: 'oak', quantity: 3, unit: 'PIECES', phase: 'FERMENTATION', triggerType: 'MANUAL', triggerValue: null, triggerUnit: null}],
+        } as Beer;
+        openFinishDialog({addFinishedBrew, selectedBeer, additionalIngredients: [{id: 'oak', name: 'Eichenholz'}]});
+
+        fireEvent.click(screen.getByRole('button', {name: 'Sud speichern'}));
+        expect(addFinishedBrew).toHaveBeenCalledWith(expect.objectContaining({
+            liters: 30,
+            state: eBrewState.WAITING_FOR_FERMENTATION,
+            fermentationStartedAt: null,
+            fermentationActions: [
+                expect.objectContaining({sourceType: 'DRY_HOP', name: 'Cascade', amount: 30, triggerType: 'TIME_OFFSET', triggerValue: 4, triggerUnit: 'DAYS', contactTime: 72, contactTimeUnit: 'HOURS'}),
+                expect.objectContaining({sourceType: 'ADDITIONAL_INGREDIENT', name: 'Eichenholz', amount: 3, triggerType: 'MANUAL', triggerValue: null, triggerUnit: null}),
+            ],
+        }));
     });
 });
 

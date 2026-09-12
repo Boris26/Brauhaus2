@@ -47,7 +47,7 @@ export const isValidRecipeAction = (value: Partial<RecipeActionFields>): boolean
         : isTimeTriggerUnit(value.triggerUnit);
 };
 
-export const hasRecipeAction = (value: Partial<RecipeActionFields>): boolean =>
+export const hasRecipeAction = (value: Partial<RecipeActionFields>): value is RecipeActionFields =>
     Boolean(value.triggerType && isValidRecipeAction(value));
 
 /** Normalizes only the current BRAUHAUS v2 contract when an editor field changes. */

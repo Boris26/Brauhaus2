@@ -36,6 +36,7 @@ const mapStateToProps = (state: RootState) => (
     {
         selectedBeer: state.beerDataReducer.beerToBrew,
         hops: state.hopsReducer.hops,
+        additionalIngredients: state.additionalIngredientsReducer.additionalIngredients,
         temperature: state.productionReducer.temperature,
         currentAgitatorState: state.productionReducer.currentAgitatorState,
         currentAgitatorSpeed: state.productionReducer.currentAgitatorSpeed,

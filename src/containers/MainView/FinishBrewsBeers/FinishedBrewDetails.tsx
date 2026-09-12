@@ -42,7 +42,10 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
   useEffect(() => { props.load(props.brew.id); }, [props.brew.id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (props.viewMode === 'measurements') props.loadBubbleActivity(props.brew.id, '24h'); }, [props.brew.id, props.viewMode]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (formOpen && !props.saving && !props.error) { setFormOpen(false); setBeerTemperature(''); setAmbientTemperature(''); setPlato(''); setNote(''); } }, [props.saving]); // eslint-disable-line react-hooks/exhaustive-deps
-  const details = props.details ?? {measurements: [], actions: [], devices: [], sensorMeasurements: []};
+  const loadedDetails = props.details ?? {measurements: [], actions: [], devices: [], sensorMeasurements: []};
+  // New FinishedBeer records own their immutable per-batch action snapshot. The
+  // endpoint result remains a fallback for legacy records where the field is absent.
+  const details = {...loadedDetails, actions: props.brew.fermentationActions ?? loadedDetails.actions};
   const measurements = useMemo(() => [...details.measurements].sort((a, b) => Date.parse(b.measuredAt) - Date.parse(a.measuredAt)), [details.measurements]);
   const latestSensor = latestByDate(details.sensorMeasurements, value => value.measuredAt);
   const latestMeasurement = latestByDate(details.measurements.filter(value => Number.isFinite(Date.parse(value.measuredAt))), value => value.measuredAt);
