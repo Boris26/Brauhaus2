@@ -113,6 +113,24 @@ export const updateFinishedBeerEpic = (action$: any) =>
   )
 ;
 
+export const startFermentationEpic = (action$: any) =>
+  action$.pipe(
+    ofType(BeerActions.ActionTypes.START_FERMENTATION),
+    groupBy((action: any) => action.payload.finishedBrewId),
+    mergeMap((actionsForBrew$: any) => actionsForBrew$.pipe(
+      exhaustMap((action: any) => {
+        const requestedId = action.payload.finishedBrewId;
+        return from(FinishedBeerRepository.startFermentation(requestedId)).pipe(
+          map((beer) => BeerActions.startFermentationSuccess(beer, requestedId)),
+          catchError((aError: Error) => from([
+            BeerActions.startFermentationFailure(requestedId, lifecycleErrorMessage(aError)),
+            ApplicationActions.openErrorDialog(true, "Gärung konnte nicht gestartet werden", lifecycleErrorMessage(aError))
+          ]))
+        );
+      })
+    ))
+  );
+
 export const sendNewFinishedBeerEpic = (action$: any) =>
     action$.pipe(
         ofType(BeerActions.ActionTypes.ADD_FINISHED_BREW),
@@ -210,6 +228,7 @@ export const beerEpics = [
   getFinishedBeersEpic,
   deleteFinishedBeerEpic,
   updateFinishedBeerEpic,
+  startFermentationEpic,
   sendNewFinishedBeerEpic,
   generateFinishedBrewsPdfEpic,
   generateShoppingListPdfEpic,

@@ -30,6 +30,8 @@ export interface BeerDataReducerState {
     importError?: string
     savingFinishedBrewIds?: string[]
     finishedBrewUpdateErrors?: Record<string, string>
+    startingFermentationIds?: string[]
+    startFermentationErrors?: Record<string, string>
     isAddingFinishedBrew?: boolean
     addFinishedBrewError?: string
     pendingFinishedBrewPayload?: FinishedBrewCreatePayload
@@ -53,6 +55,8 @@ export const initialBeerState: BeerDataReducerState =
         isImportingBeer: false,
         savingFinishedBrewIds: [],
         finishedBrewUpdateErrors: {},
+        startingFermentationIds: [],
+        startFermentationErrors: {},
         isAddingFinishedBrew: false,
         pendingFinishedBrewPayload: undefined,
         deletingFinishedBrewIds: [],
@@ -237,6 +241,44 @@ const beerDataReducer = (
               ...aState,
               savingFinishedBrewIds: (aState.savingFinishedBrewIds ?? []).filter(id => id !== requestedId),
               finishedBrewUpdateErrors: {...(aState.finishedBrewUpdateErrors ?? {}), [requestedId]: message},
+          };
+      }
+      case BeerActions.ActionTypes.START_FERMENTATION: {
+          const requestedId = aAction.payload.finishedBrewId;
+          const startFermentationErrors = {...(aState.startFermentationErrors ?? {})};
+          delete startFermentationErrors[requestedId];
+          return {
+              ...aState,
+              startingFermentationIds: Array.from(new Set([...(aState.startingFermentationIds ?? []), requestedId])),
+              startFermentationErrors,
+          };
+      }
+      case BeerActions.ActionTypes.START_FERMENTATION_SUCCESS: {
+          const {beer, requestedId} = aAction.payload;
+          const finishedBrews = aState.finishedBrews ?? [];
+          const startingFermentationIds = (aState.startingFermentationIds ?? []).filter(id => id !== requestedId);
+          if (!beer?.id || beer.id !== requestedId || !finishedBrews.some(brew => brew.id === requestedId)) {
+              return {
+                  ...aState,
+                  startingFermentationIds,
+                  startFermentationErrors: {...(aState.startFermentationErrors ?? {}), [requestedId]: 'Die Start-Antwort enthält keine passende FinishedBeer-ID.'},
+              };
+          }
+          const startFermentationErrors = {...(aState.startFermentationErrors ?? {})};
+          delete startFermentationErrors[requestedId];
+          return {
+              ...aState,
+              startingFermentationIds,
+              startFermentationErrors,
+              finishedBrews: finishedBrews.map(brew => brew.id === requestedId ? beer : brew),
+          };
+      }
+      case BeerActions.ActionTypes.START_FERMENTATION_FAILURE: {
+          const {requestedId, message} = aAction.payload;
+          return {
+              ...aState,
+              startingFermentationIds: (aState.startingFermentationIds ?? []).filter(id => id !== requestedId),
+              startFermentationErrors: {...(aState.startFermentationErrors ?? {}), [requestedId]: message},
           };
       }
 

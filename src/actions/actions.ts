@@ -41,6 +41,9 @@ export namespace BeerActions {
         ADD_FINISHED_BREW_FAILURE = 'BeerActions.ADD_FINISHED_BREW_FAILURE',
         UPDATE_FINISHED_BREW_SUCCESS = 'BeerActions.UPDATE_FINISHED_BREW_SUCCESS',
         UPDATE_FINISHED_BREW_FAILURE = 'BeerActions.UPDATE_FINISHED_BREW_FAILURE',
+        START_FERMENTATION = 'BeerActions.START_FERMENTATION',
+        START_FERMENTATION_SUCCESS = 'BeerActions.START_FERMENTATION_SUCCESS',
+        START_FERMENTATION_FAILURE = 'BeerActions.START_FERMENTATION_FAILURE',
         SAVE_BEER_FORM_STATE = 'BeerActions.SAVE_BEER_FORM_STATE',
         LOAD_BEER_FORM_STATE = 'BeerActions.LOAD_BEER_FORM_STATE',
         GENERATE_FINISHED_BREWS_PDF = 'BeerActions.GENERATE_FINISHED_BREWS_PDF',
@@ -163,6 +166,21 @@ export namespace BeerActions {
         payload: { requestedId: string; message: string };
     }
 
+    export interface StartFermentation {
+        readonly type: ActionTypes.START_FERMENTATION;
+        payload: { finishedBrewId: string };
+    }
+
+    export interface StartFermentationSuccess {
+        readonly type: ActionTypes.START_FERMENTATION_SUCCESS;
+        payload: { beer: FinishedBrew; requestedId: string };
+    }
+
+    export interface StartFermentationFailure {
+        readonly type: ActionTypes.START_FERMENTATION_FAILURE;
+        payload: { requestedId: string; message: string };
+    }
+
     export interface AddFinishedBrewSuccess {
         readonly type: ActionTypes.ADD_FINISHED_BREW_SUCCESS;
         payload: { beer: FinishedBrew };
@@ -274,6 +292,9 @@ export namespace BeerActions {
         AddFinishedBrewFailure |
         UpdateFinishedBrewSuccess |
         UpdateFinishedBrewFailure |
+        StartFermentation |
+        StartFermentationSuccess |
+        StartFermentationFailure |
         SaveBeerFormState |
         LoadBeerFormState |
         GenerateFinishedBrewsPdf |
@@ -452,6 +473,18 @@ export namespace BeerActions {
             type: ActionTypes.UPDATE_FINISHED_BREW_FAILURE,
             payload: {requestedId, message}
         };
+    }
+
+    export function startFermentation(finishedBrewId: string): StartFermentation {
+        return {type: ActionTypes.START_FERMENTATION, payload: {finishedBrewId}};
+    }
+
+    export function startFermentationSuccess(beer: FinishedBrew, requestedId: string): StartFermentationSuccess {
+        return {type: ActionTypes.START_FERMENTATION_SUCCESS, payload: {beer, requestedId}};
+    }
+
+    export function startFermentationFailure(requestedId: string, message: string): StartFermentationFailure {
+        return {type: ActionTypes.START_FERMENTATION_FAILURE, payload: {requestedId, message}};
     }
 
     export function saveBeerFormState(formState: any): SaveBeerFormState {

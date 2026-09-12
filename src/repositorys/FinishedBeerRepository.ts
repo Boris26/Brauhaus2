@@ -16,6 +16,10 @@ export class FinishedBeerRepository extends BaseRepository {
         return this.put<FinishedBrew>("finishedbeer", enforceFinishedBrewStateInvariant(aBeer));
     }
 
+    static startFermentation(aBeerId: string): Promise<FinishedBrew> {
+        return this.post<FinishedBrew>(`finishedbeer/${encodeURIComponent(aBeerId)}/start-fermentation`, undefined);
+    }
+
     static deleteFinishedBeer(aBeerId: string): Promise<void> {
         return this.delete(`finishedbeer/${aBeerId}`);
     }

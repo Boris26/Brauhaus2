@@ -95,6 +95,26 @@ describe('beerDataReducer finished brews', () => {
         expect(state.finishedBrews).toEqual([brew]);
         expect(state.finishedBrewUpdateErrors?.ABC).toBeDefined();
     });
+
+    it('stores the canonical fermentation-start response including its backend timestamp', () => {
+        const waiting = {...brew, state: eBrewState.WAITING_FOR_FERMENTATION, fermentationStartedAt: null};
+        const canonical = {...waiting, state: eBrewState.FERMENTATION, fermentationStartedAt: '2026-09-12T08:45:10+02:00', note: 'canonical'};
+        const pending = beerDataReducer({...initialBeerState, finishedBrews: [waiting]}, BeerActions.startFermentation('ABC'));
+        const state = beerDataReducer(pending, BeerActions.startFermentationSuccess(canonical, 'ABC'));
+
+        expect(state.finishedBrews).toEqual([canonical]);
+        expect(state.startingFermentationIds).toEqual([]);
+    });
+
+    it('keeps the waiting lifecycle state after fermentation-start failure', () => {
+        const waiting = {...brew, state: eBrewState.WAITING_FOR_FERMENTATION, fermentationStartedAt: null};
+        const pending = beerDataReducer({...initialBeerState, finishedBrews: [waiting]}, BeerActions.startFermentation('ABC'));
+        const state = beerDataReducer(pending, BeerActions.startFermentationFailure('ABC', 'HTTP 500'));
+
+        expect(state.finishedBrews).toEqual([waiting]);
+        expect(state.startingFermentationIds).toEqual([]);
+        expect(state.startFermentationErrors?.ABC).toBe('HTTP 500');
+    });
 });
 
 describe('beerDataReducer loading failures', () => {

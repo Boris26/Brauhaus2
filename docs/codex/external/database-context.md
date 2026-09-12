@@ -255,6 +255,8 @@ New production-created records use `WAITING_FOR_FERMENTATION`, `fermentationStar
 
 Brauhaus2 now exposes only `FERMENTATION`, `MATURATION`, and `FINISHED` as normal global lifecycle values. Gärung is the entire time in the fermentation vessel; dry hop and other additions are per-brew recipe actions, not lifecycle states. Invalid transitions should return HTTP 409 with `INVALID_FINISHED_BEER_TRANSITION`.
 
+BeerDataStore exposes idempotent, bodyless `POST finishedbeer/{id}/start-fermentation` for `WAITING_FOR_FERMENTATION -> FERMENTATION`. It sets `fermentationStartedAt` and returns the complete canonical updated `FinishedBrew`; Brauhaus2 neither sends nor derives the timestamp.
+
 `FinishedBrew.fermentationStartedAt` is the timezone-bearing `TIME_OFFSET` epoch and must be stored/read unchanged; `startDate` must not be substituted. Recipe actions use the final BeerDataStore fields `actionId`, `triggerType`, `triggerValue`, `triggerUnit`, `contactTime`, and `contactTimeUnit`. Persisted runtime is only `PENDING | COMPLETED | SKIPPED`; `due` is a recalculated boolean projection, never a persisted `DUE` state. Runtime rows reference concrete `FinishedBrew.id`, because multiple brews may share one recipe `beer_id`. Due evaluation after Plato writes, `completedAt`, `skippedAt`, and `contactEndsAt` are server-owned. Finished-brew create idempotency remains unchanged: the client operation ID is created before dispatch/retry and `beer_id` is only a recipe reference.
 
 ## Normalized ingredient/reference contract (current)

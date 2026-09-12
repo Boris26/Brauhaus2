@@ -272,3 +272,5 @@ The UI now requires the hard-cut normalized BeerDataStore recipe contract: ingre
 ## UI ↔ FermentationSensorGateway live integration status (Brauhaus2)
 
 Brauhaus2 additively consumes the gateway's native RFC WebSocket through Caddy at `/api/fermentation/ui`; it must not use the existing BrewmasterController Socket.IO client for this endpoint. Snapshot/status DTOs and the six documented status strings are preserved without deriving assignment or fermentation decisions in the UI. BeerDataStore remains the REST source of truth and exposes no UI WebSocket. Local CRA development rewrites this public path to `http://localhost:5001/fermentation/ui` with WebSocket upgrade support. Production Caddy route and gateway deployment are **Needs verification**.
+
+The coordinated manual-start contract is bodyless, idempotent `POST finishedbeer/{id}/start-fermentation`. BeerDataStore alone changes `WAITING_FOR_FERMENTATION` to `FERMENTATION`, assigns `fermentationStartedAt`, and returns the canonical complete `FinishedBrew`; Brauhaus2 replaces the existing ID in Redux from that response without an optimistic timestamp or state transition.
