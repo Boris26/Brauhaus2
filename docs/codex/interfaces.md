@@ -22,6 +22,7 @@ Recipe scaling requires optional numeric `referenceVolume` (liters) and `referen
 | GET | `finishedbeers` | Load finished brews | `FinishedBrew[]` |
 | POST | `finishedbeer` | Create finished brew | Complete payload without `id`; backend generates the UUID and returns the created `FinishedBrew` |
 | PUT | `finishedbeer` | Update finished brew | Complete `FinishedBrew` including its existing `id`; returns the updated `FinishedBrew` |
+| POST | `finishedbeer/{id}/start-fermentation` | Start fermentation manually | no request body; idempotently returns the canonical updated `FinishedBrew` with `state: FERMENTATION` and server-owned `fermentationStartedAt` |
 | DELETE | `finishedbeer/{id}` | Delete finished brew | no body |
 | GET | `hops` | Load hops | `Hops[]` |
 | POST | `hop` | Create hop | `Hops` |
@@ -164,7 +165,7 @@ Temperatures are Celsius, Plato values are degrees Plato, timestamps are ISO-860
 
 ## Finished-brew lifecycle and recipe-action additions
 
-Finished-beer state values are `WAITING_FOR_FERMENTATION`, `FERMENTATION`, `MATURATION`, and `FINISHED`. Production completion creates `WAITING_FOR_FERMENTATION`; the UI deliberately offers no transition out of that state in this work package. Existing transitions remain `FERMENTATION -> MATURATION | FINISHED` and `MATURATION -> FINISHED`; BeerDataStore is authoritative and may reject stale/invalid writes with HTTP 409 and code `INVALID_FINISHED_BEER_TRANSITION`. Unknown historic state strings are rendered defensively and are not offered as transitions.
+Finished-beer state values are `WAITING_FOR_FERMENTATION`, `FERMENTATION`, `MATURATION`, and `FINISHED`. Production completion creates `WAITING_FOR_FERMENTATION`; an explicitly confirmed `POST finishedbeer/{id}/start-fermentation` performs the idempotent `WAITING_FOR_FERMENTATION -> FERMENTATION` transition. The request has no body, and the UI replaces the list item with the canonical response instead of creating `fermentationStartedAt`. Existing transitions remain `FERMENTATION -> MATURATION | FINISHED` and `MATURATION -> FINISHED`; BeerDataStore is authoritative and may reject stale/invalid writes with HTTP 409 and code `INVALID_FINISHED_BEER_TRANSITION`. Unknown historic state strings are rendered defensively and are not offered as transitions.
 
 Dry-hop and fermentation-phase additional-ingredient DTOs use one Recipe Action Contract: `actionId`, `triggerType`, `triggerValue`, `triggerUnit`, `contactTime`, and `contactTimeUnit`. Trigger types are `TIME_OFFSET | PLATO_THRESHOLD | MANUAL`; units are `MINUTES | HOURS | DAYS | PLATO`, while contact time accepts only the three time units. `PLATO_THRESHOLD` always uses `PLATO`, and `MANUAL` has no value/unit. `Hop.additionTime/timeUnit` is used only by brew-day hop usages; `DRY_HOP` uses Recipe Action fields exclusively. BRAUHAUS v2 is a hard cut: the UI has no mapper, migration, fallback, or local-storage compatibility for older recipe-action fields.
 

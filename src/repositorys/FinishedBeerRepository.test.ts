@@ -60,4 +60,12 @@ describe('FinishedBeerRepository', () => {
         expect(mockedApi.put.mock.calls[0][1]).toMatchObject({fermentationStartedAt: '2026-08-27T20:15:00+02:00'});
         expect(mockedApi.post).not.toHaveBeenCalled();
     });
+
+    it('starts fermentation without a client timestamp or payload', async () => {
+        mockedApi.post.mockResolvedValueOnce({data: {...createPayload, id: 'brew / 1', state: eBrewState.FERMENTATION}});
+
+        await FinishedBeerRepository.startFermentation('brew / 1');
+
+        expect(mockedApi.post).toHaveBeenCalledWith('finishedbeer/brew%20%2F%201/start-fermentation', undefined);
+    });
 });

@@ -51,7 +51,8 @@ This document reflects the **current React frontend implementation** after align
 | POST | `importbeer` (`DatabaseURL`) | Import external recipe JSON | Workflow Prepare | `BeerRepository.importBeer` | `{ source, recipe }` JSON | Backend contract update required |
 | GET | `finishedbeers` (`DatabaseURL`) | Load finished brews | Safe Read | `FinishedBeerRepository.getFinishedBeers` | none | No |
 | POST | `finishedbeer` (`DatabaseURL`) | Add finished brew | Workflow Prepare | `FinishedBeerRepository.sendNewFinishedBeer` | `FinishedBrew` JSON | No |
-| POST | `finishedbeer` (`DatabaseURL`) | Update finished brew | Workflow Control | `FinishedBeerRepository.updateFinishedBeer` | `FinishedBrew` JSON | Medium (POST used for update) |
+| PUT | `finishedbeer` (`DatabaseURL`) | Update finished brew | Workflow Control | `FinishedBeerRepository.updateFinishedBeer` | `FinishedBrew` JSON | No |
+| POST | `finishedbeer/{id}/start-fermentation` (`DatabaseURL`) | Start fermentation | Workflow Control | `FinishedBeerRepository.startFermentation` | none | No |
 | DELETE | `finishedbeer/{id}` (`DatabaseURL`) | Delete finished brew | Workflow Control | `FinishedBeerRepository.deleteFinishedBeer` | none | No |
 | GET | `hops` (`DatabaseURL`) | Load hops | Safe Read | `HopRepository.getHops` | none | No |
 | POST | `hop` (`DatabaseURL`) | Create hop | Workflow Prepare | `HopRepository.submitHop` | `Hops` JSON | No |
