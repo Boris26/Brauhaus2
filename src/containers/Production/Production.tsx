@@ -42,12 +42,14 @@ import {AgitatorSettingsRepository} from '../../repositorys/AgitatorSettingsRepo
 import {RealtimeControllerState} from '../../model/RealtimeControllerState';
 import {formatTemperature, getTemperatureSensorMessage, isTemperatureSensorReady} from '../../utils/temperatureSensor';
 import {AgitatorIntervalProgress} from './components/AgitatorIntervalProgress';
+import {createFinishedBeerFermentationActions} from '../../utils/finishedBeerFermentationActions';
 
 export const AGITATOR_SPEED_DEBOUNCE_MS = 300;
 
 export interface ProductionProps {
     selectedBeer?: Beer;
     hops?: Array<{id: string | number; name: string}>;
+    additionalIngredients?: Array<{id: string | number; name: string}>;
     temperature: number;
     currentAgitatorState: ToggleState;
     currentAgitatorSpeed: number;
@@ -924,18 +926,19 @@ export class Production extends React.Component<ProductionProps, ProductionState
         }
 
         this.isFinishedBrewSaveRequestPending = true;
-        const fermentationStartedAt = new Date().toISOString();
+        const createdAt = new Date().toISOString();
         const finishedBrew = pendingFinishedBrewPayload ?? {
                 name: selectedBeer.name || 'Unknown Beer',
-                liters: 0,
+                liters: selectedBeer.plannedVolume ?? 0,
                 originalwort:  0,
                 residual_extract:  0, // Default value added
                 note: '', // Default value added
-                startDate: fermentationStartedAt.slice(0, 10),
-                fermentationStartedAt,
+                startDate: createdAt.slice(0, 10),
+                fermentationStartedAt: null,
+                fermentationActions: createFinishedBeerFermentationActions(selectedBeer, this.props.hops, this.props.additionalIngredients),
                 beer_id: selectedBeer.id.toString(), // Assuming beer_id is a string
                 active: true,
-                state: eBrewState.FERMENTATION,
+                state: eBrewState.WAITING_FOR_FERMENTATION,
                 brewValues: dataCollector.getAllDataAsJSONString()
             };
         addFinishedBrew(finishedBrew);

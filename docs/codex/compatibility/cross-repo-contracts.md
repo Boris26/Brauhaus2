@@ -71,6 +71,10 @@ Before changing any database/backend field or endpoint, check whether the UI use
 - `FinishedBrew.brewValues`
 - `FinishedBrew.startDate`
 - `FinishedBrew.endDate`
+- `FinishedBrew.fermentationStartedAt` (nullable until fermentation is explicitly started)
+- `FinishedBrew.fermentationActions` (per-batch snapshot with already scaled amounts)
+
+Production completion now posts state `WAITING_FOR_FERMENTATION`, `fermentationStartedAt: null`, and `fermentationActions` selected from dry hops and fermentation-phase additions in the already scaled plan. The create-action wire fields are `sourceType`, optional `recipeRelationId`, optional `ingredientId`, `name`, `amount`, `unit`, `triggerType`, nullable `triggerValue`/`triggerUnit`, and nullable `contactTime`/`contactTimeUnit`. BeerDataStore owns runtime IDs and action runtime projections. Rollout of this additive FinishedBeer contract is **Needs verification**.
 
 The recipe editor now omits `time` when serializing the fixed `Einmaischen` and `Abmaischen` steps because those phases have no recipe duration. The TypeScript contract already permits this field to be absent, but database/backend persistence tolerance is **Needs verification**; the UI does not synthesize a compatibility value.
 

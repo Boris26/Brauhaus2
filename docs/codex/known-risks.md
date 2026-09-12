@@ -37,6 +37,8 @@ Resolved items that should not be reopened without new evidence: `/Available/`, 
 
 ## Lifecycle/action deployment risks
 
+- Production now sends the additive `WAITING_FOR_FERMENTATION` state and embedded `fermentationActions` create snapshot. Acceptance/persistence of the exact extended create DTO by the deployed BeerDataStore is **Needs verification**.
+
 - BeerDataStore validation for the three-state lifecycle, HTTP 409 `INVALID_FINISHED_BEER_TRANSITION`, and atomic completion timestamps is **Needs verification**. The UI never treats its transition projection as authoritative.
 - Recipe action fields are additive and optional for legacy compatibility. Backend persistence and runtime action materialization are **Needs verification**; the UI deliberately does not reinterpret legacy dry-hop `additionTime`.
 - `TIME_OFFSET` uses `FinishedBrew.fermentationStartedAt` as its only fermentation epoch; `startDate` is never a fallback. The browser sets a timezone-bearing ISO instant only when the production workflow first creates the concrete brew. BeerDataStore persistence and calculation remain **Needs verification**.

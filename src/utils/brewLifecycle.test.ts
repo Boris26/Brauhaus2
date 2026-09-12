@@ -8,6 +8,7 @@ it('defines only the normal fermentation lifecycle', () => {
   expect(canTransitionBrew(eBrewState.FERMENTATION, eBrewState.FINISHED)).toBe(true);
   expect(canTransitionBrew(eBrewState.MATURATION, eBrewState.FINISHED)).toBe(true);
   expect(canTransitionBrew(eBrewState.FINISHED, eBrewState.FERMENTATION)).toBe(false);
+  expect(canTransitionBrew(eBrewState.WAITING_FOR_FERMENTATION, eBrewState.FERMENTATION)).toBe(false);
 });
 
 it('finishes without changing measurements or recipe linkage', () => {

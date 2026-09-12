@@ -14,6 +14,6 @@ export const completeFinishedBrew = (brew: FinishedBrew, now: Date = new Date())
     endDate: brew.endDate || now.toISOString(),
 });
 
-export const enforceFinishedBrewStateInvariant = <TBrew extends FinishedBrew | Omit<FinishedBrew, 'id'>>(brew: TBrew): TBrew => (
+export const enforceFinishedBrewStateInvariant = <TBrew extends {state: eBrewState; active: boolean}>(brew: TBrew): TBrew => (
     brew.state === eBrewState.FINISHED ? ({...brew, active: false} as TBrew) : brew
 );

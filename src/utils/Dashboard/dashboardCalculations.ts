@@ -38,7 +38,7 @@ export const calculateDashboardKpis = (beers: Beer[] = [], brews: FinishedBrew[]
   recipeCount: beers.length,
   brewCount: brews.length,
   totalLiters: brews.reduce((sum, brew) => sum + Math.max(0, safeNumber(brew.liters)), 0),
-  activeBeerCount: brews.filter((brew) => brew.state === eBrewState.FERMENTATION || brew.state === eBrewState.MATURATION).length,
+  activeBeerCount: brews.filter((brew) => brew.state === eBrewState.WAITING_FOR_FERMENTATION || brew.state === eBrewState.FERMENTATION || brew.state === eBrewState.MATURATION).length,
   fermentationCount: brews.filter((brew) => brew.state === eBrewState.FERMENTATION).length,
   maturationCount: brews.filter((brew) => brew.state === eBrewState.MATURATION).length,
   finishedCount: brews.filter((brew) => brew.state === eBrewState.FINISHED).length,
@@ -178,7 +178,7 @@ export const calculateCareHints = (beers: Beer[] = [], brews: FinishedBrew[] = [
 };
 
 export const buildActiveBrewRows = (brews: FinishedBrew[] = [], now = new Date()): DashboardActiveBrewRow[] => brews
-  .filter((brew) => brew.state === eBrewState.FERMENTATION || brew.state === eBrewState.MATURATION)
+  .filter((brew) => brew.state === eBrewState.WAITING_FOR_FERMENTATION || brew.state === eBrewState.FERMENTATION || brew.state === eBrewState.MATURATION)
   .map((brew) => {
     const days = calculateDaysSinceStart(brew.startDate, now);
     return {

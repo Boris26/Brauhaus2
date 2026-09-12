@@ -123,7 +123,11 @@ Heater-safety reset is intentionally not a Settings-page action. Settings expose
 
 ## Fermentation data (#249)
 
+At production completion, `Production` uses the selected, already scaled `Beer` plan. It selects `DRY_HOP` hops and `FERMENTATION` additional ingredients, resolves their display names from ingredient master data, and copies their scaled quantities and recipe trigger/contact metadata into the `FinishedBeer.fermentationActions` create snapshot. The create request starts in `WAITING_FOR_FERMENTATION` with `fermentationStartedAt: null`; no scheduler, gateway call, notification, or fermentation-start command is involved.
+
 Finished-beer detail/dashboard → Redux action → fermentation epic → `FermentationRepository` → BeerDataStore. A load combines recipe actions and the unified measurement history from their per-finished-beer routes with the existing device/sensor reads. Beer temperature, ambient temperature, and Plato flow exclusively from `/measurements` into one Redux history; the UI does not merge temperatures from `/sensor-measurements`. The sensor route remains loaded for sensor-specific blubb data. Successful measurement, completion, or assignment commands reload backend truth; reducers never optimistically claim domain success. Sensor hardware communicates with BeerDataStore, never Brauhaus2.
+
+The finished-beer detail presentation prefers the embedded `FinishedBrew.fermentationActions` field whenever it is present, including an explicitly empty array. The separately loaded recipe-action result is retained only as a legacy fallback when old `FinishedBrew` responses omit the field.
 
 Both the compact finished-beer detail and each existing finished-brew table row link to `/finished-brews/{encodedFinishedBeerId}/measurements`. The route resolves the existing `FinishedBrew.id`, restores the finished-brew list only for direct entry, and reuses `FinishedBrewDetails` in measurement mode. That shared component remains the single owner of the fermentation aggregate load, so opening the analysis view does not introduce a second measurement-loading path or endpoint. Current values are selected independently from the unified measurement history; completed action markers use only backend `completedAt` timestamps.
 
