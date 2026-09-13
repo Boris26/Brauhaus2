@@ -3,7 +3,7 @@ import {FinishedBrewDetailsView} from './FinishedBrewDetails';
 import {eBrewState} from '../../../enums/eBrewState';
 
 const brew: any = {id: 'brew-1', name: 'West Coast IPA', startDate: '2026-09-01', fermentationStartedAt: '2026-09-01T12:00:00+02:00', liters: 20, originalwort: 13.2, residual_extract: null, note: '', active: true, state: eBrewState.FERMENTATION};
-const base: any = {brew, details: {measurements: [], actions: [], devices: [], sensorMeasurements: []}, bubbleActivity: [], bubbleActivityRange: '24h', bubbleActivityLoading: false, activeBrews: [brew], loading: false, saving: false, savingLifecycle: false, startingFermentation: false, completing: [], completeActionErrors: {}, dismissCompleteError: jest.fn(), skipping: [], assigning: [], load: jest.fn(), loadBubbleActivity: jest.fn(), save: jest.fn(), complete: jest.fn(), skip: jest.fn(), transition: jest.fn(), startFermentation: jest.fn(), assign: jest.fn()};
+const base: any = {brew, details: {measurements: [], actions: [], devices: [], sensorMeasurements: []}, bubbleActivity: [], bubbleActivityRange: '24h', bubbleActivityLoading: false, activeBrews: [brew], loading: false, saving: false, savingLifecycle: false, startingFermentation: false, completing: [], completeActionErrors: {}, dismissCompleteError: jest.fn(), skipping: [], assigning: [], unassigning: [], sensorsByDeviceUid: {}, load: jest.fn(), loadBubbleActivity: jest.fn(), save: jest.fn(), complete: jest.fn(), skip: jest.fn(), transition: jest.fn(), startFermentation: jest.fn(), assign: jest.fn(), unassign: jest.fn()};
 
 describe('fermentation details dashboard', () => {
   it('shows the compact current-state dashboard with neutral missing values', () => {
@@ -30,7 +30,7 @@ describe('fermentation details dashboard', () => {
         {id: 'm2', finishedBeerId: 'brew-1', measuredAt: '2026-09-04T18:00:00Z', beerTemperatureC: 18.3, ambientTemperatureC: 17.6, plato: 4.2, source: 'SENSOR'},
       ],
       actions: [{actionId: 'a', status: 'PENDING', due: true, sourceType: 'HINZUFÜGEN', name: 'Citra', amount: 80, unit: 'g'}],
-      devices: [{id: 'd', name: 'FERM-01', lastSeenAt: new Date().toISOString()}],
+      devices: [{deviceUid: 'd', deviceName: 'FERM-01', lastSeenAt: new Date().toISOString(), activeAssignment: {beerId: 'brew-1'}}],
       sensorMeasurements: [{id: 's', deviceId: 'd', measuredAt: '2026-09-03T18:00:00Z', beerTemperature: 18.3, ambientTemperature: 17.6}],
     };
     render(<FinishedBrewDetailsView {...base} details={details} complete={complete} assign={assign} />);
@@ -42,7 +42,7 @@ describe('fermentation details dashboard', () => {
     expect(screen.getByText('● Online')).toBeInTheDocument();
     expect(screen.getByRole('img', {name: /Plato-Verlauf/})).toBeInTheDocument();
     fireEvent.click(screen.getByText('Zugabe erledigt')); expect(complete).toHaveBeenCalledWith('brew-1', 'a');
-    fireEvent.click(screen.getByText('West Coast IPA', {selector: 'button'})); expect(assign).toHaveBeenCalledWith('d', 'brew-1');
+    expect(assign).not.toHaveBeenCalled();
   });
 
   it('moves full histories and measurement entry to the separate measurements view', () => {
@@ -68,6 +68,56 @@ describe('fermentation details dashboard', () => {
     expect(save).toHaveBeenLastCalledWith(expect.objectContaining({beerTemperatureC: undefined, ambientTemperatureC: 17.2, plato: undefined}));
     fireEvent.click(screen.getByText('← Fertige Biere'));
     expect(closeMeasurements).toHaveBeenCalledTimes(1);
+  });
+
+  it('uses backend assignments, offers only free devices and dispatches assignment', () => {
+    const assign = jest.fn();
+    const details: any = {measurements: [], actions: [], sensorMeasurements: [], devices: [
+      {deviceUid: 'other', deviceName: 'Sensor Fremdbier', activeAssignment: {beerId: 'brew-2'}, lastSeenAt: new Date().toISOString()},
+      {deviceUid: 'free', deviceName: 'Sensor Keller', activeAssignment: null},
+    ]};
+    render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" assign={assign} sensorsByDeviceUid={{other: {deviceUid: 'other', status: 'ASSIGNED', beerId: 'brew-1', updatedAt: new Date().toISOString()}, free: {deviceUid: 'free', status: 'REGISTERED', updatedAt: new Date().toISOString()}}} />);
+    expect(screen.getByText('Kein Sensor zugeordnet.')).toBeInTheDocument();
+    expect(screen.getByText('Sensor').nextSibling).toHaveTextContent('–');
+    expect(screen.getByRole('option', {name: 'Sensor Keller · Online'})).toBeInTheDocument();
+    expect(screen.queryByRole('option', {name: /Sensor Fremdbier/})).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Sensor auswählen'), {target: {value: 'free'}});
+    fireEvent.click(screen.getByRole('button', {name: 'Sensor zuweisen'}));
+    expect(assign).toHaveBeenCalledWith('free', 'brew-1');
+  });
+
+  it('shows only the assigned sensor online status and confirms separation', () => {
+    const unassign = jest.fn();
+    const details: any = {measurements: [], actions: [], sensorMeasurements: [], devices: [
+      {deviceUid: 'mine', deviceName: 'Sensor Keller', activeAssignment: {beerId: 'brew-1', assignedAt: '2026-09-13T15:20:00Z'}},
+      {deviceUid: 'free', deviceName: 'Freier Sensor', activeAssignment: null},
+    ]};
+    const {rerender} = render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" unassign={unassign} sensorsByDeviceUid={{mine: {deviceUid: 'mine', status: 'DISCONNECTED', updatedAt: ''}, free: {deviceUid: 'free', status: 'REGISTERED', updatedAt: ''}}} />);
+    expect(screen.getAllByText('● Offline').length).toBeGreaterThan(0);
+    expect(screen.queryByText('● Online')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', {name: 'Sensor trennen'}));
+    expect(screen.getByText('Bereits gespeicherte Messwerte bleiben erhalten.')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', {name: 'Abbrechen'}));
+    expect(unassign).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', {name: 'Sensor trennen'}));
+    fireEvent.click(screen.getAllByRole('button', {name: 'Sensor trennen'})[1]);
+    expect(unassign).toHaveBeenCalledWith('mine', 'brew-1');
+    rerender(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" unassign={unassign} unassigning={['mine']} />);
+    expect(screen.getByRole('button', {name: 'Wird getrennt …'})).toBeDisabled();
+  });
+
+  it.each([eBrewState.MATURATION, eBrewState.FINISHED])('does not offer new assignments in %s', state => {
+    const details: any = {measurements: [], actions: [], sensorMeasurements: [], devices: [{deviceUid: 'free', deviceName: 'Frei', activeAssignment: null}]};
+    render(<FinishedBrewDetailsView {...base} brew={{...brew, state}} details={details} viewMode="measurements" />);
+    expect(screen.queryByLabelText('Sensor auswählen')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', {name: 'Sensor zuweisen'})).not.toBeInTheDocument();
+  });
+
+  it('reports when no free sensor is available and preserves request-specific errors', () => {
+    const details: any = {measurements: [], actions: [], sensorMeasurements: [], devices: [{deviceUid: 'other', deviceName: 'Belegt', activeAssignment: {beerId: 'brew-2'}}]};
+    render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" assignmentError="HTTP 409" />);
+    expect(screen.getByText('Kein freier Sensor verfügbar.')).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('Der Sensor konnte nicht zugeordnet werden.HTTP 409');
   });
 
   it('loads bubble activity ranges and keeps its loading and error states local', () => {

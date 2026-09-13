@@ -1,5 +1,5 @@
 import {BaseRepository} from './BaseRepository';
-import {BubbleActivity, BubbleActivityDTO, CreateFermentationMeasurement, FermentationAction, FermentationActionDTO, FermentationDetails, FermentationDevice, FermentationMeasurement, FermentationMeasurementDTO, mapBubbleActivity, mapFermentationAction, mapFermentationMeasurement, SensorMeasurement} from '../model/Fermentation';
+import {BubbleActivity, BubbleActivityDTO, CreateFermentationMeasurement, FermentationAction, FermentationActionDTO, FermentationDetails, FermentationDevice, FermentationDeviceDTO, FermentationMeasurement, FermentationMeasurementDTO, mapBubbleActivity, mapFermentationAction, mapFermentationDevice, mapFermentationMeasurement, SensorMeasurement} from '../model/Fermentation';
 
 export class FermentationRepository extends BaseRepository {
   static async getDetails(finishedBeerId: string): Promise<FermentationDetails> {
@@ -12,7 +12,10 @@ export class FermentationRepository extends BaseRepository {
     ]);
     return {actions: actions.map(mapFermentationAction), measurements: measurements.map(mapFermentationMeasurement), devices, sensorMeasurements};
   }
-  static getDevices(): Promise<FermentationDevice[]> { return this.get('fermentation/devices'); }
+  static async getDevices(): Promise<FermentationDevice[]> {
+    const devices = await this.get<FermentationDeviceDTO[]>('fermentation/devices');
+    return devices.map(mapFermentationDevice);
+  }
   static getSensorMeasurements(finishedBeerId: string): Promise<SensorMeasurement[]> {
     return this.get(`fermentation/beers/${encodeURIComponent(finishedBeerId)}/sensor-measurements`);
   }
@@ -42,7 +45,10 @@ export class FermentationRepository extends BaseRepository {
   static skipAction(finishedBeerId: string, actionId: string): Promise<FermentationAction> {
     return this.post(`fermentation/beers/${encodeURIComponent(finishedBeerId)}/recipe-actions/${encodeURIComponent(actionId)}/skip`, {});
   }
-  static assignDevice(deviceId: string, finishedBeerId: string): Promise<FermentationDevice> {
-    return this.put(`fermentation/devices/${encodeURIComponent(deviceId)}/assignment`, {finishedBeerId});
+  static assignDevice(deviceUid: string, finishedBeerId: string): Promise<FermentationDevice> {
+    return this.post(`fermentation/devices/${encodeURIComponent(deviceUid)}/assignment`, {beerId: finishedBeerId});
+  }
+  static unassignDevice(deviceUid: string): Promise<void> {
+    return this.delete(`fermentation/devices/${encodeURIComponent(deviceUid)}/assignment`);
   }
 }

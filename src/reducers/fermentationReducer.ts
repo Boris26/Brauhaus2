@@ -2,8 +2,8 @@ import {FermentationActionTypes} from '../actions/fermentation.actions';
 import {BubbleActivity, BubbleActivityRange, FermentationDetails, FermentationGatewaySensorStatus} from '../model/Fermentation';
 
 export interface BubbleActivityState {activity: BubbleActivity[]; loading: boolean; error?: string; selectedRange: BubbleActivityRange;}
-export interface FermentationState { byBrewId: Record<string, FermentationDetails>; bubbleActivityByBrewId: Record<string, BubbleActivityState>; loadingIds: string[]; savingMeasurementIds: string[]; completingActionIds: string[]; completeActionErrors: Record<string, string>; skippingActionIds: string[]; assigningDeviceIds: string[]; errors: Record<string, string>; gatewayConnected: boolean; sensorsByDeviceUid: Record<string, FermentationGatewaySensorStatus>; }
-export const initialFermentationState: FermentationState = {byBrewId: {}, bubbleActivityByBrewId: {}, loadingIds: [], savingMeasurementIds: [], completingActionIds: [], completeActionErrors: {}, skippingActionIds: [], assigningDeviceIds: [], errors: {}, gatewayConnected: false, sensorsByDeviceUid: {}};
+export interface FermentationState { byBrewId: Record<string, FermentationDetails>; bubbleActivityByBrewId: Record<string, BubbleActivityState>; loadingIds: string[]; savingMeasurementIds: string[]; completingActionIds: string[]; completeActionErrors: Record<string, string>; skippingActionIds: string[]; assigningDeviceIds: string[]; unassigningDeviceIds: string[]; assignmentErrors: Record<string, string>; unassignmentErrors: Record<string, string>; errors: Record<string, string>; gatewayConnected: boolean; sensorsByDeviceUid: Record<string, FermentationGatewaySensorStatus>; }
+export const initialFermentationState: FermentationState = {byBrewId: {}, bubbleActivityByBrewId: {}, loadingIds: [], savingMeasurementIds: [], completingActionIds: [], completeActionErrors: {}, skippingActionIds: [], assigningDeviceIds: [], unassigningDeviceIds: [], assignmentErrors: {}, unassignmentErrors: {}, errors: {}, gatewayConnected: false, sensorsByDeviceUid: {}};
 const add = (xs: string[], id: string) => xs.includes(id) ? xs : [...xs, id];
 const remove = (xs: string[], id: string) => xs.filter(value => value !== id);
 export const fermentationActionRequestId = (brewId: string, actionId: string) => `${brewId}/${actionId}`;
@@ -37,9 +37,12 @@ export const fermentationReducer = (state = initialFermentationState, action: an
     case FermentationActionTypes.SKIP_ACTION: return {...state, skippingActionIds: add(state.skippingActionIds, p.actionId)};
     case FermentationActionTypes.SKIP_ACTION_SUCCESS: return {...state, skippingActionIds: remove(state.skippingActionIds, p.actionId)};
     case FermentationActionTypes.SKIP_ACTION_FAILURE: return {...state, skippingActionIds: remove(state.skippingActionIds, p.actionId), errors: {...state.errors, [p.brewId]: p.error}};
-    case FermentationActionTypes.ASSIGN_DEVICE: return {...state, assigningDeviceIds: add(state.assigningDeviceIds, p.deviceId)};
+    case FermentationActionTypes.ASSIGN_DEVICE: return {...state, assigningDeviceIds: add(state.assigningDeviceIds, p.deviceId), assignmentErrors: {...state.assignmentErrors, [p.brewId]: ''}};
     case FermentationActionTypes.ASSIGN_DEVICE_SUCCESS: return {...state, assigningDeviceIds: remove(state.assigningDeviceIds, p.deviceId)};
-    case FermentationActionTypes.ASSIGN_DEVICE_FAILURE: return {...state, assigningDeviceIds: remove(state.assigningDeviceIds, p.deviceId), errors: {...state.errors, [p.brewId]: p.error}};
+    case FermentationActionTypes.ASSIGN_DEVICE_FAILURE: return {...state, assigningDeviceIds: remove(state.assigningDeviceIds, p.deviceId), assignmentErrors: {...state.assignmentErrors, [p.brewId]: p.error}};
+    case FermentationActionTypes.UNASSIGN_DEVICE: return {...state, unassigningDeviceIds: add(state.unassigningDeviceIds, p.deviceId), unassignmentErrors: {...state.unassignmentErrors, [p.brewId]: ''}};
+    case FermentationActionTypes.UNASSIGN_DEVICE_SUCCESS: return {...state, unassigningDeviceIds: remove(state.unassigningDeviceIds, p.deviceId)};
+    case FermentationActionTypes.UNASSIGN_DEVICE_FAILURE: return {...state, unassigningDeviceIds: remove(state.unassigningDeviceIds, p.deviceId), unassignmentErrors: {...state.unassignmentErrors, [p.brewId]: p.error}};
     case FermentationActionTypes.GATEWAY_CONNECTION_CHANGED: return {...state, gatewayConnected: p.connected};
     case FermentationActionTypes.GATEWAY_SNAPSHOT_RECEIVED: return {...state, sensorsByDeviceUid: Object.fromEntries((p.sensors || []).map((sensor: FermentationGatewaySensorStatus) => [sensor.deviceUid, sensor]))};
     case FermentationActionTypes.GATEWAY_SENSOR_STATUS_CHANGED: return p.sensor?.deviceUid ? {...state, sensorsByDeviceUid: {...state.sensorsByDeviceUid, [p.sensor.deviceUid]: p.sensor}} : state;

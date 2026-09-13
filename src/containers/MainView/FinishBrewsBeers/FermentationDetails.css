@@ -16,6 +16,13 @@
 .fermentation-prominent { color: var(--color-primary); font-size: 1.05rem; }.fermentation-prominent.is-overdue { color: var(--color-error); }.fermentation-prominent.is-due { color: var(--color-warning); }
 .fermentation-device { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--spacing-sm); align-items: center; padding: var(--spacing-sm); background: var(--color-panel-contrast); border-radius: var(--border-radius-medium); }
 .fermentation-assignment { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-xs); font-size: var(--font-size-small); }
+.fermentation-sensor-card { display: grid; gap: var(--spacing-sm); }
+.fermentation-assigned-device { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--spacing-md); }
+.fermentation-assigned-device > div { display: grid; gap: var(--spacing-xs); }
+.fermentation-assigned-device small, .fermentation-error small { display: block; color: var(--color-text-secondary); }
+.fermentation-assignment-controls { display: flex; flex-wrap: wrap; align-items: end; gap: var(--spacing-sm); }
+.fermentation-assignment-controls label { display: grid; gap: var(--spacing-xs); color: var(--color-text-secondary); font-size: var(--font-size-small); }
+.fermentation-assignment-controls select { min-width: 16rem; padding: .5rem; color: var(--color-text); background: var(--color-input-bg); border: 1px solid var(--color-border); border-radius: var(--border-radius-small); }
 .is-online { color: var(--color-success); }.is-offline, .fermentation-error { color: var(--color-error); }
 .fermentation-trend-card { overflow: hidden; }
 .fermentation-trend { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-xs); margin-top: var(--spacing-xs); }

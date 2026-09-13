@@ -67,6 +67,17 @@ export const assignDeviceEpic = (action$: any) => action$.pipe(
   )))
 );
 
+export const unassignDeviceEpic = (action$: any) => action$.pipe(
+  ofType(FermentationActionTypes.UNASSIGN_DEVICE),
+  groupBy((action: any) => action.payload.deviceId),
+  mergeMap((group$: any) => group$.pipe(exhaustMap((action: any) =>
+    from(FermentationRepository.unassignDevice(action.payload.deviceId)).pipe(
+      mergeMap(() => of(FermentationActions.unassignDeviceSuccess(action.payload.deviceId, action.payload.brewId), FermentationActions.load(action.payload.brewId))),
+      catchError(error => of(FermentationActions.unassignDeviceFailure(action.payload.deviceId, action.payload.brewId, error.message)))
+    )
+  )))
+);
+
 const gatewayMessageAction = (message: FermentationGatewayMessage) => message.type === 'FERMENTATION_GATEWAY_SNAPSHOT'
   ? FermentationActions.gatewaySnapshotReceived(message.sensors)
   : FermentationActions.gatewaySensorStatusChanged(message.sensor);
@@ -127,4 +138,4 @@ export const loadBubbleActivityEpic = (action$: any) => action$.pipe(
   })))
 );
 
-export const fermentationEpics = [loadFermentationEpic, createMeasurementEpic, completeFermentationActionEpic, skipFermentationActionEpic, assignDeviceEpic, fermentationGatewayWebSocketEpic, refreshFermentationAfterGatewayStatusEpic, loadBubbleActivityEpic];
+export const fermentationEpics = [loadFermentationEpic, createMeasurementEpic, completeFermentationActionEpic, skipFermentationActionEpic, assignDeviceEpic, unassignDeviceEpic, fermentationGatewayWebSocketEpic, refreshFermentationAfterGatewayStatusEpic, loadBubbleActivityEpic];
