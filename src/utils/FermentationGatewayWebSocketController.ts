@@ -2,7 +2,8 @@ import {FermentationGatewaySensorStatus} from '../model/Fermentation';
 
 export type FermentationGatewayMessage =
   | {type: 'FERMENTATION_GATEWAY_SNAPSHOT'; sensors: FermentationGatewaySensorStatus[]}
-  | {type: 'FERMENTATION_SENSOR_STATUS_CHANGED'; sensor: FermentationGatewaySensorStatus};
+  | {type: 'FERMENTATION_SENSOR_STATUS_CHANGED'; sensor: FermentationGatewaySensorStatus}
+  | {type: 'FERMENTATION_DATA_CHANGED'; beerId: string; change: 'MEASUREMENT' | 'BUBBLE_ACTIVITY' | 'STATE'};
 
 export const buildFermentationGatewayWebSocketUrl = (location: Pick<Location, 'protocol' | 'host'> = window.location): string =>
   `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/api/fermentation/ui`;
@@ -12,6 +13,10 @@ export const parseFermentationGatewayMessage = (data: unknown): FermentationGate
     const value = typeof data === 'string' ? JSON.parse(data) : data;
     if (value?.type === 'FERMENTATION_GATEWAY_SNAPSHOT' && Array.isArray(value.sensors)) return value;
     if (value?.type === 'FERMENTATION_SENSOR_STATUS_CHANGED' && value.sensor?.deviceUid) return value;
+    if (value?.type === 'FERMENTATION_DATA_CHANGED'
+      && typeof value.beerId === 'string'
+      && value.beerId.length > 0
+      && ['MEASUREMENT', 'BUBBLE_ACTIVITY', 'STATE'].includes(value.change)) return value;
   } catch (_) {
     // Malformed and unknown gateway messages are deliberately non-fatal.
   }
