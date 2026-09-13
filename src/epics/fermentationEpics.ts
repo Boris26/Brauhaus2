@@ -8,6 +8,7 @@ import {RootState} from '../reducers/rootReducer';
 import {Views} from '../enums/eViews';
 import {getFinishedBeerIdFromPath} from '../utils/viewRoutes';
 import {BubbleActivityRange} from '../model/Fermentation';
+import {BeerActions} from '../actions/actions';
 
 let gatewayController: FermentationGatewayWebSocketController | null = null;
 
@@ -78,9 +79,11 @@ export const unassignDeviceEpic = (action$: any) => action$.pipe(
   )))
 );
 
-const gatewayMessageAction = (message: FermentationGatewayMessage) => message.type === 'FERMENTATION_GATEWAY_SNAPSHOT'
-  ? FermentationActions.gatewaySnapshotReceived(message.sensors)
-  : FermentationActions.gatewaySensorStatusChanged(message.sensor);
+export const gatewayMessageAction = (message: FermentationGatewayMessage) => {
+  if (message.type === 'FERMENTATION_GATEWAY_SNAPSHOT') return FermentationActions.gatewaySnapshotReceived(message.sensors);
+  if (message.type === 'FERMENTATION_SENSOR_STATUS_CHANGED') return FermentationActions.gatewaySensorStatusChanged(message.sensor);
+  return FermentationActions.gatewayDataChanged(message.beerId, message.change);
+};
 
 export const fermentationGatewayWebSocketEpic = (action$: any) => action$.pipe(
   ofType(FermentationActionTypes.GATEWAY_CONNECT, FermentationActionTypes.GATEWAY_DISCONNECT),
@@ -111,11 +114,32 @@ export const refreshFermentationAfterGatewayStatusEpic = (action$: any, state$: 
     if (!['REGISTERED', 'ASSIGNED', 'UNASSIGNED', 'DISCONNECTED'].includes(action.payload.sensor.status)) return EMPTY;
     const state = state$.value;
     const loadedIds = Object.keys(state.fermentationReducer.byBrewId);
+    if (action.payload.sensor.beerId) {
+      return loadedIds.includes(action.payload.sensor.beerId)
+        ? of(FermentationActions.load(action.payload.sensor.beerId))
+        : EMPTY;
+    }
     const pathId = state.applicationReducer.view === Views.MEASUREMENT_DATA && typeof window !== 'undefined'
       ? getFinishedBeerIdFromPath(window.location.pathname)
       : undefined;
     const brewId = pathId && loadedIds.includes(pathId) ? pathId : loadedIds.length === 1 ? loadedIds[0] : undefined;
     return brewId ? of(FermentationActions.load(brewId)) : EMPTY;
+  }),
+);
+
+/** Translate gateway invalidations into targeted REST reloads; socket payloads never replace canonical data. */
+export const refreshFermentationAfterGatewayDataEpic = (action$: any, state$: {value: RootState}) => action$.pipe(
+  ofType(FermentationActionTypes.GATEWAY_DATA_CHANGED),
+  mergeMap((action: any) => {
+    const {beerId, change} = action.payload;
+    const state = state$.value;
+    const isLoaded = Object.prototype.hasOwnProperty.call(state.fermentationReducer.byBrewId, beerId);
+    const actions: any[] = [];
+    if (change === 'STATE') actions.push(BeerActions.getFinishedBeers(true));
+    if (isLoaded && (change === 'STATE' || change === 'MEASUREMENT')) actions.push(FermentationActions.load(beerId));
+    const bubbleState = state.fermentationReducer.bubbleActivityByBrewId[beerId];
+    if (change === 'BUBBLE_ACTIVITY' && bubbleState) actions.push(FermentationActions.loadBubbleActivity(beerId, bubbleState.selectedRange));
+    return actions.length ? of(...actions) : EMPTY;
   }),
 );
 
@@ -138,4 +162,4 @@ export const loadBubbleActivityEpic = (action$: any) => action$.pipe(
   })))
 );
 
-export const fermentationEpics = [loadFermentationEpic, createMeasurementEpic, completeFermentationActionEpic, skipFermentationActionEpic, assignDeviceEpic, unassignDeviceEpic, fermentationGatewayWebSocketEpic, refreshFermentationAfterGatewayStatusEpic, loadBubbleActivityEpic];
+export const fermentationEpics = [loadFermentationEpic, createMeasurementEpic, completeFermentationActionEpic, skipFermentationActionEpic, assignDeviceEpic, unassignDeviceEpic, fermentationGatewayWebSocketEpic, refreshFermentationAfterGatewayStatusEpic, refreshFermentationAfterGatewayDataEpic, loadBubbleActivityEpic];

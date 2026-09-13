@@ -27,6 +27,23 @@ describe('FermentationGatewayWebSocketController', () => {
     expect(parseFermentationGatewayMessage('invalid')).toBeUndefined();
   });
 
+  it('parses fermentation data invalidations and validates their contract', () => {
+    expect(parseFermentationGatewayMessage(JSON.stringify({type: 'FERMENTATION_DATA_CHANGED', beerId: 'brew-a', change: 'STATE'}))).toEqual({type: 'FERMENTATION_DATA_CHANGED', beerId: 'brew-a', change: 'STATE'});
+    expect(parseFermentationGatewayMessage(JSON.stringify({type: 'FERMENTATION_DATA_CHANGED', beerId: 'brew-a', change: 'MEASUREMENT'}))).toEqual({type: 'FERMENTATION_DATA_CHANGED', beerId: 'brew-a', change: 'MEASUREMENT'});
+    expect(parseFermentationGatewayMessage(JSON.stringify({type: 'FERMENTATION_DATA_CHANGED', beerId: '', change: 'STATE'}))).toBeUndefined();
+    expect(parseFermentationGatewayMessage(JSON.stringify({type: 'FERMENTATION_DATA_CHANGED', beerId: 'brew-a', change: 'UNKNOWN'}))).toBeUndefined();
+  });
+
+  it('forwards valid data changes and keeps unknown events non-fatal', () => {
+    const onMessage = jest.fn();
+    const controller = new FermentationGatewayWebSocketController(onMessage, jest.fn(), 'ws://host/api/fermentation/ui');
+    controller.connect();
+    expect(() => MockWebSocket.instances[0].onmessage?.({data: '{"type":"UNKNOWN"}'})).not.toThrow();
+    MockWebSocket.instances[0].onmessage?.({data: '{"type":"FERMENTATION_DATA_CHANGED","beerId":"brew-a","change":"STATE"}'});
+    expect(onMessage).toHaveBeenCalledWith({type: 'FERMENTATION_DATA_CHANGED', beerId: 'brew-a', change: 'STATE'});
+    controller.disconnect();
+  });
+
   it('reconnects and resets backoff after a successful connection', () => {
     const states: boolean[] = [];
     const controller = new FermentationGatewayWebSocketController(jest.fn(), connected => states.push(connected), 'ws://host/api/fermentation/ui');
