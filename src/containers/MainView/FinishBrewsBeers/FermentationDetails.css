@@ -22,7 +22,9 @@
 .fermentation-assigned-device small, .fermentation-error small { display: block; color: var(--color-text-secondary); }
 .fermentation-assignment-controls { display: flex; flex-wrap: wrap; align-items: end; gap: var(--spacing-sm); }
 .fermentation-assignment-controls label { display: grid; gap: var(--spacing-xs); color: var(--color-text-secondary); font-size: var(--font-size-small); }
-.fermentation-assignment-controls select { min-width: 16rem; padding: .5rem; color: var(--color-text); background: var(--color-input-bg); border: 1px solid var(--color-border); border-radius: var(--border-radius-small); }
+.fermentation-assignment-controls select { min-width: 16rem; padding: .5rem; color: var(--color-text); background: var(--color-panel-contrast); border: 1px solid var(--color-border); border-radius: var(--border-radius-small); }
+.fermentation-assignment-controls select option { color: var(--color-text); background: var(--color-panel-contrast); }
+.fermentation-assignment-controls select:disabled { color: var(--color-disabled-text); background: var(--color-disabled-bg); border-color: var(--color-disabled-border); cursor: not-allowed; }
 .is-online { color: var(--color-success); }.is-offline, .fermentation-error { color: var(--color-error); }
 .fermentation-trend-card { overflow: hidden; }
 .fermentation-trend { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-xs); margin-top: var(--spacing-xs); }
