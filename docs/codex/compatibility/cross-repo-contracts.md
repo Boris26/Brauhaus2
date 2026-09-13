@@ -263,6 +263,8 @@ The additive technical-history read is `GET fermentation/beers/{finishedBeerId}/
 
 ## Fermentation lifecycle/actions (Brauhaus2)
 
+The Settings UI uses BeerDataStore's existing `GET /config` and partial `PUT /config` contract for `fermentationActionWarningSeconds` and `fermentationActionReminderIntervalSeconds`. Both wire values are integer seconds. The UI only converts those values to minutes or hours for display, permits warning value `0`, rejects reminder value `0`, sends only changed fields, and adopts the canonical PUT response. Deployment of these fields and the exact canonical response behind `/api/database/config` is **Needs verification** with BeerDataStore.
+
 The UI normal lifecycle is `FERMENTATION -> MATURATION | FINISHED`, `MATURATION -> FINISHED`. There is no regular main/secondary-fermentation state: `FERMENTATION` covers the entire vessel period. Dry hop and fermentation additions use optional recipe trigger/contact fields and separate BeerDataStore runtime actions. BeerDataStore persistence, due calculation, completion/contact timestamps, conflict response, and push event ownership are **Needs verification**. PI control owns neither lifecycle validation nor recipe-action completion.
 
 ### BeerDataStore normalized recipe ingredients and Import V2 resolution
