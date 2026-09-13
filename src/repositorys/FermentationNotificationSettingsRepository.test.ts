@@ -25,7 +25,7 @@ describe('FermentationNotificationSettingsRepository', () => {
 
     it('uses GET config through the existing database API infrastructure', async () => {
         mockedApi.get.mockResolvedValueOnce({data: settings});
-        await expect(FermentationNotificationSettingsRepository.get()).resolves.toEqual(settings);
+        await expect(FermentationNotificationSettingsRepository.getSettings()).resolves.toEqual(settings);
         expect(mockedApi.get).toHaveBeenCalledWith('config');
     });
 

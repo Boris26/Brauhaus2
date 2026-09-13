@@ -16,6 +16,8 @@ const payload: FinishedBrewCreatePayload = {
     state: eBrewState.FERMENTATION, brewValues: '{"groupedData":{"FINISHED":[1]}}',
 };
 
+const createdBrew = (id: string): FinishedBrew => ({...payload, id, fermentationActions: undefined});
+
 const deferred = <T,>() => {
     let resolve!: (value: T) => void;
     let reject!: (error: Error) => void;
@@ -43,7 +45,7 @@ describe('sendNewFinishedBeerEpic', () => {
         expect(repository.sendNewFinishedBeer).toHaveBeenCalledTimes(1);
         expect(repository.sendNewFinishedBeer).toHaveBeenCalledWith(payload);
 
-        request.resolve({...payload, id: 'brew-1'});
+        request.resolve(createdBrew('brew-1'));
         await flush();
         subscription.unsubscribe();
     });
@@ -51,7 +53,7 @@ describe('sendNewFinishedBeerEpic', () => {
     it('emits failure, then retries with the same payload', async () => {
         repository.sendNewFinishedBeer
             .mockRejectedValueOnce(new Error('network error'))
-            .mockResolvedValueOnce({...payload, id: 'brew-1'});
+            .mockResolvedValueOnce(createdBrew('brew-1'));
         const action$ = new Subject<BeerActions.AddFinishedBrew>();
         const emitted: BeerActions.AllBeerActions[] = [];
         const subscription = sendNewFinishedBeerEpic(action$).subscribe((action: unknown) => emitted.push(action as BeerActions.AllBeerActions));
@@ -64,7 +66,7 @@ describe('sendNewFinishedBeerEpic', () => {
         expect(repository.sendNewFinishedBeer).toHaveBeenNthCalledWith(1, payload);
         expect(repository.sendNewFinishedBeer).toHaveBeenNthCalledWith(2, payload);
         expect(emitted).toContainEqual(BeerActions.addFinishedBrewFailure('network error'));
-        expect(emitted).toContainEqual(BeerActions.addFinishedBrewSuccess({...payload, id: 'brew-1'}));
+        expect(emitted).toContainEqual(BeerActions.addFinishedBrewSuccess(createdBrew('brew-1')));
         subscription.unsubscribe();
     });
 });
