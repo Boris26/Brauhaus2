@@ -10,13 +10,13 @@ const backendSettings = {fermentationActionWarningSeconds: 10800, fermentationAc
 describe('FermentationNotificationSettings', () => {
     beforeEach(() => {
         jest.clearAllMocks();
-        repository.get.mockResolvedValue(backendSettings);
+        repository.getSettings.mockResolvedValue(backendSettings);
         repository.update.mockImplementation(async (update) => ({...backendSettings, ...update}));
     });
 
     const open = async () => {
         render(<FermentationNotificationSettings/>);
-        expect(repository.get).toHaveBeenCalledTimes(1);
+        expect(repository.getSettings).toHaveBeenCalledTimes(1);
         fireEvent.click(screen.getByRole('button', {name: /Gärungsbenachrichtigungen/}));
         await screen.findByDisplayValue('3');
     };
@@ -71,7 +71,7 @@ describe('FermentationNotificationSettings', () => {
     });
 
     it('offers retry after a failed load and never renders invented values', async () => {
-        repository.get.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce(backendSettings);
+        repository.getSettings.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce(backendSettings);
         render(<FermentationNotificationSettings/>);
         fireEvent.click(screen.getByRole('button', {name: /Gärungsbenachrichtigungen/}));
         const alert = await screen.findByRole('alert');
