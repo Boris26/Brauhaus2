@@ -19,28 +19,11 @@ const FermentationMeasurementsPage = React.lazy(() => import('./MainView/FinishB
 interface indexMainProps {
     viewState: Views;
     brewingStatus: BrewingStatus;
-    checkIsBackenAvailable : () => void;
-    webSocketConnect: () => void;
-    webSocketDisconnect: () => void;
-    fermentationGatewayConnect: () => void;
-    fermentationGatewayDisconnect: () => void;
     socketConnected: boolean;
     socketId?: string;
 }
 
 export class Index extends React.Component<indexMainProps> {
-    componentDidMount() {
-        const {checkIsBackenAvailable, webSocketConnect, fermentationGatewayConnect} = this.props;
-        checkIsBackenAvailable();
-        webSocketConnect();
-        fermentationGatewayConnect();
-    }
-
-    componentWillUnmount() {
-        this.props.webSocketDisconnect();
-        this.props.fermentationGatewayDisconnect();
-    }
-
     componentDidUpdate(prevProps: Readonly<indexMainProps>, prevState: Readonly<{}>, snapshot?: any) {
         const {brewingStatus} = this.props;
 

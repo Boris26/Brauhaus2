@@ -549,6 +549,11 @@ export namespace ApplicationActions {
         REMOVE_MESSAGE = 'ApplicationActions.REMOVE_MESSAGE',
         SET_THEME = 'ApplicationActions.SET_THEME',
         SET_DEBUG = 'ApplicationActions.SET_DEBUG',
+        APPLICATION_START = 'ApplicationActions.APPLICATION_START',
+    }
+
+    export interface ApplicationStart {
+        readonly type: ActionTypes.APPLICATION_START
     }
 
     export interface SetView {
@@ -588,12 +593,17 @@ export namespace ApplicationActions {
 
     export type AllApplicationActions =
 
+        ApplicationStart |
         SetView |
         OpenDialog |
         SetMessage |
         RemoveMessage |
         SetTheme |
         SetDebug;
+
+    export function applicationStart(): ApplicationStart {
+        return {type: ActionTypes.APPLICATION_START};
+    }
 
     export function setViewState(aView: Views): SetView {
         pushViewPath(aView);
