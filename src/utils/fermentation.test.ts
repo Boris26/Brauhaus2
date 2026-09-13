@@ -54,6 +54,7 @@ describe('fermentation domain helpers', () => {
     ];
     expect(assignedDeviceForBeer(devices, 'brew-a')?.deviceUid).toBe('mine');
     expect(freeFermentationDevices(devices).map(device => device.deviceUid)).toEqual(['free']);
+    expect(freeFermentationDevices(devices)).not.toContain(devices[0]);
     expect(isFermentationDeviceOnline(devices[0], {deviceUid: 'mine', beerId: 'wrong-beer', status: 'DISCONNECTED', updatedAt: ''})).toBe(false);
     expect(assignedDeviceForBeer(devices, 'wrong-beer')).toBeUndefined();
   });

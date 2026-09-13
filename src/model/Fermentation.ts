@@ -79,6 +79,7 @@ export const mapFermentationAction = (dto: FermentationActionDTO): FermentationA
 
 export interface FermentationDeviceAssignment {
   beerId: string;
+  assignmentType?: string;
   assignedAt?: string | null;
 }
 
@@ -98,7 +99,7 @@ export interface FermentationDeviceDTO {
   name?: string;
   status?: 'ONLINE' | 'OFFLINE' | string;
   lastSeenAt?: string | null;
-  activeAssignment?: FermentationDeviceAssignment | null;
+  assignment?: FermentationDeviceAssignment | null;
 }
 
 export const mapFermentationDevice = (dto: FermentationDeviceDTO): FermentationDevice => ({
@@ -106,7 +107,7 @@ export const mapFermentationDevice = (dto: FermentationDeviceDTO): FermentationD
   deviceName: dto.deviceName || dto.name || dto.deviceUid,
   status: dto.status,
   lastSeenAt: dto.lastSeenAt,
-  activeAssignment: dto.activeAssignment,
+  activeAssignment: dto.assignment,
 });
 
 export type FermentationGatewaySensorState = 'REGISTERED' | 'ASSIGNED' | 'UNASSIGNED' | 'DISCONNECTED' | 'BACKEND_UNAVAILABLE' | 'BACKEND_ERROR';

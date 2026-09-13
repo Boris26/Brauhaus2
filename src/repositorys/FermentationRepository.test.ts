@@ -38,10 +38,15 @@ describe('FermentationRepository BeerDataStore routes', () => {
     const details = await FermentationRepository.getDetails('brew');
     expect(details.measurements[0]).toMatchObject({beerTemperatureC: 18.2, ambientTemperatureC: 16.8, source: 'SENSOR'});
   });
-  it('maps the current device uid, display name and active assignment DTO', async () => {
-    mocked.get.mockResolvedValue({data: [{deviceUid: 'sensor-1', name: 'Keller', activeAssignment: {beerId: 'brew', assignedAt: '2026-09-13T15:20:00Z'}}]});
+  it('maps the backend assignment DTO to the UI active assignment', async () => {
+    mocked.get.mockResolvedValue({data: [{deviceUid: 'sensor-1', name: 'Keller', assignment: {beerId: 'brew', assignmentType: 'manual', assignedAt: '2026-09-13T15:20:00Z'}}]});
     const devices = await FermentationRepository.getDevices();
-    expect(devices).toEqual([{deviceUid: 'sensor-1', deviceName: 'Keller', status: undefined, lastSeenAt: undefined, activeAssignment: {beerId: 'brew', assignedAt: '2026-09-13T15:20:00Z'}}]);
+    expect(devices).toEqual([{deviceUid: 'sensor-1', deviceName: 'Keller', status: undefined, lastSeenAt: undefined, activeAssignment: {beerId: 'brew', assignmentType: 'manual', assignedAt: '2026-09-13T15:20:00Z'}}]);
+  });
+  it('maps a null backend assignment to a free UI device', async () => {
+    mocked.get.mockResolvedValue({data: [{deviceUid: 'sensor-free', deviceName: 'Frei', assignment: null}]});
+    const devices = await FermentationRepository.getDevices();
+    expect(devices[0].activeAssignment).toBeNull();
   });
   it('uses finished beer and action identity for complete and skip', async () => {
     mocked.post.mockResolvedValue({data: {}});
@@ -75,12 +80,13 @@ describe('FermentationRepository BeerDataStore routes', () => {
     expect(mocked.get).toHaveBeenCalledWith('fermentation/beers/brew/bubble-activity');
   });
   it('uses the current assignment and unassignment contracts with an encoded device uid', async () => {
-    mocked.post.mockResolvedValue({data: {deviceUid: 'sensor/a', deviceName: 'Keller'}});
+    mocked.post.mockResolvedValue({data: {deviceUid: 'sensor/a', deviceName: 'Keller', assignment: {beerId: 'brew-1', assignmentType: 'manual'}}});
     mocked.delete.mockResolvedValue({data: undefined});
-    await FermentationRepository.assignDevice('sensor/a', 'brew-1');
+    const assigned = await FermentationRepository.assignDevice('sensor/a', 'brew-1');
     await FermentationRepository.unassignDevice('sensor/a');
     expect(mocked.post).toHaveBeenCalledWith('fermentation/devices/sensor%2Fa/assignment', {beerId: 'brew-1'});
     expect(mocked.put).not.toHaveBeenCalled();
     expect(mocked.delete).toHaveBeenCalledWith('fermentation/devices/sensor%2Fa/assignment');
+    expect(assigned.activeAssignment).toEqual({beerId: 'brew-1', assignmentType: 'manual'});
   });
 });
