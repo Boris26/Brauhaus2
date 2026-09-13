@@ -45,8 +45,9 @@ export class FermentationRepository extends BaseRepository {
   static skipAction(finishedBeerId: string, actionId: string): Promise<FermentationAction> {
     return this.post(`fermentation/beers/${encodeURIComponent(finishedBeerId)}/recipe-actions/${encodeURIComponent(actionId)}/skip`, {});
   }
-  static assignDevice(deviceUid: string, finishedBeerId: string): Promise<FermentationDevice> {
-    return this.post(`fermentation/devices/${encodeURIComponent(deviceUid)}/assignment`, {beerId: finishedBeerId});
+  static async assignDevice(deviceUid: string, finishedBeerId: string): Promise<FermentationDevice> {
+    const device = await this.post<FermentationDeviceDTO>(`fermentation/devices/${encodeURIComponent(deviceUid)}/assignment`, {beerId: finishedBeerId});
+    return mapFermentationDevice(device);
   }
   static unassignDevice(deviceUid: string): Promise<void> {
     return this.delete(`fermentation/devices/${encodeURIComponent(deviceUid)}/assignment`);

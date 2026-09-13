@@ -179,6 +179,8 @@ Runtime actions retain the API field `actionId` (never silently renamed to `id`)
 
 ## UI ↔ FermentationSensorGateway WebSocket
 
+BeerDataStore `GET fermentation/devices` and the response from `POST fermentation/devices/{deviceUid}/assignment` expose the current assignment under the wire field `assignment` (an assignment object or `null`). Brauhaus2 maps this field to the unchanged internal `FermentationDevice.activeAssignment` property.
+
 The browser opens a native RFC WebSocket (not Socket.IO) at same-origin `/api/fermentation/ui`, using `ws://` for an HTTP page and `wss://` for an HTTPS page. Caddy owns production routing. The initial `FERMENTATION_GATEWAY_SNAPSHOT` carries `sensors[]`; `FERMENTATION_SENSOR_STATUS_CHANGED` carries one `sensor`. A sensor is keyed by `deviceUid`, has optional `deviceName` and `beerId`, an ISO-8601 `updatedAt`, and one of `REGISTERED | ASSIGNED | UNASSIGNED | DISCONNECTED | BACKEND_UNAVAILABLE | BACKEND_ERROR`. Unknown messages are ignored. The UI must not infer assignments from optional `beerId`.
 
 This additive live-status contract does not change BeerDataStore REST DTOs or controller Socket.IO. Caddy routing and deployed gateway support are **Needs verification** outside this repository.
