@@ -12,8 +12,8 @@ const availability = (isAvailable: boolean) => ProductionActions.isBackenAvailab
 describe('application startup', () => {
   it('starts availability discovery and the independent fermentation gateway, but not the controller socket', done => {
     const action$ = new Subject<any>();
-    applicationStartupEpic$(action$).pipe(take(2), toArray()).subscribe(actions => {
-      expect(actions.map(action => action.type)).toEqual([
+    applicationStartupEpic$(action$).pipe(take(2), toArray()).subscribe((actions: any[]) => {
+      expect(actions.map((action: any) => action.type)).toEqual([
         ProductionActions.ActionTypes.CHECK_IS_BACKEND_AVAILABLE,
         FermentationActionTypes.GATEWAY_CONNECT,
       ]);
@@ -28,7 +28,7 @@ describe('application startup', () => {
 describe('controller socket availability lifecycle', () => {
   it('keeps the socket disconnected while the backend is unavailable', done => {
     const action$ = new Subject<any>();
-    controllerSocketLifecycleEpic$(action$).pipe(take(1)).subscribe(action => {
+    controllerSocketLifecycleEpic$(action$).pipe(take(1)).subscribe((action: any) => {
       expect(action).toEqual(ProductionActions.webSocketDisconnect());
       done();
     });
@@ -37,7 +37,7 @@ describe('controller socket availability lifecycle', () => {
 
   it('connects once for repeated available results, disconnects on failure, and reconnects after recovery', done => {
     const action$ = new Subject<any>();
-    controllerSocketLifecycleEpic$(action$).pipe(take(4), toArray()).subscribe(actions => {
+    controllerSocketLifecycleEpic$(action$).pipe(take(4), toArray()).subscribe((actions: any[]) => {
       expect(actions).toEqual([
         ProductionActions.webSocketDisconnect(),
         ProductionActions.webSocketConnect(),

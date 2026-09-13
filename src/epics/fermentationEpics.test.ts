@@ -110,7 +110,7 @@ it('reloads exactly the assigned beer when the gateway supplies its beerId', don
   refreshFermentationAfterGatewayStatusEpic(
     of(FermentationActions.gatewaySensorStatusChanged({deviceUid: 'sensor', status: 'ASSIGNED', beerId: 'brew-b', updatedAt: '2026-09-13T10:00:00Z'})),
     gatewayState(['brew-a', 'brew-b']),
-  ).pipe(toArray()).subscribe(actions => {
+  ).pipe(toArray()).subscribe((actions: any[]) => {
     expect(actions).toEqual([FermentationActions.load('brew-b')]);
     done();
   });
@@ -120,7 +120,7 @@ it('does not reload another fermentation aggregate for an unloaded assigned beer
   refreshFermentationAfterGatewayStatusEpic(
     of(FermentationActions.gatewaySensorStatusChanged({deviceUid: 'sensor', status: 'ASSIGNED', beerId: 'brew-b', updatedAt: '2026-09-13T10:00:00Z'})),
     gatewayState(['brew-a']),
-  ).pipe(toArray()).subscribe(actions => {
+  ).pipe(toArray()).subscribe((actions: any[]) => {
     expect(actions).toEqual([]);
     done();
   });
@@ -130,7 +130,7 @@ it('refreshes finished beers for STATE and additionally reloads loaded fermentat
   refreshFermentationAfterGatewayDataEpic(
     of(FermentationActions.gatewayDataChanged('brew-a', 'STATE')),
     gatewayState(['brew-a']),
-  ).pipe(toArray()).subscribe(actions => {
+  ).pipe(toArray()).subscribe((actions: any[]) => {
     expect(actions).toEqual([BeerActions.getFinishedBeers(true), FermentationActions.load('brew-a')]);
     done();
   });
@@ -140,7 +140,7 @@ it('refreshes finished beers but not unrelated fermentation details for unloaded
   refreshFermentationAfterGatewayDataEpic(
     of(FermentationActions.gatewayDataChanged('brew-b', 'STATE')),
     gatewayState(['brew-a']),
-  ).pipe(toArray()).subscribe(actions => {
+  ).pipe(toArray()).subscribe((actions: any[]) => {
     expect(actions).toEqual([BeerActions.getFinishedBeers(true)]);
     done();
   });
@@ -149,9 +149,9 @@ it('refreshes finished beers but not unrelated fermentation details for unloaded
 it('reloads loaded measurements and the selected bubble activity range through REST actions', done => {
   const measurementActions: any[] = [];
   refreshFermentationAfterGatewayDataEpic(of(FermentationActions.gatewayDataChanged('brew-a', 'MEASUREMENT')), gatewayState(['brew-a']))
-    .subscribe(action => measurementActions.push(action));
+    .subscribe((action: any) => measurementActions.push(action));
   refreshFermentationAfterGatewayDataEpic(of(FermentationActions.gatewayDataChanged('brew-a', 'BUBBLE_ACTIVITY')), gatewayState(['brew-a'], '6h'))
-    .pipe(toArray()).subscribe(actions => {
+    .pipe(toArray()).subscribe((actions: any[]) => {
       expect(measurementActions).toEqual([FermentationActions.load('brew-a')]);
       expect(actions).toEqual([FermentationActions.loadBubbleActivity('brew-a', '6h')]);
       done();
