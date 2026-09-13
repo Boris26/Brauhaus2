@@ -20,6 +20,8 @@ Recipe scaling requires optional numeric `referenceVolume` (liters) and `referen
 | DELETE | `beer/{id}` | Delete recipe | no body |
 | POST | `importbeer` | Import recipe JSON (Recipe Import V2) | `{ format: 'BRAUHAUS' | 'MMUM', recipe, idempotencyKey, ingredientMappings? }`, returns `RecipeImportResult` with `recipe`, `warnings`, `ingredientMappings`, `createdMasterData`, and `replayed` |
 | GET | `finishedbeers` | Load finished brews | `FinishedBrew[]` |
+| GET | `config` | Load BeerDataStore configuration for fermentation-action notifications | Includes integer `fermentationActionWarningSeconds >= 0` and integer `fermentationActionReminderIntervalSeconds > 0` |
+| PUT | `config` | Partially update BeerDataStore configuration | Sends only changed configuration fields and returns the canonical configuration; both fermentation notification values remain seconds |
 | POST | `finishedbeer` | Create finished brew | Complete payload without `id`; backend generates the UUID and returns the created `FinishedBrew` |
 | PUT | `finishedbeer` | Update finished brew | Complete `FinishedBrew` including its existing `id`; returns the updated `FinishedBrew` |
 | POST | `finishedbeer/{id}/start-fermentation` | Start fermentation manually | no request body; idempotently returns the canonical updated `FinishedBrew` with `state: FERMENTATION` and server-owned `fermentationStartedAt` |

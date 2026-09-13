@@ -6,10 +6,12 @@ import { SoundType } from '../../enums/eSoundType';
 import {AgitatorSettingsRepository} from '../../repositorys/AgitatorSettingsRepository';
 import {PushService} from '../../utils/pushService';
 import {OperationalSettingsRepository} from '../../repositorys/OperationalSettingsRepository';
+import {FermentationNotificationSettingsRepository} from '../../repositorys/FermentationNotificationSettingsRepository';
 
 jest.mock('../../repositorys/AudioRepository');
 jest.mock('../../repositorys/AgitatorSettingsRepository');
 jest.mock('../../repositorys/OperationalSettingsRepository');
+jest.mock('../../repositorys/FermentationNotificationSettingsRepository');
 jest.mock('../../utils/pushService', () => ({
     isPushSupported: jest.fn(() => true),
     getPermissionState: jest.fn(() => 'granted'),
@@ -26,6 +28,7 @@ const mockedGetAgitatorSettings = AgitatorSettingsRepository.get as jest.MockedF
 const mockedUpdateAgitatorSettings = AgitatorSettingsRepository.update as jest.MockedFunction<typeof AgitatorSettingsRepository.update>;
 const mockedPushService = PushService as jest.Mocked<typeof PushService>;
 const mockedOperational = OperationalSettingsRepository as jest.Mocked<typeof OperationalSettingsRepository>;
+const mockedFermentationNotifications = FermentationNotificationSettingsRepository as jest.Mocked<typeof FermentationNotificationSettingsRepository>;
 const operationalSettings = {
     waterFilling: {pulsesPerLiter: 411, sensorStartDelaySeconds: 0.7},
     audio: {enabled: true, confirmationRepeatSeconds: 12, alarmRepeatSeconds: 4},
@@ -36,6 +39,8 @@ const operationalSettings = {
 beforeEach(() => {
     mockedOperational.get.mockResolvedValue(operationalSettings);
     mockedOperational.updateSection.mockImplementation(async (_section, settings) => settings as any);
+    mockedFermentationNotifications.get.mockResolvedValue({fermentationActionWarningSeconds: 10800, fermentationActionReminderIntervalSeconds: 7200});
+    mockedFermentationNotifications.update.mockImplementation(async (settings) => ({fermentationActionWarningSeconds: 10800, fermentationActionReminderIntervalSeconds: 7200, ...settings}));
 });
 
 const deferred = <T,>() => {
