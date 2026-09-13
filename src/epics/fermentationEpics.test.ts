@@ -50,10 +50,8 @@ it('skips by finished beer and action id and reloads backend state', done => {
 it('reloads backend completedAt and contactEndsAt after completion', done => {
   repository.completeAction.mockResolvedValue({actionId: 'action-a', status: 'COMPLETED', completedAt: '2026-09-05T10:00:00Z', contactEndsAt: '2026-09-08T10:00:00Z', sourceType: 'DRY_HOP'});
   completeFermentationActionEpic(of(FermentationActions.completeAction('brew-a', 'action-a'))).pipe(toArray()).subscribe((actions: any[]) => {
-    expect(actions.map(action => action.type)).toEqual([
-      FermentationActionTypes.COMPLETE_ACTION_SUCCESS,
-      FermentationActionTypes.LOAD,
-    ]);
+    expect(actions.map(action => action.type)).toEqual([FermentationActionTypes.COMPLETE_ACTION_SUCCESS]);
+    expect(actions[0].payload.action).toMatchObject({actionId: 'action-a', status: 'COMPLETED', completedAt: '2026-09-05T10:00:00Z'});
     expect(repository.completeAction).toHaveBeenCalledWith('brew-a', 'action-a');
     done();
   });

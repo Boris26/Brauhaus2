@@ -18,9 +18,23 @@ describe('fermentationReducer', () => {
   });
   it('does not optimistically complete actions or assignments and exposes failures', () => {
     const completing = fermentationReducer(initialFermentationState, FermentationActions.completeAction('b', 'a'));
-    expect(completing.completingActionIds).toEqual(['a']); expect(completing.byBrewId.b).toBeUndefined();
+    expect(completing.completingActionIds).toEqual(['b/a']); expect(completing.byBrewId.b).toBeUndefined();
     const failed = fermentationReducer(completing, FermentationActions.completeActionFailure('b', 'a', 'HTTP 500'));
-    expect(failed.completingActionIds).toEqual([]); expect(failed.errors.b).toBe('HTTP 500');
+    expect(failed.completingActionIds).toEqual([]); expect(failed.completeActionErrors['b/a']).toBe('HTTP 500');
+  });
+  it('immediately adopts the canonical action returned by successful completion', () => {
+    const pending = {actionId: 'a', sourceType: 'DRY_HOP', status: 'PENDING' as const, due: true};
+    const loaded = fermentationReducer(initialFermentationState, FermentationActions.loadSuccess('b', {actions: [pending], measurements: [], devices: [], sensorMeasurements: []}));
+    const requesting = fermentationReducer(loaded, FermentationActions.completeAction('b', 'a'));
+    const canonical = {...pending, status: 'COMPLETED' as const, due: false, completedAt: '2026-09-13T10:00:00Z', contactEndsAt: '2026-09-16T10:00:00Z'};
+    const completed = fermentationReducer(requesting, FermentationActions.completeActionSuccess('b', canonical));
+    expect(completed.completingActionIds).toEqual([]);
+    expect(completed.byBrewId.b.actions).toEqual([canonical]);
+  });
+  it('scopes simultaneous completion state to finished beer and action identity', () => {
+    const first = fermentationReducer(initialFermentationState, FermentationActions.completeAction('brew-a', 'same-action'));
+    const second = fermentationReducer(first, FermentationActions.completeAction('brew-b', 'same-action'));
+    expect(second.completingActionIds).toEqual(['brew-a/same-action', 'brew-b/same-action']);
   });
   it('does not optimistically skip actions and clears the pending marker on failure', () => {
     const skipping = fermentationReducer(initialFermentationState, FermentationActions.skipAction('b', 'a'));

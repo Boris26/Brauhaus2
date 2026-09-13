@@ -3,7 +3,7 @@ import {FinishedBrewDetailsView} from './FinishedBrewDetails';
 import {eBrewState} from '../../../enums/eBrewState';
 
 const brew: any = {id: 'brew-1', name: 'West Coast IPA', startDate: '2026-09-01', fermentationStartedAt: '2026-09-01T12:00:00+02:00', liters: 20, originalwort: 13.2, residual_extract: null, note: '', active: true, state: eBrewState.FERMENTATION};
-const base: any = {brew, details: {measurements: [], actions: [], devices: [], sensorMeasurements: []}, bubbleActivity: [], bubbleActivityRange: '24h', bubbleActivityLoading: false, activeBrews: [brew], loading: false, saving: false, savingLifecycle: false, startingFermentation: false, completing: [], skipping: [], assigning: [], load: jest.fn(), loadBubbleActivity: jest.fn(), save: jest.fn(), complete: jest.fn(), skip: jest.fn(), transition: jest.fn(), startFermentation: jest.fn(), assign: jest.fn()};
+const base: any = {brew, details: {measurements: [], actions: [], devices: [], sensorMeasurements: []}, bubbleActivity: [], bubbleActivityRange: '24h', bubbleActivityLoading: false, activeBrews: [brew], loading: false, saving: false, savingLifecycle: false, startingFermentation: false, completing: [], completeActionErrors: {}, dismissCompleteError: jest.fn(), skipping: [], assigning: [], load: jest.fn(), loadBubbleActivity: jest.fn(), save: jest.fn(), complete: jest.fn(), skip: jest.fn(), transition: jest.fn(), startFermentation: jest.fn(), assign: jest.fn()};
 
 describe('fermentation details dashboard', () => {
   it('shows the compact current-state dashboard with neutral missing values', () => {
@@ -41,7 +41,7 @@ describe('fermentation details dashboard', () => {
     expect(screen.getByText('FERM-01')).toBeInTheDocument();
     expect(screen.getByText('● Online')).toBeInTheDocument();
     expect(screen.getByRole('img', {name: /Plato-Verlauf/})).toBeInTheDocument();
-    fireEvent.click(screen.getByText('Als ausgeführt bestätigen')); expect(complete).toHaveBeenCalledWith('brew-1', 'a');
+    fireEvent.click(screen.getByText('Zugabe erledigt')); expect(complete).toHaveBeenCalledWith('brew-1', 'a');
     fireEvent.click(screen.getByText('West Coast IPA', {selector: 'button'})); expect(assign).toHaveBeenCalledWith('d', 'brew-1');
   });
 
@@ -134,12 +134,34 @@ describe('fermentation details dashboard', () => {
       {actionId: 'skipped', status: 'SKIPPED', due: true, triggerType: 'MANUAL', sourceType: 'ZUGABE'},
     ]};
     render(<FinishedBrewDetailsView {...base} details={details} complete={complete} skip={skip} viewMode="measurements" />);
-    expect(screen.getAllByText('Als zugegeben markieren')).toHaveLength(1);
-    fireEvent.click(screen.getByText('Als zugegeben markieren'));
+    expect(screen.getAllByText('Zugabe erledigt')).toHaveLength(1);
+    fireEvent.click(screen.getByText('Zugabe erledigt'));
     expect(complete).toHaveBeenCalledWith(brew.id, 'manual');
     expect(screen.getAllByText('Überspringen')).toHaveLength(1);
     fireEvent.click(screen.getByText('Überspringen'));
     expect(skip).toHaveBeenCalledWith(brew.id, 'manual');
+  });
+  it('disables only the action whose completion request is pending', () => {
+    const details: any = {measurements: [], devices: [], sensorMeasurements: [], actions: [
+      {actionId: 'first', status: 'PENDING', due: true, triggerType: 'TIME_OFFSET', triggerValue: 4, triggerUnit: 'DAYS', sourceType: 'DRY_HOP', name: 'Cascade', amount: 50, unit: 'GRAMS'},
+      {actionId: 'second', status: 'PENDING', due: true, triggerType: 'MANUAL', sourceType: 'ADDITIONAL_INGREDIENT', name: 'Orange', amount: 35, unit: 'GRAMS'},
+    ]};
+    render(<FinishedBrewDetailsView {...base} details={details} completing={['brew-1/first']} viewMode="measurements" />);
+    const buttons = screen.getAllByRole('button', {name: /Zugabe erledigt|Wird gespeichert/});
+    expect(buttons[0]).toBeDisabled();
+    expect(buttons[1]).toBeEnabled();
+  });
+  it('keeps a failed action open and uses the existing error dialog', () => {
+    const dismissCompleteError = jest.fn();
+    const details: any = {measurements: [], devices: [], sensorMeasurements: [], actions: [
+      {actionId: 'failed', status: 'PENDING', due: true, triggerType: 'PLATO_THRESHOLD', triggerValue: 5, triggerUnit: 'PLATO', sourceType: 'DRY_HOP', name: 'Cascade', amount: 50, unit: 'GRAMS'},
+    ]};
+    render(<FinishedBrewDetailsView {...base} details={details} completeActionErrors={{'brew-1/failed': 'HTTP 409'}} dismissCompleteError={dismissCompleteError} viewMode="measurements" />);
+    expect(screen.getByRole('button', {name: 'Zugabe erledigt'})).toBeEnabled();
+    expect(screen.getByText('Zugabe konnte nicht bestätigt werden')).toBeInTheDocument();
+    expect(screen.getByText('HTTP 409')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', {name: 'Ok'}));
+    expect(dismissCompleteError).toHaveBeenCalledWith('brew-1', 'failed');
   });
   it('shows localized pending and completed fermentation actions with backend timestamps', () => {
     const details: any = {measurements: [], devices: [], sensorMeasurements: [], actions: [
@@ -155,7 +177,9 @@ describe('fermentation details dashboard', () => {
     expect(screen.getByText('Zutat')).toBeInTheDocument();
     expect(screen.getByText('bei ≤ 5 °P')).toBeInTheDocument();
     expect(screen.getByText(/11\.09\.26, 10:22/)).toBeInTheDocument();
-    expect(screen.getByText(/Kontaktzeit (läuft|beendet)/)).toBeInTheDocument();
+    expect(screen.getByText(/Standzeit (läuft|beendet)/)).toBeInTheDocument();
+    expect(screen.getByText('Erledigt')).toBeInTheDocument();
+    expect(screen.getAllByRole('button', {name: 'Zugabe erledigt'})).toHaveLength(0);
   });
   it('does not infer fermentationStartedAt or a fermentation day from legacy startDate', () => {
     render(<FinishedBrewDetailsView {...base} brew={{...brew, fermentationStartedAt: undefined, startDate: '2020-01-01'}} />);
@@ -168,12 +192,14 @@ describe('fermentation details dashboard', () => {
       {actionId: 'old', status: 'PENDING', sourceType: 'DRY_HOP', name: 'Altes Rezept', amount: 10, unit: 'GRAMS'},
     ]};
     const snapshot: any[] = [{actionId: 'snapshot', status: 'PENDING', sourceType: 'DRY_HOP', name: 'Sud-Snapshot', amount: 30, unit: 'GRAMS'}];
-    const {rerender} = render(<FinishedBrewDetailsView {...base} brew={{...brew, fermentationActions: snapshot}} details={endpointDetails} viewMode="measurements" />);
+    const {rerender} = render(<FinishedBrewDetailsView {...base} brew={{...brew, fermentationActions: snapshot}} details={undefined} viewMode="measurements" />);
     expect(screen.getByText('Sud-Snapshot · 30 g')).toBeInTheDocument();
-    expect(screen.queryByText(/Altes Rezept/)).not.toBeInTheDocument();
 
-    rerender(<FinishedBrewDetailsView {...base} brew={{...brew, fermentationActions: []}} details={endpointDetails} viewMode="measurements" />);
-    expect(screen.getByText('Keine Aktionen vorhanden.')).toBeInTheDocument();
-    expect(screen.queryByText(/Altes Rezept/)).not.toBeInTheDocument();
+    rerender(<FinishedBrewDetailsView {...base} brew={{...brew, fermentationActions: snapshot}} details={endpointDetails} viewMode="measurements" />);
+    expect(screen.getByText('Altes Rezept · 10 g')).toBeInTheDocument();
+    expect(screen.queryByText(/Sud-Snapshot/)).not.toBeInTheDocument();
+
+    rerender(<FinishedBrewDetailsView {...base} brew={{...brew, fermentationActions: snapshot}} details={{...endpointDetails, actions: []}} viewMode="measurements" />);
+    expect(screen.getByText('Keine Gärungsaktionen geplant.')).toBeInTheDocument();
   });
 });

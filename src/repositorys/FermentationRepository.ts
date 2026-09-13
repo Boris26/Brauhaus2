@@ -35,8 +35,9 @@ export class FermentationRepository extends BaseRepository {
 
     return this.post(`fermentation/beers/${encodeURIComponent(finishedBeerId)}/measurements`, payload);
   }
-  static completeAction(finishedBeerId: string, actionId: string): Promise<FermentationAction> {
-    return this.post(`fermentation/beers/${encodeURIComponent(finishedBeerId)}/recipe-actions/${encodeURIComponent(actionId)}/complete`, {});
+  static async completeAction(finishedBeerId: string, actionId: string): Promise<FermentationAction> {
+    const action = await this.post<FermentationActionDTO>(`fermentation/beers/${encodeURIComponent(finishedBeerId)}/recipe-actions/${encodeURIComponent(actionId)}/complete`, {});
+    return mapFermentationAction(action);
   }
   static skipAction(finishedBeerId: string, actionId: string): Promise<FermentationAction> {
     return this.post(`fermentation/beers/${encodeURIComponent(finishedBeerId)}/recipe-actions/${encodeURIComponent(actionId)}/skip`, {});

@@ -2,10 +2,11 @@ import {FermentationActionTypes} from '../actions/fermentation.actions';
 import {BubbleActivity, BubbleActivityRange, FermentationDetails, FermentationGatewaySensorStatus} from '../model/Fermentation';
 
 export interface BubbleActivityState {activity: BubbleActivity[]; loading: boolean; error?: string; selectedRange: BubbleActivityRange;}
-export interface FermentationState { byBrewId: Record<string, FermentationDetails>; bubbleActivityByBrewId: Record<string, BubbleActivityState>; loadingIds: string[]; savingMeasurementIds: string[]; completingActionIds: string[]; skippingActionIds: string[]; assigningDeviceIds: string[]; errors: Record<string, string>; gatewayConnected: boolean; sensorsByDeviceUid: Record<string, FermentationGatewaySensorStatus>; }
-export const initialFermentationState: FermentationState = {byBrewId: {}, bubbleActivityByBrewId: {}, loadingIds: [], savingMeasurementIds: [], completingActionIds: [], skippingActionIds: [], assigningDeviceIds: [], errors: {}, gatewayConnected: false, sensorsByDeviceUid: {}};
+export interface FermentationState { byBrewId: Record<string, FermentationDetails>; bubbleActivityByBrewId: Record<string, BubbleActivityState>; loadingIds: string[]; savingMeasurementIds: string[]; completingActionIds: string[]; completeActionErrors: Record<string, string>; skippingActionIds: string[]; assigningDeviceIds: string[]; errors: Record<string, string>; gatewayConnected: boolean; sensorsByDeviceUid: Record<string, FermentationGatewaySensorStatus>; }
+export const initialFermentationState: FermentationState = {byBrewId: {}, bubbleActivityByBrewId: {}, loadingIds: [], savingMeasurementIds: [], completingActionIds: [], completeActionErrors: {}, skippingActionIds: [], assigningDeviceIds: [], errors: {}, gatewayConnected: false, sensorsByDeviceUid: {}};
 const add = (xs: string[], id: string) => xs.includes(id) ? xs : [...xs, id];
 const remove = (xs: string[], id: string) => xs.filter(value => value !== id);
+export const fermentationActionRequestId = (brewId: string, actionId: string) => `${brewId}/${actionId}`;
 export const fermentationReducer = (state = initialFermentationState, action: any): FermentationState => {
   const p = action.payload || {};
   switch (action.type) {
@@ -15,9 +16,24 @@ export const fermentationReducer = (state = initialFermentationState, action: an
     case FermentationActionTypes.CREATE_MEASUREMENT: return {...state, savingMeasurementIds: add(state.savingMeasurementIds, p.measurement.finishedBeerId), errors: {...state.errors, [p.measurement.finishedBeerId]: ''}};
     case FermentationActionTypes.CREATE_MEASUREMENT_SUCCESS: return {...state, savingMeasurementIds: remove(state.savingMeasurementIds, p.brewId)};
     case FermentationActionTypes.CREATE_MEASUREMENT_FAILURE: return {...state, savingMeasurementIds: remove(state.savingMeasurementIds, p.brewId), errors: {...state.errors, [p.brewId]: p.error}};
-    case FermentationActionTypes.COMPLETE_ACTION: return {...state, completingActionIds: add(state.completingActionIds, p.actionId)};
-    case FermentationActionTypes.COMPLETE_ACTION_SUCCESS: return {...state, completingActionIds: remove(state.completingActionIds, p.actionId)};
-    case FermentationActionTypes.COMPLETE_ACTION_FAILURE: return {...state, completingActionIds: remove(state.completingActionIds, p.actionId), errors: {...state.errors, [p.brewId]: p.error}};
+    case FermentationActionTypes.COMPLETE_ACTION: {
+      const requestId = fermentationActionRequestId(p.brewId, p.actionId); const completeActionErrors = {...state.completeActionErrors}; delete completeActionErrors[requestId];
+      return {...state, completingActionIds: add(state.completingActionIds, requestId), completeActionErrors};
+    }
+    case FermentationActionTypes.COMPLETE_ACTION_SUCCESS: {
+      const requestId = fermentationActionRequestId(p.brewId, p.actionId); const details = state.byBrewId[p.brewId];
+      const canonicalDetails = details
+        ? {...details, actions: details.actions.some(item => item.actionId === p.actionId) ? details.actions.map(item => item.actionId === p.actionId ? p.action : item) : [...details.actions, p.action]}
+        : {actions: [p.action], measurements: [], devices: [], sensorMeasurements: []};
+      return {...state, completingActionIds: remove(state.completingActionIds, requestId), byBrewId: {...state.byBrewId, [p.brewId]: canonicalDetails}};
+    }
+    case FermentationActionTypes.COMPLETE_ACTION_FAILURE: {
+      const requestId = fermentationActionRequestId(p.brewId, p.actionId);
+      return {...state, completingActionIds: remove(state.completingActionIds, requestId), completeActionErrors: {...state.completeActionErrors, [requestId]: p.error}};
+    }
+    case FermentationActionTypes.DISMISS_COMPLETE_ACTION_ERROR: {
+      const completeActionErrors = {...state.completeActionErrors}; delete completeActionErrors[fermentationActionRequestId(p.brewId, p.actionId)]; return {...state, completeActionErrors};
+    }
     case FermentationActionTypes.SKIP_ACTION: return {...state, skippingActionIds: add(state.skippingActionIds, p.actionId)};
     case FermentationActionTypes.SKIP_ACTION_SUCCESS: return {...state, skippingActionIds: remove(state.skippingActionIds, p.actionId)};
     case FermentationActionTypes.SKIP_ACTION_FAILURE: return {...state, skippingActionIds: remove(state.skippingActionIds, p.actionId), errors: {...state.errors, [p.brewId]: p.error}};
