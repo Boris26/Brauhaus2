@@ -155,6 +155,9 @@
 @media (max-width: 600px) { .agitator-default-fields { grid-template-columns: minmax(0, 1fr); } }
 
 .operational-fields { display: grid; gap: var(--spacing-md); padding-top: var(--spacing-md); border-top: 1px solid var(--color-border-soft); }
+.fermentation-time-field { display: grid; grid-template-columns: minmax(0, 1fr) minmax(10rem, auto); align-items: end; gap: var(--spacing-md); }
+.fermentation-unit-label { display: grid; gap: 2px; color: var(--color-text); font-weight: 600; }
+.fermentation-unit-select { min-width: 10rem; }
 .settings-number-field { gap: 2px; }
 .settings-number-field-control { display: grid; grid-template-columns: 9rem auto; align-items: end; gap: 0.3rem; min-width: 0; }
 .settings-number-field .quantity-picker-content { width: 9rem; background: var(--color-surface-strong); }
@@ -167,3 +170,4 @@
 .diagnosis-list dt { color: var(--color-text-secondary); }
 .diagnosis-list dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
 @media (max-width: 600px) { .diagnosis-list div { grid-template-columns: 1fr; gap: 2px; } }
+@media (max-width: 600px) { .fermentation-time-field { grid-template-columns: minmax(0, 1fr); } }

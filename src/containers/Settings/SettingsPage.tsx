@@ -22,6 +22,7 @@ import {TemperatureSensorRealtimeState} from '../../model/RealtimeControllerStat
 import {getTemperatureSensorMessage} from '../../utils/temperatureSensor';
 import {SettingsNumberField} from './SettingsNumberField';
 import {SettingsAccordion} from './SettingsAccordion';
+import {FermentationNotificationSettings} from './FermentationNotificationSettings';
 
 interface SettingsPageProps {
     theme: ThemeName;
@@ -515,6 +516,8 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                             <p className="settings-warning">Die Startverzögerung gehört zur Wasser-Section und wird gemeinsam mit „Impulse pro Liter“ gespeichert.</p>
                         </SettingsAccordion>
                     </>}
+
+                    <FermentationNotificationSettings onSaved={() => this.setState({statusMessage: 'Gärungsbenachrichtigungen gespeichert.'})}/>
 
                     <SettingsAccordion icon={<PaletteOutlinedIcon />} title="Oberfläche" description="Darstellung und Funktionsumfang dieses Browsers.">
 

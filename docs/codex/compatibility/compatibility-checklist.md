@@ -52,3 +52,11 @@ When a compatibility-relevant change is requested, Codex must:
 - [x] Writes are backend-confirmed and followed by reload; no optimistic completion/assignment.
 - [x] Hardware communicates with BeerDataStore, not this UI.
 - [ ] Verify exact routes, aggregate DTO, action strings, and errors against BeerDataStore #42.
+
+## Fermentation-action notification settings
+
+- [x] Reuses BeerDataStore's existing `GET /config` and partial `PUT /config` endpoints.
+- [x] Preserves the exact warning/reminder field names and integer-second wire units.
+- [x] Uses the PUT response as canonical state and retains the draft after errors.
+- [x] Allows a zero warning and rejects a zero reminder before sending.
+- [ ] Verify deployment of both fields and the canonical PUT response with BeerDataStore.
