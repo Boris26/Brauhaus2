@@ -22,6 +22,16 @@ describe('fermentationReducer', () => {
     const failed = fermentationReducer(completing, FermentationActions.completeActionFailure('b', 'a', 'HTTP 500'));
     expect(failed.completingActionIds).toEqual([]); expect(failed.completeActionErrors['b/a']).toBe('HTTP 500');
   });
+  it('tracks assignment and unassignment independently per device', () => {
+    const assigning = fermentationReducer(initialFermentationState, FermentationActions.assignDevice('one', 'b'));
+    const parallel = fermentationReducer(assigning, FermentationActions.unassignDevice('two', 'b'));
+    expect(parallel.assigningDeviceIds).toEqual(['one']);
+    expect(parallel.unassigningDeviceIds).toEqual(['two']);
+    const failed = fermentationReducer(parallel, FermentationActions.unassignDeviceFailure('two', 'b', 'HTTP 500'));
+    expect(failed.unassigningDeviceIds).toEqual([]);
+    expect(failed.assigningDeviceIds).toEqual(['one']);
+    expect(failed.unassignmentErrors.b).toBe('HTTP 500');
+  });
   it('immediately adopts the canonical action returned by successful completion', () => {
     const pending = {actionId: 'a', sourceType: 'DRY_HOP', status: 'PENDING' as const, due: true};
     const loaded = fermentationReducer(initialFermentationState, FermentationActions.loadSuccess('b', {actions: [pending], measurements: [], devices: [], sensorMeasurements: []}));

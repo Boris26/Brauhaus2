@@ -2,10 +2,10 @@ import {of} from 'rxjs';
 import {toArray} from 'rxjs/operators';
 import {FermentationActions, FermentationActionTypes} from '../actions/fermentation.actions';
 import {FermentationRepository} from '../repositorys/FermentationRepository';
-import {bubbleActivityBounds, completeFermentationActionEpic, createMeasurementEpic, loadBubbleActivityEpic, skipFermentationActionEpic} from './fermentationEpics';
+import {assignDeviceEpic, bubbleActivityBounds, completeFermentationActionEpic, createMeasurementEpic, loadBubbleActivityEpic, skipFermentationActionEpic, unassignDeviceEpic} from './fermentationEpics';
 
 jest.mock('../repositorys/FermentationRepository', () => ({FermentationRepository: {
-  createMeasurement: jest.fn(), completeAction: jest.fn(), skipAction: jest.fn(), getBubbleActivity: jest.fn(),
+  createMeasurement: jest.fn(), completeAction: jest.fn(), skipAction: jest.fn(), assignDevice: jest.fn(), unassignDevice: jest.fn(), getBubbleActivity: jest.fn(),
 }}));
 const repository = FermentationRepository as jest.Mocked<typeof FermentationRepository>;
 
@@ -53,6 +53,40 @@ it('reloads backend completedAt and contactEndsAt after completion', done => {
     expect(actions.map(action => action.type)).toEqual([FermentationActionTypes.COMPLETE_ACTION_SUCCESS]);
     expect(actions[0].payload.action).toMatchObject({actionId: 'action-a', status: 'COMPLETED', completedAt: '2026-09-05T10:00:00Z'});
     expect(repository.completeAction).toHaveBeenCalledWith('brew-a', 'action-a');
+    done();
+  });
+});
+
+it('assigns through the repository and reloads canonical backend state', done => {
+  repository.assignDevice.mockResolvedValue({deviceUid: 'sensor', deviceName: 'Keller'});
+  assignDeviceEpic(of(FermentationActions.assignDevice('sensor', 'brew-a'))).pipe(toArray()).subscribe((actions: any[]) => {
+    expect(repository.assignDevice).toHaveBeenCalledWith('sensor', 'brew-a');
+    expect(actions.map(action => action.type)).toEqual([FermentationActionTypes.ASSIGN_DEVICE_SUCCESS, FermentationActionTypes.LOAD]);
+    done();
+  });
+});
+
+it('unassigns through the repository and reloads canonical backend state', done => {
+  repository.unassignDevice.mockResolvedValue(undefined);
+  unassignDeviceEpic(of(FermentationActions.unassignDevice('sensor', 'brew-a'))).pipe(toArray()).subscribe((actions: any[]) => {
+    expect(repository.unassignDevice).toHaveBeenCalledWith('sensor');
+    expect(actions.map(action => action.type)).toEqual([FermentationActionTypes.UNASSIGN_DEVICE_SUCCESS, FermentationActionTypes.LOAD]);
+    done();
+  });
+});
+
+it('returns a scoped assignment failure action', done => {
+  repository.assignDevice.mockRejectedValueOnce(new Error('HTTP 409'));
+  assignDeviceEpic(of(FermentationActions.assignDevice('sensor', 'brew-a'))).subscribe((result: any) => {
+    expect(result).toMatchObject({type: FermentationActionTypes.ASSIGN_DEVICE_FAILURE, payload: {deviceId: 'sensor', brewId: 'brew-a', error: 'HTTP 409'}});
+    done();
+  });
+});
+
+it('returns a scoped unassignment failure action', done => {
+  repository.unassignDevice.mockRejectedValueOnce(new Error('HTTP 409'));
+  unassignDeviceEpic(of(FermentationActions.unassignDevice('sensor', 'brew-a'))).subscribe((result: any) => {
+    expect(result).toMatchObject({type: FermentationActionTypes.UNASSIGN_DEVICE_FAILURE, payload: {deviceId: 'sensor', brewId: 'brew-a', error: 'HTTP 409'}});
     done();
   });
 });

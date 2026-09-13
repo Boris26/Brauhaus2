@@ -77,13 +77,37 @@ export const mapFermentationAction = (dto: FermentationActionDTO): FermentationA
   latestPlato: dto.latestPlato,
 });
 
+export interface FermentationDeviceAssignment {
+  beerId: string;
+  assignedAt?: string | null;
+}
+
+/** Device shape used by the UI after mapping the BeerDataStore response. */
 export interface FermentationDevice {
-  id: string;
-  name: string;
+  deviceUid: string;
+  deviceName: string;
   status?: 'ONLINE' | 'OFFLINE' | string;
   lastSeenAt?: string | null;
-  assignedFinishedBeerId?: string | null;
+  activeAssignment?: FermentationDeviceAssignment | null;
 }
+
+/** Current BeerDataStore wire shape for GET fermentation/devices. */
+export interface FermentationDeviceDTO {
+  deviceUid: string;
+  deviceName?: string;
+  name?: string;
+  status?: 'ONLINE' | 'OFFLINE' | string;
+  lastSeenAt?: string | null;
+  activeAssignment?: FermentationDeviceAssignment | null;
+}
+
+export const mapFermentationDevice = (dto: FermentationDeviceDTO): FermentationDevice => ({
+  deviceUid: dto.deviceUid,
+  deviceName: dto.deviceName || dto.name || dto.deviceUid,
+  status: dto.status,
+  lastSeenAt: dto.lastSeenAt,
+  activeAssignment: dto.activeAssignment,
+});
 
 export type FermentationGatewaySensorState = 'REGISTERED' | 'ASSIGNED' | 'UNASSIGNED' | 'DISCONNECTED' | 'BACKEND_UNAVAILABLE' | 'BACKEND_ERROR';
 

@@ -1,4 +1,4 @@
-import {actionAmountLabel, actionDueLabel, actionTriggerLabel, actionTypeLabel, approximateAlcohol, attenuation, bubbleRate, canCompleteAction, contactStatus, contactTimeLabel, isDeviceOnline, latestFermentationReadings, missingPlatoDays, temperatureDelta} from './fermentation';
+import {actionAmountLabel, actionDueLabel, actionTriggerLabel, actionTypeLabel, approximateAlcohol, assignedDeviceForBeer, attenuation, bubbleRate, canCompleteAction, contactStatus, contactTimeLabel, freeFermentationDevices, isDeviceOnline, isFermentationDeviceOnline, latestFermentationReadings, missingPlatoDays, temperatureDelta} from './fermentation';
 import {TriggerType, TriggerUnit} from '../model/FermentationRecipeAction';
 
 describe('fermentation domain helpers', () => {
@@ -45,6 +45,17 @@ describe('fermentation domain helpers', () => {
     expect(isDeviceOnline('2026-09-04T11:50:00Z', Date.parse('2026-09-04T12:00:00Z'))).toBe(true);
     expect(attenuation(13.2, 3)).toBeCloseTo(77.27);
     expect(approximateAlcohol(13.2, 3)).toBeCloseTo(5.406);
+  });
+  it('keeps BeerDataStore assignment truth separate from gateway online state', () => {
+    const devices = [
+      {deviceUid: 'mine', deviceName: 'Keller', activeAssignment: {beerId: 'brew-a'}},
+      {deviceUid: 'other', deviceName: 'Garage', activeAssignment: {beerId: 'brew-b'}},
+      {deviceUid: 'free', deviceName: 'Frei', activeAssignment: null},
+    ];
+    expect(assignedDeviceForBeer(devices, 'brew-a')?.deviceUid).toBe('mine');
+    expect(freeFermentationDevices(devices).map(device => device.deviceUid)).toEqual(['free']);
+    expect(isFermentationDeviceOnline(devices[0], {deviceUid: 'mine', beerId: 'wrong-beer', status: 'DISCONNECTED', updatedAt: ''})).toBe(false);
+    expect(assignedDeviceForBeer(devices, 'wrong-beer')).toBeUndefined();
   });
   it('selects each newest valid value from the backend-unified measurement history regardless of source', () => {
     const readings = latestFermentationReadings([

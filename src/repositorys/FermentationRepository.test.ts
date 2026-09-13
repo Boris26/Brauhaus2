@@ -2,17 +2,18 @@ import {api} from './BaseRepository';
 import {FermentationRepository} from './FermentationRepository';
 
 jest.mock('./BaseRepository', () => {
-  const get = jest.fn(); const post = jest.fn(); const put = jest.fn();
-  return {api: {get, post, put}, BaseRepository: class {
+  const get = jest.fn(); const post = jest.fn(); const put = jest.fn(); const remove = jest.fn();
+  return {api: {get, post, put, delete: remove}, BaseRepository: class {
     protected static async get<T>(url: string): Promise<T> { return (await get(url)).data; }
     protected static async post<T>(url: string, body: unknown): Promise<T> { return (await post(url, body)).data; }
     protected static async put<T>(url: string, body: unknown): Promise<T> { return (await put(url, body)).data; }
+    protected static async delete(url: string): Promise<void> { await remove(url); }
   }};
 });
-const mocked = api as unknown as {get: jest.Mock; post: jest.Mock; put: jest.Mock};
+const mocked = api as unknown as {get: jest.Mock; post: jest.Mock; put: jest.Mock; delete: jest.Mock};
 
 describe('FermentationRepository BeerDataStore routes', () => {
-  beforeEach(() => { mocked.get.mockReset(); mocked.post.mockReset(); mocked.put.mockReset(); });
+  beforeEach(() => { mocked.get.mockReset(); mocked.post.mockReset(); mocked.put.mockReset(); mocked.delete.mockReset(); });
   it('combines actual action and measurement APIs instead of an aggregate endpoint', async () => {
     mocked.get.mockResolvedValue({data: []});
     await FermentationRepository.getDetails('brew/a');
@@ -36,6 +37,11 @@ describe('FermentationRepository BeerDataStore routes', () => {
       .mockResolvedValue({data: []});
     const details = await FermentationRepository.getDetails('brew');
     expect(details.measurements[0]).toMatchObject({beerTemperatureC: 18.2, ambientTemperatureC: 16.8, source: 'SENSOR'});
+  });
+  it('maps the current device uid, display name and active assignment DTO', async () => {
+    mocked.get.mockResolvedValue({data: [{deviceUid: 'sensor-1', name: 'Keller', activeAssignment: {beerId: 'brew', assignedAt: '2026-09-13T15:20:00Z'}}]});
+    const devices = await FermentationRepository.getDevices();
+    expect(devices).toEqual([{deviceUid: 'sensor-1', deviceName: 'Keller', status: undefined, lastSeenAt: undefined, activeAssignment: {beerId: 'brew', assignedAt: '2026-09-13T15:20:00Z'}}]);
   });
   it('uses finished beer and action identity for complete and skip', async () => {
     mocked.post.mockResolvedValue({data: {}});
@@ -67,5 +73,14 @@ describe('FermentationRepository BeerDataStore routes', () => {
     mocked.get.mockResolvedValue({data: []});
     await FermentationRepository.getBubbleActivity('brew');
     expect(mocked.get).toHaveBeenCalledWith('fermentation/beers/brew/bubble-activity');
+  });
+  it('uses the current assignment and unassignment contracts with an encoded device uid', async () => {
+    mocked.post.mockResolvedValue({data: {deviceUid: 'sensor/a', deviceName: 'Keller'}});
+    mocked.delete.mockResolvedValue({data: undefined});
+    await FermentationRepository.assignDevice('sensor/a', 'brew-1');
+    await FermentationRepository.unassignDevice('sensor/a');
+    expect(mocked.post).toHaveBeenCalledWith('fermentation/devices/sensor%2Fa/assignment', {beerId: 'brew-1'});
+    expect(mocked.put).not.toHaveBeenCalled();
+    expect(mocked.delete).toHaveBeenCalledWith('fermentation/devices/sensor%2Fa/assignment');
   });
 });

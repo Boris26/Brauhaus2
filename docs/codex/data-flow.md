@@ -140,3 +140,9 @@ Both the compact finished-beer detail and each existing finished-brew table row 
 3. Redux derives a persistent header warning for gateway disconnect, assignment, sensor connectivity, or BeerDataStore integration errors. Identical state does not create toasts or dialogs.
 4. A meaningful sensor status change may trigger at most one reload of an already visible fermentation aggregate. That reload uses existing BeerDataStore REST methods; assignments and measurements never come from the gateway message.
 5. Disconnect uses bounded backoff (2, 5, 10, 20, then at most 30 seconds), reset after open. App unmount closes only this gateway socket.
+
+## Manual fermentation-sensor assignment
+
+The FinishedBeer measurement view obtains the registered device list through BeerDataStore `GET fermentation/devices`. A device's `activeAssignment.beerId` is the canonical assignment truth: only a device whose active assignment points to the open `FinishedBrew.id` is shown as assigned, and only devices without an active assignment are offered as free. The independent gateway entry in `fermentationReducer.sensorsByDeviceUid` supplements that device solely with online/runtime state (and a fallback display name); its optional `beerId` is never assignment truth.
+
+Manual assignment flows from UI → Redux → fermentation epic → `POST fermentation/devices/{encodedDeviceUid}/assignment` with exactly `{ beerId: finishedBeerId }`. Manual separation first uses the shared confirmation dialog, then flows through Redux and its epic to `DELETE fermentation/devices/{encodedDeviceUid}/assignment`; BeerDataStore ends the assignment and coordinates the gateway stop. Both successful commands trigger a fresh aggregate load, including the BeerDataStore device list, rather than creating optimistic assignment state. Separating a sensor does not delete measurements, device data, or assignment history.

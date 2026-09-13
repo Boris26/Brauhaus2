@@ -1,4 +1,4 @@
-import {FermentationAction, FermentationMeasurement, SensorMeasurement} from '../model/Fermentation';
+import {FermentationAction, FermentationDevice, FermentationGatewaySensorStatus, FermentationMeasurement, SensorMeasurement} from '../model/Fermentation';
 import {unitLabel, TriggerType} from '../model/FermentationRecipeAction';
 
 export interface LatestFermentationReadings {
@@ -44,6 +44,12 @@ export const temperatureDelta = (value?: SensorMeasurement): number | undefined 
 };
 export const isDeviceOnline = (lastSeenAt?: string | null, now = Date.now(), staleMinutes = 15): boolean =>
   Boolean(lastSeenAt && now - Date.parse(lastSeenAt) <= staleMinutes * 60_000);
+export const assignedDeviceForBeer = (devices: FermentationDevice[], brewId: string): FermentationDevice | undefined =>
+  devices.find(device => device.activeAssignment?.beerId === brewId);
+export const freeFermentationDevices = (devices: FermentationDevice[]): FermentationDevice[] =>
+  devices.filter(device => !device.activeAssignment);
+export const isFermentationDeviceOnline = (device: FermentationDevice, gateway?: FermentationGatewaySensorStatus): boolean =>
+  gateway ? gateway.status !== 'DISCONNECTED' && gateway.status !== 'BACKEND_UNAVAILABLE' && gateway.status !== 'BACKEND_ERROR' : device.status === 'ONLINE' ? true : device.status === 'OFFLINE' ? false : isDeviceOnline(device.lastSeenAt);
 export const fermentationDay = (startedAt?: string, now = Date.now()): number | undefined => {
   const start = startedAt ? Date.parse(startedAt) : NaN;
   return Number.isFinite(start) ? Math.max(1, Math.floor((now - start) / 86_400_000) + 1) : undefined;
