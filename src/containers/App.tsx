@@ -1,9 +1,8 @@
-import React, { Suspense, useEffect } from 'react';
-import {useDispatch, useSelector} from 'react-redux';
+import React, { Suspense } from 'react';
+import {useSelector} from 'react-redux';
 import Header from './MainView/Header/Header.connect';
 import './App.css';
 import Index from "./index.connect";
-import {ProductionActions} from '../actions/actions';
 import type {RootState} from '../reducers/rootReducer';
 import {isHeaterStuckOnAlarmActive} from '../utils/brewingStatus/alarmDisplay';
 import GlobalHeaterSafetyDialog, {GlobalHeaterSafetyDialogOwnedContext} from '../components/GlobalHeaterSafetyDialog/GlobalHeaterSafetyDialog';
@@ -14,7 +13,6 @@ const MobileProductionView = React.lazy(() => import('./Mobile/MobileStatusView/
 const App: React.FC = () => {
     const isMobile = window.innerWidth < 768;
     const isDashboardRoute = window.location.pathname === '/dashboard';
-    const dispatch = useDispatch();
     const production = useSelector((state: RootState) => state.productionReducer);
     const socketConnected = production.socketConnection.connected;
     const realtime = production.realtimeState;
@@ -25,14 +23,6 @@ const App: React.FC = () => {
     const heaterSafetyAlarmActive = isHeaterStuckOnAlarmActive(alarms);
     const currentTemperature = socketConnected ? realtime.temperatureSensor?.current : undefined;
     const heatingRunning = socketConnected ? realtime.heatingRunning : undefined;
-
-    useEffect(() => {
-        // Desktop owns the same central connection through Index. The mobile
-        // shell bypasses Index, so keep that PWA shell subscribed as well.
-        if (!isMobile || isDashboardRoute) return undefined;
-        dispatch(ProductionActions.webSocketConnect());
-        return () => { dispatch(ProductionActions.webSocketDisconnect()); };
-    }, [dispatch, isDashboardRoute, isMobile]);
 
     const globalSafetyDialog = (
         <GlobalHeaterSafetyDialog
