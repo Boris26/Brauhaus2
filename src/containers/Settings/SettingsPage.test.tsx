@@ -39,7 +39,7 @@ const operationalSettings = {
 beforeEach(() => {
     mockedOperational.get.mockResolvedValue(operationalSettings);
     mockedOperational.updateSection.mockImplementation(async (_section, settings) => settings as any);
-    mockedFermentationNotifications.get.mockResolvedValue({fermentationActionWarningSeconds: 10800, fermentationActionReminderIntervalSeconds: 7200});
+    mockedFermentationNotifications.getSettings.mockResolvedValue({fermentationActionWarningSeconds: 10800, fermentationActionReminderIntervalSeconds: 7200});
     mockedFermentationNotifications.update.mockImplementation(async (settings) => ({fermentationActionWarningSeconds: 10800, fermentationActionReminderIntervalSeconds: 7200, ...settings}));
 });
 

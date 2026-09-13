@@ -2,7 +2,7 @@ import {BaseRepository} from './BaseRepository';
 import {FermentationNotificationSettings, FermentationNotificationSettingsUpdate} from '../model/FermentationNotificationSettings';
 
 export class FermentationNotificationSettingsRepository extends BaseRepository {
-    static async get(): Promise<FermentationNotificationSettings> {
+    static async getSettings(): Promise<FermentationNotificationSettings> {
         return this.get<FermentationNotificationSettings>('config');
     }
 

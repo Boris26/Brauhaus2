@@ -47,7 +47,7 @@ export class FermentationNotificationSettings extends React.Component<Props, Sta
     load = async () => {
         this.setState({loading: true, error: null, settings: undefined, draft: undefined});
         try {
-            const settings = await FermentationNotificationSettingsRepository.get();
+            const settings = await FermentationNotificationSettingsRepository.getSettings();
             if (this.mounted) this.setState({settings, draft: this.createDraft(settings), loading: false});
         } catch {
             if (this.mounted) this.setState({loading: false, error: 'Gärungsbenachrichtigungen konnten nicht geladen werden.'});
