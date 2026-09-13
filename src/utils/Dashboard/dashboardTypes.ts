@@ -1,3 +1,5 @@
+import type {FermentationAction} from '../../model/Fermentation';
+
 export interface DashboardKpis {
   recipeCount: number;
   brewCount: number;
@@ -77,4 +79,5 @@ export interface DashboardActiveBrewRow {
   originalWortLabel: string;
   residualExtractLabel: string;
   noteLabel: string;
+  fermentationActions?: FermentationAction[];
 }

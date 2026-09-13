@@ -16,7 +16,7 @@ describe('startFermentationEpic', () => {
   it('requests the dedicated command and forwards the canonical response unchanged', done => {
     repository.startFermentation.mockResolvedValue(canonical);
     const action$ = new Subject<BeerActions.StartFermentation>();
-    startFermentationEpic(action$).pipe(toArray()).subscribe(actions => {
+    startFermentationEpic(action$).pipe(toArray()).subscribe((actions: BeerActions.AllBeerActions[]) => {
       expect(repository.startFermentation).toHaveBeenCalledWith('brew-1');
       expect(actions).toEqual([BeerActions.startFermentationSuccess(canonical, 'brew-1')]);
       done();
@@ -28,9 +28,9 @@ describe('startFermentationEpic', () => {
   it('does not create a timestamp or lifecycle update when the request fails', done => {
     repository.startFermentation.mockRejectedValue(new Error('HTTP 500'));
     const action$ = new Subject<BeerActions.StartFermentation>();
-    startFermentationEpic(action$).pipe(toArray()).subscribe(actions => {
+    startFermentationEpic(action$).pipe(toArray()).subscribe((actions: BeerActions.AllBeerActions[]) => {
       expect(actions[0]).toMatchObject({type: BeerActions.ActionTypes.START_FERMENTATION_FAILURE, payload: {requestedId: 'brew-1', message: expect.any(String)}});
-      expect(actions.some(action => action.type === BeerActions.ActionTypes.START_FERMENTATION_SUCCESS)).toBe(false);
+      expect(actions.some((action: BeerActions.AllBeerActions) => action.type === BeerActions.ActionTypes.START_FERMENTATION_SUCCESS)).toBe(false);
       done();
     });
     action$.next(BeerActions.startFermentation('brew-1'));

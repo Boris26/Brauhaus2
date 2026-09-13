@@ -8,8 +8,8 @@ type IngredientName = {id: string | number; name: string};
 const nameFor = (id: string | number, ingredients: IngredientName[]): string =>
     ingredients.find(ingredient => String(ingredient.id) === String(id))?.name ?? `Unbekannte Zutat (ID ${id})`;
 
-const actionFields = (ingredient: RecipeActionFields) => ({
-    triggerType: ingredient.triggerType,
+const actionFields = (ingredient: Partial<RecipeActionFields>) => ({
+    triggerType: ingredient.triggerType!,
     triggerValue: ingredient.triggerValue ?? null,
     triggerUnit: ingredient.triggerUnit ?? null,
     contactTime: ingredient.contactTime ?? null,

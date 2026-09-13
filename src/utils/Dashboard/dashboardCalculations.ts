@@ -192,6 +192,7 @@ export const buildActiveBrewRows = (brews: FinishedBrew[] = [], now = new Date()
       originalWortLabel: safeNumber(brew.originalwort) > 0 ? `${formatQuantity(safeNumber(brew.originalwort))} °P` : '-',
       residualExtractLabel: brew.residual_extract !== null && safeNumber(brew.residual_extract) > 0 ? `${formatQuantity(safeNumber(brew.residual_extract))} °P` : '-',
       noteLabel: brew.note || '-',
+      fermentationActions: brew.fermentationActions,
     };
   });
 

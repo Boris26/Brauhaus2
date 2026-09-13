@@ -51,7 +51,8 @@ describe('FinishedBeerRepository', () => {
     });
 
     it('updates the complete existing record through PUT finishedbeer', async () => {
-        const existing: FinishedBrew = {...createPayload, id: 'existing-id', state: eBrewState.MATURATION};
+        const {fermentationActions, ...existingFields} = createPayload;
+        const existing: FinishedBrew = {...existingFields, id: 'existing-id', state: eBrewState.MATURATION};
         mockedApi.put.mockResolvedValueOnce({data: existing});
 
         await FinishedBeerRepository.updateFinishedBeer(existing);

@@ -66,7 +66,7 @@ describe('beerDataReducer finished brews', () => {
     });
 
     it('retains the exact create payload on failure and clears it only on success', () => {
-        const {id, ...payload} = brew;
+        const {id, fermentationActions, ...payload} = brew;
         const pending = beerDataReducer(initialBeerState, BeerActions.addFinishedBrew(payload));
         expect(pending.isAddingFinishedBrew).toBe(true);
         expect(pending.pendingFinishedBrewPayload).toBe(payload);
