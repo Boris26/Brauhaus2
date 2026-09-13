@@ -39,7 +39,7 @@ export const completeFermentationActionEpic = (action$: any) => action$.pipe(
   groupBy((action: any) => `${action.payload.brewId}/${action.payload.actionId}`),
   mergeMap((group$: any) => group$.pipe(exhaustMap((action: any) =>
     from(FermentationRepository.completeAction(action.payload.brewId, action.payload.actionId)).pipe(
-      mergeMap(() => of(FermentationActions.completeActionSuccess(action.payload.brewId, action.payload.actionId), FermentationActions.load(action.payload.brewId))),
+      map(completedAction => FermentationActions.completeActionSuccess(action.payload.brewId, completedAction)),
       catchError(error => of(FermentationActions.completeActionFailure(action.payload.brewId, action.payload.actionId, error.message)))
     )
   )))

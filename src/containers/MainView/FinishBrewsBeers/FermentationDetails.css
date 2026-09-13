@@ -70,3 +70,9 @@
 
 .fermentation-lifecycle > div { display: flex; flex-wrap: wrap; gap: .75rem; }
 .fermentation-list li > span { display: block; }
+.fermentation-action-list > li.is-due { border-left-color: var(--color-warning); background: var(--color-warning-subtle); }
+.fermentation-action-list > li.is-completed { border-left-color: var(--color-success); }
+.fermentation-action-status { display: inline-block; padding: .15rem .45rem; border-radius: var(--border-radius-small); font-weight: 700; }
+.fermentation-action-status.is-due { color: var(--color-warning); background: var(--color-warning-subtle); }
+.fermentation-action-status.is-completed { color: var(--color-success); background: var(--color-success-subtle); }
+.fermentation-action-status.is-planned { color: var(--color-info); background: var(--color-surface-soft); }
