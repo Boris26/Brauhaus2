@@ -1,342 +1,410 @@
-.fermentation-details { display: grid; gap: var(--spacing-md); color: var(--color-text); }
-.fermentation-details h3, .fermentation-details h4, .fermentation-details p { margin: 0; }
-.fermentation-details h4 { font-size: var(--font-size-normal); }
-.fermentation-details button { border: 0; border-radius: var(--border-radius-small); padding: .45rem .8rem; color: var(--color-button-text); background: var(--color-primary); font-weight: 700; }
-.fermentation-details button:disabled { opacity: .55; }
-.fermentation-phase, .fermentation-status-card p, .fermentation-empty { color: var(--color-text-secondary); font-size: var(--font-size-small); }
-.fermentation-dashboard-header, .fermentation-page-header { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-md); }
-.fermentation-dashboard-header h3, .fermentation-page-header h3 { font-size: var(--font-size-section-title); }
-.fermentation-reading-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--spacing-sm); }
-.fermentation-reading-grid > div { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-sm); min-width: 0; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--border-radius-large); background: var(--color-panel-bg); }
-.fermentation-reading-grid span { color: var(--color-text-secondary); font-size: var(--font-size-small); }
-.fermentation-reading-grid strong { color: var(--color-primary); font-size: 1.35rem; white-space: nowrap; }
-.fermentation-dashboard-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-sm); }
-.fermentation-card { min-width: 0; padding: var(--spacing-md); border: 1px solid var(--color-border); border-radius: var(--border-radius-large); background: var(--color-panel-bg); }
-.fermentation-status-card { display: grid; align-content: start; gap: var(--spacing-sm); }
-.fermentation-prominent { color: var(--color-primary); font-size: 1.05rem; }.fermentation-prominent.is-overdue { color: var(--color-error); }.fermentation-prominent.is-due { color: var(--color-warning); }
-.fermentation-device { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--spacing-sm); align-items: center; padding: var(--spacing-sm); background: var(--color-panel-contrast); border-radius: var(--border-radius-medium); }
-.fermentation-assignment { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-xs); font-size: var(--font-size-small); }
-.fermentation-sensor-card { display: grid; gap: var(--spacing-sm); }
-.fermentation-assigned-device { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--spacing-md); }
-.fermentation-assigned-device > div { display: grid; gap: var(--spacing-xs); }
-.fermentation-assigned-device small, .fermentation-error small { display: block; color: var(--color-text-secondary); }
-.fermentation-device-name, .fermentation-device-name-edit { display: flex; align-items: center; gap: var(--spacing-xs); }
-.fermentation-device-name button, .fermentation-device-name-edit button { display: inline-flex; padding: .2rem; border: 0; color: var(--color-text-secondary); background: transparent; }
-.fermentation-device-name button:hover, .fermentation-device-name-edit button:hover { color: var(--color-primary); }
-.fermentation-device-name-edit input { width: min(20rem, 100%); padding: .4rem .5rem; color: var(--color-text); background: var(--color-panel-contrast); border: 1px solid var(--color-border); border-radius: var(--border-radius-small); }
-.fermentation-display-name-reset { justify-self: start; margin-top: var(--spacing-xs); padding: .2rem 0; border: 0; color: var(--color-text-secondary); background: transparent; text-decoration: underline; }
-.fermentation-assigned-device .fermentation-error { color: var(--color-error); }
-.fermentation-assignment-controls { display: flex; flex-wrap: wrap; align-items: end; gap: var(--spacing-sm); }
-.fermentation-assignment-controls label { display: grid; gap: var(--spacing-xs); color: var(--color-text-secondary); font-size: var(--font-size-small); }
-.fermentation-assignment-controls select { min-width: 16rem; padding: .5rem; color: var(--color-text); background: var(--color-panel-contrast); border: 1px solid var(--color-border); border-radius: var(--border-radius-small); }
-.fermentation-assignment-controls select option { color: var(--color-text); background: var(--color-panel-contrast); }
-.fermentation-assignment-controls select:disabled { color: var(--color-disabled-text); background: var(--color-disabled-bg); border-color: var(--color-disabled-border); cursor: not-allowed; }
-.is-online { color: var(--color-success); }.is-offline, .fermentation-error { color: var(--color-error); }
-.fermentation-trend-card { overflow: hidden; }
-.fermentation-trend { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-xs); margin-top: var(--spacing-xs); }
-.fermentation-trend svg { grid-column: 1 / -1; width: 100%; height: 3.25rem; overflow: visible; }
-.fermentation-trend polyline { fill: none; stroke: var(--color-primary); stroke-width: 2; vector-effect: non-scaling-stroke; }
-.fermentation-trend span { color: var(--color-text-secondary); font-size: .75rem; }.fermentation-trend span:last-child { text-align: right; }
-.fermentation-page-header .fermentation-back-button { margin-bottom: var(--spacing-xs); padding-left: 0; color: var(--color-primary); background: transparent; }
-.fermentation-measurements-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-md); }
-.fermentation-form { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--spacing-sm); }
-.fermentation-form label { display: grid; gap: var(--spacing-xs); }.fermentation-form input, .fermentation-form textarea { padding: .5rem; color: var(--color-text); background: var(--color-input-bg); border: 1px solid var(--color-border); border-radius: var(--border-radius-small); }.fermentation-form div, .fermentation-form p { grid-column: 1 / -1; }
-.fermentation-list { list-style: none; padding: 0; margin-bottom: 0; }.fermentation-list li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--spacing-sm); padding: var(--spacing-sm) 0; border-bottom: 1px solid var(--color-border-soft); }.fermentation-list time { color: var(--color-text-secondary); }
-.fermentation-analysis { overflow: auto; }
-.fermentation-history-chart { contain: layout size; width: 100%; height: clamp(14rem, 25vh, 17rem); margin-top: var(--spacing-xs); }
-.fermentation-bubble-chart { contain: layout size; width: 100%; height: clamp(13rem, 23vh, 16rem); margin-top: var(--spacing-xs); }
-.fermentation-chart-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--spacing-sm); }
-.fermentation-chart-content { position: relative; }
-.fermentation-chart-loading { position: absolute; top: .25rem; right: .5rem; z-index: 2; padding: .15rem .4rem; border-radius: var(--border-radius-small); color: var(--color-text-secondary); background: var(--color-panel-bg); font-size: .72rem; }
-.fermentation-chart-content.has-chart > .fermentation-error { position: absolute; right: .5rem; bottom: .25rem; z-index: 2; max-width: calc(100% - 1rem); margin: 0; padding: .15rem .4rem; border-radius: var(--border-radius-small); background: var(--color-panel-bg); font-size: .72rem; }
-.fermentation-range-selector { display: flex; flex-wrap: wrap; gap: var(--spacing-xs); }
-.fermentation-range-selector button { color: var(--color-text); background: var(--color-panel-contrast); }
-.fermentation-range-selector button.is-selected { color: var(--color-button-text); background: var(--color-primary); }
-.fermentation-section-title { margin-bottom: var(--spacing-sm) !important; text-transform: uppercase; letter-spacing: .08em; color: var(--color-text-secondary); }
-.fermentation-current-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: 1px solid var(--color-border); border-radius: var(--border-radius-large); background: var(--color-panel-bg); }
-.fermentation-current-grid > div { display: grid; align-content: center; gap: var(--spacing-xs); min-width: 0; padding: var(--spacing-md); border-right: 1px solid var(--color-border-soft); }
-.fermentation-current-grid > div:last-child { border-right: 0; }
-.fermentation-current-grid span, .fermentation-current-grid small { color: var(--color-text-secondary); font-size: var(--font-size-small); }
-.fermentation-current-grid strong { font-size: 1.25rem; overflow-wrap: anywhere; }
-.fermentation-runtime-status { color: var(--color-text-secondary); }
-.fermentation-runtime-status.is-running { color: var(--color-info); }
-.fermentation-runtime-status.is-running .status-dot { display: inline-block; animation: fermentation-runtime-pulse 1.2s ease-in-out infinite; }
-@keyframes fermentation-runtime-pulse { 0%, 100% { opacity: .45; transform: scale(.9); } 50% { opacity: 1; transform: scale(1); } }
-@media (prefers-reduced-motion: reduce) { .fermentation-runtime-status.is-running .status-dot { animation: none; } }
-.fermentation-devices-compact { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); margin-top: var(--spacing-sm); }
-.fermentation-devices-compact .fermentation-device { flex: 1 1 15rem; max-width: 24rem; }
-.fermentation-devices-compact small { flex-basis: 100%; color: var(--color-text-secondary); }
-.fermentation-chart-card { overflow: hidden; }
-.fermentation-last-measurement > div { display: flex; flex-wrap: wrap; gap: var(--spacing-sm) var(--spacing-lg); margin-top: var(--spacing-sm); }
-.fermentation-last-measurement time { color: var(--color-text-secondary); }
-.fermentation-plan { display: grid; gap: var(--spacing-md); }
-.fermentation-plan > h4 { text-transform: uppercase; letter-spacing: .08em; }
-.fermentation-plan-group h5 { margin: 0 0 var(--spacing-xs); color: var(--color-primary); font-size: 1rem; }
-.fermentation-action-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-sm); margin: 0; padding: 0; list-style: none; }
-.fermentation-action-list > li { display: grid; align-content: start; gap: var(--spacing-sm); min-width: 0; padding: var(--spacing-md); border-left: 3px solid var(--color-border); border-radius: var(--border-radius-medium); background: var(--color-panel-contrast); }
-.fermentation-action-heading { display: grid; gap: var(--spacing-xs); overflow-wrap: anywhere; }
-.fermentation-action-heading strong { font-size: 1.1rem; }
-.fermentation-action-heading span { color: var(--color-text-secondary); }
-.fermentation-action-list dl { display: grid; gap: var(--spacing-xs); margin: 0; }
-.fermentation-action-list dl > div { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); gap: var(--spacing-xs); }
-.fermentation-action-list dt { color: var(--color-text-secondary); }
-.fermentation-action-list dd { margin: 0; overflow-wrap: anywhere; }
-.fermentation-action-buttons { display: flex; flex-wrap: wrap; gap: var(--spacing-xs); margin-top: auto; }
-.fermentation-measurements-page { gap: var(--spacing-sm); }
-.fermentation-measurements-page .fermentation-chart-card { padding-block: var(--spacing-sm); }
-.fermentation-measurements-page .fermentation-section-title { margin-bottom: var(--spacing-xs) !important; }
-.fermentation-measurements-lower-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem); gap: var(--spacing-md); min-width: 0; align-items: stretch; }
-.fermentation-measurements-main { display: grid; gap: var(--spacing-sm); min-width: 0; }
-.fermentation-measurements-sidebar { min-width: 0; align-self: stretch; display: grid; }
-.fermentation-measurements-sidebar .fermentation-sensor-card { height: 100%; box-sizing: border-box; align-content: start; }
-.fermentation-measurements-sidebar .fermentation-assigned-device { align-items: flex-start; }
-.fermentation-measurements-sidebar .fermentation-assignment-controls select { min-width: 0; width: 100%; }
-.fermentation-measurements-page .fermentation-last-measurement { padding-block: var(--spacing-sm); }
-.fermentation-measurements-page .fermentation-last-measurement > div { margin-top: var(--spacing-xs); }
-.fermentation-measurements-page .fermentation-plan { gap: var(--spacing-sm); }
-.fermentation-measurements-page .fermentation-action-list { grid-template-columns: repeat(auto-fit, minmax(min(16rem, 100%), 1fr)); }
-.fermentation-measurements-route { box-sizing: border-box; width: 100%; height: 100%; min-height: 0; padding: var(--spacing-md) var(--spacing-lg); overflow-y: auto; }
-.fermentation-route-state { min-height: 16rem; display: grid; place-content: center; justify-items: center; gap: var(--spacing-sm); color: var(--color-text); text-align: center; }
-.fermentation-route-state h2, .fermentation-route-state p { margin: 0; }.fermentation-route-state p { color: var(--color-text-secondary); }
-.fermentation-route-state button { border: 0; border-radius: var(--border-radius-small); padding: .45rem .8rem; color: var(--color-button-text); background: var(--color-primary); font-weight: 700; }
-@media (max-width: 1100px) { .fermentation-current-grid { grid-template-columns: repeat(3, 1fr); }.fermentation-current-grid > div { border-bottom: 1px solid var(--color-border-soft); }.fermentation-action-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }.fermentation-measurements-lower-grid { grid-template-columns: 1fr; }.fermentation-measurements-sidebar { grid-row: 2; } }
-@media (max-width: 800px) { .fermentation-reading-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }.fermentation-reading-grid > div { flex-direction: column; align-items: flex-start; padding: var(--spacing-sm); }.fermentation-dashboard-grid, .fermentation-measurements-grid { grid-template-columns: 1fr; }.fermentation-current-grid { grid-template-columns: repeat(2, 1fr); }.fermentation-action-list { grid-template-columns: 1fr; } }
-@media (max-width: 520px) { .fermentation-dashboard-header, .fermentation-page-header { align-items: flex-start; }.fermentation-reading-grid, .fermentation-current-grid { grid-template-columns: 1fr; }.fermentation-reading-grid > div { flex-direction: row; align-items: center; }.fermentation-form { grid-template-columns: 1fr; } }
-
-.fermentation-lifecycle > div { display: flex; flex-wrap: wrap; gap: .75rem; }
-.fermentation-list li > span { display: block; }
-.fermentation-action-list > li.is-due { border-left-color: var(--color-warning); background: var(--color-warning-subtle); }
-.fermentation-action-list > li.is-completed { border-left-color: var(--color-success); }
-.fermentation-action-status { display: inline-block; padding: .15rem .45rem; border-radius: var(--border-radius-small); font-weight: 700; }
-.fermentation-action-status.is-due { color: var(--color-warning); background: var(--color-warning-subtle); }
-.fermentation-action-status.is-completed { color: var(--color-success); background: var(--color-success-subtle); }
-.fermentation-action-status.is-planned { color: var(--color-text-secondary); background: transparent; }
-
-/* Compact measurement-page action tiles: preserve the existing semantic markup while
-   using the available desktop width more efficiently. */
-.fermentation-measurements-page .fermentation-plan {
-  gap: .45rem;
-  padding: .65rem;
-}
-.fermentation-measurements-page .fermentation-plan > h4 {
-  font-size: .9rem;
-  line-height: 1.15;
-}
-.fermentation-measurements-page .fermentation-plan-group {
+.fermentation-details {
   display: grid;
-  gap: .25rem;
+  gap: var(--spacing-md);
+  color: var(--color-text);
 }
-.fermentation-measurements-page .fermentation-plan-group h5 {
+
+.fermentation-details h3,
+.fermentation-details h4,
+.fermentation-details p {
   margin: 0;
-  font-size: .8rem;
-  line-height: 1.15;
 }
-.fermentation-measurements-page .fermentation-action-list {
-  grid-template-columns: repeat(auto-fit, minmax(min(13rem, 100%), 1fr));
-  gap: .4rem;
+
+.fermentation-details h4 {
+  font-size: var(--font-size-normal);
 }
-.fermentation-measurements-page .fermentation-action-list > li {
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-rows: auto auto;
-  align-items: start;
-  gap: .25rem .5rem;
-  padding: .55rem .65rem;
-  min-height: 0;
-  border-left-width: 2px;
+
+.fermentation-details button {
+  border: 0;
   border-radius: var(--border-radius-small);
-}
-.fermentation-measurements-page .fermentation-action-heading {
-  grid-column: 1;
-  grid-row: 1;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: .15rem .45rem;
-  min-width: 0;
-}
-.fermentation-measurements-page .fermentation-action-heading strong {
-  min-width: 0;
-  font-size: .88rem;
-  line-height: 1.2;
-  overflow-wrap: anywhere;
-}
-.fermentation-measurements-page .fermentation-action-heading > span {
-  font-size: .72rem;
-  line-height: 1.1;
-}
-.fermentation-measurements-page .fermentation-action-list dl {
-  grid-column: 1;
-  grid-row: 2;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: .15rem .55rem;
-  min-width: 0;
-  font-size: .74rem;
-  line-height: 1.15;
-}
-.fermentation-measurements-page .fermentation-action-list dl > div {
-  display: inline-flex;
-  align-items: center;
-  grid-template-columns: none;
-  gap: .18rem;
-  min-width: 0;
-}
-.fermentation-measurements-page .fermentation-action-list dt {
-  font-size: .7rem;
-  white-space: nowrap;
-}
-.fermentation-measurements-page .fermentation-action-list dt::after {
-  content: ':';
-}
-.fermentation-measurements-page .fermentation-action-list dd {
-  line-height: 1.15;
-}
-.fermentation-measurements-page .fermentation-action-status {
-  padding: .08rem .3rem;
-  font-size: .68rem;
-  line-height: 1.15;
-  white-space: nowrap;
-}
-.fermentation-measurements-page .fermentation-action-status.is-planned {
-  padding: 0;
-  color: var(--color-text-secondary);
-  background: transparent;
-  font-weight: 500;
-}
-.fermentation-measurements-page .fermentation-action-buttons {
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  align-self: center;
-  display: flex;
-  flex-wrap: nowrap;
-  gap: .3rem;
-  margin: 0;
-}
-.fermentation-measurements-page .fermentation-action-buttons button {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.9rem;
-  height: 1.9rem;
-  min-width: 1.9rem;
-  padding: 0;
-  line-height: 1;
-  border: 1px solid var(--color-border);
-  border-radius: 50%;
-  color: var(--color-text-secondary);
-  background: transparent;
-}
-.fermentation-measurements-page .fermentation-action-buttons button svg {
-  font-size: 1.05rem;
-}
-.fermentation-measurements-page .fermentation-action-buttons button.is-complete {
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-}
-.fermentation-measurements-page .fermentation-action-buttons button.is-complete:hover:not(:disabled) {
+  padding: .45rem .8rem;
   color: var(--color-button-text);
   background: var(--color-primary);
+  font-weight: 700;
 }
-.fermentation-measurements-page .fermentation-action-buttons button.is-skip:hover:not(:disabled) {
-  color: var(--color-text);
-  border-color: var(--color-text-secondary);
+
+.fermentation-details button:disabled {
+  opacity: .55;
+}
+
+.fermentation-phase,
+.fermentation-status-card p,
+.fermentation-empty {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.fermentation-dashboard-header,
+.fermentation-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+.fermentation-dashboard-header h3,
+.fermentation-page-header h3 {
+  font-size: var(--font-size-section-title);
+}
+
+.fermentation-reading-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--spacing-sm);
+}
+
+.fermentation-reading-grid > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  min-width: 0;
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-large);
   background: var(--color-panel-bg);
 }
-.fermentation-action-button-label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+
+.fermentation-reading-grid span {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.fermentation-reading-grid strong {
+  color: var(--color-primary);
+  font-size: 1.35rem;
   white-space: nowrap;
+}
+
+.fermentation-dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--spacing-sm);
+}
+
+.fermentation-card {
+  min-width: 0;
+  padding: var(--spacing-md);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-large);
+  background: var(--color-panel-bg);
+}
+
+.fermentation-status-card {
+  display: grid;
+  align-content: start;
+  gap: var(--spacing-sm);
+}
+
+.fermentation-prominent {
+  color: var(--color-primary);
+  font-size: 1.05rem;
+}
+
+.fermentation-prominent.is-overdue { color: var(--color-error); }
+.fermentation-prominent.is-due { color: var(--color-warning); }
+
+.fermentation-device {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  align-items: center;
+  padding: var(--spacing-sm);
+  background: var(--color-panel-contrast);
+  border-radius: var(--border-radius-medium);
+}
+
+.fermentation-sensor-card {
+  display: grid;
+  gap: var(--spacing-sm);
+}
+
+.fermentation-assigned-device {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+.fermentation-assigned-device > div {
+  display: grid;
+  gap: var(--spacing-xs);
+}
+
+.fermentation-assigned-device small,
+.fermentation-error small {
+  display: block;
+  color: var(--color-text-secondary);
+}
+
+.fermentation-device-name,
+.fermentation-device-name-edit {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.fermentation-device-name button,
+.fermentation-device-name-edit button {
+  display: inline-flex;
+  padding: .2rem;
   border: 0;
+  color: var(--color-text-secondary);
+  background: transparent;
 }
-@media (max-width: 900px) {
-  .fermentation-measurements-page .fermentation-action-list {
-    grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
-  }
+
+.fermentation-device-name button:hover,
+.fermentation-device-name-edit button:hover {
+  color: var(--color-primary);
 }
-@media (max-width: 600px) {
-  .fermentation-measurements-page .fermentation-action-list > li {
-    grid-template-columns: minmax(0, 1fr);
+
+.fermentation-device-name-edit input {
+  width: min(20rem, 100%);
+  padding: .4rem .5rem;
+  color: var(--color-text);
+  background: var(--color-panel-contrast);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-small);
+}
+
+.fermentation-display-name-reset {
+  justify-self: start;
+  margin-top: var(--spacing-xs);
+  padding: .2rem 0;
+  border: 0;
+  color: var(--color-text-secondary);
+  background: transparent;
+  text-decoration: underline;
+}
+
+.fermentation-assigned-device .fermentation-error {
+  color: var(--color-error);
+}
+
+.fermentation-assignment-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--spacing-sm);
+}
+
+.fermentation-assignment-controls label {
+  display: grid;
+  gap: var(--spacing-xs);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+}
+
+.fermentation-assignment-controls select {
+  min-width: 16rem;
+  padding: .5rem;
+  color: var(--color-text);
+  background: var(--color-panel-contrast);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-small);
+}
+
+.fermentation-assignment-controls select option {
+  color: var(--color-text);
+  background: var(--color-panel-contrast);
+}
+
+.fermentation-assignment-controls select:disabled {
+  color: var(--color-disabled-text);
+  background: var(--color-disabled-bg);
+  border-color: var(--color-disabled-border);
+  cursor: not-allowed;
+}
+
+.is-online { color: var(--color-success); }
+.is-offline,
+.fermentation-error { color: var(--color-error); }
+
+.fermentation-trend-card {
+  overflow: hidden;
+}
+
+.fermentation-trend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-xs);
+}
+
+.fermentation-trend svg {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 3.25rem;
+  overflow: visible;
+}
+
+.fermentation-trend polyline {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.fermentation-trend span {
+  color: var(--color-text-secondary);
+  font-size: .75rem;
+}
+
+.fermentation-trend span:last-child {
+  text-align: right;
+}
+
+.fermentation-page-header .fermentation-back-button {
+  margin-bottom: var(--spacing-xs);
+  padding-left: 0;
+  color: var(--color-primary);
+  background: transparent;
+}
+
+.fermentation-analysis {
+  overflow: auto;
+}
+
+.fermentation-plan {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+.fermentation-plan > h4 {
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+
+.fermentation-plan-group h5 {
+  margin: 0 0 var(--spacing-xs);
+  color: var(--color-primary);
+  font-size: 1rem;
+}
+
+.fermentation-action-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--spacing-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fermentation-action-list > li {
+  display: grid;
+  align-content: start;
+  gap: var(--spacing-sm);
+  min-width: 0;
+  padding: var(--spacing-md);
+  border-left: 3px solid var(--color-border);
+  border-radius: var(--border-radius-medium);
+  background: var(--color-panel-contrast);
+}
+
+.fermentation-action-heading {
+  display: grid;
+  gap: var(--spacing-xs);
+  overflow-wrap: anywhere;
+}
+
+.fermentation-action-heading strong {
+  font-size: 1.1rem;
+}
+
+.fermentation-action-heading span {
+  color: var(--color-text-secondary);
+}
+
+.fermentation-action-list dl {
+  display: grid;
+  gap: var(--spacing-xs);
+  margin: 0;
+}
+
+.fermentation-action-list dl > div {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr);
+  gap: var(--spacing-xs);
+}
+
+.fermentation-action-list dt {
+  color: var(--color-text-secondary);
+}
+
+.fermentation-action-list dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.fermentation-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  margin-top: auto;
+}
+
+.fermentation-action-list > li.is-due {
+  border-left-color: var(--color-warning);
+  background: var(--color-warning-subtle);
+}
+
+.fermentation-action-list > li.is-completed {
+  border-left-color: var(--color-success);
+}
+
+.fermentation-action-status {
+  display: inline-block;
+  padding: .15rem .45rem;
+  border-radius: var(--border-radius-small);
+  font-weight: 700;
+}
+
+.fermentation-action-status.is-due {
+  color: var(--color-warning);
+  background: var(--color-warning-subtle);
+}
+
+.fermentation-action-status.is-completed {
+  color: var(--color-success);
+  background: var(--color-success-subtle);
+}
+
+.fermentation-action-status.is-planned {
+  color: var(--color-text-secondary);
+  background: transparent;
+}
+
+.fermentation-lifecycle > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+}
+
+@media (max-width: 800px) {
+  .fermentation-reading-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
-  .fermentation-measurements-page .fermentation-action-buttons {
-    grid-column: 1;
-    grid-row: auto;
-    justify-self: end;
+  .fermentation-reading-grid > div {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: var(--spacing-sm);
+  }
+  .fermentation-dashboard-grid {
+    grid-template-columns: 1fr;
   }
 }
 
-/* Compact measurement-page header and current-state strip. */
-.fermentation-measurements-page {
-  gap: .5rem;
-}
-.fermentation-measurements-page .fermentation-page-header {
-  min-height: 0;
-  align-items: center;
-  gap: .75rem;
-}
-.fermentation-measurements-page .fermentation-page-header > div {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: .2rem .75rem;
-  min-width: 0;
-}
-.fermentation-measurements-page .fermentation-page-header .fermentation-back-button {
-  margin: 0;
-  padding: 0;
-  font-size: .82rem;
-  line-height: 1.1;
-  white-space: nowrap;
-}
-.fermentation-measurements-page .fermentation-page-header h3 {
-  font-size: 1.05rem;
-  line-height: 1.15;
-}
-.fermentation-measurements-page .fermentation-page-header .fermentation-phase {
-  font-size: .75rem;
-  line-height: 1.1;
-  white-space: nowrap;
-}
-.fermentation-measurements-page .fermentation-page-header > button {
-  flex: 0 0 auto;
-  padding: .38rem .7rem;
-  white-space: nowrap;
-}
-.fermentation-measurements-page #current-state-title {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px !important;
-  padding: 0;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-.fermentation-measurements-page .fermentation-current-grid > div {
-  gap: .15rem;
-  padding: .45rem .7rem;
-}
-.fermentation-measurements-page .fermentation-current-grid span,
-.fermentation-measurements-page .fermentation-current-grid small {
-  font-size: .72rem;
-  line-height: 1.1;
-}
-.fermentation-measurements-page .fermentation-current-grid strong {
-  font-size: 1rem;
-  line-height: 1.15;
-}
-@media (max-width: 800px) {
-  .fermentation-measurements-page .fermentation-page-header {
+@media (max-width: 520px) {
+  .fermentation-dashboard-header {
     align-items: flex-start;
   }
-  .fermentation-measurements-page .fermentation-page-header > div {
-    gap: .25rem .55rem;
+  .fermentation-reading-grid {
+    grid-template-columns: 1fr;
+  }
+  .fermentation-reading-grid > div {
+    flex-direction: row;
+    align-items: center;
   }
 }
