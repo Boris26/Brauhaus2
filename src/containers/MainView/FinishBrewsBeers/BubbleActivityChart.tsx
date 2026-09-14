@@ -47,10 +47,11 @@ export const formatBubbleActivityTooltip = (value: unknown, name: unknown, item:
 export class BubbleActivityChart extends React.PureComponent<{activity: BubbleActivity[]}> {
   render() {
     const data = buildBubbleActivityChartData(this.props.activity);
-    return <div className="fermentation-bubble-chart" role="img" aria-label="Zeitlicher Verlauf der Gäraktivität in Blubbs pro Minute und des Differenzdrucks in Pascal">
+    return <div className="fermentation-bubble-chart" style={{height: 170, minWidth: 0, display: 'grid', overflow: 'hidden'}} role="img" aria-label="Zeitlicher Verlauf der Gäraktivität in Blubbs pro Minute und des Differenzdrucks in Pascal">
       <ResponsiveContainer
         width="100%"
-        height="100%"
+        height={170}
+        minWidth={0}
         debounce={50}
       ><LineChart data={data} margin={{top: 8, right: 12, bottom: 8, left: 4}}>
         <CartesianGrid strokeDasharray="3 3" opacity={0.25} />
