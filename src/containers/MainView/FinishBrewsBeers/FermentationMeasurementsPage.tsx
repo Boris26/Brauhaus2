@@ -7,6 +7,7 @@ import {Views} from '../../../enums/eViews';
 import FinishedBrewDetails from './FinishedBrewDetails';
 import './FermentationDetails.css';
 import './FermentationMeasurementsPage.css';
+import './FermentationActionRail.css';
 
 interface Props {
   finishedBrews?: FinishedBrew[];
