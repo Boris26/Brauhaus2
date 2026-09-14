@@ -30,7 +30,11 @@ const FermentationMeasurementsChart: React.FC<Props> = props => {
   const data = buildFermentationChartData(props.measurements);
   if (data.length === 0) return <p>Keine Diagrammdaten vorhanden.</p>;
   return <div className="fermentation-history-chart" role="img" aria-label="Zeitlicher Verlauf von Temperatur und Plato">
-    <ResponsiveContainer width="100%" height="100%"><LineChart data={data} margin={{top: 8, right: 8, bottom: 8, left: 0}}>
+    <ResponsiveContainer
+      width="100%"
+      height="100%"
+      debounce={50}
+    ><LineChart data={data} margin={{top: 8, right: 8, bottom: 8, left: 0}}>
       <CartesianGrid strokeDasharray="3 3" opacity={0.25} />
       <XAxis dataKey="timestamp" type="number" scale="time" domain={['dataMin', 'dataMax']} minTickGap={30} tickFormatter={value => new Intl.DateTimeFormat('de-DE', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'}).format(new Date(value))} />
       <YAxis yAxisId="temperature" unit=" °C" width={58} />
