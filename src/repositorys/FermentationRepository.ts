@@ -49,6 +49,10 @@ export class FermentationRepository extends BaseRepository {
     const device = await this.post<FermentationDeviceDTO>(`fermentation/devices/${encodeURIComponent(deviceUid)}/assignment`, {beerId: finishedBeerId});
     return mapFermentationDevice(device);
   }
+  static async updateDeviceDisplayName(deviceUid: string, displayName: string | null): Promise<FermentationDevice> {
+    const device = await this.patch<FermentationDeviceDTO>(`fermentation/devices/${encodeURIComponent(deviceUid)}`, {displayName});
+    return mapFermentationDevice(device);
+  }
   static unassignDevice(deviceUid: string): Promise<void> {
     return this.delete(`fermentation/devices/${encodeURIComponent(deviceUid)}/assignment`);
   }

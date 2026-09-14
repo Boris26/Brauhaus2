@@ -24,6 +24,7 @@
 .fermentation-device-name button, .fermentation-device-name-edit button { display: inline-flex; padding: .2rem; border: 0; color: var(--color-text-secondary); background: transparent; }
 .fermentation-device-name button:hover, .fermentation-device-name-edit button:hover { color: var(--color-primary); }
 .fermentation-device-name-edit input { width: min(20rem, 100%); padding: .4rem .5rem; color: var(--color-text); background: var(--color-panel-contrast); border: 1px solid var(--color-border); border-radius: var(--border-radius-small); }
+.fermentation-display-name-reset { justify-self: start; margin-top: var(--spacing-xs); padding: .2rem 0; border: 0; color: var(--color-text-secondary); background: transparent; text-decoration: underline; }
 .fermentation-assigned-device .fermentation-error { color: var(--color-error); }
 .fermentation-assignment-controls { display: flex; flex-wrap: wrap; align-items: end; gap: var(--spacing-sm); }
 .fermentation-assignment-controls label { display: grid; gap: var(--spacing-xs); color: var(--color-text-secondary); font-size: var(--font-size-small); }
