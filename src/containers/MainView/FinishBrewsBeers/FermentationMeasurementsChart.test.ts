@@ -1,6 +1,6 @@
 import React from 'react';
-import {render} from '@testing-library/react';
-import FermentationMeasurementsChart, {buildFermentationActionMarkers, buildFermentationChartData} from './FermentationMeasurementsChart';
+import {fireEvent, render, screen} from '@testing-library/react';
+import FermentationMeasurementsChart, {buildFermentationActionMarkers, buildFermentationChartData, filterFermentationMeasurementsByRange} from './FermentationMeasurementsChart';
 
 jest.mock('recharts', () => {
   const React = require('react');
@@ -40,6 +40,19 @@ describe('buildFermentationChartData', () => {
     ] as any);
     expect(markers).toEqual([{actionId: 'done', timestamp: Date.parse('2026-09-11T10:22:00Z'), label: 'Mosaic 50 g'}]);
   });
+
+  it('filters ranges relative to the newest available measurement', () => {
+    const measurements: any[] = [
+      {id: 'old', measuredAt: '2026-09-01T00:00:00Z'},
+      {id: 'recent', measuredAt: '2026-09-07T20:00:00Z'},
+      {id: 'latest', measuredAt: '2026-09-08T00:00:00Z'},
+    ];
+
+    expect(filterFermentationMeasurementsByRange(measurements, '6h').map(value => value.id)).toEqual(['recent', 'latest']);
+    expect(filterFermentationMeasurementsByRange(measurements, '24h').map(value => value.id)).toEqual(['recent', 'latest']);
+    expect(filterFermentationMeasurementsByRange(measurements, '7d').map(value => value.id)).toEqual(['old', 'recent', 'latest']);
+    expect(filterFermentationMeasurementsByRange(measurements, 'all')).toBe(measurements);
+  });
 });
 
 describe('FermentationMeasurementsChart refresh rendering', () => {
@@ -61,5 +74,23 @@ describe('FermentationMeasurementsChart refresh rendering', () => {
     rerender(React.createElement(FermentationMeasurementsChart, {measurements: updatedMeasurements, actions}));
     expect(LineChart).toHaveBeenCalledTimes(2);
     expect(LineChart.mock.calls[1][0].data).toHaveLength(2);
+  });
+
+  it('offers the same compact time ranges as the fermentation activity chart', () => {
+    const measurements: any[] = [
+      {id: 'old', finishedBeerId: 'b', measuredAt: '2026-09-01T00:00:00Z', beerTemperatureC: 17.8, source: 'SENSOR'},
+      {id: 'latest', finishedBeerId: 'b', measuredAt: '2026-09-08T00:00:00Z', beerTemperatureC: 18.1, source: 'SENSOR'},
+    ];
+    const LineChart = require('recharts').LineChart as jest.Mock;
+    LineChart.mockClear();
+
+    render(React.createElement(FermentationMeasurementsChart, {measurements, actions: []}));
+    expect(screen.getByRole('group', {name: 'Zeitraum des Temperaturverlaufs'})).toBeInTheDocument();
+    expect(screen.getByRole('button', {name: '24 h'})).toHaveAttribute('aria-pressed', 'true');
+    expect(LineChart.mock.calls.at(-1)[0].data).toHaveLength(1);
+
+    fireEvent.click(screen.getByRole('button', {name: 'Alles'}));
+    expect(screen.getByRole('button', {name: 'Alles'})).toHaveAttribute('aria-pressed', 'true');
+    expect(LineChart.mock.calls.at(-1)[0].data).toHaveLength(2);
   });
 });
