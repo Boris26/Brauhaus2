@@ -86,6 +86,36 @@ describe('fermentation details dashboard', () => {
     expect(within(sensorSection).getByText('● Online')).toBeInTheDocument();
   });
 
+  it.each([
+    ['RUNNING', 'Aktiv', 'is-running'],
+    ['PAUSED', 'Pause', 'is-paused'],
+    ['IDLE', 'Bereit', 'is-idle'],
+  ])('shows assigned %s measurement runtime independently from online status', (measurementState, label, cssClass) => {
+    const details: any = {measurements: [], actions: [], sensorMeasurements: [], devices: [
+      {deviceUid: 'mine', deviceName: 'Sensor Keller', activeAssignment: {beerId: 'brew-1'}},
+    ]};
+    render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" sensorsByDeviceUid={{mine: {deviceUid: 'mine', status: 'ASSIGNED', beerId: 'brew-1', measurementState, updatedAt: new Date().toISOString()}}} />);
+
+    const runtime = screen.getByText('Messung').parentElement as HTMLElement;
+    expect(within(runtime).getByText(label)).toHaveClass('fermentation-runtime-status', cssClass);
+    expect(within(runtime).queryByText(label)?.classList.contains('is-running')).toBe(measurementState === 'RUNNING');
+    expect(screen.getByText('● Online')).toBeInTheDocument();
+    expect(screen.getByRole('button', {name: 'Sensor trennen'})).toBeInTheDocument();
+  });
+
+  it('hides runtime from an offline assigned sensor and from another sensor', () => {
+    const details: any = {measurements: [], actions: [], sensorMeasurements: [], devices: [
+      {deviceUid: 'mine', deviceName: 'Sensor Keller', activeAssignment: {beerId: 'brew-1'}},
+    ]};
+    const {rerender} = render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" sensorsByDeviceUid={{mine: {deviceUid: 'mine', status: 'DISCONNECTED', measurementState: 'RUNNING', updatedAt: ''}}} />);
+    expect(screen.getByText('Messung').nextSibling).toHaveTextContent('–');
+    expect(screen.getByText('● Offline')).toBeInTheDocument();
+
+    rerender(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" sensorsByDeviceUid={{other: {deviceUid: 'other', status: 'ASSIGNED', beerId: 'brew-1', measurementState: 'RUNNING', updatedAt: ''}}} />);
+    expect(screen.getByText('Messung').nextSibling).toHaveTextContent('–');
+    expect(screen.queryByText('Aktiv')).not.toBeInTheDocument();
+  });
+
   it('uses backend assignments, offers only free devices and dispatches assignment', () => {
     const assign = jest.fn();
     const details: any = {measurements: [], actions: [], sensorMeasurements: [], devices: [

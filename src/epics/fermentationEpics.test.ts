@@ -24,6 +24,13 @@ it('maps gateway data invalidations to the dedicated Redux action', () => {
     .toEqual(FermentationActions.gatewayDataChanged('brew-a', 'STATE'));
 });
 
+it('maps sensor runtime directly without creating a REST invalidation', () => {
+  const action = gatewayMessageAction({type: 'FERMENTATION_SENSOR_RUNTIME_CHANGED', deviceUid: 'sensor-a', measurementState: 'RUNNING', updatedAt: '2026-09-14T10:00:00Z'});
+  expect(action).toEqual(FermentationActions.gatewaySensorRuntimeChanged('sensor-a', 'RUNNING', '2026-09-14T10:00:00Z'));
+  expect(action.type).not.toBe(FermentationActionTypes.GATEWAY_DATA_CHANGED);
+  expect(action.type).not.toBe(FermentationActionTypes.LOAD);
+});
+
 it('builds filtered server ranges while all remains unfiltered', () => {
   const now = new Date('2026-09-11T12:00:00.000Z');
   expect(bubbleActivityBounds('6h', now)).toEqual({from: '2026-09-11T06:00:00.000Z', to: now.toISOString()});

@@ -114,6 +114,7 @@ export const mapFermentationDevice = (dto: FermentationDeviceDTO): FermentationD
 });
 
 export type FermentationGatewaySensorState = 'REGISTERED' | 'ASSIGNED' | 'UNASSIGNED' | 'DISCONNECTED' | 'BACKEND_UNAVAILABLE' | 'BACKEND_ERROR';
+export type FermentationMeasurementRuntimeState = 'IDLE' | 'RUNNING' | 'PAUSED';
 
 /** Runtime integration state from FermentationSensorGateway; BeerDataStore remains authoritative for assignments and measurements. */
 export interface FermentationGatewaySensorStatus {
@@ -122,6 +123,7 @@ export interface FermentationGatewaySensorStatus {
   status: FermentationGatewaySensorState;
   updatedAt: string;
   beerId?: string;
+  measurementState?: FermentationMeasurementRuntimeState;
 }
 
 export interface SensorMeasurement {

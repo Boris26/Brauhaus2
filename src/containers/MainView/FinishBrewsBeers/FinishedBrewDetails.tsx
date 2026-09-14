@@ -7,7 +7,7 @@ import {FinishedBrew} from '../../../model/FinishedBrew';
 import {brewStateLabel, BrewStateTransitions, eBrewState} from '../../../enums/eBrewState';
 import {FermentationActions} from '../../../actions/fermentation.actions';
 import {ApplicationActions, BeerActions} from '../../../actions/actions';
-import {BubbleActivity, BubbleActivityRange, CreateFermentationMeasurement, FermentationAction, FermentationDetails, FermentationGatewaySensorStatus, FermentationMeasurement} from '../../../model/Fermentation';
+import {BubbleActivity, BubbleActivityRange, CreateFermentationMeasurement, FermentationAction, FermentationDetails, FermentationGatewaySensorStatus, FermentationMeasurement, FermentationMeasurementRuntimeState} from '../../../model/Fermentation';
 import {actionAmountLabel, actionDueLabel, actionTriggerLabel, actionTypeLabel, assignedDeviceForBeer, canCompleteAction, contactStatus, contactTimeLabel, fermentationDay, freeFermentationDevices, isActionDue, isFermentationDeviceOnline, latestByDate, latestFermentationReadings} from '../../../utils/fermentation';
 import {fermentationActionRequestId} from '../../../reducers/fermentationReducer';
 import {transitionFinishedBrew} from '../../../utils/brewLifecycle';
@@ -22,6 +22,11 @@ interface Props { brew: FinishedBrew; details?: FermentationDetails; bubbleActiv
 const number = (value?: number | null, unit = '') => typeof value === 'number' && Number.isFinite(value) ? `${value.toLocaleString('de-DE', {maximumFractionDigits: 1})}${unit}` : '–';
 const date = (value?: string) => value && Number.isFinite(Date.parse(value)) ? new Intl.DateTimeFormat('de-DE', {dateStyle: 'short', timeStyle: 'short'}).format(new Date(value)) : '–';
 const actionText = (action: FermentationAction) => [action.name, actionAmountLabel(action.amount, action.unit)].filter(Boolean).join(' · ');
+const FermentationMeasurementRuntime: React.FC<{state?: FermentationMeasurementRuntimeState}> = ({state}) => {
+  if (!state) return <strong>–</strong>;
+  const label = state === 'RUNNING' ? 'Aktiv' : state === 'PAUSED' ? 'Pause' : 'Bereit';
+  return <strong className={`fermentation-runtime-status is-${state.toLowerCase()}`}><span className="status-dot" aria-hidden="true">●</span> {label}</strong>;
+};
 
 const ActionItem: React.FC<{action: FermentationAction; requestId: string; completing: string[]; skipping: string[]; complete: () => void; skip: () => void}> = ({action, requestId, completing, skipping, complete, skip}) => {
   const contact = contactStatus(action);
@@ -78,6 +83,7 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
     ?? assignedGatewayStatus?.deviceName
     ?? 'Gärsensor';
   const assignedOnline = assignedDevice ? isFermentationDeviceOnline(assignedDevice, assignedGatewayStatus) : false;
+  const measurementRuntimeState = assignedOnline ? assignedGatewayStatus?.measurementState : undefined;
   const canManageAssignment = props.brew.state === eBrewState.WAITING_FOR_FERMENTATION || props.brew.state === eBrewState.FERMENTATION;
   const isAssigning = Boolean(selectedDeviceUid && props.assigning.includes(selectedDeviceUid));
   const isUnassigning = Boolean(assignedDevice && props.unassigning.includes(assignedDevice.deviceUid));
@@ -140,7 +146,7 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
       {formOpen && <section className="fermentation-card"><div className="fermentation-form" role="dialog" aria-label="Neue Gärungsmessung"><label>Datum / Uhrzeit<input type="datetime-local" value={measuredAt} onChange={event => setMeasuredAt(event.target.value)} /></label><label>Biertemperatur °C<input type="number" step="0.1" value={beerTemperature} onChange={event => setBeerTemperature(event.target.value)} /></label><label>Außentemperatur °C<input type="number" step="0.1" value={ambientTemperature} onChange={event => setAmbientTemperature(event.target.value)} /></label><label>Plato °P<input type="number" step="0.1" value={plato} onChange={event => setPlato(event.target.value)} /></label><label>Notiz<textarea value={note} onChange={event => setNote(event.target.value)} /></label>{validation && <p className="fermentation-error">{validation}</p>}<div><button onClick={() => setFormOpen(false)} disabled={props.saving}>Abbrechen</button><button onClick={save} disabled={props.saving}>{props.saving ? 'Speichert …' : 'Speichern'}</button></div></div></section>}
 
       <section aria-labelledby="current-state-title"><h4 id="current-state-title" className="fermentation-section-title">Aktueller Zustand</h4><div className="fermentation-current-grid">
-        <div><span>Biertemperatur</span><strong>{number(readings.beerTemperature, ' °C')}</strong></div><div><span>Außentemperatur</span><strong>{number(readings.ambientTemperature, ' °C')}</strong></div><div><span>Plato</span><strong>{number(readings.plato, ' °P')}</strong></div><div className="fermentation-measurement-runtime"><span>Messung</span><strong>–</strong></div><div><span>Letzte Messung</span><strong>{relativeMeasurement}</strong><small>{date(latestMeasurement?.measuredAt)}</small></div>
+        <div><span>Biertemperatur</span><strong>{number(readings.beerTemperature, ' °C')}</strong></div><div><span>Außentemperatur</span><strong>{number(readings.ambientTemperature, ' °C')}</strong></div><div><span>Plato</span><strong>{number(readings.plato, ' °P')}</strong></div><div className="fermentation-measurement-runtime"><span>Messung</span><FermentationMeasurementRuntime state={measurementRuntimeState} /></div><div><span>Letzte Messung</span><strong>{relativeMeasurement}</strong><small>{date(latestMeasurement?.measuredAt)}</small></div>
       </div></section>
 
       <section className="fermentation-card fermentation-sensor-card" aria-labelledby="fermentation-sensor-title"><h4 id="fermentation-sensor-title">Gärsensor</h4>

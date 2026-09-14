@@ -34,6 +34,18 @@ describe('FermentationGatewayWebSocketController', () => {
     expect(parseFermentationGatewayMessage(JSON.stringify({type: 'FERMENTATION_DATA_CHANGED', beerId: 'brew-a', change: 'UNKNOWN'}))).toBeUndefined();
   });
 
+  it.each(['RUNNING', 'PAUSED', 'IDLE'] as const)('parses the %s measurement runtime state', measurementState => {
+    const message = {type: 'FERMENTATION_SENSOR_RUNTIME_CHANGED', deviceUid: 'sensor-a', measurementState, updatedAt: '2026-09-14T10:00:00Z'};
+    expect(parseFermentationGatewayMessage(JSON.stringify(message))).toEqual(message);
+  });
+
+  it('ignores invalid measurement runtime messages', () => {
+    const runtime = {type: 'FERMENTATION_SENSOR_RUNTIME_CHANGED', deviceUid: 'sensor-a', measurementState: 'RUNNING', updatedAt: '2026-09-14T10:00:00Z'};
+    expect(parseFermentationGatewayMessage(JSON.stringify({...runtime, measurementState: 'STARTED'}))).toBeUndefined();
+    expect(parseFermentationGatewayMessage(JSON.stringify({...runtime, deviceUid: ''}))).toBeUndefined();
+    expect(parseFermentationGatewayMessage(JSON.stringify({...runtime, updatedAt: ''}))).toBeUndefined();
+  });
+
   it('forwards valid data changes and keeps unknown events non-fatal', () => {
     const onMessage = jest.fn();
     const controller = new FermentationGatewayWebSocketController(onMessage, jest.fn(), 'ws://host/api/fermentation/ui');

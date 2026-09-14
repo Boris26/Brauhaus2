@@ -20,6 +20,26 @@ describe('fermentationReducer', () => {
     expect(changed.sensorsByDeviceUid).toEqual({one: assigned, two: second});
     expect(changed.sensorsByDeviceUid.two).toBe(snapshot.sensorsByDeviceUid.two);
   });
+  it('keeps snapshot runtime state and updates only that runtime state and timestamp', () => {
+    const first = {deviceUid: 'one', deviceName: 'FERM-1', status: 'ASSIGNED' as const, beerId: 'brew-1', measurementState: 'PAUSED' as const, updatedAt: 'old'};
+    const second = {deviceUid: 'two', deviceName: 'FERM-2', status: 'REGISTERED' as const, measurementState: 'IDLE' as const, updatedAt: 'old'};
+    const snapshot = fermentationReducer(initialFermentationState, FermentationActions.gatewaySnapshotReceived([first, second]));
+    expect(snapshot.sensorsByDeviceUid.one.measurementState).toBe('PAUSED');
+
+    const running = fermentationReducer(snapshot, FermentationActions.gatewaySensorRuntimeChanged('one', 'RUNNING', 'running-at'));
+    const paused = fermentationReducer(running, FermentationActions.gatewaySensorRuntimeChanged('one', 'PAUSED', 'paused-at'));
+    const idle = fermentationReducer(paused, FermentationActions.gatewaySensorRuntimeChanged('one', 'IDLE', 'idle-at'));
+    expect(running.sensorsByDeviceUid.one).toMatchObject({deviceName: 'FERM-1', status: 'ASSIGNED', beerId: 'brew-1', measurementState: 'RUNNING', updatedAt: 'running-at'});
+    expect(paused.sensorsByDeviceUid.one.measurementState).toBe('PAUSED');
+    expect(idle.sensorsByDeviceUid.one.measurementState).toBe('IDLE');
+    expect(idle.sensorsByDeviceUid.two).toBe(snapshot.sensorsByDeviceUid.two);
+  });
+  it('discards the last runtime state when a disconnected status omits it', () => {
+    const connected = {deviceUid: 'one', status: 'ASSIGNED' as const, measurementState: 'RUNNING' as const, updatedAt: 'old'};
+    const state = fermentationReducer(initialFermentationState, FermentationActions.gatewaySnapshotReceived([connected]));
+    const disconnected = fermentationReducer(state, FermentationActions.gatewaySensorStatusChanged({deviceUid: 'one', status: 'DISCONNECTED', updatedAt: 'new'}));
+    expect(disconnected.sensorsByDeviceUid.one.measurementState).toBeUndefined();
+  });
   it('does not optimistically add measurements', () => {
     const state = fermentationReducer(initialFermentationState, FermentationActions.createMeasurement({finishedBeerId: 'b', measuredAt: '', plato: 4}));
     expect(state.savingMeasurementIds).toEqual(['b']); expect(state.byBrewId.b).toBeUndefined();
