@@ -1,5 +1,5 @@
 import { connect } from 'react-redux';
-import { BeerActions } from '../../actions/actions';
+import { ApplicationActions, BeerActions } from '../../actions/actions';
 import { BeerDataReducerState, FermentationState, ProductionReducerState } from '../../reducers/rootReducer';
 import {DashboardPage} from './DashboardPage';
 import {FermentationActions} from '../../actions/fermentation.actions';
@@ -26,6 +26,7 @@ const mapDispatchToProps = (dispatch: (action: any) => void) => ({
   getBeers: (isFetching: boolean) => dispatch(BeerActions.getBeers(isFetching)),
   getFinishedBrews: (isFetching: boolean) => dispatch(BeerActions.getFinishedBeers(isFetching)),
   loadFermentation: (id: string) => dispatch(FermentationActions.load(id)),
+  openMeasurements: (id: string) => dispatch(ApplicationActions.openMeasurementData(id)),
 });
 
 export default connect(mapStateToProps, mapDispatchToProps)(DashboardPage);
