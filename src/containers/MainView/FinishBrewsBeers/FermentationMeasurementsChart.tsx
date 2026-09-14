@@ -30,10 +30,11 @@ const FermentationMeasurementsChart: React.FC<Props> = React.memo(props => {
   const data = React.useMemo(() => buildFermentationChartData(props.measurements), [props.measurements]);
   const actionMarkers = React.useMemo(() => buildFermentationActionMarkers(props.actions), [props.actions]);
   if (data.length === 0) return <p>Keine Diagrammdaten vorhanden.</p>;
-  return <div className="fermentation-history-chart" role="img" aria-label="Zeitlicher Verlauf von Temperatur und Plato">
+  return <div className="fermentation-history-chart" style={{height: 180, minWidth: 0, display: 'grid', overflow: 'hidden'}} role="img" aria-label="Zeitlicher Verlauf von Temperatur und Plato">
     <ResponsiveContainer
       width="100%"
-      height="100%"
+      height={180}
+      minWidth={0}
       debounce={50}
     ><LineChart data={data} margin={{top: 8, right: 8, bottom: 8, left: 0}}>
       <CartesianGrid strokeDasharray="3 3" opacity={0.25} />
