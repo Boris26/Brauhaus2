@@ -6,6 +6,26 @@ const brew: any = {id: 'brew-1', name: 'West Coast IPA', startDate: '2026-09-01'
 const base: any = {brew, details: {measurements: [], actions: [], devices: [], sensorMeasurements: []}, bubbleActivity: [], bubbleActivityRange: '24h', bubbleActivityLoading: false, activeBrews: [brew], loading: false, saving: false, savingLifecycle: false, startingFermentation: false, completing: [], completeActionErrors: {}, dismissCompleteError: jest.fn(), skipping: [], assigning: [], unassigning: [], updatingDeviceDisplayNames: [], deviceDisplayNameErrors: {}, sensorsByDeviceUid: {}, load: jest.fn(), loadBubbleActivity: jest.fn(), save: jest.fn(), complete: jest.fn(), skip: jest.fn(), transition: jest.fn(), startFermentation: jest.fn(), assign: jest.fn(), unassign: jest.fn(), updateDeviceDisplayName: jest.fn()};
 
 describe('fermentation details dashboard', () => {
+  it.each(['measurements', 'dashboard'] as const)('shows measurement loading only before details exist in the %s view', viewMode => {
+    const {rerender} = render(<FinishedBrewDetailsView {...base} details={undefined} loading viewMode={viewMode} />);
+    expect(screen.getByRole('status')).toHaveTextContent('Messdaten werden geladen …');
+
+    rerender(<FinishedBrewDetailsView {...base} loading viewMode={viewMode} />);
+    expect(screen.queryByText('Messdaten werden geladen …')).not.toBeInTheDocument();
+    expect(screen.getByText('Biertemperatur')).toBeInTheDocument();
+  });
+
+  it('keeps the temperature chart mounted during a background refresh', () => {
+    const details: any = {measurements: [{id: 'm1', finishedBeerId: 'brew-1', measuredAt: '2026-09-02T18:00:00Z', beerTemperatureC: 18.1, source: 'SENSOR'}], actions: [], devices: [], sensorMeasurements: []};
+    const {rerender} = render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" />);
+    const chart = screen.getByRole('img', {name: 'Zeitlicher Verlauf von Temperatur und Plato'});
+
+    rerender(<FinishedBrewDetailsView {...base} details={details} loading viewMode="measurements" />);
+
+    expect(screen.getByRole('img', {name: 'Zeitlicher Verlauf von Temperatur und Plato'})).toBe(chart);
+    expect(screen.queryByText('Messdaten werden geladen …')).not.toBeInTheDocument();
+  });
+
   it('shows the compact current-state dashboard with neutral missing values', () => {
     render(<FinishedBrewDetailsView {...base} />);
 

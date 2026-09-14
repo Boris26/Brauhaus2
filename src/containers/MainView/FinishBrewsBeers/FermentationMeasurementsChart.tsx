@@ -26,8 +26,9 @@ export const buildFermentationActionMarkers = (actions: FermentationAction[] = [
   .filter(action => action.status === 'COMPLETED' && action.completedAt && Number.isFinite(Date.parse(action.completedAt)))
   .map(action => ({actionId: action.actionId, timestamp: Date.parse(action.completedAt as string), label: `${action.name || 'Zugabe'} ${actionAmountLabel(action.amount, action.unit) || ''}`.trim()}));
 
-const FermentationMeasurementsChart: React.FC<Props> = props => {
-  const data = buildFermentationChartData(props.measurements);
+const FermentationMeasurementsChart: React.FC<Props> = React.memo(props => {
+  const data = React.useMemo(() => buildFermentationChartData(props.measurements), [props.measurements]);
+  const actionMarkers = React.useMemo(() => buildFermentationActionMarkers(props.actions), [props.actions]);
   if (data.length === 0) return <p>Keine Diagrammdaten vorhanden.</p>;
   return <div className="fermentation-history-chart" role="img" aria-label="Zeitlicher Verlauf von Temperatur und Plato">
     <ResponsiveContainer
@@ -40,11 +41,11 @@ const FermentationMeasurementsChart: React.FC<Props> = props => {
       <YAxis yAxisId="temperature" unit=" °C" width={58} />
       <YAxis yAxisId="plato" orientation="right" unit=" °P" width={52} />
       <Tooltip /><Legend />
-      {buildFermentationActionMarkers(props.actions).map(marker => <ReferenceLine key={marker.actionId} x={marker.timestamp} stroke={COLOR_ACCENT} strokeDasharray="4 3" label={{value: marker.label, fill: COLOR_ACCENT, position: 'insideTopRight'}} />)}
+      {actionMarkers.map(marker => <ReferenceLine key={marker.actionId} x={marker.timestamp} stroke={COLOR_ACCENT} strokeDasharray="4 3" label={{value: marker.label, fill: COLOR_ACCENT, position: 'insideTopRight'}} />)}
       <Line yAxisId="temperature" type="monotone" dataKey="beerTemperature" name="Biertemperatur" stroke={COLOR_CHART_GREEN || COLOR_ACCENT} connectNulls dot={false} isAnimationActive={false} />
       <Line yAxisId="temperature" type="monotone" dataKey="ambientTemperature" name="Außentemperatur" stroke={COLOR_CHART_BLUE} connectNulls dot={false} isAnimationActive={false} />
       <Line yAxisId="plato" type="monotone" dataKey="plato" name="Plato" stroke={COLOR_CHART_YELLOW} connectNulls dot={false} isAnimationActive={false} />
     </LineChart></ResponsiveContainer>
   </div>;
-};
+});
 export default FermentationMeasurementsChart;

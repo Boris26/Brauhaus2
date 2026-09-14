@@ -1,4 +1,22 @@
-import {buildFermentationActionMarkers, buildFermentationChartData} from './FermentationMeasurementsChart';
+import React from 'react';
+import {render} from '@testing-library/react';
+import FermentationMeasurementsChart, {buildFermentationActionMarkers, buildFermentationChartData} from './FermentationMeasurementsChart';
+
+jest.mock('recharts', () => {
+  const React = require('react');
+  const Container = ({children}: {children?: React.ReactNode}) => React.createElement('div', null, children);
+  return {
+    ResponsiveContainer: Container,
+    LineChart: jest.fn(({children}: {children?: React.ReactNode}) => React.createElement('div', null, children)),
+    CartesianGrid: () => null,
+    Legend: () => null,
+    Line: () => null,
+    ReferenceLine: () => null,
+    Tooltip: () => null,
+    XAxis: () => null,
+    YAxis: () => null,
+  };
+});
 
 describe('buildFermentationChartData', () => {
   it('renders manual and sensor values from the unified measurement history', () => {
@@ -21,5 +39,27 @@ describe('buildFermentationChartData', () => {
       {actionId: 'missing', status: 'COMPLETED', sourceType: 'DRY_HOP'},
     ] as any);
     expect(markers).toEqual([{actionId: 'done', timestamp: Date.parse('2026-09-11T10:22:00Z'), label: 'Mosaic 50 g'}]);
+  });
+});
+
+describe('FermentationMeasurementsChart refresh rendering', () => {
+  const firstMeasurement: any = {id: 'm1', finishedBeerId: 'b', measuredAt: '2026-09-03T10:00:00Z', beerTemperatureC: 18.1, source: 'SENSOR'};
+
+  it('skips an identical-props refresh and renders a newly supplied measurement', () => {
+    const measurements = [firstMeasurement];
+    const actions: any[] = [];
+    const LineChart = require('recharts').LineChart as jest.Mock;
+    LineChart.mockClear();
+    const {rerender} = render(React.createElement(FermentationMeasurementsChart, {measurements, actions}));
+    expect(LineChart).toHaveBeenCalledTimes(1);
+    expect(LineChart.mock.calls[0][0].data).toHaveLength(1);
+
+    rerender(React.createElement(FermentationMeasurementsChart, {measurements, actions}));
+    expect(LineChart).toHaveBeenCalledTimes(1);
+
+    const updatedMeasurements = [...measurements, {...firstMeasurement, id: 'm2', measuredAt: '2026-09-03T10:05:00Z', beerTemperatureC: 18.2}];
+    rerender(React.createElement(FermentationMeasurementsChart, {measurements: updatedMeasurements, actions}));
+    expect(LineChart).toHaveBeenCalledTimes(2);
+    expect(LineChart.mock.calls[1][0].data).toHaveLength(2);
   });
 });
