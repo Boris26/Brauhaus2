@@ -3,7 +3,7 @@ import {CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContain
 import {FermentationAction, FermentationMeasurement} from '../../../model/Fermentation';
 import {actionAmountLabel} from '../../../utils/fermentation';
 import {COLOR_ACCENT, COLOR_INFO, COLOR_SUCCESS, COLOR_WARNING} from '../../../colors';
-import './FermentationChartRange.css';
+import './FermentationCharts.css';
 
 interface Props { measurements: FermentationMeasurement[]; actions?: FermentationAction[]; }
 interface ChartPoint { timestamp: number; label: string; beerTemperature?: number; ambientTemperature?: number; plato?: number; }
@@ -80,11 +80,12 @@ const FermentationMeasurementsChart: React.FC<Props> = React.memo(props => {
     </div>
     {data.length === 0
       ? <p>Keine Diagrammdaten vorhanden.</p>
-      : <div className="fermentation-history-chart" style={{height: 160, minWidth: 0, display: 'grid', overflow: 'hidden'}} role="img" aria-label="Zeitlicher Verlauf von Temperatur und Plato">
+      : <div className="fermentation-history-chart" role="img" aria-label="Zeitlicher Verlauf von Temperatur und Plato">
         <ResponsiveContainer
           width="100%"
-          height={160}
+          height="100%"
           minWidth={0}
+          minHeight={0}
           debounce={50}
         ><LineChart data={data} margin={{top: 8, right: 8, bottom: 8, left: 0}}>
           <CartesianGrid strokeDasharray="3 3" opacity={0.25} />
