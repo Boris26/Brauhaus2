@@ -1,7 +1,7 @@
 import React from 'react';
 import {CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
 import {BubbleActivity} from '../../../model/Fermentation';
-import {COLOR_CHART_BLUE, COLOR_CHART_PURPLE} from '../../../colors';
+import {COLOR_ACCENT, COLOR_INFO} from '../../../colors';
 
 export interface BubbleActivityChartPoint {
   timestamp: number;
@@ -12,6 +12,22 @@ export interface BubbleActivityChartPoint {
 }
 
 type BubbleActivityMeasurementPoint = BubbleActivityChartPoint & {bubbleCount: number; windowSeconds: number};
+
+const TOOLTIP_CONTENT_STYLE: React.CSSProperties = {
+  background: 'var(--color-panel-contrast)',
+  border: '1px solid var(--color-border)',
+  borderRadius: 'var(--border-radius-medium)',
+  boxShadow: '0 8px 20px rgba(0, 0, 0, .28)',
+  color: 'var(--color-text)',
+  fontSize: '.78rem',
+  padding: '6px 9px',
+};
+const TOOLTIP_LABEL_STYLE: React.CSSProperties = {
+  color: 'var(--color-text-secondary)',
+  fontWeight: 700,
+  marginBottom: 4,
+};
+const TOOLTIP_ITEM_STYLE: React.CSSProperties = {padding: '1px 0'};
 
 const localDateTime = (value: number): string => new Intl.DateTimeFormat('de-DE', {
   dateStyle: 'short', timeStyle: 'short',
@@ -58,10 +74,17 @@ export class BubbleActivityChart extends React.PureComponent<{activity: BubbleAc
         <XAxis dataKey="timestamp" type="number" scale="time" domain={['dataMin', 'dataMax']} minTickGap={30} tickFormatter={localDateTime} />
         <YAxis yAxisId="bubbles" width={72} label={{value: 'Blubbs/min', angle: -90, position: 'insideLeft'}} allowDecimals />
         <YAxis yAxisId="pressure" orientation="right" width={72} label={{value: 'Differenzdruck (Pa)', angle: 90, position: 'insideRight'}} allowDecimals />
-        <Tooltip labelFormatter={value => localDateTime(Number(value))} formatter={formatBubbleActivityTooltip} />
+        <Tooltip
+          labelFormatter={value => localDateTime(Number(value))}
+          formatter={formatBubbleActivityTooltip}
+          contentStyle={TOOLTIP_CONTENT_STYLE}
+          labelStyle={TOOLTIP_LABEL_STYLE}
+          itemStyle={TOOLTIP_ITEM_STYLE}
+          cursor={{stroke: 'var(--color-border-strong)', strokeDasharray: '3 3'}}
+        />
         <Legend />
-        <Line yAxisId="bubbles" dataKey="bubblesPerMinute" name="Blubbs/min" type="linear" stroke={COLOR_CHART_BLUE} strokeWidth={2} dot={false} activeDot={{r: 4}} connectNulls isAnimationActive={false} />
-        <Line yAxisId="pressure" dataKey="averagePressureDeltaPa" name="Differenzdruck" type="linear" stroke={COLOR_CHART_PURPLE} strokeWidth={2} dot={false} activeDot={{r: 4}} connectNulls isAnimationActive={false} />
+        <Line yAxisId="bubbles" dataKey="bubblesPerMinute" name="Blubbs/min" type="linear" stroke={COLOR_INFO} strokeWidth={2} dot={false} activeDot={{r: 4}} connectNulls isAnimationActive={false} />
+        <Line yAxisId="pressure" dataKey="averagePressureDeltaPa" name="Differenzdruck" type="linear" stroke={COLOR_ACCENT} strokeWidth={2} dot={false} activeDot={{r: 4}} connectNulls isAnimationActive={false} />
       </LineChart></ResponsiveContainer>
     </div>;
   }
