@@ -256,3 +256,73 @@
     justify-self: end;
   }
 }
+
+/* Compact measurement-page header and current-state strip. */
+.fermentation-measurements-page {
+  gap: .5rem;
+}
+.fermentation-measurements-page .fermentation-page-header {
+  min-height: 0;
+  align-items: center;
+  gap: .75rem;
+}
+.fermentation-measurements-page .fermentation-page-header > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: .2rem .75rem;
+  min-width: 0;
+}
+.fermentation-measurements-page .fermentation-page-header .fermentation-back-button {
+  margin: 0;
+  padding: 0;
+  font-size: .82rem;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.fermentation-measurements-page .fermentation-page-header h3 {
+  font-size: 1.05rem;
+  line-height: 1.15;
+}
+.fermentation-measurements-page .fermentation-page-header .fermentation-phase {
+  font-size: .75rem;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+.fermentation-measurements-page .fermentation-page-header > button {
+  flex: 0 0 auto;
+  padding: .38rem .7rem;
+  white-space: nowrap;
+}
+.fermentation-measurements-page #current-state-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px !important;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.fermentation-measurements-page .fermentation-current-grid > div {
+  gap: .15rem;
+  padding: .45rem .7rem;
+}
+.fermentation-measurements-page .fermentation-current-grid span,
+.fermentation-measurements-page .fermentation-current-grid small {
+  font-size: .72rem;
+  line-height: 1.1;
+}
+.fermentation-measurements-page .fermentation-current-grid strong {
+  font-size: 1rem;
+  line-height: 1.15;
+}
+@media (max-width: 800px) {
+  .fermentation-measurements-page .fermentation-page-header {
+    align-items: flex-start;
+  }
+  .fermentation-measurements-page .fermentation-page-header > div {
+    gap: .25rem .55rem;
+  }
+}
