@@ -1,0 +1,129 @@
+/* Horizontal action rail for the kiosk measurement view.
+   The first upcoming action stays visible while later actions scroll horizontally. */
+.fermentation-measurements-page .fermentation-plan {
+  grid-template-columns: minmax(20rem, 24rem) minmax(0, 1fr);
+  column-gap: .65rem;
+  overflow: hidden;
+}
+
+.fermentation-measurements-page .fermentation-plan > h4,
+.fermentation-measurements-page .fermentation-plan > .fermentation-plan-group-completed {
+  grid-column: 1 / -1;
+}
+
+/* A single active group uses the complete width. If a due group and a future
+   group exist together, the due group stays fixed on the left and only the
+   future group becomes the horizontal rail. */
+.fermentation-measurements-page .fermentation-plan > .fermentation-plan-group:not(.fermentation-plan-group-completed) {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.fermentation-measurements-page .fermentation-plan > .fermentation-plan-group:not(.fermentation-plan-group-completed):has(+ .fermentation-plan-group:not(.fermentation-plan-group-completed)) {
+  grid-column: 1;
+  padding-right: .65rem;
+  border-right: 1px solid var(--color-border-strong);
+}
+
+.fermentation-measurements-page .fermentation-plan > .fermentation-plan-group:not(.fermentation-plan-group-completed) + .fermentation-plan-group:not(.fermentation-plan-group-completed) {
+  grid-column: 2;
+}
+
+/* Visually describe the fixed left side as the action that is up next. */
+.fermentation-measurements-page .fermentation-plan > .fermentation-plan-group:not(.fermentation-plan-group-completed):first-of-type > h5 {
+  font-size: 0;
+}
+
+.fermentation-measurements-page .fermentation-plan > .fermentation-plan-group:not(.fermentation-plan-group-completed):first-of-type > h5::after {
+  content: 'Steht an';
+  color: var(--color-primary);
+  font-size: .8rem;
+  line-height: 1.15;
+}
+
+.fermentation-measurements-page .fermentation-plan > .fermentation-plan-group:not(.fermentation-plan-group-completed) .fermentation-action-list {
+  display: flex;
+  grid-template-columns: none;
+  gap: .4rem;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0 0 .3rem;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+
+.fermentation-measurements-page .fermentation-plan > .fermentation-plan-group:not(.fermentation-plan-group-completed) .fermentation-action-list::-webkit-scrollbar {
+  height: .35rem;
+}
+
+.fermentation-measurements-page .fermentation-plan > .fermentation-plan-group:not(.fermentation-plan-group-completed) .fermentation-action-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.fermentation-measurements-page .fermentation-plan > .fermentation-plan-group:not(.fermentation-plan-group-completed) .fermentation-action-list::-webkit-scrollbar-thumb {
+  border-radius: var(--border-radius-pill);
+  background: var(--color-border-strong);
+}
+
+.fermentation-measurements-page .fermentation-plan > .fermentation-plan-group:not(.fermentation-plan-group-completed) .fermentation-action-list > li {
+  flex: 0 0 20rem;
+  width: 20rem;
+  max-width: calc(100vw - 5rem);
+  scroll-snap-align: start;
+}
+
+/* When due and future actions are split into two groups, cards in the fixed
+   left group fill that column. Additional simultaneously due actions can still
+   be reached horizontally without changing the page height. */
+.fermentation-measurements-page .fermentation-plan > .fermentation-plan-group:not(.fermentation-plan-group-completed):has(+ .fermentation-plan-group:not(.fermentation-plan-group-completed)) .fermentation-action-list > li {
+  flex-basis: 100%;
+  width: 100%;
+}
+
+/* If there is only one active group, pin its first card. The remaining cards
+   move underneath the scroll rail while the first card and separator stay put. */
+.fermentation-measurements-page .fermentation-plan > .fermentation-plan-group:not(.fermentation-plan-group-completed):first-of-type:not(:has(+ .fermentation-plan-group:not(.fermentation-plan-group-completed))) .fermentation-action-list > li:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  margin-right: .75rem;
+  background: var(--color-panel-contrast);
+  box-shadow:
+    .55rem 0 0 var(--color-panel-bg),
+    calc(.55rem + 1px) 0 0 var(--color-border-strong);
+}
+
+@media (max-width: 900px) {
+  .fermentation-measurements-page .fermentation-plan {
+    grid-template-columns: minmax(16rem, 19rem) minmax(0, 1fr);
+  }
+
+  .fermentation-measurements-page .fermentation-plan > .fermentation-plan-group:not(.fermentation-plan-group-completed) .fermentation-action-list > li {
+    flex-basis: 17rem;
+    width: 17rem;
+  }
+}
+
+@media (max-width: 700px) {
+  .fermentation-measurements-page .fermentation-plan {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .fermentation-measurements-page .fermentation-plan > h4,
+  .fermentation-measurements-page .fermentation-plan > .fermentation-plan-group,
+  .fermentation-measurements-page .fermentation-plan > .fermentation-plan-group-completed,
+  .fermentation-measurements-page .fermentation-plan > .fermentation-plan-group:not(.fermentation-plan-group-completed):has(+ .fermentation-plan-group:not(.fermentation-plan-group-completed)),
+  .fermentation-measurements-page .fermentation-plan > .fermentation-plan-group:not(.fermentation-plan-group-completed) + .fermentation-plan-group:not(.fermentation-plan-group-completed) {
+    grid-column: 1;
+  }
+
+  .fermentation-measurements-page .fermentation-plan > .fermentation-plan-group:not(.fermentation-plan-group-completed):has(+ .fermentation-plan-group:not(.fermentation-plan-group-completed)) {
+    padding-right: 0;
+    padding-bottom: .45rem;
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border-soft);
+  }
+}
