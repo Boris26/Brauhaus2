@@ -1,4 +1,4 @@
-import {fireEvent, render, screen} from '@testing-library/react';
+import {fireEvent, render, screen, within} from '@testing-library/react';
 import {FinishedBrewDetailsView} from './FinishedBrewDetails';
 import {eBrewState} from '../../../enums/eBrewState';
 
@@ -70,6 +70,22 @@ describe('fermentation details dashboard', () => {
     expect(closeMeasurements).toHaveBeenCalledTimes(1);
   });
 
+  it('reserves the current-state field for measurement runtime while keeping sensor availability below', () => {
+    const details: any = {measurements: [], actions: [], sensorMeasurements: [], devices: [
+      {deviceUid: 'mine', deviceName: 'Sensor Keller', activeAssignment: {beerId: 'brew-1'}},
+    ]};
+    render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" sensorsByDeviceUid={{mine: {deviceUid: 'mine', status: 'ASSIGNED', beerId: 'brew-1', updatedAt: new Date().toISOString()}}} />);
+
+    const currentState = screen.getByRole('heading', {name: 'Aktueller Zustand'}).parentElement as HTMLElement;
+    const runtime = currentState.querySelector('.fermentation-measurement-runtime') as HTMLElement;
+    expect(within(currentState).queryByText('Sensor')).not.toBeInTheDocument();
+    expect(within(runtime).getByText('Messung')).toBeInTheDocument();
+    expect(within(runtime).getByText('–')).toBeInTheDocument();
+
+    const sensorSection = screen.getByRole('heading', {name: 'Gärsensor'}).parentElement as HTMLElement;
+    expect(within(sensorSection).getByText('● Online')).toBeInTheDocument();
+  });
+
   it('uses backend assignments, offers only free devices and dispatches assignment', () => {
     const assign = jest.fn();
     const details: any = {measurements: [], actions: [], sensorMeasurements: [], devices: [
@@ -78,7 +94,7 @@ describe('fermentation details dashboard', () => {
     ]};
     render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" assign={assign} sensorsByDeviceUid={{other: {deviceUid: 'other', status: 'ASSIGNED', beerId: 'brew-1', updatedAt: new Date().toISOString()}, free: {deviceUid: 'free', status: 'REGISTERED', updatedAt: new Date().toISOString()}}} />);
     expect(screen.getByText('Kein Sensor zugeordnet.')).toBeInTheDocument();
-    expect(screen.getByText('Sensor').nextSibling).toHaveTextContent('–');
+    expect(screen.getByText('Messung').nextSibling).toHaveTextContent('–');
     expect(screen.getByRole('option', {name: 'Sensor Keller · Online'})).toBeInTheDocument();
     expect(screen.queryByRole('option', {name: /Sensor Fremdbier/})).not.toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Sensor auswählen'), {target: {value: 'free'}});
