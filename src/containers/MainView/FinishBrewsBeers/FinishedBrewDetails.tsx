@@ -1,8 +1,9 @@
-import React, {useEffect, useMemo, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {connect} from 'react-redux';
 import CheckIcon from '@mui/icons-material/Check';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
+import SkipNextIcon from '@mui/icons-material/SkipNext';
 import {FinishedBrew} from '../../../model/FinishedBrew';
 import {brewStateLabel, BrewStateTransitions, eBrewState} from '../../../enums/eBrewState';
 import {FermentationActions} from '../../../actions/fermentation.actions';
@@ -31,8 +32,12 @@ const FermentationMeasurementRuntime: React.FC<{state?: FermentationMeasurementR
 const ActionItem: React.FC<{action: FermentationAction; requestId: string; completing: string[]; skipping: string[]; complete: () => void; skip: () => void}> = ({action, requestId, completing, skipping, complete, skip}) => {
   const contact = contactStatus(action);
   const isCompleting = completing.includes(requestId);
+  const isSkipping = skipping.includes(action.actionId);
+  const disabled = isCompleting || isSkipping;
+  const completeLabel = isCompleting ? 'Wird gespeichert …' : 'Zugabe erledigt';
+  const skipLabel = isSkipping ? 'Wird übersprungen …' : 'Überspringen';
   const visibleStatus = action.status === 'COMPLETED' ? 'Erledigt' : action.status === 'SKIPPED' ? 'Übersprungen' : action.due ? 'Fällig · offen' : action.triggerType === TriggerType.MANUAL ? 'Offen' : 'Geplant';
-  return <li className={action.status === 'COMPLETED' ? 'is-completed' : action.due ? 'is-due' : ''}><div className="fermentation-action-heading"><strong>{actionText(action) || 'Unbenannte Aktion'}</strong><span>{actionTypeLabel(action.sourceType)}</span></div><dl><div><dt>Auslöser</dt><dd>{actionTriggerLabel(action)}</dd></div>{contactTimeLabel(action) && <div><dt>Standzeit</dt><dd>{contactTimeLabel(action)}</dd></div>}<div><dt>Status</dt><dd><span className={`fermentation-action-status is-${action.status === 'COMPLETED' ? 'completed' : action.due ? 'due' : 'planned'}`}>{visibleStatus}</span></dd></div>{action.status === 'COMPLETED' && <div><dt>Bestätigt</dt><dd>{date(action.completedAt || undefined)}</dd></div>}{contact === 'running' && <div><dt>Kontakt</dt><dd>Standzeit läuft · endet {date(action.contactEndsAt || undefined)}</dd></div>}{contact === 'ended' && <div><dt>Kontakt</dt><dd>Standzeit beendet · {date(action.contactEndsAt || undefined)}</dd></div>}</dl><div className="fermentation-action-buttons">{canCompleteAction(action) && <button disabled={isCompleting || skipping.includes(action.actionId)} onClick={complete}>{isCompleting ? 'Wird gespeichert …' : 'Zugabe erledigt'}</button>}{action.status === 'PENDING' && <button disabled={isCompleting || skipping.includes(action.actionId)} onClick={skip}>{skipping.includes(action.actionId) ? 'Wird übersprungen …' : 'Überspringen'}</button>}</div></li>;
+  return <li className={action.status === 'COMPLETED' ? 'is-completed' : action.due ? 'is-due' : ''}><div className="fermentation-action-heading"><strong>{actionText(action) || 'Unbenannte Aktion'}</strong><span>{actionTypeLabel(action.sourceType)}</span></div><dl><div><dt>Auslöser</dt><dd>{actionTriggerLabel(action)}</dd></div>{contactTimeLabel(action) && <div><dt>Standzeit</dt><dd>{contactTimeLabel(action)}</dd></div>}<div><dt>Status</dt><dd><span className={`fermentation-action-status is-${action.status === 'COMPLETED' ? 'completed' : action.due ? 'due' : 'planned'}`}>{visibleStatus}</span></dd></div>{action.status === 'COMPLETED' && <div><dt>Bestätigt</dt><dd>{date(action.completedAt || undefined)}</dd></div>}{contact === 'running' && <div><dt>Kontakt</dt><dd>Standzeit läuft · endet {date(action.contactEndsAt || undefined)}</dd></div>}{contact === 'ended' && <div><dt>Kontakt</dt><dd>Standzeit beendet · {date(action.contactEndsAt || undefined)}</dd></div>}</dl><div className="fermentation-action-buttons">{canCompleteAction(action) && <button className="is-complete" aria-label={completeLabel} title={completeLabel} disabled={disabled} onClick={complete}><CheckIcon fontSize="small" /><span className="fermentation-action-button-label">{completeLabel}</span></button>}{action.status === 'PENDING' && <button className="is-skip" aria-label={skipLabel} title={skipLabel} disabled={disabled} onClick={skip}><SkipNextIcon fontSize="small" /><span className="fermentation-action-button-label">{skipLabel}</span></button>}</div></li>;
 };
 
 const FermentationTrend: React.FC<{measurements: FermentationMeasurement[]}> = ({measurements}) => {
@@ -68,7 +73,6 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
   // Use the embedded batch snapshot until the dedicated endpoint supplies the
   // canonical runtime actions (including due and completion projections).
   const details = {...loadedDetails, actions: props.details ? loadedDetails.actions : (props.brew.fermentationActions ?? [])};
-  const measurements = useMemo(() => [...details.measurements].sort((a, b) => Date.parse(b.measuredAt) - Date.parse(a.measuredAt)), [details.measurements]);
   const latestSensor = latestByDate(details.sensorMeasurements, value => value.measuredAt);
   const latestMeasurement = latestByDate(details.measurements.filter(value => Number.isFinite(Date.parse(value.measuredAt))), value => value.measuredAt);
   const readings = latestFermentationReadings(details.measurements);
@@ -166,7 +170,6 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
       <div className="fermentation-measurements-lower-grid">
         <div className="fermentation-measurements-main">
           <section className="fermentation-card fermentation-plan"><h4>Gärungsaktionen</h4>{details.actions.length === 0 ? <p className="fermentation-empty">Keine Gärungsaktionen geplant.</p> : <>{actionGroup('Jetzt fällig', dueActions)}{actionGroup('Als Nächstes', pendingActions)}{actionGroup('Bereits durchgeführt', completedActions)}</>}</section>
-          {measurements.length > 1 && <details className="fermentation-card fermentation-raw-history"><summary>Messhistorie ({measurements.length})</summary><ul className="fermentation-list">{measurements.map(measurement => <li key={measurement.id}><time>{date(measurement.measuredAt)}</time><strong>{[number(measurement.beerTemperatureC, ' °C'), `Außen ${number(measurement.ambientTemperatureC, ' °C')}`, number(measurement.plato, ' °P')].join(' · ')}</strong><span>Quelle: {measurement.source === 'SENSOR' ? 'Sensor' : 'Manuell'}</span></li>)}</ul></details>}
         </div>
         <aside className="fermentation-measurements-sidebar">
           <section className="fermentation-card fermentation-sensor-card" aria-labelledby="fermentation-sensor-title"><h4 id="fermentation-sensor-title">Gärsensor</h4>
