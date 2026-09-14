@@ -70,6 +70,33 @@ describe('fermentation details dashboard', () => {
     expect(closeMeasurements).toHaveBeenCalledTimes(1);
   });
 
+  it('keeps the measurement dashboard content in the compact lower grid', () => {
+    const details: any = {
+      measurements: [
+        {id: 'm1', finishedBeerId: 'brew-1', measuredAt: '2026-09-02T18:00:00Z', beerTemperatureC: 18.1, ambientTemperatureC: 17.4, plato: 7.2, source: 'MANUAL'},
+        {id: 'm2', finishedBeerId: 'brew-1', measuredAt: '2026-09-04T18:00:00Z', beerTemperatureC: 18.3, ambientTemperatureC: 17.6, plato: 4.2, source: 'SENSOR'},
+      ],
+      actions: [{actionId: 'a', status: 'PENDING', due: true, sourceType: 'DRY_HOP', name: 'Citra', amount: 80, unit: 'GRAMS'}],
+      devices: [{deviceUid: 'mine', deviceName: 'Sensor Keller', activeAssignment: {beerId: 'brew-1'}}],
+      sensorMeasurements: [],
+    };
+    const bubbleActivity: any[] = [{deviceId: 'mine', sequence: 1, bubbleCount: 4, windowSeconds: 60, averagePressureDeltaPa: 2, windowEndedAt: '2026-09-04T18:00:00Z'}];
+    const {container} = render(<FinishedBrewDetailsView {...base} brew={{...brew, brewValues: JSON.stringify({groupedData: {}})}} details={details} bubbleActivity={bubbleActivity} viewMode="measurements" />);
+
+    const currentValues = container.querySelector('.fermentation-current-grid') as HTMLElement;
+    expect(currentValues.children).toHaveLength(5);
+    expect(screen.getByRole('img', {name: 'Zeitlicher Verlauf von Temperatur und Plato'})).toBeInTheDocument();
+    expect(screen.getByRole('img', {name: /Zeitlicher Verlauf der Gäraktivität/})).toBeInTheDocument();
+
+    const lowerGrid = container.querySelector('.fermentation-measurements-lower-grid') as HTMLElement;
+    expect(lowerGrid).toBeInTheDocument();
+    expect(lowerGrid.querySelector('.fermentation-measurements-main')).toContainElement(screen.getByRole('heading', {name: 'Letzte Messung'}).parentElement);
+    expect(lowerGrid.querySelector('.fermentation-measurements-main')).toContainElement(screen.getByRole('heading', {name: 'Gärungsaktionen'}).parentElement);
+    expect(lowerGrid.querySelector('.fermentation-measurements-main details')).toHaveTextContent('Messhistorie (2)');
+    expect(lowerGrid.querySelector('.fermentation-measurements-sidebar')).toContainElement(screen.getByRole('heading', {name: 'Gärsensor'}).parentElement);
+    expect(screen.getByRole('heading', {name: 'Analyse des Brauprozesses'})).toBeInTheDocument();
+  });
+
   it('reserves the current-state field for measurement runtime while keeping sensor availability below', () => {
     const details: any = {measurements: [], actions: [], sensorMeasurements: [], devices: [
       {deviceUid: 'mine', deviceName: 'Sensor Keller', activeAssignment: {beerId: 'brew-1'}},
