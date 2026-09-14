@@ -1,5 +1,8 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {connect} from 'react-redux';
+import CheckIcon from '@mui/icons-material/Check';
+import CloseIcon from '@mui/icons-material/Close';
+import EditIcon from '@mui/icons-material/Edit';
 import {FinishedBrew} from '../../../model/FinishedBrew';
 import {brewStateLabel, BrewStateTransitions, eBrewState} from '../../../enums/eBrewState';
 import {FermentationActions} from '../../../actions/fermentation.actions';
@@ -15,7 +18,7 @@ import BubbleActivityChart from './BubbleActivityChart';
 import ModalDialog, {DialogType} from '../../../components/ModalDialog/ModalDialog';
 import './FermentationDetails.css';
 
-interface Props { brew: FinishedBrew; details?: FermentationDetails; bubbleActivity: BubbleActivity[]; bubbleActivityRange: BubbleActivityRange; bubbleActivityLoading: boolean; bubbleActivityError?: string; loading: boolean; saving: boolean; savingLifecycle: boolean; startingFermentation: boolean; completing: string[]; completeActionErrors: Record<string, string>; skipping: string[]; assigning: string[]; unassigning: string[]; sensorsByDeviceUid: Record<string, FermentationGatewaySensorStatus>; assignmentError?: string; unassignmentError?: string; error?: string; lifecycleError?: string; startFermentationError?: string; viewMode?: 'dashboard' | 'measurements'; load: (id: string) => void; loadBubbleActivity: (id: string, range: BubbleActivityRange) => void; save: (value: CreateFermentationMeasurement) => void; complete: (brewId: string, actionId: string) => void; dismissCompleteError: (brewId: string, actionId: string) => void; skip: (brewId: string, actionId: string) => void; transition: (brew: FinishedBrew) => void; startFermentation: (brewId: string) => void; assign: (deviceId: string, brewId: string) => void; unassign: (deviceId: string, brewId: string) => void; openMeasurements?: (id: string) => void; closeMeasurements?: () => void; }
+interface Props { brew: FinishedBrew; details?: FermentationDetails; bubbleActivity: BubbleActivity[]; bubbleActivityRange: BubbleActivityRange; bubbleActivityLoading: boolean; bubbleActivityError?: string; loading: boolean; saving: boolean; savingLifecycle: boolean; startingFermentation: boolean; completing: string[]; completeActionErrors: Record<string, string>; skipping: string[]; assigning: string[]; unassigning: string[]; sensorsByDeviceUid: Record<string, FermentationGatewaySensorStatus>; assignmentError?: string; unassignmentError?: string; error?: string; lifecycleError?: string; startFermentationError?: string; viewMode?: 'dashboard' | 'measurements'; load: (id: string) => void; loadBubbleActivity: (id: string, range: BubbleActivityRange) => void; save: (value: CreateFermentationMeasurement) => void; complete: (brewId: string, actionId: string) => void; dismissCompleteError: (brewId: string, actionId: string) => void; skip: (brewId: string, actionId: string) => void; transition: (brew: FinishedBrew) => void; startFermentation: (brewId: string) => void; assign: (deviceId: string, brewId: string) => void; unassign: (deviceId: string, brewId: string) => void; renameDevice?: (deviceUid: string, deviceName: string) => void; openMeasurements?: (id: string) => void; closeMeasurements?: () => void; }
 const number = (value?: number | null, unit = '') => typeof value === 'number' && Number.isFinite(value) ? `${value.toLocaleString('de-DE', {maximumFractionDigits: 1})}${unit}` : '–';
 const date = (value?: string) => value && Number.isFinite(Date.parse(value)) ? new Intl.DateTimeFormat('de-DE', {dateStyle: 'short', timeStyle: 'short'}).format(new Date(value)) : '–';
 const actionText = (action: FermentationAction) => [action.name, actionAmountLabel(action.amount, action.unit)].filter(Boolean).join(' · ');
@@ -44,6 +47,10 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
   const [startConfirmationOpen, setStartConfirmationOpen] = useState(false);
   const [unassignConfirmationOpen, setUnassignConfirmationOpen] = useState(false);
   const [selectedDeviceUid, setSelectedDeviceUid] = useState('');
+  const [editingDeviceName, setEditingDeviceName] = useState(false);
+  const [deviceNameDraft, setDeviceNameDraft] = useState('');
+  const [deviceNameError, setDeviceNameError] = useState('');
+  const deviceNameInput = useRef<HTMLInputElement>(null);
   const assignmentWasPending = useRef(false);
   const [measuredAt, setMeasuredAt] = useState(() => new Date().toISOString().slice(0, 16));
   const [beerTemperature, setBeerTemperature] = useState(''); const [ambientTemperature, setAmbientTemperature] = useState(''); const [plato, setPlato] = useState(''); const [note, setNote] = useState(''); const [validation, setValidation] = useState('');
@@ -65,11 +72,18 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
   const assignedDevice = assignedDeviceForBeer(details.devices, props.brew.id);
   const freeDevices = freeFermentationDevices(details.devices);
   const assignedGatewayStatus = assignedDevice ? props.sensorsByDeviceUid[assignedDevice.deviceUid] : undefined;
+  const assignedDeviceName = assignedDevice?.deviceName || assignedGatewayStatus?.deviceName || 'Unbenannter Sensor';
   const assignedOnline = assignedDevice ? isFermentationDeviceOnline(assignedDevice, assignedGatewayStatus) : false;
   const canManageAssignment = props.brew.state === eBrewState.WAITING_FOR_FERMENTATION || props.brew.state === eBrewState.FERMENTATION;
   const isAssigning = Boolean(selectedDeviceUid && props.assigning.includes(selectedDeviceUid));
   const isUnassigning = Boolean(assignedDevice && props.unassigning.includes(assignedDevice.deviceUid));
   useEffect(() => { if (assignedDevice?.deviceUid === selectedDeviceUid) setSelectedDeviceUid(''); }, [assignedDevice?.deviceUid, selectedDeviceUid]);
+  useEffect(() => {
+    if (editingDeviceName) {
+      deviceNameInput.current?.focus();
+      deviceNameInput.current?.select();
+    }
+  }, [editingDeviceName]);
   useEffect(() => {
     if (isAssigning) assignmentWasPending.current = true;
     else if (assignmentWasPending.current) {
@@ -79,6 +93,17 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
   }, [isAssigning, props.assignmentError]);
   const day = fermentationDay(props.brew.fermentationStartedAt || undefined);
   const save = () => { if (!beerTemperature && !ambientTemperature && !plato) { setValidation('Mindestens eine Temperatur oder Plato ist erforderlich.'); return; } setValidation(''); props.save({finishedBeerId: props.brew.id, measuredAt: new Date(measuredAt).toISOString(), beerTemperatureC: beerTemperature === '' ? undefined : Number(beerTemperature), ambientTemperatureC: ambientTemperature === '' ? undefined : Number(ambientTemperature), plato: plato === '' ? undefined : Number(plato), note}); };
+  const cancelDeviceNameEdit = () => { setEditingDeviceName(false); setDeviceNameError(''); };
+  const saveDeviceName = () => {
+    if (!assignedDevice) return;
+    const name = deviceNameDraft.trim();
+    if (!name) { setDeviceNameError('Bitte einen Sensornamen eingeben.'); return; }
+    if (name.length > 255) { setDeviceNameError('Der Sensorname darf maximal 255 Zeichen lang sein.'); return; }
+    if (name === assignedDeviceName.trim()) { cancelDeviceNameEdit(); return; }
+    if (!props.renameDevice) { setDeviceNameError('Das Umbenennen ist noch nicht verfügbar.'); return; }
+    setDeviceNameError('');
+    props.renameDevice(assignedDevice.deviceUid, name);
+  };
   let groupedData: any; try { groupedData = props.brew.brewValues && JSON.parse(props.brew.brewValues as string).groupedData; } catch (_) { groupedData = undefined; }
   const completeErrorDialogs = Object.entries(props.completeActionErrors ?? {}).map(([requestId, message]) => requestId.startsWith(`${props.brew.id}/`) && <ModalDialog key={requestId} type={DialogType.ERROR} open header="Zugabe konnte nicht bestätigt werden" content={message || 'Bitte erneut versuchen.'} onConfirm={() => props.dismissCompleteError(props.brew.id, requestId.slice(props.brew.id.length + 1))} />);
 
@@ -97,8 +122,8 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
       </div></section>
 
       <section className="fermentation-card fermentation-sensor-card" aria-labelledby="fermentation-sensor-title"><h4 id="fermentation-sensor-title">Gärsensor</h4>
-        {assignedDevice ? <div className="fermentation-assigned-device"><div><strong>{assignedDevice.deviceName || assignedGatewayStatus?.deviceName || assignedDevice.deviceUid}</strong><span className={assignedOnline ? 'is-online' : 'is-offline'}>{assignedOnline ? '● Online' : '● Offline'}</span><small>{assignedDevice.deviceUid}</small>{assignedDevice.activeAssignment?.assignedAt && <small>Zugeordnet seit: {date(assignedDevice.activeAssignment.assignedAt)}</small>}</div>{canManageAssignment && <button disabled={isUnassigning} onClick={() => setUnassignConfirmationOpen(true)}>{isUnassigning ? 'Wird getrennt …' : 'Sensor trennen'}</button>}</div> : <>
-          <p>Kein Sensor zugeordnet.</p>{canManageAssignment && (freeDevices.length === 0 ? <p className="fermentation-empty">Kein freier Sensor verfügbar.</p> : <div className="fermentation-assignment-controls"><label>Sensor auswählen<select aria-label="Sensor auswählen" value={selectedDeviceUid} disabled={isAssigning} onChange={event => setSelectedDeviceUid(event.target.value)}><option value="">Bitte auswählen</option>{freeDevices.map(device => { const gateway = props.sensorsByDeviceUid[device.deviceUid]; const online = isFermentationDeviceOnline(device, gateway); return <option key={device.deviceUid} value={device.deviceUid}>{device.deviceName || gateway?.deviceName || device.deviceUid} · {online ? 'Online' : 'Offline'}</option>; })}</select></label><button disabled={!selectedDeviceUid || isAssigning} onClick={() => props.assign(selectedDeviceUid, props.brew.id)}>{isAssigning ? 'Wird zugewiesen …' : 'Sensor zuweisen'}</button></div>)}</>}
+        {assignedDevice ? <div className="fermentation-assigned-device"><div>{editingDeviceName ? <div className="fermentation-device-name-edit"><input ref={deviceNameInput} aria-label="Sensorname" maxLength={255} value={deviceNameDraft} onChange={event => { setDeviceNameDraft(event.target.value); setDeviceNameError(''); }} onKeyDown={event => { if (event.key === 'Enter') saveDeviceName(); else if (event.key === 'Escape') cancelDeviceNameEdit(); }} /><button type="button" aria-label="Sensorname bestätigen" title="Sensorname bestätigen" onClick={saveDeviceName}><CheckIcon fontSize="small" /></button><button type="button" aria-label="Umbenennen abbrechen" title="Umbenennen abbrechen" onClick={cancelDeviceNameEdit}><CloseIcon fontSize="small" /></button></div> : <div className="fermentation-device-name"><strong>{assignedDeviceName}</strong><button type="button" aria-label="Sensor umbenennen" title="Sensor umbenennen" onClick={() => { setDeviceNameDraft(assignedDeviceName); setDeviceNameError(''); setEditingDeviceName(true); }}><EditIcon fontSize="small" /></button></div>}{deviceNameError && <small className="fermentation-error" role="alert">{deviceNameError}</small>}<span className={assignedOnline ? 'is-online' : 'is-offline'}>{assignedOnline ? '● Online' : '● Offline'}</span>{assignedDevice.activeAssignment?.assignedAt && <small>Zugeordnet seit: {date(assignedDevice.activeAssignment.assignedAt)}</small>}</div>{canManageAssignment && <button disabled={isUnassigning} onClick={() => setUnassignConfirmationOpen(true)}>{isUnassigning ? 'Wird getrennt …' : 'Sensor trennen'}</button>}</div> : <>
+          <p>Kein Sensor zugeordnet.</p>{canManageAssignment && (freeDevices.length === 0 ? <p className="fermentation-empty">Kein freier Sensor verfügbar.</p> : <div className="fermentation-assignment-controls"><label>Sensor auswählen<select aria-label="Sensor auswählen" value={selectedDeviceUid} disabled={isAssigning} onChange={event => setSelectedDeviceUid(event.target.value)}><option value="">Bitte auswählen</option>{freeDevices.map(device => { const gateway = props.sensorsByDeviceUid[device.deviceUid]; const online = isFermentationDeviceOnline(device, gateway); return <option key={device.deviceUid} value={device.deviceUid}>{device.deviceName || gateway?.deviceName || 'Unbenannter Sensor'} · {online ? 'Online' : 'Offline'}</option>; })}</select></label><button disabled={!selectedDeviceUid || isAssigning} onClick={() => props.assign(selectedDeviceUid, props.brew.id)}>{isAssigning ? 'Wird zugewiesen …' : 'Sensor zuweisen'}</button></div>)}</>}
         {props.assignmentError && <p className="fermentation-error" role="alert">Der Sensor konnte nicht zugeordnet werden.<small>{props.assignmentError}</small></p>}{props.unassignmentError && <p className="fermentation-error" role="alert">Der Sensor konnte nicht getrennt werden.<small>{props.unassignmentError}</small></p>}
       </section>
       <ModalDialog type={DialogType.CONFIRM} open={unassignConfirmationOpen} header="Sensor trennen?" content={'Der Sensor wird von diesem Bier getrennt und die laufende Messsession beendet.\nBereits gespeicherte Messwerte bleiben erhalten.'} confirmLabel="Sensor trennen" showCancelButton onConfirm={() => { setUnassignConfirmationOpen(false); if (assignedDevice) props.unassign(assignedDevice.deviceUid, props.brew.id); }} onCancel={() => setUnassignConfirmationOpen(false)} actionsDisabled={isUnassigning} />
@@ -124,7 +149,7 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
     <ModalDialog type={DialogType.CONFIRM} open={startConfirmationOpen} header="Gärung jetzt starten?" content={'Die Gärung sollte erst gestartet werden, wenn die Würze auf Anstelltemperatur abgekühlt und die Hefe zugegeben wurde.'} confirmLabel="Gärung starten" showCancelButton onConfirm={() => { setStartConfirmationOpen(false); props.startFermentation(props.brew.id); }} onCancel={() => setStartConfirmationOpen(false)} actionsDisabled={props.startingFermentation} />
     <section className="fermentation-reading-grid" aria-label="Aktuelle Gärungswerte"><div><span>Biertemperatur</span><strong>{number(readings.beerTemperature, ' °C')}</strong></div><div><span>Außentemperatur</span><strong>{number(readings.ambientTemperature, ' °C')}</strong></div><div><span>Plato</span><strong>{number(readings.plato, ' °P')}</strong></div></section>
     <div className="fermentation-dashboard-grid">
-      <section className="fermentation-card fermentation-status-card"><h4>Gärsensor</h4>{!assignedDevice ? <p>Kein Sensor zugeordnet.</p> : <div className="fermentation-device"><strong>{assignedDevice.deviceName || assignedGatewayStatus?.deviceName || assignedDevice.deviceUid}</strong><span className={assignedOnline ? 'is-online' : 'is-offline'}>{assignedOnline ? '● Online' : '● Offline'}</span></div>}</section>
+      <section className="fermentation-card fermentation-status-card"><h4>Gärsensor</h4>{!assignedDevice ? <p>Kein Sensor zugeordnet.</p> : <div className="fermentation-device"><strong>{assignedDeviceName}</strong><span className={assignedOnline ? 'is-online' : 'is-offline'}>{assignedOnline ? '● Online' : '● Offline'}</span></div>}</section>
       <section className="fermentation-card fermentation-status-card"><h4>Letzte Messung</h4><strong className="fermentation-prominent">{date(latestMeasurement?.measuredAt)}</strong><p>{latestSensor ? `Sensor zuletzt ${date(latestSensor.measuredAt)}` : 'Noch keine Sensormessung vorhanden.'}</p></section>
       <section className="fermentation-card fermentation-status-card"><h4>Nächste Aktion</h4>{nextAction ? <><strong className={`fermentation-prominent is-${actionDueLabel(nextAction).severity}`}>{actionDueLabel(nextAction).label}</strong><p>{actionText(nextAction)}</p><p>Zugabe: {actionTriggerLabel(nextAction)}</p>{canCompleteAction(nextAction) && <button disabled={props.completing.includes(fermentationActionRequestId(props.brew.id, nextAction.actionId))} onClick={() => props.complete(props.brew.id, nextAction.actionId)}>{props.completing.includes(fermentationActionRequestId(props.brew.id, nextAction.actionId)) ? 'Wird gespeichert …' : 'Zugabe erledigt'}</button>}</> : <p>Keine Aktion geplant.</p>}</section>
       <section className="fermentation-card fermentation-trend-card"><h4>Gärungsverlauf</h4><FermentationTrend measurements={details.measurements} /></section>

@@ -122,6 +122,46 @@ describe('fermentation details dashboard', () => {
     expect(screen.getByRole('button', {name: 'Wird getrennt …'})).toBeDisabled();
   });
 
+  it('edits the sensor name inline without exposing its device UID', () => {
+    const renameDevice = jest.fn();
+    const deviceUid = '307528d6-76af-4616-a0c1-568e471ff77e';
+    const details: any = {measurements: [], actions: [], sensorMeasurements: [], devices: [
+      {deviceUid, deviceName: 'FERM-1FF77E', activeAssignment: {beerId: 'brew-1', assignedAt: '2026-09-13T15:20:00Z'}},
+    ]};
+    render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" renameDevice={renameDevice} sensorsByDeviceUid={{[deviceUid]: {deviceUid, status: 'ASSIGNED', beerId: 'brew-1', updatedAt: new Date().toISOString()}}} />);
+
+    expect(screen.getByText('FERM-1FF77E')).toBeInTheDocument();
+    expect(screen.queryByText(deviceUid)).not.toBeInTheDocument();
+    expect(screen.getByText('● Online')).toBeInTheDocument();
+    expect(screen.getByText(/Zugeordnet seit:/)).toBeInTheDocument();
+    const edit = screen.getByRole('button', {name: 'Sensor umbenennen'});
+    expect(edit).toHaveAttribute('title', 'Sensor umbenennen');
+
+    fireEvent.click(edit);
+    const input = screen.getByRole('textbox', {name: 'Sensorname'});
+    expect(input).toHaveValue('FERM-1FF77E');
+    expect(input).toHaveFocus();
+    fireEvent.keyDown(input, {key: 'Escape'});
+    expect(screen.queryByRole('textbox', {name: 'Sensorname'})).not.toBeInTheDocument();
+    expect(renameDevice).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', {name: 'Sensor umbenennen'}));
+    fireEvent.change(screen.getByRole('textbox', {name: 'Sensorname'}), {target: {value: '   '}});
+    fireEvent.keyDown(screen.getByRole('textbox', {name: 'Sensorname'}), {key: 'Enter'});
+    expect(screen.getByRole('alert')).toHaveTextContent('Bitte einen Sensornamen eingeben.');
+    expect(renameDevice).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByRole('textbox', {name: 'Sensorname'}), {target: {value: ' FERM-1FF77E '}});
+    fireEvent.click(screen.getByRole('button', {name: 'Sensorname bestätigen'}));
+    expect(renameDevice).not.toHaveBeenCalled();
+    expect(screen.queryByRole('textbox', {name: 'Sensorname'})).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', {name: 'Sensor umbenennen'}));
+    fireEvent.change(screen.getByRole('textbox', {name: 'Sensorname'}), {target: {value: ' Sensor Keller '}});
+    fireEvent.click(screen.getByRole('button', {name: 'Sensorname bestätigen'}));
+    expect(renameDevice).toHaveBeenCalledWith(deviceUid, 'Sensor Keller');
+  });
+
   it.each([eBrewState.MATURATION, eBrewState.FINISHED])('does not offer new assignments in %s', state => {
     const details: any = {measurements: [], actions: [], sensorMeasurements: [], devices: [{deviceUid: 'free', deviceName: 'Frei', activeAssignment: null}]};
     render(<FinishedBrewDetailsView {...base} brew={{...brew, state}} details={details} viewMode="measurements" />);
