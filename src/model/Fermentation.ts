@@ -1,7 +1,8 @@
 import {TimeUnit, TriggerType, TriggerUnit} from './FermentationRecipeAction';
 
-/** Persisted runtime truth. Fälligkeit is returned separately and is never persisted by this UI. */
+/** UI runtime state. Fälligkeit is represented by `due`; BeerDataStore's wire-only `DUE` is normalized to PENDING here. */
 export type FermentationActionState = 'PENDING' | 'COMPLETED' | 'SKIPPED';
+export type FermentationActionWireState = FermentationActionState | 'DUE';
 
 export interface FermentationMeasurement {
   id: string;
@@ -50,7 +51,8 @@ export interface FermentationAction {
 }
 
 /** Wire shape returned by BeerDataStore. MANUAL actions may encode absent trigger data as null. */
-export interface FermentationActionDTO extends Omit<FermentationAction, 'triggerType' | 'triggerValue' | 'triggerUnit' | 'contactTime' | 'contactTimeUnit'> {
+export interface FermentationActionDTO extends Omit<FermentationAction, 'status' | 'triggerType' | 'triggerValue' | 'triggerUnit' | 'contactTime' | 'contactTimeUnit'> {
+  status: FermentationActionWireState;
   triggerType?: TriggerType | null;
   triggerValue?: number | null;
   triggerUnit?: TriggerUnit | null;
@@ -69,8 +71,8 @@ export const mapFermentationAction = (dto: FermentationActionDTO): FermentationA
   triggerUnit: dto.triggerUnit ?? undefined,
   contactTime: dto.contactTime ?? undefined,
   contactTimeUnit: dto.contactTimeUnit ?? undefined,
-  status: dto.status,
-  due: dto.due,
+  status: dto.status === 'DUE' ? 'PENDING' : dto.status,
+  due: dto.status === 'DUE' ? true : dto.due,
   completedAt: dto.completedAt,
   skippedAt: dto.skippedAt,
   contactEndsAt: dto.contactEndsAt,
