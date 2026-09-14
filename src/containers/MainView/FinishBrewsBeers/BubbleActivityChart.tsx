@@ -48,7 +48,11 @@ export class BubbleActivityChart extends React.PureComponent<{activity: BubbleAc
   render() {
     const data = buildBubbleActivityChartData(this.props.activity);
     return <div className="fermentation-bubble-chart" role="img" aria-label="Zeitlicher Verlauf der Gäraktivität in Blubbs pro Minute und des Differenzdrucks in Pascal">
-      <ResponsiveContainer width="100%" height="100%"><LineChart data={data} margin={{top: 8, right: 12, bottom: 8, left: 4}}>
+      <ResponsiveContainer
+        width="100%"
+        height="100%"
+        debounce={50}
+      ><LineChart data={data} margin={{top: 8, right: 12, bottom: 8, left: 4}}>
         <CartesianGrid strokeDasharray="3 3" opacity={0.25} />
         <XAxis dataKey="timestamp" type="number" scale="time" domain={['dataMin', 'dataMax']} minTickGap={30} tickFormatter={localDateTime} />
         <YAxis yAxisId="bubbles" width={72} label={{value: 'Blubbs/min', angle: -90, position: 'insideLeft'}} allowDecimals />
