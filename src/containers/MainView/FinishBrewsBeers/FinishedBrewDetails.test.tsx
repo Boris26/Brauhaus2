@@ -110,9 +110,8 @@ describe('fermentation details dashboard', () => {
 
     const lowerGrid = container.querySelector('.fermentation-measurements-lower-grid') as HTMLElement;
     expect(lowerGrid).toBeInTheDocument();
-    expect(lowerGrid.querySelector('.fermentation-measurements-main')).toContainElement(screen.getByRole('heading', {name: 'Letzte Messung'}).parentElement);
     expect(lowerGrid.querySelector('.fermentation-measurements-main')).toContainElement(screen.getByRole('heading', {name: 'Gärungsaktionen'}).parentElement);
-    expect(lowerGrid.querySelector('.fermentation-measurements-main details')).toHaveTextContent('Messhistorie (2)');
+    expect(within(lowerGrid).queryByText(/Messhistorie/)).not.toBeInTheDocument();
     expect(lowerGrid.querySelector('.fermentation-measurements-sidebar')).toContainElement(screen.getByRole('heading', {name: 'Gärsensor'}).parentElement);
     expect(screen.getByRole('heading', {name: 'Analyse des Brauprozesses'})).toBeInTheDocument();
   });
