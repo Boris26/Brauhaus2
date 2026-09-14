@@ -1,5 +1,5 @@
 import React from 'react';
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { DashboardPage } from './DashboardPage';
 import { Beer } from '../../model/Beer';
 import { FinishedBrew } from '../../model/FinishedBrew';
@@ -83,6 +83,19 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Heizung')).toBeInTheDocument();
     expect(screen.getByText('Rührwerk')).toBeInTheDocument();
     expect(screen.getByText('50 %')).toBeInTheDocument();
+  });
+
+  it('opens fermentation measurements from an active fermentation row by click or keyboard', () => {
+    const openMeasurements = jest.fn();
+    renderDashboard({openMeasurements});
+
+    const row = screen.getByRole('button', {name: 'Messdaten für Boris Kellerbräu öffnen'});
+    fireEvent.click(row);
+    expect(openMeasurements).toHaveBeenLastCalledWith('finished-1');
+
+    fireEvent.keyDown(row, {key: 'Enter'});
+    expect(openMeasurements).toHaveBeenCalledTimes(2);
+    expect(openMeasurements).toHaveBeenLastCalledWith('finished-1');
   });
 
   it('projects timed-step progress locally and accepts authoritative resync', () => {
