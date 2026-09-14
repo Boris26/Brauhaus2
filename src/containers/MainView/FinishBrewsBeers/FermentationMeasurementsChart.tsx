@@ -41,9 +41,9 @@ const FermentationMeasurementsChart: React.FC<Props> = props => {
       <YAxis yAxisId="plato" orientation="right" unit=" °P" width={52} />
       <Tooltip /><Legend />
       {buildFermentationActionMarkers(props.actions).map(marker => <ReferenceLine key={marker.actionId} x={marker.timestamp} stroke={COLOR_ACCENT} strokeDasharray="4 3" label={{value: marker.label, fill: COLOR_ACCENT, position: 'insideTopRight'}} />)}
-      <Line yAxisId="temperature" type="monotone" dataKey="beerTemperature" name="Biertemperatur" stroke={COLOR_CHART_GREEN || COLOR_ACCENT} connectNulls dot={false} />
-      <Line yAxisId="temperature" type="monotone" dataKey="ambientTemperature" name="Außentemperatur" stroke={COLOR_CHART_BLUE} connectNulls dot={false} />
-      <Line yAxisId="plato" type="monotone" dataKey="plato" name="Plato" stroke={COLOR_CHART_YELLOW} connectNulls dot={false} />
+      <Line yAxisId="temperature" type="monotone" dataKey="beerTemperature" name="Biertemperatur" stroke={COLOR_CHART_GREEN || COLOR_ACCENT} connectNulls dot={false} isAnimationActive={false} />
+      <Line yAxisId="temperature" type="monotone" dataKey="ambientTemperature" name="Außentemperatur" stroke={COLOR_CHART_BLUE} connectNulls dot={false} isAnimationActive={false} />
+      <Line yAxisId="plato" type="monotone" dataKey="plato" name="Plato" stroke={COLOR_CHART_YELLOW} connectNulls dot={false} isAnimationActive={false} />
     </LineChart></ResponsiveContainer>
   </div>;
 };

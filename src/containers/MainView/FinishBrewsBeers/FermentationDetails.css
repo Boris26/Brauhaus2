@@ -46,6 +46,9 @@
 .fermentation-history-chart { contain: layout size; width: 100%; height: clamp(14rem, 25vh, 17rem); margin-top: var(--spacing-xs); }
 .fermentation-bubble-chart { contain: layout size; width: 100%; height: clamp(13rem, 23vh, 16rem); margin-top: var(--spacing-xs); }
 .fermentation-chart-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--spacing-sm); }
+.fermentation-chart-content { position: relative; }
+.fermentation-chart-loading { position: absolute; top: .25rem; right: .5rem; z-index: 2; padding: .15rem .4rem; border-radius: var(--border-radius-small); color: var(--color-text-secondary); background: var(--color-panel-bg); font-size: .72rem; }
+.fermentation-chart-content.has-chart > .fermentation-error { position: absolute; right: .5rem; bottom: .25rem; z-index: 2; max-width: calc(100% - 1rem); margin: 0; padding: .15rem .4rem; border-radius: var(--border-radius-small); background: var(--color-panel-bg); font-size: .72rem; }
 .fermentation-range-selector { display: flex; flex-wrap: wrap; gap: var(--spacing-xs); }
 .fermentation-range-selector button { color: var(--color-text); background: var(--color-panel-contrast); }
 .fermentation-range-selector button.is-selected { color: var(--color-button-text); background: var(--color-primary); }

@@ -246,17 +246,48 @@ describe('fermentation details dashboard', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Der Sensor konnte nicht zugeordnet werden.HTTP 409');
   });
 
-  it('loads bubble activity ranges and keeps its loading and error states local', () => {
+  it('shows the initial bubble activity loading state without a chart', () => {
     const loadBubbleActivity = jest.fn();
-    const {rerender} = render(<FinishedBrewDetailsView {...base} viewMode="measurements" loadBubbleActivity={loadBubbleActivity} bubbleActivityLoading />);
+    render(<FinishedBrewDetailsView {...base} viewMode="measurements" loadBubbleActivity={loadBubbleActivity} bubbleActivityLoading />);
     expect(loadBubbleActivity).toHaveBeenCalledWith('brew-1', '24h');
     expect(screen.getByText('Gäraktivität wird geladen …')).toBeInTheDocument();
-    for (const [label, range] of [['6 h', '6h'], ['7 Tage', '7d'], ['Alles', 'all']]) {
+    expect(screen.queryByRole('img', {name: /Zeitlicher Verlauf der Gäraktivität/})).not.toBeInTheDocument();
+  });
+
+  it('keeps existing bubble activity mounted while loading another range', () => {
+    const loadBubbleActivity = jest.fn();
+    const activity: any[] = [{deviceId: 'sensor', sequence: 1, bubbleCount: 4, windowSeconds: 60, windowEndedAt: '2026-09-04T18:00:00Z'}];
+    const {rerender} = render(<FinishedBrewDetailsView {...base} viewMode="measurements" loadBubbleActivity={loadBubbleActivity} bubbleActivity={activity} />);
+    const chart = screen.getByRole('img', {name: /Zeitlicher Verlauf der Gäraktivität/});
+
+    fireEvent.click(screen.getByText('6 h'));
+    expect(loadBubbleActivity).toHaveBeenCalledWith('brew-1', '6h');
+    rerender(<FinishedBrewDetailsView {...base} viewMode="measurements" loadBubbleActivity={loadBubbleActivity} bubbleActivity={activity} bubbleActivityRange="6h" bubbleActivityLoading />);
+    expect(screen.getByRole('img', {name: /Zeitlicher Verlauf der Gäraktivität/})).toBe(chart);
+    expect(screen.getByRole('status')).toHaveTextContent('Aktualisiere …');
+
+    for (const [label, range] of [['7 Tage', '7d'], ['Alles', 'all']]) {
       fireEvent.click(screen.getByText(label)); expect(loadBubbleActivity).toHaveBeenCalledWith('brew-1', range);
     }
-    rerender(<FinishedBrewDetailsView {...base} viewMode="measurements" loadBubbleActivity={loadBubbleActivity} bubbleActivityError="HTTP 500" />);
+  });
+
+  it('shows existing bubble activity without a loading hint after loading', () => {
+    const activity: any[] = [{deviceId: 'sensor', sequence: 1, bubbleCount: 4, windowSeconds: 60, windowEndedAt: '2026-09-04T18:00:00Z'}];
+    render(<FinishedBrewDetailsView {...base} viewMode="measurements" bubbleActivity={activity} />);
+    expect(screen.getByRole('img', {name: /Zeitlicher Verlauf der Gäraktivität/})).toBeInTheDocument();
+    expect(screen.queryByText('Aktualisiere …')).not.toBeInTheDocument();
+  });
+
+  it('keeps existing bubble activity visible next to a refresh error', () => {
+    const activity: any[] = [{deviceId: 'sensor', sequence: 1, bubbleCount: 4, windowSeconds: 60, windowEndedAt: '2026-09-04T18:00:00Z'}];
+    render(<FinishedBrewDetailsView {...base} viewMode="measurements" bubbleActivity={activity} bubbleActivityError="HTTP 500" />);
+    expect(screen.getByRole('img', {name: /Zeitlicher Verlauf der Gäraktivität/})).toBeInTheDocument();
     expect(screen.getByText('Die Gäraktivität konnte nicht geladen werden.')).toBeInTheDocument();
-    expect(screen.getByText('Verlauf')).toBeInTheDocument();
+  });
+
+  it('shows an empty bubble activity state after a successful empty load', () => {
+    render(<FinishedBrewDetailsView {...base} viewMode="measurements" />);
+    expect(screen.getByText('Noch keine Gäraktivität gemessen.')).toBeInTheDocument();
   });
 
   it('navigates from the compact beer detail to its measurement route', () => {
