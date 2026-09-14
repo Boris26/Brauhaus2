@@ -5,10 +5,10 @@ const target = "https://braumeister.boris-mahne.de";
 module.exports = function setupProxy(app) {
     app.use(
         createProxyMiddleware("/api/fermentation/ui", {
-            target: "http://localhost:5001",
+            target,
             changeOrigin: true,
+            secure: false,
             ws: true,
-            pathRewrite: {"^/api/fermentation/ui": "/fermentation/ui"},
             onError(aError, aRequest) {
                 console.error(
                     `Development fermentation gateway proxy failed for ${aRequest.method} ${aRequest.url}:`,
@@ -33,8 +33,6 @@ module.exports = function setupProxy(app) {
         })
     );
 
-    // Keep the Socket.IO proxy explicitly scoped to /socket.io so that
-    // webpack-dev-server's own HMR websocket on /ws is not intercepted.
     app.use(
         createProxyMiddleware("/socket.io", {
             target,
