@@ -153,7 +153,14 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
 
       <section className="fermentation-card fermentation-chart-card"><h4>Verlauf</h4><FermentationMeasurementsChart measurements={details.measurements} actions={details.actions} /></section>
       <section className="fermentation-card fermentation-chart-card" aria-labelledby="bubble-activity-title"><div className="fermentation-chart-heading"><h4 id="bubble-activity-title">Gäraktivität</h4><div className="fermentation-range-selector" role="group" aria-label="Zeitraum der Gäraktivität">{([['6h', '6 h'], ['24h', '24 h'], ['7d', '7 Tage'], ['all', 'Alles']] as [BubbleActivityRange, string][]).map(([range, label]) => <button key={range} className={props.bubbleActivityRange === range ? 'is-selected' : ''} aria-pressed={props.bubbleActivityRange === range} disabled={props.bubbleActivityLoading && props.bubbleActivityRange === range} onClick={() => props.loadBubbleActivity(props.brew.id, range)}>{label}</button>)}</div></div>
-        {props.bubbleActivityLoading ? <p role="status">Gäraktivität wird geladen …</p> : props.bubbleActivityError ? <p className="fermentation-error" role="alert">Die Gäraktivität konnte nicht geladen werden.</p> : props.bubbleActivity.length === 0 ? <p className="fermentation-empty">Noch keine Gäraktivität gemessen.</p> : <BubbleActivityChart activity={props.bubbleActivity} />}
+        <div className={`fermentation-chart-content${props.bubbleActivity.length > 0 ? ' has-chart' : ''}`}>
+          {props.bubbleActivity.length > 0 && <BubbleActivityChart activity={props.bubbleActivity} />}
+          {props.bubbleActivityLoading && (props.bubbleActivity.length > 0
+            ? <span className="fermentation-chart-loading" role="status">Aktualisiere …</span>
+            : <p role="status">Gäraktivität wird geladen …</p>)}
+          {props.bubbleActivityError && <p className="fermentation-error" role="alert">Die Gäraktivität konnte nicht geladen werden.</p>}
+          {!props.bubbleActivityLoading && !props.bubbleActivityError && props.bubbleActivity.length === 0 && <p className="fermentation-empty">Noch keine Gäraktivität gemessen.</p>}
+        </div>
       </section>
       <div className="fermentation-measurements-lower-grid">
         <div className="fermentation-measurements-main">
