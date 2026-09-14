@@ -2,7 +2,7 @@ import React from 'react';
 import {CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
 import {FermentationAction, FermentationMeasurement} from '../../../model/Fermentation';
 import {actionAmountLabel} from '../../../utils/fermentation';
-import {COLOR_ACCENT, COLOR_CHART_BLUE, COLOR_CHART_GREEN, COLOR_CHART_YELLOW} from '../../../colors';
+import {COLOR_ACCENT, COLOR_INFO, COLOR_SUCCESS, COLOR_WARNING} from '../../../colors';
 import './FermentationChartRange.css';
 
 interface Props { measurements: FermentationMeasurement[]; actions?: FermentationAction[]; }
@@ -16,8 +16,29 @@ const RANGE_MS: Record<Exclude<FermentationChartRange, 'all'>, number> = {
   '24h': 24 * 60 * 60 * 1000,
   '7d': 7 * 24 * 60 * 60 * 1000,
 };
+const TOOLTIP_CONTENT_STYLE: React.CSSProperties = {
+  background: 'var(--color-panel-contrast)',
+  border: '1px solid var(--color-border)',
+  borderRadius: 'var(--border-radius-medium)',
+  boxShadow: '0 8px 20px rgba(0, 0, 0, .28)',
+  color: 'var(--color-text)',
+  fontSize: '.78rem',
+  padding: '6px 9px',
+};
+const TOOLTIP_LABEL_STYLE: React.CSSProperties = {
+  color: 'var(--color-text-secondary)',
+  fontWeight: 700,
+  marginBottom: 4,
+};
+const TOOLTIP_ITEM_STYLE: React.CSSProperties = {padding: '1px 0'};
 
 const finite = (value?: number | null): value is number => typeof value === 'number' && Number.isFinite(value);
+const formatDateTime = (value: number): string => new Intl.DateTimeFormat('de-DE', {dateStyle: 'short', timeStyle: 'short'}).format(new Date(value));
+const formatFermentationTooltip = (value: unknown, name: unknown): [string, string] => {
+  const numeric = Number(value);
+  const formatted = Number.isFinite(numeric) ? numeric.toLocaleString('de-DE', {maximumFractionDigits: 1}) : String(value ?? '–');
+  return name === 'Plato' ? [`${formatted} °P`, 'Plato'] : [`${formatted} °C`, String(name)];
+};
 
 export const filterFermentationMeasurementsByRange = (measurements: FermentationMeasurement[], range: FermentationChartRange): FermentationMeasurement[] => {
   if (range === 'all') return measurements;
@@ -70,11 +91,19 @@ const FermentationMeasurementsChart: React.FC<Props> = React.memo(props => {
           <XAxis dataKey="timestamp" type="number" scale="time" domain={['dataMin', 'dataMax']} minTickGap={30} tickFormatter={value => new Intl.DateTimeFormat('de-DE', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'}).format(new Date(value))} />
           <YAxis yAxisId="temperature" unit=" °C" width={58} />
           <YAxis yAxisId="plato" orientation="right" unit=" °P" width={52} />
-          <Tooltip /><Legend />
+          <Tooltip
+            labelFormatter={value => formatDateTime(Number(value))}
+            formatter={formatFermentationTooltip}
+            contentStyle={TOOLTIP_CONTENT_STYLE}
+            labelStyle={TOOLTIP_LABEL_STYLE}
+            itemStyle={TOOLTIP_ITEM_STYLE}
+            cursor={{stroke: 'var(--color-border-strong)', strokeDasharray: '3 3'}}
+          />
+          <Legend />
           {actionMarkers.map(marker => <ReferenceLine key={marker.actionId} x={marker.timestamp} stroke={COLOR_ACCENT} strokeDasharray="4 3" label={{value: marker.label, fill: COLOR_ACCENT, position: 'insideTopRight'}} />)}
-          <Line yAxisId="temperature" type="monotone" dataKey="beerTemperature" name="Biertemperatur" stroke={COLOR_CHART_GREEN || COLOR_ACCENT} connectNulls dot={false} isAnimationActive={false} />
-          <Line yAxisId="temperature" type="monotone" dataKey="ambientTemperature" name="Außentemperatur" stroke={COLOR_CHART_BLUE} connectNulls dot={false} isAnimationActive={false} />
-          <Line yAxisId="plato" type="monotone" dataKey="plato" name="Plato" stroke={COLOR_CHART_YELLOW} connectNulls dot={false} isAnimationActive={false} />
+          <Line yAxisId="temperature" type="monotone" dataKey="beerTemperature" name="Biertemperatur" stroke={COLOR_SUCCESS} strokeWidth={2} connectNulls dot={false} activeDot={{r: 3}} isAnimationActive={false} />
+          <Line yAxisId="temperature" type="monotone" dataKey="ambientTemperature" name="Außentemperatur" stroke={COLOR_INFO} strokeWidth={2} connectNulls dot={false} activeDot={{r: 3}} isAnimationActive={false} />
+          <Line yAxisId="plato" type="monotone" dataKey="plato" name="Plato" stroke={COLOR_WARNING} strokeWidth={2} connectNulls dot={false} activeDot={{r: 3}} isAnimationActive={false} />
         </LineChart></ResponsiveContainer>
       </div>}
   </>;
