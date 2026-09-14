@@ -46,6 +46,17 @@ export class BaseRepository {
         }
     }
 
+    protected static async patch<T>(aUrl: string, aBody: any): Promise<T> {
+        const url = this.normalizePath(aUrl);
+        try {
+            const aResponse = await api.patch<T>(url, aBody);
+            return aResponse.data;
+        } catch (aError) {
+            console.error(`PATCH ${url} fehlgeschlagen`, aError);
+            throw aError;
+        }
+    }
+
     protected static async delete(aUrl: string): Promise<void> {
         const url = this.normalizePath(aUrl);
         try {

@@ -79,6 +79,18 @@ export const unassignDeviceEpic = (action$: any) => action$.pipe(
   )))
 );
 
+export const updateDeviceDisplayNameEpic = (action$: any) => action$.pipe(
+  ofType(FermentationActionTypes.UPDATE_DEVICE_DISPLAY_NAME),
+  groupBy((action: any) => action.payload.deviceUid),
+  mergeMap((group$: any) => group$.pipe(exhaustMap((action: any) => {
+    const {deviceUid, brewId, displayName} = action.payload;
+    return from(FermentationRepository.updateDeviceDisplayName(deviceUid, displayName)).pipe(
+      mergeMap(() => of(FermentationActions.updateDeviceDisplayNameSuccess(deviceUid, brewId), FermentationActions.load(brewId))),
+      catchError(() => of(FermentationActions.updateDeviceDisplayNameFailure(deviceUid, brewId, 'Sensor-Alias konnte nicht gespeichert werden.')))
+    );
+  })))
+);
+
 export const gatewayMessageAction = (message: FermentationGatewayMessage) => {
   if (message.type === 'FERMENTATION_GATEWAY_SNAPSHOT') return FermentationActions.gatewaySnapshotReceived(message.sensors);
   if (message.type === 'FERMENTATION_SENSOR_STATUS_CHANGED') return FermentationActions.gatewaySensorStatusChanged(message.sensor);
@@ -162,4 +174,4 @@ export const loadBubbleActivityEpic = (action$: any) => action$.pipe(
   })))
 );
 
-export const fermentationEpics = [loadFermentationEpic, createMeasurementEpic, completeFermentationActionEpic, skipFermentationActionEpic, assignDeviceEpic, unassignDeviceEpic, fermentationGatewayWebSocketEpic, refreshFermentationAfterGatewayStatusEpic, refreshFermentationAfterGatewayDataEpic, loadBubbleActivityEpic];
+export const fermentationEpics = [loadFermentationEpic, createMeasurementEpic, completeFermentationActionEpic, skipFermentationActionEpic, assignDeviceEpic, unassignDeviceEpic, updateDeviceDisplayNameEpic, fermentationGatewayWebSocketEpic, refreshFermentationAfterGatewayStatusEpic, refreshFermentationAfterGatewayDataEpic, loadBubbleActivityEpic];

@@ -2,18 +2,19 @@ import {api} from './BaseRepository';
 import {FermentationRepository} from './FermentationRepository';
 
 jest.mock('./BaseRepository', () => {
-  const get = jest.fn(); const post = jest.fn(); const put = jest.fn(); const remove = jest.fn();
-  return {api: {get, post, put, delete: remove}, BaseRepository: class {
+  const get = jest.fn(); const post = jest.fn(); const put = jest.fn(); const patch = jest.fn(); const remove = jest.fn();
+  return {api: {get, post, put, patch, delete: remove}, BaseRepository: class {
     protected static async get<T>(url: string): Promise<T> { return (await get(url)).data; }
     protected static async post<T>(url: string, body: unknown): Promise<T> { return (await post(url, body)).data; }
     protected static async put<T>(url: string, body: unknown): Promise<T> { return (await put(url, body)).data; }
+    protected static async patch<T>(url: string, body: unknown): Promise<T> { return (await patch(url, body)).data; }
     protected static async delete(url: string): Promise<void> { await remove(url); }
   }};
 });
-const mocked = api as unknown as {get: jest.Mock; post: jest.Mock; put: jest.Mock; delete: jest.Mock};
+const mocked = api as unknown as {get: jest.Mock; post: jest.Mock; put: jest.Mock; patch: jest.Mock; delete: jest.Mock};
 
 describe('FermentationRepository BeerDataStore routes', () => {
-  beforeEach(() => { mocked.get.mockReset(); mocked.post.mockReset(); mocked.put.mockReset(); mocked.delete.mockReset(); });
+  beforeEach(() => { mocked.get.mockReset(); mocked.post.mockReset(); mocked.put.mockReset(); mocked.patch.mockReset(); mocked.delete.mockReset(); });
   it('combines actual action and measurement APIs instead of an aggregate endpoint', async () => {
     mocked.get.mockResolvedValue({data: []});
     await FermentationRepository.getDetails('brew/a');
@@ -41,12 +42,19 @@ describe('FermentationRepository BeerDataStore routes', () => {
   it('maps the backend assignment DTO to the UI active assignment', async () => {
     mocked.get.mockResolvedValue({data: [{deviceUid: 'sensor-1', name: 'Keller', assignment: {beerId: 'brew', assignmentType: 'manual', assignedAt: '2026-09-13T15:20:00Z'}}]});
     const devices = await FermentationRepository.getDevices();
-    expect(devices).toEqual([{deviceUid: 'sensor-1', deviceName: 'Keller', status: undefined, lastSeenAt: undefined, activeAssignment: {beerId: 'brew', assignmentType: 'manual', assignedAt: '2026-09-13T15:20:00Z'}}]);
+    expect(devices).toEqual([{deviceUid: 'sensor-1', deviceName: 'Keller', displayName: undefined, status: undefined, lastSeenAt: undefined, activeAssignment: {beerId: 'brew', assignmentType: 'manual', assignedAt: '2026-09-13T15:20:00Z'}}]);
   });
   it('maps a null backend assignment to a free UI device', async () => {
     mocked.get.mockResolvedValue({data: [{deviceUid: 'sensor-free', deviceName: 'Frei', assignment: null}]});
     const devices = await FermentationRepository.getDevices();
     expect(devices[0].activeAssignment).toBeNull();
+  });
+  it('patches and maps a device display name without using registration', async () => {
+    mocked.patch.mockResolvedValue({data: {deviceUid: 'sensor/a', deviceName: 'FERM-1', displayName: 'Garage', assignment: null}});
+    const device = await FermentationRepository.updateDeviceDisplayName('sensor/a', 'Garage');
+    expect(mocked.patch).toHaveBeenCalledWith('fermentation/devices/sensor%2Fa', {displayName: 'Garage'});
+    expect(mocked.post).not.toHaveBeenCalled();
+    expect(device).toMatchObject({deviceUid: 'sensor/a', deviceName: 'FERM-1', displayName: 'Garage'});
   });
   it('uses finished beer and action identity for complete and skip', async () => {
     mocked.post.mockResolvedValue({data: {}});

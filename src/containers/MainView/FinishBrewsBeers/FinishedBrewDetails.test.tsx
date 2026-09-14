@@ -3,7 +3,7 @@ import {FinishedBrewDetailsView} from './FinishedBrewDetails';
 import {eBrewState} from '../../../enums/eBrewState';
 
 const brew: any = {id: 'brew-1', name: 'West Coast IPA', startDate: '2026-09-01', fermentationStartedAt: '2026-09-01T12:00:00+02:00', liters: 20, originalwort: 13.2, residual_extract: null, note: '', active: true, state: eBrewState.FERMENTATION};
-const base: any = {brew, details: {measurements: [], actions: [], devices: [], sensorMeasurements: []}, bubbleActivity: [], bubbleActivityRange: '24h', bubbleActivityLoading: false, activeBrews: [brew], loading: false, saving: false, savingLifecycle: false, startingFermentation: false, completing: [], completeActionErrors: {}, dismissCompleteError: jest.fn(), skipping: [], assigning: [], unassigning: [], sensorsByDeviceUid: {}, load: jest.fn(), loadBubbleActivity: jest.fn(), save: jest.fn(), complete: jest.fn(), skip: jest.fn(), transition: jest.fn(), startFermentation: jest.fn(), assign: jest.fn(), unassign: jest.fn()};
+const base: any = {brew, details: {measurements: [], actions: [], devices: [], sensorMeasurements: []}, bubbleActivity: [], bubbleActivityRange: '24h', bubbleActivityLoading: false, activeBrews: [brew], loading: false, saving: false, savingLifecycle: false, startingFermentation: false, completing: [], completeActionErrors: {}, dismissCompleteError: jest.fn(), skipping: [], assigning: [], unassigning: [], updatingDeviceDisplayNames: [], deviceDisplayNameErrors: {}, sensorsByDeviceUid: {}, load: jest.fn(), loadBubbleActivity: jest.fn(), save: jest.fn(), complete: jest.fn(), skip: jest.fn(), transition: jest.fn(), startFermentation: jest.fn(), assign: jest.fn(), unassign: jest.fn(), updateDeviceDisplayName: jest.fn()};
 
 describe('fermentation details dashboard', () => {
   it('shows the compact current-state dashboard with neutral missing values', () => {
@@ -122,44 +122,57 @@ describe('fermentation details dashboard', () => {
     expect(screen.getByRole('button', {name: 'Wird getrennt …'})).toBeDisabled();
   });
 
-  it('edits the sensor name inline without exposing its device UID', () => {
-    const renameDevice = jest.fn();
+  it('edits and resets the sensor alias inline without exposing its device UID', () => {
+    const updateDeviceDisplayName = jest.fn();
     const deviceUid = '307528d6-76af-4616-a0c1-568e471ff77e';
     const details: any = {measurements: [], actions: [], sensorMeasurements: [], devices: [
-      {deviceUid, deviceName: 'FERM-1FF77E', activeAssignment: {beerId: 'brew-1', assignedAt: '2026-09-13T15:20:00Z'}},
+      {deviceUid, deviceName: 'FERM-1FF77E', displayName: 'Gärtank Garage', activeAssignment: {beerId: 'brew-1', assignedAt: '2026-09-13T15:20:00Z'}},
     ]};
-    render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" renameDevice={renameDevice} sensorsByDeviceUid={{[deviceUid]: {deviceUid, status: 'ASSIGNED', beerId: 'brew-1', updatedAt: new Date().toISOString()}}} />);
+    render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" updateDeviceDisplayName={updateDeviceDisplayName} sensorsByDeviceUid={{[deviceUid]: {deviceUid, status: 'ASSIGNED', beerId: 'brew-1', updatedAt: new Date().toISOString()}}} />);
 
-    expect(screen.getByText('FERM-1FF77E')).toBeInTheDocument();
+    expect(screen.getByText('Gärtank Garage')).toBeInTheDocument();
+    expect(screen.queryByText('FERM-1FF77E')).not.toBeInTheDocument();
     expect(screen.queryByText(deviceUid)).not.toBeInTheDocument();
     expect(screen.getByText('● Online')).toBeInTheDocument();
     expect(screen.getByText(/Zugeordnet seit:/)).toBeInTheDocument();
-    const edit = screen.getByRole('button', {name: 'Sensor umbenennen'});
-    expect(edit).toHaveAttribute('title', 'Sensor umbenennen');
+    const edit = screen.getByRole('button', {name: 'Sensor-Alias bearbeiten'});
+    expect(edit).toHaveAttribute('title', 'Sensor-Alias bearbeiten');
 
     fireEvent.click(edit);
-    const input = screen.getByRole('textbox', {name: 'Sensorname'});
-    expect(input).toHaveValue('FERM-1FF77E');
+    const input = screen.getByRole('textbox', {name: 'Sensor-Alias'});
+    expect(input).toHaveValue('Gärtank Garage');
     expect(input).toHaveFocus();
     fireEvent.keyDown(input, {key: 'Escape'});
-    expect(screen.queryByRole('textbox', {name: 'Sensorname'})).not.toBeInTheDocument();
-    expect(renameDevice).not.toHaveBeenCalled();
+    expect(screen.queryByRole('textbox', {name: 'Sensor-Alias'})).not.toBeInTheDocument();
+    expect(updateDeviceDisplayName).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole('button', {name: 'Sensor umbenennen'}));
-    fireEvent.change(screen.getByRole('textbox', {name: 'Sensorname'}), {target: {value: '   '}});
-    fireEvent.keyDown(screen.getByRole('textbox', {name: 'Sensorname'}), {key: 'Enter'});
+    fireEvent.click(screen.getByRole('button', {name: 'Sensor-Alias bearbeiten'}));
+    fireEvent.change(screen.getByRole('textbox', {name: 'Sensor-Alias'}), {target: {value: '   '}});
+    fireEvent.keyDown(screen.getByRole('textbox', {name: 'Sensor-Alias'}), {key: 'Enter'});
     expect(screen.getByRole('alert')).toHaveTextContent('Bitte einen Sensornamen eingeben.');
-    expect(renameDevice).not.toHaveBeenCalled();
+    expect(updateDeviceDisplayName).not.toHaveBeenCalled();
 
-    fireEvent.change(screen.getByRole('textbox', {name: 'Sensorname'}), {target: {value: ' FERM-1FF77E '}});
-    fireEvent.click(screen.getByRole('button', {name: 'Sensorname bestätigen'}));
-    expect(renameDevice).not.toHaveBeenCalled();
-    expect(screen.queryByRole('textbox', {name: 'Sensorname'})).not.toBeInTheDocument();
+    fireEvent.change(screen.getByRole('textbox', {name: 'Sensor-Alias'}), {target: {value: ' Gärtank Garage '}});
+    fireEvent.click(screen.getByRole('button', {name: 'Sensor-Alias speichern'}));
+    expect(updateDeviceDisplayName).not.toHaveBeenCalled();
+    expect(screen.queryByRole('textbox', {name: 'Sensor-Alias'})).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', {name: 'Sensor umbenennen'}));
-    fireEvent.change(screen.getByRole('textbox', {name: 'Sensorname'}), {target: {value: ' Sensor Keller '}});
-    fireEvent.click(screen.getByRole('button', {name: 'Sensorname bestätigen'}));
-    expect(renameDevice).toHaveBeenCalledWith(deviceUid, 'Sensor Keller');
+    fireEvent.click(screen.getByRole('button', {name: 'Sensor-Alias bearbeiten'}));
+    fireEvent.change(screen.getByRole('textbox', {name: 'Sensor-Alias'}), {target: {value: ' Sensor Keller '}});
+    fireEvent.click(screen.getByRole('button', {name: 'Sensor-Alias speichern'}));
+    expect(updateDeviceDisplayName).toHaveBeenCalledWith(deviceUid, 'brew-1', 'Sensor Keller');
+    fireEvent.click(screen.getByRole('button', {name: 'Technischen Namen verwenden'}));
+    expect(updateDeviceDisplayName).toHaveBeenLastCalledWith(deviceUid, 'brew-1', null);
+  });
+
+  it('prefills the technical name when no alias exists and keeps editing open on save errors', () => {
+    const details: any = {measurements: [], actions: [], sensorMeasurements: [], devices: [{deviceUid: 'mine', deviceName: 'FERM-01', displayName: null, activeAssignment: {beerId: 'brew-1'}}]};
+    const {rerender} = render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" />);
+    fireEvent.click(screen.getByRole('button', {name: 'Sensor-Alias bearbeiten'}));
+    expect(screen.getByRole('textbox', {name: 'Sensor-Alias'})).toHaveValue('FERM-01');
+    rerender(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" deviceDisplayNameErrors={{mine: 'Sensor-Alias konnte nicht gespeichert werden.'}} />);
+    expect(screen.getByRole('textbox', {name: 'Sensor-Alias'})).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('Sensor-Alias konnte nicht gespeichert werden.');
   });
 
   it.each([eBrewState.MATURATION, eBrewState.FINISHED])('does not offer new assignments in %s', state => {

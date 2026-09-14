@@ -86,7 +86,8 @@ export interface FermentationDeviceAssignment {
 /** Device shape used by the UI after mapping the BeerDataStore response. */
 export interface FermentationDevice {
   deviceUid: string;
-  deviceName: string;
+  deviceName?: string;
+  displayName?: string | null;
   status?: 'ONLINE' | 'OFFLINE' | string;
   lastSeenAt?: string | null;
   activeAssignment?: FermentationDeviceAssignment | null;
@@ -97,6 +98,7 @@ export interface FermentationDeviceDTO {
   deviceUid: string;
   deviceName?: string;
   name?: string;
+  displayName?: string | null;
   status?: 'ONLINE' | 'OFFLINE' | string;
   lastSeenAt?: string | null;
   assignment?: FermentationDeviceAssignment | null;
@@ -104,7 +106,8 @@ export interface FermentationDeviceDTO {
 
 export const mapFermentationDevice = (dto: FermentationDeviceDTO): FermentationDevice => ({
   deviceUid: dto.deviceUid,
-  deviceName: dto.deviceName || dto.name || dto.deviceUid,
+  deviceName: dto.deviceName ?? dto.name,
+  displayName: dto.displayName,
   status: dto.status,
   lastSeenAt: dto.lastSeenAt,
   activeAssignment: dto.assignment,

@@ -2,12 +2,12 @@ import {of} from 'rxjs';
 import {toArray} from 'rxjs/operators';
 import {FermentationActions, FermentationActionTypes} from '../actions/fermentation.actions';
 import {FermentationRepository} from '../repositorys/FermentationRepository';
-import {assignDeviceEpic, bubbleActivityBounds, completeFermentationActionEpic, createMeasurementEpic, gatewayMessageAction, loadBubbleActivityEpic, refreshFermentationAfterGatewayDataEpic, refreshFermentationAfterGatewayStatusEpic, skipFermentationActionEpic, unassignDeviceEpic} from './fermentationEpics';
+import {assignDeviceEpic, bubbleActivityBounds, completeFermentationActionEpic, createMeasurementEpic, gatewayMessageAction, loadBubbleActivityEpic, refreshFermentationAfterGatewayDataEpic, refreshFermentationAfterGatewayStatusEpic, skipFermentationActionEpic, unassignDeviceEpic, updateDeviceDisplayNameEpic} from './fermentationEpics';
 import {BeerActions} from '../actions/actions';
 import {beerDataReducer, initialBeerState} from '../reducers/beerReducer';
 
 jest.mock('../repositorys/FermentationRepository', () => ({FermentationRepository: {
-  createMeasurement: jest.fn(), completeAction: jest.fn(), skipAction: jest.fn(), assignDevice: jest.fn(), unassignDevice: jest.fn(), getBubbleActivity: jest.fn(),
+  createMeasurement: jest.fn(), completeAction: jest.fn(), skipAction: jest.fn(), assignDevice: jest.fn(), unassignDevice: jest.fn(), updateDeviceDisplayName: jest.fn(), getBubbleActivity: jest.fn(),
 }}));
 const repository = FermentationRepository as jest.Mocked<typeof FermentationRepository>;
 
@@ -86,6 +86,23 @@ it('unassigns through the repository and reloads canonical backend state', done 
   unassignDeviceEpic(of(FermentationActions.unassignDevice('sensor', 'brew-a'))).pipe(toArray()).subscribe((actions: any[]) => {
     expect(repository.unassignDevice).toHaveBeenCalledWith('sensor');
     expect(actions.map(action => action.type)).toEqual([FermentationActionTypes.UNASSIGN_DEVICE_SUCCESS, FermentationActionTypes.LOAD]);
+    done();
+  });
+});
+
+it('updates the display name and reloads the canonical beer aggregate', done => {
+  repository.updateDeviceDisplayName.mockResolvedValue({deviceUid: 'sensor', deviceName: 'FERM-1', displayName: 'Garage'});
+  updateDeviceDisplayNameEpic(of(FermentationActions.updateDeviceDisplayName('sensor', 'brew-a', 'Garage'))).pipe(toArray()).subscribe((actions: any[]) => {
+    expect(repository.updateDeviceDisplayName).toHaveBeenCalledWith('sensor', 'Garage');
+    expect(actions).toEqual([FermentationActions.updateDeviceDisplayNameSuccess('sensor', 'brew-a'), FermentationActions.load('brew-a')]);
+    done();
+  });
+});
+
+it('reports a friendly display-name failure without reloading', done => {
+  repository.updateDeviceDisplayName.mockRejectedValueOnce(new Error('HTTP 500'));
+  updateDeviceDisplayNameEpic(of(FermentationActions.updateDeviceDisplayName('sensor', 'brew-a', null))).pipe(toArray()).subscribe((actions: any[]) => {
+    expect(actions).toEqual([FermentationActions.updateDeviceDisplayNameFailure('sensor', 'brew-a', 'Sensor-Alias konnte nicht gespeichert werden.')]);
     done();
   });
 });

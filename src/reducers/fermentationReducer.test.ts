@@ -2,6 +2,14 @@ import {FermentationActions} from '../actions/fermentation.actions';
 import {fermentationReducer, initialFermentationState} from './fermentationReducer';
 
 describe('fermentationReducer', () => {
+  it('tracks display-name saving and errors per device without changing canonical details', () => {
+    const requesting = fermentationReducer(initialFermentationState, FermentationActions.updateDeviceDisplayName('sensor-a', 'brew', 'Garage'));
+    expect(requesting.updatingDeviceDisplayNameIds).toEqual(['sensor-a']);
+    const failed = fermentationReducer(requesting, FermentationActions.updateDeviceDisplayNameFailure('sensor-a', 'brew', 'Sensor-Alias konnte nicht gespeichert werden.'));
+    expect(failed.updatingDeviceDisplayNameIds).toEqual([]);
+    expect(failed.deviceDisplayNameErrors['sensor-a']).toBe('Sensor-Alias konnte nicht gespeichert werden.');
+    expect(failed.byBrewId).toEqual({});
+  });
   it('replaces a gateway snapshot and updates exactly one sensor status', () => {
     const first = {deviceUid: 'one', deviceName: 'FERM-1', status: 'UNASSIGNED' as const, updatedAt: '2026-09-11T07:23:11Z'};
     const second = {deviceUid: 'two', deviceName: 'FERM-2', status: 'REGISTERED' as const, updatedAt: '2026-09-11T07:23:11Z'};
