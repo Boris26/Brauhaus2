@@ -1,0 +1,128 @@
+.fermentation-measurements-page {
+  --fermentation-temperature-chart-height: 200px;
+  --fermentation-activity-chart-height: 200px;
+}
+
+.fermentation-chart-card {
+  overflow: hidden;
+}
+
+.fermentation-history-chart,
+.fermentation-bubble-chart {
+  contain: layout size;
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  margin-top: var(--spacing-xs);
+}
+
+.fermentation-history-chart {
+  height: var(--fermentation-temperature-chart-height, 200px);
+  min-height: var(--fermentation-temperature-chart-height, 200px);
+  max-height: var(--fermentation-temperature-chart-height, 200px);
+}
+
+.fermentation-bubble-chart {
+  height: var(--fermentation-activity-chart-height, 200px);
+  min-height: var(--fermentation-activity-chart-height, 200px);
+  max-height: var(--fermentation-activity-chart-height, 200px);
+}
+
+.fermentation-chart-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+.fermentation-chart-content {
+  position: relative;
+}
+
+.fermentation-chart-loading {
+  position: absolute;
+  top: .25rem;
+  right: .5rem;
+  z-index: 2;
+  padding: .15rem .4rem;
+  border-radius: var(--border-radius-small);
+  color: var(--color-text-secondary);
+  background: var(--color-panel-bg);
+  font-size: .72rem;
+}
+
+.fermentation-chart-content.has-chart > .fermentation-error {
+  position: absolute;
+  right: .5rem;
+  bottom: .25rem;
+  z-index: 2;
+  max-width: calc(100% - 1rem);
+  margin: 0;
+  padding: .15rem .4rem;
+  border-radius: var(--border-radius-small);
+  background: var(--color-panel-bg);
+  font-size: .72rem;
+}
+
+.fermentation-measurements-page .fermentation-chart-card {
+  padding-block: var(--spacing-sm);
+}
+
+.fermentation-measurements-page .fermentation-range-selector {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: .2rem;
+}
+
+.fermentation-measurements-page .fermentation-range-selector button {
+  min-width: 2.15rem;
+  height: 1.55rem;
+  padding: 0 .42rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-small);
+  color: var(--color-text-secondary);
+  background: var(--color-panel-contrast);
+  box-shadow: none;
+  font-size: .7rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.fermentation-measurements-page .fermentation-range-selector button:hover:not(:disabled) {
+  color: var(--color-text);
+  border-color: var(--color-text-secondary);
+  background: var(--color-panel-bg);
+}
+
+.fermentation-measurements-page .fermentation-range-selector button.is-selected {
+  color: var(--color-button-text);
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+}
+
+.fermentation-measurements-page .fermentation-range-selector button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.fermentation-temperature-range-selector {
+  justify-content: flex-end;
+  min-height: 1.55rem;
+  margin: .05rem 0 .15rem;
+}
+
+.fermentation-measurements-page .fermentation-chart-heading {
+  min-height: 1.55rem;
+  gap: .4rem;
+  margin-bottom: .15rem;
+}
+
+@media (max-width: 520px) {
+  .fermentation-measurements-page .fermentation-range-selector {
+    flex-wrap: wrap;
+  }
+}
