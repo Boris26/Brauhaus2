@@ -69,12 +69,11 @@
 .fermentation-chart-card { overflow: hidden; }
 .fermentation-last-measurement > div { display: flex; flex-wrap: wrap; gap: var(--spacing-sm) var(--spacing-lg); margin-top: var(--spacing-sm); }
 .fermentation-last-measurement time { color: var(--color-text-secondary); }
-.fermentation-raw-history summary { cursor: pointer; font-weight: 700; }
 .fermentation-plan { display: grid; gap: var(--spacing-md); }
 .fermentation-plan > h4 { text-transform: uppercase; letter-spacing: .08em; }
 .fermentation-plan-group h5 { margin: 0 0 var(--spacing-xs); color: var(--color-primary); font-size: 1rem; }
 .fermentation-action-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--spacing-sm); margin: 0; padding: 0; list-style: none; }
-.fermentation-action-list > li { display: grid; align-content: start; gap: var(--spacing-sm); min-width: 0; padding: var(--spacing-md); border-left: 3px solid var(--color-primary); border-radius: var(--border-radius-medium); background: var(--color-panel-contrast); }
+.fermentation-action-list > li { display: grid; align-content: start; gap: var(--spacing-sm); min-width: 0; padding: var(--spacing-md); border-left: 3px solid var(--color-border); border-radius: var(--border-radius-medium); background: var(--color-panel-contrast); }
 .fermentation-action-heading { display: grid; gap: var(--spacing-xs); overflow-wrap: anywhere; }
 .fermentation-action-heading strong { font-size: 1.1rem; }
 .fermentation-action-heading span { color: var(--color-text-secondary); }
@@ -86,9 +85,10 @@
 .fermentation-measurements-page { gap: var(--spacing-sm); }
 .fermentation-measurements-page .fermentation-chart-card { padding-block: var(--spacing-sm); }
 .fermentation-measurements-page .fermentation-section-title { margin-bottom: var(--spacing-xs) !important; }
-.fermentation-measurements-lower-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem); gap: var(--spacing-md); min-width: 0; }
+.fermentation-measurements-lower-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem); gap: var(--spacing-md); min-width: 0; align-items: stretch; }
 .fermentation-measurements-main { display: grid; gap: var(--spacing-sm); min-width: 0; }
-.fermentation-measurements-sidebar { min-width: 0; align-self: start; }
+.fermentation-measurements-sidebar { min-width: 0; align-self: stretch; display: grid; }
+.fermentation-measurements-sidebar .fermentation-sensor-card { height: 100%; box-sizing: border-box; align-content: start; }
 .fermentation-measurements-sidebar .fermentation-assigned-device { align-items: flex-start; }
 .fermentation-measurements-sidebar .fermentation-assignment-controls select { min-width: 0; width: 100%; }
 .fermentation-measurements-page .fermentation-last-measurement { padding-block: var(--spacing-sm); }
@@ -110,7 +110,7 @@
 .fermentation-action-status { display: inline-block; padding: .15rem .45rem; border-radius: var(--border-radius-small); font-weight: 700; }
 .fermentation-action-status.is-due { color: var(--color-warning); background: var(--color-warning-subtle); }
 .fermentation-action-status.is-completed { color: var(--color-success); background: var(--color-success-subtle); }
-.fermentation-action-status.is-planned { color: var(--color-info); background: var(--color-surface-soft); }
+.fermentation-action-status.is-planned { color: var(--color-text-secondary); background: transparent; }
 
 /* Compact measurement-page action tiles: preserve the existing semantic markup while
    using the available desktop width more efficiently. */
@@ -198,51 +198,62 @@
   line-height: 1.15;
   white-space: nowrap;
 }
+.fermentation-measurements-page .fermentation-action-status.is-planned {
+  padding: 0;
+  color: var(--color-text-secondary);
+  background: transparent;
+  font-weight: 500;
+}
 .fermentation-measurements-page .fermentation-action-buttons {
   grid-column: 2;
   grid-row: 1 / span 2;
   align-self: center;
   display: flex;
   flex-wrap: nowrap;
-  gap: .25rem;
+  gap: .3rem;
   margin: 0;
 }
 .fermentation-measurements-page .fermentation-action-buttons button {
   position: relative;
-  display: inline-grid;
-  place-items: center;
-  width: 2.1rem;
-  height: 2.1rem;
-  min-width: 2.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  min-width: 1.9rem;
   padding: 0;
-  font-size: 0;
   line-height: 1;
-  border: 1px solid transparent;
-  border-radius: var(--border-radius-small);
-}
-.fermentation-measurements-page .fermentation-action-buttons button::before {
-  content: '⏭';
-  font-size: 1rem;
-  line-height: 1;
-}
-.fermentation-measurements-page .fermentation-action-buttons:has(button + button) button:first-child::before {
-  content: '✓';
-  font-size: 1.15rem;
-}
-.fermentation-measurements-page .fermentation-action-buttons button:last-child {
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
   color: var(--color-text-secondary);
-  background: var(--color-panel-bg);
-  border-color: var(--color-border);
+  background: transparent;
 }
-.fermentation-measurements-page .fermentation-action-buttons:has(button + button) button:first-child {
+.fermentation-measurements-page .fermentation-action-buttons button svg {
+  font-size: 1.05rem;
+}
+.fermentation-measurements-page .fermentation-action-buttons button.is-complete {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.fermentation-measurements-page .fermentation-action-buttons button.is-complete:hover:not(:disabled) {
   color: var(--color-button-text);
   background: var(--color-primary);
-  border-color: transparent;
 }
-.fermentation-measurements-page .fermentation-action-buttons button:only-child {
-  color: var(--color-text-secondary);
+.fermentation-measurements-page .fermentation-action-buttons button.is-skip:hover:not(:disabled) {
+  color: var(--color-text);
+  border-color: var(--color-text-secondary);
   background: var(--color-panel-bg);
-  border-color: var(--color-border);
+}
+.fermentation-action-button-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 @media (max-width: 900px) {
   .fermentation-measurements-page .fermentation-action-list {
