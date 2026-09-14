@@ -94,6 +94,7 @@ export const updateDeviceDisplayNameEpic = (action$: any) => action$.pipe(
 export const gatewayMessageAction = (message: FermentationGatewayMessage) => {
   if (message.type === 'FERMENTATION_GATEWAY_SNAPSHOT') return FermentationActions.gatewaySnapshotReceived(message.sensors);
   if (message.type === 'FERMENTATION_SENSOR_STATUS_CHANGED') return FermentationActions.gatewaySensorStatusChanged(message.sensor);
+  if (message.type === 'FERMENTATION_SENSOR_RUNTIME_CHANGED') return FermentationActions.gatewaySensorRuntimeChanged(message.deviceUid, message.measurementState, message.updatedAt);
   return FermentationActions.gatewayDataChanged(message.beerId, message.change);
 };
 

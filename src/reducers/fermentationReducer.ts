@@ -49,6 +49,10 @@ export const fermentationReducer = (state = initialFermentationState, action: an
     case FermentationActionTypes.GATEWAY_CONNECTION_CHANGED: return {...state, gatewayConnected: p.connected};
     case FermentationActionTypes.GATEWAY_SNAPSHOT_RECEIVED: return {...state, sensorsByDeviceUid: Object.fromEntries((p.sensors || []).map((sensor: FermentationGatewaySensorStatus) => [sensor.deviceUid, sensor]))};
     case FermentationActionTypes.GATEWAY_SENSOR_STATUS_CHANGED: return p.sensor?.deviceUid ? {...state, sensorsByDeviceUid: {...state.sensorsByDeviceUid, [p.sensor.deviceUid]: p.sensor}} : state;
+    case FermentationActionTypes.GATEWAY_SENSOR_RUNTIME_CHANGED: {
+      const sensor = state.sensorsByDeviceUid[p.deviceUid];
+      return sensor ? {...state, sensorsByDeviceUid: {...state.sensorsByDeviceUid, [p.deviceUid]: {...sensor, measurementState: p.measurementState, updatedAt: p.updatedAt}}} : state;
+    }
     case FermentationActionTypes.LOAD_BUBBLE_ACTIVITY: return {...state, bubbleActivityByBrewId: {...state.bubbleActivityByBrewId, [p.brewId]: {activity: state.bubbleActivityByBrewId[p.brewId]?.activity ?? [], loading: true, selectedRange: p.range}}};
     case FermentationActionTypes.LOAD_BUBBLE_ACTIVITY_SUCCESS:
       if (state.bubbleActivityByBrewId[p.brewId]?.selectedRange !== p.range) return state;

@@ -55,6 +55,11 @@
 .fermentation-current-grid > div:last-child { border-right: 0; }
 .fermentation-current-grid span, .fermentation-current-grid small { color: var(--color-text-secondary); font-size: var(--font-size-small); }
 .fermentation-current-grid strong { font-size: 1.25rem; overflow-wrap: anywhere; }
+.fermentation-runtime-status { color: var(--color-text-secondary); }
+.fermentation-runtime-status.is-running { color: var(--color-info); }
+.fermentation-runtime-status.is-running .status-dot { display: inline-block; animation: fermentation-runtime-pulse 1.2s ease-in-out infinite; }
+@keyframes fermentation-runtime-pulse { 0%, 100% { opacity: .45; transform: scale(.9); } 50% { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .fermentation-runtime-status.is-running .status-dot { animation: none; } }
 .fermentation-devices-compact { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); margin-top: var(--spacing-sm); }
 .fermentation-devices-compact .fermentation-device { flex: 1 1 15rem; max-width: 24rem; }
 .fermentation-devices-compact small { flex-basis: 100%; color: var(--color-text-secondary); }
