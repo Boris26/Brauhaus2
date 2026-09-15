@@ -1,5 +1,6 @@
 import {fireEvent, render, screen} from '@testing-library/react';
 import {Beer} from '../../../model/Beer';
+import {HopUsage} from '../../../enums/eHopUsage';
 import {Details} from './Details';
 
 const beer = {
@@ -60,4 +61,101 @@ it('keeps the 10 l / 52 % defaults for a legacy recipe without references', () =
     expect(screen.getByRole('combobox')).toHaveValue('10');
     expect(screen.getByRole('spinbutton')).toHaveValue(52);
     expect(updateRecipeScaling).toHaveBeenCalledWith({beer: legacyBeer, volume: 10, brewhouseEfficiency: 52});
+});
+
+it('displays the recipe malt name when no ingredient master data is loaded', () => {
+    const beerWithNamedMalt = {
+        ...beer,
+        malts: [{id: 'malt-1', name: 'Pilsner Malz', quantity: 4500}],
+    };
+
+    render(<Details selectedBeer={beerWithNamedMalt} updateRecipeScaling={jest.fn()} malts={[]} />);
+
+    expect(screen.getByText('Pilsner Malz')).toBeInTheDocument();
+    expect(screen.queryByText('Unbekannte Zutat (ID malt-1)')).not.toBeInTheDocument();
+});
+
+it('loads the malt master data and resolves a recipe malt by its id', () => {
+    const getMalt = jest.fn();
+    const beerWithMaltId = {
+        ...beer,
+        malts: [{id: 26, quantity: 4500}],
+    };
+
+    render(
+        <Details
+            selectedBeer={beerWithMaltId}
+            updateRecipeScaling={jest.fn()}
+            getMalt={getMalt}
+            malts={[{id: '26', name: 'Wiener Malz'}]}
+        />
+    );
+
+    expect(getMalt).toHaveBeenCalledWith(true);
+    expect(screen.getByText('Wiener Malz')).toBeInTheDocument();
+    expect(screen.queryByText('Unbekannte Zutat (ID 26)')).not.toBeInTheDocument();
+});
+
+it('displays the unknown ingredient fallback when neither recipe nor master data has a name', () => {
+    const beerWithUnknownMalt = {
+        ...beer,
+        malts: [{id: 44, quantity: 1000}],
+    };
+
+    render(<Details selectedBeer={beerWithUnknownMalt} updateRecipeScaling={jest.fn()} malts={[]} />);
+
+    expect(screen.getByText('Unbekannte Zutat (ID 44)')).toBeInTheDocument();
+});
+
+it('displays the recipe hop name when no ingredient master data is loaded', () => {
+    const beerWithNamedHop = {
+        ...beer,
+        wortBoiling: {
+            ...beer.wortBoiling,
+            hops: [{id: 'hop-1', name: 'Citra', quantity: 20, additionTime: 10, usage: HopUsage.BOIL}],
+        },
+    };
+
+    render(<Details selectedBeer={beerWithNamedHop} updateRecipeScaling={jest.fn()} hops={[]} />);
+
+    expect(screen.getByText('Citra')).toBeInTheDocument();
+    expect(screen.queryByText('Unbekannte Zutat (ID hop-1)')).not.toBeInTheDocument();
+});
+
+it('loads the hop master data and resolves a recipe hop by its id', () => {
+    const getHop = jest.fn();
+    const beerWithHopId = {
+        ...beer,
+        wortBoiling: {
+            ...beer.wortBoiling,
+            hops: [{id: 11, quantity: 20, additionTime: 10, usage: HopUsage.BOIL}],
+        },
+    };
+
+    render(
+        <Details
+            selectedBeer={beerWithHopId}
+            updateRecipeScaling={jest.fn()}
+            getHop={getHop}
+            hops={[{id: '11', name: 'Hallertauer Mittelfrüh'}]}
+        />
+    );
+
+    expect(getHop).toHaveBeenCalledWith(true);
+    expect(screen.getByText('Hallertauer Mittelfrüh')).toBeInTheDocument();
+    expect(screen.queryByText('Unbekannte Zutat (ID 11)')).not.toBeInTheDocument();
+});
+
+it('displays the unknown ingredient fallback for an unresolved recipe hop', () => {
+    const beerWithUnknownHop = {
+        ...beer,
+        wortBoiling: {
+            ...beer.wortBoiling,
+            hops: [{id: 12, quantity: 20, additionTime: 10, usage: HopUsage.BOIL}],
+        },
+    };
+
+    render(<Details selectedBeer={beerWithUnknownHop} updateRecipeScaling={jest.fn()} hops={[]} />);
+
+    expect(screen.getByText('Unbekannte Zutat (ID 12)')).toBeInTheDocument();
 });

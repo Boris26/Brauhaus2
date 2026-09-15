@@ -15,12 +15,14 @@ export interface FermentationSteps {
 
 export interface Malt {
     id: string | number;
+    name?: string;
     quantity: number;
 }
 
 export interface Hop extends Partial<RecipeActionFields> {
     recipeRelationId?: string | number;
     id: string | number;
+    name?: string;
     quantity: number;
     additionTime?: number;
     usage: HopUsage;
