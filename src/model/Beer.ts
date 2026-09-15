@@ -15,6 +15,7 @@ export interface FermentationSteps {
 
 export interface Malt {
     id: string | number;
+    name?: string;
     quantity: number;
 }
 

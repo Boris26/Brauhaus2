@@ -61,3 +61,15 @@ it('keeps the 10 l / 52 % defaults for a legacy recipe without references', () =
     expect(screen.getByRole('spinbutton')).toHaveValue(52);
     expect(updateRecipeScaling).toHaveBeenCalledWith({beer: legacyBeer, volume: 10, brewhouseEfficiency: 52});
 });
+
+it('displays the recipe malt name when no ingredient master data is loaded', () => {
+    const beerWithNamedMalt = {
+        ...beer,
+        malts: [{id: 'malt-1', name: 'Pilsner Malz', quantity: 4500}],
+    };
+
+    render(<Details selectedBeer={beerWithNamedMalt} updateRecipeScaling={jest.fn()} malts={[]} />);
+
+    expect(screen.getByText('Pilsner Malz')).toBeInTheDocument();
+    expect(screen.queryByText('Unbekannte Zutat (ID malt-1)')).not.toBeInTheDocument();
+});

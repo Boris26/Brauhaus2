@@ -47,6 +47,7 @@ Before changing any database/backend field or endpoint, check whether the UI use
 - `Beer.referenceBrewhouseEfficiency` / `BeerDTO.referenceBrewhouseEfficiency` (recipe-basis percent; UI create default `52`)
 - `Beer.id`
 - `Beer.name`
+- `Beer.malts[].name`
 - `Beer.type`
 - `Beer.color`
 - `Beer.alcohol`
