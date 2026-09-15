@@ -22,6 +22,7 @@ export interface Malt {
 export interface Hop extends Partial<RecipeActionFields> {
     recipeRelationId?: string | number;
     id: string | number;
+    name?: string;
     quantity: number;
     additionTime?: number;
     usage: HopUsage;
