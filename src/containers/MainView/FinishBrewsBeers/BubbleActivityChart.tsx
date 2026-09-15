@@ -75,7 +75,7 @@ export class BubbleActivityChart extends React.PureComponent<{activity: BubbleAc
         <CartesianGrid strokeDasharray="3 3" opacity={0.25} />
         <XAxis dataKey="timestamp" type="number" scale="time" domain={['dataMin', 'dataMax']} minTickGap={30} tickFormatter={localDateTime} />
         <YAxis yAxisId="bubbles" width={72} label={{value: 'Blubbs/min', angle: -90, position: 'insideLeft'}} allowDecimals />
-        <YAxis yAxisId="pressure" orientation="right" width={72} label={{value: 'Differenzdruck (Pa)', angle: 90, position: 'insideRight'}} allowDecimals />
+        <YAxis yAxisId="pressure" orientation="right" width={72} label={{value: 'Δp (Pa)', angle: 90, position: 'insideRight'}} allowDecimals />
         <Tooltip
           labelFormatter={value => localDateTime(Number(value))}
           formatter={formatBubbleActivityTooltip}
