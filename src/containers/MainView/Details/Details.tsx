@@ -19,6 +19,7 @@ import {AppAccordion, AppAccordionHeader} from "../../../components/AppAccordion
 interface DetailsProps {
     selectedBeer?: Beer;
     updateRecipeScaling: (aScalingValues: scalingValues) => void;
+    getMalt?: (isFetching: boolean) => void;
     malts?: Array<{id: string | number; name: string}>;
     hops?: Array<{id: string | number; name: string}>;
     yeasts?: Array<{id: string | number; name: string}>;
@@ -45,6 +46,7 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
     }
 
     componentDidMount() {
+        this.props.getMalt?.(true);
         this.updateRecipe();
     }
 

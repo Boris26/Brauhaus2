@@ -73,3 +73,35 @@ it('displays the recipe malt name when no ingredient master data is loaded', () 
     expect(screen.getByText('Pilsner Malz')).toBeInTheDocument();
     expect(screen.queryByText('Unbekannte Zutat (ID malt-1)')).not.toBeInTheDocument();
 });
+
+it('loads the malt master data and resolves a recipe malt by its id', () => {
+    const getMalt = jest.fn();
+    const beerWithMaltId = {
+        ...beer,
+        malts: [{id: 26, quantity: 4500}],
+    };
+
+    render(
+        <Details
+            selectedBeer={beerWithMaltId}
+            updateRecipeScaling={jest.fn()}
+            getMalt={getMalt}
+            malts={[{id: '26', name: 'Wiener Malz'}]}
+        />
+    );
+
+    expect(getMalt).toHaveBeenCalledWith(true);
+    expect(screen.getByText('Wiener Malz')).toBeInTheDocument();
+    expect(screen.queryByText('Unbekannte Zutat (ID 26)')).not.toBeInTheDocument();
+});
+
+it('displays the unknown ingredient fallback when neither recipe nor master data has a name', () => {
+    const beerWithUnknownMalt = {
+        ...beer,
+        malts: [{id: 44, quantity: 1000}],
+    };
+
+    render(<Details selectedBeer={beerWithUnknownMalt} updateRecipeScaling={jest.fn()} malts={[]} />);
+
+    expect(screen.getByText('Unbekannte Zutat (ID 44)')).toBeInTheDocument();
+});
