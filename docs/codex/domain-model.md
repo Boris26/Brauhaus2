@@ -65,7 +65,7 @@ Fields: `id`, `name`, `startDate`, nullable timezone-bearing `fermentationStarte
 
 - `Hops`: `id`, `name`, `type`, `alpha`, `description`.
 - Recipe hop entries keep brew-day `additionTime`/`timeUnit` separate from optional `DRY_HOP` action fields. Action fields are `actionId`, `triggerType`, `triggerValue`, `triggerUnit`, `contactTime`, and `contactTimeUnit`; non-dry-hop usages contain none of them. BRAUHAUS v2 imports are interpreted by BeerDataStore and returned to this UI in the canonical model. Brauhaus2 has no BRAUHAUS recipe exporter; its PDF exports are presentation documents only.
-- `Malts`: `id`, `name`, `description`, `ebc`; recipe malt uses uppercase `EBC` and `quantity`.
+- `Malts`: `id`, `name`, `description`, `ebc`; recipe malt references master data by `id`, may contain an optional `name`, uses uppercase `EBC`, and has `quantity`.
 - `Yeasts`: `id`, `name`, `description`, `temperature`, `type`, `evg`; recipe yeast uses `EVG`, `temperature`, `type`, and `quantity`.
 - `AdditionalIngredient`: `id`, `name`, optional `description`; recipe additional ingredient has `quantity`, `unit`, `phase`, optional `time`, `timeUnit`, `description`.
 

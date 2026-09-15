@@ -19,6 +19,7 @@ import {AppAccordion, AppAccordionHeader} from "../../../components/AppAccordion
 interface DetailsProps {
     selectedBeer?: Beer;
     updateRecipeScaling: (aScalingValues: scalingValues) => void;
+    getMalt?: (isFetching: boolean) => void;
     malts?: Array<{id: string | number; name: string}>;
     hops?: Array<{id: string | number; name: string}>;
     yeasts?: Array<{id: string | number; name: string}>;
@@ -32,8 +33,8 @@ interface DetailsState {
 
 export class Details extends React.Component<DetailsProps, DetailsState> {
 
-    ingredientName = (items: Array<{id: string | number; name: string}> | undefined, id: string | number, kind: string) =>
-        items?.find(item => String(item.id) === String(id))?.name ?? `Unbekannte ${kind} (ID ${id})`;
+    ingredientName = (items: Array<{id: string | number; name: string}> | undefined, id: string | number, kind: string, recipeName?: string) =>
+        recipeName?.trim() || items?.find(item => String(item.id) === String(id))?.name?.trim() || `Unbekannte ${kind} (ID ${id})`;
 
     constructor(props: DetailsProps) {
         super(props);
@@ -45,6 +46,7 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
     }
 
     componentDidMount() {
+        this.props.getMalt?.(true);
         this.updateRecipe();
     }
 
@@ -241,7 +243,7 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
                     <TableBody>
                         {selectedBeer.malts.map((item, index) => (
                             <TableRow key={index}>
-                                <TableCell>{this.ingredientName(this.props.malts, item.id, 'Zutat')}</TableCell>
+                                <TableCell>{this.ingredientName(this.props.malts, item.id, 'Zutat', item.name)}</TableCell>
                                 <TableCell>{item.quantity}</TableCell>
                             </TableRow>
                         ))}
