@@ -1,6 +1,6 @@
 .fermentation-measurements-page {
-  --fermentation-temperature-chart-height: 200px;
-  --fermentation-activity-chart-height: 200px;
+  --fermentation-temperature-chart-height: 230px;
+  --fermentation-activity-chart-height: 230px;
 }
 
 .fermentation-chart-card {
