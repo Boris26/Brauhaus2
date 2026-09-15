@@ -36,6 +36,7 @@ export interface WortBoiling {
 
 export interface Yeast {
     id: string | number;
+    name?: string;
     quantity: number;
 }
 

@@ -159,3 +159,56 @@ it('displays the unknown ingredient fallback for an unresolved recipe hop', () =
 
     expect(screen.getByText('Unbekannte Zutat (ID 12)')).toBeInTheDocument();
 });
+
+it('displays the recipe yeast name when no ingredient master data is loaded', () => {
+    const beerWithNamedYeast = {
+        ...beer,
+        fermentationMaturation: {
+            ...beer.fermentationMaturation,
+            yeast: [{id: 'yeast-1', name: 'US-05', quantity: 1}],
+        },
+    };
+
+    render(<Details selectedBeer={beerWithNamedYeast} updateRecipeScaling={jest.fn()} yeasts={[]} />);
+
+    expect(screen.getByText('US-05')).toBeInTheDocument();
+    expect(screen.queryByText('Unbekannte Hefe (ID yeast-1)')).not.toBeInTheDocument();
+});
+
+it('loads the yeast master data and resolves a recipe yeast by its id', () => {
+    const getYeast = jest.fn();
+    const beerWithYeastId = {
+        ...beer,
+        fermentationMaturation: {
+            ...beer.fermentationMaturation,
+            yeast: [{id: 7, quantity: 1}],
+        },
+    };
+
+    render(
+        <Details
+            selectedBeer={beerWithYeastId}
+            updateRecipeScaling={jest.fn()}
+            getYeast={getYeast}
+            yeasts={[{id: '7', name: 'SafAle S-04'}]}
+        />
+    );
+
+    expect(getYeast).toHaveBeenCalledWith(true);
+    expect(screen.getByText('SafAle S-04')).toBeInTheDocument();
+    expect(screen.queryByText('Unbekannte Hefe (ID 7)')).not.toBeInTheDocument();
+});
+
+it('displays the unknown yeast fallback when neither recipe nor master data has a name', () => {
+    const beerWithUnknownYeast = {
+        ...beer,
+        fermentationMaturation: {
+            ...beer.fermentationMaturation,
+            yeast: [{id: 8, quantity: 1}],
+        },
+    };
+
+    render(<Details selectedBeer={beerWithUnknownYeast} updateRecipeScaling={jest.fn()} yeasts={[]} />);
+
+    expect(screen.getByText('Unbekannte Hefe (ID 8)')).toBeInTheDocument();
+});
