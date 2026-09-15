@@ -272,11 +272,6 @@
   gap: var(--spacing-md);
 }
 
-.fermentation-plan > h4 {
-  text-transform: uppercase;
-  letter-spacing: .08em;
-}
-
 .fermentation-plan-group h5 {
   margin: 0 0 var(--spacing-xs);
   color: var(--color-primary);
