@@ -47,6 +47,7 @@ Before changing any database/backend field or endpoint, check whether the UI use
 - `Beer.referenceBrewhouseEfficiency` / `BeerDTO.referenceBrewhouseEfficiency` (recipe-basis percent; UI create default `52`)
 - `Beer.id`
 - `Beer.name`
+- `Beer.malts[].name`
 - `Beer.type`
 - `Beer.color`
 - `Beer.alcohol`
@@ -61,6 +62,7 @@ Before changing any database/backend field or endpoint, check whether the UI use
 - `Beer.fermentation[].stepId` (stable UI-generated UUID for configurable mash steps)
 - `Beer.fermentation[].relatedRastId` (DECOCTION reference to a RAST `stepId`)
 - `Beer.wortBoiling.hops[].name`
+- `Beer.fermentationMaturation.yeast[].name`
 - `Beer.wortBoiling.hops[].additionTime`
 - `Beer.wortBoiling.hops[].usage` (`FIRST_WORT`, `BOIL`, `WHIRLPOOL`, or `DRY_HOP`; missing legacy value defaults to `BOIL`)
 - `Beer.wortBoiling.hops[].timeUnit` (`MINUTES`, `HOURS`, or `DAYS` when optional `additionTime` is present)
