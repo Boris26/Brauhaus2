@@ -1,0 +1,131 @@
+/*
+ * Shared visual baseline for form inputs.
+ *
+ * Keep component CSS responsible for layout and dimensions. This file owns the
+ * interactive surface so native, Bootstrap and MUI controls look and behave
+ * consistently throughout the application.
+ */
+#root input:not([type='button']):not([type='checkbox']):not([type='color']):not([type='file']):not([type='hidden']):not([type='image']):not([type='radio']):not([type='range']):not([type='reset']):not([type='submit']):not(.MuiInputBase-input),
+#root select:not(.MuiSelect-nativeInput),
+#root textarea:not(.MuiInputBase-input),
+#root .form-control,
+#root .form-select,
+#root .brauhaus-form-control {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: .48rem .6rem;
+  color: var(--color-text);
+  background-color: var(--color-panel-contrast);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-small);
+  outline: none;
+  font: inherit;
+  line-height: var(--line-height-normal);
+  color-scheme: dark;
+  transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+}
+
+#root select:not(.MuiSelect-nativeInput),
+#root .form-select {
+  cursor: pointer;
+}
+
+#root textarea:not(.MuiInputBase-input) {
+  min-height: 4rem;
+  resize: vertical;
+}
+
+#root input:not([type='button']):not([type='checkbox']):not([type='color']):not([type='file']):not([type='hidden']):not([type='image']):not([type='radio']):not([type='range']):not([type='reset']):not([type='submit']):not(.MuiInputBase-input):hover:not(:disabled):not([readonly]),
+#root select:not(.MuiSelect-nativeInput):hover:not(:disabled),
+#root textarea:not(.MuiInputBase-input):hover:not(:disabled):not([readonly]),
+#root .form-control:hover:not(:disabled):not([readonly]),
+#root .form-select:hover:not(:disabled),
+#root .brauhaus-form-control:hover:not(:disabled):not([readonly]) {
+  border-color: var(--color-border-strong);
+}
+
+#root input:not([type='button']):not([type='checkbox']):not([type='color']):not([type='file']):not([type='hidden']):not([type='image']):not([type='radio']):not([type='range']):not([type='reset']):not([type='submit']):not(.MuiInputBase-input):focus,
+#root select:not(.MuiSelect-nativeInput):focus,
+#root textarea:not(.MuiInputBase-input):focus,
+#root .form-control:focus,
+#root .form-select:focus,
+#root .brauhaus-form-control:focus {
+  color: var(--color-text);
+  background-color: var(--color-panel-bg);
+  border-color: var(--color-primary);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--color-accent-subtle);
+}
+
+#root input:not([type='button']):not([type='checkbox']):not([type='color']):not([type='file']):not([type='hidden']):not([type='image']):not([type='radio']):not([type='range']):not([type='reset']):not([type='submit']):not(.MuiInputBase-input):disabled,
+#root select:not(.MuiSelect-nativeInput):disabled,
+#root textarea:not(.MuiInputBase-input):disabled,
+#root .form-control:disabled,
+#root .form-select:disabled,
+#root .brauhaus-form-control:disabled {
+  color: var(--color-disabled-text);
+  background-color: var(--color-disabled-bg);
+  border-color: var(--color-disabled-border);
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+#root input:not([type='button']):not([type='checkbox']):not([type='color']):not([type='file']):not([type='hidden']):not([type='image']):not([type='radio']):not([type='range']):not([type='reset']):not([type='submit']):not(.MuiInputBase-input)[readonly],
+#root textarea:not(.MuiInputBase-input)[readonly] {
+  color: var(--color-text-secondary);
+  background-color: var(--color-surface-muted);
+}
+
+#root select option {
+  color: var(--color-text);
+  background: var(--color-panel-contrast);
+}
+
+/* MUI renders the visible border and background on the input root. */
+#root .MuiInputBase-root {
+  color: var(--color-text);
+  background-color: var(--color-panel-contrast);
+  border-radius: var(--border-radius-small);
+  font: inherit;
+  color-scheme: dark;
+  transition: box-shadow .15s ease, background-color .15s ease;
+}
+
+#root .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
+  border-color: var(--color-border);
+  transition: border-color .15s ease;
+}
+
+#root .MuiOutlinedInput-root:hover:not(.Mui-disabled) .MuiOutlinedInput-notchedOutline {
+  border-color: var(--color-border-strong);
+}
+
+#root .MuiOutlinedInput-root.Mui-focused {
+  background-color: var(--color-panel-bg);
+  box-shadow: 0 0 0 2px var(--color-accent-subtle);
+}
+
+#root .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--color-primary);
+  border-width: 1px;
+}
+
+#root .MuiInputBase-root.Mui-disabled {
+  color: var(--color-disabled-text);
+  background-color: var(--color-disabled-bg);
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+#root .MuiOutlinedInput-root.Mui-disabled .MuiOutlinedInput-notchedOutline {
+  border-color: var(--color-disabled-border);
+}
+
+#root .MuiInputLabel-root,
+#root .MuiSelect-icon {
+  color: var(--color-text-secondary);
+}
+
+#root .MuiInputLabel-root.Mui-focused {
+  color: var(--color-primary);
+}
