@@ -1,116 +1,116 @@
 .status-display {
   display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  align-items: flex-start;
-  font-size: 0.92rem;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .4rem;
+  min-width: 0;
+  width: 100%;
   color: var(--color-text-secondary);
-  background: var(--color-panel-raised);
-  border: 1px solid var(--color-border-soft);
-  border-radius: 0.6rem;
-  box-shadow: 0 1px 3px var(--shadow-secondary);
-  padding-left: 8px;
-  padding-top: 4px;
-  min-height: 3.35rem;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-  margin-top: 3px;
 }
 
-.backend-status {
-  font-weight: bold;
-  color: var(--color-white);
-  margin-top: 0;
-  margin-bottom: 0.08rem;
-  background: transparent;
-  z-index: 2;
-  font-size: 0.95rem;
-  line-height: 1.1;
-  padding: 0 0 0.05rem 0;
-  text-shadow: none;
-}
-
-.backend-status.Online {
-  color: var(--color-success);
-  text-shadow: none;
-}
-
-.backend-status.Offline {
-  color: var(--color-error);
-  text-shadow: none;
-}
-
-.backend-status-row {
-  display: flex;
-  align-items: flex-start;
-  width: 100%;
-  gap: 0.3rem;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--color-border-soft);
-  padding-bottom: 0.1rem;
-  margin-bottom: 0.1rem;
-  padding-left: 0;
-}
-
-.close-x {
+.status-chip {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  font-size: 1.1rem;
-  font-weight: bold;
-  color: var(--color-white);
-  background: var(--color-panel-highlight);
-  border-radius: 50%;
-  border: 1.5px solid var(--color-border-soft);
-  cursor: pointer;
-  margin-right: 3px;
-  transition: background 0.2s, color 0.2s;
+  gap: .35rem;
+  min-width: 0;
+  height: 2rem;
+  padding: 0 .65rem;
+  box-sizing: border-box;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 999px;
+  background: var(--color-panel-raised);
+  color: var(--color-text-secondary);
+  font-size: .82rem;
+  line-height: 1;
+  white-space: nowrap;
 }
 
-.close-x:hover {
-  background: var(--color-accent-subtle-hover);
-  color: var(--color-white);
+.status-chip svg {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+}
+
+.backend-chip {
+  flex: 0 0 auto;
+  font-weight: 700;
+}
+
+.backend-chip.Online svg,
+.backend-chip.Online span {
+  color: var(--color-success);
+}
+
+.backend-chip.Offline svg,
+.backend-chip.Offline span {
+  color: var(--color-error);
+}
+
+.message-chip {
+  flex: 0 1 auto;
+  max-width: min(34rem, 52vw);
+}
+
+.message-chip .message {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: inherit;
+}
+
+.message-chip.warning-message {
+  color: var(--color-warning);
+  border-color: color-mix(in srgb, var(--color-warning) 38%, var(--color-border-soft));
+}
+
+.message-chip.alarm-message {
+  color: var(--color-error);
+  border-color: color-mix(in srgb, var(--color-error) 42%, var(--color-border-soft));
+  font-weight: 700;
 }
 
 .messages {
-  margin-top: 0.1rem;
-  max-height: 36px;
-  overflow-y: auto;
-  width: 100%;
-  overflow-wrap: anywhere;
-  background: transparent;
-  scrollbar-width: none;
-  scroll-behavior: smooth;
+  overflow: hidden;
 }
 
-.messages::-webkit-scrollbar {
-  display: none;
-}
-
-.message {
-  color: var(--color-text-secondary);
-  font-size: 0.92rem;
-  margin-bottom: 0.03rem;
-  border-radius: 0.3rem;
-  background: none;
-  line-height: 1.1;
-}
-
-.message-row {
-  display: flex;
+.status-clear-button {
+  display: inline-flex;
   align-items: center;
-  gap: 0.2rem;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
 }
 
-.alarm-message .message {
-  color: var(--color-error);
-  font-weight: bold;
+.status-clear-button svg {
+  width: 1rem;
+  height: 1rem;
 }
 
-.warning-message .message {
-  color: var(--color-warning);
-  font-weight: bold;
+.status-clear-button:hover {
+  color: var(--color-text);
+  background: var(--color-panel-highlight);
+  border-color: var(--color-border-soft);
+}
+
+.status-clear-button:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1100px) {
+  .status-display {
+    justify-content: flex-start;
+  }
+
+  .message-chip {
+    max-width: min(40rem, 65vw);
+  }
 }
