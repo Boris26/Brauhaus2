@@ -1,4 +1,8 @@
 import React from 'react';
+import CloseIcon from '@mui/icons-material/Close';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import './StatusDisplay.css';
 
 interface StatusDisplayProps {
@@ -18,9 +22,7 @@ class StatusDisplay extends React.Component<StatusDisplayProps, StatusDisplaySta
   isPaused: boolean = false;
 
   componentDidMount() {
-    if (!this.props.disableScrollAnimation) {
-      this.startAutoScroll();
-    }
+    if (!this.props.disableScrollAnimation) this.startAutoScroll();
     const messagesDiv = this.messagesRef.current;
     if (messagesDiv) {
       messagesDiv.addEventListener('mouseenter', this.handleMouseEnter);
@@ -37,62 +39,47 @@ class StatusDisplay extends React.Component<StatusDisplayProps, StatusDisplaySta
     }
   }
 
-  handleMouseEnter = () => {
-    this.isPaused = true;
-  };
-
-  handleMouseLeave = () => {
-    this.isPaused = false;
-  };
+  handleMouseEnter = () => { this.isPaused = true; };
+  handleMouseLeave = () => { this.isPaused = false; };
 
   startAutoScroll = () => {
     if (this.props.disableScrollAnimation) return;
-    const scrollStep = 1; // px pro Schritt
-    const scrollDelay = 70; // ms pro Schritt
     this.scrollInterval = setInterval(() => {
       if (this.isPaused) return;
       const messagesDiv = this.messagesRef.current;
-      if (messagesDiv) {
-        if (messagesDiv.scrollTop + messagesDiv.clientHeight >= messagesDiv.scrollHeight) {
-          messagesDiv.scrollTop = 0;
-        } else {
-          messagesDiv.scrollTop += scrollStep;
-        }
-      }
-    }, scrollDelay);
+      if (!messagesDiv) return;
+      if (messagesDiv.scrollTop + messagesDiv.clientHeight >= messagesDiv.scrollHeight) messagesDiv.scrollTop = 0;
+      else messagesDiv.scrollTop += 1;
+    }, 70);
   };
 
   render() {
-    const { backendStatus, messages, removeAllMessages, priorityMessage, prioritySeverity } = this.props;
-
+    const {backendStatus, messages, removeAllMessages, priorityMessage, prioritySeverity} = this.props;
     const backendClass = backendStatus ? 'Online' : 'Offline';
-    const priorityClass = prioritySeverity === 'alarm'
-      ? 'alarm-message'
-      : prioritySeverity === 'warning' ? 'warning-message' : '';
+    const priorityClass = prioritySeverity === 'alarm' ? 'alarm-message' : prioritySeverity === 'warning' ? 'warning-message' : '';
     const priorityRole = prioritySeverity === 'alarm' ? 'alert' : 'status';
+    const hasMessages = Boolean(priorityMessage || (messages && messages.length > 0));
 
     return (
       <div className="status-display">
-        <div className="backend-status-row">
-          <span className={`backend-status ${backendClass}`}>Backend: {backendClass}</span>
-          <span className="close-x" title="Alle Nachrichten löschen" onClick={() => removeAllMessages()}>
-            ×
-          </span>
+        <div className={`status-chip backend-chip ${backendClass}`} title={`Backend ${backendClass}`}>
+          {backendStatus ? <CheckCircleOutlineIcon /> : <ErrorOutlineIcon />}
+          <span>Backend: {backendClass}</span>
         </div>
         {priorityMessage ? (
-          <div className={`messages ${priorityClass}`} role={priorityRole}>
-            <div className="message-row">
-              <span className="message">{priorityMessage}</span>
-            </div>
+          <div className={`status-chip message-chip ${priorityClass}`} role={priorityRole} title={priorityMessage}>
+            <WarningAmberIcon />
+            <span className="message">{priorityMessage}</span>
           </div>
-        ) : messages && messages.length > 0 && (
-          <div className="messages" ref={this.messagesRef}>
-            {messages.map((msg, idx) => (
-              <div className="message-row" key={idx}>
-                <span className="message">{msg}</span>
-              </div>
-            ))}
+        ) : messages && messages.length > 0 ? (
+          <div className="status-chip message-chip messages" ref={this.messagesRef} title={messages[0]}>
+            <span className="message">{messages[0]}</span>
           </div>
+        ) : null}
+        {hasMessages && (
+          <button className="status-clear-button" type="button" title="Alle Nachrichten löschen" aria-label="Alle Nachrichten löschen" onClick={removeAllMessages}>
+            <CloseIcon />
+          </button>
         )}
       </div>
     );
