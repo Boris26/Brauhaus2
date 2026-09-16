@@ -184,8 +184,8 @@
 }
 
 .ingredient-table th {
-    background-color: var(--color-border-strong);
-    color: var(--color-white);
+    background-color: var(--color-accent);
+    color: var(--color-text-on-primary);
     height: 34px;
     padding: 5px 8px;
     box-sizing: border-box;
@@ -202,11 +202,11 @@
 }
 
 .ingredient-table tr:nth-child(even) {
-    background-color: var(--color-surface-strong);
+    background-color: var(--color-panel-bg);
 }
 
 .ingredient-table tr:nth-child(odd) {
-    background-color: var(--color-surface-deep);
+    background-color: var(--color-panel-bg);
 }
 
 .ingredient-table input,
@@ -266,7 +266,7 @@
     margin-top: var(--spacing-xs);
 }
 
-.cancel-btn {
+.containerBeerForm .cancel-btn {
     min-width: 40px;
     width: 40px;
     height: 40px;
@@ -282,7 +282,7 @@
     cursor: pointer;
 }
 
-.cancel-btn:hover:not(:disabled) {
+.containerBeerForm .cancel-btn:hover:not(:disabled) {
     background-color: var(--color-danger);
 }
 

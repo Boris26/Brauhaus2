@@ -21,13 +21,13 @@
     overflow: visible !important;
 }
 
-.containerIngredientsForm .filter-container {
+.containerIngredientsForm .ingredients-toolbar {
     display: flex;
     gap: 8px;
     margin-bottom: 8px;
 }
 
-.containerIngredientsForm .FinishedBrewsTable {
+.containerIngredientsForm .ingredients-table-container {
     width: 100% !important;
     background-color: var(--color-brew-bg) !important;
     box-shadow: none !important;
@@ -43,25 +43,9 @@
 }
 
 .containerIngredientsForm .MuiTableHead-root .MuiTableCell-head {
-    background-color: var(--color-accent) !important;
-    color: black !important;
-    font-weight: bold !important;
-    border-bottom: 2px solid var(--color-gray-deep) !important;
     position: sticky !important;
     top: 0;
     z-index: 20 !important;
-}
-
-.containerIngredientsForm .MuiTableCell-root {
-    background-color: var(--color-brew-bg) !important;
-    color: white !important;
-    border-bottom: 1px solid var(--color-border-strong) !important;
-    padding: 8px 10px !important;
-    vertical-align: middle !important;
-}
-
-.containerIngredientsForm .MuiTableRow-root {
-    background-color: var(--color-brew-bg) !important;
 }
 
 .containerIngredientsForm .action-cell {
@@ -99,9 +83,7 @@
     flex-shrink: 0;
 }
 
-.containerIngredientsForm .finish-btn,
-.containerIngredientsForm .cancel-btn,
-.containerIngredientsForm .edit-btn {
+.containerIngredientsForm .ingredient-action {
     height: 34px;
     width: 34px;
     padding: 0;
@@ -114,20 +96,9 @@
     cursor: pointer;
 }
 
-.containerIngredientsForm .edit-btn:hover {
-    background-color: var(--bg-transparent-orange);
-}
-
-.containerIngredientsForm .finish-btn:hover {
-    background-color: var(--bg-transparent-orange);
-}
-
-.containerIngredientsForm .cancel-btn:hover {
-    background-color: var(--bg-transparent-red);
-}
 
 .containerIngredientsForm .ingredient-error {
-    color: #d32f2f;
+    color: var(--color-error-mid);
     font-size: 0.8rem;
     margin-top: 4px;
 }

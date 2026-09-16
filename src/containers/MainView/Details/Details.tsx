@@ -13,7 +13,6 @@ import {
     Typography
 } from "@mui/material";
 import {BeerRecipeScaler, scalingValues} from "../../../utils/BeerScaler/ScalingBeerRecipe";
-import {COLOR_BREW_BG} from "../../../colors";
 import {AppAccordion, AppAccordionHeader} from "../../../components/AppAccordion/AppAccordion";
 
 interface DetailsProps {
@@ -166,8 +165,8 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
         const { selectedBeer } = this.props;
 
         return (
-            <TableContainer component={Paper} style={{ backgroundColor: COLOR_BREW_BG }}>
-                <Table className="wortBoiling-table">
+            <TableContainer component={Paper} className="app-table-container">
+                <Table className="wortBoiling-table app-table app-table--compact app-table--key-value">
                     <TableBody>
                         <TableRow><TableCell>Name</TableCell><TableCell>{selectedBeer?.name}</TableCell></TableRow>
                         <TableRow><TableCell>Type</TableCell><TableCell>{selectedBeer?.type}</TableCell></TableRow>
@@ -197,8 +196,8 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
         if (!selectedBeer?.fermentation) return null;
 
         return (
-            <TableContainer component={Paper} style={{ backgroundColor: COLOR_BREW_BG }}>
-                <Table className="wortBoiling-table">
+            <TableContainer component={Paper} className="app-table-container">
+                <Table className="wortBoiling-table app-table app-table--compact">
                     <TableHead>
                         <TableRow>
                             <TableCell>Type</TableCell>
@@ -236,8 +235,8 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
         if (!selectedBeer?.malts) return null;
 
         return (
-            <TableContainer component={Paper} style={{ backgroundColor: COLOR_BREW_BG }}>
-                <Table className="wortBoiling-table">
+            <TableContainer component={Paper} className="app-table-container">
+                <Table className="wortBoiling-table app-table app-table--compact">
                     <TableHead>
                         <TableRow>
                             <TableCell>Name</TableCell>
@@ -279,8 +278,8 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
                     <label className="wortBoiling-header-text">Temperatur: {selectedBeer.cookingTemperatur}°C</label>
                 </div>
 
-                <TableContainer component={Paper}>
-                    <Table className="wortBoiling-table">
+                <TableContainer component={Paper} className="app-table-container">
+                    <Table className="wortBoiling-table app-table app-table--compact">
                         <TableHead>
                             <TableRow>
                                 <TableCell>Name</TableCell>
@@ -366,8 +365,8 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
         const { selectedBeer } = this.props;
 
         return (
-            <TableContainer component={Paper} style={{ backgroundColor: COLOR_BREW_BG }}>
-                <Table className="wortBoiling-table">
+            <TableContainer component={Paper} className="app-table-container">
+                <Table className="wortBoiling-table app-table app-table--compact">
                     <TableHead>
                         <TableRow>
                             <TableCell>Hauptguss</TableCell>

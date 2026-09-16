@@ -3,6 +3,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'simplebar/dist/simplebar.min.css';
 import './index.css';
 import './form-controls.css';
+import './app-table.css';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
