@@ -15,6 +15,7 @@ export interface BubbleActivityChartPoint {
 type BubbleActivityMeasurementPoint = BubbleActivityChartPoint & {bubbleCount: number; windowSeconds: number};
 
 const PRESSURE_SMOOTHING_WINDOW = 5;
+const PRESSURE_NOISE_DEADBAND_PA = 0.1;
 const ACTIVITY_GAP_TOLERANCE_FACTOR = 1.5;
 
 const TOOLTIP_CONTENT_STYLE: React.CSSProperties = {
@@ -66,9 +67,11 @@ const smoothPressureDelta = (points: BubbleActivityMeasurementPoint[]): BubbleAc
     recentPressureValues.push(point.averagePressureDeltaPa);
     if (recentPressureValues.length > PRESSURE_SMOOTHING_WINDOW) recentPressureValues.shift();
 
+    const smoothedPressureDeltaPa = recentPressureValues.reduce((sum, value) => sum + value, 0) / recentPressureValues.length;
+
     return {
       ...point,
-      averagePressureDeltaPa: recentPressureValues.reduce((sum, value) => sum + value, 0) / recentPressureValues.length,
+      averagePressureDeltaPa: Math.abs(smoothedPressureDeltaPa) <= PRESSURE_NOISE_DEADBAND_PA ? 0 : smoothedPressureDeltaPa,
     };
   });
 };

@@ -42,6 +42,15 @@ describe('bubble activity chart', () => {
 
     expect(buildBubbleActivityChartData(pressureActivity).map(point => point.averagePressureDeltaPa)).toEqual([1, 1.5, 2, 2.5, 3, 4]);
   });
+  it('suppresses smoothed pressure within plus or minus 0.1 Pa as chart noise', () => {
+    const point = (averagePressureDeltaPa: number) => [{
+      deviceId: 'sensor', sequence: 1, bubbleCount: 0, windowSeconds: 60, averagePressureDeltaPa, windowEndedAt: '2026-09-11T10:00:00Z',
+    }];
+
+    expect(buildBubbleActivityChartData(point(0.1))[0].averagePressureDeltaPa).toBe(0);
+    expect(buildBubbleActivityChartData(point(-0.1))[0].averagePressureDeltaPa).toBe(0);
+    expect(buildBubbleActivityChartData(point(0.11))[0].averagePressureDeltaPa).toBe(0.11);
+  });
   it('normalizes a 30 second window and exposes only a technical label', () => {
     expect(buildBubbleActivityChartData([{...activity[0], bubbleCount: 4, windowSeconds: 30}])[0].bubblesPerMinute).toBe(8);
     render(<BubbleActivityChart activity={activity} />);
