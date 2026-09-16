@@ -14,6 +14,8 @@ export interface BubbleActivityChartPoint {
 
 type BubbleActivityMeasurementPoint = BubbleActivityChartPoint & {bubbleCount: number; windowSeconds: number};
 
+const PRESSURE_SMOOTHING_WINDOW = 5;
+
 const TOOLTIP_CONTENT_STYLE: React.CSSProperties = {
   background: 'var(--color-panel-contrast)',
   border: '1px solid var(--color-border)',
@@ -45,10 +47,35 @@ const normalizedBubbleActivity = (activity: BubbleActivity[]): BubbleActivityMea
   }))
   .sort((left, right) => left.timestamp - right.timestamp);
 
-export const buildBubbleActivityChartData = (activity: BubbleActivity[]): BubbleActivityChartPoint[] => normalizedBubbleActivity(activity)
+const hasActivityGap = (previous: BubbleActivityMeasurementPoint, point: BubbleActivityMeasurementPoint): boolean =>
+  point.timestamp - previous.timestamp > Math.max(previous.windowSeconds, point.windowSeconds) * 1000;
+
+const smoothPressureDelta = (points: BubbleActivityMeasurementPoint[]): BubbleActivityMeasurementPoint[] => {
+  const recentPressureValues: number[] = [];
+
+  return points.map((point, index) => {
+    const previous = points[index - 1];
+    if (previous && hasActivityGap(previous, point)) recentPressureValues.length = 0;
+
+    if (point.averagePressureDeltaPa === null) {
+      recentPressureValues.length = 0;
+      return point;
+    }
+
+    recentPressureValues.push(point.averagePressureDeltaPa);
+    if (recentPressureValues.length > PRESSURE_SMOOTHING_WINDOW) recentPressureValues.shift();
+
+    return {
+      ...point,
+      averagePressureDeltaPa: recentPressureValues.reduce((sum, value) => sum + value, 0) / recentPressureValues.length,
+    };
+  });
+};
+
+export const buildBubbleActivityChartData = (activity: BubbleActivity[]): BubbleActivityChartPoint[] => smoothPressureDelta(normalizedBubbleActivity(activity))
   .flatMap((point, index, points) => {
     const previous = points[index - 1];
-    if (!previous || point.timestamp - previous.timestamp <= Math.max(previous.windowSeconds, point.windowSeconds) * 1000) return [point];
+    if (!previous || !hasActivityGap(previous, point)) return [point];
 
     return [{timestamp: previous.timestamp + (point.timestamp - previous.timestamp) / 2, bubblesPerMinute: null, averagePressureDeltaPa: null}, point];
   });
