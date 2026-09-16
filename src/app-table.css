@@ -4,7 +4,8 @@
   min-width: 0;
   color: var(--color-text);
   background: var(--color-brew-bg);
-  border-radius: 0 !important;
+  border-radius: var(--border-radius-large) !important;
+  overflow: hidden;
   box-shadow: none;
 }
 
