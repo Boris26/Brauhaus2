@@ -1,5 +1,5 @@
 import React from 'react';
-import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField } from '@mui/material';
+import { Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
@@ -14,7 +14,6 @@ import {isNil} from "lodash";
 import { eBrewState, BrewStateGerman, brewStateLabel } from '../../../enums/eBrewState';
 import Panel from '../../Panel/Panel';
 import FinishedBrewDetails from './FinishedBrewDetails';
-import {mergeFinishedBrewChanges} from '../../../utils/finishedBrewChanges';
 import {createFinishedBrewId} from '../../../utils/finishedBrewCreateId';
 import ModalDialog, {DialogType} from '../../../components/ModalDialog/ModalDialog';
 
@@ -36,28 +35,38 @@ interface FinishedBrewsTableProps {
 }
 
 interface FinishedBrewsTableState {
-    editRows: Record<string, Partial<FinishedBrew>>;
     filterYear: string;
     showOnlyActive: boolean;
     filterOutActive: boolean;
     newRowActive?: boolean;
     newRowData?: Partial<FinishedBrew>;
     panelBrewId?: string | null;
-    submittingRows: Record<string, boolean>;
     newRowSubmitting: boolean;
     brewPendingDelete?: FinishedBrew;
 }
 
-const calcAlcohol = (w1: number, w2: number | null) => {
+const calcAlcohol = (w1: number | null | undefined, w2: number | null | undefined) => {
     if (isNil(w2)) return '-';
-    if (isNaN(w1) || isNaN(w2)) return '-';
+    if (isNil(w1) || isNaN(w1) || isNaN(w2)) return '-';
     return (((w1 - w2) * 0.5).toFixed(2) + ' %');
 };
+
+const formatDate = (value?: Date | string) => {
+    if (!value) return '–';
+    if (value instanceof Date) return Number.isNaN(value.getTime()) ? '–' : value.toLocaleDateString('de-DE');
+    const dateOnly = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (dateOnly) return `${dateOnly[3]}.${dateOnly[2]}.${dateOnly[1]}`;
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? '–' : parsed.toLocaleDateString('de-DE');
+};
+
+const formatValue = (value: number | null | undefined, unit: string) =>
+    isNil(value) || !Number.isFinite(value) ? '–' : `${value} ${unit}`;
 
 export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, FinishedBrewsTableState> {
     constructor(props: FinishedBrewsTableProps) {
         super(props);
-        this.state = { editRows: {}, filterYear: '', showOnlyActive: false, filterOutActive: false, panelBrewId: null, submittingRows: {}, newRowSubmitting: false };
+        this.state = {filterYear: '', showOnlyActive: false, filterOutActive: false, panelBrewId: null, newRowSubmitting: false};
     }
 
     componentDidMount() {
@@ -69,56 +78,12 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
         if (this.state.brewPendingDelete && prevProps.brews.some(brew => brew.id === this.state.brewPendingDelete?.id) && !this.props.brews.some(brew => brew.id === this.state.brewPendingDelete?.id)) {
             this.setState({brewPendingDelete: undefined});
         }
-        const completedIds = prevProps.savingFinishedBrewIds.filter(id => !this.props.savingFinishedBrewIds.includes(id));
-        const successfulIds = completedIds.filter(id => !this.props.finishedBrewUpdateErrors[id]);
-
-        if (completedIds.length > 0) {
-            this.setState(prevState => {
-                const editRows = {...prevState.editRows};
-                const submittingRows = {...prevState.submittingRows};
-                successfulIds.forEach(id => delete editRows[id]);
-                completedIds.forEach(id => {
-                    delete submittingRows[id];
-                });
-                return {editRows, submittingRows};
-            });
-        }
-
         if (prevProps.isAddingFinishedBrew && !this.props.isAddingFinishedBrew) {
             this.setState(this.props.addFinishedBrewError
                 ? {newRowSubmitting: false}
                 : {newRowActive: false, newRowData: {}, newRowSubmitting: false});
         }
     }
-
-    handleChange = (id: string, field: keyof FinishedBrew, value: string) => {
-        let parsedValue: any = value;
-        if (field === 'liters' || field === 'originalwort') {
-            parsedValue = value === '' ? '' : Math.max(0, Number(value));
-        } else if (field === 'residual_extract') {
-            parsedValue = value === '' ? null : Math.max(0, Number(value));
-        }
-        this.setState(prevState => ({
-            editRows: {
-                ...prevState.editRows,
-                [id]: {
-                    ...prevState.editRows[id],
-                    [field]:
-                        field === 'liters' || field === 'originalwort' || field === 'residual_extract'
-                            ? parsedValue
-                            : value
-                }
-            }
-        }));
-    };
-
-    handleSave = (id: string) => {
-        const brew = this.props.brews.find(b => b.id === id);
-        if (!brew) return;
-        const updated = mergeFinishedBrewChanges(brew, this.state.editRows[id]);
-        if (this.state.submittingRows[id] || this.props.savingFinishedBrewIds.includes(id)) return;
-        this.setState(prevState => ({submittingRows: {...prevState.submittingRows, [id]: true}}), () => this.props.onSave(updated));
-    };
 
     handleFilterYearChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         this.setState({ filterYear: e.target.value });
@@ -256,263 +221,83 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
         );
     }
 
-    renderNewRow(beers: { id: string; name: string }[]) {
-        const { newRowActive, newRowData, newRowSubmitting } = this.state;
+    renderNewBrewForm(beers: { id: string; name: string }[]) {
+        const {newRowActive, newRowData, newRowSubmitting} = this.state;
         if (!newRowActive) return null;
+        const updateNewRow = (changes: Partial<FinishedBrew>) => this.setState(prev => ({newRowData: {...prev.newRowData, ...changes}}));
         return (
-            <TableRow className="table-row">
-                <TableCell className="table-cell">
-                    <select
-                        value={newRowData?.name || ''}
-                        onChange={e => {
-                            const selectedBeer = beers.find(b => b.name === e.target.value);
-                            this.setState(prev => ({
-                                newRowData: {
-                                    ...prev.newRowData,
-                                    name: selectedBeer ? selectedBeer.name : '',
-                                    beer_id: selectedBeer ? selectedBeer.id : undefined
-                                }
-                            }));
-                        }}
-                        className="table-edit-field"
-                    >
+            <section className="finished-brews-create-form" aria-label="Neuen Eintrag anlegen">
+                <label>Name
+                    <select value={newRowData?.name || ''} onChange={event => {
+                        const selectedBeer = beers.find(beer => beer.name === event.target.value);
+                        updateNewRow({name: selectedBeer?.name || '', beer_id: selectedBeer?.id});
+                    }} className="table-edit-field">
                         <option value="">Bier wählen</option>
-                        {beers.map(beer => (
-                            <option key={beer.id} value={beer.name}>{beer.name}</option>
-                        ))}
+                        {beers.map(beer => <option key={beer.id} value={beer.name}>{beer.name}</option>)}
                     </select>
-                </TableCell>
-                <TableCell className="table-cell">
-                    <input
-                        type="date"
-                        value={newRowData?.startDate
-                            ? (newRowData.startDate instanceof Date
-                                ? newRowData.startDate.toISOString().slice(0, 10)
-                                : newRowData.startDate)
-                            : ''}
-                        onChange={e => this.setState(prev => ({ newRowData: { ...prev.newRowData, startDate: e.target.value } }))}
-                        className="table-edit-field"
-                    />
-                </TableCell>
-                <TableCell className="table-cell">
-                    <input
-                        type="date"
-                        value={newRowData?.endDate
-                            ? (newRowData.endDate instanceof Date
-                                ? newRowData.endDate.toISOString().slice(0, 10)
-                                : newRowData.endDate)
-                            : ''}
-                        onChange={e => this.setState(prev => ({ newRowData: { ...prev.newRowData, endDate: e.target.value } }))}
-                        className="table-edit-field"
-                    />
-                </TableCell>
-                <TableCell className="table-cell liters">
-                    <input
-                        type="number"
-                        value={newRowData?.liters || ''}
-                        onChange={e => this.setState(prev => ({ newRowData: { ...prev.newRowData, liters: Number(e.target.value) } }))}
-                        className="table-edit-field"
-                    />
-                </TableCell>
-                <TableCell className="table-cell originalwort">
-                    <input
-                        type="number"
-                        value={newRowData?.originalwort || ''}
-                        onChange={e => this.setState(prev => ({ newRowData: { ...prev.newRowData, originalwort: Number(e.target.value) } }))}
-                        className="table-edit-field"
-                    />
-                </TableCell>
-                <TableCell className="table-cell residualExtract">
-                    <input
-                        type="number"
-                        value={newRowData?.residual_extract || ''}
-                        onChange={e => this.setState(prev => ({ newRowData: { ...prev.newRowData, residual_extract: Number(e.target.value) } }))}
-                        className="table-edit-field"
-                    />
-                </TableCell>
-                <TableCell className="table-cell">
-                    {/* Alkoholspalte bleibt leer in der neuen Zeile */}
-                    -
-                </TableCell>
-                <TableCell className="table-cell">
-                    <label className="administrative-status-label">Administrativer Status
-                    <select
-                        value={newRowData?.state || eBrewState.FERMENTATION}
-                        onChange={e => this.setState(prev => ({ newRowData: { ...prev.newRowData, state: e.target.value as eBrewState } }))}
-                        className="table-edit-field"
-                    >
-                        {Object.values(eBrewState).map(state => (
-                            <option key={state} value={state}>{BrewStateGerman[state]}</option>
-                        ))}
+                </label>
+                <label>Startdatum
+                    <input type="date" value={newRowData?.startDate ? (newRowData.startDate instanceof Date ? newRowData.startDate.toISOString().slice(0, 10) : newRowData.startDate) : ''} onChange={event => updateNewRow({startDate: event.target.value})} className="table-edit-field" />
+                </label>
+                <label>Enddatum
+                    <input type="date" value={newRowData?.endDate ? (newRowData.endDate instanceof Date ? newRowData.endDate.toISOString().slice(0, 10) : newRowData.endDate) : ''} onChange={event => updateNewRow({endDate: event.target.value})} className="table-edit-field" />
+                </label>
+                <label>Volumen (l)
+                    <input type="number" value={newRowData?.liters ?? ''} onChange={event => updateNewRow({liters: Number(event.target.value)})} className="table-edit-field" />
+                </label>
+                <label>Stammwürze (°P)
+                    <input type="number" value={newRowData?.originalwort ?? ''} onChange={event => updateNewRow({originalwort: Number(event.target.value)})} className="table-edit-field" />
+                </label>
+                <label>Restextrakt (°P)
+                    <input type="number" value={newRowData?.residual_extract ?? ''} onChange={event => updateNewRow({residual_extract: Number(event.target.value)})} className="table-edit-field" />
+                </label>
+                <label>Administrativer Status
+                    <select value={newRowData?.state || eBrewState.FERMENTATION} onChange={event => updateNewRow({state: event.target.value as eBrewState})} className="table-edit-field">
+                        {Object.values(eBrewState).map(state => <option key={state} value={state}>{BrewStateGerman[state]}</option>)}
                     </select>
-                    </label>
-                </TableCell>
-                <TableCell className="table-cell beschreibung">
-                    <input
-                        type="text"
-                        value={newRowData?.note || ''}
-                        onChange={e => this.setState(prev => ({ newRowData: { ...prev.newRowData, note: e.target.value } }))}
-                        className="table-edit-field"
-                    />
-                </TableCell>
-                <TableCell className="table-cell">
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button
-                            className="finish-btn"
-                            onClick={() => {
-                                if (newRowSubmitting || this.props.isAddingFinishedBrew) return;
-                                const newBrew: FinishedBrewCreatePayload = {
-                                    ...newRowData,
-                                    beer_id: newRowData?.beer_id,
-                                    state: newRowData?.state || eBrewState.FERMENTATION,
-                                    note: newRowData?.note || '',
-                                    active: true,
-                                } as FinishedBrewCreatePayload;
-                                this.setState({newRowSubmitting: true}, () => this.props.onCreate(newBrew));
-                            }}
-                            disabled={newRowSubmitting || this.props.isAddingFinishedBrew}
-                            title="Speichern"
-                            aria-label="Speichern"
-                        >
-                            <SaveIcon sx={{fontSize: 22}} />
-                        </button>
-                        <button
-                            className="cancel-btn"
-                            onClick={() => this.setState({ newRowActive: false, newRowData: {} })}
-                            disabled={newRowSubmitting || this.props.isAddingFinishedBrew}
-                            title="Abbrechen"
-                            aria-label="Abbrechen"
-                        >
-                            <CloseIcon sx={{fontSize: 22}} />
-                        </button>
-                    </div>
+                </label>
+                <label className="finished-brews-create-description">Beschreibung
+                    <input type="text" value={newRowData?.note || ''} onChange={event => updateNewRow({note: event.target.value})} className="table-edit-field" />
+                </label>
+                <div className="finished-brews-create-actions">
+                    <button className="finish-btn" onClick={() => {
+                        if (newRowSubmitting || this.props.isAddingFinishedBrew) return;
+                        const newBrew = {...newRowData, beer_id: newRowData?.beer_id, state: newRowData?.state || eBrewState.FERMENTATION, note: newRowData?.note || '', active: true} as FinishedBrewCreatePayload;
+                        this.setState({newRowSubmitting: true}, () => this.props.onCreate(newBrew));
+                    }} disabled={newRowSubmitting || this.props.isAddingFinishedBrew} title="Speichern" aria-label="Speichern">
+                        <SaveIcon sx={{fontSize: 22}} />
+                    </button>
+                    <button className="cancel-btn" onClick={() => this.setState({newRowActive: false, newRowData: {}})} disabled={newRowSubmitting || this.props.isAddingFinishedBrew} title="Abbrechen" aria-label="Abbrechen">
+                        <CloseIcon sx={{fontSize: 22}} />
+                    </button>
                     {this.props.addFinishedBrewError && <p role="alert">Speichern fehlgeschlagen: {this.props.addFinishedBrewError}</p>}
-                </TableCell>
-            </TableRow>
+                </div>
+            </section>
         );
     }
 
-    renderBrewRow(brew: FinishedBrew, beers: { id: string; name: string }[]) {
-        const { editRows, submittingRows } = this.state;
+    renderBrewRow(brew: FinishedBrew, _beers: { id: string; name: string }[]) {
         const brewId = brew.id;
-        const isEdited = !!editRows[brewId];
-        const row = { ...brew, ...editRows[brewId] };
         const isActive = brew.active;
-        const isSaving = Boolean(submittingRows[brewId]) || this.props.savingFinishedBrewIds.includes(brewId);
         return (
             <TableRow key={brewId} className={`table-row${isActive ? ' active-row' : ''}`}>
-                <TableCell className="table-cell">{brew.name}</TableCell>
+                <TableCell className="table-cell brew-name-cell">
+                    {isActive && <span className="active-brew-dot" title="Aktives Bier" aria-label="Aktives Bier" />}
+                    <span>{brew.name || '–'}</span>
+                </TableCell>
+                <TableCell className="table-cell brew-period">{formatDate(brew.startDate)} <span aria-hidden="true">–</span> {formatDate(brew.endDate)}</TableCell>
+                <TableCell className="table-cell">{formatValue(brew.liters, 'l')}</TableCell>
+                <TableCell className="table-cell">{formatValue(brew.originalwort, '°P')}</TableCell>
+                <TableCell className="table-cell alcohol">{calcAlcohol(brew.originalwort, brew.residual_extract)}</TableCell>
                 <TableCell className="table-cell">
-                    <TextField
-                        variant="standard"
-                        value={row.startDate instanceof Date ? row.startDate.toISOString().slice(0, 10) : row.startDate}
-                        type="date"
-                        onChange={e => {
-                            const target = e.target as HTMLInputElement;
-                            this.handleChange(brewId, 'startDate', target.value);
-                        }}
-                        className="table-edit-field"
-                        InputProps={{ style: { color: 'white' }, disableUnderline: true, readOnly: !isActive }}
-                    />
+                    <span className={`brew-status-badge${isActive ? ' is-active' : ''}`}>{brewStateLabel(brew.state)}</span>
                 </TableCell>
-                <TableCell className="table-cell">
-                    <TextField
-                        variant="standard"
-                        value={row.endDate ? (row.endDate instanceof Date ? row.endDate.toISOString().slice(0, 10) : row.endDate) : ''}
-                        type="date"
-                        onChange={e => {
-                            const target = e.target as HTMLInputElement;
-                            this.handleChange(brewId, 'endDate', target.value);
-                        }}
-                        className="table-edit-field"
-                        InputProps={{ style: { color: 'white' }, disableUnderline: true, readOnly: !isActive }}
-                    />
-                </TableCell>
-                <TableCell className="table-cell liters">
-                    <TextField
-                        variant="standard"
-                        value={row.liters === null || row.liters === undefined ? '' : row.liters}
-                        type="number"
-                        onChange={e => {
-                            const target = e.target as HTMLInputElement;
-                            this.handleChange(brewId, 'liters', target.value);
-                        }}
-                        className="table-edit-field"
-                        InputProps={{ style: { color: 'white' }, disableUnderline: true, readOnly: !isActive }}
-                    />
-                </TableCell>
-                <TableCell className="table-cell originalwort">
-                    <TextField
-                        variant="standard"
-                        value={row.originalwort === null || row.originalwort === undefined ? '' : row.originalwort}
-                        type="number"
-                        onChange={e => {
-                            const target = e.target as HTMLInputElement;
-                            this.handleChange(brewId, 'originalwort', target.value);
-                        }}
-                        className="table-edit-field"
-                        InputProps={{ style: { color: 'white' }, disableUnderline: true, readOnly: !isActive }}
-                    />
-                </TableCell>
-                <TableCell className="table-cell residualExtract">
-                    <TextField
-                        variant="standard"
-                        value={row.residual_extract === null || row.residual_extract === undefined ? '' : row.residual_extract}
-                        type="number"
-                        onChange={e => {
-                            const target = e.target as HTMLInputElement;
-                            this.handleChange(brewId, 'residual_extract', target.value);
-                        }}
-                        className="table-edit-field"
-                        InputProps={{ style: { color: 'white' }, disableUnderline: true, readOnly: !isActive }}
-                    />
-                </TableCell>
-                <TableCell className="table-cell alcohol">{calcAlcohol(row.originalwort, row.residual_extract)}</TableCell>
-                <TableCell className="table-cell">
-                    <span>{brewStateLabel(row.state)}</span>
-                </TableCell>
-                <TableCell className="table-cell beschreibung">
-                    <TextField
-                        variant="standard"
-                        value={row.note || ''}
-                        onChange={e => this.handleChange(brewId, 'note', e.target.value)}
-                        className="table-edit-field"
-                        InputProps={{ style: { color: 'white' }, disableUnderline: true, readOnly: !isActive }}
-                    />
-                </TableCell>
-                <TableCell className="table-cell">
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        {isEdited && isActive && (
-                            <button
-                                className="finish-btn"
-                                onClick={() => this.handleSave(brewId)}
-                                disabled={isSaving}
-                                title="Speichern"
-                                aria-label="Speichern"
-                            >
-                                <SaveIcon sx={{fontSize: 22}} />
-                            </button>
-                        )}
-                        <button
-                            className="cancel-btn"
-                            onClick={() => this.handleDelete(brewId)}
-                            title="Löschen"
-                            aria-label="Löschen"
-                        >
-                            <DeleteOutlineIcon sx={{fontSize: 22}} />
-
-                        </button>
-                        <button
-                            className="cancel-btn"
-                            onClick={() => this.handleShowDetails(brewId)}
-                            title="Details"
-                            aria-label="Details"
-                        >
-                            <VisibilityIcon sx={{fontSize: 22}} />
-                        </button>
-                        <button className="cancel-btn" onClick={() => this.props.openMeasurements(brewId)} title="Messdaten" aria-label={`Messdaten für ${row.name}`}>
-                            <ShowChartIcon sx={{fontSize: 22}} />
-                        </button>
+                <TableCell className="table-cell beschreibung">{brew.note || '–'}</TableCell>
+                <TableCell className="table-cell actions-cell">
+                    <div className="finished-brews-row-actions">
+                        <button className="cancel-btn" onClick={() => this.handleDelete(brewId)} title="Löschen" aria-label="Löschen"><DeleteOutlineIcon sx={{fontSize: 22}} /></button>
+                        <button className="cancel-btn" onClick={() => this.handleShowDetails(brewId)} title="Details" aria-label="Details"><VisibilityIcon sx={{fontSize: 22}} /></button>
+                        <button className="cancel-btn" onClick={() => this.props.openMeasurements(brewId)} title="Messdaten" aria-label={`Messdaten für ${brew.name}`}><ShowChartIcon sx={{fontSize: 22}} /></button>
                     </div>
                 </TableCell>
             </TableRow>
@@ -527,21 +312,16 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                         <TableHead className="table-header">
                             <TableRow>
                                 <TableCell className="table-header-cell">Name</TableCell>
-                                <TableCell className="table-header-cell">Start-Datum</TableCell>
-                                <TableCell className="table-header-cell">End-Datum</TableCell>
-                                <TableCell className="table-header-cell">Liter</TableCell>
+                                <TableCell className="table-header-cell">Zeitraum</TableCell>
+                                <TableCell className="table-header-cell">Volumen</TableCell>
                                 <TableCell className="table-header-cell">Stammwürze</TableCell>
-                                <TableCell className="table-header-cell">Restextrakt</TableCell>
                                 <TableCell className="table-header-cell">Alkohol</TableCell>
                                 <TableCell className="table-header-cell">Status</TableCell>
                                 <TableCell className="table-header-cell">Beschreibung</TableCell>
-                                <TableCell className="table-header-cell">Aktion</TableCell>
+                                <TableCell className="table-header-cell">Aktionen</TableCell>
                             </TableRow>
                         </TableHead>
-                        <TableBody>
-                            {this.renderNewRow(beers)}
-                            {filteredBrews.map(brew => this.renderBrewRow(brew, beers))}
-                        </TableBody>
+                        <TableBody>{filteredBrews.map(brew => this.renderBrewRow(brew, beers))}</TableBody>
                     </Table>
                 </TableContainer>
             </SimpleBar>
@@ -559,6 +339,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
             <ModalDialog type={DialogType.CONFIRM} open={Boolean(this.state.brewPendingDelete)} header="Sud löschen" content={`Soll ${this.state.brewPendingDelete?.name ?? 'dieser Sud'} endgültig gelöscht werden?`} onConfirm={this.confirmDelete} onCancel={() => this.setState({brewPendingDelete: undefined})} showCancelButton={true} actionsDisabled={Boolean(this.state.brewPendingDelete && this.props.deletingFinishedBrewIds.includes(this.state.brewPendingDelete.id))} />
             <main className="finished-brews-page">
                 {this.renderFilterControls(years)}
+                {this.renderNewBrewForm(beers)}
                 <div className="finished-brews-table-area">{this.renderTable(filteredBrews, beers)}</div>
                 {/* Panel als Overlay am Ende */}
                 {selectedBrew && (

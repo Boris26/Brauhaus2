@@ -38,7 +38,7 @@
 
 .FinishedBrewsTable {
   width: 100%;
-  min-width: 88rem;
+  min-width: 76rem;
   table-layout: fixed;
 }
 
@@ -48,7 +48,7 @@
   border-top-left-radius: 5px !important;
   border-top-right-radius: 5px !important;
   width: 100%;
-  min-width: 88rem;
+  min-width: 76rem;
   overflow: visible;
 }
 
@@ -74,7 +74,8 @@
 
 .FinishedBrewsTable .table-row {
   height: auto;
-  border-bottom: 1px solid white;
+  background: var(--color-panel-bg);
+  border-bottom: 1px solid var(--color-border-soft);
 }
 
 .FinishedBrewsTable .table-cell,
@@ -141,10 +142,59 @@
 }
 
 .FinishedBrewsTable .active-row {
-  background-color: var(--color-success-alt) !important; /* Grüner Hintergrund für aktive Zeile */
-  color: var(--color-white);
-  font-weight: bold;
-  transition: background 0.3s;
+  background: var(--color-panel-bg);
+}
+
+.FinishedBrewsTable .brew-name-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-weight: 700;
+}
+
+.FinishedBrewsTable .active-brew-dot {
+  width: .55rem;
+  height: .55rem;
+  flex: 0 0 .55rem;
+  border-radius: 50%;
+  background: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-subtle);
+}
+
+.FinishedBrewsTable .brew-status-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.45rem;
+  padding: .12rem .55rem;
+  border: 1px solid var(--color-border-mid);
+  border-radius: var(--border-radius-pill);
+  color: var(--color-text-secondary);
+  background: var(--color-panel-contrast);
+  font-size: .78rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.FinishedBrewsTable .brew-status-badge.is-active {
+  border-color: var(--color-accent-border);
+  color: var(--color-accent-hover);
+  background: var(--color-accent-subtle);
+}
+
+.finished-brews-row-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.FinishedBrewsTable .actions-cell .cancel-btn {
+  display: inline-grid;
+  width: 2rem;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0;
+  place-items: center;
 }
 
 /* SimpleBar Anpassung */
@@ -271,16 +321,14 @@
   width: 30%;
 }
 
-.FinishedBrewsTable th:nth-child(1), .FinishedBrewsTable td:nth-child(1) { width: 11rem; }
-.FinishedBrewsTable th:nth-child(2), .FinishedBrewsTable td:nth-child(2),
-.FinishedBrewsTable th:nth-child(3), .FinishedBrewsTable td:nth-child(3) { width: 9rem; }
+.FinishedBrewsTable th:nth-child(1), .FinishedBrewsTable td:nth-child(1) { width: 12rem; }
+.FinishedBrewsTable th:nth-child(2), .FinishedBrewsTable td:nth-child(2) { width: 15rem; }
+.FinishedBrewsTable th:nth-child(3), .FinishedBrewsTable td:nth-child(3),
 .FinishedBrewsTable th:nth-child(4), .FinishedBrewsTable td:nth-child(4),
-.FinishedBrewsTable th:nth-child(5), .FinishedBrewsTable td:nth-child(5),
-.FinishedBrewsTable th:nth-child(6), .FinishedBrewsTable td:nth-child(6),
-.FinishedBrewsTable th:nth-child(7), .FinishedBrewsTable td:nth-child(7) { width: 7rem; }
-.FinishedBrewsTable th:nth-child(8), .FinishedBrewsTable td:nth-child(8) { width: 9rem; }
-.FinishedBrewsTable th:nth-child(9), .FinishedBrewsTable td:nth-child(9) { width: auto; }
-.FinishedBrewsTable th:nth-child(10), .FinishedBrewsTable td:nth-child(10) { width: 12rem; }
+.FinishedBrewsTable th:nth-child(5), .FinishedBrewsTable td:nth-child(5) { width: 8rem; }
+.FinishedBrewsTable th:nth-child(6), .FinishedBrewsTable td:nth-child(6) { width: 11rem; }
+.FinishedBrewsTable th:nth-child(7), .FinishedBrewsTable td:nth-child(7) { width: auto; }
+.FinishedBrewsTable th:nth-child(8), .FinishedBrewsTable td:nth-child(8) { width: 8rem; }
 
 @media (max-width: 900px) {
   .finished-brews-page { padding: var(--spacing-md); }
@@ -308,4 +356,39 @@
   -moz-appearance: textfield;
 }
 
-.administrative-status-label { display: grid; gap: .2rem; font-size: .72rem; }
+.finished-brews-create-form {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(10rem, 1fr));
+  gap: var(--spacing-sm) var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--color-panel-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-large);
+}
+
+.finished-brews-create-form label {
+  display: grid;
+  gap: var(--spacing-xs);
+  color: var(--color-text-secondary);
+  font-size: .78rem;
+  font-weight: 700;
+}
+
+.finished-brews-create-form input,
+.finished-brews-create-form select {
+  min-width: 0;
+  height: var(--control-height-compact);
+  padding: 0 var(--spacing-sm);
+  color: var(--color-text);
+  background: var(--color-panel-contrast);
+  border: 1px solid var(--color-border-mid);
+  border-radius: var(--border-radius-medium);
+}
+
+.finished-brews-create-description { grid-column: span 2; }
+.finished-brews-create-actions { display: flex; align-items: end; gap: var(--spacing-xs); }
+.finished-brews-create-actions p { margin: 0; color: var(--color-error); }
+
+@media (max-width: 1100px) {
+  .finished-brews-create-form { grid-template-columns: repeat(2, minmax(10rem, 1fr)); }
+}
