@@ -9,6 +9,13 @@
   box-shadow: none;
 }
 
+/* Keep the outer table card consistent even if legacy component CSS still sets
+   Paper corner/overflow properties with higher local specificity. */
+#root .app-table-container {
+  border-radius: var(--border-radius-large) !important;
+  overflow: hidden !important;
+}
+
 .app-table {
   width: 100%;
   color: var(--color-text);
