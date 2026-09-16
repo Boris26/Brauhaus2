@@ -157,8 +157,7 @@
   height: .55rem;
   flex: 0 0 .55rem;
   border-radius: 50%;
-  background: var(--color-accent);
-  box-shadow: 0 0 0 3px var(--color-accent-subtle);
+  background: var(--color-success);
 }
 
 .FinishedBrewsTable .brew-status-badge {
@@ -177,9 +176,9 @@
 }
 
 .FinishedBrewsTable .brew-status-badge.is-active {
-  border-color: var(--color-accent-border);
-  color: var(--color-accent-hover);
-  background: var(--color-accent-subtle);
+  border-color: transparent;
+  color: var(--color-success);
+  background: var(--color-success-subtle);
 }
 
 .finished-brews-row-actions {
