@@ -15,6 +15,7 @@ export interface BubbleActivityChartPoint {
 type BubbleActivityMeasurementPoint = BubbleActivityChartPoint & {bubbleCount: number; windowSeconds: number};
 
 const PRESSURE_SMOOTHING_WINDOW = 5;
+const ACTIVITY_GAP_TOLERANCE_FACTOR = 1.5;
 
 const TOOLTIP_CONTENT_STYLE: React.CSSProperties = {
   background: 'var(--color-panel-contrast)',
@@ -48,7 +49,7 @@ const normalizedBubbleActivity = (activity: BubbleActivity[]): BubbleActivityMea
   .sort((left, right) => left.timestamp - right.timestamp);
 
 const hasActivityGap = (previous: BubbleActivityMeasurementPoint, point: BubbleActivityMeasurementPoint): boolean =>
-  point.timestamp - previous.timestamp > Math.max(previous.windowSeconds, point.windowSeconds) * 1000;
+  point.timestamp - previous.timestamp > Math.max(previous.windowSeconds, point.windowSeconds) * 1000 * ACTIVITY_GAP_TOLERANCE_FACTOR;
 
 const smoothPressureDelta = (points: BubbleActivityMeasurementPoint[]): BubbleActivityMeasurementPoint[] => {
   const recentPressureValues: number[] = [];

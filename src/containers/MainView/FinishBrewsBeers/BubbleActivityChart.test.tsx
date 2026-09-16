@@ -30,14 +30,14 @@ describe('bubble activity chart', () => {
     expect(data.filter(point => point.bubblesPerMinute !== null).every(point => point.bubbleCount !== undefined && point.windowSeconds !== undefined)).toBe(true);
     expect(data[0]).not.toHaveProperty('sequence'); expect(data[0]).not.toHaveProperty('deviceId');
   });
-  it('uses a trailing five point average for pressure values', () => {
+  it('uses a trailing five point average for pressure values despite small window timing jitter', () => {
     const pressureActivity = [1, 2, 3, 4, 5, 6].map((averagePressureDeltaPa, index) => ({
       deviceId: 'sensor',
       sequence: index + 1,
       bubbleCount: 0,
       windowSeconds: 60,
       averagePressureDeltaPa,
-      windowEndedAt: new Date(Date.parse('2026-09-11T10:00:00Z') + index * 60000).toISOString(),
+      windowEndedAt: new Date(Date.parse('2026-09-11T10:00:00Z') + index * 60100).toISOString(),
     }));
 
     expect(buildBubbleActivityChartData(pressureActivity).map(point => point.averagePressureDeltaPa)).toEqual([1, 1.5, 2, 2.5, 3, 4]);
