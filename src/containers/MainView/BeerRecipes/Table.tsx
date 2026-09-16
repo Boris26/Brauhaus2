@@ -150,8 +150,8 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                         cancelLabel={"Abbrechen"}
                         showCancelButton={true}
                     />
-                    <TableContainer component={Paper} className="Table">
-                        <Table className="Table">
+                    <TableContainer component={Paper} className="Table app-table-container">
+                        <Table className="Table app-table app-table--selectable">
                             <TableHead className="table-header">
                                 <TableRow>
                                     <TableCell>
@@ -202,16 +202,16 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                             <TableBody>
                                 {sortedData.map((item) => (
                                     <TableRow key={item.id} onClick={() => this.onSelectBeer(item)}
-                                              className={`table-row ${selectedBeerId !== null && item.id === selectedBeerId ? 'selected' : ''}`}
+                                              className={`table-row ${selectedBeerId !== null && item.id === selectedBeerId ? 'app-table__row--selected' : ''}`}
                                     >
                                         <TableCell className="table-cell">{item.name}</TableCell>
                                         <TableCell className="table-cell">{item.type}</TableCell>
                                         <TableCell className="table-cell">{item.color}</TableCell>
                                         <TableCell className="table-cell">{item.alcohol}</TableCell>
                                         <TableCell className="table-cell">
-                                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                            <div className="app-table-actions">
                                                 <button
-                                                    className="table-action-button export-button"
+                                                    className="table-action-button app-table-action export-button"
                                                     onClick={e => {
                                                         e.stopPropagation();
                                                         this.handleExportShoppingListPdfForBeer(item);
@@ -222,7 +222,7 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                                                     <ShoppingCartIcon sx={{fontSize: '1.5rem', marginTop: '0.4rem'}} />
                                                 </button>
                                                 <button
-                                                    className={`table-action-button ${beerToBrew && beerToBrew.id === item.id ? 'cancel-brew-button' : 'brew-button'}`}
+                                                    className={`table-action-button app-table-action ${beerToBrew && beerToBrew.id === item.id ? 'cancel-brew-button' : 'brew-button'}`}
                                                     onClick={e => {
                                                         e.stopPropagation();
                                                         if (beerToBrew && beerToBrew.id === item.id) {
@@ -245,7 +245,7 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                                                         : <SportsBarIcon sx={{fontSize: '1.5rem', marginTop: '0.3rem'}} />}
                                                 </button>
                                                 <button
-                                                    className="table-action-button delete-beer-button"
+                                                    className="table-action-button app-table-action app-table-action--danger delete-beer-button"
                                                     onClick={e => {
                                                         e.stopPropagation();
                                                         this.handleDeleteBeer(item);

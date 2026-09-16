@@ -163,7 +163,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
     renderFilterControls(years: string[]) {
         const { filterYear, showOnlyActive, filterOutActive } = this.state;
         return (
-            <div className="filter-container">
+            <div className="finished-brews-filter">
                 <label htmlFor="year-filter" className="filter-label">
                     Jahr filtern:
                 </label>
@@ -198,7 +198,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                     <span>Aktive ausfiltern</span>
                 </label>
                 <button
-                    className="finish-btn"
+                    className="finished-brews-toolbar-button"
                     style={{ marginLeft: '2rem', height: '2.2rem', display: 'flex', alignItems: 'center' }}
                     onClick={this.handleExportPdf}
                     title="PDF exportieren"
@@ -208,7 +208,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                     PDF exportieren
                 </button>
                 <button
-                    className="finish-btn"
+                    className="finished-brews-toolbar-button"
                     style={{ marginLeft: '2rem', height: '2.2rem', display: 'flex', alignItems: 'center' }}
                     onClick={() => this.setState({ newRowActive: true, newRowData: {id: createFinishedBrewId()} })}
                     title="Neuen Eintrag hinzufügen"
@@ -260,14 +260,14 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                     <input type="text" value={newRowData?.note || ''} onChange={event => updateNewRow({note: event.target.value})} className="table-edit-field" />
                 </label>
                 <div className="finished-brews-create-actions">
-                    <button className="finish-btn" onClick={() => {
+                    <button className="finished-brews-create-button app-table-action" onClick={() => {
                         if (newRowSubmitting || this.props.isAddingFinishedBrew) return;
                         const newBrew = {...newRowData, beer_id: newRowData?.beer_id, state: newRowData?.state || eBrewState.FERMENTATION, note: newRowData?.note || '', active: true} as FinishedBrewCreatePayload;
                         this.setState({newRowSubmitting: true}, () => this.props.onCreate(newBrew));
                     }} disabled={newRowSubmitting || this.props.isAddingFinishedBrew} title="Speichern" aria-label="Speichern">
                         <SaveIcon sx={{fontSize: 22}} />
                     </button>
-                    <button className="cancel-btn" onClick={() => this.setState({newRowActive: false, newRowData: {}})} disabled={newRowSubmitting || this.props.isAddingFinishedBrew} title="Abbrechen" aria-label="Abbrechen">
+                    <button className="app-table-action app-table-action--danger" onClick={() => this.setState({newRowActive: false, newRowData: {}})} disabled={newRowSubmitting || this.props.isAddingFinishedBrew} title="Abbrechen" aria-label="Abbrechen">
                         <CloseIcon sx={{fontSize: 22}} />
                     </button>
                     {this.props.addFinishedBrewError && <p role="alert">Speichern fehlgeschlagen: {this.props.addFinishedBrewError}</p>}
@@ -280,7 +280,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
         const brewId = brew.id;
         const isActive = brew.active;
         return (
-            <TableRow key={brewId} className={`table-row${isActive ? ' active-row' : ''}`}>
+            <TableRow key={brewId} className={`table-row app-table-row${isActive ? ' active-row' : ''}`}>
                 <TableCell className="table-cell brew-name-cell">
                     {isActive && <span className="active-brew-dot" title="Aktives Bier" aria-label="Aktives Bier" />}
                     <span>{brew.name || '–'}</span>
@@ -294,10 +294,10 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                 </TableCell>
                 <TableCell className="table-cell beschreibung">{brew.note || '–'}</TableCell>
                 <TableCell className="table-cell actions-cell">
-                    <div className="finished-brews-row-actions">
-                        <button className="cancel-btn" onClick={() => this.handleDelete(brewId)} title="Löschen" aria-label="Löschen"><DeleteOutlineIcon sx={{fontSize: 22}} /></button>
-                        <button className="cancel-btn" onClick={() => this.handleShowDetails(brewId)} title="Details" aria-label="Details"><VisibilityIcon sx={{fontSize: 22}} /></button>
-                        <button className="cancel-btn" onClick={() => this.props.openMeasurements(brewId)} title="Messdaten" aria-label={`Messdaten für ${brew.name}`}><ShowChartIcon sx={{fontSize: 22}} /></button>
+                    <div className="finished-brews-row-actions app-table-actions">
+                        <button className="app-table-action app-table-action--danger" onClick={() => this.handleDelete(brewId)} title="Löschen" aria-label="Löschen"><DeleteOutlineIcon sx={{fontSize: 22}} /></button>
+                        <button className="app-table-action" onClick={() => this.handleShowDetails(brewId)} title="Details" aria-label="Details"><VisibilityIcon sx={{fontSize: 22}} /></button>
+                        <button className="app-table-action" onClick={() => this.props.openMeasurements(brewId)} title="Messdaten" aria-label={`Messdaten für ${brew.name}`}><ShowChartIcon sx={{fontSize: 22}} /></button>
                     </div>
                 </TableCell>
             </TableRow>
@@ -307,18 +307,18 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
     renderTable(filteredBrews: FinishedBrew[], beers: { id: string; name: string }[]) {
         return (
             <SimpleBar className="finished-brews-table-scroll">
-                <TableContainer component={Paper} className="finished-brews-table-container">
-                    <Table className="FinishedBrewsTable">
-                        <TableHead className="table-header">
+                <TableContainer component={Paper} className="finished-brews-table-container app-table-container">
+                    <Table className="FinishedBrewsTable app-table">
+                        <TableHead className="table-header app-table-head">
                             <TableRow>
-                                <TableCell className="table-header-cell">Name</TableCell>
-                                <TableCell className="table-header-cell">Zeitraum</TableCell>
-                                <TableCell className="table-header-cell">Volumen</TableCell>
-                                <TableCell className="table-header-cell">Stammwürze</TableCell>
-                                <TableCell className="table-header-cell">Alkohol</TableCell>
-                                <TableCell className="table-header-cell">Status</TableCell>
-                                <TableCell className="table-header-cell">Beschreibung</TableCell>
-                                <TableCell className="table-header-cell">Aktionen</TableCell>
+                                <TableCell className="table-header-cell app-table-header-cell">Name</TableCell>
+                                <TableCell className="table-header-cell app-table-header-cell">Zeitraum</TableCell>
+                                <TableCell className="table-header-cell app-table-header-cell">Volumen</TableCell>
+                                <TableCell className="table-header-cell app-table-header-cell">Stammwürze</TableCell>
+                                <TableCell className="table-header-cell app-table-header-cell">Alkohol</TableCell>
+                                <TableCell className="table-header-cell app-table-header-cell">Status</TableCell>
+                                <TableCell className="table-header-cell app-table-header-cell">Beschreibung</TableCell>
+                                <TableCell className="table-header-cell app-table-header-cell">Aktionen</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>{filteredBrews.map(brew => this.renderBrewRow(brew, beers))}</TableBody>

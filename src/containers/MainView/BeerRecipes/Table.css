@@ -1,112 +1,27 @@
-.Table {
-  background-color: var(--color-brew-bg);
-  border-top-left-radius: 5px;
-  border-top-right-radius: 5px;
+.Table.app-table-container {
+  min-width: 0;
+  overflow-x: auto;
 }
 
-.Table .table-row {
-  height: auto;
-}
-
-.Table .table-cell,
-.Table .table-cell input,
-.Table .table-cell select,
-.Table .table-cell textarea {
-  font-size: 1rem;
-  color: white;
-}
-
-.Table .table-header {
-  height: 1rem;
-  background-color: var(--color-accent);
+.Table.app-table {
+  min-width: 0;
+  table-layout: auto;
 }
 
 .Table .table-header-cell {
-  height: 1rem;
-  font-size: 1rem;
-  font-weight: bold;
+  font-size: var(--font-size-normal);
+  font-weight: 700;
 }
 
-.selected {
-  background-color: var(--color-select);
-}
-
-
-.Table .cancel-btn {
-  background-color: #b71c1c;
-  border: none;
-  border-radius: 4px;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.75rem;
-  font-weight: bold;
-  cursor: pointer;
-  margin-left: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 2rem;
-  min-width: 4rem;
-  transition: background 0.2s;
-}
-
-.Table .cancel-btn:hover {
-  background-color: #d32f2f;
+.Table .table-cell {
+  vertical-align: middle;
 }
 
 .Table .table-action-button {
-  border: none;
-  border-radius: 4px;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.75rem;
-  font-weight: bold;
-  cursor: pointer;
-  transition: background 0.2s, transform 0.1s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 2rem;
-  min-width: 2.5rem;
+  color: var(--color-text);
 }
 
-.Table .table-action-button:hover {
-  transform: translateY(-1px);
-}
-
-.Table .table-action-button:disabled {
-  cursor: not-allowed;
-  border: none;
-  opacity: 1;
-}
-
-
-.Table .export-button:hover {
-    background-color: #388e3c;
-
-}
-.Table .export-button {
-    background-color: transparent;
-}
-
-.Table .brew-button:hover {
-  background-color: #388e3c;
-}
-
-.Table .brew-button {
-    background-color: transparent;
-}
-.Table .cancel-brew-button:hover {
-    background-color:transparent;
-}
-
-.Table .delete-beer-button {
-    background-color: transparent;
-}
-
-.Table .delete-beer-button {
-  background-color: transparent;
-}
-
-
-.Table .delete-beer-button:hover {
-  background-color: #388e3c;
+.Table .cancel-brew-button:hover:not(:disabled) {
+  color: var(--color-white);
+  background: var(--color-danger);
 }

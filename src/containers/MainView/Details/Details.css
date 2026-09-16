@@ -119,10 +119,4 @@
     margin-left: 1.5rem;
 }
 
-/* Tabellen: Text weiß + dunkler Hintergrund */
-.wortBoiling-table .MuiTableCell-root,
-.wortBoiling-table .MuiTableCell-head,
-.wortBoiling-table .MuiTableCell-body {
-    color: white !important;
-    background-color: var(--color-brew-bg) !important;
-}
+/* Table colors, spacing and borders come from the shared app-table foundation. */
