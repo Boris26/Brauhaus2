@@ -4,7 +4,7 @@
   min-width: 0;
   color: var(--color-text);
   background: var(--color-brew-bg);
-  border-radius: var(--border-radius-medium) var(--border-radius-medium) 0 0;
+  border-radius: 0 !important;
   box-shadow: none;
 }
 
@@ -56,16 +56,27 @@
   vertical-align: middle;
 }
 
-.app-table--selectable .MuiTableRow-root:not(.app-table__row--selected) {
+.app-table--selectable .MuiTableRow-root {
   cursor: pointer;
+  transition: background-color .12s ease;
 }
 
-.app-table--selectable .MuiTableRow-root:hover,
-.app-table .app-table__row--selected {
-  background: var(--color-accent-subtle);
+.app-table--selectable .MuiTableRow-root:not(.app-table__row--selected):hover {
+  background: var(--color-panel-highlight);
 }
 
-.app-table .app-table__row--selected {
+.app-table--selectable .MuiTableRow-root.app-table__row--selected,
+.app-table--selectable .MuiTableRow-root.app-table__row--selected:hover {
+  background: var(--color-panel-raised);
+}
+
+.app-table--selectable .MuiTableRow-root:hover > .MuiTableCell-root,
+.app-table--selectable .MuiTableRow-root.app-table__row--selected > .MuiTableCell-root {
+  color: var(--color-text);
+  background: transparent;
+}
+
+.app-table--selectable .MuiTableRow-root.app-table__row--selected > .MuiTableCell-root:first-child {
   box-shadow: inset 3px 0 0 var(--color-accent);
 }
 
