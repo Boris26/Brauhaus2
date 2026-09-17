@@ -2,18 +2,18 @@ import {of} from 'rxjs';
 import {toArray} from 'rxjs/operators';
 import {FermentationActions, FermentationActionTypes} from '../actions/fermentation.actions';
 import {FermentationRepository} from '../repositorys/FermentationRepository';
-import {assignDeviceEpic, bubbleActivityBounds, completeFermentationActionEpic, createMeasurementEpic, gatewayMessageAction, loadBubbleActivityEpic, refreshFermentationAfterGatewayDataEpic, refreshFermentationAfterGatewayStatusEpic, skipFermentationActionEpic, unassignDeviceEpic, updateDeviceDisplayNameEpic} from './fermentationEpics';
+import {assignDeviceEpic, bubbleActivityBounds, completeFermentationActionEpic, createMeasurementEpic, gatewayMessageAction, loadBubbleActivityEpic, recoverMeasurementsAfterReconnectEpic, recoverMeasurementsEpic, refreshFermentationAfterGatewayDataEpic, refreshFermentationAfterGatewayStatusEpic, skipFermentationActionEpic, unassignDeviceEpic, updateDeviceDisplayNameEpic} from './fermentationEpics';
 import {BeerActions} from '../actions/actions';
 import {beerDataReducer, initialBeerState} from '../reducers/beerReducer';
 
 jest.mock('../repositorys/FermentationRepository', () => ({FermentationRepository: {
-  createMeasurement: jest.fn(), completeAction: jest.fn(), skipAction: jest.fn(), assignDevice: jest.fn(), unassignDevice: jest.fn(), updateDeviceDisplayName: jest.fn(), getBubbleActivity: jest.fn(),
+  createMeasurement: jest.fn(), completeAction: jest.fn(), skipAction: jest.fn(), assignDevice: jest.fn(), unassignDevice: jest.fn(), updateDeviceDisplayName: jest.fn(), getBubbleActivity: jest.fn(), getMeasurementsAfter: jest.fn(),
 }}));
 const repository = FermentationRepository as jest.Mocked<typeof FermentationRepository>;
 
 const gatewayState = (loadedIds: string[] = [], bubbleRange?: '6h' | '24h' | '7d' | 'all') => ({value: {
   fermentationReducer: {
-    byBrewId: Object.fromEntries(loadedIds.map(id => [id, {measurements: [], actions: [], devices: [], sensorMeasurements: []}])),
+    byBrewId: Object.fromEntries(loadedIds.map(id => [id, {measurements: [], actions: [], devices: []}])),
     bubbleActivityByBrewId: bubbleRange ? {'brew-a': {activity: [], loading: false, selectedRange: bubbleRange}} : {},
   },
   applicationReducer: {},
@@ -48,13 +48,10 @@ it('loads all bubble activity without from/to', done => {
   });
 });
 
-it('reloads backend due projection after a Plato measurement without completing an action', done => {
+it('appends the canonical manual measurement without reloading history', done => {
   repository.createMeasurement.mockResolvedValue({id: 'm2', finishedBeerId: 'brew-a', measuredAt: '2026-09-05T10:00:00Z', plato: 4.9, source: 'MANUAL'});
   createMeasurementEpic(of(FermentationActions.createMeasurement({finishedBeerId: 'brew-a', measuredAt: '2026-09-05T10:00:00Z', plato: 4.9}))).pipe(toArray()).subscribe((actions: any[]) => {
-    expect(actions.map(action => action.type)).toEqual([
-      FermentationActionTypes.CREATE_MEASUREMENT_SUCCESS,
-      FermentationActionTypes.LOAD,
-    ]);
+    expect(actions.map(action => action.type)).toEqual([FermentationActionTypes.CREATE_MEASUREMENT_SUCCESS]);
     expect(actions).not.toContainEqual(expect.objectContaining({type: FermentationActionTypes.COMPLETE_ACTION}));
     done();
   });
@@ -130,12 +127,12 @@ it('returns a scoped unassignment failure action', done => {
   });
 });
 
-it('reloads exactly the assigned beer when the gateway supplies its beerId', done => {
+it('does not reload history when gateway connectivity status changes', done => {
   refreshFermentationAfterGatewayStatusEpic(
     of(FermentationActions.gatewaySensorStatusChanged({deviceUid: 'sensor', status: 'ASSIGNED', beerId: 'brew-b', updatedAt: '2026-09-13T10:00:00Z'})),
     gatewayState(['brew-a', 'brew-b']),
   ).pipe(toArray()).subscribe((actions: any[]) => {
-    expect(actions).toEqual([FermentationActions.load('brew-b')]);
+    expect(actions).toEqual([]);
     done();
   });
 });
@@ -150,12 +147,12 @@ it('does not reload another fermentation aggregate for an unloaded assigned beer
   });
 });
 
-it('refreshes finished beers for STATE and additionally reloads loaded fermentation details', done => {
+it('refreshes finished beers for STATE without reloading measurement history', done => {
   refreshFermentationAfterGatewayDataEpic(
     of(FermentationActions.gatewayDataChanged('brew-a', 'STATE')),
     gatewayState(['brew-a']),
   ).pipe(toArray()).subscribe((actions: any[]) => {
-    expect(actions).toEqual([BeerActions.getFinishedBeers(true), FermentationActions.load('brew-a')]);
+    expect(actions).toEqual([BeerActions.getFinishedBeers(true)]);
     done();
   });
 });
@@ -170,16 +167,40 @@ it('refreshes finished beers but not unrelated fermentation details for unloaded
   });
 });
 
-it('reloads loaded measurements and the selected bubble activity range through REST actions', done => {
+it('does not translate legacy data invalidations into full-history reads', done => {
   const measurementActions: any[] = [];
   refreshFermentationAfterGatewayDataEpic(of(FermentationActions.gatewayDataChanged('brew-a', 'MEASUREMENT')), gatewayState(['brew-a']))
     .subscribe((action: any) => measurementActions.push(action));
   refreshFermentationAfterGatewayDataEpic(of(FermentationActions.gatewayDataChanged('brew-a', 'BUBBLE_ACTIVITY')), gatewayState(['brew-a'], '6h'))
     .pipe(toArray()).subscribe((actions: any[]) => {
-      expect(measurementActions).toEqual([FermentationActions.load('brew-a')]);
-      expect(actions).toEqual([FermentationActions.loadBubbleActivity('brew-a', '6h')]);
+      expect(measurementActions).toEqual([]);
+      expect(actions).toEqual([]);
       done();
     });
+});
+
+it('maps socket measurement payloads directly to incremental Redux updates', () => {
+  const measurement = {id: 'm2', finishedBeerId: 'brew-a', measuredAt: '2026-09-17T10:00:00Z', temperatureC: 18.4, source: 'SENSOR' as const};
+  expect(gatewayMessageAction({type: 'FERMENTATION_MEASUREMENT_RECORDED', beerId: 'brew-a', measurement}))
+    .toEqual(FermentationActions.measurementsReceived('brew-a', [{id: 'm2', finishedBeerId: 'brew-a', measuredAt: '2026-09-17T10:00:00Z', source: 'SENSOR', beerTemperatureC: 18.4}]));
+});
+
+it('recovers only measurements after the last id when the socket reconnects', done => {
+  const state = gatewayState(['brew-a']);
+  state.value.fermentationReducer.byBrewId['brew-a'].measurements = [{id: 'm1'}];
+  recoverMeasurementsAfterReconnectEpic(of(FermentationActions.gatewayConnectionChanged(true)), state).pipe(toArray()).subscribe((actions: any[]) => {
+    expect(actions).toEqual([FermentationActions.recoverMeasurements('brew-a', 'm1')]);
+    done();
+  });
+});
+
+it('uses the incremental endpoint for recovery instead of full history', done => {
+  repository.getMeasurementsAfter.mockResolvedValue([]);
+  recoverMeasurementsEpic(of(FermentationActions.recoverMeasurements('brew-a', 'm1'))).subscribe((action: any) => {
+    expect(repository.getMeasurementsAfter).toHaveBeenCalledWith('brew-a', 'm1');
+    expect(action).toEqual(FermentationActions.measurementsReceived('brew-a', []));
+    done();
+  });
 });
 
 it('makes the canonical WAITING_FOR_FERMENTATION to FERMENTATION response visible without a reload', () => {

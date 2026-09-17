@@ -60,3 +60,11 @@ When a compatibility-relevant change is requested, Codex must:
 - [x] Uses the PUT response as canonical state and retains the draft after errors.
 - [x] Allows a zero warning and rejects a zero reminder before sending.
 - [ ] Verify deployment of both fields and the canonical PUT response with BeerDataStore.
+
+## Incremental fermentation history
+
+- [x] Preserves the unfiltered initial measurement route and DTO.
+- [x] Uses an additive `afterId` query and additive socket event types.
+- [x] Deduplicates at-least-once socket delivery without replacing history arrays.
+- [x] Keeps pressure/bubble data separate from canonical temperature/Plato history.
+- [ ] Verify BeerDataStore cursor ordering/error behavior and gateway post-persistence delivery.

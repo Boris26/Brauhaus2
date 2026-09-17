@@ -142,7 +142,6 @@ describe('DashboardPage', () => {
         {id: 's1', finishedBeerId: 'finished-1', measuredAt: '2026-09-02T10:00:00Z', beerTemperatureC: 18.7, ambientTemperatureC: 16.3, source: 'SENSOR'},
         {id: 'm2', finishedBeerId: 'finished-1', measuredAt: '2026-09-03T10:00:00Z', plato: 4.4, source: 'MANUAL'},
       ],
-      sensorMeasurements: [],
       actions: [], devices: [],
     }}});
 

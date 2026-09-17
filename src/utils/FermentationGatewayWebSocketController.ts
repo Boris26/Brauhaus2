@@ -1,10 +1,12 @@
-import {FermentationGatewaySensorStatus, FermentationMeasurementRuntimeState} from '../model/Fermentation';
+import {BubbleActivityDTO, FermentationGatewaySensorStatus, FermentationMeasurementDTO, FermentationMeasurementRuntimeState} from '../model/Fermentation';
 
 export type FermentationGatewayMessage =
   | {type: 'FERMENTATION_GATEWAY_SNAPSHOT'; sensors: FermentationGatewaySensorStatus[]}
   | {type: 'FERMENTATION_SENSOR_STATUS_CHANGED'; sensor: FermentationGatewaySensorStatus}
   | {type: 'FERMENTATION_SENSOR_RUNTIME_CHANGED'; deviceUid: string; measurementState: FermentationMeasurementRuntimeState; updatedAt: string}
-  | {type: 'FERMENTATION_DATA_CHANGED'; beerId: string; change: 'MEASUREMENT' | 'BUBBLE_ACTIVITY' | 'STATE'};
+  | {type: 'FERMENTATION_DATA_CHANGED'; beerId: string; change: 'MEASUREMENT' | 'BUBBLE_ACTIVITY' | 'STATE'}
+  | {type: 'FERMENTATION_MEASUREMENT_RECORDED'; beerId: string; measurement: FermentationMeasurementDTO}
+  | {type: 'FERMENTATION_BUBBLE_ACTIVITY_RECORDED'; beerId: string; activity: BubbleActivityDTO};
 
 export const buildFermentationGatewayWebSocketUrl = (location: Pick<Location, 'protocol' | 'host'> = window.location): string =>
   `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/api/fermentation/ui`;
@@ -24,6 +26,8 @@ export const parseFermentationGatewayMessage = (data: unknown): FermentationGate
       && typeof value.beerId === 'string'
       && value.beerId.length > 0
       && ['MEASUREMENT', 'BUBBLE_ACTIVITY', 'STATE'].includes(value.change)) return value;
+    if (value?.type === 'FERMENTATION_MEASUREMENT_RECORDED' && typeof value.beerId === 'string' && value.measurement?.id) return value;
+    if (value?.type === 'FERMENTATION_BUBBLE_ACTIVITY_RECORDED' && typeof value.beerId === 'string' && value.activity?.deviceId && Number.isFinite(value.activity?.sequence)) return value;
   } catch (_) {
     // Malformed and unknown gateway messages are deliberately non-fatal.
   }

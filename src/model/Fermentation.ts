@@ -169,5 +169,4 @@ export interface FermentationDetails {
   measurements: FermentationMeasurement[];
   actions: FermentationAction[];
   devices: FermentationDevice[];
-  sensorMeasurements: SensorMeasurement[];
 }

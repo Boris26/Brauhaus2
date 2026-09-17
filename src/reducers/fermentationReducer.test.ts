@@ -44,6 +44,15 @@ describe('fermentationReducer', () => {
     const state = fermentationReducer(initialFermentationState, FermentationActions.createMeasurement({finishedBeerId: 'b', measuredAt: '', plato: 4}));
     expect(state.savingMeasurementIds).toEqual(['b']); expect(state.byBrewId.b).toBeUndefined();
   });
+  it('appends canonical measurements once and preserves the existing array for duplicates', () => {
+    const first = {id: 'm1', finishedBeerId: 'b', measuredAt: '2026-09-17T10:00:00Z', beerTemperatureC: 18, source: 'SENSOR' as const};
+    const second = {...first, id: 'm2', measuredAt: '2026-09-17T10:01:00Z'};
+    const loaded = fermentationReducer(initialFermentationState, FermentationActions.loadSuccess('b', {measurements: [first], actions: [], devices: []}));
+    const appended = fermentationReducer(loaded, FermentationActions.measurementsReceived('b', [second]));
+    const duplicate = fermentationReducer(appended, FermentationActions.measurementsReceived('b', [second]));
+    expect(appended.byBrewId.b.measurements).toEqual([first, second]);
+    expect(duplicate).toBe(appended);
+  });
   it('does not optimistically complete actions or assignments and exposes failures', () => {
     const completing = fermentationReducer(initialFermentationState, FermentationActions.completeAction('b', 'a'));
     expect(completing.completingActionIds).toEqual(['b/a']); expect(completing.byBrewId.b).toBeUndefined();
@@ -62,7 +71,7 @@ describe('fermentationReducer', () => {
   });
   it('immediately adopts the canonical action returned by successful completion', () => {
     const pending = {actionId: 'a', sourceType: 'DRY_HOP', status: 'PENDING' as const, due: true};
-    const loaded = fermentationReducer(initialFermentationState, FermentationActions.loadSuccess('b', {actions: [pending], measurements: [], devices: [], sensorMeasurements: []}));
+    const loaded = fermentationReducer(initialFermentationState, FermentationActions.loadSuccess('b', {actions: [pending], measurements: [], devices: []}));
     const requesting = fermentationReducer(loaded, FermentationActions.completeAction('b', 'a'));
     const canonical = {...pending, status: 'COMPLETED' as const, due: false, completedAt: '2026-09-13T10:00:00Z', contactEndsAt: '2026-09-16T10:00:00Z'};
     const completed = fermentationReducer(requesting, FermentationActions.completeActionSuccess('b', canonical));
@@ -82,15 +91,15 @@ describe('fermentationReducer', () => {
   });
   it('keeps runtime actions isolated by concrete FinishedBeer.id even for the same recipe action', () => {
     const action = {actionId: 'recipe-action-1', status: 'PENDING'} as any;
-    const brewA = {measurements: [], devices: [], sensorMeasurements: [], actions: [{...action, status: 'COMPLETED'}]};
-    const brewB = {measurements: [], devices: [], sensorMeasurements: [], actions: [action]};
+    const brewA = {measurements: [], devices: [], actions: [{...action, status: 'COMPLETED'}]};
+    const brewB = {measurements: [], devices: [], actions: [action]};
     const afterA = fermentationReducer(initialFermentationState, FermentationActions.loadSuccess('brew-a', brewA));
     const afterB = fermentationReducer(afterA, FermentationActions.loadSuccess('brew-b', brewB));
     expect(afterB.byBrewId['brew-a'].actions[0].status).toBe('COMPLETED');
     expect(afterB.byBrewId['brew-b'].actions[0].status).toBe('PENDING');
   });
   it('replaces the backend due projection after Plato reload without completing the action', () => {
-    const details = (due: boolean) => ({measurements: [], devices: [], sensorMeasurements: [], actions: [{actionId: 'plato-action', sourceType: 'ADDITIONAL_INGREDIENT', status: 'PENDING' as const, due, triggerType: 'PLATO_THRESHOLD' as any, triggerValue: 5}]});
+    const details = (due: boolean) => ({measurements: [], devices: [], actions: [{actionId: 'plato-action', sourceType: 'ADDITIONAL_INGREDIENT', status: 'PENDING' as const, due, triggerType: 'PLATO_THRESHOLD' as any, triggerValue: 5}]});
     const before = fermentationReducer(initialFermentationState, FermentationActions.loadSuccess('brew-a', details(false)));
     const after = fermentationReducer(before, FermentationActions.loadSuccess('brew-a', details(true)));
     expect(before.byBrewId['brew-a'].actions[0]).toMatchObject({status: 'PENDING', due: false});

@@ -66,16 +66,16 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
   const displayNameWasPending = useRef(false);
   const [measuredAt, setMeasuredAt] = useState(() => new Date().toISOString().slice(0, 16));
   const [beerTemperature, setBeerTemperature] = useState(''); const [ambientTemperature, setAmbientTemperature] = useState(''); const [plato, setPlato] = useState(''); const [note, setNote] = useState(''); const [validation, setValidation] = useState('');
-  useEffect(() => { props.load(props.brew.id); }, [props.brew.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (!props.details) props.load(props.brew.id); }, [props.brew.id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setCompletedActionsOpen(false); }, [props.brew.id]);
   useEffect(() => { if (props.viewMode === 'measurements') props.loadBubbleActivity(props.brew.id, '24h'); }, [props.brew.id, props.viewMode]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (formOpen && !props.saving && !props.error) { setFormOpen(false); setBeerTemperature(''); setAmbientTemperature(''); setPlato(''); setNote(''); } }, [props.saving]); // eslint-disable-line react-hooks/exhaustive-deps
-  const loadedDetails = props.details ?? {measurements: [], actions: [], devices: [], sensorMeasurements: []};
+  const loadedDetails = props.details ?? {measurements: [], actions: [], devices: []};
   const isInitialLoading = props.loading && !props.details;
   // Use the embedded batch snapshot until the dedicated endpoint supplies the
   // canonical runtime actions (including due and completion projections).
   const details = {...loadedDetails, actions: props.details ? loadedDetails.actions : (props.brew.fermentationActions ?? [])};
-  const latestSensor = latestByDate(details.sensorMeasurements, value => value.measuredAt);
+  const latestSensor = latestByDate(details.measurements.filter(value => value.source === 'SENSOR'), value => value.measuredAt);
   const latestMeasurement = latestByDate(details.measurements.filter(value => Number.isFinite(Date.parse(value.measuredAt))), value => value.measuredAt);
   const readings = latestFermentationReadings(details.measurements);
   const nextAction = [...details.actions].filter(action => action.status === 'PENDING').sort((a, b) => Number(isActionDue(b)) - Number(isActionDue(a)))[0];
