@@ -1,11 +1,16 @@
 import {FermentationActionTypes} from '../actions/fermentation.actions';
-import {BubbleActivity, BubbleActivityRange, FermentationDetails, FermentationGatewaySensorStatus} from '../model/Fermentation';
+import {BubbleActivity, BubbleActivityRange, FermentationDetails, FermentationGatewaySensorStatus, FermentationMeasurement} from '../model/Fermentation';
 
 export interface BubbleActivityState {activity: BubbleActivity[]; loading: boolean; error?: string; selectedRange: BubbleActivityRange;}
 export interface FermentationState { byBrewId: Record<string, FermentationDetails>; bubbleActivityByBrewId: Record<string, BubbleActivityState>; loadingIds: string[]; savingMeasurementIds: string[]; completingActionIds: string[]; completeActionErrors: Record<string, string>; skippingActionIds: string[]; assigningDeviceIds: string[]; unassigningDeviceIds: string[]; updatingDeviceDisplayNameIds: string[]; deviceDisplayNameErrors: Record<string, string>; assignmentErrors: Record<string, string>; unassignmentErrors: Record<string, string>; errors: Record<string, string>; gatewayConnected: boolean; sensorsByDeviceUid: Record<string, FermentationGatewaySensorStatus>; }
 export const initialFermentationState: FermentationState = {byBrewId: {}, bubbleActivityByBrewId: {}, loadingIds: [], savingMeasurementIds: [], completingActionIds: [], completeActionErrors: {}, skippingActionIds: [], assigningDeviceIds: [], unassigningDeviceIds: [], updatingDeviceDisplayNameIds: [], deviceDisplayNameErrors: {}, assignmentErrors: {}, unassignmentErrors: {}, errors: {}, gatewayConnected: false, sensorsByDeviceUid: {}};
 const add = (xs: string[], id: string) => xs.includes(id) ? xs : [...xs, id];
 const remove = (xs: string[], id: string) => xs.filter(value => value !== id);
+const appendMeasurements = (current: FermentationMeasurement[], incoming: FermentationMeasurement[]) => {
+  const knownIds = new Set(current.map(measurement => measurement.id));
+  const additions = incoming.filter(measurement => !knownIds.has(measurement.id));
+  return additions.length === 0 ? current : [...current, ...additions].sort((a, b) => Date.parse(a.measuredAt) - Date.parse(b.measuredAt));
+};
 export const fermentationActionRequestId = (brewId: string, actionId: string) => `${brewId}/${actionId}`;
 export const fermentationReducer = (state = initialFermentationState, action: any): FermentationState => {
   const p = action.payload || {};
@@ -14,7 +19,10 @@ export const fermentationReducer = (state = initialFermentationState, action: an
     case FermentationActionTypes.LOAD_SUCCESS: return {...state, loadingIds: remove(state.loadingIds, p.brewId), byBrewId: {...state.byBrewId, [p.brewId]: p.details}};
     case FermentationActionTypes.LOAD_FAILURE: return {...state, loadingIds: remove(state.loadingIds, p.brewId), errors: {...state.errors, [p.brewId]: p.error}};
     case FermentationActionTypes.CREATE_MEASUREMENT: return {...state, savingMeasurementIds: add(state.savingMeasurementIds, p.measurement.finishedBeerId), errors: {...state.errors, [p.measurement.finishedBeerId]: ''}};
-    case FermentationActionTypes.CREATE_MEASUREMENT_SUCCESS: return {...state, savingMeasurementIds: remove(state.savingMeasurementIds, p.brewId)};
+    case FermentationActionTypes.CREATE_MEASUREMENT_SUCCESS: {
+      const details = state.byBrewId[p.brewId];
+      return {...state, savingMeasurementIds: remove(state.savingMeasurementIds, p.brewId), byBrewId: details ? {...state.byBrewId, [p.brewId]: {...details, measurements: appendMeasurements(details.measurements, [p.measurement])}} : state.byBrewId};
+    }
     case FermentationActionTypes.CREATE_MEASUREMENT_FAILURE: return {...state, savingMeasurementIds: remove(state.savingMeasurementIds, p.brewId), errors: {...state.errors, [p.brewId]: p.error}};
     case FermentationActionTypes.COMPLETE_ACTION: {
       const requestId = fermentationActionRequestId(p.brewId, p.actionId); const completeActionErrors = {...state.completeActionErrors}; delete completeActionErrors[requestId];
@@ -24,7 +32,7 @@ export const fermentationReducer = (state = initialFermentationState, action: an
       const requestId = fermentationActionRequestId(p.brewId, p.actionId); const details = state.byBrewId[p.brewId];
       const canonicalDetails = details
         ? {...details, actions: details.actions.some(item => item.actionId === p.actionId) ? details.actions.map(item => item.actionId === p.actionId ? p.action : item) : [...details.actions, p.action]}
-        : {actions: [p.action], measurements: [], devices: [], sensorMeasurements: []};
+        : {actions: [p.action], measurements: [], devices: []};
       return {...state, completingActionIds: remove(state.completingActionIds, requestId), byBrewId: {...state.byBrewId, [p.brewId]: canonicalDetails}};
     }
     case FermentationActionTypes.COMPLETE_ACTION_FAILURE: {
@@ -52,6 +60,17 @@ export const fermentationReducer = (state = initialFermentationState, action: an
     case FermentationActionTypes.GATEWAY_SENSOR_RUNTIME_CHANGED: {
       const sensor = state.sensorsByDeviceUid[p.deviceUid];
       return sensor ? {...state, sensorsByDeviceUid: {...state.sensorsByDeviceUid, [p.deviceUid]: {...sensor, measurementState: p.measurementState, updatedAt: p.updatedAt}}} : state;
+    }
+    case FermentationActionTypes.MEASUREMENTS_RECEIVED: {
+      const details = state.byBrewId[p.brewId];
+      if (!details) return state;
+      const measurements = appendMeasurements(details.measurements, p.measurements || []);
+      return measurements === details.measurements ? state : {...state, byBrewId: {...state.byBrewId, [p.brewId]: {...details, measurements}}};
+    }
+    case FermentationActionTypes.BUBBLE_ACTIVITY_RECEIVED: {
+      const bubble = state.bubbleActivityByBrewId[p.brewId];
+      if (!bubble || bubble.activity.some(item => item.deviceId === p.activity.deviceId && item.sequence === p.activity.sequence)) return state;
+      return {...state, bubbleActivityByBrewId: {...state.bubbleActivityByBrewId, [p.brewId]: {...bubble, activity: [...bubble.activity, p.activity]}}};
     }
     case FermentationActionTypes.LOAD_BUBBLE_ACTIVITY: return {...state, bubbleActivityByBrewId: {...state.bubbleActivityByBrewId, [p.brewId]: {activity: state.bubbleActivityByBrewId[p.brewId]?.activity ?? [], loading: true, selectedRange: p.range}}};
     case FermentationActionTypes.LOAD_BUBBLE_ACTIVITY_SUCCESS:

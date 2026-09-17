@@ -34,6 +34,13 @@ describe('FermentationGatewayWebSocketController', () => {
     expect(parseFermentationGatewayMessage(JSON.stringify({type: 'FERMENTATION_DATA_CHANGED', beerId: 'brew-a', change: 'UNKNOWN'}))).toBeUndefined();
   });
 
+  it('parses persisted measurement and bubble payloads for incremental updates', () => {
+    const measurement = {type: 'FERMENTATION_MEASUREMENT_RECORDED', beerId: 'brew-a', measurement: {id: 'm1', measuredAt: '2026-09-17T10:00:00Z', source: 'SENSOR'}};
+    const activity = {type: 'FERMENTATION_BUBBLE_ACTIVITY_RECORDED', beerId: 'brew-a', activity: {deviceId: 'sensor-a', sequence: 4, bubbleCount: 1, windowSeconds: 60, windowEndedAt: '2026-09-17T10:00:00Z'}};
+    expect(parseFermentationGatewayMessage(JSON.stringify(measurement))).toEqual(measurement);
+    expect(parseFermentationGatewayMessage(JSON.stringify(activity))).toEqual(activity);
+  });
+
   it.each(['RUNNING', 'PAUSED', 'IDLE'] as const)('parses the %s measurement runtime state', measurementState => {
     const message = {type: 'FERMENTATION_SENSOR_RUNTIME_CHANGED', deviceUid: 'sensor-a', measurementState, updatedAt: '2026-09-14T10:00:00Z'};
     expect(parseFermentationGatewayMessage(JSON.stringify(message))).toEqual(message);

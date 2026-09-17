@@ -3,7 +3,15 @@ import {FinishedBrewDetailsView} from './FinishedBrewDetails';
 import {eBrewState} from '../../../enums/eBrewState';
 
 const brew: any = {id: 'brew-1', name: 'West Coast IPA', startDate: '2026-09-01', fermentationStartedAt: '2026-09-01T12:00:00+02:00', liters: 20, originalwort: 13.2, residual_extract: null, note: '', active: true, state: eBrewState.FERMENTATION};
-const base: any = {brew, details: {measurements: [], actions: [], devices: [], sensorMeasurements: []}, bubbleActivity: [], bubbleActivityRange: '24h', bubbleActivityLoading: false, activeBrews: [brew], loading: false, saving: false, savingLifecycle: false, startingFermentation: false, completing: [], completeActionErrors: {}, dismissCompleteError: jest.fn(), skipping: [], assigning: [], unassigning: [], updatingDeviceDisplayNames: [], deviceDisplayNameErrors: {}, sensorsByDeviceUid: {}, load: jest.fn(), loadBubbleActivity: jest.fn(), save: jest.fn(), complete: jest.fn(), skip: jest.fn(), transition: jest.fn(), startFermentation: jest.fn(), assign: jest.fn(), unassign: jest.fn(), updateDeviceDisplayName: jest.fn()};
+const base: any = {brew, details: {measurements: [], actions: [], devices: []}, bubbleActivity: [], bubbleActivityRange: '24h', bubbleActivityLoading: false, activeBrews: [brew], loading: false, saving: false, savingLifecycle: false, startingFermentation: false, completing: [], completeActionErrors: {}, dismissCompleteError: jest.fn(), skipping: [], assigning: [], unassigning: [], updatingDeviceDisplayNames: [], deviceDisplayNameErrors: {}, sensorsByDeviceUid: {}, load: jest.fn(), loadBubbleActivity: jest.fn(), save: jest.fn(), complete: jest.fn(), skip: jest.fn(), transition: jest.fn(), startFermentation: jest.fn(), assign: jest.fn(), unassign: jest.fn(), updateDeviceDisplayName: jest.fn()};
+
+it('loads the fermentation aggregate only when it is not already in Redux', () => {
+  const load = jest.fn();
+  const {rerender} = render(<FinishedBrewDetailsView {...base} details={undefined} load={load} />);
+  expect(load).toHaveBeenCalledTimes(1);
+  rerender(<FinishedBrewDetailsView {...base} details={{measurements: [], actions: [], devices: []}} load={load} />);
+  expect(load).toHaveBeenCalledTimes(1);
+});
 
 describe('fermentation details dashboard', () => {
   it.each(['measurements', 'dashboard'] as const)('shows measurement loading only before details exist in the %s view', viewMode => {
@@ -16,7 +24,7 @@ describe('fermentation details dashboard', () => {
   });
 
   it('keeps the temperature chart mounted during a background refresh', () => {
-    const details: any = {measurements: [{id: 'm1', finishedBeerId: 'brew-1', measuredAt: '2026-09-02T18:00:00Z', beerTemperatureC: 18.1, source: 'SENSOR'}], actions: [], devices: [], sensorMeasurements: []};
+    const details: any = {measurements: [{id: 'm1', finishedBeerId: 'brew-1', measuredAt: '2026-09-02T18:00:00Z', beerTemperatureC: 18.1, source: 'SENSOR'}], actions: [], devices: []};
     const {rerender} = render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" />);
     const chart = screen.getByRole('img', {name: 'Zeitlicher Verlauf von Temperatur und Plato'});
 
@@ -51,7 +59,6 @@ describe('fermentation details dashboard', () => {
       ],
       actions: [{actionId: 'a', status: 'PENDING', due: true, sourceType: 'HINZUFÜGEN', name: 'Citra', amount: 80, unit: 'g'}],
       devices: [{deviceUid: 'd', deviceName: 'FERM-01', lastSeenAt: new Date().toISOString(), activeAssignment: {beerId: 'brew-1'}}],
-      sensorMeasurements: [{id: 's', deviceId: 'd', measuredAt: '2026-09-03T18:00:00Z', beerTemperature: 18.3, ambientTemperature: 17.6}],
     };
     render(<FinishedBrewDetailsView {...base} details={details} complete={complete} assign={assign} />);
 
@@ -98,8 +105,7 @@ describe('fermentation details dashboard', () => {
       ],
       actions: [{actionId: 'a', status: 'PENDING', due: true, sourceType: 'DRY_HOP', name: 'Citra', amount: 80, unit: 'GRAMS'}],
       devices: [{deviceUid: 'mine', deviceName: 'Sensor Keller', activeAssignment: {beerId: 'brew-1'}}],
-      sensorMeasurements: [],
-    };
+          };
     const bubbleActivity: any[] = [{deviceId: 'mine', sequence: 1, bubbleCount: 4, windowSeconds: 60, averagePressureDeltaPa: 2, windowEndedAt: '2026-09-04T18:00:00Z'}];
     const {container} = render(<FinishedBrewDetailsView {...base} brew={{...brew, brewValues: JSON.stringify({groupedData: {}})}} details={details} bubbleActivity={bubbleActivity} viewMode="measurements" />);
 
@@ -117,7 +123,7 @@ describe('fermentation details dashboard', () => {
   });
 
   it('reserves the current-state field for measurement runtime while keeping sensor availability below', () => {
-    const details: any = {measurements: [], actions: [], sensorMeasurements: [], devices: [
+    const details: any = {measurements: [], actions: [], devices: [
       {deviceUid: 'mine', deviceName: 'Sensor Keller', activeAssignment: {beerId: 'brew-1'}},
     ]};
     render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" sensorsByDeviceUid={{mine: {deviceUid: 'mine', status: 'ASSIGNED', beerId: 'brew-1', updatedAt: new Date().toISOString()}}} />);
@@ -137,7 +143,7 @@ describe('fermentation details dashboard', () => {
     ['PAUSED', 'Pause', 'is-paused'],
     ['IDLE', 'Bereit', 'is-idle'],
   ])('shows assigned %s measurement runtime independently from online status', (measurementState, label, cssClass) => {
-    const details: any = {measurements: [], actions: [], sensorMeasurements: [], devices: [
+    const details: any = {measurements: [], actions: [], devices: [
       {deviceUid: 'mine', deviceName: 'Sensor Keller', activeAssignment: {beerId: 'brew-1'}},
     ]};
     render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" sensorsByDeviceUid={{mine: {deviceUid: 'mine', status: 'ASSIGNED', beerId: 'brew-1', measurementState, updatedAt: new Date().toISOString()}}} />);
@@ -150,7 +156,7 @@ describe('fermentation details dashboard', () => {
   });
 
   it('hides runtime from an offline assigned sensor and from another sensor', () => {
-    const details: any = {measurements: [], actions: [], sensorMeasurements: [], devices: [
+    const details: any = {measurements: [], actions: [], devices: [
       {deviceUid: 'mine', deviceName: 'Sensor Keller', activeAssignment: {beerId: 'brew-1'}},
     ]};
     const {rerender} = render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" sensorsByDeviceUid={{mine: {deviceUid: 'mine', status: 'DISCONNECTED', measurementState: 'RUNNING', updatedAt: ''}}} />);
@@ -164,7 +170,7 @@ describe('fermentation details dashboard', () => {
 
   it('uses backend assignments, offers only free devices and dispatches assignment', () => {
     const assign = jest.fn();
-    const details: any = {measurements: [], actions: [], sensorMeasurements: [], devices: [
+    const details: any = {measurements: [], actions: [], devices: [
       {deviceUid: 'other', deviceName: 'Sensor Fremdbier', activeAssignment: {beerId: 'brew-2'}, lastSeenAt: new Date().toISOString()},
       {deviceUid: 'free', deviceName: 'Sensor Keller', activeAssignment: null},
     ]};
@@ -180,7 +186,7 @@ describe('fermentation details dashboard', () => {
 
   it('shows only the assigned sensor online status and confirms separation', () => {
     const unassign = jest.fn();
-    const details: any = {measurements: [], actions: [], sensorMeasurements: [], devices: [
+    const details: any = {measurements: [], actions: [], devices: [
       {deviceUid: 'mine', deviceName: 'Sensor Keller', activeAssignment: {beerId: 'brew-1', assignedAt: '2026-09-13T15:20:00Z'}},
       {deviceUid: 'free', deviceName: 'Freier Sensor', activeAssignment: null},
     ]};
@@ -201,7 +207,7 @@ describe('fermentation details dashboard', () => {
   it('edits and resets the sensor alias inline without exposing its device UID', () => {
     const updateDeviceDisplayName = jest.fn();
     const deviceUid = '307528d6-76af-4616-a0c1-568e471ff77e';
-    const details: any = {measurements: [], actions: [], sensorMeasurements: [], devices: [
+    const details: any = {measurements: [], actions: [], devices: [
       {deviceUid, deviceName: 'FERM-1FF77E', displayName: 'Gärtank Garage', activeAssignment: {beerId: 'brew-1', assignedAt: '2026-09-13T15:20:00Z'}},
     ]};
     render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" updateDeviceDisplayName={updateDeviceDisplayName} sensorsByDeviceUid={{[deviceUid]: {deviceUid, status: 'ASSIGNED', beerId: 'brew-1', updatedAt: new Date().toISOString()}}} />);
@@ -242,7 +248,7 @@ describe('fermentation details dashboard', () => {
   });
 
   it('prefills the technical name when no alias exists and keeps editing open on save errors', () => {
-    const details: any = {measurements: [], actions: [], sensorMeasurements: [], devices: [{deviceUid: 'mine', deviceName: 'FERM-01', displayName: null, activeAssignment: {beerId: 'brew-1'}}]};
+    const details: any = {measurements: [], actions: [], devices: [{deviceUid: 'mine', deviceName: 'FERM-01', displayName: null, activeAssignment: {beerId: 'brew-1'}}]};
     const {rerender} = render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" />);
     fireEvent.click(screen.getByRole('button', {name: 'Sensor-Alias bearbeiten'}));
     expect(screen.getByRole('textbox', {name: 'Sensor-Alias'})).toHaveValue('FERM-01');
@@ -252,14 +258,14 @@ describe('fermentation details dashboard', () => {
   });
 
   it.each([eBrewState.MATURATION, eBrewState.FINISHED])('does not offer new assignments in %s', state => {
-    const details: any = {measurements: [], actions: [], sensorMeasurements: [], devices: [{deviceUid: 'free', deviceName: 'Frei', activeAssignment: null}]};
+    const details: any = {measurements: [], actions: [], devices: [{deviceUid: 'free', deviceName: 'Frei', activeAssignment: null}]};
     render(<FinishedBrewDetailsView {...base} brew={{...brew, state}} details={details} viewMode="measurements" />);
     expect(screen.queryByLabelText('Sensor auswählen')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', {name: 'Sensor zuweisen'})).not.toBeInTheDocument();
   });
 
   it('reports when no free sensor is available and preserves request-specific errors', () => {
-    const details: any = {measurements: [], actions: [], sensorMeasurements: [], devices: [{deviceUid: 'other', deviceName: 'Belegt', activeAssignment: {beerId: 'brew-2'}}]};
+    const details: any = {measurements: [], actions: [], devices: [{deviceUid: 'other', deviceName: 'Belegt', activeAssignment: {beerId: 'brew-2'}}]};
     render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" assignmentError="HTTP 409" />);
     expect(screen.getByText('Kein freier Sensor verfügbar.')).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent('Der Sensor konnte nicht zugeordnet werden.HTTP 409');
@@ -355,7 +361,7 @@ describe('fermentation details dashboard', () => {
   it('allows MANUAL + PENDING without due and never offers skipped actions', () => {
     const complete = jest.fn();
     const skip = jest.fn();
-    const details: any = {measurements: [], devices: [], sensorMeasurements: [], actions: [
+    const details: any = {measurements: [], devices: [], actions: [
       {actionId: 'manual', status: 'PENDING', due: false, triggerType: 'MANUAL', sourceType: 'ZUGABE'},
       {actionId: 'skipped', status: 'SKIPPED', due: true, triggerType: 'MANUAL', sourceType: 'ZUGABE'},
     ]};
@@ -368,7 +374,7 @@ describe('fermentation details dashboard', () => {
     expect(skip).toHaveBeenCalledWith(brew.id, 'manual');
   });
   it('disables only the action whose completion request is pending', () => {
-    const details: any = {measurements: [], devices: [], sensorMeasurements: [], actions: [
+    const details: any = {measurements: [], devices: [], actions: [
       {actionId: 'first', status: 'PENDING', due: true, triggerType: 'TIME_OFFSET', triggerValue: 4, triggerUnit: 'DAYS', sourceType: 'DRY_HOP', name: 'Cascade', amount: 50, unit: 'GRAMS'},
       {actionId: 'second', status: 'PENDING', due: true, triggerType: 'MANUAL', sourceType: 'ADDITIONAL_INGREDIENT', name: 'Orange', amount: 35, unit: 'GRAMS'},
     ]};
@@ -379,7 +385,7 @@ describe('fermentation details dashboard', () => {
   });
   it('keeps a failed action open and uses the existing error dialog', () => {
     const dismissCompleteError = jest.fn();
-    const details: any = {measurements: [], devices: [], sensorMeasurements: [], actions: [
+    const details: any = {measurements: [], devices: [], actions: [
       {actionId: 'failed', status: 'PENDING', due: true, triggerType: 'PLATO_THRESHOLD', triggerValue: 5, triggerUnit: 'PLATO', sourceType: 'DRY_HOP', name: 'Cascade', amount: 50, unit: 'GRAMS'},
     ]};
     render(<FinishedBrewDetailsView {...base} details={details} completeActionErrors={{'brew-1/failed': 'HTTP 409'}} dismissCompleteError={dismissCompleteError} viewMode="measurements" />);
@@ -390,7 +396,7 @@ describe('fermentation details dashboard', () => {
     expect(dismissCompleteError).toHaveBeenCalledWith('brew-1', 'failed');
   });
   it('shows localized pending and completed fermentation actions with backend timestamps', () => {
-    const details: any = {measurements: [], devices: [], sensorMeasurements: [], actions: [
+    const details: any = {measurements: [], devices: [], actions: [
       {actionId: 'hop', status: 'PENDING', due: false, triggerType: 'TIME_OFFSET', triggerValue: 4, triggerUnit: 'DAYS', sourceType: 'DRY_HOP', name: 'Citra', amount: 50, unit: 'GRAMS', contactTime: 72, contactTimeUnit: 'HOURS'},
       {actionId: 'spice', status: 'COMPLETED', triggerType: 'PLATO_THRESHOLD', triggerValue: 5, triggerUnit: 'PLATO', sourceType: 'ADDITIONAL_INGREDIENT', name: 'Koriandersamen', amount: 1, unit: 'PIECES', completedAt: '2026-09-11T10:22:00Z', contactEndsAt: '2026-09-14T10:22:00Z'},
     ]};
@@ -414,7 +420,7 @@ describe('fermentation details dashboard', () => {
   });
 
   it('uses the FinishedBeer action snapshot, including an explicitly empty array', () => {
-    const endpointDetails: any = {measurements: [], devices: [], sensorMeasurements: [], actions: [
+    const endpointDetails: any = {measurements: [], devices: [], actions: [
       {actionId: 'old', status: 'PENDING', sourceType: 'DRY_HOP', name: 'Altes Rezept', amount: 10, unit: 'GRAMS'},
     ]};
     const snapshot: any[] = [{actionId: 'snapshot', status: 'PENDING', sourceType: 'DRY_HOP', name: 'Sud-Snapshot', amount: 30, unit: 'GRAMS'}];

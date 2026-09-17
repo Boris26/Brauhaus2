@@ -20,7 +20,8 @@ describe('FermentationRepository BeerDataStore routes', () => {
     await FermentationRepository.getDetails('brew/a');
     expect(mocked.get).toHaveBeenCalledWith('fermentation/beers/brew%2Fa/recipe-actions');
     expect(mocked.get).toHaveBeenCalledWith('fermentation/beers/brew%2Fa/measurements');
-    expect(mocked.get).toHaveBeenCalledWith('fermentation/beers/brew%2Fa/sensor-measurements');
+    expect(mocked.get).not.toHaveBeenCalledWith(expect.stringContaining('sensor-measurements'));
+    expect(mocked.get).toHaveBeenCalledTimes(3);
     expect(mocked.get).not.toHaveBeenCalledWith(expect.stringContaining('finishedbeers'));
   });
   it('maps nullable API trigger fields without renaming actionId', async () => {
@@ -38,6 +39,12 @@ describe('FermentationRepository BeerDataStore routes', () => {
       .mockResolvedValue({data: []});
     const details = await FermentationRepository.getDetails('brew');
     expect(details.measurements[0]).toMatchObject({beerTemperatureC: 18.2, ambientTemperatureC: 16.8, source: 'SENSOR'});
+  });
+  it('loads only measurements after the last known id for reconnect recovery', async () => {
+    mocked.get.mockResolvedValue({data: [{id: 'm2', finishedBeerId: 'brew/a', measuredAt: '2026-09-05T12:01:00Z', temperatureC: 18.3, source: 'SENSOR'}]});
+    const measurements = await FermentationRepository.getMeasurementsAfter('brew/a', 'm/1');
+    expect(mocked.get).toHaveBeenCalledWith('fermentation/beers/brew%2Fa/measurements?afterId=m%2F1');
+    expect(measurements[0].beerTemperatureC).toBe(18.3);
   });
   it('maps the backend assignment DTO to the UI active assignment', async () => {
     mocked.get.mockResolvedValue({data: [{deviceUid: 'sensor-1', name: 'Keller', assignment: {beerId: 'brew', assignmentType: 'manual', assignedAt: '2026-09-13T15:20:00Z'}}]});

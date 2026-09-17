@@ -1,4 +1,4 @@
-import {BubbleActivity, BubbleActivityRange, CreateFermentationMeasurement, FermentationAction, FermentationDetails, FermentationGatewaySensorStatus, FermentationMeasurementRuntimeState} from '../model/Fermentation';
+import {BubbleActivity, BubbleActivityRange, CreateFermentationMeasurement, FermentationAction, FermentationDetails, FermentationGatewaySensorStatus, FermentationMeasurement, FermentationMeasurementRuntimeState} from '../model/Fermentation';
 
 export enum FermentationActionTypes {
   LOAD = 'Fermentation.LOAD', LOAD_SUCCESS = 'Fermentation.LOAD_SUCCESS', LOAD_FAILURE = 'Fermentation.LOAD_FAILURE',
@@ -11,6 +11,7 @@ export enum FermentationActionTypes {
   UPDATE_DEVICE_DISPLAY_NAME = 'Fermentation.UPDATE_DEVICE_DISPLAY_NAME', UPDATE_DEVICE_DISPLAY_NAME_SUCCESS = 'Fermentation.UPDATE_DEVICE_DISPLAY_NAME_SUCCESS', UPDATE_DEVICE_DISPLAY_NAME_FAILURE = 'Fermentation.UPDATE_DEVICE_DISPLAY_NAME_FAILURE',
   GATEWAY_CONNECT = 'Fermentation.GATEWAY_CONNECT', GATEWAY_DISCONNECT = 'Fermentation.GATEWAY_DISCONNECT', GATEWAY_CONNECTION_CHANGED = 'Fermentation.GATEWAY_CONNECTION_CHANGED',
   GATEWAY_SNAPSHOT_RECEIVED = 'Fermentation.GATEWAY_SNAPSHOT_RECEIVED', GATEWAY_SENSOR_STATUS_CHANGED = 'Fermentation.GATEWAY_SENSOR_STATUS_CHANGED', GATEWAY_SENSOR_RUNTIME_CHANGED = 'Fermentation.GATEWAY_SENSOR_RUNTIME_CHANGED', GATEWAY_DATA_CHANGED = 'Fermentation.GATEWAY_DATA_CHANGED',
+  MEASUREMENTS_RECEIVED = 'Fermentation.MEASUREMENTS_RECEIVED', BUBBLE_ACTIVITY_RECEIVED = 'Fermentation.BUBBLE_ACTIVITY_RECEIVED', RECOVER_MEASUREMENTS = 'Fermentation.RECOVER_MEASUREMENTS',
   LOAD_BUBBLE_ACTIVITY = 'Fermentation.LOAD_BUBBLE_ACTIVITY', LOAD_BUBBLE_ACTIVITY_SUCCESS = 'Fermentation.LOAD_BUBBLE_ACTIVITY_SUCCESS', LOAD_BUBBLE_ACTIVITY_FAILURE = 'Fermentation.LOAD_BUBBLE_ACTIVITY_FAILURE',
 }
 export const FermentationActions = {
@@ -18,7 +19,7 @@ export const FermentationActions = {
   loadSuccess: (brewId: string, details: FermentationDetails) => ({type: FermentationActionTypes.LOAD_SUCCESS, payload: {brewId, details}}),
   loadFailure: (brewId: string, error: string) => ({type: FermentationActionTypes.LOAD_FAILURE, payload: {brewId, error}}),
   createMeasurement: (measurement: CreateFermentationMeasurement) => ({type: FermentationActionTypes.CREATE_MEASUREMENT, payload: {measurement}}),
-  createMeasurementSuccess: (brewId: string) => ({type: FermentationActionTypes.CREATE_MEASUREMENT_SUCCESS, payload: {brewId}}),
+  createMeasurementSuccess: (brewId: string, measurement: FermentationMeasurement) => ({type: FermentationActionTypes.CREATE_MEASUREMENT_SUCCESS, payload: {brewId, measurement}}),
   createMeasurementFailure: (brewId: string, error: string) => ({type: FermentationActionTypes.CREATE_MEASUREMENT_FAILURE, payload: {brewId, error}}),
   completeAction: (brewId: string, actionId: string) => ({type: FermentationActionTypes.COMPLETE_ACTION, payload: {brewId, actionId}}),
   completeActionSuccess: (brewId: string, action: FermentationAction) => ({type: FermentationActionTypes.COMPLETE_ACTION_SUCCESS, payload: {brewId, actionId: action.actionId, action}}),
@@ -43,6 +44,9 @@ export const FermentationActions = {
   gatewaySensorStatusChanged: (sensor: FermentationGatewaySensorStatus) => ({type: FermentationActionTypes.GATEWAY_SENSOR_STATUS_CHANGED, payload: {sensor}}),
   gatewaySensorRuntimeChanged: (deviceUid: string, measurementState: FermentationMeasurementRuntimeState, updatedAt: string) => ({type: FermentationActionTypes.GATEWAY_SENSOR_RUNTIME_CHANGED, payload: {deviceUid, measurementState, updatedAt}}),
   gatewayDataChanged: (beerId: string, change: 'MEASUREMENT' | 'BUBBLE_ACTIVITY' | 'STATE') => ({type: FermentationActionTypes.GATEWAY_DATA_CHANGED, payload: {beerId, change}}),
+  measurementsReceived: (brewId: string, measurements: FermentationMeasurement[]) => ({type: FermentationActionTypes.MEASUREMENTS_RECEIVED, payload: {brewId, measurements}}),
+  bubbleActivityReceived: (brewId: string, activity: BubbleActivity) => ({type: FermentationActionTypes.BUBBLE_ACTIVITY_RECEIVED, payload: {brewId, activity}}),
+  recoverMeasurements: (brewId: string, afterId: string) => ({type: FermentationActionTypes.RECOVER_MEASUREMENTS, payload: {brewId, afterId}}),
   loadBubbleActivity: (brewId: string, range: BubbleActivityRange) => ({type: FermentationActionTypes.LOAD_BUBBLE_ACTIVITY, payload: {brewId, range}}),
   loadBubbleActivitySuccess: (brewId: string, range: BubbleActivityRange, activity: BubbleActivity[]) => ({type: FermentationActionTypes.LOAD_BUBBLE_ACTIVITY_SUCCESS, payload: {brewId, range, activity}}),
   loadBubbleActivityFailure: (brewId: string, range: BubbleActivityRange, error: string) => ({type: FermentationActionTypes.LOAD_BUBBLE_ACTIVITY_FAILURE, payload: {brewId, range, error}}),
