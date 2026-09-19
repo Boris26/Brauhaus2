@@ -99,11 +99,11 @@ describe('FermentationMeasurementsChart refresh rendering', () => {
       {id: 'old', finishedBeerId: 'b', measuredAt: '2026-09-01T00:00:00Z', beerTemperatureC: 17.8, source: 'SENSOR'},
       {id: 'latest', finishedBeerId: 'b', measuredAt: '2026-09-08T00:00:00Z', beerTemperatureC: 18.1, source: 'SENSOR'},
     ];
-    const {rerender} = render(<FermentationMeasurementsChart measurements={measurements} initialRange="6h" />);
+    const {rerender} = render(React.createElement(FermentationMeasurementsChart, {measurements, initialRange: '6h'}));
 
     expect(screen.getByRole('button', {name: '6 h'})).toHaveAttribute('aria-pressed', 'true');
     fireEvent.click(screen.getByRole('button', {name: 'Alles'}));
-    rerender(<FermentationMeasurementsChart measurements={[...measurements, {...measurements[1], id: 'new'}]} initialRange="6h" />);
+    rerender(React.createElement(FermentationMeasurementsChart, {measurements: [...measurements, {...measurements[1], id: 'new'}], initialRange: '6h'}));
 
     expect(screen.getByRole('button', {name: 'Alles'})).toHaveAttribute('aria-pressed', 'true');
   });
