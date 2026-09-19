@@ -1,6 +1,7 @@
 import React, {useEffect, useState} from "react";
-import {Alert, Button, CircularProgress, TextField} from "@mui/material";
+import {Alert, Button, CircularProgress} from "@mui/material";
 import AppDialog from '../../../../components/AppDialog/AppDialog';
+import FormField from '../../../../components/FormField/FormField';
 
 export type IngredientKind = "malt" | "hop" | "yeast" | "additional";
 export interface IngredientEditValue { id: string | number; name: string; description?: string; ebc?: number; alpha?: number; type?: string; evg?: number; temperature?: number; }
@@ -43,16 +44,16 @@ export const IngredientEditDialog = ({kind, value, open, loading, backendError, 
         if (Object.keys(nextErrors).length) return;
         onSave({...value, ...form, name: form.name.trim(), description: form.description || "", ...Object.fromEntries(numericFields.map(field => [field, Number(form[field])]))});
     };
-    const field = (name: string, label: string, numeric = false) => <TextField fullWidth margin="dense" name={name} label={label} value={form[name] ?? ""} onChange={update(name)} error={Boolean(errors[name])} helperText={errors[name]} type={numeric ? "number" : "text"} inputProps={numeric ? {step: "any"} : undefined}/>;
+    const field = (name: string, label: string, numeric = false) => <FormField name={name} label={label} value={form[name] ?? ""} onChange={update(name)} error={errors[name]} type={numeric ? "number" : "text"} step={numeric ? "any" : undefined}/>;
 
     return <AppDialog open={open} onClose={onCancel} disableClose={loading} title={titles[kind]} variant={backendError ? 'error' : 'info'}
-        actions={<><Button onClick={onCancel} disabled={loading}>Abbrechen</Button>
-            <Button color="primary" variant="contained" onClick={submit} disabled={loading}>{loading ? <><CircularProgress size={18} sx={{mr: 1}}/>Speichern</> : "Speichern"}</Button></>}>
+        actions={<><Button className="brauhaus-button brauhaus-button-secondary" onClick={onCancel} disabled={loading}>Abbrechen</Button>
+            <Button className="brauhaus-button brauhaus-button-primary" color="primary" variant="contained" onClick={submit} disabled={loading}>{loading ? <><CircularProgress size={18} sx={{mr: 1}}/>Speichern</> : "Speichern"}</Button></>}>
             {backendError && <Alert severity="error" sx={{mb: 1}}>{backendError}</Alert>}
-            {field("name", "Name")}
+            <div className="brauhaus-form">{field("name", "Name")}
             {field("description", "Beschreibung")}
             {kind === "malt" && field("ebc", "EBC", true)}
             {kind === "hop" && <>{field("type", "Typ")}{field("alpha", "Alpha %", true)}</>}
-            {kind === "yeast" && <>{field("evg", "EVG %", true)}{field("temperature", "Temperatur °C", true)}{field("type", "Typ")}</>}
+            {kind === "yeast" && <>{field("evg", "EVG %", true)}{field("temperature", "Temperatur °C", true)}{field("type", "Typ")}</>}</div>
     </AppDialog>;
 };

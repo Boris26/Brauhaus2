@@ -70,11 +70,11 @@ class ModalDialog extends React.Component<ModalDialogProps, ModalDialogState> {
                 disableClose={disableClose} onClose={showCancelButton ? this.handleCancel : this.handleClose}
                 actions={showCancelButton || showConfirmButton ? <>
                     {showCancelButton && (
-                        <Button onClick={this.handleCancel} color="primary" disabled={actionsDisabled}>
+                        <Button className="brauhaus-button brauhaus-button-secondary" onClick={this.handleCancel} color="primary" disabled={actionsDisabled}>
                             {cancelLabel ?? "Abbrechen"}
                         </Button>
                     )}
-                    {showConfirmButton && <Button onClick={this.handleClose} color={confirmColor ?? "primary"} variant={confirmVariant ?? "text"} disabled={actionsDisabled}>
+                    {showConfirmButton && <Button className={`brauhaus-button ${confirmColor === 'error' ? 'brauhaus-button-danger' : 'brauhaus-button-primary'}`} onClick={this.handleClose} color={confirmColor ?? "primary"} variant={confirmVariant ?? "text"} disabled={actionsDisabled}>
                         {confirmLabel ?? "Ok"}
                     </Button>}
                 </> : undefined}>

@@ -1,8 +1,9 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {Alert, Button, CircularProgress, TextField} from '@mui/material';
+import {Alert, Button, CircularProgress} from '@mui/material';
 import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined';
 import {connect} from 'react-redux';
 import AppDialog from '../AppDialog/AppDialog';
+import FormField from '../FormField/FormField';
 import {FermentationActions} from '../../actions/fermentation.actions';
 import {eBrewState} from '../../enums/eBrewState';
 import {CreateFermentationMeasurement} from '../../model/Fermentation';
@@ -58,12 +59,12 @@ export const ManualMeasurementDialogView: React.FC<Props> = ({open, beerId, onCl
     {unavailable && <Alert severity="warning">Manuelle Messungen sind nur während der aktiven Gärung möglich.</Alert>}
     {error && <Alert severity="error">Die Messung konnte nicht gespeichert werden. Bitte erneut versuchen.</Alert>}
     {validation && <Alert severity="error">{validation}</Alert>}
-    <div className="manual-measurement-dialog__form">
-      <TextField label="Datum / Uhrzeit" type="datetime-local" value={measuredAt} onChange={event => setMeasuredAt(event.target.value)} disabled={saving} InputLabelProps={{shrink: true}} />
-      <TextField label="Biertemperatur °C" type="number" value={beerTemperature} onChange={event => setBeerTemperature(event.target.value)} disabled={saving} inputProps={{step: 0.1}} InputLabelProps={{shrink: true}} />
-      <TextField label="Außentemperatur °C" type="number" value={ambientTemperature} onChange={event => setAmbientTemperature(event.target.value)} disabled={saving} inputProps={{step: 0.1}} InputLabelProps={{shrink: true}} />
-      <TextField label="Plato °P" type="number" value={plato} onChange={event => setPlato(event.target.value)} disabled={saving} inputProps={{step: 0.1}} InputLabelProps={{shrink: true}} />
-      <TextField className="manual-measurement-dialog__note" label="Notiz" multiline minRows={2} value={note} onChange={event => setNote(event.target.value)} disabled={saving} InputLabelProps={{shrink: true}} />
+    <div className="manual-measurement-dialog__form brauhaus-form">
+      <FormField label="Datum / Uhrzeit" type="datetime-local" value={measuredAt} onChange={event => setMeasuredAt(event.target.value)} disabled={saving} />
+      <FormField label="Biertemperatur °C" type="number" value={beerTemperature} onChange={event => setBeerTemperature(event.target.value)} disabled={saving} step={0.1} />
+      <FormField label="Außentemperatur °C" type="number" value={ambientTemperature} onChange={event => setAmbientTemperature(event.target.value)} disabled={saving} step={0.1} />
+      <FormField label="Plato °P" type="number" value={plato} onChange={event => setPlato(event.target.value)} disabled={saving} step={0.1} />
+      <FormField wrapperClassName="manual-measurement-dialog__note" label="Notiz" multiline rows={2} value={note} onChange={event => setNote(event.target.value)} disabled={saving} />
     </div>
   </AppDialog>;
 };

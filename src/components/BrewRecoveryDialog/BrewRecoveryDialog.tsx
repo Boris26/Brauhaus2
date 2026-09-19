@@ -45,15 +45,15 @@ const BrewRecoveryDialog: React.FC = () => {
             title={confirmDiscard ? 'Brauvorgang wirklich verwerfen?' : 'Unterbrochener Brauvorgang gefunden'}
             description={!confirmDiscard ? 'Der letzte Brauvorgang wurde nicht regulär beendet.' : undefined}
             actions={confirmDiscard ? <>
-                <Button disabled={pending} onClick={() => setConfirmDiscard(false)}>Abbrechen</Button>
-                <Button color="error" variant="outlined" disabled={pending} startIcon={<DeleteOutlineRoundedIcon/>}
+                <Button className="brauhaus-button brauhaus-button-secondary" disabled={pending} onClick={() => setConfirmDiscard(false)}>Abbrechen</Button>
+                <Button className="brauhaus-button brauhaus-button-danger" color="error" variant="outlined" disabled={pending} startIcon={<DeleteOutlineRoundedIcon/>}
                         onClick={() => dispatch(ProductionActions.discardBrewRecovery())}>
                     {recoveryState.discardPending ? 'Brauvorgang wird verworfen …' : 'Brauvorgang verwerfen'}
                 </Button>
             </> : <>
-                <Button color="error" variant="outlined" disabled={pending} startIcon={<DeleteOutlineRoundedIcon/>}
+                <Button className="brauhaus-button brauhaus-button-danger" color="error" variant="outlined" disabled={pending} startIcon={<DeleteOutlineRoundedIcon/>}
                         onClick={() => setConfirmDiscard(true)}>Brauvorgang verwerfen</Button>
-                <Button color="primary" variant="contained" disabled={pending || !envelope} startIcon={<PlayArrowRoundedIcon/>}
+                <Button className="brauhaus-button brauhaus-button-primary" color="primary" variant="contained" disabled={pending || !envelope} startIcon={<PlayArrowRoundedIcon/>}
                         onClick={() => dispatch(ProductionActions.resumeBrewRecovery())}>
                     {recoveryState.resumePending ? 'Brauvorgang wird wiederhergestellt …' : 'Brauvorgang fortsetzen'}
                 </Button>

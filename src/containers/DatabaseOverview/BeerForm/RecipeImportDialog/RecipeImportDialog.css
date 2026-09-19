@@ -14,62 +14,9 @@
     overflow-y: auto;
 }
 
-.recipe-import-dialog__format .MuiInputLabel-root,
-.recipe-import-dialog__mapping .MuiInputLabel-root,
-.recipe-import-dialog__create .MuiInputLabel-root,
-.recipe-import-dialog__format .MuiSelect-icon,
-.recipe-import-dialog__mapping .MuiSelect-icon {
-    color: var(--color-text-secondary);
-}
-
-.recipe-import-dialog__format .MuiOutlinedInput-root,
-.recipe-import-dialog__mapping .MuiOutlinedInput-root,
-.recipe-import-dialog__create .MuiOutlinedInput-root {
-    color: var(--color-text);
-    background: var(--color-surface-strong);
-    border-radius: var(--border-radius-medium);
-}
-
-.recipe-import-dialog__format .MuiOutlinedInput-notchedOutline,
-.recipe-import-dialog__mapping .MuiOutlinedInput-notchedOutline,
-.recipe-import-dialog__create .MuiOutlinedInput-notchedOutline {
-    border-color: var(--color-border-strong);
-}
-
-.recipe-import-dialog__format .MuiOutlinedInput-root:hover:not(.Mui-disabled) .MuiOutlinedInput-notchedOutline,
-.recipe-import-dialog__mapping .MuiOutlinedInput-root:hover:not(.Mui-disabled) .MuiOutlinedInput-notchedOutline,
-.recipe-import-dialog__create .MuiOutlinedInput-root:hover:not(.Mui-disabled) .MuiOutlinedInput-notchedOutline {
-    border-color: var(--color-accent-border);
-}
-
-.recipe-import-dialog__format .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline,
-.recipe-import-dialog__mapping .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline,
-.recipe-import-dialog__create .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
-    border-color: var(--color-primary);
-    border-width: 2px;
-}
-
-.recipe-import-dialog__format .MuiInputLabel-root.Mui-focused,
-.recipe-import-dialog__mapping .MuiInputLabel-root.Mui-focused,
-.recipe-import-dialog__create .MuiInputLabel-root.Mui-focused {
-    color: var(--color-accent-hover);
-}
-
 .recipe-import-dialog .Mui-disabled {
     color: var(--color-disabled-text);
     -webkit-text-fill-color: var(--color-disabled-text);
-}
-
-.recipe-import-dialog__menu.MuiPaper-root {
-    color: var(--color-text);
-    background: var(--color-surface-strong);
-    border: 1px solid var(--color-border);
-}
-
-.recipe-import-dialog__menu .MuiMenuItem-root:hover,
-.recipe-import-dialog__menu .MuiMenuItem-root.Mui-selected,
-.recipe-import-dialog__menu .MuiMenuItem-root.Mui-selected:hover {
-    background: var(--color-accent-subtle-hover);
 }
 
 .recipe-import-dialog__file-button.MuiButton-root,
