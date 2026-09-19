@@ -243,9 +243,21 @@ describe('fermentation measurement dashboard', () => {
   it('shows the initial bubble activity loading state without a chart', () => {
     const loadBubbleActivity = jest.fn();
     render(<FinishedBrewDetailsView {...base} loadBubbleActivity={loadBubbleActivity} bubbleActivityLoading />);
-    expect(loadBubbleActivity).toHaveBeenCalledWith('brew-1', '24h');
+    expect(loadBubbleActivity).toHaveBeenCalledWith('brew-1', '6h');
     expect(screen.getByText('Gäraktivität wird geladen …')).toBeInTheDocument();
     expect(screen.queryByRole('img', {name: /Zeitlicher Verlauf der Gäraktivität/})).not.toBeInTheDocument();
+  });
+
+  it.each([
+    [eBrewState.FERMENTATION, '6h', '6 h'],
+    [eBrewState.MATURATION, 'all', 'Alles'],
+    [eBrewState.FINISHED, 'all', 'Alles'],
+  ])('initializes both chart ranges for %s', (state, range, label) => {
+    const loadBubbleActivity = jest.fn();
+    render(<FinishedBrewDetailsView {...base} brew={{...brew, state}} loadBubbleActivity={loadBubbleActivity} bubbleActivityRange={range as any} />);
+
+    expect(loadBubbleActivity).toHaveBeenCalledWith('brew-1', range);
+    expect(screen.getAllByRole('button', {name: label}).every(button => button.getAttribute('aria-pressed') === 'true')).toBe(true);
   });
 
   it('keeps existing bubble activity mounted while loading another range', () => {
@@ -254,14 +266,15 @@ describe('fermentation measurement dashboard', () => {
     const {rerender} = render(<FinishedBrewDetailsView {...base} loadBubbleActivity={loadBubbleActivity} bubbleActivity={activity} />);
     const chart = screen.getByRole('img', {name: /Zeitlicher Verlauf der Gäraktivität/});
 
-    fireEvent.click(screen.getByText('6 h'));
+    fireEvent.click(within(screen.getByRole('group', {name: 'Zeitraum der Gäraktivität'})).getByText('6 h'));
     expect(loadBubbleActivity).toHaveBeenCalledWith('brew-1', '6h');
     rerender(<FinishedBrewDetailsView {...base} loadBubbleActivity={loadBubbleActivity} bubbleActivity={activity} bubbleActivityRange="6h" bubbleActivityLoading />);
+    expect(loadBubbleActivity).toHaveBeenCalledTimes(2);
     expect(screen.getByRole('img', {name: /Zeitlicher Verlauf der Gäraktivität/})).toBe(chart);
     expect(screen.getByRole('status')).toHaveTextContent('Aktualisiere …');
 
     for (const [label, range] of [['7 Tage', '7d'], ['Alles', 'all']]) {
-      fireEvent.click(screen.getByText(label)); expect(loadBubbleActivity).toHaveBeenCalledWith('brew-1', range);
+      fireEvent.click(within(screen.getByRole('group', {name: 'Zeitraum der Gäraktivität'})).getByText(label)); expect(loadBubbleActivity).toHaveBeenCalledWith('brew-1', range);
     }
   });
 

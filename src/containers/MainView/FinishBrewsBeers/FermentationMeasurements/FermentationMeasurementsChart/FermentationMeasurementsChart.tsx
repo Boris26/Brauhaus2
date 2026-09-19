@@ -5,10 +5,10 @@ import {actionAmountLabel} from '../../../../../utils/fermentation';
 import {COLOR_ACCENT, COLOR_INFO, COLOR_SUCCESS, COLOR_WARNING} from '../../../../../colors';
 import '../FermentationCharts.css';
 
-interface Props { measurements: FermentationMeasurement[]; actions?: FermentationAction[]; }
+interface Props { measurements: FermentationMeasurement[]; actions?: FermentationAction[]; initialRange?: FermentationChartRange; }
 interface ChartPoint { timestamp: number; label: string; beerTemperature?: number; ambientTemperature?: number; plato?: number; }
 interface ActionMarker {actionId: string; timestamp: number; label: string;}
-type FermentationChartRange = '6h' | '24h' | '7d' | 'all';
+export type FermentationChartRange = '6h' | '24h' | '7d' | 'all';
 
 const CHART_RANGES: [FermentationChartRange, string][] = [['6h', '6 h'], ['24h', '24 h'], ['7d', '7 Tage'], ['all', 'Alles']];
 const RANGE_MS: Record<Exclude<FermentationChartRange, 'all'>, number> = {
@@ -69,7 +69,7 @@ export const buildFermentationActionMarkers = (actions: FermentationAction[] = [
   .map(action => ({actionId: action.actionId, timestamp: Date.parse(action.completedAt as string), label: `${action.name || 'Zugabe'} ${actionAmountLabel(action.amount, action.unit) || ''}`.trim()}));
 
 const FermentationMeasurementsChart: React.FC<Props> = React.memo(props => {
-  const [range, setRange] = React.useState<FermentationChartRange>('24h');
+  const [range, setRange] = React.useState<FermentationChartRange>(() => props.initialRange ?? '24h');
   const visibleMeasurements = React.useMemo(() => filterFermentationMeasurementsByRange(props.measurements, range), [props.measurements, range]);
   const data = React.useMemo(() => buildFermentationChartData(visibleMeasurements), [visibleMeasurements]);
   const actionMarkers = React.useMemo(() => buildFermentationActionMarkers(props.actions), [props.actions]);

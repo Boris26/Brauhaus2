@@ -52,17 +52,17 @@ export const ManualMeasurementDialogView: React.FC<Props> = ({open, beerId, onCl
   };
 
   const unavailable = brewState !== eBrewState.FERMENTATION;
-  return <AppDialog open={open} onClose={onClose} disableClose={saving} title="Manuelle Gärungsmessung" maxWidth="xs" className="manual-measurement-dialog" variant={error || validation ? 'error' : 'info'}
+  return <AppDialog open={open} onClose={onClose} disableClose={saving} title="Manuelle Gärungsmessung" maxWidth="xs" className="manual-measurement-dialog" icon={null}
     actions={<><Button onClick={onClose} disabled={saving}>Abbrechen</Button><Button variant="contained" onClick={submit} disabled={saving || unavailable}>{saving ? <><CircularProgress size={18} sx={{mr: 1}}/>Speichert …</> : 'Speichern'}</Button></>}>
     {unavailable && <Alert severity="warning">Manuelle Messungen sind nur während der aktiven Gärung möglich.</Alert>}
     {error && <Alert severity="error">Die Messung konnte nicht gespeichert werden. Bitte erneut versuchen.</Alert>}
     {validation && <Alert severity="error">{validation}</Alert>}
     <div className="manual-measurement-dialog__form">
       <TextField label="Datum / Uhrzeit" type="datetime-local" value={measuredAt} onChange={event => setMeasuredAt(event.target.value)} disabled={saving} InputLabelProps={{shrink: true}} />
-      <TextField label="Biertemperatur °C" type="number" value={beerTemperature} onChange={event => setBeerTemperature(event.target.value)} disabled={saving} inputProps={{step: 0.1}} />
-      <TextField label="Außentemperatur °C" type="number" value={ambientTemperature} onChange={event => setAmbientTemperature(event.target.value)} disabled={saving} inputProps={{step: 0.1}} />
-      <TextField label="Plato °P" type="number" value={plato} onChange={event => setPlato(event.target.value)} disabled={saving} inputProps={{step: 0.1}} />
-      <TextField className="manual-measurement-dialog__note" label="Notiz" multiline minRows={2} value={note} onChange={event => setNote(event.target.value)} disabled={saving} />
+      <TextField label="Biertemperatur °C" type="number" value={beerTemperature} onChange={event => setBeerTemperature(event.target.value)} disabled={saving} inputProps={{step: 0.1}} InputLabelProps={{shrink: true}} />
+      <TextField label="Außentemperatur °C" type="number" value={ambientTemperature} onChange={event => setAmbientTemperature(event.target.value)} disabled={saving} inputProps={{step: 0.1}} InputLabelProps={{shrink: true}} />
+      <TextField label="Plato °P" type="number" value={plato} onChange={event => setPlato(event.target.value)} disabled={saving} inputProps={{step: 0.1}} InputLabelProps={{shrink: true}} />
+      <TextField className="manual-measurement-dialog__note" label="Notiz" multiline minRows={2} value={note} onChange={event => setNote(event.target.value)} disabled={saving} InputLabelProps={{shrink: true}} />
     </div>
   </AppDialog>;
 };
