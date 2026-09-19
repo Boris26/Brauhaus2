@@ -1,93 +1,27 @@
-.containerIngredientsForm {
-    box-sizing: border-box;
-    width: 100%;
-    max-width: 76rem;
-    margin: 0 auto;
-    min-width: 0;
-}
-
-.containerIngredientsForm .ingredients-accordion-details {
-    overflow: visible !important;
-}
-
-.containerIngredientsForm .ingredients-toolbar {
-    display: flex;
-    gap: var(--space-2);
-    margin-bottom: var(--space-2);
-}
-
-.containerIngredientsForm .ingredients-table-container {
-    width: 100% !important;
-    background-color: var(--color-brew-bg) !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    padding: 0 !important;
-}
-
-.containerIngredientsForm .MuiTableContainer-root {
-    max-width: 100%;
-    background-color: var(--color-brew-bg) !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-}
-
-.containerIngredientsForm .MuiTableHead-root .MuiTableCell-head {
-    position: sticky !important;
-    top: 0;
-    z-index: 20 !important;
-}
-
-.containerIngredientsForm .action-cell {
-    width: 120px;
-}
-
-.containerIngredientsForm .table-edit-field {
-    width: 100%;
-    padding: 4px 8px;
-    background-color: var(--bg-transparent-black);
-    border: 1px solid var(--border-default-mid);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
-}
-
-.containerIngredientsForm .table-edit-field:focus {
-    border-color: var(--accent) !important;
-    outline: none;
-}
-
-.containerIngredientsForm input[type="number"] {
-    text-align: right;
-}
-
-.action-buttons {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: var(--space-2);
-    white-space: nowrap;
-    min-height: 34px;
-}
-
-.action-buttons button {
-    flex-shrink: 0;
-}
-
-.containerIngredientsForm .ingredient-action {
-    height: 34px;
-    width: 34px;
-    padding: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.1rem;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-}
-
-
-.containerIngredientsForm .ingredient-error {
-    color: var(--color-error-mid);
-    font-size: 0.8rem;
-    margin-top: 4px;
-}
+.containerIngredientsForm { box-sizing: border-box; width: 100%; min-width: 0; }
+.containerIngredientsForm .app-accordion-group { gap: var(--spacing-md); }
+.containerIngredientsForm .ingredients-accordion { background: var(--bg-panel); border-color: var(--border-default); }
+.containerIngredientsForm .ingredients-accordion-details { overflow: visible !important; background: var(--bg-panel); }
+.containerIngredientsForm .app-accordion-summary.MuiAccordionSummary-root { min-height: 52px; padding: 0 var(--spacing-md); }
+.containerIngredientsForm .app-accordion-summary .MuiAccordionSummary-content { gap: var(--spacing-sm); }
+.containerIngredientsForm .app-accordion-icon svg { font-size: 1.25rem; }
+.containerIngredientsForm .ingredients-toolbar { display: flex; justify-content: flex-end; gap: var(--spacing-sm); margin-bottom: var(--spacing-sm); }
+.containerIngredientsForm .ingredients-add-button { display: inline-flex; align-items: center; gap: var(--spacing-xs); min-height: var(--control-height-compact); padding: var(--spacing-xs) var(--spacing-md); font-size: var(--font-size-small); }
+.containerIngredientsForm .ingredients-add-button svg { color: var(--accent); }
+.containerIngredientsForm .ingredients-table-container,
+.containerIngredientsForm .MuiTableContainer-root { width: 100% !important; max-width: 100%; background: transparent !important; box-shadow: none !important; border-radius: 0 !important; padding: 0 !important; }
+.containerIngredientsForm .MuiTableHead-root .MuiTableCell-head { position: sticky !important; top: 0; z-index: 20 !important; }
+.containerIngredientsForm .app-table .MuiTableCell-head,
+.containerIngredientsForm .app-table .MuiTableCell-body { padding: var(--spacing-sm) var(--spacing-md); }
+.containerIngredientsForm .app-table .MuiTableRow-root { transition: background-color .15s ease; }
+.containerIngredientsForm .app-table .MuiTableRow-root:hover { background: var(--bg-table-row-hover); }
+.containerIngredientsForm .action-cell { width: 92px; text-align: right; }
+.containerIngredientsForm .action-cell .app-table-actions { justify-content: flex-end; }
+.containerIngredientsForm .ingredient-description { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
+.containerIngredientsForm .table-edit-field { width: 100%; min-height: var(--control-height-compact); padding: var(--spacing-xs) var(--spacing-sm); background: var(--bg-input); border: 1px solid var(--border-default); border-radius: var(--border-radius-small); color: var(--text-primary); }
+.containerIngredientsForm .table-edit-field:focus { border-color: var(--accent) !important; outline: none; box-shadow: 0 0 0 2px var(--accent-subtle); }
+.containerIngredientsForm input[type="number"] { text-align: right; }
+.action-buttons { display: flex; flex-direction: row; align-items: center; gap: var(--spacing-xs); white-space: nowrap; min-height: 32px; }
+.action-buttons button { flex-shrink: 0; }
+.containerIngredientsForm .ingredient-action { height: 32px; width: 32px; min-width: 32px; padding: 0; display: flex; align-items: center; justify-content: center; font-size: 1rem; background: transparent; border: 0; cursor: pointer; }
+.containerIngredientsForm .ingredient-error { margin-top: var(--spacing-xs); color: var(--color-error); font-size: var(--font-size-small); }
