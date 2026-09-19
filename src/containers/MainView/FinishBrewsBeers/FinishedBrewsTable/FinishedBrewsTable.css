@@ -5,7 +5,7 @@
   min-width: 0;
   min-height: 0;
   padding: var(--spacing-md) var(--spacing-lg);
-  color: var(--color-text);
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
@@ -54,7 +54,7 @@
 
 .FinishedBrewsTable .table-header {
   height: 1rem;
-  background-color: var(--color-accent);
+  background-color: var(--bg-table-header);
 }
 
 .FinishedBrewsTable .table-header-cell,
@@ -69,13 +69,13 @@
   height: 1rem;
   font-size: 1rem;
   font-weight: bold;
-  color: black;
+  color: var(--text-secondary);
 }
 
 .FinishedBrewsTable .table-row {
   height: auto;
-  background: var(--color-panel-bg);
-  border-bottom: 1px solid var(--color-border-soft);
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .FinishedBrewsTable .table-cell,
@@ -117,7 +117,7 @@
 }
 
 .FinishedBrewsTable .select-btn:hover {
-  background-color: var(--color-accent);
+  background-color: var(--accent);
   color: var(--color-gray-deep);
 }
 
@@ -146,7 +146,7 @@
 }
 
 .FinishedBrewsTable .active-row {
-  background: var(--color-panel-bg);
+  background: var(--bg-panel);
 }
 
 .FinishedBrewsTable .brew-name-cell {
@@ -174,10 +174,10 @@
   align-items: center;
   min-height: 1.45rem;
   padding: .12rem .55rem;
-  border: 1px solid var(--color-border-mid);
+  border: 1px solid var(--border-default-mid);
   border-radius: var(--border-radius-pill);
-  color: var(--color-text-secondary);
-  background: var(--color-panel-contrast);
+  color: var(--text-secondary);
+  background: var(--bg-input);
   font-size: .78rem;
   font-weight: 700;
   line-height: 1.2;
@@ -223,7 +223,7 @@
 
 .filter-label {
   margin: 0;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   font-size: var(--font-size-small);
   font-weight: 600;
   white-space: nowrap;
@@ -234,9 +234,9 @@
   height: var(--control-height-compact);
   margin: 0;
   padding: 0 var(--spacing-md);
-  color: var(--color-text);
-  background: var(--color-panel-contrast);
-  border: 1px solid var(--color-border);
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
   border-radius: var(--border-radius-medium);
   font: inherit;
   outline: none;
@@ -244,17 +244,17 @@
 }
 
 .FinishedBrewsTable-year-filter:hover {
-  background: var(--color-panel-highlight);
+  background: var(--bg-elevated);
 }
 
 .FinishedBrewsTable-year-filter:focus {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px var(--color-accent-subtle);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
 }
 
 .FinishedBrewsTable-year-filter option {
-  color: var(--color-text);
-  background: var(--color-panel-contrast);
+  color: var(--text-primary);
+  background: var(--bg-input);
 }
 
 .active-filter-label {
@@ -263,9 +263,9 @@
   min-height: var(--control-height-compact);
   padding: 0 var(--spacing-sm);
   gap: var(--spacing-sm);
-  color: var(--color-text-secondary);
-  background: var(--color-panel-contrast);
-  border: 1px solid var(--color-border-soft);
+  color: var(--text-secondary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--border-radius-medium);
   font-size: var(--font-size-small);
   font-weight: 600;
@@ -275,9 +275,9 @@
 }
 
 .active-filter-label:hover {
-  color: var(--color-text);
-  background: var(--color-panel-highlight);
-  border-color: var(--color-border);
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border-color: var(--border-default);
 }
 
 .active-filter-label span {
@@ -288,7 +288,7 @@
   width: 1rem;
   height: 1rem;
   margin: 0;
-  accent-color: var(--color-primary);
+  accent-color: var(--accent);
 }
 
 .finished-brews-filter > .finished-brews-toolbar-button {
@@ -300,10 +300,10 @@
   justify-content: center;
   gap: 6px;
   padding: 0 var(--spacing-md);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--border-radius-medium);
-  color: var(--color-text);
-  background: var(--color-panel-raised);
+  color: var(--text-primary);
+  background: var(--bg-card);
   box-shadow: none;
   font: inherit;
   font-size: var(--font-size-small);
@@ -318,24 +318,24 @@
 }
 
 .finished-brews-filter > .finished-brews-toolbar-button:first-of-type:hover {
-  background: var(--color-panel-highlight);
-  border-color: var(--color-border-strong);
+  background: var(--bg-elevated);
+  border-color: var(--border-strong);
 }
 
 .finished-brews-filter > .finished-brews-toolbar-button:last-of-type {
-  color: var(--color-text-on-primary);
-  background: var(--color-primary);
-  border-color: var(--color-accent-border);
+  color: var(--text-on-accent);
+  background: var(--accent);
+  border-color: var(--accent-border);
 }
 
 .finished-brews-filter > .finished-brews-toolbar-button:last-of-type:hover {
-  background: var(--color-primary-hover);
+  background: var(--accent-hover);
 }
 
 .finished-brews-filter > .finished-brews-toolbar-button:focus-visible,
 .FinishedBrewsTable-year-filter:focus-visible,
 .active-filter-label:has(.active-filter-checkbox:focus-visible) {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -412,15 +412,15 @@
 }
 
 .FinishedBrewsTable .table-edit-field:focus {
-  border: 1.5px solid var(--color-accent) !important;
+  border: 1.5px solid var(--accent) !important;
   border-radius: 4px;
-  background: var(--color-dark-bg);
+  background: var(--bg-app);
 }
 
 .FinishedBrewsTable .table-edit-field input:focus:not([readonly]) {
-  border: 1.5px solid var(--color-accent) !important;
+  border: 1.5px solid var(--accent) !important;
   border-radius: 4px;
-  background: var(--color-dark-bg);
+  background: var(--bg-app);
 }
 
 .FinishedBrewsTable .table-edit-field input[type=number]::-webkit-outer-spin-button,
@@ -437,15 +437,15 @@
   grid-template-columns: repeat(4, minmax(10rem, 1fr));
   gap: var(--spacing-sm) var(--spacing-md);
   padding: var(--spacing-md);
-  background: var(--color-panel-bg);
-  border: 1px solid var(--color-border);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
   border-radius: var(--border-radius-large);
 }
 
 .finished-brews-create-form label {
   display: grid;
   gap: var(--spacing-xs);
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   font-size: .78rem;
   font-weight: 700;
 }
@@ -455,9 +455,9 @@
   min-width: 0;
   height: var(--control-height-compact);
   padding: 0 var(--spacing-sm);
-  color: var(--color-text);
-  background: var(--color-panel-contrast);
-  border: 1px solid var(--color-border-mid);
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-default-mid);
   border-radius: var(--border-radius-medium);
 }
 

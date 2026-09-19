@@ -12,9 +12,9 @@ import {
   COLOR_CHART_RED,
   COLOR_CHART_YELLOW,
   COLOR_CHART_YELLOW_STRONG,
-  COLOR_DARK_BG,
+  BG_APP,
   COLOR_HEATING,
-  COLOR_LIGHT_TEXT,
+  TEXT_PRIMARY,
   COLOR_WAITING_MASHING,
   COLOR_WHITE,
   SHADOW_PANEL2
@@ -201,7 +201,7 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
       WAITING_FOR_COOKING_START: COLOR_CHART_PURPLE,
       WAITING_FOR_WATER_BOIL: COLOR_CHART_YELLOW,
       BREWING_FINISHED: COLOR_BREW_FINISHED,
-      default: COLOR_LIGHT_TEXT
+      default: TEXT_PRIMARY
     };
 
     return (
@@ -262,7 +262,7 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
                 contentStyle={{
                   fontWeight: 'normal',
                   fontSize: 12,
-                  background: COLOR_DARK_BG,
+                  background: BG_APP,
                   color: COLOR_WHITE,
                   border: `2px solid ${COLOR_ACCENT}`,
                   borderRadius: '4px',
@@ -349,7 +349,7 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
                 height={36}
                 stroke={COLOR_ACCENT}
                 travellerWidth={14}
-                fill={COLOR_DARK_BG}
+                fill={BG_APP}
                 tickFormatter={this.formatSecondsToHMS}
                 className="brew-brush"
                 y={440}

@@ -1,6 +1,6 @@
 .mobile-brewing-calc-container {
   padding: 18px 8px 32px 8px;
-  background: var(--color-amber-bright);
+  background: var(--bg-app);
   max-height: 100vh;
   font-family: Arial, sans-serif;
   display: flex;
@@ -16,7 +16,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  background: var(--color-white);
+  background: var(--bg-card);
   border-radius: 10px;
   box-shadow: 0 1px 4px var(--shadow-primary);
   padding: 18px 20px;
@@ -27,7 +27,7 @@
   font-weight: 700;
   margin-bottom: 8px;
   font-size: 1.15em;
-  color: var(--color-gold-deep);
+  color: var(--accent);
   letter-spacing: 0.5px;
   text-align: left;
   width: 100%;
@@ -37,23 +37,23 @@
   font-weight: 600;
   margin-bottom: 4px;
   font-size: 1.08em;
-  color: var(--color-dark-bg);
+  color: var(--text-primary);
 }
 
 .mobile-calc-block input {
   margin-bottom: 8px;
   padding: 8px;
   border-radius: 6px;
-  border: 1px solid var(--color-gray-muted);
+  border: 1px solid var(--border-default);
   font-size: 1.1em;
   width: 100%;
   box-sizing: border-box;
-  background: var(--color-amber-highlight);
-  color: var(--color-gray-deep);
+  background: var(--bg-input);
+  color: var(--text-primary);
 }
 
 .mobile-calc-block span {
-  color: var(--color-teal-strong);
+  color: var(--text-primary);
   font-size: 1.13em;
   font-weight: bold;
   margin-bottom: 4px;

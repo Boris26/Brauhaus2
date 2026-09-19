@@ -2,7 +2,7 @@
 .app-table-container {
   width: 100%;
   min-width: 0;
-  color: var(--color-text);
+  color: var(--text-primary);
   background: var(--color-brew-bg);
   border-radius: var(--border-radius-large) !important;
   overflow: hidden;
@@ -18,22 +18,22 @@
 
 .app-table {
   width: 100%;
-  color: var(--color-text);
+  color: var(--text-primary);
   font-size: var(--font-size-normal);
   border-collapse: collapse;
 }
 
 .app-table .MuiTableHead-root,
 .app-table > thead {
-  background: var(--color-accent);
+  background: var(--bg-table-header);
 }
 
 .app-table .MuiTableCell-head,
 .app-table > thead > tr > th {
   padding: var(--spacing-sm) var(--spacing-md);
-  color: var(--color-text-on-primary);
-  background: var(--color-accent);
-  border-bottom: 1px solid var(--color-border-soft);
+  color: var(--text-secondary);
+  background: var(--bg-table-header);
+  border-bottom: 1px solid var(--border-default);
   font-size: var(--font-size-normal);
   font-weight: 700;
   line-height: var(--line-height-normal);
@@ -43,22 +43,22 @@
 
 .app-table .MuiTableSortLabel-root,
 .app-table .MuiTableSortLabel-icon {
-  color: var(--color-text-on-primary) !important;
+  color: var(--text-secondary) !important;
 }
 
 .app-table .MuiTableRow-root,
 .app-table > tbody > tr {
-  color: var(--color-text);
-  background: var(--color-panel-bg);
-  border-bottom: 1px solid var(--color-border-soft);
+  color: var(--text-primary);
+  background: var(--bg-table-row);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .app-table .MuiTableCell-body,
 .app-table > tbody > tr > td {
   padding: var(--spacing-md);
-  color: var(--color-text);
+  color: var(--text-primary);
   background: transparent;
-  border-bottom: 1px solid var(--color-border-soft);
+  border-bottom: 1px solid var(--border-subtle);
   font-size: var(--font-size-normal);
   line-height: var(--line-height-normal);
   vertical-align: middle;
@@ -70,22 +70,22 @@
 }
 
 .app-table--selectable .MuiTableRow-root:not(.app-table__row--selected):hover {
-  background: var(--color-panel-highlight);
+  background: var(--bg-elevated);
 }
 
 .app-table--selectable .MuiTableRow-root.app-table__row--selected,
 .app-table--selectable .MuiTableRow-root.app-table__row--selected:hover {
-  background: var(--color-panel-raised);
+  background: var(--accent-subtle);
 }
 
 .app-table--selectable .MuiTableRow-root:hover > .MuiTableCell-root,
 .app-table--selectable .MuiTableRow-root.app-table__row--selected > .MuiTableCell-root {
-  color: var(--color-text);
+  color: var(--text-primary);
   background: transparent;
 }
 
 .app-table--selectable .MuiTableRow-root.app-table__row--selected > .MuiTableCell-root:first-child {
-  box-shadow: inset 3px 0 0 var(--color-accent);
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .app-table--compact .MuiTableCell-head,
@@ -98,7 +98,7 @@
 
 .app-table--key-value .MuiTableCell-body:first-child {
   width: 38%;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   font-weight: 600;
 }
 
@@ -116,7 +116,7 @@
   min-width: 2rem;
   height: 2rem;
   padding: 0;
-  color: var(--color-text);
+  color: var(--text-primary);
   background: transparent;
   border: 0;
   border-radius: var(--border-radius-small);
@@ -125,8 +125,8 @@
 }
 
 .app-table-action:hover:not(:disabled) {
-  color: var(--color-text-on-primary);
-  background: var(--color-accent);
+  color: var(--text-on-accent);
+  background: var(--accent);
   transform: translateY(-1px);
 }
 
@@ -136,7 +136,7 @@
 }
 
 .app-table-action:focus-visible {
-  outline: 2px solid var(--color-accent);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 

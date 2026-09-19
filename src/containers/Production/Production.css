@@ -75,7 +75,7 @@
     display: none;
 }
 .HeaderText {
-    color: var(--color-light-text);
+    color: var(--text-primary);
     font-size: 1.5rem;
     line-height: 1.1;
     font-weight: bold;
@@ -129,7 +129,7 @@
     min-height: 220px;
     align-items: center;
     justify-content: center;
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
     font-size: 2rem;
     font-weight: 700;
 }
@@ -145,7 +145,7 @@
 .containerProduction .settings {
     grid-area: settings;
     background: var(--color-surface-2);
-    border: 1px solid var(--color-border-soft);
+    border: 1px solid var(--border-subtle);
     border-radius: var(--border-radius-large);
     padding: var(--spacing-sm);
     min-width: 0;
@@ -159,7 +159,7 @@
 
 .containerProduction .settings h3 {
     margin: 0;
-    color: var(--color-light-text);
+    color: var(--text-primary);
     font-size: var(--font-size-section-title);
     line-height: 1.15;
 }
@@ -169,7 +169,7 @@
     align-items: center;
     min-height: var(--control-height-compact);
     padding: 0 var(--spacing-xs) var(--spacing-xs);
-    border-bottom: 1px solid var(--color-border-soft);
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 .settingsContent {
@@ -183,8 +183,8 @@
 .settingsGroup {
     padding: var(--spacing-sm);
     background: var(--color-brew-bg);
-    border: 1px solid var(--color-border);
-    border-left: 0.25rem solid var(--color-accent);
+    border: 1px solid var(--border-default);
+    border-left: 0.25rem solid var(--accent);
     border-radius: var(--border-radius-large);
     min-height: 0;
 }
@@ -197,7 +197,7 @@
 
 .settingsGroup h4 {
     margin: 0 0 var(--spacing-sm);
-    color: var(--color-text);
+    color: var(--text-primary);
     font-size: var(--font-size-normal);
     font-weight: 700;
 }
@@ -205,47 +205,47 @@
 .intervalSettings {
     margin-top: var(--spacing-sm);
     padding: var(--spacing-xs) var(--spacing-sm) var(--spacing-sm);
-    background: var(--color-accent-subtle);
-    border: 1px solid var(--color-accent-border);
+    background: var(--accent-subtle);
+    border: 1px solid var(--accent-border);
     border-radius: var(--border-radius-medium);
 }
 
 .intervalSettings h5 {
     margin: 0;
-    color: var(--color-accent-hover);
+    color: var(--accent-hover);
     font-size: var(--font-size-small);
     font-weight: 700;
 }
 
 .agitatorPauseButton {
     width: 100%;
-    border: 1px solid var(--color-accent-border);
+    border: 1px solid var(--accent-border);
     border-radius: var(--border-radius-medium);
     background: var(--color-surface-2);
-    color: var(--color-text);
+    color: var(--text-primary);
     padding: 0.55rem 0.35rem;
     font-weight: 700;
     cursor: pointer;
 }
-.agitatorPauseButton:hover:not(:disabled) { background: var(--color-accent-subtle-hover); }
+.agitatorPauseButton:hover:not(:disabled) { background: var(--accent-subtle-hover); }
 .agitatorPauseButton:disabled {
     background: var(--color-disabled-bg);
     border-color: var(--color-disabled-border);
     color: var(--color-disabled-text);
     cursor: not-allowed;
 }
-.agitatorAvailability { margin: 0 0 var(--spacing-xs); color: var(--color-text-muted); font-size: var(--font-size-small); }
+.agitatorAvailability { margin: 0 0 var(--spacing-xs); color: var(--text-muted); font-size: var(--font-size-small); }
 .agitatorPrimaryMode { padding-inline: var(--spacing-sm); }
-.agitatorSpeedControl { display: grid; gap: var(--spacing-xs); margin-top: var(--spacing-md); color: var(--color-text); }
+.agitatorSpeedControl { display: grid; gap: var(--spacing-xs); margin-top: var(--spacing-md); color: var(--text-primary); }
 .agitatorSpeedControl span { display: flex; justify-content: space-between; }
-.agitatorSpeedControl input { width: 100%; accent-color: var(--color-accent); }
-.agitatorAutomaticSettings { background: var(--color-surface-2); border: 0; box-shadow: inset 0 0 0 1px var(--color-accent-border); }
+.agitatorSpeedControl input { width: 100%; accent-color: var(--accent); }
+.agitatorAutomaticSettings { background: var(--color-surface-2); border: 0; box-shadow: inset 0 0 0 1px var(--accent-border); }
 .agitatorAutomaticHeader { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-sm); }
 .agitatorIntervalProgressRow { display: flex; flex: 0 0 auto; align-items: center; justify-content: flex-start; margin-block: var(--spacing-xs); }
-.agitatorAutomaticSettings h6 { margin: var(--spacing-sm) 0 0; color: var(--color-text); font-size: var(--font-size-small); }
+.agitatorAutomaticSettings h6 { margin: var(--spacing-sm) 0 0; color: var(--text-primary); font-size: var(--font-size-small); }
 .agitatorIntervalStepper { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: var(--spacing-xs); min-width: 0; }
-.agitatorIntervalUnit { display: flex; align-items: center; height: 2rem; color: var(--color-text-secondary); }
-.agitatorAutomaticSettings .quantity-picker-input-disabled { color: var(--color-text-secondary); }
+.agitatorIntervalUnit { display: flex; align-items: center; height: 2rem; color: var(--text-secondary); }
+.agitatorAutomaticSettings .quantity-picker-input-disabled { color: var(--text-secondary); }
 .agitatorFooter { margin-top: auto; padding-top: var(--spacing-sm); }
 .agitatorError { color: var(--color-error); margin: 0.5rem 0 0; }
 
@@ -306,27 +306,27 @@
     flex: 0 0 auto;
 }
 .frame {
-    border: 2px solid var(--color-dark-bg);
+    border: 2px solid var(--bg-app);
     padding: 0.65rem 1rem;
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: var(--color-dark-bg);
+    background-color: var(--bg-app);
     box-shadow: 0 0.25rem 0.375rem var(--shadow-secondary);
 }
 .label {
-    color: var(--color-light-text);
+    color: var(--text-primary);
     font-size: 0.95rem;
     font-weight: bold;
     margin-bottom: 0.35rem;
 }
 .time {
-    color: var(--color-light-text);
+    color: var(--text-primary);
     font-size: 1.25rem;
 }
 .progressLabel {
     margin: 0 0 0.35rem 0;
-    color: var(--color-light-text);
+    color: var(--text-primary);
 }
 
 .containerProduction .info .container {
@@ -364,7 +364,7 @@
     justify-content: space-between;
     gap: var(--spacing-md);
     min-height: var(--control-height-compact);
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
     font-size: var(--font-size-small);
     font-weight: 600;
 }
@@ -372,9 +372,9 @@
 .settingsToggleRow + .settingsToggleRow { margin-top: var(--spacing-sm); }
 .settingsToggleRow:has(input:disabled) { color: var(--color-disabled-text); }
 .productionSwitch { flex: 0 0 auto; }
-.productionSwitch .react-switch-bg { background: var(--color-panel-highlight) !important; }
-.productionSwitch:has(input:checked) .react-switch-bg { background: var(--color-primary) !important; }
-.productionSwitch:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.productionSwitch .react-switch-bg { background: var(--bg-elevated) !important; }
+.productionSwitch:has(input:checked) .react-switch-bg { background: var(--accent) !important; }
+.productionSwitch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .productionSwitch:has(input:disabled) { opacity: 0.65; cursor: not-allowed; }
 
 .settings .quantity-picker-content,
@@ -389,17 +389,17 @@
     font-size: 1rem;
     padding: 0.3rem 1.2rem;
     border-radius: var(--border-radius-medium);
-    background-color: var(--color-primary);
-    color: var(--color-text-on-primary);
-    border: 1px solid var(--color-accent-border);
+    background-color: var(--accent);
+    color: var(--text-on-accent);
+    border: 1px solid var(--accent-border);
     min-width: 80px;
     min-height: 32px;
     transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
     box-shadow: 0 2px 8px var(--shadow-soft);
 }
 .startBtn:hover:not(:disabled) {
-    background-color: var(--color-primary-hover);
-    color: var(--color-text-on-primary);
+    background-color: var(--accent-hover);
+    color: var(--text-on-accent);
     box-shadow: 0 4px 16px var(--shadow-orange-strong);
     transform: translateY(-1px);
     cursor: pointer;
@@ -449,21 +449,21 @@
 .recipeWaterGroup {
     margin-top: auto;
     padding-top: var(--spacing-sm);
-    border-top: 1px solid var(--color-border-soft);
+    border-top: 1px solid var(--border-subtle);
 }
 
 .recipeWaterGroupLabel {
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
     font-size: var(--font-size-small);
     font-weight: 700;
 }
 
 .recipeWaterBtn {
     flex: 1 1 0;
-    background-color: var(--color-panel-highlight);
-    border: 1px solid var(--color-border);
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-default);
     border-radius: var(--border-radius-medium);
-    color: var(--color-text);
+    color: var(--text-primary);
     cursor: pointer;
     font-size: var(--font-size-small);
     min-height: var(--control-height-compact);
@@ -473,8 +473,8 @@
 }
 
 .recipeWaterBtn:hover:not(:disabled) {
-    background-color: var(--color-accent-subtle-hover);
-    border-color: var(--color-accent-border);
+    background-color: var(--accent-subtle-hover);
+    border-color: var(--accent-border);
 }
 
 .recipeWaterBtn:disabled {

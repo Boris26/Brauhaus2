@@ -56,13 +56,13 @@
     width: 100%;
     padding: 4px 8px;
     background-color: var(--bg-transparent-black);
-    border: 1px solid var(--color-border-mid);
+    border: 1px solid var(--border-default-mid);
     border-radius: 4px;
     color: white;
 }
 
 .containerIngredientsForm .table-edit-field:focus {
-    border-color: var(--color-accent) !important;
+    border-color: var(--accent) !important;
     outline: none;
 }
 

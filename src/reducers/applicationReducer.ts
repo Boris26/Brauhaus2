@@ -1,6 +1,5 @@
 import {ApplicationActions} from '../actions/actions';
 import {Views} from '../enums/eViews';
-import { ThemeName, resolveInitialTheme } from '../utils/theme';
 import { resolveInitialView } from '../utils/viewRoutes';
 import { getStoredDebugMode } from '../utils/debugMode';
 import AllApplicationActions = ApplicationActions.AllApplicationActions;
@@ -14,7 +13,6 @@ export interface ApplicationReducerState {
     errorDialogMessage: string;
     errorDialogOpen: boolean;
     message?: string[];
-    theme: ThemeName;
     debug: boolean;
 }
 
@@ -24,7 +22,6 @@ export const initialApplicationState: ApplicationReducerState = {
     errorDialogMessage: '',
     errorDialogOpen: false,
     message: [],
-    theme: resolveInitialTheme(),
     debug: getStoredDebugMode(),
 };
 
@@ -60,12 +57,6 @@ const applicationReducer = (
             return {
                 ...aState,
                 message: [],
-            };
-        }
-        case ApplicationActions.ActionTypes.SET_THEME: {
-            return {
-                ...aState,
-                theme: aAction.payload.theme,
             };
         }
         case ApplicationActions.ActionTypes.SET_DEBUG: {

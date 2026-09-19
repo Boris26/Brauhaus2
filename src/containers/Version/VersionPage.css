@@ -1,6 +1,6 @@
 .version-page {
   padding: 1.5rem 2rem;
-  color: var(--color-black);
+  color: var(--text-primary);
   display: grid;
   gap: 1rem;
 }
@@ -50,8 +50,8 @@
 }
 
 .version-card {
-  background: var(--color-white);
-  border: 1px solid var(--color-input-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: 1rem;
   box-shadow: 0 2px 6px var(--shadow-card-light);
   padding: 1rem;
@@ -73,7 +73,7 @@
 }
 
 .version-description {
-  color: var(--color-gray-very-dark);
+  color: var(--text-secondary);
   margin: 0.5rem 0 1rem 0;
 }
 
@@ -83,7 +83,7 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.75rem 0;
-  border-top: 1px solid var(--color-input-border);
+  border-top: 1px solid var(--border-subtle);
 }
 
 .version-label {
@@ -91,7 +91,7 @@
 }
 
 .version-value {
-  background: var(--color-input-bg2);
+  background: var(--bg-input2);
   border: 1px solid var(--color-input-border);
   border-radius: 999px;
   font-family: monospace;
@@ -100,5 +100,5 @@
 }
 
 .version-value-loading {
-  color: var(--color-gray-very-dark);
+  color: var(--text-muted);
 }

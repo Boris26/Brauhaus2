@@ -9,12 +9,8 @@ import ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 import store from './store';
 import App from './containers/App';
-import { resolveInitialTheme } from './utils/theme';
-import { ApplicationActions } from './actions/actions';
 import { debugMetrics } from './utils/debugMetrics';
 import { dataCollector } from './utils/DataCollector/dataCollector';
-
-store.dispatch(ApplicationActions.setTheme(resolveInitialTheme()));
 
 debugMetrics.start(
     () => store.getState(),

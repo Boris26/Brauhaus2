@@ -1,7 +1,7 @@
 .custom-panel {
   position: absolute;
-  background: var(--color-panel-bg);
-  border: 1.5px solid var(--color-accent);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
   border-radius: 8px;
   box-shadow: 0 4px 24px var(--shadow-panel), 0 1.5px 6px var(--shadow-panel2);
   overflow: hidden;
@@ -14,12 +14,12 @@
 }
 
 .custom-panel-header {
-  background: var(--color-accent);
-  color: var(--color-black);
+  background: var(--bg-card);
+  color: var(--text-primary);
   padding: 2px 8px; /* Höhe reduziert */
   cursor: move;
   font-weight: bold;
-  border-bottom: 2px solid var(--color-accent);
+  border-bottom: 2px solid var(--accent);
   font-size: 0.92rem; /* Schriftgröße leicht reduziert */
   letter-spacing: 0.02em;
   display: flex;
@@ -37,7 +37,7 @@
 .custom-panel-max-btn {
   background: transparent;
   border: none;
-  color: var(--color-black);
+  color: var(--text-primary);
   font-size: 1.5rem;
   font-weight: bold;
   cursor: pointer;
@@ -68,7 +68,7 @@
   height: auto;
   max-height: calc(90vh - 48px);
   overflow: auto;
-  background: var(--color-panel-bg);
+  background: var(--bg-panel);
 }
 
 .custom-panel-resize {
@@ -78,5 +78,5 @@
   width: 18px;
   height: 18px;
   cursor: se-resize;
-  background: linear-gradient(135deg, transparent 60%, var(--color-accent) 60%);
+  background: linear-gradient(135deg, transparent 60%, var(--accent) 60%);
 }

@@ -9,7 +9,7 @@
 }
 
 .beer-form-panel {
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--border-default);
     border-radius: var(--border-radius-large);
     display: flex;
     flex: 1 1 auto;
@@ -21,8 +21,9 @@
 }
 
 .beer-form-panel-header {
-    background-color: var(--color-accent);
-    color: var(--color-white);
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    border-bottom: 2px solid var(--accent);
     min-height: 45px;
     padding: 4px 12px;
     box-sizing: border-box;
@@ -66,7 +67,7 @@
     padding: 10px 12px;
     border-radius: var(--border-radius-large);
     background: var(--color-surface-strong);
-    border: 1px solid var(--color-border-strong);
+    border: 1px solid var(--border-strong);
     min-width: 0;
 }
 
@@ -96,11 +97,11 @@
     min-height: 30px;
     box-sizing: border-box;
     padding: 6px 10px;
-    border: 1px solid var(--color-border-mid);
+    border: 1px solid var(--border-default-mid);
     border-radius: var(--border-radius-medium);
     font: inherit;
-    background: var(--color-input-bg);
-    color: var(--color-dark-bg);
+    background: var(--bg-input);
+    color: var(--bg-app);
     min-width: 0;
 }
 
@@ -108,7 +109,7 @@
 .beer-form select:focus,
 .beer-form textarea:focus,
 .beer-form button:not(.app-accordion-summary):focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
 }
 
@@ -151,14 +152,14 @@
     align-items: center;
     justify-content: flex-end;
     gap: 10px;
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
     font-weight: 500;
     flex-wrap: wrap;
 }
 
 .beer-accordion-error {
     color: var(--color-error-highlight);
-    background: var(--color-dark-bg);
+    background: var(--bg-app);
     border-radius: var(--border-radius-pill);
     padding: var(--spacing-xs) var(--spacing-sm);
 }
@@ -184,8 +185,8 @@
 }
 
 .ingredient-table th {
-    background-color: var(--color-accent);
-    color: var(--color-text-on-primary);
+    background-color: var(--accent);
+    color: var(--text-on-accent);
     height: 34px;
     padding: 5px 8px;
     box-sizing: border-box;
@@ -202,11 +203,11 @@
 }
 
 .ingredient-table tr:nth-child(even) {
-    background-color: var(--color-panel-bg);
+    background-color: var(--bg-panel);
 }
 
 .ingredient-table tr:nth-child(odd) {
-    background-color: var(--color-panel-bg);
+    background-color: var(--bg-panel);
 }
 
 .ingredient-table input,
@@ -250,16 +251,16 @@
 }
 
 .containerBeerForm .add-button {
-    background: linear-gradient(180deg, var(--color-primary) 10%, var(--color-primary-hover) 100%);
+    background: linear-gradient(180deg, var(--accent) 10%, var(--accent-hover) 100%);
     border: 1px solid var(--color-orange-dark);
-    color: var(--color-text-on-primary);
+    color: var(--text-on-accent);
     box-shadow: 0 3px 8px var(--shadow-orange-bold);
     height: 25px;
 }
 
 .containerBeerForm .add-button:hover:not(:disabled),
 .containerBeerForm .finish-btn:hover:not(:disabled) {
-    background: linear-gradient(180deg, var(--color-primary-hover) 10%, var(--color-primary-active) 100%);
+    background: linear-gradient(180deg, var(--accent-hover) 10%, var(--accent-active) 100%);
 }
 
 .section-add-button {
@@ -338,16 +339,16 @@
 
 
 .primary-action {
-    background: linear-gradient(180deg, var(--color-primary) 10%, var(--color-primary-hover) 100%);
+    background: linear-gradient(180deg, var(--accent) 10%, var(--accent-hover) 100%);
     border: 1px solid var(--color-orange-dark);
-    color: var(--color-text-on-primary);
+    color: var(--text-on-accent);
     margin-left: auto;
 }
 
 .secondary-action {
     background: var(--color-surface-raised);
-    border-color: var(--color-border);
-    color: var(--color-text);
+    border-color: var(--border-default);
+    color: var(--text-primary);
 }
 
 .visually-hidden-file {
@@ -362,10 +363,10 @@
 
 .beer-form-overview-item {
     background: var(--color-surface-raised);
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--border-default);
     border-radius: var(--border-radius-medium);
     padding: 8px 10px;
-    color: var(--color-text);
+    color: var(--text-primary);
     min-width: 0;
 }
 
@@ -376,7 +377,7 @@
 }
 
 .beer-form-overview-item span {
-    color: var(--color-text-secondary);
+    color: var(--text-secondary);
     font-size: var(--font-size-small);
     margin-bottom: var(--spacing-xs);
 }

@@ -48,8 +48,8 @@
   z-index: 2;
   padding: .15rem .4rem;
   border-radius: var(--border-radius-small);
-  color: var(--color-text-secondary);
-  background: var(--color-panel-bg);
+  color: var(--text-secondary);
+  background: var(--bg-panel);
   font-size: .72rem;
 }
 
@@ -62,7 +62,7 @@
   margin: 0;
   padding: .15rem .4rem;
   border-radius: var(--border-radius-small);
-  background: var(--color-panel-bg);
+  background: var(--bg-panel);
   font-size: .72rem;
 }
 
@@ -81,10 +81,10 @@
   min-width: 2.15rem;
   height: 1.55rem;
   padding: 0 .42rem;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--border-radius-small);
-  color: var(--color-text-secondary);
-  background: var(--color-panel-contrast);
+  color: var(--text-secondary);
+  background: var(--bg-input);
   box-shadow: none;
   font-size: .7rem;
   font-weight: 600;
@@ -93,19 +93,19 @@
 }
 
 .fermentation-measurements-page .fermentation-range-selector button:hover:not(:disabled) {
-  color: var(--color-text);
-  border-color: var(--color-text-secondary);
-  background: var(--color-panel-bg);
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+  background: var(--bg-panel);
 }
 
 .fermentation-measurements-page .fermentation-range-selector button.is-selected {
   color: var(--color-button-text);
-  border-color: var(--color-primary);
-  background: var(--color-primary);
+  border-color: var(--accent);
+  background: var(--accent);
 }
 
 .fermentation-measurements-page .fermentation-range-selector button:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
