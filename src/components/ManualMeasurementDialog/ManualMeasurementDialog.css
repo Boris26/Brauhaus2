@@ -1,4 +1,4 @@
-.manual-measurement-dialog.MuiPaper-root { width: min(100% - calc(2 * var(--spacing-lg)), 500px); border-top: 1px solid var(--color-border); }
+.manual-measurement-dialog.MuiPaper-root { width: min(100% - calc(2 * var(--spacing-lg)), 500px); }
 .manual-measurement-dialog .app-dialog__content { display: grid; gap: var(--spacing-sm); }
 .manual-measurement-dialog__form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-md); padding-top: var(--spacing-xs); }
 .manual-measurement-dialog__form .MuiTextField-root:first-child,
