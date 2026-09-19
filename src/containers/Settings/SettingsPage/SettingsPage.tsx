@@ -22,6 +22,7 @@ import {getTemperatureSensorMessage} from '../../../utils/temperatureSensor';
 import {SettingsNumberField} from '../components/SettingsNumberField/SettingsNumberField';
 import {SettingsAccordion} from '../components/SettingsAccordion/SettingsAccordion';
 import {FermentationNotificationSettings} from '../components/FermentationNotificationSettings/FermentationNotificationSettings';
+import {PageHeader} from '../../../components/PageLayout/PageLayout';
 
 interface SettingsPageProps {
     debug: boolean;
@@ -419,10 +420,7 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
 
         return (
             <main className="settings-page">
-                <header className="settings-header">
-                    <h1>Einstellungen</h1>
-                    <p className="settings-subtitle">Konfiguriere Verhalten und Brausteuerung.</p>
-                </header>
+                <PageHeader className="settings-header" title="Einstellungen" subtitle="Konfiguriere Verhalten und Brausteuerung." />
 
                 {statusMessage && (
                     <div className="settings-message" role="status" aria-live="polite">

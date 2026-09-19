@@ -15,6 +15,7 @@ import { eBrewState, BrewStateGerman, brewStateLabel } from '../../../../enums/e
 import {createFinishedBrewId} from '../../../../utils/finishedBrewCreateId';
 import ModalDialog, {DialogType} from '../../../../components/ModalDialog/ModalDialog';
 import ManualMeasurementDialog from '../../../../components/ManualMeasurementDialog/ManualMeasurementDialog';
+import {PageLayout} from '../../../../components/PageLayout/PageLayout';
 
 
 interface FinishedBrewsTableProps {
@@ -189,26 +190,6 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                     />
                     <span>Aktive ausfiltern</span>
                 </label>
-                <button
-                    className="finished-brews-toolbar-button"
-                    style={{ marginLeft: '2rem', height: '2.2rem', display: 'flex', alignItems: 'center' }}
-                    onClick={this.handleExportPdf}
-                    title="PDF exportieren"
-                    aria-label="PDF exportieren"
-                >
-                    <PictureAsPdfIcon sx={{fontSize: 22, marginRight: '4px'}} />
-                    PDF exportieren
-                </button>
-                <button
-                    className="finished-brews-toolbar-button"
-                    style={{ marginLeft: '2rem', height: '2.2rem', display: 'flex', alignItems: 'center' }}
-                    onClick={() => this.setState({ newRowActive: true, newRowData: {id: createFinishedBrewId()} })}
-                    title="Neuen Eintrag hinzufügen"
-                    aria-label="Neuen Eintrag hinzufügen"
-                >
-                    <AddIcon sx={{fontSize: 22, marginRight: '4px'}} />
-                    Neuer Eintrag
-                </button>
             </div>
         );
     }
@@ -329,11 +310,14 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
             <>
             <ModalDialog type={DialogType.CONFIRM} open={Boolean(this.state.brewPendingDelete)} header="Sud löschen" content={`Soll ${this.state.brewPendingDelete?.name ?? 'dieser Sud'} endgültig gelöscht werden?`} onConfirm={this.confirmDelete} onCancel={() => this.setState({brewPendingDelete: undefined})} showCancelButton={true} actionsDisabled={Boolean(this.state.brewPendingDelete && this.props.deletingFinishedBrewIds.includes(this.state.brewPendingDelete.id))} />
             {this.state.measurementBeerId && <ManualMeasurementDialog open beerId={this.state.measurementBeerId} onClose={() => this.setState({measurementBeerId: undefined})} />}
-            <main className="finished-brews-page">
+            <PageLayout title="Biere / Sudhistorie" subtitle="Abgeschlossene und laufende Sude im Überblick." scroll={false} contentClassName="finished-brews-page" actions={<>
+                <button className="brauhaus-button brauhaus-button-secondary" onClick={this.handleExportPdf}><PictureAsPdfIcon fontSize="small" /> PDF exportieren</button>
+                <button className="brauhaus-button brauhaus-button-primary" onClick={() => this.setState({newRowActive: true, newRowData: {id: createFinishedBrewId()}})}><AddIcon fontSize="small" /> Neuer Eintrag</button>
+            </>}>
                 {this.renderFilterControls(years)}
                 {this.renderNewBrewForm(beers)}
                 <div className="finished-brews-table-area">{this.renderTable(filteredBrews, beers)}</div>
-            </main>
+            </PageLayout>
             </>
         );
     }
