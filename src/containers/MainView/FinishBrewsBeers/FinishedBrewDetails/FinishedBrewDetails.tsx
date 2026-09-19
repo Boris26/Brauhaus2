@@ -72,6 +72,7 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
     ?? 'Gärsensor';
   const assignedOnline = assignedDevice ? isFermentationDeviceOnline(assignedDevice, assignedGatewayStatus) : false;
   const measurementRuntimeState = assignedOnline ? assignedGatewayStatus?.measurementState : undefined;
+  const canCreateMeasurement = props.brew.state === eBrewState.FERMENTATION;
   const canManageAssignment = props.brew.state === eBrewState.WAITING_FOR_FERMENTATION || props.brew.state === eBrewState.FERMENTATION;
   const isAssigning = Boolean(selectedDeviceUid && props.assigning.includes(selectedDeviceUid));
   const isUnassigning = Boolean(assignedDevice && props.unassigning.includes(assignedDevice.deviceUid));
@@ -129,7 +130,7 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
   const actionGroup = (title: string, actions: FermentationAction[]) => actions.length > 0 && <section className="fermentation-plan-group"><h5>{title}</h5>{actionItems(actions)}</section>;
   const completedActionGroup = completedActions.length > 0 && <section className="fermentation-plan-group fermentation-plan-group-completed"><button type="button" className="fermentation-completed-toggle" aria-expanded={completedActionsOpen} aria-label={`Bereits durchgeführt (${completedActions.length})`} onClick={() => setCompletedActionsOpen(open => !open)}><span className="fermentation-completed-chevron" aria-hidden="true">{completedActionsOpen ? '▾' : '▸'}</span><span>Bereits durchgeführt</span><span className="fermentation-completed-count">{completedActions.length}</span></button>{completedActionsOpen && actionItems(completedActions)}</section>;
   return <div className="finished-brew-details fermentation-details fermentation-measurements-page">
-      <header className="fermentation-page-header"><div><button className="fermentation-back-button" onClick={props.closeMeasurements}>← Fertige Biere</button><h3>Messdaten · {props.brew.name}</h3><p className="fermentation-phase">{brewStateLabel(props.brew.state)}{day ? ` · Gärtag ${day}` : ''}</p></div>{props.brew.state === eBrewState.FERMENTATION && <button onClick={() => setFormOpen(true)}>Neue Messung</button>}</header>
+      <header className="fermentation-page-header"><div><button className="fermentation-back-button" onClick={props.closeMeasurements}>← Fertige Biere</button><h3>Messdaten · {props.brew.name}</h3><p className="fermentation-phase">{brewStateLabel(props.brew.state)}{day ? ` · Gärtag ${day}` : ''}</p></div><button disabled={!canCreateMeasurement} title={canCreateMeasurement ? undefined : 'Messungen können nur während der Gärung erfasst werden.'} onClick={() => setFormOpen(true)}>Neue Messung</button></header>
       {isInitialLoading && <p role="status">Messdaten werden geladen …</p>}{props.error && <p className="fermentation-error" role="alert">Die Messdaten konnten nicht geladen werden.</p>}
       <ManualMeasurementDialogView open={formOpen} beerId={props.brew.id} onClose={() => setFormOpen(false)} brewState={props.brew.state} saving={props.saving} error={props.error} saveMeasurement={props.save} />
 
