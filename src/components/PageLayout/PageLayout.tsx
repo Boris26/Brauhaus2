@@ -4,21 +4,21 @@ import './PageLayout.css';
 interface PageHeaderProps {
     title: React.ReactNode;
     subtitle?: React.ReactNode;
-    eyebrow?: React.ReactNode;
     actions?: React.ReactNode;
     className?: string;
+    /** @deprecated Page headers deliberately do not render icons. */
+    icon?: React.ReactNode;
 }
 
 const classes = (...values: Array<string | undefined>) => values.filter(Boolean).join(' ');
 
-export const PageHeader = ({title, subtitle, eyebrow, actions, className}: PageHeaderProps) => (
+export const PageHeader = ({title, subtitle, actions, className}: PageHeaderProps) => (
     <header className={classes('brauhaus-page-header', className)}>
         <div className="brauhaus-page-heading">
-            {eyebrow && <span className="brauhaus-page-eyebrow">{eyebrow}</span>}
             <h1>{title}</h1>
             {subtitle && <p>{subtitle}</p>}
         </div>
-        {actions && <div className="brauhaus-page-actions">{actions}</div>}
+        <div className="brauhaus-page-actions">{actions}</div>
     </header>
 );
 
