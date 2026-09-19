@@ -71,7 +71,7 @@ describe('ProductionTemperatureTimeline', () => {
         expect(screen.queryByText('Isttemperatur, Zieltemperatur und Prozessschritte über den gesamten Brautag.')).not.toBeInTheDocument();
 
         const nowMarker = screen.getByTestId('reference-line');
-        expect(nowMarker).toHaveAttribute('data-stroke', 'var(--color-accent)');
+        expect(nowMarker).toHaveAttribute('data-stroke', 'var(--accent)');
         expect(nowMarker).toHaveAttribute('data-stroke-width', '2');
         expect(nowMarker.getAttribute('data-label')).toContain('Jetzt');
     });

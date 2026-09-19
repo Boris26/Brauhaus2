@@ -11,7 +11,6 @@ import {FinishedBrew, FinishedBrewCreatePayload} from "../model/FinishedBrew";
 import {BackendAvailable} from "../reducers/productionReducer";
 import {scalingValues} from "../utils/BeerScaler/ScalingBeerRecipe";
 import {RecipeImportRequest, RecipeImportResult} from '../model/RecipeImport';
-import { ThemeName, setTheme as applyAndStoreTheme } from "../utils/theme";
 import { getMeasurementDataPath, pushViewPath } from "../utils/viewRoutes";
 import { setStoredDebugMode } from "../utils/debugMode";
 import {AgitatorRealtimeState, AlarmRealtimeState, HeatingRunningState, TemperatureSensorRealtimeState} from '../model/RealtimeControllerState';
@@ -547,7 +546,6 @@ export namespace ApplicationActions {
         OPEN_ERROR_DIALOG = 'ApplicationActions.OPEN_ERROR_DIALOG',
         SET_MESSAGE = 'ApplicationActions.SET_MESSAGE',
         REMOVE_MESSAGE = 'ApplicationActions.REMOVE_MESSAGE',
-        SET_THEME = 'ApplicationActions.SET_THEME',
         SET_DEBUG = 'ApplicationActions.SET_DEBUG',
         APPLICATION_START = 'ApplicationActions.APPLICATION_START',
     }
@@ -581,11 +579,6 @@ export namespace ApplicationActions {
         readonly type: ActionTypes.REMOVE_MESSAGE
     }
 
-    export interface SetTheme {
-        readonly type: ActionTypes.SET_THEME
-        payload: { theme: ThemeName }
-    }
-
     export interface SetDebug {
         readonly type: ActionTypes.SET_DEBUG
         payload: { debug: boolean }
@@ -598,7 +591,6 @@ export namespace ApplicationActions {
         OpenDialog |
         SetMessage |
         RemoveMessage |
-        SetTheme |
         SetDebug;
 
     export function applicationStart(): ApplicationStart {
@@ -641,15 +633,6 @@ export namespace ApplicationActions {
         return {
             type: ActionTypes.REMOVE_MESSAGE
         }
-    }
-
-    export function setTheme(theme: ThemeName): SetTheme {
-        applyAndStoreTheme(theme);
-
-        return {
-            type: ActionTypes.SET_THEME,
-            payload: { theme },
-        };
     }
 
     export function setDebug(debug: boolean): SetDebug {

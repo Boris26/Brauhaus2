@@ -22,7 +22,7 @@
 .fermentation-measurements-page .fermentation-plan > .fermentation-plan-group:not(.fermentation-plan-group-completed):has(+ .fermentation-plan-group:not(.fermentation-plan-group-completed)) {
   grid-column: 1;
   padding-right: .65rem;
-  border-right: 1px solid var(--color-border-strong);
+  border-right: 1px solid var(--border-strong);
 }
 
 .fermentation-measurements-page .fermentation-plan > .fermentation-plan-group:not(.fermentation-plan-group-completed) + .fermentation-plan-group:not(.fermentation-plan-group-completed) {
@@ -36,7 +36,7 @@
 
 .fermentation-measurements-page .fermentation-plan > .fermentation-plan-group:not(.fermentation-plan-group-completed):first-of-type > h5::after {
   content: 'Steht an';
-  color: var(--color-primary);
+  color: var(--accent);
   font-size: .8rem;
   line-height: 1.15;
 }
@@ -52,7 +52,7 @@
   scroll-snap-type: x proximity;
   overscroll-behavior-x: contain;
   scrollbar-width: thin;
-  scrollbar-color: var(--color-border-strong) transparent;
+  scrollbar-color: var(--border-strong) transparent;
 }
 
 .fermentation-measurements-page .fermentation-plan > .fermentation-plan-group:not(.fermentation-plan-group-completed) .fermentation-action-list::-webkit-scrollbar {
@@ -65,7 +65,7 @@
 
 .fermentation-measurements-page .fermentation-plan > .fermentation-plan-group:not(.fermentation-plan-group-completed) .fermentation-action-list::-webkit-scrollbar-thumb {
   border-radius: var(--border-radius-pill);
-  background: var(--color-border-strong);
+  background: var(--border-strong);
 }
 
 .fermentation-measurements-page .fermentation-plan > .fermentation-plan-group:not(.fermentation-plan-group-completed) .fermentation-action-list > li {
@@ -90,10 +90,10 @@
   left: 0;
   z-index: 3;
   margin-right: .75rem;
-  background: var(--color-panel-contrast);
+  background: var(--bg-input);
   box-shadow:
-    .55rem 0 0 var(--color-panel-bg),
-    calc(.55rem + 1px) 0 0 var(--color-border-strong);
+    .55rem 0 0 var(--bg-panel),
+    calc(.55rem + 1px) 0 0 var(--border-strong);
 }
 
 @media (max-width: 900px) {
@@ -124,6 +124,6 @@
     padding-right: 0;
     padding-bottom: .45rem;
     border-right: 0;
-    border-bottom: 1px solid var(--color-border-soft);
+    border-bottom: 1px solid var(--border-subtle);
   }
 }

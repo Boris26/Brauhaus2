@@ -76,17 +76,17 @@ export class ProductionTemperatureTimeline extends React.Component<ProductionTem
                                     allowDataOverflow
                                     minTickGap={12}
                                     tickFormatter={this.formatAxisTime}
-                                    stroke="var(--color-light-text)"
+                                    stroke="var(--text-primary)"
                                 />
-                                <YAxis domain={[0, 110]} unit="°C" tickCount={6} stroke="var(--color-light-text)" />
+                                <YAxis domain={[0, 110]} unit="°C" tickCount={6} stroke="var(--text-primary)" />
                                 <Tooltip labelFormatter={(value) => `Zeit: ${this.formatAxisTime(Number(value))}`} formatter={(value, name) => [`${Number(value).toFixed(1)} °C`, name === 'actualTemperature' ? 'Isttemperatur' : 'Zieltemperatur']} />
                                 {steps.map((step, index) => (
-                                    <ReferenceArea key={`${step.name}-${step.startSeconds}`} x1={step.startSeconds} x2={step.endSeconds} fill={index % 2 === 0 ? 'rgba(76, 175, 80, 0.10)' : 'rgba(33, 150, 243, 0.10)'} stroke="rgba(255,255,255,0.18)" label={step.showLabel ? {value: step.name, position: 'insideTop', fill: 'var(--color-light-text)', fontSize: 11} : undefined} />
+                                    <ReferenceArea key={`${step.name}-${step.startSeconds}`} x1={step.startSeconds} x2={step.endSeconds} fill={index % 2 === 0 ? 'rgba(76, 175, 80, 0.10)' : 'rgba(33, 150, 243, 0.10)'} stroke="rgba(255,255,255,0.18)" label={step.showLabel ? {value: step.name, position: 'insideTop', fill: 'var(--text-primary)', fontSize: 11} : undefined} />
                                 ))}
                                 {steps.map((step) => (
                                     <ReferenceLine key={`${step.name}-end`} x={step.endSeconds} stroke="rgba(255,255,255,0.24)" strokeDasharray="4 4" />
                                 ))}
-                                <ReferenceLine x={nowSeconds} stroke="var(--color-accent)" strokeWidth={2} label={{value: 'Jetzt', position: 'top', fill: 'var(--color-accent)', fontSize: 12}} />
+                                <ReferenceLine x={nowSeconds} stroke="var(--accent)" strokeWidth={2} label={{value: 'Jetzt', position: 'top', fill: 'var(--accent)', fontSize: 12}} />
                                 <Line type="linear" dataKey="actualTemperature" name="Isttemperatur" stroke="var(--color-warning)" strokeWidth={2} dot={false} isAnimationActive={false} connectNulls />
                                 <Line type="stepAfter" dataKey="targetTemperature" name="Zieltemperatur" stroke="var(--color-success)" strokeWidth={1.5} strokeOpacity={0.8} dot={false} isAnimationActive={false} connectNulls />
                             </LineChart>

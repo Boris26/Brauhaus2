@@ -14,14 +14,13 @@
   box-sizing: border-box;
   min-width: 0;
   padding: .48rem .6rem;
-  color: var(--color-text);
-  background-color: var(--color-panel-contrast);
-  border: 1px solid var(--color-border);
+  color: var(--text-primary);
+  background-color: var(--bg-input);
+  border: 1px solid var(--border-default);
   border-radius: var(--border-radius-small);
   outline: none;
   font: inherit;
   line-height: var(--line-height-normal);
-  color-scheme: dark;
   transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
 }
 
@@ -41,7 +40,7 @@
 #root .form-control:hover:not(:disabled):not([readonly]),
 #root .form-select:hover:not(:disabled),
 #root .brauhaus-form-control:hover:not(:disabled):not([readonly]) {
-  border-color: var(--color-border-strong);
+  border-color: var(--border-strong);
 }
 
 #root input:not([type='button']):not([type='checkbox']):not([type='color']):not([type='file']):not([type='hidden']):not([type='image']):not([type='radio']):not([type='range']):not([type='reset']):not([type='submit']):not(.MuiInputBase-input):focus,
@@ -50,11 +49,11 @@
 #root .form-control:focus,
 #root .form-select:focus,
 #root .brauhaus-form-control:focus {
-  color: var(--color-text);
-  background-color: var(--color-panel-bg);
-  border-color: var(--color-primary);
+  color: var(--text-primary);
+  background-color: var(--bg-panel);
+  border-color: var(--accent);
   outline: none;
-  box-shadow: 0 0 0 2px var(--color-accent-subtle);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
 }
 
 #root input:not([type='button']):not([type='checkbox']):not([type='color']):not([type='file']):not([type='hidden']):not([type='image']):not([type='radio']):not([type='range']):not([type='reset']):not([type='submit']):not(.MuiInputBase-input):disabled,
@@ -72,41 +71,40 @@
 
 #root input:not([type='button']):not([type='checkbox']):not([type='color']):not([type='file']):not([type='hidden']):not([type='image']):not([type='radio']):not([type='range']):not([type='reset']):not([type='submit']):not(.MuiInputBase-input)[readonly],
 #root textarea:not(.MuiInputBase-input)[readonly] {
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   background-color: var(--color-surface-muted);
 }
 
 #root select option {
-  color: var(--color-text);
-  background: var(--color-panel-contrast);
+  color: var(--text-primary);
+  background: var(--bg-input);
 }
 
 /* MUI renders the visible border and background on the input root. */
 #root .MuiInputBase-root {
-  color: var(--color-text);
-  background-color: var(--color-panel-contrast);
+  color: var(--text-primary);
+  background-color: var(--bg-input);
   border-radius: var(--border-radius-small);
   font: inherit;
-  color-scheme: dark;
   transition: box-shadow .15s ease, background-color .15s ease;
 }
 
 #root .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
-  border-color: var(--color-border);
+  border-color: var(--border-default);
   transition: border-color .15s ease;
 }
 
 #root .MuiOutlinedInput-root:hover:not(.Mui-disabled) .MuiOutlinedInput-notchedOutline {
-  border-color: var(--color-border-strong);
+  border-color: var(--border-strong);
 }
 
 #root .MuiOutlinedInput-root.Mui-focused {
-  background-color: var(--color-panel-bg);
-  box-shadow: 0 0 0 2px var(--color-accent-subtle);
+  background-color: var(--bg-panel);
+  box-shadow: 0 0 0 2px var(--accent-subtle);
 }
 
 #root .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
-  border-color: var(--color-primary);
+  border-color: var(--accent);
   border-width: 1px;
 }
 
@@ -123,11 +121,11 @@
 
 #root .MuiInputLabel-root,
 #root .MuiSelect-icon {
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
 }
 
 #root .MuiInputLabel-root.Mui-focused {
-  color: var(--color-primary);
+  color: var(--accent);
 }
 
 /* Shared label/control composition used by page forms and dialogs alike. */
@@ -137,11 +135,11 @@
   min-width: 0;
   gap: var(--spacing-xs);
   margin: 0;
-  color: var(--color-text);
+  color: var(--text-primary);
 }
 
 #root .brauhaus-form-field__label {
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   font-size: var(--font-size-small);
   font-weight: 700;
   line-height: var(--line-height-normal);

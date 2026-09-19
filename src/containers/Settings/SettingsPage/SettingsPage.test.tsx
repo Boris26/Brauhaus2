@@ -52,7 +52,7 @@ const deferred = <T,>() => {
 };
 
 const renderSettings = (debug = true, setDebug = jest.fn()) => render(
-    <SettingsPage theme="default" setTheme={jest.fn()} debug={debug} setDebug={setDebug} />
+    <SettingsPage debug={debug} setDebug={setDebug} />
 );
 
 describe('Settings sound tests', () => {
@@ -184,18 +184,18 @@ describe('Settings agitator defaults', () => {
     });
 
     it('adopts socket snapshots when clean without another GET', async () => {
-        const view = render(<SettingsPage theme="default" setTheme={jest.fn()} debug={false} setDebug={jest.fn()} />);
+        const view = render(<SettingsPage debug={false} setDebug={jest.fn()} />);
         await screen.findByDisplayValue('32');
-        view.rerender(<SettingsPage theme="default" setTheme={jest.fn()} debug={false} setDebug={jest.fn()} agitatorDefaultsSnapshot={{speed: 75, intervalOnMinutes: 5, intervalOffMinutes: 2}} />);
+        view.rerender(<SettingsPage debug={false} setDebug={jest.fn()} agitatorDefaultsSnapshot={{speed: 75, intervalOnMinutes: 5, intervalOffMinutes: 2}} />);
         expect(screen.getByDisplayValue('75')).toBeInTheDocument();
         expect(screen.getByDisplayValue('5')).toBeInTheDocument();
         expect(mockedGetAgitatorSettings).toHaveBeenCalledTimes(1);
     });
 
     it('does not silently overwrite dirty inputs with a socket snapshot', async () => {
-        const view = render(<SettingsPage theme="default" setTheme={jest.fn()} debug={false} setDebug={jest.fn()} />);
+        const view = render(<SettingsPage debug={false} setDebug={jest.fn()} />);
         fireEvent.change(await screen.findByLabelText('Geschwindigkeit'), {target: {value: '44'}});
-        view.rerender(<SettingsPage theme="default" setTheme={jest.fn()} debug={false} setDebug={jest.fn()} agitatorDefaultsSnapshot={{speed: 75, intervalOnMinutes: 5, intervalOffMinutes: 2}} />);
+        view.rerender(<SettingsPage debug={false} setDebug={jest.fn()} agitatorDefaultsSnapshot={{speed: 75, intervalOnMinutes: 5, intervalOffMinutes: 2}} />);
         expect(screen.getByDisplayValue('44')).toBeInTheDocument();
         expect(screen.getByText(/extern geändert/)).toBeInTheDocument();
         fireEvent.click(screen.getByRole('button', {name: 'Externe Werte übernehmen'}));
@@ -213,7 +213,7 @@ describe('Settings async lifecycle', () => {
     });
 
     const renderWithRef = () => render(
-        <SettingsPage ref={(instance) => { page = instance; }} theme="default" setTheme={jest.fn()} debug setDebug={jest.fn()} />
+        <SettingsPage ref={(instance) => { page = instance; }} debug setDebug={jest.fn()} />
     );
 
     const expectNoPostUnmountState = async (start: () => Promise<void>, settle: () => void) => {
@@ -273,7 +273,7 @@ describe('Operational settings', () => {
     });
 
     it('separates read-only diagnostics from independently expandable settings', async () => {
-        render(<SettingsPage theme="default" setTheme={jest.fn()} debug={false} setDebug={jest.fn()} socketConnected temperatureSensor={{current: 20, health: 'OK', sensorId: '28-abcdef'}}/>);
+        render(<SettingsPage debug={false} setDebug={jest.fn()} socketConnected temperatureSensor={{current: 20, health: 'OK', sensorId: '28-abcdef'}}/>);
 
         expect(screen.getByRole('heading', {name: 'System- und Diagnosestatus'})).toBeInTheDocument();
         expect(screen.getByText('28-abcdef')).toBeInTheDocument();
@@ -335,7 +335,7 @@ describe('Operational settings', () => {
     });
 
     it('renders the automatically managed sensor id read-only', async () => {
-        render(<SettingsPage theme="default" setTheme={jest.fn()} debug={false} setDebug={jest.fn()} socketConnected temperatureSensor={{current: 20, health: 'OK', sensorId: '28-abcdef'}}/>);
+        render(<SettingsPage debug={false} setDebug={jest.fn()} socketConnected temperatureSensor={{current: 20, health: 'OK', sensorId: '28-abcdef'}}/>);
         expect(await screen.findByText('28-abcdef')).toBeInTheDocument();
         expect(screen.queryByDisplayValue('28-abcdef')).not.toBeInTheDocument();
     });

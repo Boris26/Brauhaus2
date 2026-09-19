@@ -1,6 +1,5 @@
 import React from 'react';
 import './SettingsPage.css';
-import { ThemeName } from '../../../utils/theme';
 import { PushService, getPermissionState, isPushSupported } from '../../../utils/pushService';
 import { AudioRepository } from '../../../repositorys/AudioRepository';
 import { SOUND_LABELS, SOUND_TYPES, SoundType } from '../../../enums/eSoundType';
@@ -25,8 +24,6 @@ import {SettingsAccordion} from '../components/SettingsAccordion/SettingsAccordi
 import {FermentationNotificationSettings} from '../components/FermentationNotificationSettings/FermentationNotificationSettings';
 
 interface SettingsPageProps {
-    theme: ThemeName;
-    setTheme: (theme: ThemeName) => void;
     debug: boolean;
     setDebug: (debug: boolean) => void;
     agitatorDefaultsSnapshot?: AgitatorSettings;
@@ -367,13 +364,6 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
         }
     };
 
-    handleThemeChange = (nextTheme: ThemeName) => {
-        this.props.setTheme(nextTheme);
-        this.setState({
-            statusMessage: `Theme auf "${nextTheme === 'dark-alt' ? 'dunkel' : 'hell'}" aktualisiert.`,
-        });
-    };
-
     handleUiModeChange = (nextMode: UiMode) => {
         if (nextMode === getUiMode()) return;
         setUiMode(nextMode);
@@ -424,14 +414,14 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
     </>;
 
     render() {
-        const { theme, debug, temperatureSensor, socketConnected } = this.props;
+        const { debug, temperatureSensor, socketConnected } = this.props;
         const { autoConnect, notificationsEnabled, temperatureUnit, statusMessage, pushSupported, pushSubscribed, pushLoading, pushError, pushPermission, soundPlaying, soundError, agitatorSettings, agitatorDraft, pendingAgitatorSnapshot, agitatorLoading, agitatorSaving, agitatorError } = this.state;
 
         return (
             <main className="settings-page">
                 <header className="settings-header">
                     <h1>Einstellungen</h1>
-                    <p className="settings-subtitle">Passe Darstellung und Verhalten der Anwendung an.</p>
+                    <p className="settings-subtitle">Konfiguriere Verhalten und Brausteuerung.</p>
                 </header>
 
                 {statusMessage && (
@@ -532,16 +522,6 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
                             </div>
                         </div>
 
-                        <div className="setting-block">
-                            <div className="setting-label-group">
-                                <span className="setting-label">Darstellung</span>
-                                <span className="setting-description">Wähle das Theme der Anwendung.</span>
-                            </div>
-                            <div className="settings-segmented" aria-label="Darstellung">
-                                <button className={theme === 'default' ? 'active' : ''} type="button" aria-pressed={theme === 'default'} onClick={() => this.handleThemeChange('default')}>Helles Theme</button>
-                                <button className={theme === 'dark-alt' ? 'active' : ''} type="button" aria-pressed={theme === 'dark-alt'} onClick={() => this.handleThemeChange('dark-alt')}>Dunkles Theme</button>
-                            </div>
-                        </div>
                     </SettingsAccordion>
 
                     <SettingsAccordion icon={<PrecisionManufacturingOutlinedIcon />} title="Brausteuerung" description="Verbindung, Messwerte und Werkzeuge für den Brauprozess.">

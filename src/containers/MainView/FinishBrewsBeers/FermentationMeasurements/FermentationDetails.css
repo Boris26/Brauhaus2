@@ -1,7 +1,7 @@
 .fermentation-details {
   display: grid;
   gap: var(--spacing-md);
-  color: var(--color-text);
+  color: var(--text-primary);
 }
 
 .fermentation-details h3,
@@ -19,7 +19,7 @@
   border-radius: var(--border-radius-small);
   padding: .45rem .8rem;
   color: var(--color-button-text);
-  background: var(--color-primary);
+  background: var(--accent);
   font-weight: 700;
 }
 
@@ -30,7 +30,7 @@
 .fermentation-phase,
 .fermentation-status-card p,
 .fermentation-empty {
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   font-size: var(--font-size-small);
 }
 
@@ -60,18 +60,18 @@
   gap: var(--spacing-sm);
   min-width: 0;
   padding: var(--spacing-md);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--border-radius-large);
-  background: var(--color-panel-bg);
+  background: var(--bg-panel);
 }
 
 .fermentation-reading-grid span {
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   font-size: var(--font-size-small);
 }
 
 .fermentation-reading-grid strong {
-  color: var(--color-primary);
+  color: var(--accent);
   font-size: 1.35rem;
   white-space: nowrap;
 }
@@ -85,9 +85,9 @@
 .fermentation-card {
   min-width: 0;
   padding: var(--spacing-md);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--border-radius-large);
-  background: var(--color-panel-bg);
+  background: var(--bg-panel);
 }
 
 .fermentation-status-card {
@@ -97,7 +97,7 @@
 }
 
 .fermentation-prominent {
-  color: var(--color-primary);
+  color: var(--accent);
   font-size: 1.05rem;
 }
 
@@ -111,7 +111,7 @@
   gap: var(--spacing-sm);
   align-items: center;
   padding: var(--spacing-sm);
-  background: var(--color-panel-contrast);
+  background: var(--bg-input);
   border-radius: var(--border-radius-medium);
 }
 
@@ -136,7 +136,7 @@
 .fermentation-assigned-device small,
 .fermentation-error small {
   display: block;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
 }
 
 .fermentation-device-name,
@@ -151,21 +151,21 @@
   display: inline-flex;
   padding: .2rem;
   border: 0;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   background: transparent;
 }
 
 .fermentation-device-name button:hover,
 .fermentation-device-name-edit button:hover {
-  color: var(--color-primary);
+  color: var(--accent);
 }
 
 .fermentation-device-name-edit input {
   width: min(20rem, 100%);
   padding: .4rem .5rem;
-  color: var(--color-text);
-  background: var(--color-panel-contrast);
-  border: 1px solid var(--color-border);
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
   border-radius: var(--border-radius-small);
 }
 
@@ -174,7 +174,7 @@
   margin-top: var(--spacing-xs);
   padding: .2rem 0;
   border: 0;
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   background: transparent;
   text-decoration: underline;
 }
@@ -193,22 +193,22 @@
 .fermentation-assignment-controls label {
   display: grid;
   gap: var(--spacing-xs);
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   font-size: var(--font-size-small);
 }
 
 .fermentation-assignment-controls select {
   min-width: 16rem;
   padding: .5rem;
-  color: var(--color-text);
-  background: var(--color-panel-contrast);
-  border: 1px solid var(--color-border);
+  color: var(--text-primary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
   border-radius: var(--border-radius-small);
 }
 
 .fermentation-assignment-controls select option {
-  color: var(--color-text);
-  background: var(--color-panel-contrast);
+  color: var(--text-primary);
+  background: var(--bg-input);
 }
 
 .fermentation-assignment-controls select:disabled {
@@ -242,13 +242,13 @@
 
 .fermentation-trend polyline {
   fill: none;
-  stroke: var(--color-primary);
+  stroke: var(--accent);
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
 }
 
 .fermentation-trend span {
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   font-size: .75rem;
 }
 
@@ -259,7 +259,7 @@
 .fermentation-page-header .fermentation-back-button {
   margin-bottom: var(--spacing-xs);
   padding-left: 0;
-  color: var(--color-primary);
+  color: var(--accent);
   background: transparent;
 }
 
@@ -274,7 +274,7 @@
 
 .fermentation-plan-group h5 {
   margin: 0 0 var(--spacing-xs);
-  color: var(--color-primary);
+  color: var(--accent);
   font-size: 1rem;
 }
 
@@ -293,9 +293,9 @@
   gap: var(--spacing-sm);
   min-width: 0;
   padding: var(--spacing-md);
-  border-left: 3px solid var(--color-border);
+  border-left: 3px solid var(--border-default);
   border-radius: var(--border-radius-medium);
-  background: var(--color-panel-contrast);
+  background: var(--bg-input);
 }
 
 .fermentation-action-heading {
@@ -309,7 +309,7 @@
 }
 
 .fermentation-action-heading span {
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
 }
 
 .fermentation-action-list dl {
@@ -325,7 +325,7 @@
 }
 
 .fermentation-action-list dt {
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
 }
 
 .fermentation-action-list dd {
@@ -367,7 +367,7 @@
 }
 
 .fermentation-action-status.is-planned {
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   background: transparent;
 }
 

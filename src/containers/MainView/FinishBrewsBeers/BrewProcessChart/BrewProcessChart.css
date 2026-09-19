@@ -17,8 +17,8 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  background-color: var(--color-surface-soft);
-  color: var(--color-dark-bg);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
   font-weight: normal;
 }
 
@@ -36,7 +36,7 @@
 .brew-tooltip {
   font-weight: normal;
   font-size: 12px;
-  background: var(--color-white);
+  background: var(--bg-card);
   border: 2px solid var(--color-orange-main);
   border-radius: 4px;
   padding: 8px;
@@ -46,7 +46,7 @@
 }
 
 .brew-tooltip-dark {
-  background: var(--color-dark-bg)333;
+  background: var(--bg-app);
   color: var(--color-white);
 }
 

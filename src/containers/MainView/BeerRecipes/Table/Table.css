@@ -10,7 +10,7 @@
 }
 
 .Table .table-header-cell {
-  color: var(--color-text-secondary);
+  color: var(--text-secondary);
   font-size: var(--font-size-small);
   font-weight: 650;
 }
@@ -22,14 +22,14 @@
 
 .Table .table-cell--name { font-weight: 650; }
 .Table .table-row { transition: background-color 120ms ease; }
-.Table .app-table__row--selected { box-shadow: inset 4px 0 0 var(--color-accent); }
-.Table .app-table__row--selected .table-cell--name { color: var(--color-text); }
+.Table .app-table__row--selected { box-shadow: inset 4px 0 0 var(--accent); }
+.Table .app-table__row--selected .table-cell--name { color: var(--text-primary); }
 .Table .app-table-actions { justify-content: flex-end; gap: var(--spacing-xs); }
 .Table .MuiTableCell-root:last-child { width: 7rem; text-align: right; }
 .Table .app-table-action svg { margin-top: 0 !important; }
 
 .Table .table-action-button {
-  color: var(--color-text);
+  color: var(--text-primary);
 }
 
 .Table .cancel-brew-button:hover:not(:disabled) {

@@ -19,16 +19,16 @@ const PRESSURE_NOISE_DEADBAND_PA = 0.1;
 const ACTIVITY_GAP_TOLERANCE_FACTOR = 1.5;
 
 const TOOLTIP_CONTENT_STYLE: React.CSSProperties = {
-  background: 'var(--color-panel-contrast)',
-  border: '1px solid var(--color-border)',
+  background: 'var(--bg-input)',
+  border: '1px solid var(--border-default)',
   borderRadius: 'var(--border-radius-medium)',
   boxShadow: '0 8px 20px rgba(0, 0, 0, .28)',
-  color: 'var(--color-text)',
+  color: 'var(--text-primary)',
   fontSize: '.78rem',
   padding: '6px 9px',
 };
 const TOOLTIP_LABEL_STYLE: React.CSSProperties = {
-  color: 'var(--color-text-secondary)',
+  color: 'var(--text-secondary)',
   fontWeight: 700,
   marginBottom: 4,
 };
@@ -113,7 +113,7 @@ export class BubbleActivityChart extends React.PureComponent<{activity: BubbleAc
           contentStyle={TOOLTIP_CONTENT_STYLE}
           labelStyle={TOOLTIP_LABEL_STYLE}
           itemStyle={TOOLTIP_ITEM_STYLE}
-          cursor={{stroke: 'var(--color-border-strong)', strokeDasharray: '3 3'}}
+          cursor={{stroke: 'var(--border-strong)', strokeDasharray: '3 3'}}
         />
         <Legend />
         <Line yAxisId="bubbles" dataKey="bubblesPerMinute" name="Blubbs/min" type="linear" stroke={COLOR_INFO} strokeWidth={2} dot={false} activeDot={{r: 4}} connectNulls isAnimationActive={false} />

@@ -9,7 +9,7 @@
 - Convert selected beer recipes into the brewing-control `BrewingData` payload.
 - Display normalized runtime brewing status and status dialogs.
 - Dispatch HTTP commands to backend/database and brewing-control APIs.
-- Persist only the selected theme in localStorage.
+- Render the single fixed gray/anthracite/orange design without appearance persistence.
 
 ### Backend/database application responsibilities inferred from UI calls
 
@@ -47,7 +47,7 @@ No `.env`-based URL configuration was found in inspected source. Changing deploy
 
 ## High-level UI flows
 
-1. App starts, resolves and applies theme, renders desktop or mobile shell.
+1. App starts with the fixed Brauhaus design and renders the desktop or mobile shell.
 2. Desktop index dispatches backend availability polling.
 3. Recipe main view fetches beers and selects the last beer returned as default.
 4. User marks a recipe as the beer to brew.

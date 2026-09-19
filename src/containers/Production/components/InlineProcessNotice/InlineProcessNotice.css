@@ -1,8 +1,8 @@
 .inline-process-notice {
-    border-top: 1px solid color-mix(in srgb, var(--color-accent) 55%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
     margin-top: 0.5rem;
     padding: 0.45rem 0 0;
-    color: var(--color-light-text);
+    color: var(--text-primary);
 }
 
 .inline-process-notice--action {
@@ -10,9 +10,9 @@
 }
 
 .inline-process-notice--reminder {
-    background: color-mix(in srgb, var(--color-accent) 6%, var(--color-surface-2));
-    border: 1px solid color-mix(in srgb, var(--color-accent) 72%, transparent);
-    border-left: 0.35rem solid var(--color-accent);
+    background: color-mix(in srgb, var(--accent) 6%, var(--color-surface-2));
+    border: 1px solid color-mix(in srgb, var(--accent) 72%, transparent);
+    border-left: 0.35rem solid var(--accent);
     border-radius: 0.7rem;
     padding: 0.7rem 0.8rem;
 }
@@ -21,7 +21,7 @@
 .inline-process-notice--reminder p { line-height: 1.35; margin: 0.35rem 0 0; }
 
 .inline-process-notice__eyebrow {
-    color: var(--color-accent);
+    color: var(--accent);
     display: block;
     font-size: 0.76rem;
     font-weight: 800;
@@ -43,9 +43,9 @@
 .inline-process-notice__alert {
     align-items: center;
     animation: confirmation-alert-pulse 1.3s ease-in-out infinite;
-    border: 2px solid var(--color-accent);
+    border: 2px solid var(--accent);
     border-radius: 50%;
-    color: var(--color-accent);
+    color: var(--accent);
     display: inline-flex;
     font-size: 0.78rem;
     font-weight: 900;
@@ -77,8 +77,8 @@
 }
 
 .inline-process-notice__button {
-    background: var(--color-accent);
-    border: 1px solid var(--color-accent);
+    background: var(--accent);
+    border: 1px solid var(--accent);
     border-radius: 0.45rem;
     color: var(--color-white);
     cursor: pointer;
@@ -105,7 +105,7 @@
 
 .inline-process-notice__button--secondary {
     background: transparent;
-    color: var(--color-accent);
+    color: var(--accent);
 }
 
 .inline-process-notice__button:disabled {

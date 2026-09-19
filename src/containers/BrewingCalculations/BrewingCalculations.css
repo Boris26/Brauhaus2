@@ -1,6 +1,6 @@
 /* Stil für die Seite Bierbrau-Berechnungen */
 
-/* Farben und Kontraste für Dark Mode */
+/* Farben und Kontraste des festen Brauhaus-Designs */
 .BrewingCalculations-outer .Paper-root,
 .BrewingCalculations-outer .MuiPaper-root {
     background-color: var(--color-brew-bg) !important; /* Dunkler Hintergrund */
@@ -14,7 +14,7 @@
 }
 
 .BrewingCalculations-outer .MuiOutlinedInput-root .MuiOutlinedInput-notchedOutline {
-    border-color: var(--color-accent) !important;
+    border-color: var(--accent) !important;
 }
 
 .BrewingCalculations-outer .MuiTextField-root {
@@ -22,7 +22,7 @@
 }
 
 .BrewingCalculations-outer .header-container h1 {
-    color: var(--color-accent);
+    color: var(--accent);
 }
 
 /* Beispiel: Abstand zwischen Boxen */
@@ -36,13 +36,13 @@
 
 /* Buttons, falls benötigt */
 .BrewingCalculations-outer .MuiButton-root {
-    background: var(--color-accent);
+    background: var(--accent);
 
 }
 
 /* Orange für Labels und Akzente */
 .BrewingCalculations-outer .MuiTypography-subtitle2 {
-    color: var(--color-accent) !important;
+    color: var(--accent) !important;
 }
 
 /* Wrapper-Klassen für die Komponente und den SimpleBar-Container */

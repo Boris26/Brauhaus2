@@ -6,7 +6,7 @@ This repository is a Create React App TypeScript UI named `test1`. It presents b
 
 ## Entry points and shell
 
-- `src/index.tsx` eagerly imports the global color tokens, Bootstrap base CSS, SimpleBar base CSS, and `index.css` reset/theme defaults before it creates the React tree. It wraps `App` in the Redux `Provider`, dispatches the initial theme, and registers `public/service-worker.js` through `process.env.PUBLIC_URL`. Route components and their page-specific CSS remain lazy-loaded.
+- `src/index.tsx` eagerly imports the global color tokens, Bootstrap base CSS, SimpleBar base CSS, and `index.css` reset and fixed palette defaults before it creates the React tree. It wraps `App` in the Redux `Provider` and registers `public/service-worker.js` through `process.env.PUBLIC_URL`. Route components and their page-specific CSS remain lazy-loaded.
 - `src/store.ts` dispatches `APPLICATION_START` exactly once after the root epic middleware is running. The application startup epic starts the periodic controller availability discovery and independently connects the fermentation gateway. Availability transitions alone connect or disconnect the controller Socket.IO client, so rendered page lifecycles do not own global infrastructure.
 - `src/containers/App.tsx` switches between a mobile-only UI and the desktop UI based on `window.innerWidth < 768`. There is no React Router in the code inspected; navigation is Redux view-state driven, with lightweight browser path synchronization in `src/utils/viewRoutes.ts` for direct links such as `/dashboard`.
 - `App` owns the global `HEATER_STUCK_ON` safety dialog above both desktop and mobile content. It opens from the app-lifetime `alarm-state-changed` snapshot. Because the controller alarm is latched, an already received active alarm stays visible through a temporary Socket.IO disconnect until a later controller snapshot explicitly clears it; current temperature/heater details are shown only while the realtime connection is live. Reset uses only `POST /api/controller/Safety/Heater/Reset`. The dialog is non-dismissible and does not disappear merely because that HTTP request succeeded. Production suppresses its legacy local safety modal while rendered below this app-shell owner. Regular `EQUIPMENT_ALARM` handling remains local to Production.
@@ -24,7 +24,7 @@ The app does not use URL routes. Navigation is an enum in `src/enums/eViews.ts` 
 - `MEASUREMENT_DATA`: deep-linked fermentation history for one finished brew at `/finished-brews/{finishedBeerId}/measurements`; direct entry first restores the existing finished-brew list and the shared fermentation detail component owns the aggregate load.
 - `BREWING_CALCULATIONS`: calculators.
 - `INGREDIENTS`: ingredient maintenance.
-- `SETTINGS`: theme/settings.
+- `SETTINGS`: application and controller settings.
 
 The header icon bar dispatches `ApplicationActions.setViewState(...)` to select views.
 
@@ -38,13 +38,13 @@ The repository is mostly class-component React with Redux `connect(...)`. Functi
 - `src/containers/Mobile/`: mobile status, active finished brew, calculations.
 - `src/components/`: reusable controls, modal, gauge, flame, water visual.
 - The desktop header's explicitly confirmed shutdown action uses `SystemRepository` to send one `POST /api/system/shutdown`. It blocks duplicate requests and leaves the UI in a terminal state after HTTP success.
-- `src/utils/`: calculations, recipe mapping, status normalization/selectors, PDF, theme, data collection.
+- `src/utils/`: calculations, recipe mapping, status normalization/selectors, PDF, and data collection.
 
 ## State management
 
 Redux store setup is in `src/store.ts` using `@reduxjs/toolkit` `configureStore`, `redux-thunk`, and `redux-observable` epic middleware. `rootReducer` combines these slices:
 
-- `applicationReducer`: current view, error dialog fields, user messages, theme.
+- `applicationReducer`: current view, error dialog fields, user messages, and debug state.
 - `beerDataReducer`: recipes, selected recipe, recipe selected for brewing, finished brews, imported beer, form state, scaling.
 - `productionReducer`: temperature, agitator and water state, normalized brewing status, backend availability, polling flag, overheat flag.
 - `hopsReducer`, `maltsReducer`, `yeastReducer`, `additionalIngredientsReducer`: ingredient lists and submit/fetch flags.
@@ -78,8 +78,7 @@ See `interfaces.md` and `docs/frontend-api-usage.md` for endpoint details.
 
 ## LocalStorage and browser APIs
 
-- Theme persistence uses key `theme` in `src/utils/theme.ts`. The browser-local UI role uses `brauhaus.uiMode`, accepts `desktop` and `controller`, and safely defaults to `desktop` when storage is missing, invalid, or unavailable.
-- Initial theme falls back to `window.matchMedia('(prefers-color-scheme: dark)')`.
+- The fixed gray/anthracite/orange design has no theme state or persistence. The browser-local UI role uses `brauhaus.uiMode`, accepts `desktop` and `controller`, and safely defaults to `desktop` when storage is missing, invalid, or unavailable.
 - Mobile status view uses `navigator.vibrate` when status identity changes.
 - Service worker registration occurs on window `load`.
 

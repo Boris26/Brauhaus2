@@ -17,16 +17,16 @@ const RANGE_MS: Record<Exclude<FermentationChartRange, 'all'>, number> = {
   '7d': 7 * 24 * 60 * 60 * 1000,
 };
 const TOOLTIP_CONTENT_STYLE: React.CSSProperties = {
-  background: 'var(--color-panel-contrast)',
-  border: '1px solid var(--color-border)',
+  background: 'var(--bg-input)',
+  border: '1px solid var(--border-default)',
   borderRadius: 'var(--border-radius-medium)',
   boxShadow: '0 8px 20px rgba(0, 0, 0, .28)',
-  color: 'var(--color-text)',
+  color: 'var(--text-primary)',
   fontSize: '.78rem',
   padding: '6px 9px',
 };
 const TOOLTIP_LABEL_STYLE: React.CSSProperties = {
-  color: 'var(--color-text-secondary)',
+  color: 'var(--text-secondary)',
   fontWeight: 700,
   marginBottom: 4,
 };
@@ -98,7 +98,7 @@ const FermentationMeasurementsChart: React.FC<Props> = React.memo(props => {
             contentStyle={TOOLTIP_CONTENT_STYLE}
             labelStyle={TOOLTIP_LABEL_STYLE}
             itemStyle={TOOLTIP_ITEM_STYLE}
-            cursor={{stroke: 'var(--color-border-strong)', strokeDasharray: '3 3'}}
+            cursor={{stroke: 'var(--border-strong)', strokeDasharray: '3 3'}}
           />
           <Legend />
           {actionMarkers.map(marker => <ReferenceLine key={marker.actionId} x={marker.timestamp} stroke={COLOR_ACCENT} strokeDasharray="4 3" label={{value: marker.label, fill: COLOR_ACCENT, position: 'insideTopRight'}} />)}
