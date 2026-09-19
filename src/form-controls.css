@@ -129,3 +129,41 @@
 #root .MuiInputLabel-root.Mui-focused {
   color: var(--color-primary);
 }
+
+/* Shared label/control composition used by page forms and dialogs alike. */
+#root .brauhaus-form-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: var(--spacing-xs);
+  margin: 0;
+  color: var(--color-text);
+}
+
+#root .brauhaus-form-field__label {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  font-weight: 700;
+  line-height: var(--line-height-normal);
+}
+
+#root .brauhaus-form-field .brauhaus-form-control {
+  width: 100%;
+  min-height: var(--control-height);
+}
+
+#root .brauhaus-form-field textarea.brauhaus-form-control {
+  min-height: 5rem;
+}
+
+#root .brauhaus-form-control--error,
+#root .brauhaus-form-control--error:hover,
+#root .brauhaus-form-control--error:focus {
+  border-color: var(--color-error);
+}
+
+#root .brauhaus-form-field__error {
+  color: var(--color-error);
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-normal);
+}
