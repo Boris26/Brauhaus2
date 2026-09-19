@@ -1,0 +1,6 @@
+.manual-measurement-dialog.MuiPaper-root { width: min(100% - calc(2 * var(--spacing-lg)), 500px); }
+.manual-measurement-dialog .app-dialog__content { display: grid; gap: var(--spacing-sm); }
+.manual-measurement-dialog__form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-md); padding-top: var(--spacing-xs); }
+.manual-measurement-dialog__form .MuiTextField-root:first-child,
+.manual-measurement-dialog__note { grid-column: 1 / -1; }
+@media (max-width: 520px) { .manual-measurement-dialog__form { grid-template-columns: 1fr; } .manual-measurement-dialog__form .MuiTextField-root { grid-column: 1; } }
