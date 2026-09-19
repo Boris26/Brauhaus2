@@ -2,6 +2,7 @@ import React from 'react';
 import './PageLayout.css';
 
 interface PageHeaderProps {
+    icon: React.ReactNode;
     title: React.ReactNode;
     subtitle?: React.ReactNode;
     eyebrow?: React.ReactNode;
@@ -11,14 +12,17 @@ interface PageHeaderProps {
 
 const classes = (...values: Array<string | undefined>) => values.filter(Boolean).join(' ');
 
-export const PageHeader = ({title, subtitle, eyebrow, actions, className}: PageHeaderProps) => (
+export const PageHeader = ({icon, title, subtitle, eyebrow, actions, className}: PageHeaderProps) => (
     <header className={classes('brauhaus-page-header', className)}>
-        <div className="brauhaus-page-heading">
-            {eyebrow && <span className="brauhaus-page-eyebrow">{eyebrow}</span>}
-            <h1>{title}</h1>
-            {subtitle && <p>{subtitle}</p>}
+        <div className="brauhaus-page-heading-group">
+            <span className="brauhaus-page-icon" aria-hidden="true">{icon}</span>
+            <div className="brauhaus-page-heading">
+                {eyebrow && <span className="brauhaus-page-eyebrow">{eyebrow}</span>}
+                <h1>{title}</h1>
+                {subtitle && <p>{subtitle}</p>}
+            </div>
         </div>
-        {actions && <div className="brauhaus-page-actions">{actions}</div>}
+        <div className="brauhaus-page-actions">{actions}</div>
     </header>
 );
 

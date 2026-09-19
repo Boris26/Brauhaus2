@@ -7,6 +7,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined';
+import HistoryIcon from '@mui/icons-material/History';
 import SimpleBar from 'simplebar-react';
 import './FinishedBrewsTable.css';
 import {FinishedBrew, FinishedBrewCreatePayload} from "../../../../model/FinishedBrew";
@@ -310,7 +311,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
             <>
             <ModalDialog type={DialogType.CONFIRM} open={Boolean(this.state.brewPendingDelete)} header="Sud löschen" content={`Soll ${this.state.brewPendingDelete?.name ?? 'dieser Sud'} endgültig gelöscht werden?`} onConfirm={this.confirmDelete} onCancel={() => this.setState({brewPendingDelete: undefined})} showCancelButton={true} actionsDisabled={Boolean(this.state.brewPendingDelete && this.props.deletingFinishedBrewIds.includes(this.state.brewPendingDelete.id))} />
             {this.state.measurementBeerId && <ManualMeasurementDialog open beerId={this.state.measurementBeerId} onClose={() => this.setState({measurementBeerId: undefined})} />}
-            <PageLayout title="Biere / Sudhistorie" subtitle="Abgeschlossene und laufende Sude im Überblick." scroll={false} contentClassName="finished-brews-page" actions={<>
+            <PageLayout icon={<HistoryIcon />} title="Biere / Sudhistorie" subtitle="Abgeschlossene und laufende Sude im Überblick." scroll={false} contentClassName="finished-brews-page" actions={<>
                 <button className="brauhaus-button brauhaus-button-secondary" onClick={this.handleExportPdf}><PictureAsPdfIcon fontSize="small" /> PDF exportieren</button>
                 <button className="brauhaus-button brauhaus-button-primary" onClick={() => this.setState({newRowActive: true, newRowData: {id: createFinishedBrewId()}})}><AddIcon fontSize="small" /> Neuer Eintrag</button>
             </>}>
