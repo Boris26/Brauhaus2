@@ -1,9 +1,8 @@
-.dashboard-page { box-sizing: border-box; width: 100%; height: calc(100vh - var(--desktop-header-height)); height: calc(100dvh - var(--desktop-header-height)); min-height: 0; padding: var(--spacing-md) var(--spacing-lg); color: var(--text-primary); display: grid; grid-template-rows: auto auto minmax(0, 1fr); gap: var(--spacing-md); overflow: hidden; }
-.dashboard-page > .brauhaus-page-header { margin-bottom: 0; }
+.dashboard-page { box-sizing: border-box; width: 100%; height: calc(100vh - var(--desktop-header-height)); height: calc(100dvh - var(--desktop-header-height)); min-height: 0; padding: var(--spacing-md) var(--spacing-lg); color: var(--text-primary); display: grid; grid-template-rows: auto auto minmax(0, 1fr); column-gap: var(--spacing-md); overflow: hidden; }
 .dashboard-card h2, .dashboard-card h3 { margin: 0; }
 .dashboard-loading, .dashboard-empty, .dashboard-footnote { color: var(--text-secondary); font-size: var(--font-size-small); }
 .dashboard-card { min-width: 0; background: var(--bg-panel); border: 1px solid var(--border-default); border-radius: var(--border-radius-large); box-shadow: 0 2px 6px var(--shadow-card-light); }
-.dashboard-kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--spacing-md); }
+.dashboard-kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--spacing-md); margin-bottom: var(--spacing-md); }
 .dashboard-kpi-card { padding: var(--spacing-md); display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "icon label value" "icon detail value"; align-items: center; column-gap: var(--spacing-md); }
 .dashboard-kpi-icon { grid-area: icon; width: 2.25rem; height: 2.25rem; display: grid; place-items: center; border-radius: var(--border-radius-medium); color: var(--accent); background: var(--accent-subtle); }
 .dashboard-kpi-label { grid-area: label; font-weight: 700; }

@@ -12,7 +12,6 @@
   -webkit-overflow-scrolling: touch;
 }
 
-.settings-header { margin-bottom: var(--spacing-md); }
 .settings-subtitle { margin: var(--spacing-xs) 0 0; color: var(--text-secondary); }
 
 .settings-message {

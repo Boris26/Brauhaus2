@@ -1027,7 +1027,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                     masterData={{MALT: this.props.malts ?? [], HOP: this.props.hops ?? [], YEAST: this.props.yeasts ?? [], ADDITIONAL_INGREDIENT: this.props.additionalIngredients ?? []}}
                     onCreateMasterData={this.createImportMasterData}
                 />
-                <PageHeader icon={<MenuBookOutlinedIcon />} title="Rezepteditor" subtitle="Rezeptdaten und Brauprozess bearbeiten." actions={
+                <PageHeader title="Rezepteditor" subtitle="Rezeptdaten und Brauprozess bearbeiten." actions={
                         <>
                             <button type="button" className="add-button brauhaus-button brauhaus-button-secondary secondary-action" onClick={this.cancelOrResetForm}>Abbrechen / Zurücksetzen</button>
                             <button className="finish-btn brauhaus-button brauhaus-button-primary submit-button primary-action" type="submit" form="beer-recipe-form" disabled={this.props.isSavingBeer}>

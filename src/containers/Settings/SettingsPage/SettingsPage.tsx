@@ -421,7 +421,7 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
 
         return (
             <main className="settings-page">
-                <PageHeader className="settings-header" icon={<SettingsOutlinedIcon />} title="Einstellungen" subtitle="Konfiguriere Verhalten und Brausteuerung." />
+                <PageHeader title="Einstellungen" subtitle="Konfiguriere Verhalten und Brausteuerung." />
 
                 {statusMessage && (
                     <div className="settings-message" role="status" aria-live="polite">

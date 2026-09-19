@@ -3,6 +3,7 @@ import Details from './Details/Details.connect';
 import BeerTable from './BeerRecipes/Table/Table.connect';
 import {Beer} from '../../model/Beer';
 import './Main.css';
+import {PageLayout} from '../../components/PageLayout/PageLayout';
 
 interface MainProps {
     beers: Beer[];
@@ -16,18 +17,14 @@ export class Main extends React.Component<MainProps> {
 
     render() {
         return (
-            <div className="main-view">
-                <section className="CustomTable" aria-labelledby="recipe-list-title">
-                    <header className="recipe-list-header">
-                        <h1 id="recipe-list-title">Rezepte</h1>
-                        <p>Alle Rezepte im Überblick</p>
-                    </header>
+            <PageLayout title="Rezepte" subtitle="Rezepte im Überblick." scroll={false} contentClassName="main-view">
+                <section className="CustomTable" aria-label="Rezeptliste">
                     <div className="recipe-list-scroll"><BeerTable/></div>
                 </section>
                 <section className="Details" aria-label="Rezeptdetails">
                     <Details/>
                 </section>
-            </div>
+            </PageLayout>
         );
     }
 }
