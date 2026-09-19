@@ -59,6 +59,13 @@ describe('fermentation measurement dashboard', () => {
     expect(closeMeasurements).toHaveBeenCalledTimes(1);
   });
 
+  it.each([eBrewState.MATURATION, eBrewState.FINISHED])('keeps measurement entry visible but disabled in %s', state => {
+    render(<FinishedBrewDetailsView {...base} brew={{...brew, state}} />);
+
+    expect(screen.getByRole('button', {name: 'Neue Messung'})).toBeDisabled();
+    expect(screen.getByRole('button', {name: 'Neue Messung'})).toHaveAttribute('title', 'Messungen können nur während der Gärung erfasst werden.');
+  });
+
   it('keeps the measurement dashboard content in the compact lower grid', () => {
     const details: any = {
       measurements: [
