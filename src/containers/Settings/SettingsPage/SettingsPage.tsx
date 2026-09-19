@@ -13,6 +13,7 @@ import WaterDropOutlinedIcon from '@mui/icons-material/WaterDropOutlined';
 import VolumeUpOutlinedIcon from '@mui/icons-material/VolumeUpOutlined';
 import HealthAndSafetyOutlinedIcon from '@mui/icons-material/HealthAndSafetyOutlined';
 import SensorsOutlinedIcon from '@mui/icons-material/SensorsOutlined';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import {AgitatorSettings} from '../../../model/AgitatorSettings';
 import {AgitatorSettingsRepository} from '../../../repositorys/AgitatorSettingsRepository';
 import {OperationalSettings, OperationalSettingsSection} from '../../../model/OperationalSettings';

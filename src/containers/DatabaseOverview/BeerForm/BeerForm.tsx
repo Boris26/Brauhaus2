@@ -27,6 +27,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
 import {AppAccordion, AppAccordionHeader} from '../../../components/AppAccordion/AppAccordion';
 import {PageHeader} from '../../../components/PageLayout/PageLayout';
+import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
 import {CONTACT_TIME_UNITS, TIME_TRIGGER_UNITS, clearRecipeAction, unitLabel, RecipeActionFields, TriggerType, TriggerUnit, TimeUnit, hasRecipeAction, normalizeRecipeAction} from '../../../model/FermentationRecipeAction';
 
 interface BeerFormProps {

@@ -2,6 +2,7 @@ import React from 'react';
 import './PageLayout.css';
 
 interface PageHeaderProps {
+    icon: React.ReactNode;
     title: React.ReactNode;
     subtitle?: React.ReactNode;
     actions?: React.ReactNode;
