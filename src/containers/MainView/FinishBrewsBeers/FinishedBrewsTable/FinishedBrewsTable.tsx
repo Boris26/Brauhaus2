@@ -6,14 +6,11 @@ import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import VisibilityIcon from '@mui/icons-material/Visibility';
-import ShowChartIcon from '@mui/icons-material/ShowChart';
 import SimpleBar from 'simplebar-react';
 import './FinishedBrewsTable.css';
 import {FinishedBrew, FinishedBrewCreatePayload} from "../../../../model/FinishedBrew";
 import {isNil} from "lodash";
 import { eBrewState, BrewStateGerman, brewStateLabel } from '../../../../enums/eBrewState';
-import Panel from '../../../Panel/Panel';
-import FinishedBrewDetails from '../FinishedBrewDetails/FinishedBrewDetails';
 import {createFinishedBrewId} from '../../../../utils/finishedBrewCreateId';
 import ModalDialog, {DialogType} from '../../../../components/ModalDialog/ModalDialog';
 
@@ -40,7 +37,6 @@ interface FinishedBrewsTableState {
     filterOutActive: boolean;
     newRowActive?: boolean;
     newRowData?: Partial<FinishedBrew>;
-    panelBrewId?: string | null;
     newRowSubmitting: boolean;
     brewPendingDelete?: FinishedBrew;
 }
@@ -66,7 +62,7 @@ const formatValue = (value: number | null | undefined, unit: string) =>
 export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps, FinishedBrewsTableState> {
     constructor(props: FinishedBrewsTableProps) {
         super(props);
-        this.state = {filterYear: '', showOnlyActive: false, filterOutActive: false, panelBrewId: null, newRowSubmitting: false};
+        this.state = {filterYear: '', showOnlyActive: false, filterOutActive: false, newRowSubmitting: false};
     }
 
     componentDidMount() {
@@ -137,13 +133,6 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
         if (!brew || this.props.deletingFinishedBrewIds.includes(brew.id)) return;
         this.props.onDelete(brew.id);
     };
-
-    handleShowDetails = (brewId: string | null) => {
-        this.setState(prev => ({
-            panelBrewId: prev.panelBrewId === brewId ? null : brewId
-        }));
-
-    }
 
     private filterBrewsByYearAndActive(aBrews: FinishedBrew[] = [], aFilterYear: string, aShowOnlyActive: boolean, aFilterOutActive: boolean) {
         return (aBrews || []).filter(brew => {
@@ -296,8 +285,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                 <TableCell className="table-cell actions-cell">
                     <div className="finished-brews-row-actions app-table-actions">
                         <button className="app-table-action app-table-action--danger" onClick={() => this.handleDelete(brewId)} title="Löschen" aria-label="Löschen"><DeleteOutlineIcon sx={{fontSize: 22}} /></button>
-                        <button className="app-table-action" onClick={() => this.handleShowDetails(brewId)} title="Details" aria-label="Details"><VisibilityIcon sx={{fontSize: 22}} /></button>
-                        <button className="app-table-action" onClick={() => this.props.openMeasurements(brewId)} title="Messdaten" aria-label={`Messdaten für ${brew.name}`}><ShowChartIcon sx={{fontSize: 22}} /></button>
+                        <button className="app-table-action" onClick={() => this.props.openMeasurements(brewId)} title="Details" aria-label={`Details für ${brew.name}`}><VisibilityIcon sx={{fontSize: 22}} /></button>
                     </div>
                 </TableCell>
             </TableRow>
@@ -330,10 +318,9 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
 
     render() {
         const { brews, beers } = this.props;
-        const { filterYear, showOnlyActive, filterOutActive, panelBrewId } = this.state;
+        const { filterYear, showOnlyActive, filterOutActive } = this.state;
         const years = this.getYearsFromBrews();
         const filteredBrews = this.filterBrewsByYearAndActive(brews, filterYear, showOnlyActive, filterOutActive);
-        const selectedBrew = panelBrewId ? brews.find(b => b.id === panelBrewId) : null;
         return (
             <>
             <ModalDialog type={DialogType.CONFIRM} open={Boolean(this.state.brewPendingDelete)} header="Sud löschen" content={`Soll ${this.state.brewPendingDelete?.name ?? 'dieser Sud'} endgültig gelöscht werden?`} onConfirm={this.confirmDelete} onCancel={() => this.setState({brewPendingDelete: undefined})} showCancelButton={true} actionsDisabled={Boolean(this.state.brewPendingDelete && this.props.deletingFinishedBrewIds.includes(this.state.brewPendingDelete.id))} />
@@ -341,16 +328,6 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                 {this.renderFilterControls(years)}
                 {this.renderNewBrewForm(beers)}
                 <div className="finished-brews-table-area">{this.renderTable(filteredBrews, beers)}</div>
-                {/* Panel als Overlay am Ende */}
-                {selectedBrew && (
-                    <div style={{ position: 'fixed', left: 0, top: 0, width: '100vw', height: '100vh', zIndex: 2000, pointerEvents: 'none' }}>
-                        <div style={{ pointerEvents: 'auto' }}>
-                            <Panel title={selectedBrew.name || 'Details'} onClose={() => this.setState({ panelBrewId: null })}>
-                                <FinishedBrewDetails brew={selectedBrew} />
-                            </Panel>
-                        </div>
-                    </div>
-                )}
             </main>
             </>
         );

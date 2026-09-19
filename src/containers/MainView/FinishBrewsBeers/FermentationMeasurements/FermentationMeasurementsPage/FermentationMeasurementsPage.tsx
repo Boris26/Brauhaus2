@@ -24,7 +24,7 @@ export const FermentationMeasurementsPageView: React.FC<Props> = ({finishedBrews
   if (finishedBrews === undefined || isFetching) return <main className="fermentation-route-state" role="status">Messdaten werden geladen …</main>;
   if (!finishedBeerId || !brew) return <main className="fermentation-route-state"><h2>Keine Messdaten gefunden</h2><p>Das ausgewählte Bier ist nicht verfügbar.</p><button onClick={close}>Zurück zu den fertigen Bieren</button></main>;
 
-  return <main className="fermentation-measurements-route"><FinishedBrewDetails brew={brew} viewMode="measurements" closeMeasurements={close} /></main>;
+  return <main className="fermentation-measurements-route"><FinishedBrewDetails brew={brew} closeMeasurements={close} /></main>;
 };
 
 const mapState = (state: any) => ({

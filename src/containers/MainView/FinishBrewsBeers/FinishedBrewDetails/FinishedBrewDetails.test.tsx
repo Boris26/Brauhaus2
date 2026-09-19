@@ -13,68 +13,30 @@ it('loads the fermentation aggregate only when it is not already in Redux', () =
   expect(load).toHaveBeenCalledTimes(1);
 });
 
-describe('fermentation details dashboard', () => {
-  it.each(['measurements', 'dashboard'] as const)('shows measurement loading only before details exist in the %s view', viewMode => {
-    const {rerender} = render(<FinishedBrewDetailsView {...base} details={undefined} loading viewMode={viewMode} />);
+describe('fermentation measurement dashboard', () => {
+  it('shows measurement loading only before details exist', () => {
+    const {rerender} = render(<FinishedBrewDetailsView {...base} details={undefined} loading />);
     expect(screen.getByRole('status')).toHaveTextContent('Messdaten werden geladen …');
 
-    rerender(<FinishedBrewDetailsView {...base} loading viewMode={viewMode} />);
+    rerender(<FinishedBrewDetailsView {...base} loading />);
     expect(screen.queryByText('Messdaten werden geladen …')).not.toBeInTheDocument();
     expect(screen.getByText('Biertemperatur')).toBeInTheDocument();
   });
 
   it('keeps the temperature chart mounted during a background refresh', () => {
     const details: any = {measurements: [{id: 'm1', finishedBeerId: 'brew-1', measuredAt: '2026-09-02T18:00:00Z', beerTemperatureC: 18.1, source: 'SENSOR'}], actions: [], devices: []};
-    const {rerender} = render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" />);
+    const {rerender} = render(<FinishedBrewDetailsView {...base} details={details} />);
     const chart = screen.getByRole('img', {name: 'Zeitlicher Verlauf von Temperatur und Plato'});
 
-    rerender(<FinishedBrewDetailsView {...base} details={details} loading viewMode="measurements" />);
+    rerender(<FinishedBrewDetailsView {...base} details={details} loading />);
 
     expect(screen.getByRole('img', {name: 'Zeitlicher Verlauf von Temperatur und Plato'})).toBe(chart);
     expect(screen.queryByText('Messdaten werden geladen …')).not.toBeInTheDocument();
   });
 
-  it('shows the compact current-state dashboard with neutral missing values', () => {
-    render(<FinishedBrewDetailsView {...base} />);
-
-    expect(screen.getByText('West Coast IPA')).toBeInTheDocument();
-    expect(screen.getByText(/Gärung · Gärtag/)).toBeInTheDocument();
-    expect(screen.getByText('Reifung starten')).toBeInTheDocument();
-    expect(screen.getByText('Bier fertigstellen')).toBeInTheDocument();
-    expect(screen.getByText('Biertemperatur')).toBeInTheDocument();
-    expect(screen.getByText('Außentemperatur')).toBeInTheDocument();
-    expect(screen.getByText('Plato')).toBeInTheDocument();
-    expect(screen.getAllByText('–')).toHaveLength(3);
-    expect(screen.getByText('Kein Sensor zugeordnet.')).toBeInTheDocument();
-    expect(screen.getByText('Keine Aktion geplant.')).toBeInTheDocument();
-    expect(screen.queryByText('Messverlauf')).not.toBeInTheDocument();
-  });
-
-  it('uses current readings, sensor status, latest measurement, next action and a compact trend', () => {
-    const complete = jest.fn(); const assign = jest.fn();
-    const details: any = {
-      measurements: [
-        {id: 'm1', finishedBeerId: 'brew-1', measuredAt: '2026-09-02T18:00:00Z', beerTemperatureC: 18.1, plato: 7.2, source: 'MANUAL'},
-        {id: 'm2', finishedBeerId: 'brew-1', measuredAt: '2026-09-04T18:00:00Z', beerTemperatureC: 18.3, ambientTemperatureC: 17.6, plato: 4.2, source: 'SENSOR'},
-      ],
-      actions: [{actionId: 'a', status: 'PENDING', due: true, sourceType: 'HINZUFÜGEN', name: 'Citra', amount: 80, unit: 'g'}],
-      devices: [{deviceUid: 'd', deviceName: 'FERM-01', lastSeenAt: new Date().toISOString(), activeAssignment: {beerId: 'brew-1'}}],
-    };
-    render(<FinishedBrewDetailsView {...base} details={details} complete={complete} assign={assign} />);
-
-    expect(screen.getByText('18,3 °C')).toBeInTheDocument();
-    expect(screen.getByText('17,6 °C')).toBeInTheDocument();
-    expect(screen.getByText('4,2 °P')).toBeInTheDocument();
-    expect(screen.getByText('FERM-01')).toBeInTheDocument();
-    expect(screen.getByText('● Online')).toBeInTheDocument();
-    expect(screen.getByRole('img', {name: /Plato-Verlauf/})).toBeInTheDocument();
-    fireEvent.click(screen.getByText('Zugabe erledigt')); expect(complete).toHaveBeenCalledWith('brew-1', 'a');
-    expect(assign).not.toHaveBeenCalled();
-  });
-
   it('moves full histories and measurement entry to the separate measurements view', () => {
     const save = jest.fn(); const closeMeasurements = jest.fn();
-    render(<FinishedBrewDetailsView {...base} save={save} viewMode="measurements" closeMeasurements={closeMeasurements} />);
+    render(<FinishedBrewDetailsView {...base} save={save} closeMeasurements={closeMeasurements} />);
 
     expect(screen.getByText('Messdaten · West Coast IPA')).toBeInTheDocument();
     expect(screen.getByText('Aktueller Zustand')).toBeInTheDocument();
@@ -107,7 +69,7 @@ describe('fermentation details dashboard', () => {
       devices: [{deviceUid: 'mine', deviceName: 'Sensor Keller', activeAssignment: {beerId: 'brew-1'}}],
           };
     const bubbleActivity: any[] = [{deviceId: 'mine', sequence: 1, bubbleCount: 4, windowSeconds: 60, averagePressureDeltaPa: 2, windowEndedAt: '2026-09-04T18:00:00Z'}];
-    const {container} = render(<FinishedBrewDetailsView {...base} brew={{...brew, brewValues: JSON.stringify({groupedData: {}})}} details={details} bubbleActivity={bubbleActivity} viewMode="measurements" />);
+    const {container} = render(<FinishedBrewDetailsView {...base} brew={{...brew, brewValues: JSON.stringify({groupedData: {}})}} details={details} bubbleActivity={bubbleActivity} />);
 
     const currentValues = container.querySelector('.fermentation-current-grid') as HTMLElement;
     expect(currentValues.children).toHaveLength(5);
@@ -126,7 +88,7 @@ describe('fermentation details dashboard', () => {
     const details: any = {measurements: [], actions: [], devices: [
       {deviceUid: 'mine', deviceName: 'Sensor Keller', activeAssignment: {beerId: 'brew-1'}},
     ]};
-    render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" sensorsByDeviceUid={{mine: {deviceUid: 'mine', status: 'ASSIGNED', beerId: 'brew-1', updatedAt: new Date().toISOString()}}} />);
+    render(<FinishedBrewDetailsView {...base} details={details} sensorsByDeviceUid={{mine: {deviceUid: 'mine', status: 'ASSIGNED', beerId: 'brew-1', updatedAt: new Date().toISOString()}}} />);
 
     const currentState = screen.getByRole('heading', {name: 'Aktueller Zustand'}).parentElement as HTMLElement;
     const runtime = currentState.querySelector('.fermentation-measurement-runtime') as HTMLElement;
@@ -146,7 +108,7 @@ describe('fermentation details dashboard', () => {
     const details: any = {measurements: [], actions: [], devices: [
       {deviceUid: 'mine', deviceName: 'Sensor Keller', activeAssignment: {beerId: 'brew-1'}},
     ]};
-    render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" sensorsByDeviceUid={{mine: {deviceUid: 'mine', status: 'ASSIGNED', beerId: 'brew-1', measurementState, updatedAt: new Date().toISOString()}}} />);
+    render(<FinishedBrewDetailsView {...base} details={details} sensorsByDeviceUid={{mine: {deviceUid: 'mine', status: 'ASSIGNED', beerId: 'brew-1', measurementState, updatedAt: new Date().toISOString()}}} />);
 
     const runtime = screen.getByText('Messung').parentElement as HTMLElement;
     expect(within(runtime).getByText(label)).toHaveClass('fermentation-runtime-status', cssClass);
@@ -159,11 +121,11 @@ describe('fermentation details dashboard', () => {
     const details: any = {measurements: [], actions: [], devices: [
       {deviceUid: 'mine', deviceName: 'Sensor Keller', activeAssignment: {beerId: 'brew-1'}},
     ]};
-    const {rerender} = render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" sensorsByDeviceUid={{mine: {deviceUid: 'mine', status: 'DISCONNECTED', measurementState: 'RUNNING', updatedAt: ''}}} />);
+    const {rerender} = render(<FinishedBrewDetailsView {...base} details={details} sensorsByDeviceUid={{mine: {deviceUid: 'mine', status: 'DISCONNECTED', measurementState: 'RUNNING', updatedAt: ''}}} />);
     expect(screen.getByText('Messung').nextSibling).toHaveTextContent('–');
     expect(screen.getByText('● Offline')).toBeInTheDocument();
 
-    rerender(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" sensorsByDeviceUid={{other: {deviceUid: 'other', status: 'ASSIGNED', beerId: 'brew-1', measurementState: 'RUNNING', updatedAt: ''}}} />);
+    rerender(<FinishedBrewDetailsView {...base} details={details} sensorsByDeviceUid={{other: {deviceUid: 'other', status: 'ASSIGNED', beerId: 'brew-1', measurementState: 'RUNNING', updatedAt: ''}}} />);
     expect(screen.getByText('Messung').nextSibling).toHaveTextContent('–');
     expect(screen.queryByText('Aktiv')).not.toBeInTheDocument();
   });
@@ -174,7 +136,7 @@ describe('fermentation details dashboard', () => {
       {deviceUid: 'other', deviceName: 'Sensor Fremdbier', activeAssignment: {beerId: 'brew-2'}, lastSeenAt: new Date().toISOString()},
       {deviceUid: 'free', deviceName: 'Sensor Keller', activeAssignment: null},
     ]};
-    render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" assign={assign} sensorsByDeviceUid={{other: {deviceUid: 'other', status: 'ASSIGNED', beerId: 'brew-1', updatedAt: new Date().toISOString()}, free: {deviceUid: 'free', status: 'REGISTERED', updatedAt: new Date().toISOString()}}} />);
+    render(<FinishedBrewDetailsView {...base} details={details} assign={assign} sensorsByDeviceUid={{other: {deviceUid: 'other', status: 'ASSIGNED', beerId: 'brew-1', updatedAt: new Date().toISOString()}, free: {deviceUid: 'free', status: 'REGISTERED', updatedAt: new Date().toISOString()}}} />);
     expect(screen.getByText('Kein Sensor zugeordnet.')).toBeInTheDocument();
     expect(screen.getByText('Messung').nextSibling).toHaveTextContent('–');
     expect(screen.getByRole('option', {name: 'Sensor Keller · Online'})).toBeInTheDocument();
@@ -190,7 +152,7 @@ describe('fermentation details dashboard', () => {
       {deviceUid: 'mine', deviceName: 'Sensor Keller', activeAssignment: {beerId: 'brew-1', assignedAt: '2026-09-13T15:20:00Z'}},
       {deviceUid: 'free', deviceName: 'Freier Sensor', activeAssignment: null},
     ]};
-    const {rerender} = render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" unassign={unassign} sensorsByDeviceUid={{mine: {deviceUid: 'mine', status: 'DISCONNECTED', updatedAt: ''}, free: {deviceUid: 'free', status: 'REGISTERED', updatedAt: ''}}} />);
+    const {rerender} = render(<FinishedBrewDetailsView {...base} details={details} unassign={unassign} sensorsByDeviceUid={{mine: {deviceUid: 'mine', status: 'DISCONNECTED', updatedAt: ''}, free: {deviceUid: 'free', status: 'REGISTERED', updatedAt: ''}}} />);
     expect(screen.getAllByText('● Offline').length).toBeGreaterThan(0);
     expect(screen.queryByText('● Online')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', {name: 'Sensor trennen'}));
@@ -200,7 +162,7 @@ describe('fermentation details dashboard', () => {
     fireEvent.click(screen.getByRole('button', {name: 'Sensor trennen'}));
     fireEvent.click(screen.getAllByRole('button', {name: 'Sensor trennen'})[1]);
     expect(unassign).toHaveBeenCalledWith('mine', 'brew-1');
-    rerender(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" unassign={unassign} unassigning={['mine']} />);
+    rerender(<FinishedBrewDetailsView {...base} details={details} unassign={unassign} unassigning={['mine']} />);
     expect(screen.getByRole('button', {name: 'Wird getrennt …'})).toBeDisabled();
   });
 
@@ -210,7 +172,7 @@ describe('fermentation details dashboard', () => {
     const details: any = {measurements: [], actions: [], devices: [
       {deviceUid, deviceName: 'FERM-1FF77E', displayName: 'Gärtank Garage', activeAssignment: {beerId: 'brew-1', assignedAt: '2026-09-13T15:20:00Z'}},
     ]};
-    render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" updateDeviceDisplayName={updateDeviceDisplayName} sensorsByDeviceUid={{[deviceUid]: {deviceUid, status: 'ASSIGNED', beerId: 'brew-1', updatedAt: new Date().toISOString()}}} />);
+    render(<FinishedBrewDetailsView {...base} details={details} updateDeviceDisplayName={updateDeviceDisplayName} sensorsByDeviceUid={{[deviceUid]: {deviceUid, status: 'ASSIGNED', beerId: 'brew-1', updatedAt: new Date().toISOString()}}} />);
 
     expect(screen.getByText('Gärtank Garage')).toBeInTheDocument();
     expect(screen.queryByText('FERM-1FF77E')).not.toBeInTheDocument();
@@ -249,31 +211,31 @@ describe('fermentation details dashboard', () => {
 
   it('prefills the technical name when no alias exists and keeps editing open on save errors', () => {
     const details: any = {measurements: [], actions: [], devices: [{deviceUid: 'mine', deviceName: 'FERM-01', displayName: null, activeAssignment: {beerId: 'brew-1'}}]};
-    const {rerender} = render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" />);
+    const {rerender} = render(<FinishedBrewDetailsView {...base} details={details} />);
     fireEvent.click(screen.getByRole('button', {name: 'Sensor-Alias bearbeiten'}));
     expect(screen.getByRole('textbox', {name: 'Sensor-Alias'})).toHaveValue('FERM-01');
-    rerender(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" deviceDisplayNameErrors={{mine: 'Sensor-Alias konnte nicht gespeichert werden.'}} />);
+    rerender(<FinishedBrewDetailsView {...base} details={details} deviceDisplayNameErrors={{mine: 'Sensor-Alias konnte nicht gespeichert werden.'}} />);
     expect(screen.getByRole('textbox', {name: 'Sensor-Alias'})).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent('Sensor-Alias konnte nicht gespeichert werden.');
   });
 
   it.each([eBrewState.MATURATION, eBrewState.FINISHED])('does not offer new assignments in %s', state => {
     const details: any = {measurements: [], actions: [], devices: [{deviceUid: 'free', deviceName: 'Frei', activeAssignment: null}]};
-    render(<FinishedBrewDetailsView {...base} brew={{...brew, state}} details={details} viewMode="measurements" />);
+    render(<FinishedBrewDetailsView {...base} brew={{...brew, state}} details={details} />);
     expect(screen.queryByLabelText('Sensor auswählen')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', {name: 'Sensor zuweisen'})).not.toBeInTheDocument();
   });
 
   it('reports when no free sensor is available and preserves request-specific errors', () => {
     const details: any = {measurements: [], actions: [], devices: [{deviceUid: 'other', deviceName: 'Belegt', activeAssignment: {beerId: 'brew-2'}}]};
-    render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" assignmentError="HTTP 409" />);
+    render(<FinishedBrewDetailsView {...base} details={details} assignmentError="HTTP 409" />);
     expect(screen.getByText('Kein freier Sensor verfügbar.')).toBeInTheDocument();
     expect(screen.getByRole('alert')).toHaveTextContent('Der Sensor konnte nicht zugeordnet werden.HTTP 409');
   });
 
   it('shows the initial bubble activity loading state without a chart', () => {
     const loadBubbleActivity = jest.fn();
-    render(<FinishedBrewDetailsView {...base} viewMode="measurements" loadBubbleActivity={loadBubbleActivity} bubbleActivityLoading />);
+    render(<FinishedBrewDetailsView {...base} loadBubbleActivity={loadBubbleActivity} bubbleActivityLoading />);
     expect(loadBubbleActivity).toHaveBeenCalledWith('brew-1', '24h');
     expect(screen.getByText('Gäraktivität wird geladen …')).toBeInTheDocument();
     expect(screen.queryByRole('img', {name: /Zeitlicher Verlauf der Gäraktivität/})).not.toBeInTheDocument();
@@ -282,12 +244,12 @@ describe('fermentation details dashboard', () => {
   it('keeps existing bubble activity mounted while loading another range', () => {
     const loadBubbleActivity = jest.fn();
     const activity: any[] = [{deviceId: 'sensor', sequence: 1, bubbleCount: 4, windowSeconds: 60, windowEndedAt: '2026-09-04T18:00:00Z'}];
-    const {rerender} = render(<FinishedBrewDetailsView {...base} viewMode="measurements" loadBubbleActivity={loadBubbleActivity} bubbleActivity={activity} />);
+    const {rerender} = render(<FinishedBrewDetailsView {...base} loadBubbleActivity={loadBubbleActivity} bubbleActivity={activity} />);
     const chart = screen.getByRole('img', {name: /Zeitlicher Verlauf der Gäraktivität/});
 
     fireEvent.click(screen.getByText('6 h'));
     expect(loadBubbleActivity).toHaveBeenCalledWith('brew-1', '6h');
-    rerender(<FinishedBrewDetailsView {...base} viewMode="measurements" loadBubbleActivity={loadBubbleActivity} bubbleActivity={activity} bubbleActivityRange="6h" bubbleActivityLoading />);
+    rerender(<FinishedBrewDetailsView {...base} loadBubbleActivity={loadBubbleActivity} bubbleActivity={activity} bubbleActivityRange="6h" bubbleActivityLoading />);
     expect(screen.getByRole('img', {name: /Zeitlicher Verlauf der Gäraktivität/})).toBe(chart);
     expect(screen.getByRole('status')).toHaveTextContent('Aktualisiere …');
 
@@ -298,64 +260,21 @@ describe('fermentation details dashboard', () => {
 
   it('shows existing bubble activity without a loading hint after loading', () => {
     const activity: any[] = [{deviceId: 'sensor', sequence: 1, bubbleCount: 4, windowSeconds: 60, windowEndedAt: '2026-09-04T18:00:00Z'}];
-    render(<FinishedBrewDetailsView {...base} viewMode="measurements" bubbleActivity={activity} />);
+    render(<FinishedBrewDetailsView {...base} bubbleActivity={activity} />);
     expect(screen.getByRole('img', {name: /Zeitlicher Verlauf der Gäraktivität/})).toBeInTheDocument();
     expect(screen.queryByText('Aktualisiere …')).not.toBeInTheDocument();
   });
 
   it('keeps existing bubble activity visible next to a refresh error', () => {
     const activity: any[] = [{deviceId: 'sensor', sequence: 1, bubbleCount: 4, windowSeconds: 60, windowEndedAt: '2026-09-04T18:00:00Z'}];
-    render(<FinishedBrewDetailsView {...base} viewMode="measurements" bubbleActivity={activity} bubbleActivityError="HTTP 500" />);
+    render(<FinishedBrewDetailsView {...base} bubbleActivity={activity} bubbleActivityError="HTTP 500" />);
     expect(screen.getByRole('img', {name: /Zeitlicher Verlauf der Gäraktivität/})).toBeInTheDocument();
     expect(screen.getByText('Die Gäraktivität konnte nicht geladen werden.')).toBeInTheDocument();
   });
 
   it('shows an empty bubble activity state after a successful empty load', () => {
-    render(<FinishedBrewDetailsView {...base} viewMode="measurements" />);
+    render(<FinishedBrewDetailsView {...base} />);
     expect(screen.getByText('Noch keine Gäraktivität gemessen.')).toBeInTheDocument();
-  });
-
-  it('navigates from the compact beer detail to its measurement route', () => {
-    const openMeasurements = jest.fn();
-    render(<FinishedBrewDetailsView {...base} openMeasurements={openMeasurements} />);
-
-    fireEvent.click(screen.getByText('Messdaten öffnen'));
-    expect(openMeasurements).toHaveBeenCalledWith('brew-1');
-  });
-
-  it('offers only centrally allowed lifecycle transitions', () => {
-    const transition = jest.fn();
-    const {rerender} = render(<FinishedBrewDetailsView {...base} transition={transition} />);
-    fireEvent.click(screen.getByText('Reifung starten'));
-    expect(transition).toHaveBeenCalledWith(expect.objectContaining({state: eBrewState.MATURATION}));
-    rerender(<FinishedBrewDetailsView {...base} brew={{...brew, state: eBrewState.MATURATION}} transition={transition} />);
-    expect(screen.queryByText('Reifung starten')).not.toBeInTheDocument();
-    expect(screen.getByText('Bier fertigstellen')).toBeInTheDocument();
-    rerender(<FinishedBrewDetailsView {...base} brew={{...brew, state: eBrewState.FINISHED, active: false}} transition={transition} />);
-    expect(screen.queryByText('Reifung starten')).not.toBeInTheDocument();
-    expect(screen.queryByText('Bier fertigstellen')).not.toBeInTheDocument();
-    rerender(<FinishedBrewDetailsView {...base} brew={{...brew, state: eBrewState.WAITING_FOR_FERMENTATION, fermentationStartedAt: null}} transition={transition} />);
-    expect(screen.getByText(/Wartet auf Gärstart/)).toBeInTheDocument();
-    expect(screen.queryByText('Reifung starten')).not.toBeInTheDocument();
-    expect(screen.queryByText('Bier fertigstellen')).not.toBeInTheDocument();
-    expect(screen.getByRole('button', {name: 'Gärung starten'})).toBeInTheDocument();
-  });
-
-  it.each([eBrewState.FERMENTATION, eBrewState.MATURATION, eBrewState.FINISHED])('does not offer fermentation start in %s', state => {
-    render(<FinishedBrewDetailsView {...base} brew={{...brew, state}} />);
-    expect(screen.queryByRole('button', {name: 'Gärung starten'})).not.toBeInTheDocument();
-  });
-
-  it('confirms fermentation start and does not dispatch when cancelled', () => {
-    const startFermentation = jest.fn();
-    render(<FinishedBrewDetailsView {...base} brew={{...brew, state: eBrewState.WAITING_FOR_FERMENTATION, fermentationStartedAt: null}} startFermentation={startFermentation} />);
-    fireEvent.click(screen.getByRole('button', {name: 'Gärung starten'}));
-    expect(screen.getByText('Die Gärung sollte erst gestartet werden, wenn die Würze auf Anstelltemperatur abgekühlt und die Hefe zugegeben wurde.')).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', {name: 'Abbrechen'}));
-    expect(startFermentation).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', {name: 'Gärung starten'}));
-    fireEvent.click(screen.getAllByRole('button', {name: 'Gärung starten'})[1]);
-    expect(startFermentation).toHaveBeenCalledWith('brew-1');
   });
 
   it('allows MANUAL + PENDING without due and never offers skipped actions', () => {
@@ -365,7 +284,7 @@ describe('fermentation details dashboard', () => {
       {actionId: 'manual', status: 'PENDING', due: false, triggerType: 'MANUAL', sourceType: 'ZUGABE'},
       {actionId: 'skipped', status: 'SKIPPED', due: true, triggerType: 'MANUAL', sourceType: 'ZUGABE'},
     ]};
-    render(<FinishedBrewDetailsView {...base} details={details} complete={complete} skip={skip} viewMode="measurements" />);
+    render(<FinishedBrewDetailsView {...base} details={details} complete={complete} skip={skip} />);
     expect(screen.getAllByText('Zugabe erledigt')).toHaveLength(1);
     fireEvent.click(screen.getByText('Zugabe erledigt'));
     expect(complete).toHaveBeenCalledWith(brew.id, 'manual');
@@ -378,7 +297,7 @@ describe('fermentation details dashboard', () => {
       {actionId: 'first', status: 'PENDING', due: true, triggerType: 'TIME_OFFSET', triggerValue: 4, triggerUnit: 'DAYS', sourceType: 'DRY_HOP', name: 'Cascade', amount: 50, unit: 'GRAMS'},
       {actionId: 'second', status: 'PENDING', due: true, triggerType: 'MANUAL', sourceType: 'ADDITIONAL_INGREDIENT', name: 'Orange', amount: 35, unit: 'GRAMS'},
     ]};
-    render(<FinishedBrewDetailsView {...base} details={details} completing={['brew-1/first']} viewMode="measurements" />);
+    render(<FinishedBrewDetailsView {...base} details={details} completing={['brew-1/first']} />);
     const buttons = screen.getAllByRole('button', {name: /Zugabe erledigt|Wird gespeichert/});
     expect(buttons[0]).toBeDisabled();
     expect(buttons[1]).toBeEnabled();
@@ -388,7 +307,7 @@ describe('fermentation details dashboard', () => {
     const details: any = {measurements: [], devices: [], actions: [
       {actionId: 'failed', status: 'PENDING', due: true, triggerType: 'PLATO_THRESHOLD', triggerValue: 5, triggerUnit: 'PLATO', sourceType: 'DRY_HOP', name: 'Cascade', amount: 50, unit: 'GRAMS'},
     ]};
-    render(<FinishedBrewDetailsView {...base} details={details} completeActionErrors={{'brew-1/failed': 'HTTP 409'}} dismissCompleteError={dismissCompleteError} viewMode="measurements" />);
+    render(<FinishedBrewDetailsView {...base} details={details} completeActionErrors={{'brew-1/failed': 'HTTP 409'}} dismissCompleteError={dismissCompleteError} />);
     expect(screen.getByRole('button', {name: 'Zugabe erledigt'})).toBeEnabled();
     expect(screen.getByText('Zugabe konnte nicht bestätigt werden')).toBeInTheDocument();
     expect(screen.getByText('HTTP 409')).toBeInTheDocument();
@@ -400,7 +319,7 @@ describe('fermentation details dashboard', () => {
       {actionId: 'hop', status: 'PENDING', due: false, triggerType: 'TIME_OFFSET', triggerValue: 4, triggerUnit: 'DAYS', sourceType: 'DRY_HOP', name: 'Citra', amount: 50, unit: 'GRAMS', contactTime: 72, contactTimeUnit: 'HOURS'},
       {actionId: 'spice', status: 'COMPLETED', triggerType: 'PLATO_THRESHOLD', triggerValue: 5, triggerUnit: 'PLATO', sourceType: 'ADDITIONAL_INGREDIENT', name: 'Koriandersamen', amount: 1, unit: 'PIECES', completedAt: '2026-09-11T10:22:00Z', contactEndsAt: '2026-09-14T10:22:00Z'},
     ]};
-    render(<FinishedBrewDetailsView {...base} details={details} viewMode="measurements" />);
+    render(<FinishedBrewDetailsView {...base} details={details} />);
     expect(screen.getByText('Citra · 50 g')).toBeInTheDocument();
     expect(screen.getByText('Hopfen')).toBeInTheDocument();
     expect(screen.getByText('4 Tage nach Gärbeginn')).toBeInTheDocument();
@@ -415,7 +334,6 @@ describe('fermentation details dashboard', () => {
   });
   it('does not infer fermentationStartedAt or a fermentation day from legacy startDate', () => {
     render(<FinishedBrewDetailsView {...base} brew={{...brew, fermentationStartedAt: undefined, startDate: '2020-01-01'}} />);
-    expect(screen.getByText(/Gärbeginn:/)).toHaveTextContent('Gärbeginn: –');
     expect(screen.queryByText(/Gärtag/)).not.toBeInTheDocument();
   });
 
@@ -424,14 +342,14 @@ describe('fermentation details dashboard', () => {
       {actionId: 'old', status: 'PENDING', sourceType: 'DRY_HOP', name: 'Altes Rezept', amount: 10, unit: 'GRAMS'},
     ]};
     const snapshot: any[] = [{actionId: 'snapshot', status: 'PENDING', sourceType: 'DRY_HOP', name: 'Sud-Snapshot', amount: 30, unit: 'GRAMS'}];
-    const {rerender} = render(<FinishedBrewDetailsView {...base} brew={{...brew, fermentationActions: snapshot}} details={undefined} viewMode="measurements" />);
+    const {rerender} = render(<FinishedBrewDetailsView {...base} brew={{...brew, fermentationActions: snapshot}} details={undefined} />);
     expect(screen.getByText('Sud-Snapshot · 30 g')).toBeInTheDocument();
 
-    rerender(<FinishedBrewDetailsView {...base} brew={{...brew, fermentationActions: snapshot}} details={endpointDetails} viewMode="measurements" />);
+    rerender(<FinishedBrewDetailsView {...base} brew={{...brew, fermentationActions: snapshot}} details={endpointDetails} />);
     expect(screen.getByText('Altes Rezept · 10 g')).toBeInTheDocument();
     expect(screen.queryByText(/Sud-Snapshot/)).not.toBeInTheDocument();
 
-    rerender(<FinishedBrewDetailsView {...base} brew={{...brew, fermentationActions: snapshot}} details={{...endpointDetails, actions: []}} viewMode="measurements" />);
+    rerender(<FinishedBrewDetailsView {...base} brew={{...brew, fermentationActions: snapshot}} details={{...endpointDetails, actions: []}} />);
     expect(screen.getByText('Keine Gärungsaktionen geplant.')).toBeInTheDocument();
   });
 });

@@ -9,8 +9,9 @@ describe('FinishedBrewsTable measurement action', () => {
   it('opens measurements directly with the unchanged finished-beer id', () => {
     const openMeasurements = jest.fn();
     render(<FinishedBrewsTable {...props} openMeasurements={openMeasurements} />);
-    fireEvent.click(screen.getByRole('button', {name: 'Messdaten für Test IPA'}));
+    fireEvent.click(screen.getByRole('button', {name: 'Details für Test IPA'}));
     expect(openMeasurements).toHaveBeenCalledWith('brew/id 1');
+    expect(screen.queryByRole('button', {name: 'Messdaten für Test IPA'})).not.toBeInTheDocument();
   });
 
   it('renders the requested read-only overview with a compact active marker', () => {
