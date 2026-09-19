@@ -6,6 +6,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined';
 import SimpleBar from 'simplebar-react';
 import './FinishedBrewsTable.css';
 import {FinishedBrew, FinishedBrewCreatePayload} from "../../../../model/FinishedBrew";
@@ -13,6 +14,7 @@ import {isNil} from "lodash";
 import { eBrewState, BrewStateGerman, brewStateLabel } from '../../../../enums/eBrewState';
 import {createFinishedBrewId} from '../../../../utils/finishedBrewCreateId';
 import ModalDialog, {DialogType} from '../../../../components/ModalDialog/ModalDialog';
+import ManualMeasurementDialog from '../../../../components/ManualMeasurementDialog/ManualMeasurementDialog';
 
 
 interface FinishedBrewsTableProps {
@@ -39,6 +41,7 @@ interface FinishedBrewsTableState {
     newRowData?: Partial<FinishedBrew>;
     newRowSubmitting: boolean;
     brewPendingDelete?: FinishedBrew;
+    measurementBeerId?: string;
 }
 
 const calcAlcohol = (w1: number | null | undefined, w2: number | null | undefined) => {
@@ -286,6 +289,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
                     <div className="finished-brews-row-actions app-table-actions">
                         <button className="app-table-action app-table-action--danger" onClick={() => this.handleDelete(brewId)} title="Löschen" aria-label="Löschen"><DeleteOutlineIcon sx={{fontSize: 22}} /></button>
                         <button className="app-table-action" onClick={() => this.props.openMeasurements(brewId)} title="Details" aria-label={`Details für ${brew.name}`}><VisibilityIcon sx={{fontSize: 22}} /></button>
+                        {brew.state === eBrewState.FERMENTATION && <button className="app-table-action" onClick={() => this.setState({measurementBeerId: brewId})} title="Messung erfassen" aria-label={`Messung für ${brew.name} erfassen`}><ScienceOutlinedIcon sx={{fontSize: 22}} /></button>}
                     </div>
                 </TableCell>
             </TableRow>
@@ -324,6 +328,7 @@ export class FinishedBrewsTable extends React.Component<FinishedBrewsTableProps,
         return (
             <>
             <ModalDialog type={DialogType.CONFIRM} open={Boolean(this.state.brewPendingDelete)} header="Sud löschen" content={`Soll ${this.state.brewPendingDelete?.name ?? 'dieser Sud'} endgültig gelöscht werden?`} onConfirm={this.confirmDelete} onCancel={() => this.setState({brewPendingDelete: undefined})} showCancelButton={true} actionsDisabled={Boolean(this.state.brewPendingDelete && this.props.deletingFinishedBrewIds.includes(this.state.brewPendingDelete.id))} />
+            {this.state.measurementBeerId && <ManualMeasurementDialog open beerId={this.state.measurementBeerId} onClose={() => this.setState({measurementBeerId: undefined})} />}
             <main className="finished-brews-page">
                 {this.renderFilterControls(years)}
                 {this.renderNewBrewForm(beers)}

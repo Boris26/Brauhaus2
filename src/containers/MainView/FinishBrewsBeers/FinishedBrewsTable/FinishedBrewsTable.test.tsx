@@ -12,6 +12,7 @@ describe('FinishedBrewsTable measurement action', () => {
     fireEvent.click(screen.getByRole('button', {name: 'Details für Test IPA'}));
     expect(openMeasurements).toHaveBeenCalledWith('brew/id 1');
     expect(screen.queryByRole('button', {name: 'Messdaten für Test IPA'})).not.toBeInTheDocument();
+    expect(screen.getByRole('button', {name: 'Messung für Test IPA erfassen'})).toBeInTheDocument();
   });
 
   it('renders the requested read-only overview with a compact active marker', () => {
@@ -38,5 +39,6 @@ describe('FinishedBrewsTable measurement action', () => {
     expect(screen.getByText('Fertig')).toHaveClass('brew-status-badge');
     expect(screen.getByText('Fertig')).not.toHaveClass('is-active');
     expect(screen.queryByLabelText('Aktives Bier')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', {name: 'Messung für Test IPA erfassen'})).not.toBeInTheDocument();
   });
 });
