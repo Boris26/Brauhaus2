@@ -12,7 +12,7 @@ import {actionAmountLabel, actionDueLabel, actionTriggerLabel, actionTypeLabel, 
 import {fermentationActionRequestId} from '../../../../reducers/fermentationReducer';
 import {TriggerType} from '../../../../model/FermentationRecipeAction';
 import BrewProcessChart from '../BrewProcessChart/BrewProcessChart';
-import FermentationMeasurementsChart from '../FermentationMeasurements/FermentationMeasurementsChart/FermentationMeasurementsChart';
+import FermentationMeasurementsChart, {FermentationChartRange} from '../FermentationMeasurements/FermentationMeasurementsChart/FermentationMeasurementsChart';
 import BubbleActivityChart from '../FermentationMeasurements/BubbleActivityChart/BubbleActivityChart';
 import ModalDialog, {DialogType} from '../../../../components/ModalDialog/ModalDialog';
 import {ManualMeasurementDialogView} from '../../../../components/ManualMeasurementDialog/ManualMeasurementDialog';
@@ -22,6 +22,9 @@ interface Props { brew: FinishedBrew; details?: FermentationDetails; bubbleActiv
 const number = (value?: number | null, unit = '') => typeof value === 'number' && Number.isFinite(value) ? `${value.toLocaleString('de-DE', {maximumFractionDigits: 1})}${unit}` : '–';
 const date = (value?: string) => value && Number.isFinite(Date.parse(value)) ? new Intl.DateTimeFormat('de-DE', {dateStyle: 'short', timeStyle: 'short'}).format(new Date(value)) : '–';
 const actionText = (action: FermentationAction) => [action.name, actionAmountLabel(action.amount, action.unit)].filter(Boolean).join(' · ');
+export const initialFermentationChartRange = (state: eBrewState): FermentationChartRange => state === eBrewState.FERMENTATION
+  ? '6h'
+  : state === eBrewState.MATURATION || state === eBrewState.FINISHED ? 'all' : '24h';
 const FermentationMeasurementRuntime: React.FC<{state?: FermentationMeasurementRuntimeState}> = ({state}) => {
   if (!state) return <strong>–</strong>;
   const label = state === 'RUNNING' ? 'Aktiv' : state === 'PAUSED' ? 'Pause' : 'Bereit';
@@ -52,7 +55,8 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
   const displayNameWasPending = useRef(false);
   useEffect(() => { if (!props.details) props.load(props.brew.id); }, [props.brew.id]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setCompletedActionsOpen(false); }, [props.brew.id]);
-  useEffect(() => { props.loadBubbleActivity(props.brew.id, '24h'); }, [props.brew.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  const initialChartRange = initialFermentationChartRange(props.brew.state);
+  useEffect(() => { props.loadBubbleActivity(props.brew.id, initialChartRange); }, [props.brew.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const loadedDetails = props.details ?? {measurements: [], actions: [], devices: []};
   const isInitialLoading = props.loading && !props.details;
   // Use the embedded batch snapshot until the dedicated endpoint supplies the
@@ -140,7 +144,7 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
 
       <ModalDialog type={DialogType.CONFIRM} open={unassignConfirmationOpen} header="Sensor trennen?" content={'Der Sensor wird von diesem Bier getrennt und die laufende Messsession beendet.\nBereits gespeicherte Messwerte bleiben erhalten.'} confirmLabel="Sensor trennen" showCancelButton onConfirm={() => { setUnassignConfirmationOpen(false); if (assignedDevice) props.unassign(assignedDevice.deviceUid, props.brew.id); }} onCancel={() => setUnassignConfirmationOpen(false)} actionsDisabled={isUnassigning} />
 
-      <section className="fermentation-card fermentation-chart-card"><h4>Verlauf</h4><FermentationMeasurementsChart measurements={details.measurements} actions={details.actions} /></section>
+      <section className="fermentation-card fermentation-chart-card"><h4>Verlauf</h4><FermentationMeasurementsChart key={props.brew.id} measurements={details.measurements} actions={details.actions} initialRange={initialChartRange} /></section>
       <section className="fermentation-card fermentation-chart-card" aria-labelledby="bubble-activity-title"><div className="fermentation-chart-heading"><h4 id="bubble-activity-title">Gäraktivität</h4><div className="fermentation-range-selector" role="group" aria-label="Zeitraum der Gäraktivität">{([['6h', '6 h'], ['24h', '24 h'], ['7d', '7 Tage'], ['all', 'Alles']] as [BubbleActivityRange, string][]).map(([range, label]) => <button key={range} className={props.bubbleActivityRange === range ? 'is-selected' : ''} aria-pressed={props.bubbleActivityRange === range} disabled={props.bubbleActivityLoading && props.bubbleActivityRange === range} onClick={() => props.loadBubbleActivity(props.brew.id, range)}>{label}</button>)}</div></div>
         <div className={`fermentation-chart-content${props.bubbleActivity.length > 0 ? ' has-chart' : ''}`}>
           {props.bubbleActivity.length > 0 && <BubbleActivityChart activity={props.bubbleActivity} />}

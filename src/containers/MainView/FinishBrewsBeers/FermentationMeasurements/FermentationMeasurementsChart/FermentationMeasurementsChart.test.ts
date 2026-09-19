@@ -93,4 +93,18 @@ describe('FermentationMeasurementsChart refresh rendering', () => {
     expect(screen.getByRole('button', {name: 'Alles'})).toHaveAttribute('aria-pressed', 'true');
     expect(LineChart.mock.calls.at(-1)[0].data).toHaveLength(2);
   });
+
+  it('uses the supplied initial range without overwriting a later user selection', () => {
+    const measurements: any[] = [
+      {id: 'old', finishedBeerId: 'b', measuredAt: '2026-09-01T00:00:00Z', beerTemperatureC: 17.8, source: 'SENSOR'},
+      {id: 'latest', finishedBeerId: 'b', measuredAt: '2026-09-08T00:00:00Z', beerTemperatureC: 18.1, source: 'SENSOR'},
+    ];
+    const {rerender} = render(<FermentationMeasurementsChart measurements={measurements} initialRange="6h" />);
+
+    expect(screen.getByRole('button', {name: '6 h'})).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', {name: 'Alles'}));
+    rerender(<FermentationMeasurementsChart measurements={[...measurements, {...measurements[1], id: 'new'}]} initialRange="6h" />);
+
+    expect(screen.getByRole('button', {name: 'Alles'})).toHaveAttribute('aria-pressed', 'true');
+  });
 });
