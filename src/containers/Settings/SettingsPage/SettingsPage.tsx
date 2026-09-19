@@ -13,6 +13,7 @@ import WaterDropOutlinedIcon from '@mui/icons-material/WaterDropOutlined';
 import VolumeUpOutlinedIcon from '@mui/icons-material/VolumeUpOutlined';
 import HealthAndSafetyOutlinedIcon from '@mui/icons-material/HealthAndSafetyOutlined';
 import SensorsOutlinedIcon from '@mui/icons-material/SensorsOutlined';
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import {AgitatorSettings} from '../../../model/AgitatorSettings';
 import {AgitatorSettingsRepository} from '../../../repositorys/AgitatorSettingsRepository';
 import {OperationalSettings, OperationalSettingsSection} from '../../../model/OperationalSettings';
@@ -420,7 +421,7 @@ export class SettingsPage extends React.Component<SettingsPageProps, SettingsPag
 
         return (
             <main className="settings-page">
-                <PageHeader className="settings-header" title="Einstellungen" subtitle="Konfiguriere Verhalten und Brausteuerung." />
+                <PageHeader className="settings-header" icon={<SettingsOutlinedIcon />} title="Einstellungen" subtitle="Konfiguriere Verhalten und Brausteuerung." />
 
                 {statusMessage && (
                     <div className="settings-message" role="status" aria-live="polite">

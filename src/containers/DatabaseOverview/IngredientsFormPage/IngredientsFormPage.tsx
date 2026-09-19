@@ -15,6 +15,7 @@ import GrainIcon from "@mui/icons-material/Grain";
 import LocalFloristOutlinedIcon from "@mui/icons-material/LocalFloristOutlined";
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
 import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 
 import { Malts } from '../../../model/Malt';
 import { Hops } from '../../../model/Hops';
@@ -390,7 +391,7 @@ export class IngredientsFormPage extends React.Component<any, any> {
     render() {
         return (
             <>
-            <PageLayout title="Zutatenverwaltung" subtitle="Malze, Hopfen, Hefen und weitere Zutaten zentral pflegen." contentClassName="containerIngredientsForm">
+            <PageLayout icon={<Inventory2OutlinedIcon />} title="Zutatenverwaltung" subtitle="Malze, Hopfen, Hefen und weitere Zutaten zentral pflegen." contentClassName="containerIngredientsForm">
                 <div className='app-accordion-group'>
                     {this.renderIngredientAccordion("malz", "Malz", this.renderMaltContent())}
                     {this.renderIngredientAccordion("hopfen", "Hopfen", this.renderHopContent())}

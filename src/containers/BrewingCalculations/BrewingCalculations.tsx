@@ -4,6 +4,7 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import ThermostatIcon from '@mui/icons-material/Thermostat';
 import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined';
 import LocalDrinkOutlinedIcon from '@mui/icons-material/LocalDrinkOutlined';
+import CalculateOutlinedIcon from '@mui/icons-material/CalculateOutlined';
 import './BrewingCalculations.css';
 import {PageLayout} from '../../components/PageLayout/PageLayout';
 import {
@@ -204,6 +205,7 @@ class BrewingCalculations extends React.Component<{}, BrewingCalculationsState> 
     render() {
         return (
             <PageLayout
+                icon={<CalculateOutlinedIcon />}
                 title="Bierbrau-Berechnungen"
                 subtitle="Umrechnungen und Hilfsrechner für den Brauprozess."
                 contentClassName="BrewingCalculations-outer"

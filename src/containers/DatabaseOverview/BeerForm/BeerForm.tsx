@@ -27,6 +27,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
 import {AppAccordion, AppAccordionHeader} from '../../../components/AppAccordion/AppAccordion';
 import {PageHeader} from '../../../components/PageLayout/PageLayout';
+import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
 import {CONTACT_TIME_UNITS, TIME_TRIGGER_UNITS, clearRecipeAction, unitLabel, RecipeActionFields, TriggerType, TriggerUnit, TimeUnit, hasRecipeAction, normalizeRecipeAction} from '../../../model/FermentationRecipeAction';
 
 interface BeerFormProps {
@@ -1026,8 +1027,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                     masterData={{MALT: this.props.malts ?? [], HOP: this.props.hops ?? [], YEAST: this.props.yeasts ?? [], ADDITIONAL_INGREDIENT: this.props.additionalIngredients ?? []}}
                     onCreateMasterData={this.createImportMasterData}
                 />
-                <div className="beer-form-panel">
-                    <PageHeader className="beer-form-panel-header" eyebrow="Bier" title="Rezepteditor" subtitle="Rezeptdaten und Brauprozess bearbeiten." actions={
+                <PageHeader icon={<MenuBookOutlinedIcon />} title="Rezepteditor" subtitle="Rezeptdaten und Brauprozess bearbeiten." actions={
                         <>
                             <button type="button" className="add-button brauhaus-button brauhaus-button-secondary secondary-action" onClick={this.cancelOrResetForm}>Abbrechen / Zurücksetzen</button>
                             <button className="finish-btn brauhaus-button brauhaus-button-primary submit-button primary-action" type="submit" form="beer-recipe-form" disabled={this.props.isSavingBeer}>
@@ -1036,7 +1036,8 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                     : <><SaveIcon fontSize="small" /> Rezept speichern</>}
                             </button>
                         </>
-                    } />
+                } />
+                <div className="beer-form-panel">
                     <div className="beer-form-scroll">{this.renderCreateBeerForm()}</div>
                 </div>
             </div>
