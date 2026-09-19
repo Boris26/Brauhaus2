@@ -39,7 +39,7 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
         super(props);
 
         this.state = {
-            sortConfig: {key: 'name', direction: 'asc'}, selectedBeerId: null, beerPendingDelete: undefined
+            sortConfig: {key: 'name', direction: 'asc'}, selectedBeerId: props.selectedBeer?.id || null, beerPendingDelete: undefined
         };
     }
 
@@ -204,7 +204,7 @@ export class BeerTableComponent extends React.Component<BeerTableProps, BeerTabl
                                     <TableRow key={item.id} onClick={() => this.onSelectBeer(item)}
                                               className={`table-row ${selectedBeerId !== null && item.id === selectedBeerId ? 'app-table__row--selected' : ''}`}
                                     >
-                                        <TableCell className="table-cell">{item.name}</TableCell>
+                                        <TableCell className="table-cell table-cell--name">{item.name}</TableCell>
                                         <TableCell className="table-cell">{item.type}</TableCell>
                                         <TableCell className="table-cell">{item.color}</TableCell>
                                         <TableCell className="table-cell">{item.alcohol}</TableCell>

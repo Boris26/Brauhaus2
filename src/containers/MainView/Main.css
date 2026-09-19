@@ -1,27 +1,16 @@
-
 .main-view {
-    flex: 1;
-    display: flex;
+    height: 100%; min-height: 0; min-width: 0; display: grid; grid-template-columns: minmax(0, 41%) minmax(0, 59%);
+    gap: var(--spacing-md); padding: var(--spacing-md); box-sizing: border-box; background: var(--color-app-bg); overflow: hidden;
 }
-
-.main-view .CustomTable {
-    flex: 70%;
-    margin: 10px;
+.main-view .CustomTable, .main-view .Details {
+    min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden;
+    background: var(--color-brew-bg); border: 1px solid var(--color-border-soft); border-radius: var(--border-radius-large);
 }
-
-.main-view .Details {
-    flex: 30%;
-    display: flex;
-    flex-direction: column;
-    background-color: var(--color-brew-bg);
-    margin: 10px;
-    border-radius: var(--border-radius-large);
-    overflow: hidden;
-}
-
-.main-view .DetailsContainer {
-    flex: 1;
-    height: 100%;
-    overflow: auto;
-    padding: 10px;
+.recipe-list-header { flex: 0 0 auto; padding: var(--spacing-lg) var(--spacing-xl); border-bottom: 1px solid var(--color-border-soft); }
+.recipe-list-header h1 { margin: 0; color: var(--color-text); font-size: var(--font-size-page-title); }
+.recipe-list-header p { margin: var(--spacing-xs) 0 0; color: var(--color-text-secondary); font-size: var(--font-size-small); }
+.recipe-list-scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+@media (max-width: 1050px) {
+    .main-view { grid-template-columns: minmax(22rem, 42%) minmax(0, 58%); gap: var(--spacing-sm); padding: var(--spacing-sm); }
+    .recipe-list-header { padding: var(--spacing-md) var(--spacing-lg); }
 }

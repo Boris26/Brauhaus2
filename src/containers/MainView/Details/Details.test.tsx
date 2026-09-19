@@ -22,7 +22,7 @@ it('labels the planned batch clearly and displays the compact recipe reference',
     expect(screen.getByRole('spinbutton')).toHaveClass('brewhouse-efficiency-input');
     expect(screen.getByRole('spinbutton')).toHaveValue(52);
     expect(screen.getByRole('combobox')).toHaveValue('30');
-    expect(screen.queryByText('Liter:')).not.toBeInTheDocument();
+    expect(screen.getByText('Liter')).toBeInTheDocument();
     expect(updateRecipeScaling).toHaveBeenCalledWith({beer, volume: 30, brewhouseEfficiency: 52});
 });
 
@@ -52,6 +52,21 @@ it('resets volume and planned efficiency when the selected recipe changes', () =
     expect(updateRecipeScaling).toHaveBeenLastCalledWith({beer: nextBeer, volume: 20, brewhouseEfficiency: 52});
 });
 
+it('renders only the active tab and keeps it active when the recipe changes', () => {
+    const recipeWithMalt = {...beer, malts: [{id: 'malt-1', name: 'Pilsner Malz', quantity: 4500}]};
+    const nextRecipe = {...recipeWithMalt, id: 'recipe-next', name: 'Next', malts: [{id: 'malt-2', name: 'Wiener Malz', quantity: 3000}]};
+    const {rerender} = render(<Details selectedBeer={recipeWithMalt} updateRecipeScaling={jest.fn()}/>);
+
+    expect(screen.queryByText('Pilsner Malz')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', {name: 'Schüttung'}));
+    expect(screen.getByText('Pilsner Malz')).toBeInTheDocument();
+    expect(screen.queryByText('Allgemeine Daten')).not.toBeInTheDocument();
+
+    rerender(<Details selectedBeer={nextRecipe} updateRecipeScaling={jest.fn()}/>);
+    expect(screen.getByText('Wiener Malz')).toBeInTheDocument();
+    expect(screen.queryByText('Pilsner Malz')).not.toBeInTheDocument();
+});
+
 it('keeps the 10 l / 52 % defaults for a legacy recipe without references', () => {
     const legacyBeer = {...beer, referenceVolume: undefined, referenceBrewhouseEfficiency: undefined};
     const updateRecipeScaling = jest.fn();
@@ -70,6 +85,7 @@ it('displays the recipe malt name when no ingredient master data is loaded', () 
     };
 
     render(<Details selectedBeer={beerWithNamedMalt} updateRecipeScaling={jest.fn()} malts={[]} />);
+    fireEvent.click(screen.getByRole('tab', {name: 'Schüttung'}));
 
     expect(screen.getByText('Pilsner Malz')).toBeInTheDocument();
     expect(screen.queryByText('Unbekannte Zutat (ID malt-1)')).not.toBeInTheDocument();
@@ -90,6 +106,7 @@ it('loads the malt master data and resolves a recipe malt by its id', () => {
             malts={[{id: '26', name: 'Wiener Malz'}]}
         />
     );
+    fireEvent.click(screen.getByRole('tab', {name: 'Schüttung'}));
 
     expect(getMalt).toHaveBeenCalledWith(true);
     expect(screen.getByText('Wiener Malz')).toBeInTheDocument();
@@ -103,6 +120,7 @@ it('displays the unknown ingredient fallback when neither recipe nor master data
     };
 
     render(<Details selectedBeer={beerWithUnknownMalt} updateRecipeScaling={jest.fn()} malts={[]} />);
+    fireEvent.click(screen.getByRole('tab', {name: 'Schüttung'}));
 
     expect(screen.getByText('Unbekannte Zutat (ID 44)')).toBeInTheDocument();
 });
@@ -117,6 +135,7 @@ it('displays the recipe hop name when no ingredient master data is loaded', () =
     };
 
     render(<Details selectedBeer={beerWithNamedHop} updateRecipeScaling={jest.fn()} hops={[]} />);
+    fireEvent.click(screen.getByRole('tab', {name: 'Würzekochen'}));
 
     expect(screen.getByText('Citra')).toBeInTheDocument();
     expect(screen.queryByText('Unbekannte Zutat (ID hop-1)')).not.toBeInTheDocument();
@@ -140,6 +159,7 @@ it('loads the hop master data and resolves a recipe hop by its id', () => {
             hops={[{id: '11', name: 'Hallertauer Mittelfrüh'}]}
         />
     );
+    fireEvent.click(screen.getByRole('tab', {name: 'Würzekochen'}));
 
     expect(getHop).toHaveBeenCalledWith(true);
     expect(screen.getByText('Hallertauer Mittelfrüh')).toBeInTheDocument();
@@ -156,6 +176,7 @@ it('displays the unknown ingredient fallback for an unresolved recipe hop', () =
     };
 
     render(<Details selectedBeer={beerWithUnknownHop} updateRecipeScaling={jest.fn()} hops={[]} />);
+    fireEvent.click(screen.getByRole('tab', {name: 'Würzekochen'}));
 
     expect(screen.getByText('Unbekannte Zutat (ID 12)')).toBeInTheDocument();
 });
@@ -170,6 +191,7 @@ it('displays the recipe yeast name when no ingredient master data is loaded', ()
     };
 
     render(<Details selectedBeer={beerWithNamedYeast} updateRecipeScaling={jest.fn()} yeasts={[]} />);
+    fireEvent.click(screen.getByRole('tab', {name: 'Gärung & Reifung'}));
 
     expect(screen.getByText('US-05')).toBeInTheDocument();
     expect(screen.queryByText('Unbekannte Hefe (ID yeast-1)')).not.toBeInTheDocument();
@@ -193,6 +215,7 @@ it('loads the yeast master data and resolves a recipe yeast by its id', () => {
             yeasts={[{id: '7', name: 'SafAle S-04'}]}
         />
     );
+    fireEvent.click(screen.getByRole('tab', {name: 'Gärung & Reifung'}));
 
     expect(getYeast).toHaveBeenCalledWith(true);
     expect(screen.getByText('SafAle S-04')).toBeInTheDocument();
@@ -209,6 +232,7 @@ it('displays the unknown yeast fallback when neither recipe nor master data has 
     };
 
     render(<Details selectedBeer={beerWithUnknownYeast} updateRecipeScaling={jest.fn()} yeasts={[]} />);
+    fireEvent.click(screen.getByRole('tab', {name: 'Gärung & Reifung'}));
 
     expect(screen.getByText('Unbekannte Hefe (ID 8)')).toBeInTheDocument();
 });

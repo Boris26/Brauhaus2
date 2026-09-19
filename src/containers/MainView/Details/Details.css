@@ -1,121 +1,48 @@
-.detailsContainer {
-    display: flex;
-    flex-direction: column;
-    /* KEIN overflow hier – SimpleBar scrollt außen */
+.detailsContainer { height: 100%; min-height: 0; display: flex; flex-direction: column; color: var(--color-text); }
+.recipe-detail-header { padding: var(--spacing-xl); padding-bottom: var(--spacing-lg); flex: 0 0 auto; }
+.recipe-detail-heading h1 { margin: 0; font-size: clamp(1.55rem, 2vw, 2.15rem); line-height: 1.15; }
+.recipe-detail-heading p { margin: var(--spacing-xs) 0 0; color: var(--color-text-secondary); font-size: 1rem; }
+.recipe-metrics { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); margin-top: var(--spacing-lg); }
+.recipe-metrics > span { padding: 6px 11px; border: 1px solid var(--color-border-soft); border-radius: var(--border-radius-pill); background: var(--color-panel-raised); color: var(--color-text); font-weight: 700; font-size: var(--font-size-small); }
+.recipe-metrics small { color: var(--color-text-secondary); font: inherit; font-weight: 500; }
+.recipe-settings { flex: 0 0 auto; display: flex; align-items: flex-end; flex-wrap: wrap; gap: var(--spacing-lg) var(--spacing-xl); padding: var(--spacing-md) var(--spacing-xl); background: var(--color-surface-graph); border-block: 1px solid var(--color-border-soft); }
+.recipe-setting { display: flex; flex-direction: column; gap: var(--spacing-xs); color: var(--color-text-secondary); font-size: var(--font-size-small); font-weight: 700; }
+.recipe-setting-control { display: flex; align-items: center; gap: var(--spacing-sm); color: var(--color-text-secondary); font-weight: 500; }
+.recipe-setting .brauhaus-form-control { width: 5.5rem; min-height: var(--control-height-compact); padding-block: var(--spacing-xs); }
+.brewhouse-efficiency-input::-webkit-inner-spin-button, .brewhouse-efficiency-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.brewhouse-efficiency-input { -moz-appearance: textfield; appearance: textfield; }
+.recipe-reference { align-self: center; color: var(--color-text-muted); font-size: .75rem; }
+.recipe-tabs { flex: 0 0 auto; min-height: var(--control-height-large) !important; border-bottom: 1px solid var(--color-border-soft); background: var(--color-panel-bg); }
+.recipe-tabs .MuiTabs-indicator { height: 3px; background: var(--color-accent); }
+.recipe-tabs .MuiTab-root { min-height: var(--control-height-large); min-width: auto; padding-inline: var(--spacing-md); color: var(--color-text-secondary); font-weight: 700; text-transform: none; }
+.recipe-tabs .MuiTab-root.Mui-selected { color: var(--color-accent-hover); }
+.recipe-tabs .MuiTabs-scrollButtons { color: var(--color-text-secondary); }
+.recipe-tab-content { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: var(--spacing-xl); }
+.recipe-section { max-width: 56rem; margin: 0 auto; }
+.recipe-section h2 { margin: 0 0 var(--spacing-xl); font-size: var(--font-size-section-title); }
+.recipe-section h3 { margin: var(--spacing-2xl) 0 var(--spacing-md); color: var(--color-text-secondary); font-size: var(--font-size-normal); }
+.recipe-data-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 var(--spacing-xl); margin: 0; }
+.recipe-data-item { min-width: 0; display: grid; grid-template-columns: minmax(7rem, .8fr) minmax(0, 1.2fr); gap: var(--spacing-md); padding: var(--spacing-md) 0; border-bottom: 1px solid var(--color-border-soft); }
+.recipe-data-item dt { color: var(--color-text-secondary); font-weight: 600; }
+.recipe-data-item dd { min-width: 0; margin: 0; font-weight: 700; overflow-wrap: anywhere; }
+.recipe-data-grid--compact { max-width: 42rem; }
+.ingredient-list, .process-list { margin: 0; padding: 0; list-style: none; }
+.ingredient-list li { display: flex; justify-content: space-between; align-items: baseline; gap: var(--spacing-lg); padding: var(--spacing-md) 0; border-bottom: 1px solid var(--color-border-soft); }
+.ingredient-list li span { flex: 0 0 auto; color: var(--color-text-secondary); text-align: right; }
+.process-list { max-width: 38rem; }
+.process-step { position: relative; display: grid; grid-template-columns: 2rem 1fr; gap: var(--spacing-md); min-height: 4.5rem; }
+.process-step:not(:last-child)::before { content: ''; position: absolute; top: 2rem; bottom: 0; left: .95rem; width: 2px; background: var(--color-border-strong); }
+.process-marker { z-index: 1; display: grid; place-items: center; align-self: start; width: 2rem; height: 2rem; border-radius: 50%; background: var(--color-accent-subtle); border: 1px solid var(--color-accent-border); color: var(--color-accent-hover); font-weight: 700; }
+.process-values { display: flex; flex-wrap: wrap; gap: var(--spacing-md); margin-top: var(--spacing-xs); color: var(--color-text-secondary); font-size: var(--font-size-small); }
+.recipe-empty { color: var(--color-text-muted); }
+@media (max-width: 1250px) {
+    .recipe-detail-header, .recipe-tab-content { padding: var(--spacing-lg); }
+    .recipe-settings { padding-inline: var(--spacing-lg); gap: var(--spacing-md); }
+    .recipe-data-grid { grid-template-columns: 1fr; }
 }
-
-/* Header bleibt oben kleben */
-.header {
-    background-color: var(--color-accent);
-    height: 57px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 0;
-
-    position: sticky;
-    top: 0;
-    z-index: 10;
+@media (max-width: 900px) {
+    .recipe-detail-header { padding: var(--spacing-md); }
+    .recipe-settings { padding: var(--spacing-sm) var(--spacing-md); }
+    .recipe-reference { width: 100%; }
+    .recipe-tab-content { padding: var(--spacing-md); }
 }
-
-.header-text {
-    font-size: 20px;
-    color: black;
-}
-
-.batch-settings {
-    position: sticky;
-    background: var(--color-surface-graph);
-    padding: 16px 14px; /* Links identisch zu Tabellen */
-    flex-shrink: 0;
-    height: 72px; /* etwas höher */
-    display: flex;
-    align-items: center; /* vertikal zentriert */
-    border-bottom: 1px solid var(--color-gray-very-dark);
-}
-
-/* Schönere Abstände zwischen den Eingabeelementen */
-.batch-settings .settings-row {
-    display: flex;
-    align-items: center;
-    gap: 24px;
-}
-
-.batch-settings label {
-    color: var(--color-white);
-    font-size: 14px;
-    font-weight: 500;
-}
-
-/* Basis Input */
-.batch-select,
-.batch-input {
-    margin-left: 10px;
-    padding: 6px 10px;
-    background-color: var(--color-panel-contrast);
-    color: var(--color-white);
-    border-radius: 6px;
-    border: 1px solid var(--color-border-strong);
-    font-size: 14px;
-    transition: all 0.2s ease;
-    outline: none;
-}
-
-/* Hover */
-.batch-select:hover,
-.batch-input:hover {
-    border-color: var(--color-gray-strong);
-}
-
-/* Fokus (orange glow) */
-.batch-select:focus,
-.batch-input:focus {
-    border-color: var(--color-accent);
-    box-shadow: 0 0 6px var(--shadow-orange-stronger);
-    background-color: var(--color-surface-muted);
-}
-
-/* Select Option Styling (Firefox/Chrome) */
-.batch-select option {
-    background: var(--color-panel-contrast);
-    color: white;
-}
-
-/* Sudhausausbeute bleibt numerisch editierbar, ohne Browser-Spinner. */
-.brewhouse-efficiency-input::-webkit-inner-spin-button,
-.brewhouse-efficiency-input::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-.brewhouse-efficiency-input {
-    -moz-appearance: textfield;
-    appearance: textfield;
-}
-
-.recipe-reference {
-    color: var(--color-gray-light);
-    font-size: 12px;
-    white-space: nowrap;
-}
-
-
-/* Wortkochen Header bleibt wie gehabt */
-.wortBoiling-header {
-    display: flex;
-    border-radius: 5px;
-    background: white;
-    padding: 0.5rem;
-    margin-bottom: 0.2rem;
-    height: 1.5rem;
-    align-items: center;
-}
-
-.wortBoiling-header-text {
-    font-size: 16px;
-    font-family: Arial, Helvetica, sans-serif;
-    color: black;
-    margin-left: 1.5rem;
-}
-
-/* Table colors, spacing and borders come from the shared app-table foundation. */
