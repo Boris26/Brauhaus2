@@ -4,7 +4,7 @@
     height: 100%;
     min-width: 0;
     min-height: 0;
-    padding: var(--space-5);
+    padding: var(--spacing-md) var(--spacing-lg);
     color: var(--text-primary);
     background: var(--bg-app);
 }
@@ -17,23 +17,24 @@
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
-    gap: var(--space-5);
-    margin-bottom: var(--space-5);
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
 }
 
 .brauhaus-page-heading { min-width: 0; }
-.brauhaus-page-heading h1 { margin: 0; font-size: var(--font-size-page-title); line-height: 1.2; }
-.brauhaus-page-heading p { margin: var(--space-1) 0 0; color: var(--text-secondary); line-height: var(--line-height-normal); }
+.brauhaus-page-heading h1 { margin: 0; font-size: var(--font-size-page-title); line-height: 1.1; }
+.brauhaus-page-heading p { margin: 0; color: var(--text-secondary); font-size: var(--font-size-small); line-height: var(--line-height-normal); }
 .brauhaus-page-eyebrow { display: block; margin-bottom: var(--space-1); color: var(--accent); font-size: var(--font-size-small); font-weight: 700; }
 .brauhaus-page-actions { display: flex; flex: 0 0 auto; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
 .brauhaus-page-content { min-width: 0; }
 
 .brauhaus-card {
     min-width: 0;
-    padding: var(--space-5);
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    background: var(--bg-panel);
+    border: 1px solid var(--border-default);
+    border-radius: var(--border-radius-large);
+    box-shadow: 0 2px 6px var(--shadow-card-light);
 }
 
 @media (max-width: 700px) {

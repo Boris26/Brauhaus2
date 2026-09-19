@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-    Typography,
     Table,
     TableBody,
     TableCell,
@@ -12,6 +11,10 @@ import AddIcon from "@mui/icons-material/Add";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import GrainIcon from "@mui/icons-material/Grain";
+import LocalFloristOutlinedIcon from "@mui/icons-material/LocalFloristOutlined";
+import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
+import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
 
 import { Malts } from '../../../model/Malt';
 import { Hops } from '../../../model/Hops';
@@ -75,13 +78,19 @@ export class IngredientsFormPage extends React.Component<any, any> {
 
     renderIngredientAccordion = (aAccordionKey: string, aTitle: string, aContent: React.ReactNode) => {
         const { expandedAccordion } = this.state;
+        const icons: Record<string, React.ReactNode> = {
+            malz: <GrainIcon />,
+            hopfen: <LocalFloristOutlinedIcon />,
+            hefe: <ScienceOutlinedIcon />,
+            "weitere-zutaten": <CategoryOutlinedIcon />
+        };
 
         return (
             <AppAccordion
                 expanded={expandedAccordion === aAccordionKey}
                 onChange={this.handleAccordionChange(aAccordionKey)}
                 className="ingredients-accordion"
-                summary={<AppAccordionHeader title={aTitle} />}
+                summary={<AppAccordionHeader icon={icons[aAccordionKey]} title={aTitle} />}
                 detailsProps={{className: 'ingredients-accordion-details'}}
             >
                 {aContent}
@@ -187,7 +196,7 @@ export class IngredientsFormPage extends React.Component<any, any> {
         return (
             <>
                 <div className="ingredients-toolbar">
-                    <button className="ingredient-action app-table-action" onClick={() => this.setState({ showNewMaltRow: true })} title="Malz hinzufügen" aria-label="Malz hinzufügen"><AddIcon fontSize="small" /></button>
+                    <button className="ingredients-add-button brauhaus-button brauhaus-button-secondary" onClick={() => this.setState({ showNewMaltRow: true })}><AddIcon fontSize="small" />Neues Malz</button>
                 </div>
                 <TableContainer className="ingredients-table-container app-table-container" sx={{ maxHeight: 400 }}>
                     <Table stickyHeader className="app-table app-table--editor">
@@ -216,7 +225,7 @@ export class IngredientsFormPage extends React.Component<any, any> {
                             {malts.map((m: any) => (
                                 <TableRow key={m.id}>
                                     <TableCell>{m.name}</TableCell>
-                                    <TableCell>{m.description}</TableCell>
+                                    <TableCell><span className="ingredient-description" title={m.description}>{m.description}</span></TableCell>
                                     <TableCell>{m.ebc}</TableCell>
                                     <TableCell className="action-cell"><div className="action-buttons app-table-actions"><button className="ingredient-action app-table-action" aria-label={m.name + " bearbeiten"} onClick={() => this.handleOpenEdit("malt", m)}><EditIcon fontSize="small" /></button><button className="ingredient-action app-table-action app-table-action--danger" onClick={() => this.handleDeleteMalt(m)} title="Malz löschen" aria-label={m.name + " löschen"}><DeleteOutlineIcon fontSize="small" /></button></div></TableCell>
                                 </TableRow>
@@ -235,7 +244,7 @@ export class IngredientsFormPage extends React.Component<any, any> {
         return (
             <>
                 <div className="ingredients-toolbar">
-                    <button className="ingredient-action app-table-action" onClick={() => this.setState({ showNewHopRow: true })} title="Hopfen hinzufügen" aria-label="Hopfen hinzufügen"><AddIcon fontSize="small" /></button>
+                    <button className="ingredients-add-button brauhaus-button brauhaus-button-secondary" onClick={() => this.setState({ showNewHopRow: true })}><AddIcon fontSize="small" />Neuer Hopfen</button>
                 </div>
                 <TableContainer className="ingredients-table-container app-table-container" sx={{ maxHeight: 400 }}>
                     <Table stickyHeader className="app-table app-table--editor">
@@ -268,7 +277,7 @@ export class IngredientsFormPage extends React.Component<any, any> {
                                     <TableCell>{h.name}</TableCell>
                                     <TableCell>{h.alpha}</TableCell>
                                     <TableCell>{h.type}</TableCell>
-                                    <TableCell>{h.description}</TableCell>
+                                    <TableCell><span className="ingredient-description" title={h.description}>{h.description}</span></TableCell>
                                     <TableCell className="action-cell"><div className="action-buttons app-table-actions"><button className="ingredient-action app-table-action" aria-label={h.name + " bearbeiten"} onClick={() => this.handleOpenEdit("hop", h)}><EditIcon fontSize="small" /></button><button className="ingredient-action app-table-action app-table-action--danger" onClick={() => this.handleDeleteHop(h)} title="Hopfen löschen" aria-label={h.name + " löschen"}><DeleteOutlineIcon fontSize="small" /></button></div></TableCell>
                                 </TableRow>
                             ))}
@@ -286,7 +295,7 @@ export class IngredientsFormPage extends React.Component<any, any> {
         return (
             <>
                 <div className="ingredients-toolbar">
-                    <button className="ingredient-action app-table-action" onClick={() => this.setState({ showNewYeastRow: true })} title="Hefe hinzufügen" aria-label="Hefe hinzufügen"><AddIcon fontSize="small" /></button>
+                    <button className="ingredients-add-button brauhaus-button brauhaus-button-secondary" onClick={() => this.setState({ showNewYeastRow: true })}><AddIcon fontSize="small" />Neue Hefe</button>
                 </div>
                 <TableContainer className="ingredients-table-container app-table-container" sx={{ maxHeight: 400 }}>
                     <Table stickyHeader className="app-table app-table--editor">
@@ -337,7 +346,7 @@ export class IngredientsFormPage extends React.Component<any, any> {
         return (
             <>
                 <div className="ingredients-toolbar">
-                    <button className="ingredient-action app-table-action" onClick={() => this.setState({ showNewAdditionalIngredientRow: true, additionalIngredientError: "" })} title="Zutat hinzufügen" aria-label="Zutat hinzufügen"><AddIcon fontSize="small" /></button>
+                    <button className="ingredients-add-button brauhaus-button brauhaus-button-secondary" onClick={() => this.setState({ showNewAdditionalIngredientRow: true, additionalIngredientError: "" })}><AddIcon fontSize="small" />Neue Zutat</button>
                 </div>
                 <TableContainer className="ingredients-table-container app-table-container" sx={{ maxHeight: 400 }}>
                     <Table stickyHeader className="app-table app-table--editor">
@@ -367,7 +376,7 @@ export class IngredientsFormPage extends React.Component<any, any> {
                             {additionalIngredients.map((aIngredient: AdditionalIngredient) => (
                                 <TableRow key={aIngredient.id}>
                                     <TableCell>{aIngredient.name}</TableCell>
-                                    <TableCell>{aIngredient.description}</TableCell>
+                                    <TableCell><span className="ingredient-description" title={aIngredient.description}>{aIngredient.description}</span></TableCell>
                                     <TableCell className="action-cell"><div className="action-buttons app-table-actions"><button className="ingredient-action app-table-action" aria-label={aIngredient.name + " bearbeiten"} onClick={() => this.handleOpenEdit("additional", aIngredient)}><EditIcon fontSize="small" /></button><button className="ingredient-action app-table-action app-table-action--danger" onClick={() => this.handleDeleteAdditionalIngredient(aIngredient)} title="Zutat löschen" aria-label={aIngredient.name + " löschen"}><DeleteOutlineIcon fontSize="small" /></button></div></TableCell>
                                 </TableRow>
                             ))}

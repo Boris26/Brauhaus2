@@ -1,36 +1,30 @@
-.BrewingCalculations-outer { max-width: 76rem; margin: 0 auto; }
-.calculator-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
-
-.BrewingCalculations-outer .MuiBox-root {
-    min-width: 0;
-    margin: 0;
-    padding: var(--space-5);
-    color: var(--text-primary);
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md);
-}
-
-.BrewingCalculations-outer .MuiBox-root > .MuiTypography-root {
-    margin: 0 0 var(--space-4);
-    color: var(--text-primary);
-    font-size: var(--font-size-section-title);
-    font-weight: 700;
-}
-
-.BrewingCalculations-outer .MuiPaper-root {
-    margin: 0 !important;
-    padding: 0 !important;
-    color: var(--text-primary);
-    background: transparent;
-    box-shadow: none;
-}
-
-.BrewingCalculations-outer .MuiGrid-container { margin-top: 0 !important; }
-.BrewingCalculations-outer .MuiGrid-item { padding-top: var(--space-4); }
-.BrewingCalculations-outer .MuiTypography-subtitle2 { color: var(--text-secondary) !important; }
+.BrewingCalculations-outer { width: 100%; min-width: 0; }
+.calculator-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-md); }
+.calculator-card { display: flex; flex-direction: column; gap: var(--spacing-lg); background: var(--bg-panel); border-color: var(--border-default); }
+.calculator-card-header { display: flex; align-items: center; gap: var(--spacing-sm); }
+.calculator-card-header h2 { margin: 0; color: var(--text-primary); font-size: var(--font-size-section-title); }
+.calculator-card-header svg { color: var(--accent); font-size: 1.25rem; }
+.calculator-conversion-row { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: var(--spacing-md); }
+.calculator-arrow { color: var(--text-secondary); font-size: var(--font-size-section-title); }
+.calculator-group { display: flex; flex-direction: column; gap: var(--spacing-sm); }
+.calculator-group + .calculator-group { padding-top: var(--spacing-md); border-top: 1px solid var(--border-subtle); }
+.calculator-group h3 { margin: 0; color: var(--text-secondary); font-size: var(--font-size-small); font-weight: 700; }
+.calculator-field-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--spacing-md); }
+.calculator-field-grid--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.calculator-input-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--spacing-md); }
+.calculator-single-field { width: min(100%, 20rem); }
+.BrewingCalculations-outer .MuiInputBase-root { min-height: var(--control-height-compact); }
+.BrewingCalculations-outer .calculator-result-field .MuiInputBase-root { color: var(--text-secondary); background: var(--color-surface-muted); }
 .BrewingCalculations-outer input[type=number]::-webkit-inner-spin-button,
 .BrewingCalculations-outer input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .BrewingCalculations-outer input[type=number] { -moz-appearance: textfield; }
-
-@media (max-width: 950px) { .calculator-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 1100px) {
+  .calculator-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 700px) {
+  .calculator-input-grid, .calculator-field-grid--three { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .calculator-conversion-row, .calculator-field-grid, .calculator-input-grid, .calculator-field-grid--three { grid-template-columns: minmax(0, 1fr); }
+  .calculator-arrow { display: none; }
+}
