@@ -16,8 +16,8 @@ describe('lazy route CSS ownership', () => {
     });
 
     it('does not expose route-level finish button styles', () => {
-        const finishedBrewsCss = readContainerFile('MainView/FinishBrewsBeers/FinishedBrewsTable.css');
-        const beerFormCss = readContainerFile('DatabaseOverview/BeerForm.css');
+        const finishedBrewsCss = readContainerFile('MainView/FinishBrewsBeers/FinishedBrewsTable/FinishedBrewsTable.css');
+        const beerFormCss = readContainerFile('DatabaseOverview/BeerForm/BeerForm.css');
 
         expect(finishedBrewsCss).not.toMatch(/(^|[},]\s*)\.finish-btn(?=[\s,{:.])/m);
         expect(beerFormCss).not.toMatch(/(^|[},]\s*)\.finish-btn(?=[\s,{:.])/m);
@@ -41,7 +41,7 @@ describe('lazy route CSS ownership', () => {
     });
 
     it('keeps scrolling route-local to Settings without changing the Production shell', () => {
-        const settingsCss = readContainerFile('Settings/SettingsPage.css');
+        const settingsCss = readContainerFile('Settings/SettingsPage/SettingsPage.css');
         const productionCss = readContainerFile('Production/Production.css');
 
         expect(settingsCss).toMatch(/\.settings-page\s*\{[^}]*height:\s*100%;/s);

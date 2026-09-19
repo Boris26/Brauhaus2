@@ -7,14 +7,14 @@ import {CONTROLLER_HOME_VIEW, isViewAllowed} from '../utils/viewConfig';
 
 const Main = React.lazy(() => import('./MainView/Main.connect'));
 const Production = React.lazy(() => import('./Production/Production.connect'));
-const DatabaseOverview = React.lazy(() => import('./DatabaseOverview/BeerForm.connect'));
-const FinishedBrewsTable = React.lazy(() => import('./MainView/FinishBrewsBeers/FinishedBrewsTable.connect'));
+const DatabaseOverview = React.lazy(() => import('./DatabaseOverview/BeerForm/BeerForm.connect'));
+const FinishedBrewsTable = React.lazy(() => import('./MainView/FinishBrewsBeers/FinishedBrewsTable/FinishedBrewsTable.connect'));
 const BrewingCalculations = React.lazy(() => import('./BrewingCalculations/BrewingCalculations'));
-const IngredientsFormPage = React.lazy(() => import('./DatabaseOverview/IngredientsFormPage.connect'));
-const SettingsPage = React.lazy(() => import('./Settings/SettingsPage.connect'));
+const IngredientsFormPage = React.lazy(() => import('./DatabaseOverview/IngredientsFormPage/IngredientsFormPage.connect'));
+const SettingsPage = React.lazy(() => import('./Settings/SettingsPage/SettingsPage.connect'));
 const VersionPage = React.lazy(() => import('./Version/VersionPage'));
 const DashboardPage = React.lazy(() => import('./Dashboard/DashboardPage.connect'));
-const FermentationMeasurementsPage = React.lazy(() => import('./MainView/FinishBrewsBeers/FermentationMeasurementsPage'));
+const FermentationMeasurementsPage = React.lazy(() => import('./MainView/FinishBrewsBeers/FermentationMeasurements/FermentationMeasurementsPage/FermentationMeasurementsPage'));
 
 interface indexMainProps {
     viewState: Views;

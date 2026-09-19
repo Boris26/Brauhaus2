@@ -3,7 +3,7 @@
 ## Architekturfund
 
 - Der Service Worker der PWA wird in `src/index.tsx` bei `window.load` registriert und lädt `public/service-worker.js` nur in Production-Builds.
-- Die UI-Einstellungen liegen in `src/containers/Settings/SettingsPage.tsx` und verwenden bestehende Klassenkomponenten und CSS in `SettingsPage.css`.
+- Die UI-Einstellungen liegen in `src/containers/Settings/SettingsPage/SettingsPage.tsx` und verwenden bestehende Klassenkomponenten und CSS in `SettingsPage.css`.
 - Mobil wird dieselbe `SettingsPage` über den Tab `Einstellungen` in `MobileProductionView` geöffnet; es gibt keine separate mobile Push-Logik.
 - Die mobile Shell nutzt eine interne Tab-Umschaltung (`Status`, `Aktiver Sud`, `Berechnungen`, `Einstellungen`). Header/Tabs bleiben im mobilen Layout oberhalb des Inhalts, während der Container `.mobile-content` vertikal scrollt.
 - Für Android-Chrome und den installierten PWA-Modus verwendet die mobile Hülle `100dvh` mit `100vh`-Fallback und Safe-Area-Padding. So werden Inhalte nicht durch Browser-Chrome oder den unteren Bildschirmrand abgeschnitten.

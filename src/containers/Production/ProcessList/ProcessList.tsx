@@ -6,7 +6,7 @@ import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from
 import {ProcedureType} from "../../../enums/eProcedureType";
 import {TimeFormatter} from "../../../utils/TimeFormatter";
 import {getConfirmationRequestViewModel} from "../../../utils/brewingStatus/selectors";
-import {ControlConfirmationNotice, HopReminderNotice} from "../components/InlineProcessNotice";
+import {ControlConfirmationNotice, HopReminderNotice} from "../components/InlineProcessNotice/InlineProcessNotice";
 
 export enum ProcessListEntryType {
     HEATING = "HEATING",
