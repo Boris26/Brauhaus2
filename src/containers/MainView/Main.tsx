@@ -1,68 +1,32 @@
 import React from 'react';
-
-import Details from "./Details/Details.connect";
-import SimpleBar from 'simplebar-react';
-import BeerTable from "./BeerRecipes/Table/Table.connect";
-import {Beer} from "../../model/Beer";
+import Details from './Details/Details.connect';
+import BeerTable from './BeerRecipes/Table/Table.connect';
+import {Beer} from '../../model/Beer';
 import './Main.css';
 
 interface MainProps {
-beers: Beer[]
-getBeers: (isFetching:boolean) => void;
+    beers: Beer[];
+    getBeers: (isFetching: boolean) => void;
 }
 
-interface MainState
-{
-    maxHeight:number;
-}
-export class Main extends React.Component<MainProps,MainState> {
-    constructor(props: MainProps) {
-        super(props);
-        this.state={
-            maxHeight:0,
-        };
-    }
-
+export class Main extends React.Component<MainProps> {
     componentDidMount() {
-        const {getBeers } = this.props;
-        getBeers(true);
-        this.calculateMaxHeight();
-        window.addEventListener('resize', this.calculateMaxHeight)
+        this.props.getBeers(true);
     }
-
-    componentWillUnmount() {
-        window.removeEventListener('resize', this.calculateMaxHeight);
-    }
-
-    componentDidUpdate(prevProps: Readonly<MainProps>, prevState: Readonly<{}>, snapshot?: any) {
-
-    }
-
-    calculateMaxHeight = ()=>
-    {
-        const windowHeight = window.innerHeight;
-        const maxHeightPercentage = 0.89;
-        const calculatedMaxHeight = windowHeight * maxHeightPercentage;
-        this.setState({ maxHeight: calculatedMaxHeight });
-    }
-
 
     render() {
-        const { maxHeight } = this.state;
-
         return (
             <div className="main-view">
-                <div className="CustomTable">
-                    <SimpleBar style={{ maxHeight: maxHeight+'px' }}>
-                      <BeerTable/>
-                    </SimpleBar>
-                </div>
-                <div className="Details">
-                    <SimpleBar style={{ maxHeight: maxHeight+'px' }}>
-                        <Details/>
-                    </SimpleBar>
-
-                </div>
+                <section className="CustomTable" aria-labelledby="recipe-list-title">
+                    <header className="recipe-list-header">
+                        <h1 id="recipe-list-title">Rezepte</h1>
+                        <p>Alle Rezepte im Überblick</p>
+                    </header>
+                    <div className="recipe-list-scroll"><BeerTable/></div>
+                </section>
+                <section className="Details" aria-label="Rezeptdetails">
+                    <Details/>
+                </section>
             </div>
         );
     }

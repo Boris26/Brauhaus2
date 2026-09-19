@@ -1,6 +1,7 @@
 .Table.app-table-container {
   min-width: 0;
-  overflow-x: auto;
+  overflow: visible !important;
+  border-radius: 0 !important;
 }
 
 .Table.app-table {
@@ -16,6 +17,12 @@
 .Table .table-cell {
   vertical-align: middle;
 }
+
+.Table .table-cell--name { font-weight: 650; }
+.Table .app-table__row--selected .table-cell--name { color: var(--color-accent-hover); }
+.Table .app-table-actions { justify-content: flex-end; gap: var(--spacing-xs); }
+.Table .MuiTableCell-root:last-child { width: 7rem; text-align: right; }
+.Table .app-table-action svg { margin-top: 0 !important; }
 
 .Table .table-action-button {
   color: var(--color-text);

@@ -41,10 +41,8 @@ export class Index extends React.Component<indexMainProps> {
 
             <Suspense fallback={<div className="view-loading" role="status">Lade Ansicht…</div>}>
             <div className="IndexContent">
-                <SimpleBar style={{maxHeight: '100%', overflowY: 'auto'}}>
-                    {activeView === Views.DASHBOARD && <DashboardPage />}
-                    {activeView === Views.MAIN && <Main/>}
-                </SimpleBar>
+                {activeView === Views.DASHBOARD && <SimpleBar style={{maxHeight: '100%', overflowY: 'auto'}}><DashboardPage /></SimpleBar>}
+                {activeView === Views.MAIN && <Main/>}
                 {activeView === Views.PRODUCTION && <Production/>}
                 {activeView === Views.DATABASE && <DatabaseOverview></DatabaseOverview>}
                 <div className="ingredients-wrapper">
