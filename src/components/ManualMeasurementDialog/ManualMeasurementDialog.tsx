@@ -1,5 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {Alert, Button, CircularProgress, TextField} from '@mui/material';
+import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined';
 import {connect} from 'react-redux';
 import AppDialog from '../AppDialog/AppDialog';
 import {FermentationActions} from '../../actions/fermentation.actions';
@@ -52,8 +53,8 @@ export const ManualMeasurementDialogView: React.FC<Props> = ({open, beerId, onCl
   };
 
   const unavailable = brewState !== eBrewState.FERMENTATION;
-  return <AppDialog open={open} onClose={onClose} disableClose={saving} title="Manuelle Gärungsmessung" maxWidth="xs" className="manual-measurement-dialog" icon={null}
-    actions={<><Button onClick={onClose} disabled={saving}>Abbrechen</Button><Button variant="contained" onClick={submit} disabled={saving || unavailable}>{saving ? <><CircularProgress size={18} sx={{mr: 1}}/>Speichert …</> : 'Speichern'}</Button></>}>
+  return <AppDialog open={open} onClose={onClose} disableClose={saving} title="Manuelle Gärungsmessung" maxWidth="xs" className="manual-measurement-dialog" icon={<ScienceOutlinedIcon/>}
+    actions={<><Button className="brauhaus-button brauhaus-button-secondary" onClick={onClose} disabled={saving}>Abbrechen</Button><Button className="brauhaus-button brauhaus-button-primary" color="primary" variant="contained" onClick={submit} disabled={saving || unavailable}>{saving ? <><CircularProgress size={18} sx={{mr: 1}}/>Speichert …</> : 'Speichern'}</Button></>}>
     {unavailable && <Alert severity="warning">Manuelle Messungen sind nur während der aktiven Gärung möglich.</Alert>}
     {error && <Alert severity="error">Die Messung konnte nicht gespeichert werden. Bitte erneut versuchen.</Alert>}
     {validation && <Alert severity="error">{validation}</Alert>}

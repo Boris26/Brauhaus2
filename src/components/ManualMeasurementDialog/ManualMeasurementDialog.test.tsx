@@ -8,11 +8,13 @@ describe('ManualMeasurementDialog', () => {
   beforeEach(() => { jest.clearAllMocks(); jest.useFakeTimers().setSystemTime(new Date('2026-09-19T10:15:00Z')); });
   afterEach(() => jest.useRealTimers());
 
-  it('uses the shared dialog without an informational icon', () => {
+  it('uses the shared Brauhaus dialog styles and a measurement icon', () => {
     render(<ManualMeasurementDialogView {...props} />);
     const dialog = screen.getByRole('dialog', {name: 'Manuelle Gärungsmessung'});
     expect(dialog).toHaveClass('app-dialog');
-    expect(dialog.querySelector('.app-dialog__icon')).not.toBeInTheDocument();
+    expect(dialog.querySelector('.app-dialog__icon')).toBeInTheDocument();
+    expect(screen.getByRole('button', {name: 'Abbrechen'})).toHaveClass('brauhaus-button-secondary');
+    expect(screen.getByRole('button', {name: 'Speichern'})).toHaveClass('brauhaus-button-primary');
   });
 
   it('uses the current time again on every opening and allows changing it', () => {
