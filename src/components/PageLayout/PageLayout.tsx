@@ -7,6 +7,8 @@ interface PageHeaderProps {
     subtitle?: React.ReactNode;
     actions?: React.ReactNode;
     className?: string;
+    /** @deprecated Page headers deliberately do not render icons. */
+    icon?: React.ReactNode;
 }
 
 const classes = (...values: Array<string | undefined>) => values.filter(Boolean).join(' ');
