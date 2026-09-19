@@ -236,3 +236,34 @@ it('displays the unknown yeast fallback when neither recipe nor master data has 
 
     expect(screen.getByText('Unbekannte Hefe (ID 8)')).toBeInTheDocument();
 });
+
+it('shows decoction as a confirmation step without empty or stale measurements', () => {
+    const beerWithDecoction = {
+        ...beer,
+        fermentation: [{type: 'RAST', procedureType: 'DECOCTION', executionMode: 'CONFIRMATION_HOLD', temperature: 0, time: 0}],
+    } as Beer;
+
+    render(<Details selectedBeer={beerWithDecoction} updateRecipeScaling={jest.fn()} />);
+    fireEvent.click(screen.getByRole('tab', {name: 'Maischen'}));
+
+    expect(screen.getByText('Dekoktion')).toBeInTheDocument();
+    expect(screen.getByText('bis Bestätigung')).toBeInTheDocument();
+    expect(screen.queryByText(/°C| min/)).not.toBeInTheDocument();
+});
+
+it('does not append units to missing optional values', () => {
+    const beerWithoutOptionalValues = {
+        ...beer,
+        fermentationMaturation: {...beer.fermentationMaturation, fermentationTemperature: undefined},
+        wortBoiling: {...beer.wortBoiling, hops: [{id: 'hop-1', name: 'Citra', quantity: 20, usage: HopUsage.BOIL}]},
+    } as unknown as Beer;
+
+    const {container} = render(<Details selectedBeer={beerWithoutOptionalValues} updateRecipeScaling={jest.fn()} />);
+    fireEvent.click(screen.getByRole('tab', {name: 'Gärung & Reifung'}));
+    expect(screen.getByText('—')).toBeInTheDocument();
+    expect(container).not.toHaveTextContent('— °C');
+
+    fireEvent.click(screen.getByRole('tab', {name: 'Würzekochen'}));
+    expect(screen.getByText('20 g')).toBeInTheDocument();
+    expect(container).not.toHaveTextContent('— min');
+});
