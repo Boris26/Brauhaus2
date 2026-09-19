@@ -8,6 +8,13 @@ describe('ManualMeasurementDialog', () => {
   beforeEach(() => { jest.clearAllMocks(); jest.useFakeTimers().setSystemTime(new Date('2026-09-19T10:15:00Z')); });
   afterEach(() => jest.useRealTimers());
 
+  it('uses the shared dialog without an informational icon', () => {
+    render(<ManualMeasurementDialogView {...props} />);
+    const dialog = screen.getByRole('dialog', {name: 'Manuelle Gärungsmessung'});
+    expect(dialog).toHaveClass('app-dialog');
+    expect(dialog.querySelector('.app-dialog__icon')).not.toBeInTheDocument();
+  });
+
   it('uses the current time again on every opening and allows changing it', () => {
     const {rerender} = render(<ManualMeasurementDialogView {...props} />);
     expect(screen.getByLabelText('Datum / Uhrzeit')).toHaveValue('2026-09-19T10:15');
@@ -26,6 +33,13 @@ describe('ManualMeasurementDialog', () => {
     fireEvent.change(screen.getByLabelText('Notiz'), {target: {value: 'Kontrollmessung'}});
     fireEvent.click(screen.getByRole('button', {name: 'Speichern'}));
     expect(props.saveMeasurement).toHaveBeenCalledWith(expect.objectContaining({finishedBeerId: 'brew-1', beerTemperatureC: 18.4, ambientTemperatureC: 16.2, plato: 5.1, note: 'Kontrollmessung'}));
+  });
+
+  it('keeps the cancel action unchanged', () => {
+    render(<ManualMeasurementDialogView {...props} />);
+    fireEvent.click(screen.getByRole('button', {name: 'Abbrechen'}));
+    expect(props.onClose).toHaveBeenCalledTimes(1);
+    expect(props.saveMeasurement).not.toHaveBeenCalled();
   });
 
   it.each([eBrewState.MATURATION, eBrewState.FINISHED])('blocks saving in %s', brewState => {
