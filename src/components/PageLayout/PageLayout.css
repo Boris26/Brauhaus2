@@ -1,0 +1,43 @@
+.brauhaus-page {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    padding: var(--space-5);
+    color: var(--text-primary);
+    background: var(--bg-app);
+}
+
+.brauhaus-page--scroll { overflow: auto; overscroll-behavior: contain; }
+.brauhaus-page--contained { display: flex; flex-direction: column; overflow: hidden; }
+.brauhaus-page--contained .brauhaus-page-content { flex: 1 1 auto; min-height: 0; }
+
+.brauhaus-page-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-5);
+    margin-bottom: var(--space-5);
+}
+
+.brauhaus-page-heading { min-width: 0; }
+.brauhaus-page-heading h1 { margin: 0; font-size: var(--font-size-page-title); line-height: 1.2; }
+.brauhaus-page-heading p { margin: var(--space-1) 0 0; color: var(--text-secondary); line-height: var(--line-height-normal); }
+.brauhaus-page-eyebrow { display: block; margin-bottom: var(--space-1); color: var(--accent); font-size: var(--font-size-small); font-weight: 700; }
+.brauhaus-page-actions { display: flex; flex: 0 0 auto; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-2); }
+.brauhaus-page-content { min-width: 0; }
+
+.brauhaus-card {
+    min-width: 0;
+    padding: var(--space-5);
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+}
+
+@media (max-width: 700px) {
+    .brauhaus-page { padding: var(--space-4); }
+    .brauhaus-page-header { align-items: stretch; flex-direction: column; gap: var(--space-3); }
+    .brauhaus-page-actions { justify-content: flex-start; }
+}

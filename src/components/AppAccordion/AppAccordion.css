@@ -1,9 +1,8 @@
 .app-accordion.MuiAccordion-root {
     min-width: 0;
     color: var(--text-primary);
-    background: var(--bg-panel);
-    border: 1px solid var(--accent);
-    border-left-width: 3px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
     border-radius: var(--border-radius-large) !important;
     box-shadow: 0 2px 6px var(--shadow-card-light);
     overflow: hidden;
@@ -11,6 +10,7 @@
 
 .app-accordion.MuiAccordion-root::before { display: none; }
 .app-accordion.MuiAccordion-root.Mui-expanded { margin: 0; }
+.app-accordion.MuiAccordion-root.Mui-expanded { border-left: 3px solid var(--accent); }
 
 .app-accordion-group {
     display: flex;
@@ -40,6 +40,7 @@
 }
 
 .app-accordion-summary .MuiAccordionSummary-expandIconWrapper { color: var(--text-secondary); }
+.app-accordion-summary .MuiAccordionSummary-expandIconWrapper.Mui-expanded { color: var(--accent); }
 .app-accordion-icon { display: flex; flex: 0 0 auto; color: var(--accent); }
 .app-accordion-icon svg { font-size: 1.5rem; }
 .app-accordion-heading { display: flex; min-width: 0; flex: 1 1 auto; flex-direction: column; }
@@ -49,7 +50,7 @@
 .app-accordion-details.MuiAccordionDetails-root {
     min-width: 0;
     padding: var(--spacing-md) var(--spacing-lg) var(--spacing-lg);
-    background: var(--bg-panel);
+    background: var(--bg-card);
     border-top: 1px solid var(--border-subtle);
 }
 

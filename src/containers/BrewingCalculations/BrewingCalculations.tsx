@@ -1,7 +1,7 @@
 import React from 'react';
-import SimpleBar from 'simplebar-react';
 import { Paper, TextField, Typography, Box, Grid } from '@mui/material';
 import './BrewingCalculations.css';
+import {PageLayout} from '../../components/PageLayout/PageLayout';
 import {
     brixToPlato, calculateFromRefractometer,
     platoToBrix,
@@ -357,18 +357,18 @@ class BrewingCalculations extends React.Component<{}, BrewingCalculationsState> 
 
     render() {
         return (
-            <div className="BrewingCalculations-outer">
-                <SimpleBar style={{ maxHeight: '60%' }}>
-                    <Paper elevation={3} style={{  margin: 24, padding: 24 }}>
-                        <Typography variant="h5" gutterBottom>Bierbrau-Berechnungen</Typography>
+            <PageLayout
+                title="Bierbrau-Berechnungen"
+                subtitle="Umrechnungen und Hilfsrechner für den Brauprozess."
+                contentClassName="BrewingCalculations-outer"
+            >
+                    <div className="calculator-grid">
                         {this.renderBrixPlatoBlock()}
                         {this.renderTemperatureCorrectionBlock()}
                         {this.renderTerrillBlock()}
                         {this.renderCarbonationBlock()}
-
-                    </Paper>
-                </SimpleBar>
-            </div>
+                    </div>
+            </PageLayout>
         );
     }
 }

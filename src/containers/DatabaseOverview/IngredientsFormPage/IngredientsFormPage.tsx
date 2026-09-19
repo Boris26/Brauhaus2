@@ -12,7 +12,6 @@ import AddIcon from "@mui/icons-material/Add";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import SimpleBar from "simplebar-react";
 
 import { Malts } from '../../../model/Malt';
 import { Hops } from '../../../model/Hops';
@@ -24,6 +23,7 @@ import { AdditionalIngredient } from "../../../model/AdditionalIngredient";
 import EditIcon from "@mui/icons-material/Edit";
 import {AppAccordion, AppAccordionHeader} from "../../../components/AppAccordion/AppAccordion";
 import {IngredientEditDialog, IngredientEditValue, IngredientKind} from "./IngredientEditDialog/IngredientEditDialog";
+import {PageLayout} from '../../../components/PageLayout/PageLayout';
 
 
 export class IngredientsFormPage extends React.Component<any, any> {
@@ -380,18 +380,15 @@ export class IngredientsFormPage extends React.Component<any, any> {
 
     render() {
         return (
-            <SimpleBar
-                className="ingredients-page-scroll"
-                ref={(ref) => { this.simpleBarRef = ref }}
-                style={{ height: "calc(100vh - 0px)" }}
-                autoHide={false}
-            >
-                <div className='containerIngredientsForm app-accordion-group'>
+            <>
+            <PageLayout title="Zutatenverwaltung" subtitle="Malze, Hopfen, Hefen und weitere Zutaten zentral pflegen." contentClassName="containerIngredientsForm">
+                <div className='app-accordion-group'>
                     {this.renderIngredientAccordion("malz", "Malz", this.renderMaltContent())}
                     {this.renderIngredientAccordion("hopfen", "Hopfen", this.renderHopContent())}
                     {this.renderIngredientAccordion("hefe", "Hefe", this.renderYeastContent())}
                     {this.renderIngredientAccordion("weitere-zutaten", "Weitere Zutaten", this.renderAdditionalIngredientsContent())}
                 </div>
+            </PageLayout>
                 <IngredientEditDialog
                     kind={this.state.editingKind || "malt"}
                     value={this.state.editingValue}
@@ -401,7 +398,7 @@ export class IngredientsFormPage extends React.Component<any, any> {
                     onCancel={this.handleCancelEdit}
                     onSave={this.handleSaveEdit}
                 />
-            </SimpleBar>
+            </>
         );
     }
 }

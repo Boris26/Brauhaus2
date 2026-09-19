@@ -1,20 +1,9 @@
-.ingredients-page-scroll {
-    width: 100%;
-    max-width: 100%;
-}
-
-.ingredients-page-scroll .simplebar-content {
-    min-width: 0;
-}
-
 .containerIngredientsForm {
     box-sizing: border-box;
-    margin: 10px;
-    width: auto;
-    max-width: calc(100% - 20px);
+    width: 100%;
+    max-width: 76rem;
+    margin: 0 auto;
     min-width: 0;
-    height: auto !important;
-    overflow: visible !important;
 }
 
 .containerIngredientsForm .ingredients-accordion-details {
@@ -23,8 +12,8 @@
 
 .containerIngredientsForm .ingredients-toolbar {
     display: flex;
-    gap: 8px;
-    margin-bottom: 8px;
+    gap: var(--space-2);
+    margin-bottom: var(--space-2);
 }
 
 .containerIngredientsForm .ingredients-table-container {
@@ -57,8 +46,8 @@
     padding: 4px 8px;
     background-color: var(--bg-transparent-black);
     border: 1px solid var(--border-default-mid);
-    border-radius: 4px;
-    color: white;
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
 }
 
 .containerIngredientsForm .table-edit-field:focus {
@@ -74,7 +63,7 @@
     display: flex;
     flex-direction: row;
     align-items: center;
-    gap: 8px;
+    gap: var(--space-2);
     white-space: nowrap;
     min-height: 34px;
 }

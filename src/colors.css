@@ -2,6 +2,7 @@
 :root {
   /* Fixed Brauhaus surface hierarchy: app -> panel -> card/row -> elevated. */
   --bg-app: #252729;
+  --bg-surface: #2b2e31;
   --bg-nav: #2b2e31;
   --bg-panel: #2e3134;
   --bg-card: #35383b;
@@ -23,6 +24,7 @@
   --accent: #c9822f;
   --accent-hover: #dc9845;
   --accent-active: #ad6c23;
+  --accent-soft: rgba(201, 130, 47, 0.16);
   --danger: #d32f2f;
   --warning: #d6a33a;
   --success: #3fa66b;
@@ -154,6 +156,14 @@
   --spacing-xl: 24px;
   --spacing-2xl: 32px;
 
+  /* Short semantic aliases used by the shared page primitives. */
+  --space-1: var(--spacing-xs);
+  --space-2: var(--spacing-sm);
+  --space-3: var(--spacing-md);
+  --space-4: var(--spacing-lg);
+  --space-5: var(--spacing-xl);
+  --space-6: var(--spacing-2xl);
+
   --control-height-compact: 36px;
   --control-height: 44px;
   --control-height-large: 48px;
@@ -163,6 +173,8 @@
   --border-radius-medium: 6px;
   --border-radius-large: 10px;
   --border-radius-pill: 999px;
+  --radius-sm: var(--border-radius-small);
+  --radius-md: var(--border-radius-medium);
 
   --font-size-small: 0.875rem;
   --font-size-normal: 1rem;
