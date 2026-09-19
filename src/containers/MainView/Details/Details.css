@@ -32,6 +32,11 @@
 }
 
 .recipe-metrics > span {
+    display: inline-flex;
+    min-height: 1.875rem;
+    align-items: center;
+    gap: .25em;
+    box-sizing: border-box;
     padding: var(--spacing-xs) var(--spacing-md);
     border: 1px solid var(--border-subtle);
     border-radius: var(--border-radius-pill);
@@ -50,7 +55,7 @@
 
 .recipe-settings {
     flex: 0 0 auto;
-    padding: 0 var(--spacing-xl) var(--spacing-xl);
+    padding: var(--spacing-xs) var(--spacing-xl) var(--spacing-xl);
 }
 
 .recipe-settings-inner {
@@ -64,6 +69,8 @@
 .recipe-setting {
     display: flex;
     min-width: 14rem;
+    min-height: 6.25rem;
+    box-sizing: border-box;
     flex-direction: column;
     justify-content: space-between;
     gap: var(--spacing-sm);
@@ -86,7 +93,7 @@
 
 .recipe-setting .brauhaus-form-control {
     width: 5.5rem;
-    min-height: var(--control-height-compact);
+    height: var(--control-height);
     padding-block: var(--spacing-xs);
 }
 
@@ -123,12 +130,12 @@
     min-width: auto;
     min-height: var(--control-height-large);
     padding-inline: var(--spacing-lg);
-    color: var(--text-muted);
+    color: var(--text-secondary);
     font-weight: 650;
     text-transform: none;
 }
 
-.recipe-tabs .MuiTab-root.Mui-selected { color: var(--text-primary); }
+.recipe-tabs .MuiTab-root.Mui-selected { color: var(--text-primary); font-weight: 700; }
 .recipe-tabs .MuiTabs-scrollButtons { color: var(--text-secondary); }
 
 .recipe-tab-content {
@@ -151,12 +158,12 @@
 .recipe-card {
     padding: var(--spacing-xl);
     border: 1px solid var(--border-subtle);
-    border-radius: var(--border-radius-large);
-    background: var(--bg-input);
+    border-radius: var(--border-radius-medium);
+    background: var(--bg-card);
     box-shadow: 0 10px 24px var(--shadow-primary);
 }
 
-.recipe-card--timeline { max-width: 48rem; }
+.recipe-card--mashing { max-width: 64rem; }
 
 .recipe-section h2 {
     margin: 0 0 var(--spacing-xl);
@@ -206,7 +213,7 @@
 }
 
 .recipe-data-grid--compact { max-width: 44rem; }
-.ingredient-list, .process-list { margin: 0; padding: 0; list-style: none; }
+.ingredient-list, .mash-step-grid { margin: 0; padding: 0; list-style: none; }
 
 .ingredient-list {
     overflow: hidden;
@@ -233,34 +240,36 @@
     text-align: right;
 }
 
-.process-list { max-width: 34rem; }
-
-.process-step {
-    position: relative;
+.mash-step-grid {
     display: grid;
-    grid-template-columns: 2rem 1fr;
-    gap: var(--spacing-lg);
-    min-height: 5.25rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--spacing-md);
 }
 
-.process-step:not(:last-child)::before {
-    content: '';
-    position: absolute;
-    top: 2rem;
-    bottom: 0;
-    left: .95rem;
-    width: 2px;
-    background: var(--border-strong);
+.mash-step-card {
+    min-width: 0;
+    min-height: 7.25rem;
+    padding: var(--spacing-lg);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--border-radius-medium);
+    background: var(--bg-panel);
 }
 
-.process-marker {
-    z-index: 1;
+.mash-step-heading {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+}
+
+.mash-step-heading strong { min-width: 0; font-weight: 700; overflow-wrap: anywhere; }
+
+.mash-step-number {
     display: grid;
     place-items: center;
-    align-self: start;
-    width: 2rem;
-    height: 2rem;
-    border: 1px solid var(--accent-border);
+    flex: 0 0 auto;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 1px solid var(--border-default);
     border-radius: 50%;
     background: var(--accent-subtle);
     color: var(--accent-hover);
@@ -282,6 +291,7 @@
     .recipe-detail-header, .recipe-tab-content { padding: var(--spacing-lg); }
     .recipe-settings { padding: 0 var(--spacing-lg) var(--spacing-lg); }
     .recipe-data-grid { grid-template-columns: 1fr; }
+    .mash-step-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 900px) {
@@ -292,4 +302,5 @@
     .recipe-tab-content { padding: var(--spacing-md); }
     .recipe-card { padding: var(--spacing-lg); }
     .recipe-data-item { grid-template-columns: minmax(6.5rem, .8fr) minmax(0, 1.2fr); }
+    .mash-step-grid { grid-template-columns: 1fr; }
 }

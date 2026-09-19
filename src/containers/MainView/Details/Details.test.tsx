@@ -247,7 +247,7 @@ it('shows decoction as a confirmation step without empty or stale measurements',
     fireEvent.click(screen.getByRole('tab', {name: 'Maischen'}));
 
     expect(screen.getByText('Dekoktion')).toBeInTheDocument();
-    expect(screen.getByText('bis Bestätigung')).toBeInTheDocument();
+    expect(screen.getByText('Bis Bestätigung')).toBeInTheDocument();
     expect(screen.queryByText(/°C| min/)).not.toBeInTheDocument();
 });
 
