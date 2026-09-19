@@ -1,0 +1,271 @@
+import React from 'react';
+import {Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TableSortLabel} from '@mui/material';
+import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import CloseIcon from '@mui/icons-material/Close';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import SportsBarIcon from '@mui/icons-material/SportsBar';
+import './Table.css';
+import {Beer} from "../../../../model/Beer";
+import {WaterHeatingTimeCalculator, cookingTimeOptions} from "../../../../utils/WaterHeatingTimeCalculator";
+import {MashingType} from "../../../../enums/eMashingType";
+import ModalDialog, {DialogType} from "../../../../components/ModalDialog/ModalDialog";
+
+export interface BeerTableProps {
+    beers: Beer[];
+    setSelectedBeer: (beer: Beer) => void;
+    setBeerToBrew: (beer: Beer | undefined) => void;
+    beerToBrew?: Beer;
+    isPollingRunning?: boolean;
+    exportShoppingListPdf: (beer: Beer) => void;
+    selectedBeer: Beer;
+    deleteBeer: (aBeerId: string) => void;
+}
+
+
+interface BeerTableState {
+    sortConfig: SortConfig;
+    selectedBeerId: string | null;
+    beerPendingDelete?: Beer;
+}
+
+
+interface SortConfig {
+    key: keyof Beer;
+    direction: 'asc' | 'desc';
+}
+
+export class BeerTableComponent extends React.Component<BeerTableProps, BeerTableState> {
+    constructor(props: BeerTableProps) {
+        super(props);
+
+        this.state = {
+            sortConfig: {key: 'name', direction: 'asc'}, selectedBeerId: null, beerPendingDelete: undefined
+        };
+    }
+
+
+
+    componentDidUpdate(prevProps: Readonly<BeerTableProps>) {
+        const {selectedBeer} = this.props;
+
+        if (selectedBeer?.id !== prevProps.selectedBeer?.id) {
+            this.setState({ selectedBeerId: selectedBeer ? selectedBeer.id : null });
+        }
+    }
+
+
+    onSort = (key: keyof Beer) => {
+        const {sortConfig} = this.state;
+        let direction: 'asc' | 'desc' = 'asc';
+        if (sortConfig.key === key && sortConfig.direction === 'asc') {
+            direction = 'desc';
+        }
+        this.setState({sortConfig: {key, direction}});
+    };
+    onSelectBeer = (aBeer: Beer) => {
+        const b = new WaterHeatingTimeCalculator();
+        const opt: cookingTimeOptions = {
+            currentTemperature: 20,
+            targetTemperature: 60,
+            liters: 30,
+            type: MashingType.IN,
+            malzIn_g: 10000
+        }
+        b.setOptions(opt);
+        b.getTime();
+        const {setSelectedBeer} = this.props;
+        setSelectedBeer(aBeer);
+        this.setState({selectedBeerId: aBeer.id});
+    }
+
+    onBrewBeer = (beer: Beer) => {
+        const {setBeerToBrew, selectedBeer} = this.props;
+        // selectedBeer contains the temporary plan produced by the scaler. The
+        // immutable recipe in `beers` must not replace it when brewing starts.
+        setBeerToBrew(selectedBeer.id === beer.id ? selectedBeer : beer);
+    }
+
+    onCancelBrew = () => {
+        const {setBeerToBrew} = this.props;
+        setBeerToBrew(undefined);
+    }
+
+    handleExportShoppingListPdfForBeer = (aBeer: Beer) => {
+        const {selectedBeer} = this.props
+        if(selectedBeer.id === aBeer.id)
+        {
+            this.props.exportShoppingListPdf(selectedBeer);
+        }
+
+
+    };
+
+    handleDeleteBeer = (aBeer: Beer) => {
+        this.setState({beerPendingDelete: aBeer});
+    }
+
+    confirmDeleteBeer = () => {
+        const {beerPendingDelete} = this.state;
+        if (!beerPendingDelete) return;
+
+        if (this.props.isPollingRunning && this.props.beerToBrew?.id === beerPendingDelete.id) return;
+
+        this.props.deleteBeer(beerPendingDelete.id);
+        this.setState({beerPendingDelete: undefined});
+    }
+
+    cancelDeleteBeer = () => {
+        this.setState({beerPendingDelete: undefined});
+    }
+
+    render() {
+        const {beers, beerToBrew, isPollingRunning} = this.props;
+        const {sortConfig, selectedBeerId, beerPendingDelete} = this.state;
+        const aBeerNamePart = beerPendingDelete?.name ? ` „${beerPendingDelete.name}“` : '';
+        const aDeleteMessage = `Möchtest du das Rezept${aBeerNamePart} wirklich löschen?`;
+        if (beers.length > 0) {
+            const sortedData = [...beers].sort((a, b) => {
+                const {key, direction} = sortConfig;
+                const aValue = a[key] ?? '';
+                const bValue = b[key] ?? '';
+                if (aValue < bValue) {
+                    return direction === 'asc' ? -1 : 1;
+                }
+                if (aValue > bValue) {
+                    return direction === 'asc' ? 1 : -1;
+                }
+                return 0;
+            });
+
+            return (
+                <>
+                    <ModalDialog
+                        type={DialogType.CONFIRM}
+                        open={!!beerPendingDelete}
+                        header={"Löschen bestätigen"}
+                        content={aDeleteMessage}
+                        onConfirm={this.confirmDeleteBeer}
+                        onCancel={this.cancelDeleteBeer}
+                        confirmLabel={"Löschen"}
+                        cancelLabel={"Abbrechen"}
+                        showCancelButton={true}
+                    />
+                    <TableContainer component={Paper} className="Table app-table-container">
+                        <Table className="Table app-table app-table--selectable">
+                            <TableHead className="table-header">
+                                <TableRow>
+                                    <TableCell>
+                                        <TableSortLabel
+                                            active={sortConfig.key === 'name'}
+                                            direction={sortConfig.direction}
+                                            onClick={() => this.onSort('name')}
+                                            className="table-header-cell"
+                                        >
+                                            Name
+                                        </TableSortLabel>
+                                    </TableCell>
+                                    <TableCell>
+                                        <TableSortLabel
+                                            active={sortConfig.key === 'type'}
+                                            direction={sortConfig.direction}
+                                            onClick={() => this.onSort('type')}
+                                            className="table-header-cell"
+                                        >
+                                            Sorte
+                                        </TableSortLabel>
+                                    </TableCell>
+                                    <TableCell>
+                                        <TableSortLabel
+                                            active={sortConfig.key === 'color'}
+                                            direction={sortConfig.direction}
+                                            onClick={() => this.onSort('color')}
+                                            className="table-header-cell"
+                                        >
+                                            Farbe
+                                        </TableSortLabel>
+                                    </TableCell>
+                                    <TableCell>
+                                        <TableSortLabel
+                                            active={sortConfig.key === 'alcohol'}
+                                            direction={sortConfig.direction}
+                                            onClick={() => this.onSort('alcohol')}
+                                            className="table-header-cell"
+                                        >
+                                            Alkohol
+                                        </TableSortLabel>
+                                    </TableCell>
+                                    <TableCell className="table-header-cell">
+                                        Aktion
+                                    </TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {sortedData.map((item) => (
+                                    <TableRow key={item.id} onClick={() => this.onSelectBeer(item)}
+                                              className={`table-row ${selectedBeerId !== null && item.id === selectedBeerId ? 'app-table__row--selected' : ''}`}
+                                    >
+                                        <TableCell className="table-cell">{item.name}</TableCell>
+                                        <TableCell className="table-cell">{item.type}</TableCell>
+                                        <TableCell className="table-cell">{item.color}</TableCell>
+                                        <TableCell className="table-cell">{item.alcohol}</TableCell>
+                                        <TableCell className="table-cell">
+                                            <div className="app-table-actions">
+                                                <button
+                                                    className="table-action-button app-table-action export-button"
+                                                    onClick={e => {
+                                                        e.stopPropagation();
+                                                        this.handleExportShoppingListPdfForBeer(item);
+                                                    }}
+                                                    title="Einkaufsliste"
+                                                    aria-label="Einkaufsliste"
+                                                >
+                                                    <ShoppingCartIcon sx={{fontSize: '1.5rem', marginTop: '0.4rem'}} />
+                                                </button>
+                                                <button
+                                                    className={`table-action-button app-table-action ${beerToBrew && beerToBrew.id === item.id ? 'cancel-brew-button' : 'brew-button'}`}
+                                                    onClick={e => {
+                                                        e.stopPropagation();
+                                                        if (beerToBrew && beerToBrew.id === item.id) {
+                                                            if (!this.props.isPollingRunning) {
+                                                                this.onCancelBrew();
+                                                            }
+                                                        } else {
+                                                            this.onBrewBeer(item);
+                                                        }
+                                                    }}
+                                                    disabled={
+                                                        (!!beerToBrew && beerToBrew.id !== item.id) ||
+                                                        (beerToBrew && beerToBrew.id === item.id && isPollingRunning)
+                                                    }
+                                                    title={beerToBrew && beerToBrew.id === item.id ? 'Abbrechen' : 'Brauen'}
+                                                    aria-label={beerToBrew && beerToBrew.id === item.id ? 'Abbrechen' : 'Brauen'}
+                                                >
+                                                    {beerToBrew && beerToBrew.id === item.id
+                                                        ? <CloseIcon sx={{fontSize: '1.5rem', marginTop: '0.3rem'}} />
+                                                        : <SportsBarIcon sx={{fontSize: '1.5rem', marginTop: '0.3rem'}} />}
+                                                </button>
+                                                <button
+                                                    className="table-action-button app-table-action app-table-action--danger delete-beer-button"
+                                                    onClick={e => {
+                                                        e.stopPropagation();
+                                                        this.handleDeleteBeer(item);
+                                                    }}
+                                                    title="Rezept löschen"
+                                                    aria-label="Rezept löschen"
+                                                    disabled={Boolean(isPollingRunning && beerToBrew?.id === item.id)}
+                                                >
+                                                    <DeleteOutlineIcon sx={{fontSize: '1.4rem', marginTop: '0.3rem'}} />
+                                                </button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </>
+            );
+        }
+        return <div className="Table">No data</div>;
+    }
+}

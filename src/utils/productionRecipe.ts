@@ -2,7 +2,7 @@ import { Beer, FermentationSteps } from '../model/Beer';
 import { BrewingData } from '../model/BrewingData';
 import { RestExecutionMode } from '../enums/eRestExecutionMode';
 import { ProcedureType } from '../enums/eProcedureType';
-import { normalizeMashPlan } from '../containers/DatabaseOverview/fermentationDefaults';
+import { normalizeMashPlan } from '../containers/DatabaseOverview/BeerForm/fermentationDefaults';
 import { BeerRecipeScaler } from './BeerScaler/ScalingBeerRecipe';
 
 const isValidTemperature = (value: unknown): value is number => typeof value === 'number' && Number.isFinite(value) && value > 0;

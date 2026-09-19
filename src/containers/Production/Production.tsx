@@ -30,7 +30,7 @@ import {BrewingDisplayTimeAnchor, createBrewingDisplayTimeAnchor, projectBrewing
 import {getAlarmSnapshot, getAgitatorActive, getHeatingActive, isControllerAvailable as getIsControllerAvailable} from "./utils/productionStatus";
 import {RecipeWaterFill, RecipeWaterFillStatus} from "./waterFill/recipeWaterFill.types";
 import {completeWaterFill, createInitialRecipeWaterFillStatus, failWaterFill, includePreparedSpargeAfterMashingOut, markValveOpened, resetWaterFill, startManualWaterFill, startWaterFill} from "./waterFill/recipeWaterFillState";
-import {ProductionDialogs} from "./components/ProductionDialogs";
+import {ProductionDialogs} from "./components/ProductionDialogs/ProductionDialogs";
 import {ProductionTemperatureTimeline} from "./TemperatureTimeline/ProductionTemperatureTimeline";
 import {getDisplayedWaterLiters as selectDisplayedWaterLiters, getWaterLabel, getWaterTargetLiters, isRecipeWaterButtonDisabled as selectRecipeWaterButtonDisabled, isWaterFillingActive as selectWaterFillingActive, shouldIncludeSpargeAfterMashingOut as selectShouldIncludeSpargeAfterMashingOut, sanitizeLiters} from "./waterFill/recipeWaterFillSelectors";
 import {equipmentAlarmDisplay, heaterStuckOnAlarmDisplay, isEquipmentAlarmActive, isHeaterStuckOnAlarmActive} from '../../utils/brewingStatus/alarmDisplay';
@@ -41,7 +41,7 @@ import {ProductionRepository} from '../../repositorys/ProductionRepository';
 import {AgitatorSettingsRepository} from '../../repositorys/AgitatorSettingsRepository';
 import {RealtimeControllerState} from '../../model/RealtimeControllerState';
 import {formatTemperature, getTemperatureSensorMessage, isTemperatureSensorReady} from '../../utils/temperatureSensor';
-import {AgitatorIntervalProgress} from './components/AgitatorIntervalProgress';
+import {AgitatorIntervalProgress} from './components/AgitatorIntervalProgress/AgitatorIntervalProgress';
 import {createFinishedBeerFermentationActions} from '../../utils/finishedBeerFermentationActions';
 
 export const AGITATOR_SPEED_DEBOUNCE_MS = 300;

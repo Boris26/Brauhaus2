@@ -1,7 +1,7 @@
 import React from 'react';
 import './Header.css';
 import {Views} from "../../../enums/eViews";
-import StatusDisplay from './StatusDisplay';
+import StatusDisplay from './StatusDisplay/StatusDisplay';
 import DashboardOutlinedIcon from '@mui/icons-material/DashboardOutlined';
 import SportsBarOutlinedIcon from '@mui/icons-material/SportsBarOutlined';
 import PrecisionManufacturingOutlinedIcon from '@mui/icons-material/PrecisionManufacturingOutlined';
