@@ -10,16 +10,20 @@
 }
 
 .Table .table-header-cell {
-  font-size: var(--font-size-normal);
-  font-weight: 700;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-small);
+  font-weight: 650;
 }
 
 .Table .table-cell {
+  padding-block: var(--spacing-md);
   vertical-align: middle;
 }
 
 .Table .table-cell--name { font-weight: 650; }
-.Table .app-table__row--selected .table-cell--name { color: var(--color-accent-hover); }
+.Table .table-row { transition: background-color 120ms ease; }
+.Table .app-table__row--selected { box-shadow: inset 4px 0 0 var(--color-accent); }
+.Table .app-table__row--selected .table-cell--name { color: var(--color-text); }
 .Table .app-table-actions { justify-content: flex-end; gap: var(--spacing-xs); }
 .Table .MuiTableCell-root:last-child { width: 7rem; text-align: right; }
 .Table .app-table-action svg { margin-top: 0 !important; }
