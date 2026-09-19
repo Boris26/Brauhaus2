@@ -70,12 +70,12 @@
 }
 
 .app-table--selectable .MuiTableRow-root:not(.app-table__row--selected):hover {
-  background: var(--bg-elevated);
+  background: var(--bg-table-row-hover);
 }
 
 .app-table--selectable .MuiTableRow-root.app-table__row--selected,
 .app-table--selectable .MuiTableRow-root.app-table__row--selected:hover {
-  background: var(--accent-subtle);
+  background: var(--bg-table-row-selected);
 }
 
 .app-table--selectable .MuiTableRow-root:hover > .MuiTableCell-root,

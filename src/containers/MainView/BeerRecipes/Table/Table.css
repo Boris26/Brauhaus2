@@ -22,7 +22,7 @@
 
 .Table .table-cell--name { font-weight: 650; }
 .Table .table-row { transition: background-color 120ms ease; }
-.Table .app-table__row--selected { box-shadow: inset 4px 0 0 var(--accent); }
+.Table .app-table__row--selected { box-shadow: inset 3px 0 0 var(--accent); }
 .Table .app-table__row--selected .table-cell--name { color: var(--text-primary); }
 .Table .app-table-actions { justify-content: flex-end; gap: var(--spacing-xs); }
 .Table .MuiTableCell-root:last-child { width: 7rem; text-align: right; }

@@ -4,7 +4,7 @@
 }
 .main-view .CustomTable, .main-view .Details {
     min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden;
-    background: var(--color-brew-bg); border: 1px solid var(--border-subtle); border-radius: var(--border-radius-large);
+    background: var(--bg-panel); border: 1px solid var(--border-subtle); border-radius: var(--border-radius-large);
 }
 .recipe-list-header { flex: 0 0 auto; padding: var(--spacing-lg) var(--spacing-xl); border-bottom: 1px solid var(--border-subtle); }
 .recipe-list-header h1 { margin: 0; color: var(--text-primary); font-size: var(--font-size-page-title); }

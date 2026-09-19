@@ -1,14 +1,17 @@
 /* Auto-generiert: Farbvariablen für das Projekt */
 :root {
-  --bg-app: #292b2d;
-  --bg-nav: #303235;
-  --bg-panel: #36383a;
-  --bg-card: #3d4043;
-  --bg-elevated: #45484b;
-  --bg-input: #2f2f2f;
-  --bg-table-header: #303336;
-  --bg-table-row: #383a3c;
-  --bg-table-row-alt: #3d3f41;
+  /* Fixed Brauhaus surface hierarchy: app -> panel -> card/row -> elevated. */
+  --bg-app: #252729;
+  --bg-nav: #2b2e31;
+  --bg-panel: #2e3134;
+  --bg-card: #35383b;
+  --bg-elevated: #3d4145;
+  --bg-input: var(--bg-elevated);
+  --bg-table-header: var(--bg-panel);
+  --bg-table-row: var(--bg-card);
+  --bg-table-row-alt: var(--bg-card);
+  --bg-table-row-hover: var(--bg-elevated);
+  --bg-table-row-selected: #41382f;
   --text-primary: #f2f3f4;
   --text-secondary: #c5c8cb;
   --text-muted: #92979c;
@@ -29,14 +32,14 @@
   --accent-subtle: rgba(201, 130, 47, 0.16);
   --accent-subtle-hover: rgba(201, 130, 47, 0.24);
   --color-select: var(--accent-subtle);
-  --color-brew-bg: #404040;
-  --color-input-border: #404040;
+  --color-brew-bg: var(--bg-panel);
+  --color-input-border: var(--border-default);
   --bg-input2: var(--bg-elevated);
   --bg-input3: var(--bg-card);
-  --color-surface-1: #353535;
-  --color-surface-2: #393939;
-  --color-surface-graph: #303030;
-  --color-surface-muted: #3b3b3b;
+  --color-surface-1: var(--bg-panel);
+  --color-surface-2: var(--bg-card);
+  --color-surface-graph: var(--bg-app);
+  --color-surface-muted: var(--bg-card);
   --color-gray-quiet: #c9c9c9;
   --color-gray-strong: #888;
   --color-gray-muted: #bdbdbd;
@@ -47,8 +50,8 @@
   --border-default-mid: #565b60;
   --border-default-input-alt: #ced4da;
   --color-surface-highlight: #c96a00;
-  --color-surface-strong: #4a4a4a;
-  --color-surface-deep: #3a3a3a;
+  --color-surface-strong: var(--bg-elevated);
+  --color-surface-deep: var(--bg-panel);
   --color-surface-light: #cccccc;
   --color-surface-alt: #1976d2;
   --color-surface-alt-dark: #1565c0;

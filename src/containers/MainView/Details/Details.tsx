@@ -96,12 +96,12 @@ export class Details extends React.Component<DetailsProps, DetailsState> {
 
     renderMashing() {
         const steps = this.props.selectedBeer?.fermentation || [];
-        return <section className="recipe-section recipe-card recipe-card--timeline"><h2>Maischplan</h2>{steps.length ? <ol className="process-list">{steps.map((step, index) =>
-            <li key={step.stepId || index} className="process-step"><span className="process-marker" aria-hidden="true">{index + 1}</span><div>
-                <strong>{this.mashingStepLabel(step)}</strong><div className="process-values">
+        return <section className="recipe-section recipe-card recipe-card--mashing"><h2>Maischplan</h2>{steps.length ? <ol className="mash-step-grid">{steps.map((step, index) =>
+            <li key={step.stepId || index} className="mash-step-card"><div className="mash-step-heading"><span className="mash-step-number" aria-hidden="true">{index + 1}</span>
+                <strong>{this.mashingStepLabel(step)}</strong></div><div className="process-values">
                     {step.procedureType !== 'DECOCTION' && step.temperature != null && <span>{step.temperature} °C</span>}{step.procedureType !== 'DECOCTION' && step.time != null && <span>{step.time} min</span>}
-                    {step.executionMode === 'CONFIRMATION_HOLD' && <span>bis Bestätigung</span>}
-                </div></div></li>)}</ol> : <p className="recipe-empty">Keine Maischschritte hinterlegt.</p>}</section>;
+                    {step.executionMode === 'CONFIRMATION_HOLD' && <span>Bis Bestätigung</span>}
+                </div></li>)}</ol> : <p className="recipe-empty">Keine Maischschritte hinterlegt.</p>}</section>;
     }
 
     renderMalts() {
