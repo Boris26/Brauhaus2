@@ -53,8 +53,8 @@ const fillValidRecipe = () => {
     fireEvent.change(screen.getByLabelText(/Nachguss/), {target: {value: '10'}});
     fireEvent.click(screen.getByRole('button', {name: /Brauprozess/}));
     fireEvent.change(screen.getByLabelText('Kochzeit im Brauprozess'), {target: {value: '60'}});
-    fireEvent.change(within(screen.getByText('Einmaischen').closest('tr')!).getByRole('spinbutton'), {target: {value: '57'}});
-    fireEvent.change(within(screen.getByText('Abmaischen').closest('tr')!).getByRole('spinbutton'), {target: {value: '78'}});
+    fireEvent.change(within(screen.getByText('Einmaischen').closest('article')!).getByRole('spinbutton'), {target: {value: '57'}});
+    fireEvent.change(within(screen.getByText('Abmaischen').closest('article')!).getByRole('spinbutton'), {target: {value: '78'}});
 
     fireEvent.click(screen.getByRole('button', {name: /Malze/}));
     fireEvent.change(screen.getByDisplayValue('Malz'), {target: {value: 'm1'}});
@@ -101,7 +101,7 @@ describe('BeerForm section navigation', () => {
         }]}});
         fireEvent.click(screen.getByRole('button', {name: /Hopfen/}));
 
-        const hopRow = screen.getByDisplayValue('Hallertauer Mittelfrüh').closest('tr')!;
+        const hopRow = screen.getByDisplayValue('Hallertauer Mittelfrüh').closest('article')!;
         const usageSelect = within(hopRow).getByDisplayValue('Kochhopfen');
         expect(within(hopRow).getByDisplayValue('Minuten')).toBeInTheDocument();
 
@@ -124,10 +124,10 @@ describe('BeerForm section navigation', () => {
         for (const type of ['Einmaischen', 'Abmaischen', 'Kochen']) {
             expect(screen.getByText(type)).toBeInTheDocument();
         }
-        const mashInRow = screen.getByText('Einmaischen').closest('tr')!;
-        const mashOutRow = screen.getByText('Abmaischen').closest('tr')!;
-        expect(within(mashInRow).getAllByText('–')).toHaveLength(2);
-        expect(within(mashOutRow).getAllByText('–')).toHaveLength(2);
+        const mashInRow = screen.getByText('Einmaischen').closest('article')!;
+        const mashOutRow = screen.getByText('Abmaischen').closest('article')!;
+        expect(within(mashInRow).getByText('Bis Bestätigung')).toBeInTheDocument();
+        expect(within(mashOutRow).getByText('Bis Bestätigung')).toBeInTheDocument();
         expect(within(mashInRow).getAllByRole('spinbutton')).toHaveLength(1);
         expect(within(mashOutRow).getAllByRole('spinbutton')).toHaveLength(1);
     });
@@ -138,7 +138,7 @@ describe('BeerForm section navigation', () => {
         expect(screen.queryByLabelText(/Kochzeit \(min\):/)).not.toBeInTheDocument();
 
         fireEvent.click(screen.getByRole('button', {name: /Brauprozess/}));
-        const cookingRow = screen.getByText('Kochen').closest('tr')!;
+        const cookingRow = screen.getByText('Kochen').closest('article')!;
         expect(within(cookingRow).getByLabelText('Kochtemperatur im Brauprozess')).toHaveValue(100);
         expect(within(cookingRow).getByLabelText('Kochtemperatur im Brauprozess')).toHaveAttribute('readonly');
         expect(within(cookingRow).getByLabelText('Kochzeit im Brauprozess')).not.toHaveAttribute('readonly');
@@ -154,7 +154,7 @@ describe('BeerForm section navigation', () => {
         };
         renderBeerForm({beers: [existingBeer]});
 
-        fireEvent.change(screen.getByLabelText(/Bier auswählen/), {target: {value: 'beer-99'}});
+        fireEvent.change(screen.getByLabelText(/Rezept auswählen/), {target: {value: 'beer-99'}});
         fireEvent.click(screen.getByRole('button', {name: /Brauprozess/}));
 
         expect(screen.queryByLabelText(/Kochtemperatur:/)).not.toBeInTheDocument();
@@ -164,7 +164,7 @@ describe('BeerForm section navigation', () => {
     it('reset keeps one copy of every fixed step after configurable mash steps were added', () => {
         renderBeerForm();
         fireEvent.click(screen.getByRole('button', {name: /Brauprozess/}));
-        fireEvent.click(screen.getByRole('button', {name: /Rast hinzufügen/}));
+        fireEvent.click(screen.getByRole('button', {name: /Schritt hinzufügen/}));
         fireEvent.click(screen.getByRole('button', {name: /Abbrechen \/ Zurücksetzen/}));
         fireEvent.click(screen.getByRole('button', {name: /Abbrechen \/ Zurücksetzen/}));
 
@@ -235,7 +235,7 @@ describe('BeerForm section navigation', () => {
         };
         const {props} = renderBeerForm({beers: [existingBeer]});
 
-        fireEvent.change(screen.getByLabelText(/Bier auswählen/), {target: {value: 'beer-1'}});
+        fireEvent.change(screen.getByLabelText(/Rezept auswählen/), {target: {value: 'beer-1'}});
         fireEvent.change(screen.getByLabelText(/Name:/), {target: {value: 'Altbier'}});
         fireEvent.click(screen.getByRole('button', {name: /Rezept speichern/}));
 
@@ -254,7 +254,7 @@ describe('BeerForm section navigation', () => {
             additionalIngredients: [],
         };
         const {props} = renderBeerForm({beers: [existingBeer]});
-        fireEvent.change(screen.getByLabelText(/Bier auswählen/), {target: {value: existingBeer.id}});
+        fireEvent.change(screen.getByLabelText(/Rezept auswählen/), {target: {value: existingBeer.id}});
         fireEvent.click(screen.getByRole('button', {name: /Rezept speichern/}));
         const submittedHop = (props.onSubmitBeer as jest.Mock).mock.calls[0][0].wortBoiling.hops[0];
         expect(submittedHop).toMatchObject({id: 1, triggerType: TriggerType.PLATO_THRESHOLD, triggerValue: 5, triggerUnit: TriggerUnit.PLATO, contactTime: 3, contactTimeUnit: TimeUnit.DAYS});
@@ -264,7 +264,7 @@ describe('BeerForm section navigation', () => {
     it('shows imported hop additionTime and resolves its name by master-data id', () => {
         renderBeerForm({beerFormState: {hopsDTO: [{id: 1, quantity: 20, usage: HopUsage.BOIL, additionTime: 45, timeUnit: HopTimeUnit.MINUTES}]}});
         fireEvent.click(screen.getByRole('button', {name: /Hopfen/}));
-        const row = screen.getByDisplayValue('Hallertauer Mittelfrüh').closest('tr')!;
+        const row = screen.getByDisplayValue('Hallertauer Mittelfrüh').closest('article')!;
         expect(within(row).getByDisplayValue('45')).toBeInTheDocument();
         expect(within(row).getByDisplayValue('Minuten')).toBeInTheDocument();
     });
@@ -284,13 +284,13 @@ describe('BeerForm section navigation', () => {
             fermentationMaturation: {fermentationTemperature: 18, carbonation: 5, yeast: []},
         };
         renderBeerForm({beers: [existingBeer]});
-        fireEvent.change(screen.getByLabelText(/Bier auswählen/), {target: {value: 'beer-1'}});
+        fireEvent.change(screen.getByLabelText(/Rezept auswählen/), {target: {value: 'beer-1'}});
         fireEvent.click(screen.getByRole('button', {name: /Brauprozess/}));
-        fireEvent.change(within(screen.getByText('Einmaischen').closest('tr')!).getByRole('spinbutton'), {target: {value: '65'}});
+        fireEvent.change(within(screen.getByText('Einmaischen').closest('article')!).getByRole('spinbutton'), {target: {value: '65'}});
 
         fireEvent.click(screen.getByRole('button', {name: /Abbrechen \/ Zurücksetzen/}));
 
-        expect(within(screen.getByText('Einmaischen').closest('tr')!).getByRole('spinbutton')).toHaveValue(57);
+        expect(within(screen.getByText('Einmaischen').closest('article')!).getByRole('spinbutton')).toHaveValue(57);
         expect(screen.getAllByText('Einmaischen')).toHaveLength(1);
         expect(screen.getAllByText('Abmaischen')).toHaveLength(1);
         expect(screen.getAllByText('Kochen')).toHaveLength(1);

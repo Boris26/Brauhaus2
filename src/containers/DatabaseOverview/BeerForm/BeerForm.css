@@ -27,8 +27,7 @@
     padding: var(--space-4);
     min-height: 0;
     min-width: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden;
     box-sizing: border-box;
 }
 
@@ -37,24 +36,19 @@
     flex-direction: column;
     gap: 12px;
     min-width: 0;
+    height: 100%;
+    min-height: 0;
 }
 
 .beer-form-toolbar {
     display: grid;
     grid-template-columns: minmax(14rem, 1fr) auto auto;
-    gap: 10px;
+    gap: var(--spacing-sm);
     align-items: end;
-    padding: 10px 12px;
+    padding: var(--spacing-md);
     border-radius: var(--border-radius-large);
     background: var(--bg-panel);
     min-width: 0;
-}
-
-.beer-form-toolbar-title {
-    color: var(--color-white);
-    font-size: 1.15rem;
-    font-weight: 600;
-    align-self: center;
 }
 
 .beer-select-label,
@@ -68,6 +62,7 @@
 }
 
 .beer-select-label { color: var(--text-secondary); }
+.beer-select-label select { min-width: min(38rem, 55vw); }
 
 .beer-form input,
 .beer-form select,
@@ -89,7 +84,7 @@
 .beer-form input:focus,
 .beer-form select:focus,
 .beer-form textarea:focus,
-.beer-form button:not(.app-accordion-summary):focus-visible {
+.beer-form button:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
 }
@@ -115,24 +110,21 @@
     grid-column: 1 / -1;
 }
 
-.beer-form-sections {
-    min-width: 0;
-}
-
 .recipe-editor-layout {
     display: grid;
-    grid-template-columns: 14rem minmax(0, 1fr);
+    grid-template-columns: minmax(230px, 260px) minmax(0, 1fr);
     gap: var(--spacing-md);
     min-width: 0;
-    align-items: start;
+    flex: 1 1 auto;
+    min-height: 0;
+    align-items: stretch;
+    overflow: hidden;
 }
 
 .recipe-editor-navigation {
-    position: sticky;
-    top: 0;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: var(--spacing-xs);
     padding: var(--spacing-sm);
 }
 
@@ -151,8 +143,8 @@
     align-items: center;
     gap: 8px;
     width: 100%;
-    min-height: 40px;
-    padding: 8px 10px 8px 14px;
+    min-height: 46px;
+    padding: 11px 12px 11px 16px;
     border: 0;
     border-radius: var(--border-radius-medium);
     background: transparent;
@@ -164,41 +156,17 @@
 }
 
 .recipe-editor-navigation button:hover { background: var(--color-surface-raised); color: var(--text-primary); }
-.recipe-editor-navigation button.is-active { background: var(--color-surface-strong); color: var(--color-white); }
+.recipe-editor-navigation button.is-active { background: var(--color-surface-raised); color: var(--text-primary); }
 .recipe-editor-navigation button.is-active::before { content: ''; position: absolute; inset: 7px auto 7px 0; width: 3px; border-radius: 2px; background: var(--accent); }
 .recipe-section-count { margin-left: auto; color: inherit; opacity: .78; font-variant-numeric: tabular-nums; }
 .recipe-section-error { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--color-error-highlight); color: var(--bg-app); }
+.recipe-section-icon { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 22px; color: var(--accent); }
+.recipe-section-icon svg { font-size: 1.25rem; }
 
-.recipe-editor-content { min-width: 0; padding: 0; overflow: hidden; }
-.recipe-editor-section-header { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-md); padding: var(--spacing-md); border-bottom: 1px solid var(--border-default); }
+.recipe-editor-content { min-width: 0; min-height: 0; padding: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: var(--border-strong) transparent; scrollbar-width: thin; }
+.recipe-editor-section-header { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-md); min-height: 64px; box-sizing: border-box; padding: var(--spacing-md); border-bottom: 1px solid var(--border-default); }
 .recipe-editor-section-body { min-width: 0; padding: var(--spacing-md); }
 .recipe-editor-section-body > .section-add-button { display: none; }
-
-.beer-form-accordion.has-error.MuiAccordion-root {
-    border-color: var(--color-error-highlight);
-}
-
-.beer-accordion-meta {
-    min-width: 0;
-    overflow-wrap: anywhere;
-}
-
-.beer-accordion-meta {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 10px;
-    color: var(--text-secondary);
-    font-weight: 500;
-    flex-wrap: wrap;
-}
-
-.beer-accordion-error {
-    color: var(--color-error-highlight);
-    background: var(--bg-app);
-    border-radius: var(--border-radius-pill);
-    padding: var(--spacing-xs) var(--spacing-sm);
-}
 
 .table-wrapper {
     max-width: 100%;
@@ -263,26 +231,21 @@
     white-space: nowrap;
 }
 
-.mash-plan-table {
-    display: block;
-    min-width: 0;
-    table-layout: fixed;
-    counter-reset: mash-step;
-}
-
-.mash-plan-table colgroup,
-.mash-plan-table thead { display: none; }
-.mash-plan-table tbody { display: flex; flex-direction: column; gap: 8px; }
-.mash-plan-table tr { position: relative; display: grid; grid-template-columns: minmax(9rem, 1.1fr) minmax(11rem, 1.5fr) minmax(9rem, 1fr) minmax(7rem, .7fr) minmax(7rem, .7fr) 3.5rem; gap: 8px; align-items: start; padding: 10px 10px 10px 48px; border: 1px solid var(--border-default); border-radius: var(--border-radius-medium); background: var(--color-surface-raised); counter-increment: mash-step; }
-.mash-plan-table tr::before { content: counter(mash-step); position: absolute; left: 14px; top: 14px; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--color-surface-strong); color: var(--accent); font-weight: 700; }
-.mash-plan-table td { display: block; height: auto; padding: 0; background: transparent !important; }
-
-.mash-plan-table .mash-column-type { width: 18%; }
-.mash-plan-table .mash-column-related { width: 25%; }
-.mash-plan-table .mash-column-mode { width: 20%; }
-.mash-plan-table .mash-column-temperature { width: 14%; }
-.mash-plan-table .mash-column-time { width: 14%; }
-.mash-plan-table .mash-column-action { width: 9%; }
+.mash-step-list, .hop-card-list { display: flex; flex-direction: column; gap: 12px; }
+.mash-step-card, .hop-card { padding: var(--spacing-md); border: 1px solid var(--border-default); border-radius: var(--border-radius-large); background: var(--color-surface-raised); }
+.mash-step-header, .hop-card-header { display: flex; align-items: center; gap: var(--spacing-sm); min-height: 32px; margin-bottom: 12px; }
+.mash-step-header h3 { margin: 0; color: var(--text-primary); font-size: 1rem; }
+.mash-step-header .cancel-btn, .hop-card-header .cancel-btn { margin-left: auto; }
+.mash-step-number { display: inline-grid; place-items: center; flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; background: var(--accent-subtle); color: var(--accent); font-weight: 700; }
+.mash-step-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; align-items: start; }
+.mash-step-readonly { display: flex; flex-direction: column; gap: 6px; }
+.mash-step-readonly span { color: var(--text-secondary); font-weight: 600; }
+.mash-step-readonly strong { display: flex; align-items: center; min-height: 33px; color: var(--text-primary); }
+.hop-card-header strong { color: var(--text-primary); }
+.hop-card-fields { display: grid; grid-template-columns: minmax(180px, 1.5fr) minmax(110px, .6fr) minmax(160px, 1fr) repeat(2, minmax(110px, .7fr)); gap: 12px; align-items: start; }
+.hop-action-group { margin-top: var(--spacing-md); padding-top: var(--spacing-md); border-top: 1px solid var(--border-default); }
+.hop-action-group h4 { margin: 0 0 12px; color: var(--text-primary); font-size: var(--font-size-small); }
+.hop-action-group .fermentation-action-fields { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 
 .containerBeerForm .add-button,
 .containerBeerForm .finish-btn {
@@ -404,14 +367,19 @@
 .beer-form-overview {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 10px;
+    gap: var(--spacing-sm);
+    margin: 4px 0;
 }
 
 .beer-form-overview-item {
     background: var(--color-surface-raised);
     border: 1px solid var(--border-default);
     border-radius: var(--border-radius-medium);
-    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 72px;
+    padding: var(--spacing-md);
     color: var(--text-primary);
     min-width: 0;
 }
@@ -425,7 +393,7 @@
 .beer-form-overview-item span {
     color: var(--text-secondary);
     font-size: var(--font-size-small);
-    margin-bottom: var(--spacing-xs);
+    margin-bottom: var(--spacing-sm);
 }
 
 .beer-form-overview-item strong {
@@ -438,7 +406,6 @@
         align-items: stretch;
     }
 
-    .beer-form-toolbar-title,
     .beer-select-label {
         grid-column: 1 / -1;
     }
@@ -452,8 +419,8 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .recipe-editor-layout { grid-template-columns: 11rem minmax(0, 1fr); }
-    .mash-plan-table tr { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .recipe-editor-layout { grid-template-columns: minmax(210px, 230px) minmax(0, 1fr); }
+    .hop-card-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 720px) {
@@ -479,7 +446,8 @@
     }
 
     .recipe-editor-layout { grid-template-columns: 1fr; }
-    .recipe-editor-navigation { position: static; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .recipe-editor-layout { grid-template-rows: auto minmax(0, 1fr); }
+    .recipe-editor-navigation { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .recipe-editor-navigation h2 { grid-column: 1 / -1; }
 
 }
