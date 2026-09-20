@@ -5,7 +5,7 @@ import {HopUsage} from '../../../enums/eHopUsage';
 import {HopTimeUnit} from '../../../enums/eHopTimeUnit';
 import {ProcedureType} from '../../../enums/eProcedureType';
 import {RestExecutionMode} from '../../../enums/eRestExecutionMode';
-import {Beer} from '../../../model/Beer';
+import {AdditionalIngredientPhase, AdditionalIngredientTimeUnit, Beer} from '../../../model/Beer';
 import {TimeUnit, TriggerType, TriggerUnit} from '../../../model/FermentationRecipeAction';
 
 const baseProps: React.ComponentProps<typeof BeerForm> = {
@@ -115,6 +115,22 @@ describe('BeerForm section navigation', () => {
         expect(within(unitSelect).getAllByRole('option').map(option => option.textContent)).toEqual([
             'Keine Einheit', 'Minuten', 'Stunden',
         ]);
+    });
+
+    it('shows only phase-relevant fields for additional ingredients', () => {
+        renderBeerForm({beerFormState: {additionalIngredientsDTO: [{
+            id: 'a1', quantity: 8, unit: 'g', phase: AdditionalIngredientPhase.BOIL, additionTime: 10,
+            timeUnit: AdditionalIngredientTimeUnit.MINUTES, note: 'Brautag-Zutat',
+        }]}});
+        fireEvent.click(screen.getByRole('button', {name: /Weitere Zutaten/}));
+
+        const ingredientCard = screen.getByDisplayValue('Koriandersamen').closest('article')!;
+        expect(within(ingredientCard).getByLabelText('Zeit')).toBeInTheDocument();
+        expect(within(ingredientCard).queryByLabelText('Trigger')).not.toBeInTheDocument();
+
+        fireEvent.change(within(ingredientCard).getByLabelText('Phase'), {target: {value: AdditionalIngredientPhase.FERMENTATION}});
+        expect(within(ingredientCard).queryByLabelText('Zeit')).not.toBeInTheDocument();
+        expect(within(ingredientCard).getByLabelText('Trigger')).toBeInTheDocument();
     });
 
     it('always renders fixed steps and no time inputs for mash-in and mash-out', () => {

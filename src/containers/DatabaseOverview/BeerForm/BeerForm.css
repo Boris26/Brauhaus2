@@ -66,8 +66,7 @@
 
 .beer-form input,
 .beer-form select,
-.beer-form textarea,
-.readonly-table-value {
+.beer-form textarea {
     width: 100%;
     height: 30px;
     min-height: 30px;
@@ -168,18 +167,13 @@
 .recipe-editor-section-body { min-width: 0; padding: var(--spacing-md); }
 .recipe-editor-section-body > .section-add-button { display: none; }
 
-.table-wrapper {
-    max-width: 100%;
-    min-width: 0;
-    overflow-x: auto;
-    overflow-y: visible;
-    margin-bottom: 8px;
-    border: 0;
-    border-radius: 0;
-    box-sizing: border-box;
-}
+.recipe-editor-navigation h2 { padding: 8px 10px 12px; }
 
-.ingredient-table {
+.recipe-editor-navigation button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
     width: 100%;
     min-width: 34rem;
     border-collapse: collapse;
@@ -272,10 +266,6 @@
     background: linear-gradient(180deg, var(--accent-hover) 10%, var(--accent-active) 100%);
 }
 
-.section-add-button {
-    margin-top: var(--spacing-xs);
-}
-
 .containerBeerForm .cancel-btn {
     min-width: 40px;
     width: 40px;
@@ -296,25 +286,11 @@
     background-color: var(--color-danger);
 }
 
-.readonly-table-value {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-}
-
 .beer-form input.readonly-cooking-temperature {
     background: var(--color-disabled-bg);
     border-color: var(--color-disabled-border);
     color: var(--color-disabled-text);
     cursor: default;
-}
-
-.muted-table-value {
-    opacity: 0.75;
-    display: inline-flex;
-    align-items: center;
-    min-height: 38px;
-    color: var(--color-white);
 }
 
 .field-error {
@@ -324,11 +300,8 @@
     overflow-wrap: anywhere;
 }
 
-.ingredient-table tr.validation-error-row td {
-    background-color: color-mix(in srgb, var(--color-error-highlight) 12%, transparent);
-}
-
-.ingredient-table [aria-invalid="true"] {
+.validation-error-row,
+.recipe-item-card [aria-invalid="true"] {
     border-color: var(--color-error-highlight);
 }
 
