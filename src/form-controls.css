@@ -26,6 +26,10 @@
 
 #root select:not(.MuiSelect-nativeInput),
 #root .form-select {
+  color: var(--text-primary);
+  background-color: var(--bg-input);
+  color-scheme: dark;
+  -webkit-text-fill-color: var(--text-primary);
   cursor: pointer;
 }
 
@@ -67,6 +71,13 @@
   border-color: var(--color-disabled-border);
   cursor: not-allowed;
   opacity: 1;
+}
+
+#root select:not(.MuiSelect-nativeInput):disabled,
+#root .form-select:disabled {
+  color: var(--text-secondary);
+  background-color: var(--color-disabled-bg);
+  -webkit-text-fill-color: var(--text-secondary);
 }
 
 #root input:not([type='button']):not([type='checkbox']):not([type='color']):not([type='file']):not([type='hidden']):not([type='image']):not([type='radio']):not([type='range']):not([type='reset']):not([type='submit']):not(.MuiInputBase-input)[readonly],

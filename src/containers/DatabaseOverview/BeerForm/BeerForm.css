@@ -12,9 +12,9 @@
 .recipe-action-bar .brauhaus-button, .section-add-button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 36px; white-space: nowrap; }
 .beer-select-label, .beer-form label { color: var(--text-primary); font-weight: 600; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .beer-select-label { color: var(--text-secondary); }
-.beer-form input, .beer-form select, .beer-form textarea { width: 100%; height: 36px; min-height: 36px; line-height: 1.25; box-sizing: border-box; padding: 7px 10px; border: 1px solid var(--border-default-mid); border-radius: var(--border-radius-medium); font: inherit; background: var(--bg-input); color: var(--bg-app); min-width: 0; }
+.beer-form input, .beer-form select, .beer-form textarea { width: 100%; height: var(--control-height-compact); min-height: var(--control-height-compact); min-width: 0; }
 .beer-form select { padding-top: 0; padding-bottom: 0; }
-.beer-form input:focus, .beer-form select:focus, .beer-form textarea:focus, .beer-form button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.beer-form button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .beer-description { height: auto; min-height: 72px; resize: vertical; }
 
 .recipe-editor-layout { display: grid; grid-template-columns: minmax(230px, 260px) minmax(0, 1fr); gap: var(--spacing-md); min-width: 0; flex: 1 1 auto; min-height: 0; overflow: hidden; }
@@ -48,9 +48,12 @@
 .recipe-field-group h4, .hop-action-group h4, .variable-step-heading h3 { margin: 0 0 12px; color: var(--text-primary); font-size: 1rem; }
 .fermentation-action-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; min-width: 0; }
 
-.fixed-step-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.fixed-step-card { padding: 12px 14px; }
-.fixed-step-card header h3 { margin: 0 0 12px; color: var(--text-primary); font-size: 1rem; }
+.fixed-step-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; gap: 12px; }
+.fixed-step-card { padding: 10px 12px; }
+.fixed-step-card header h3 { margin: 0 0 10px; color: var(--text-primary); font-size: 1rem; }
+.fixed-step-fields { display: grid; align-items: start; gap: 12px; }
+.fixed-step-fields--mash { grid-template-columns: minmax(0, 1fr); }
+.fixed-step-fields--boil { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .variable-step-heading { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-default); }
 .mash-step-header h3 { margin: 0; font-size: 1rem; }
 .mash-step-number { display: inline-grid; place-items: center; flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; background: var(--accent-subtle); color: var(--accent); font-weight: 700; }
@@ -66,10 +69,9 @@
 .compact-row-card { padding: 9px 14px; align-items: center; }
 .compact-row-card > .cancel-btn { align-self: center; }
 .compact-row-card label { gap: 0; }
-.compact-field > span:first-child, .compact-row-card:not(.is-expanded) .hop-card-fields > label, .compact-row-card:not(.is-expanded) .additional-ingredient-base > label, .mash-step-card.compact-row-card label { font-size: 0; gap: 0; }
+.compact-field-label, .compact-row-card:not(.is-expanded) .hop-card-fields > label, .compact-row-card:not(.is-expanded) .additional-ingredient-base > label { font-size: 0; gap: 0; }
 .compact-row-card:not(.is-expanded) .hop-card-fields > label > input, .compact-row-card:not(.is-expanded) .hop-card-fields > label > select,
-.compact-row-card:not(.is-expanded) .additional-ingredient-base > label > input, .compact-row-card:not(.is-expanded) .additional-ingredient-base > label > select,
-.mash-step-card.compact-row-card label > input, .mash-step-card.compact-row-card label > select { font-size: 1rem; }
+.compact-row-card:not(.is-expanded) .additional-ingredient-base > label > input, .compact-row-card:not(.is-expanded) .additional-ingredient-base > label > select { font-size: 1rem; }
 .quantity-with-unit { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
 .quantity-with-unit em { color: var(--text-secondary); font-style: normal; font-weight: 600; }
 .hop-card.compact-row-card { display: grid; grid-template-columns: minmax(0, 1fr) 36px; gap: 12px; }
@@ -105,7 +107,8 @@
     .hop-card.compact-row-card .hop-card-fields, .hop-card.compact-row-card.is-expanded .hop-card-fields,
     .additional-ingredient-base, .additional-ingredient-card.is-expanded .additional-ingredient-base,
     .mash-step-card.compact-row-card .mash-step-fields, .mash-step-card.compact-row-card .mash-step-fields--decoction { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .compact-field > span:first-child, .compact-row-card:not(.is-expanded) .hop-card-fields > label, .compact-row-card:not(.is-expanded) .additional-ingredient-base > label, .mash-step-card.compact-row-card label { font-size: var(--font-size-small); gap: 5px; }
+    .compact-field { gap: 5px; }
+    .compact-field-label, .compact-row-card:not(.is-expanded) .hop-card-fields > label, .compact-row-card:not(.is-expanded) .additional-ingredient-base > label { font-size: var(--font-size-small); }
 }
 @media (max-width: 720px) {
     .containerBeerForm { padding: var(--space-4); }

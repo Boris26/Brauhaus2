@@ -57,17 +57,17 @@ const fillValidRecipe = () => {
     fireEvent.change(within(screen.getByText('Abmaischen').closest('article')!).getByRole('spinbutton'), {target: {value: '78'}});
 
     fireEvent.click(screen.getByRole('button', {name: /Malze/}));
-    fireEvent.change(screen.getByDisplayValue('Malz'), {target: {value: 'm1'}});
+    fireEvent.change(screen.getByDisplayValue('Malz auswählen'), {target: {value: 'm1'}});
     fireEvent.change(screen.getAllByRole('spinbutton').find((input) => input.getAttribute('name') === 'quantity')!, {target: {value: '4000'}});
 
     fireEvent.click(screen.getByRole('button', {name: /Hopfen/}));
-    fireEvent.change(screen.getByDisplayValue('Hopfen'), {target: {value: '1'}});
+    fireEvent.change(screen.getByDisplayValue('Hopfen auswählen'), {target: {value: '1'}});
     const hopQuantity = screen.getAllByRole('spinbutton').filter((input) => input.getAttribute('name') === 'quantity')[1];
     fireEvent.change(hopQuantity, {target: {value: '50'}});
     fireEvent.change(screen.getByDisplayValue('0'), {target: {value: '60'}});
 
     fireEvent.click(screen.getByRole('button', {name: /Hefe/}));
-    fireEvent.change(screen.getByDisplayValue('Hefe'), {target: {value: '1'}});
+    fireEvent.change(screen.getByDisplayValue('Hefe auswählen'), {target: {value: '1'}});
     const yeastQuantity = screen.getAllByRole('spinbutton').filter((input) => input.getAttribute('name') === 'quantity')[2];
     fireEvent.change(yeastQuantity, {target: {value: '1'}});
 };
@@ -94,6 +94,26 @@ const expectProcedureTypeOptions = (select: HTMLElement) => {
 };
 
 describe('BeerForm section navigation', () => {
+    it('uses semantic headers and compact rows for malts and yeasts', () => {
+        renderBeerForm({beerFormState: {
+            maltsDTO: [{id: 'm1', quantity: 4000}, {id: '', quantity: 500}],
+            yeastsDTO: [{id: 1, quantity: 1.1}, {id: '', quantity: 2}],
+        }});
+
+        fireEvent.click(screen.getByRole('button', {name: /Malze/}));
+        expect(screen.getByText('Name', {selector: '.compact-column-header span'})).toBeInTheDocument();
+        expect(screen.getAllByLabelText(/Malzname/)).toHaveLength(2);
+        expect(screen.getAllByLabelText(/Malzmenge/)).toHaveLength(2);
+        expect(screen.getAllByRole('button', {name: 'Malz löschen'})).toHaveLength(2);
+
+        fireEvent.click(screen.getByRole('button', {name: /Hefe/}));
+        expect(screen.getByText('Name', {selector: '.compact-column-header span'})).toBeInTheDocument();
+        expect(screen.getAllByLabelText(/Hefename/)).toHaveLength(2);
+        expect(screen.getAllByLabelText(/Hefemenge/)).toHaveLength(2);
+        expect(screen.getAllByText('g')).toHaveLength(2);
+        expect(screen.getAllByRole('button', {name: 'Hefe löschen'})).toHaveLength(2);
+    });
+
     it('separates brew-day timing from DRY_HOP Recipe Actions on usage changes', () => {
         renderBeerForm({beerFormState: {hopsDTO: [{
             id: 1, quantity: 10, additionTime: 3,
@@ -125,11 +145,11 @@ describe('BeerForm section navigation', () => {
         fireEvent.click(screen.getByRole('button', {name: /Weitere Zutaten/}));
 
         const ingredientCard = screen.getByDisplayValue('Koriandersamen').closest('article')!;
-        expect(within(ingredientCard).getByLabelText('Zeit')).toBeInTheDocument();
+        expect(within(ingredientCard).getByLabelText('Zeitangabe')).toBeInTheDocument();
         expect(within(ingredientCard).queryByLabelText('Trigger')).not.toBeInTheDocument();
 
         fireEvent.change(within(ingredientCard).getByLabelText('Phase'), {target: {value: AdditionalIngredientPhase.FERMENTATION}});
-        expect(within(ingredientCard).queryByLabelText('Zeit')).not.toBeInTheDocument();
+        expect(within(ingredientCard).queryByLabelText('Zeitangabe')).not.toBeInTheDocument();
         expect(within(ingredientCard).getByLabelText('Trigger')).toBeInTheDocument();
     });
 
@@ -142,10 +162,31 @@ describe('BeerForm section navigation', () => {
         }
         const mashInRow = screen.getByText('Einmaischen').closest('article')!;
         const mashOutRow = screen.getByText('Abmaischen').closest('article')!;
-        expect(within(mashInRow).getByText('Bis Bestätigung')).toBeInTheDocument();
-        expect(within(mashOutRow).getByText('Bis Bestätigung')).toBeInTheDocument();
+        expect(within(mashInRow).queryByText('Modus')).not.toBeInTheDocument();
+        expect(within(mashInRow).queryByText('Bis Bestätigung')).not.toBeInTheDocument();
+        expect(within(mashOutRow).queryByText('Modus')).not.toBeInTheDocument();
+        expect(within(mashOutRow).queryByText('Bis Bestätigung')).not.toBeInTheDocument();
+        expect(within(mashInRow).getByText('°C')).toBeInTheDocument();
+        expect(within(mashOutRow).getByText('°C')).toBeInTheDocument();
         expect(within(mashInRow).getAllByRole('spinbutton')).toHaveLength(1);
         expect(within(mashOutRow).getAllByRole('spinbutton')).toHaveLength(1);
+    });
+
+    it('labels rest and decoction fields by their process meaning', () => {
+        renderBeerForm({beerFormState: {fermentationSteps: [
+            {type: 'Rast 1', temperature: 65, time: 10, procedureType: ProcedureType.RAST, executionMode: RestExecutionMode.TIMED},
+            {type: 'Dekoktion', procedureType: ProcedureType.DECOCTION, executionMode: RestExecutionMode.CONFIRMATION_HOLD},
+        ]}});
+        fireEvent.click(screen.getByRole('button', {name: /Brauprozess/}));
+
+        const typeFields = screen.getAllByLabelText(/^Typ /);
+        const modeFields = screen.getAllByLabelText(/^Modus /);
+        expect(typeFields).toHaveLength(2);
+        expect(modeFields[0]).toBeEnabled();
+        expect(screen.getByLabelText('Dauer (min)')).toBeInTheDocument();
+        expect(screen.getByLabelText(/^Zugehörige Rast /)).toBeInTheDocument();
+        expect(modeFields[1]).toBeDisabled();
+        expect(modeFields[1]).toHaveDisplayValue('Bis Bestätigung');
     });
 
     it('shows cooking values only in the brew process and keeps temperature read-only', () => {
@@ -158,6 +199,8 @@ describe('BeerForm section navigation', () => {
         expect(within(cookingRow).getByLabelText('Kochtemperatur im Brauprozess')).toHaveValue(100);
         expect(within(cookingRow).getByLabelText('Kochtemperatur im Brauprozess')).toHaveAttribute('readonly');
         expect(within(cookingRow).getByLabelText('Kochzeit im Brauprozess')).not.toHaveAttribute('readonly');
+        expect(within(cookingRow).getByText('°C')).toBeInTheDocument();
+        expect(within(cookingRow).getByText('min')).toBeInTheDocument();
     });
 
     it('preserves an existing cooking temperature while showing it read-only in the mash plan', () => {
