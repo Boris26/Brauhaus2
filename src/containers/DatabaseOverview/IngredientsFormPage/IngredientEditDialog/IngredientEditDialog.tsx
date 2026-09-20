@@ -1,6 +1,8 @@
 import React, {useEffect, useState} from "react";
 import {Alert, Button, CircularProgress} from "@mui/material";
-import AppDialog from '../../../../components/AppDialog/AppDialog';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
+import AppDialog, {DialogCancelButton} from '../../../../components/AppDialog/AppDialog';
 import FormField from '../../../../components/FormField/FormField';
 
 export type IngredientKind = "malt" | "hop" | "yeast" | "additional";
@@ -46,9 +48,9 @@ export const IngredientEditDialog = ({kind, value, open, loading, backendError, 
     };
     const field = (name: string, label: string, numeric = false) => <FormField name={name} label={label} value={form[name] ?? ""} onChange={update(name)} error={errors[name]} type={numeric ? "number" : "text"} step={numeric ? "any" : undefined}/>;
 
-    return <AppDialog open={open} onClose={onCancel} disableClose={loading} title={titles[kind]} variant={backendError ? 'error' : 'info'}
-        actions={<><Button className="brauhaus-button brauhaus-button-secondary" onClick={onCancel} disabled={loading}>Abbrechen</Button>
-            <Button className="brauhaus-button brauhaus-button-primary" color="primary" variant="contained" onClick={submit} disabled={loading}>{loading ? <><CircularProgress size={18} sx={{mr: 1}}/>Speichern</> : "Speichern"}</Button></>}>
+    return <AppDialog open={open} onClose={onCancel} disableClose={loading} title={titles[kind]} variant={backendError ? 'error' : 'info'} icon={<EditOutlinedIcon/>}
+        actions={<><DialogCancelButton onClick={onCancel} disabled={loading}/>
+            <Button className="brauhaus-button brauhaus-button-primary" color="primary" variant="contained" onClick={submit} disabled={loading} startIcon={!loading ? <SaveOutlinedIcon/> : undefined}>{loading ? <><CircularProgress size={18} sx={{mr: 1}}/>Speichern</> : "Speichern"}</Button></>}>
             {backendError && <Alert severity="error" sx={{mb: 1}}>{backendError}</Alert>}
             <div className="brauhaus-form">{field("name", "Name")}
             {field("description", "Beschreibung")}
