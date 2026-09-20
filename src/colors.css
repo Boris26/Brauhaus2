@@ -260,7 +260,7 @@
   font: inherit;
   line-height: var(--line-height-normal);
   background: var(--bg-input);
-  color: var(--bg-app);
+  color: var(--text-primary);
   min-width: 0;
 }
 
