@@ -1,11 +1,13 @@
 .containerBeerForm {
-    height: calc(100% - 24px);
-    margin: 12px;
+    box-sizing: border-box;
+    height: 100%;
+    padding: var(--spacing-md) var(--spacing-lg);
     display: flex;
     flex-direction: column;
     min-height: 0;
     min-width: 0;
     overflow: hidden;
+    background: var(--bg-app);
 }
 
 .beer-form-panel {
@@ -18,17 +20,6 @@
     background: var(--color-brew-bg);
     box-sizing: border-box;
     overflow: hidden;
-}
-
-.beer-form-panel-header {
-    background-color: var(--bg-card);
-    color: var(--text-primary);
-    border-bottom: 1px solid var(--border-subtle);
-    min-height: 0;
-    margin: 0;
-    padding: var(--space-4) var(--space-5);
-    box-sizing: border-box;
-    border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
 }
 
 .beer-form-scroll {
@@ -415,15 +406,9 @@
     }
 
     .containerBeerForm {
-        height: calc(100% - 16px);
-        margin: 8px;
+        padding: var(--space-4);
     }
 
-    .beer-form-panel-header {
-        height: auto;
-        min-height: 48px;
-        flex-wrap: wrap;
-    }
 }
 
 .fermentation-action-fields { display: grid; gap: .45rem; min-width: 13rem; }
