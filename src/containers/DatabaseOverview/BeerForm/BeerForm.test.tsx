@@ -102,6 +102,7 @@ describe('BeerForm section navigation', () => {
 
         fireEvent.click(screen.getByRole('button', {name: /Malze/}));
         expect(screen.getByText('Name', {selector: '.compact-column-header span'})).toBeInTheDocument();
+        expect(screen.getByText('Aktion', {selector: '.compact-column-header span'})).toBeInTheDocument();
         expect(screen.getAllByLabelText(/Malzname/)).toHaveLength(2);
         expect(screen.getAllByLabelText(/Malzmenge/)).toHaveLength(2);
         expect(screen.getAllByRole('button', {name: 'Malz löschen'})).toHaveLength(2);
@@ -146,6 +147,7 @@ describe('BeerForm section navigation', () => {
 
         const ingredientCard = screen.getByDisplayValue('Koriandersamen').closest('article')!;
         expect(within(ingredientCard).getByLabelText('Zeitangabe')).toBeInTheDocument();
+        expect(within(ingredientCard).getByLabelText('Zeiteinheit')).toHaveDisplayValue('Minuten');
         expect(within(ingredientCard).queryByLabelText('Trigger')).not.toBeInTheDocument();
 
         fireEvent.change(within(ingredientCard).getByLabelText('Phase'), {target: {value: AdditionalIngredientPhase.FERMENTATION}});

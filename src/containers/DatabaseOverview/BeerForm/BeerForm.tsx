@@ -71,6 +71,12 @@ const RecipeEditorSectionHeader: React.FC<{icon: React.ReactNode; title: string;
     </div>
 );
 
+const RecipeEditorColumnHeader: React.FC<{className: string; labels: string[]}> = ({className, labels}) => (
+    <div className={`compact-column-header ${className}`} aria-hidden="true">
+        {labels.map((label, index) => <span key={`${label}-${index}`}>{label}</span>)}
+    </div>
+);
+
 const DEFAULT_COOKING_TEMPERATURE = 100;
 const DEFAULT_REFERENCE_VOLUME = 10;
 const DEFAULT_REFERENCE_BREWHOUSE_EFFICIENCY = 52;
@@ -870,8 +876,8 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         const brewingContent = (
             <div className="recipe-form-card recipe-water-card"><div className="beer-form-grid brewing-data-grid">
-                <label>Hauptguss (l):<input type="number" name="mashVolume" className="field-number-small" min={0} value={mashVolume} step={0.1} onChange={this.handleChange} required={true} max={99} />{this.renderInputError('mashVolume')}</label>
-                <label>Nachguss (l):<input type="number" name="spargeVolume" className="field-number-small" min={0} step={0.1} value={spargeVolume} onChange={this.handleChange} required={true} max={99} />{this.renderInputError('spargeVolume')}</label>
+                <label>Hauptguss<span className="quantity-with-unit"><input type="number" name="mashVolume" className="field-number-small" min={0} value={mashVolume} step={0.1} onChange={this.handleChange} required={true} max={99} /><em>l</em></span>{this.renderInputError('mashVolume')}</label>
+                <label>Nachguss<span className="quantity-with-unit"><input type="number" name="spargeVolume" className="field-number-small" min={0} step={0.1} value={spargeVolume} onChange={this.handleChange} required={true} max={99} /><em>l</em></span>{this.renderInputError('spargeVolume')}</label>
             </div></div>
         );
 
@@ -888,7 +894,6 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 </article>)}</div>
                 <div className="variable-step-heading"><h3>Rasten &amp; Dekoktionen</h3></div>
                 <div className="mash-step-list">{variableSteps.map(({step, index}, variableIndex) => {
-                            const isFixed = false;
                             const executionMode = this.getExecutionMode(step);
                             const procedureType = normalizeFermentationStep(step).procedureType;
                             const procedureTypeErrorKey = `fermentationSteps.${index}.procedureType`;
@@ -897,13 +902,12 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                             return <article key={step.stepId || step.type} className={`mash-step-card compact-row-card ${this.state.validationErrors[procedureTypeErrorKey] || this.state.validationErrors[relatedRastErrorKey] ? 'validation-error-row' : ''}`}>
                                 <span className="mash-step-number" aria-label={`Schritt ${variableIndex + 1}`}>{variableIndex + 1}</span>
                                 <div className={`mash-step-fields mash-step-fields--${procedureType === ProcedureType.DECOCTION ? 'decoction' : 'rest'}`}>
-                                    {!isFixed && <label>Typ<select aria-label={`Typ ${index + 1}`} aria-invalid={Boolean(this.state.validationErrors[procedureTypeErrorKey])} name="procedureType" value={procedureType} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value={ProcedureType.RAST}>{step.type}</option><option value={ProcedureType.DECOCTION}>Dekoktion</option></select>{this.renderFieldError(procedureTypeErrorKey)}</label>}
+                                    <label>Typ<select aria-label={`Typ ${index + 1}`} aria-invalid={Boolean(this.state.validationErrors[procedureTypeErrorKey])} name="procedureType" value={procedureType} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value={ProcedureType.RAST}>{step.type}</option><option value={ProcedureType.DECOCTION}>Dekoktion</option></select>{this.renderFieldError(procedureTypeErrorKey)}</label>
                                     {procedureType === ProcedureType.DECOCTION && <label>Zugehörige Rast<select aria-label={`Zugehörige Rast ${index + 1}`} aria-invalid={Boolean(this.state.validationErrors[relatedRastErrorKey])} name="relatedRastId" value={step.relatedRastId || ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value="">Bitte Rast auswählen</option>{rastOptions.map((rast) => <option key={rast.stepId} value={rast.stepId}>{rast.type} – {rast.temperature} °C</option>)}</select>{this.renderFieldError(relatedRastErrorKey)}</label>}
-                                    {!isFixed && <label>Modus<select aria-label={`Modus ${index + 1}`} name="executionMode" value={executionMode} disabled={procedureType === ProcedureType.DECOCTION} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value={RestExecutionMode.TIMED}>Zeitgesteuert</option><option value={RestExecutionMode.CONFIRMATION_HOLD}>Bis Bestätigung</option></select></label>}
-                                    {isFixed && step.type !== 'Kochen' && <div className="mash-step-readonly"><span>Modus</span><strong>Bis Bestätigung</strong></div>}
+                                    <label>Modus<select aria-label={`Modus ${index + 1}`} name="executionMode" value={executionMode} disabled={procedureType === ProcedureType.DECOCTION} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value={RestExecutionMode.TIMED}>Zeitgesteuert</option><option value={RestExecutionMode.CONFIRMATION_HOLD}>Bis Bestätigung</option></select></label>
                                     {procedureType !== ProcedureType.DECOCTION && <label>Temperatur (°C){step.type === 'Kochen' ? <input type="number" value={cookingTemperatur} readOnly={true} className="readonly-cooking-temperature" title="Rezeptwert – die Kochphase wird nicht temperaturgeregelt." aria-label="Kochtemperatur im Brauprozess" /> : <input type="number" name="temperature" value={step.temperature ?? ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />}</label>}
                                     {step.type === 'Kochen' && <label>Zeit (min)<input type="number" name="cookingTime" min={0} max={999} value={cookingTime} onChange={this.handleChange} required={true} aria-label="Kochzeit im Brauprozess" />{this.renderInputError('cookingTime')}</label>}
-                                    {!isFixed && procedureType !== ProcedureType.DECOCTION && executionMode === RestExecutionMode.TIMED && <label>Dauer (min)<input type="number" name="time" min={1} value={step.time ?? ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} /></label>}
+                                    {procedureType !== ProcedureType.DECOCTION && executionMode === RestExecutionMode.TIMED && <label>Dauer (min)<input type="number" name="time" min={1} value={step.time ?? ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} /></label>}
                                 </div><button type="button" className="cancel-btn brauhaus-button brauhaus-button-danger brauhaus-icon-button" onClick={() => this.removeFermentationStep(index)} title="Rast löschen" aria-label="Rast löschen"><DeleteOutlineIcon fontSize="small" /></button>
                             </article>;
                         })}</div>
@@ -912,7 +916,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         const maltsContent = (
             <>
-                {maltsDTO.length > 0 && <div className="compact-column-header ingredient-quantity-grid" aria-hidden="true"><span>Name</span><span>Menge</span><span /></div>}
+                {maltsDTO.length > 0 && <RecipeEditorColumnHeader className="ingredient-quantity-grid" labels={['Name', 'Menge', 'Aktion']} />}
                 <div className="recipe-item-list">{maltsDTO?.map((step, index) => <article className="recipe-item-card compact-row-card ingredient-quantity-grid" key={index}>
                     <label className="compact-field"><span className="compact-field-label">Name</span><select aria-label={`Malzname ${index + 1}`} name="id" value={String(step.id)} onChange={(e) => this.handleMaltChange(e.target.value, e.target.name, index)} required={true}><option value="">Malz auswählen</option>{!malts.some(malt => String(malt.id) === String(step.id)) && step.id !== '' && <option value={String(step.id)}>Unbekanntes Malz (ID {step.id})</option>}{malts.map((malt) => <option key={malt.id} value={String(malt.id)}>{malt.name}</option>)}</select></label><label className="compact-field compact-quantity"><span className="compact-field-label">Menge</span><span className="quantity-with-unit"><input aria-label={`Malzmenge ${index + 1}`} type="number" name="quantity" min={0} value={step.quantity} onChange={(e) => this.handleMaltChange(e.target.value, e.target.name, index)} required={true} /><em>g</em></span>{this.renderFieldError(`maltsDTO.${index}.quantity`)}</label><button type="button" className="cancel-btn brauhaus-button brauhaus-button-danger brauhaus-icon-button" onClick={() => this.removeMalts(index)} title="Malz löschen" aria-label="Malz löschen"><DeleteOutlineIcon fontSize="small" /></button>
                 </article>)}</div>
@@ -922,7 +926,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         const hopsContent = (
             <>
-                {hopsDTO.length > 0 && <div className="compact-column-header hop-row-grid" aria-hidden="true"><span>Name</span><span>Menge</span><span>Verwendung</span><span>Zeitangabe</span><span>Einheit</span><span /></div>}
+                {hopsDTO.some(step => step.usage !== HopUsage.DRY_HOP) && <RecipeEditorColumnHeader className="hop-row-grid" labels={['Name', 'Menge', 'Verwendung', 'Zeitangabe', 'Einheit', 'Aktion']} />}
                 <div className="hop-card-list">{hopsDTO?.map((step, index) => <article className={`hop-card compact-row-card ${step.usage === HopUsage.DRY_HOP ? 'is-expanded is-dry-hop' : ''}`} key={index}>
                     <div className="hop-card-fields">
                         <label>Name<select name="id" value={String(step.id)} onChange={(e) => this.handleHopChange(e.target.value, "id", index)} required={true}><option value="">Hopfen auswählen</option>{!hops.some(hop => String(hop.id) === String(step.id)) && step.id !== '' && <option value={String(step.id)}>Unbekannter Hopfen (ID {step.id})</option>}{hops.map((hop) => <option key={hop.id} value={String(hop.id)}>{hop.name}</option>)}</select></label>
@@ -938,7 +942,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         const yeastContent = (
             <>
-                {yeastsDTO.length > 0 && <div className="compact-column-header ingredient-quantity-grid" aria-hidden="true"><span>Name</span><span>Menge</span><span /></div>}
+                {yeastsDTO.length > 0 && <RecipeEditorColumnHeader className="ingredient-quantity-grid" labels={['Name', 'Menge', 'Aktion']} />}
                 <div className="recipe-item-list">{yeastsDTO?.map((step, index) => <article className="recipe-item-card compact-row-card ingredient-quantity-grid" key={index}>
                     <label className="compact-field"><span className="compact-field-label">Name</span><select aria-label={`Hefename ${index + 1}`} name="id" value={String(step.id)} onChange={(e) => this.handleYeastChange(e.target.value, e.target.name, index)} required={true}><option value="">Hefe auswählen</option>{!yeasts.some(yeast => String(yeast.id) === String(step.id)) && step.id !== '' && <option value={String(step.id)}>Unbekannte Hefe (ID {step.id})</option>}{yeasts.map((yeast) => <option key={yeast.id} value={String(yeast.id)}>{yeast.name}</option>)}</select></label><label className="compact-field compact-quantity"><span className="compact-field-label">Menge</span><span className="quantity-with-unit"><input aria-label={`Hefemenge ${index + 1}`} type="number" name="quantity" min={0} step="0.1" value={step.quantity} onChange={(e) => this.handleYeastChange(e.target.value, e.target.name, index)} required={true} /><em>g</em></span>{this.renderFieldError(`yeastsDTO.${index}.quantity`)}</label><button type="button" className="cancel-btn brauhaus-button brauhaus-button-danger brauhaus-icon-button" onClick={() => this.removeYeast(index)} title="Hefe löschen" aria-label="Hefe löschen"><DeleteOutlineIcon fontSize="small" /></button>
                 </article>)}</div>
@@ -948,14 +952,14 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         const additionalContent = (
             <>
-                {additionalIngredientsDTO.length > 0 && <div className="compact-column-header additional-row-grid" aria-hidden="true"><span>Name</span><span>Menge</span><span>Einheit</span><span>Phase</span><span>Zeitangabe</span><span /></div>}
+                {additionalIngredientsDTO.some(step => step.phase !== AdditionalIngredientPhase.FERMENTATION) && <RecipeEditorColumnHeader className="additional-row-grid" labels={['Name', 'Menge', 'Einheit', 'Phase', 'Zeit', 'Zeiteinheit', 'Aktion']} />}
                 <div className="recipe-item-list">{additionalIngredientsDTO?.map((aStep, aIndex) => <article className={`recipe-item-card compact-row-card additional-ingredient-card ${aStep.phase === AdditionalIngredientPhase.FERMENTATION ? 'is-expanded' : ''}`} key={aIndex}>
                     <div className="recipe-item-fields additional-ingredient-base">
                         <label>Name<select name="id" value={String(aStep.id ?? '')} onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "id", aIndex)}><option value="">Zutat auswählen</option>{!additionalIngredients.some(item => String(item.id) === String(aStep.id)) && aStep.id != null && String(aStep.id) !== '' && <option value={String(aStep.id)}>Unbekannte Zutat (ID {aStep.id})</option>}{additionalIngredients.map((aIngredient) => <option key={aIngredient.id} value={String(aIngredient.id)}>{aIngredient.name}</option>)}</select></label>
                         <label>Menge<input type="number" min={0} name="quantity" value={aStep.quantity} onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "quantity", aIndex)} />{this.renderFieldError(`additionalIngredientsDTO.${aIndex}.quantity`)}</label>
                         <label>Einheit<input type="text" name="unit" value={aStep.unit} onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "unit", aIndex)} /></label>
                         <label>Phase<select name="phase" value={aStep.phase} onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "phase", aIndex)}><option value={AdditionalIngredientPhase.MASH}>Maische</option><option value={AdditionalIngredientPhase.BOIL}>Kochen</option><option value={AdditionalIngredientPhase.WHIRLPOOL}>Whirlpool</option><option value={AdditionalIngredientPhase.FERMENTATION}>Gärung</option><option value={AdditionalIngredientPhase.MATURATION}>Reifung</option><option value={AdditionalIngredientPhase.PACKAGING}>Abfüllung</option></select></label>
-                        {aStep.phase !== AdditionalIngredientPhase.FERMENTATION && <label>Zeitangabe<span className="addition-time-controls"><input aria-label="Zugabezeit" type="number" min={1} name="additionTime" value={aStep.additionTime ?? ''} onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "additionTime", aIndex)} /><select aria-label="Zeiteinheit" name="timeUnit" value={aStep.timeUnit ?? AdditionalIngredientTimeUnit.DAYS} onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "timeUnit", aIndex)}><option value={AdditionalIngredientTimeUnit.MINUTES}>min</option><option value={AdditionalIngredientTimeUnit.HOURS}>Std.</option><option value={AdditionalIngredientTimeUnit.DAYS}>Tage</option></select></span></label>}
+                        {aStep.phase !== AdditionalIngredientPhase.FERMENTATION && <><label>Zeit<input aria-label="Zeitangabe" type="number" min={1} name="additionTime" value={aStep.additionTime ?? ''} onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "additionTime", aIndex)} /></label><label>Zeiteinheit<select aria-label="Zeiteinheit" name="timeUnit" value={aStep.timeUnit ?? AdditionalIngredientTimeUnit.DAYS} onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "timeUnit", aIndex)}><option value={AdditionalIngredientTimeUnit.MINUTES}>Minuten</option><option value={AdditionalIngredientTimeUnit.HOURS}>Stunden</option><option value={AdditionalIngredientTimeUnit.DAYS}>Tage</option></select></label></>}
                     </div><button type="button" className="cancel-btn brauhaus-button brauhaus-button-danger brauhaus-icon-button" onClick={() => this.removeAdditionalIngredient(aIndex)} title="Zutat löschen" aria-label="Zutat löschen"><DeleteOutlineIcon fontSize="small" /></button>
                     {aStep.phase === AdditionalIngredientPhase.FERMENTATION && <div className="recipe-field-group"><h4>Gärungsaktion</h4><FermentationActionFields value={aStep} onChange={(value, field) => this.handleAdditionalIngredientChange(value, field, aIndex)} /></div>}
                     {(aStep.phase === AdditionalIngredientPhase.FERMENTATION || aStep.note) && <div className="recipe-field-group"><label>Hinweis<input type="text" name="note" value={aStep.note ?? ''} onChange={(e) => this.handleAdditionalIngredientChange(e.target.value, "note", aIndex)} /></label></div>}
