@@ -1,6 +1,6 @@
 import React from 'react';
 import {Button, ButtonProps} from '@mui/material';
-import AppDialog, {AppDialogVariant} from '../AppDialog/AppDialog';
+import AppDialog, {AppDialogVariant, DialogCancelButton} from '../AppDialog/AppDialog';
 import './ModalDialog.css';
 
 export enum DialogType {
@@ -19,6 +19,8 @@ interface ModalDialogProps {
     open: boolean;
     content: string;
     header: string;
+    icon?: React.ReactNode;
+    confirmIcon?: React.ReactNode;
     confirmLabel?: string;
     cancelLabel?: string;
     showCancelButton?: boolean;
@@ -62,19 +64,17 @@ class ModalDialog extends React.Component<ModalDialogProps, ModalDialogState> {
         }
     };
     render() {
-        const {content, header, open, type, confirmLabel, cancelLabel, showCancelButton, confirmColor, confirmVariant,
+        const {content, header, open, type, icon, confirmIcon, confirmLabel, cancelLabel, showCancelButton, confirmColor, confirmVariant,
             actionsDisabled, showConfirmButton = true, disableClose} = this.props;
 
         return (
-            <AppDialog open={open} title={header} variant={type as AppDialogVariant}
+            <AppDialog open={open} title={header} variant={type as AppDialogVariant} icon={icon}
                 disableClose={disableClose} onClose={showCancelButton ? this.handleCancel : this.handleClose}
                 actions={showCancelButton || showConfirmButton ? <>
                     {showCancelButton && (
-                        <Button className="brauhaus-button brauhaus-button-secondary" onClick={this.handleCancel} color="primary" disabled={actionsDisabled}>
-                            {cancelLabel ?? "Abbrechen"}
-                        </Button>
+                        <DialogCancelButton onClick={this.handleCancel} disabled={actionsDisabled} label={cancelLabel ?? "Abbrechen"}/>
                     )}
-                    {showConfirmButton && <Button className={`brauhaus-button ${confirmColor === 'error' ? 'brauhaus-button-danger' : 'brauhaus-button-primary'}`} onClick={this.handleClose} color={confirmColor ?? "primary"} variant={confirmVariant ?? "text"} disabled={actionsDisabled}>
+                    {showConfirmButton && <Button className={`brauhaus-button ${confirmColor === 'error' ? 'brauhaus-button-danger' : 'brauhaus-button-primary'}`} onClick={this.handleClose} color={confirmColor ?? "primary"} variant={confirmVariant ?? "text"} disabled={actionsDisabled} startIcon={confirmIcon}>
                         {confirmLabel ?? "Ok"}
                     </Button>}
                 </> : undefined}>
