@@ -25,9 +25,14 @@ import {AdditionalIngredientRepository} from '../../../repositorys/AdditionalIng
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import SaveIcon from '@mui/icons-material/Save';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
-import {AppAccordion, AppAccordionHeader} from '../../../components/AppAccordion/AppAccordion';
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
+import WaterDropOutlinedIcon from '@mui/icons-material/WaterDropOutlined';
+import TimelineOutlinedIcon from '@mui/icons-material/TimelineOutlined';
+import GrainIcon from '@mui/icons-material/Grain';
+import LocalFloristOutlinedIcon from '@mui/icons-material/LocalFloristOutlined';
+import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined';
+import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined';
 import {PageHeader} from '../../../components/PageLayout/PageLayout';
-import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
 import {CONTACT_TIME_UNITS, TIME_TRIGGER_UNITS, clearRecipeAction, unitLabel, RecipeActionFields, TriggerType, TriggerUnit, TimeUnit, hasRecipeAction, normalizeRecipeAction} from '../../../model/FermentationRecipeAction';
 
 interface BeerFormProps {
@@ -96,6 +101,7 @@ interface BeerFormState {
     validationDialogMessage: string;
     validationErrors: Record<string, string>;
     expandedSections: Record<BeerFormSection, boolean>;
+    activeSection: BeerFormSection;
     showImportDialog: boolean;
 }
 
@@ -132,6 +138,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             validationDialogMessage: '',
             validationErrors: {},
             showImportDialog: false,
+            activeSection: 'basic',
             expandedSections: {
                 basic: true,
                 brewing: true,
@@ -810,26 +817,6 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         }
     };
 
-    getSectionId = (section: BeerFormSection) => `beer-form-section-${section}`;
-
-    isSectionExpanded = (section: BeerFormSection): boolean => this.state.expandedSections?.[section] ?? false;
-
-    toggleSection = (section: BeerFormSection) => {
-        this.setState((prevState) => ({
-            expandedSections: {
-                ...prevState.expandedSections,
-                [section]: !(prevState.expandedSections?.[section] ?? false),
-            },
-        }));
-    };
-
-    handleSectionKeyDown = (event: React.KeyboardEvent<HTMLElement>, section: BeerFormSection) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            this.toggleSection(section);
-        }
-    };
-
     sectionHasError = (section: BeerFormSection): boolean => {
         const errorKeys = Object.keys(this.state.validationErrors);
         if (section === 'malts') return errorKeys.some((key) => key.startsWith('maltsDTO.'));
@@ -838,37 +825,6 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         if (section === 'additional') return errorKeys.some((key) => key.startsWith('additionalIngredientsDTO.'));
         if (section === 'mash') return errorKeys.some((key) => key.startsWith('fermentationSteps.'));
         return false;
-    };
-
-    renderAccordionSection = (section: BeerFormSection, title: string, summary: string, content: React.ReactNode) => {
-        const expanded = this.isSectionExpanded(section);
-        const contentId = this.getSectionId(section);
-        const summaryId = `${contentId}-header`;
-        const hasError = this.sectionHasError(section);
-        const status = (hasError || summary) ? (
-            <span className="beer-accordion-meta">
-                {hasError && <span className="beer-accordion-error">Fehler</span>}
-                {summary && <span>{summary}</span>}
-            </span>
-        ) : undefined;
-
-        return (
-            <AppAccordion
-                component="section"
-                expanded={expanded}
-                onChange={() => this.toggleSection(section)}
-                className={`beer-form-accordion ${hasError ? 'has-error' : ''}`}
-                summary={<AppAccordionHeader title={title} status={status} />}
-                summaryProps={{
-                    id: summaryId,
-                    'aria-controls': contentId,
-                    onKeyDown: (event) => this.handleSectionKeyDown(event, section),
-                }}
-                detailsProps={{id: contentId, 'aria-labelledby': summaryId}}
-            >
-                {content}
-            </AppAccordion>
-        );
     };
 
     getImportInfo = (): string => {
@@ -910,39 +866,26 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         );
 
         const mashContent = (
-            <>
-                <div className="table-wrapper">
-                    <table className="ingredient-table mash-plan-table app-table app-table--editor">
-                        <colgroup>
-                            <col className="mash-column-type" />
-                            <col className="mash-column-related" />
-                            <col className="mash-column-mode" />
-                            <col className="mash-column-temperature" />
-                            <col className="mash-column-time" />
-                            <col className="mash-column-action" />
-                        </colgroup>
-                        <thead><tr><th>Typ</th><th>Zugehörige Rast</th><th>Modus</th><th>Temp (°C)</th><th>Zeit (min)</th><th className="action-column">Aktion</th></tr></thead>
-                        <tbody>{fermentationSteps?.map((step, index) => {
+            <div className="mash-step-list">{fermentationSteps?.map((step, index) => {
                             const isFixed = this.fixedTypes.includes(step.type);
                             const executionMode = this.getExecutionMode(step);
                             const procedureType = normalizeFermentationStep(step).procedureType;
                             const procedureTypeErrorKey = `fermentationSteps.${index}.procedureType`;
                             const relatedRastErrorKey = `fermentationSteps.${index}.relatedRastId`;
                             const rastOptions = fermentationSteps.filter((candidate) => !this.fixedTypes.includes(candidate.type) && normalizeFermentationStep(candidate).procedureType === ProcedureType.RAST);
-                            const hasEditableTime = step.type === 'Kochen' || !isFixed;
-                            return <tr key={step.stepId || step.type} className={this.state.validationErrors[procedureTypeErrorKey] || this.state.validationErrors[relatedRastErrorKey] ? 'validation-error-row' : ''}>
-                                <td>{isFixed ? <span className="readonly-table-value">{step.type}</span> : <><select aria-label={`Typ ${index + 1}`} aria-invalid={Boolean(this.state.validationErrors[procedureTypeErrorKey])} name="procedureType" value={procedureType} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value={ProcedureType.RAST}>{step.type}</option><option value={ProcedureType.DECOCTION}>Dekoktion</option></select>{this.renderFieldError(procedureTypeErrorKey)}</>}</td>
-                                <td>{procedureType === ProcedureType.DECOCTION ? <><select aria-label={`Zugehörige Rast ${index + 1}`} aria-invalid={Boolean(this.state.validationErrors[relatedRastErrorKey])} name="relatedRastId" value={step.relatedRastId || ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value="">Bitte Rast auswählen</option>{rastOptions.map((rast) => <option key={rast.stepId} value={rast.stepId}>{rast.type} – {rast.temperature} °C</option>)}</select>{this.renderFieldError(relatedRastErrorKey)}</> : <span className="muted-table-value">–</span>}</td>
-                                <td>{isFixed ? <span className="muted-table-value">–</span> : <select aria-label={`Modus ${index + 1}`} name="executionMode" value={executionMode} disabled={procedureType === ProcedureType.DECOCTION} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value={RestExecutionMode.TIMED}>Zeitgesteuert</option><option value={RestExecutionMode.CONFIRMATION_HOLD}>Bis Bestätigung</option></select>}</td>
-                                <td>{procedureType === ProcedureType.DECOCTION ? <span className="muted-table-value">–</span> : step.type === 'Kochen' ? <input type="number" value={cookingTemperatur} readOnly={true} className="readonly-cooking-temperature" title="Rezeptwert – die Kochphase wird nicht temperaturgeregelt." aria-label="Kochtemperatur im Brauprozess" /> : <input type="number" name="temperature" value={step.temperature ?? ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />}</td>
-                                <td>{step.type === 'Kochen' ? <><input type="number" name="cookingTime" min={0} max={999} value={cookingTime} onChange={this.handleChange} required={true} aria-label="Kochzeit im Brauprozess" />{this.renderInputError('cookingTime')}</> : hasEditableTime && procedureType !== ProcedureType.DECOCTION && executionMode === RestExecutionMode.TIMED ? <input type="number" name="time" min={isFixed ? 0 : 1} value={step.time ?? ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={!isFixed} /> : <span className="muted-table-value">–</span>}</td>
-                                <td className="action-column">{index > 0 && !isFixed && <button type="button" className="cancel-btn brauhaus-button brauhaus-button-danger brauhaus-icon-button" onClick={() => this.removeFermentationStep(index)} title="Rast löschen" aria-label="Rast löschen"><DeleteOutlineIcon fontSize="small" /></button>}</td>
-                            </tr>;
-                        })}</tbody>
-                    </table>
-                </div>
-                <button type="button" className="add-button brauhaus-button brauhaus-button-secondary section-add-button" onClick={this.addFermentationStep}>+ Rast hinzufügen</button>
-            </>
+                            return <article key={step.stepId || step.type} className={`mash-step-card ${this.state.validationErrors[procedureTypeErrorKey] || this.state.validationErrors[relatedRastErrorKey] ? 'validation-error-row' : ''}`}>
+                                <header className="mash-step-header"><span className="mash-step-number">{index + 1}</span><h3>{procedureType === ProcedureType.DECOCTION ? 'Dekoktion' : step.type}</h3>{index > 0 && !isFixed && <button type="button" className="cancel-btn brauhaus-button brauhaus-button-danger brauhaus-icon-button" onClick={() => this.removeFermentationStep(index)} title="Rast löschen" aria-label="Rast löschen"><DeleteOutlineIcon fontSize="small" /></button>}</header>
+                                <div className="mash-step-fields">
+                                    {!isFixed && <label>Typ<select aria-label={`Typ ${index + 1}`} aria-invalid={Boolean(this.state.validationErrors[procedureTypeErrorKey])} name="procedureType" value={procedureType} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value={ProcedureType.RAST}>{step.type}</option><option value={ProcedureType.DECOCTION}>Dekoktion</option></select>{this.renderFieldError(procedureTypeErrorKey)}</label>}
+                                    {procedureType === ProcedureType.DECOCTION && <label>Zugehörige Rast<select aria-label={`Zugehörige Rast ${index + 1}`} aria-invalid={Boolean(this.state.validationErrors[relatedRastErrorKey])} name="relatedRastId" value={step.relatedRastId || ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value="">Bitte Rast auswählen</option>{rastOptions.map((rast) => <option key={rast.stepId} value={rast.stepId}>{rast.type} – {rast.temperature} °C</option>)}</select>{this.renderFieldError(relatedRastErrorKey)}</label>}
+                                    {!isFixed && <label>Modus<select aria-label={`Modus ${index + 1}`} name="executionMode" value={executionMode} disabled={procedureType === ProcedureType.DECOCTION} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value={RestExecutionMode.TIMED}>Zeitgesteuert</option><option value={RestExecutionMode.CONFIRMATION_HOLD}>Bis Bestätigung</option></select></label>}
+                                    {isFixed && step.type !== 'Kochen' && <div className="mash-step-readonly"><span>Modus</span><strong>Bis Bestätigung</strong></div>}
+                                    {procedureType !== ProcedureType.DECOCTION && <label>Temperatur (°C){step.type === 'Kochen' ? <input type="number" value={cookingTemperatur} readOnly={true} className="readonly-cooking-temperature" title="Rezeptwert – die Kochphase wird nicht temperaturgeregelt." aria-label="Kochtemperatur im Brauprozess" /> : <input type="number" name="temperature" value={step.temperature ?? ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />}</label>}
+                                    {step.type === 'Kochen' && <label>Zeit (min)<input type="number" name="cookingTime" min={0} max={999} value={cookingTime} onChange={this.handleChange} required={true} aria-label="Kochzeit im Brauprozess" />{this.renderInputError('cookingTime')}</label>}
+                                    {!isFixed && procedureType !== ProcedureType.DECOCTION && executionMode === RestExecutionMode.TIMED && <label>Zeit (min)<input type="number" name="time" min={1} value={step.time ?? ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} /></label>}
+                                </div>
+                            </article>;
+                        })}</div>
         );
 
         const maltsContent = (
@@ -955,9 +898,17 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         const hopsContent = (
             <>
-                <div className="table-wrapper"><table className="ingredient-table app-table app-table--editor"><thead><tr><th>Name</th><th>Menge (g)</th><th>Verwendung</th><th>Zeitangabe</th><th>Einheit</th><th>Gärungsaktion</th><th className="action-column">Aktion</th></tr></thead><tbody>{hopsDTO?.map((step, index) => <tr key={index}><td><select name="id" value={String(step.id)} onChange={(e) => this.handleHopChange(e.target.value, "id", index)} required={true}><option value="">Hopfen</option>{!hops.some(hop => String(hop.id) === String(step.id)) && step.id !== '' && <option value={String(step.id)}>Unbekannter Hopfen (ID {step.id})</option>}{hops.map((hop) => <option key={hop.id} value={String(hop.id)}>{hop.name}</option>)}</select></td><td><input type="number" name="quantity" min={0} value={step.quantity} onChange={(e) => this.handleHopChange(e.target.value, "quantity", index)} required={true} />{this.renderFieldError(`hopsDTO.${index}.quantity`)}</td><td><select name="usage" value={step.usage ?? HopUsage.BOIL} onChange={(e) => this.handleHopChange(e.target.value, "usage", index)} required={true}><option value={HopUsage.FIRST_WORT}>Vorderwürze</option><option value={HopUsage.BOIL}>Kochhopfen</option><option value={HopUsage.WHIRLPOOL}>Whirlpool</option><option value={HopUsage.DRY_HOP}>Hopfen stopfen</option></select></td><td>{step.usage === HopUsage.DRY_HOP ? '–' : <input type="number" name="additionTime" min={0} value={step.additionTime ?? ''} onChange={(e) => this.handleHopChange(e.target.value, "additionTime", index)} />}</td><td>{step.usage === HopUsage.DRY_HOP ? '–' : <select name="timeUnit" value={step.timeUnit ?? ''} onChange={(e) => this.handleHopChange(e.target.value, "timeUnit", index)}><option value="">Keine Einheit</option>{hopTimeUnitsByUsage[step.usage ?? HopUsage.BOIL].map((timeUnit) => <option key={timeUnit} value={timeUnit}>{timeUnit === HopTimeUnit.MINUTES ? 'Minuten' : timeUnit === HopTimeUnit.HOURS ? 'Stunden' : 'Tage'}</option>)}</select>}</td><td>{step.usage === HopUsage.DRY_HOP ? <FermentationActionFields value={step} onChange={(value, field) => this.handleHopChange(value, field, index)} /> : '–'}</td><td className="action-column"><button type="button" className="cancel-btn brauhaus-button brauhaus-button-danger brauhaus-icon-button" onClick={() => this.removeHops(index)} title="Hopfen löschen" aria-label="Hopfen löschen"><DeleteOutlineIcon fontSize="small" /></button></td></tr>)}</tbody></table></div>
+                <div className="hop-card-list">{hopsDTO?.map((step, index) => <article className={`hop-card ${step.usage === HopUsage.DRY_HOP ? 'is-dry-hop' : ''}`} key={index}>
+                    <header className="hop-card-header"><strong>{hops.find(hop => String(hop.id) === String(step.id))?.name || 'Neue Hopfengabe'}</strong><button type="button" className="cancel-btn brauhaus-button brauhaus-button-danger brauhaus-icon-button" onClick={() => this.removeHops(index)} title="Hopfen löschen" aria-label="Hopfen löschen"><DeleteOutlineIcon fontSize="small" /></button></header>
+                    <div className="hop-card-fields">
+                        <label>Hopfen<select name="id" value={String(step.id)} onChange={(e) => this.handleHopChange(e.target.value, "id", index)} required={true}><option value="">Hopfen</option>{!hops.some(hop => String(hop.id) === String(step.id)) && step.id !== '' && <option value={String(step.id)}>Unbekannter Hopfen (ID {step.id})</option>}{hops.map((hop) => <option key={hop.id} value={String(hop.id)}>{hop.name}</option>)}</select></label>
+                        <label>Menge (g)<input type="number" name="quantity" min={0} value={step.quantity} onChange={(e) => this.handleHopChange(e.target.value, "quantity", index)} required={true} />{this.renderFieldError(`hopsDTO.${index}.quantity`)}</label>
+                        <label>Verwendung<select name="usage" value={step.usage ?? HopUsage.BOIL} onChange={(e) => this.handleHopChange(e.target.value, "usage", index)} required={true}><option value={HopUsage.FIRST_WORT}>Vorderwürze</option><option value={HopUsage.BOIL}>Kochhopfen</option><option value={HopUsage.WHIRLPOOL}>Whirlpool</option><option value={HopUsage.DRY_HOP}>Hopfen stopfen</option></select></label>
+                        {step.usage !== HopUsage.DRY_HOP && <><label>Zeitangabe<input type="number" name="additionTime" min={0} value={step.additionTime ?? ''} onChange={(e) => this.handleHopChange(e.target.value, "additionTime", index)} /></label><label>Einheit<select name="timeUnit" value={step.timeUnit ?? ''} onChange={(e) => this.handleHopChange(e.target.value, "timeUnit", index)}><option value="">Keine Einheit</option>{hopTimeUnitsByUsage[step.usage ?? HopUsage.BOIL].map((timeUnit) => <option key={timeUnit} value={timeUnit}>{timeUnit === HopTimeUnit.MINUTES ? 'Minuten' : timeUnit === HopTimeUnit.HOURS ? 'Stunden' : 'Tage'}</option>)}</select></label></>}
+                    </div>
+                    {step.usage === HopUsage.DRY_HOP && <div className="hop-action-group"><h4>Gärungsaktion</h4><FermentationActionFields value={step} onChange={(value, field) => this.handleHopChange(value, field, index)} /></div>}
+                </article>)}</div>
                 {hopsDTO.length === 0 && <p className="empty-section-note">Noch kein Hopfen hinzugefügt.</p>}
-                <button type="button" className="add-button brauhaus-button brauhaus-button-secondary section-add-button" onClick={this.addHops}>+ Hopfen hinzufügen</button>
             </>
         );
 
@@ -977,12 +928,22 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             </>
         );
 
+        const sections: Array<{id: BeerFormSection; label: string; icon: React.ReactNode; count?: number; content: React.ReactNode}> = [
+            {id: 'basic', label: 'Grunddaten', icon: <DescriptionOutlinedIcon />, content: basicContent},
+            {id: 'brewing', label: 'Brauwasser', icon: <WaterDropOutlinedIcon />, content: brewingContent},
+            {id: 'mash', label: 'Brauprozess', icon: <TimelineOutlinedIcon />, count: fermentationSteps.length, content: mashContent},
+            {id: 'malts', label: 'Malze', icon: <GrainIcon />, count: maltsDTO.length, content: maltsContent},
+            {id: 'hops', label: 'Hopfen', icon: <LocalFloristOutlinedIcon />, count: hopsDTO.length, content: hopsContent},
+            {id: 'yeast', label: 'Hefe', icon: <ScienceOutlinedIcon />, count: yeastsDTO.length, content: yeastContent},
+            {id: 'additional', label: 'Weitere Zutaten', icon: <CategoryOutlinedIcon />, count: additionalIngredientsDTO.length, content: additionalContent},
+        ];
+        const active = sections.find((section) => section.id === this.state.activeSection) ?? sections[0];
+
         return (
             <form id="beer-recipe-form" className="beer-form" onSubmit={this.handleSubmit} noValidate>
-                <div className="beer-form-toolbar">
-                    <div className="beer-form-toolbar-title">Rezept</div>
-                    <label className="beer-select-label">Bier auswählen:<select onChange={this.handleBeerSelect} value={beers.find(b => b.name === name)?.id || ''}><option value="">Neues Bier anlegen</option>{beers.map(beer => <option key={beer.id} value={beer.id}>{beer.name}</option>)}</select></label>
-                    <button type="button" className="add-button brauhaus-button brauhaus-button-secondary toolbar-button" onClick={this.resetForm}>Neues Bier</button>
+                <div className="beer-form-toolbar brauhaus-card">
+                    <label className="beer-select-label">Rezept auswählen<select onChange={this.handleBeerSelect} value={beers.find(b => b.name === name)?.id || ''}><option value="">Neues Rezept anlegen</option>{beers.map(beer => <option key={beer.id} value={beer.id}>{beer.name}</option>)}</select></label>
+                    <button type="button" className="add-button brauhaus-button brauhaus-button-secondary toolbar-button" onClick={this.resetForm}>Neu</button>
                     <button type="button" className="add-button brauhaus-button brauhaus-button-secondary toolbar-button" onClick={() => this.setState({showImportDialog: true})}>Importieren</button>
                 </div>
                 <div className="beer-form-overview" aria-label="Rezeptübersicht">
@@ -993,14 +954,25 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 </div>
                 {(missingMalts.length > 0 || missingHops.length > 0 || missingYeasts.length > 0) && <div className="missing-ingredients-warning">{missingMalts.length > 0 && <div>Fehlende Malze: {missingMalts.join(', ')}</div>}{missingHops.length > 0 && <div>Fehlende Hopfen: {missingHops.join(', ')}</div>}{missingYeasts.length > 0 && <div>Fehlende Hefen: {missingYeasts.join(', ')}</div>}</div>}
                 {info && <div className="beer-form-info">{info}</div>}
-                <div className="beer-form-sections app-accordion-group">
-                    {this.renderAccordionSection('basic', 'Grunddaten', '', basicContent)}
-                    {this.renderAccordionSection('brewing', 'Brauwasser', '', brewingContent)}
-                    {this.renderAccordionSection('mash', 'Brauprozess', `${fermentationSteps.length} Rasten`, mashContent)}
-                    {this.renderAccordionSection('malts', 'Malze', `${maltsDTO.length} Einträge`, maltsContent)}
-                    {this.renderAccordionSection('hops', 'Hopfen', `${hopsDTO.length} Einträge`, hopsContent)}
-                    {this.renderAccordionSection('yeast', 'Hefe', `${yeastsDTO.length} Einträge`, yeastContent)}
-                    {this.renderAccordionSection('additional', 'Weitere Zutaten', `${additionalIngredientsDTO.length} Einträge`, additionalContent)}
+                <div className="recipe-editor-layout">
+                    <nav className="recipe-editor-navigation brauhaus-card" aria-label="Rezeptabschnitte">
+                        <h2>Rezept</h2>
+                        {sections.map((section) => <button key={section.id} type="button" className={section.id === active.id ? 'is-active' : ''} aria-current={section.id === active.id ? 'page' : undefined} onClick={() => this.setState({activeSection: section.id})}>
+                            <span className="recipe-section-icon" aria-hidden="true">{section.icon}</span><span>{section.label}</span>{section.count !== undefined && <span className="recipe-section-count">{section.count}</span>}
+                            {this.sectionHasError(section.id) && <span className="recipe-section-error" aria-label="Fehler">!</span>}
+                        </button>)}
+                    </nav>
+                    <section className="recipe-editor-content brauhaus-card" aria-labelledby={`recipe-section-${active.id}`}>
+                        <div className="recipe-editor-section-header">
+                            <h2 id={`recipe-section-${active.id}`}>{active.label}</h2>
+                            {active.id === 'mash' && <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addFermentationStep}>+ Schritt hinzufügen</button>}
+                            {active.id === 'malts' && <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addMalts}>+ Malz hinzufügen</button>}
+                            {active.id === 'hops' && <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addHops}>+ Hopfen hinzufügen</button>}
+                            {active.id === 'yeast' && <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addYeast}>+ Hefe hinzufügen</button>}
+                            {active.id === 'additional' && <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addAdditionalIngredient}>+ Zutat hinzufügen</button>}
+                        </div>
+                        <div className="recipe-editor-section-body">{active.content}</div>
+                    </section>
                 </div>
             </form>
         );
