@@ -7,7 +7,6 @@ import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded';
 import CheckCircleOutlineRoundedIcon from '@mui/icons-material/CheckCircleOutlineRounded';
 import AutorenewRoundedIcon from '@mui/icons-material/AutorenewRounded';
 import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
-import HelpOutlineRoundedIcon from '@mui/icons-material/HelpOutlineRounded';
 import './AppDialog.css';
 
 export type AppDialogVariant = 'info' | 'warning' | 'error' | 'success' | 'progress' | 'recovery' | 'confirm';
@@ -36,7 +35,7 @@ interface DialogCancelButtonProps {
 const icons: Record<AppDialogVariant, React.ReactNode> = {
     info: <InfoOutlinedIcon/>, warning: <WarningAmberRoundedIcon/>, error: <ErrorOutlineRoundedIcon/>,
     success: <CheckCircleOutlineRoundedIcon/>, progress: <AutorenewRoundedIcon className="app-dialog__spinning"/>,
-    recovery: <HistoryRoundedIcon/>, confirm: <HelpOutlineRoundedIcon/>,
+    recovery: <HistoryRoundedIcon/>, confirm: <CheckCircleOutlineRoundedIcon/>,
 };
 
 export const DialogCancelButton: React.FC<DialogCancelButtonProps> = ({onClick, disabled = false, label = 'Abbrechen', className = ''}) => (
