@@ -163,33 +163,83 @@
 .recipe-section-icon svg { font-size: 1.25rem; }
 
 .recipe-editor-content { min-width: 0; min-height: 0; padding: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-color: var(--border-strong) transparent; scrollbar-width: thin; }
-.recipe-editor-section-header { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-md); min-height: 64px; box-sizing: border-box; padding: var(--spacing-md); border-bottom: 1px solid var(--border-default); background: var(--bg-panel); }
-.recipe-editor-section-title { display: flex; align-items: center; gap: var(--spacing-sm); min-width: 0; }
+.recipe-editor-section-header { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-md); min-height: 64px; box-sizing: border-box; padding: var(--spacing-md); border-bottom: 1px solid var(--border-default); }
 .recipe-editor-section-body { min-width: 0; padding: var(--spacing-md); }
+.recipe-editor-section-body > .section-add-button { display: none; }
 
-.recipe-form-card,
-.mash-step-card,
-.hop-card,
-.recipe-item-card { padding: var(--spacing-md); border: 1px solid var(--border-default); border-radius: var(--border-radius-large); background: var(--color-surface-raised); }
-.recipe-item-list, .mash-step-list, .hop-card-list { display: flex; flex-direction: column; gap: 12px; }
-.mash-step-header, .hop-card-header, .recipe-item-card-header { display: flex; align-items: center; gap: var(--spacing-sm); min-height: 32px; margin-bottom: 12px; }
+.recipe-editor-navigation h2 { padding: 8px 10px 12px; }
+
+.recipe-editor-navigation button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-width: 34rem;
+    border-collapse: collapse;
+    color: white;
+    font-size: 0.95rem;
+    table-layout: auto;
+}
+
+.ingredient-table th {
+    background-color: var(--color-surface-strong);
+    color: var(--text-primary);
+    height: 34px;
+    padding: 5px 8px;
+    box-sizing: border-box;
+    text-align: left;
+    font-weight: bold;
+    overflow-wrap: anywhere;
+}
+
+.ingredient-table td {
+    padding: 4px 8px;
+    height: 48px;
+    vertical-align: middle;
+    overflow-wrap: anywhere;
+}
+
+.ingredient-table tr:nth-child(even) {
+    background-color: var(--bg-panel);
+}
+
+.ingredient-table tr:nth-child(odd) {
+    background-color: var(--bg-panel);
+}
+
+.ingredient-table input,
+.ingredient-table select,
+.readonly-table-value {
+    height: 33px;
+    min-height: 33px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    font-size: 0.95rem;
+}
+
+.action-column {
+    width: 4.75rem;
+    min-width: 4.75rem;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.mash-step-list, .hop-card-list { display: flex; flex-direction: column; gap: 12px; }
+.mash-step-card, .hop-card { padding: var(--spacing-md); border: 1px solid var(--border-default); border-radius: var(--border-radius-large); background: var(--color-surface-raised); }
+.mash-step-header, .hop-card-header { display: flex; align-items: center; gap: var(--spacing-sm); min-height: 32px; margin-bottom: 12px; }
 .mash-step-header h3 { margin: 0; color: var(--text-primary); font-size: 1rem; }
-.mash-step-header .cancel-btn, .hop-card-header .cancel-btn, .recipe-item-card-header .cancel-btn { margin-left: auto; }
-.recipe-item-card-header strong { color: var(--text-primary); }
+.mash-step-header .cancel-btn, .hop-card-header .cancel-btn { margin-left: auto; }
 .mash-step-number { display: inline-grid; place-items: center; flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; background: var(--accent-subtle); color: var(--accent); font-weight: 700; }
-.mash-step-fields, .recipe-item-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px 16px; align-items: start; }
-.recipe-item-fields--quantity { grid-template-columns: minmax(220px, 2fr) minmax(120px, 1fr); }
-.recipe-item-fields--timing { grid-template-columns: repeat(2, minmax(140px, 1fr)); max-width: 34rem; }
-.additional-ingredient-base { grid-template-columns: minmax(200px, 2fr) minmax(100px, .7fr) minmax(110px, .8fr) minmax(160px, 1.1fr); }
+.mash-step-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; align-items: start; }
 .mash-step-readonly { display: flex; flex-direction: column; gap: 6px; }
 .mash-step-readonly span { color: var(--text-secondary); font-weight: 600; }
 .mash-step-readonly strong { display: flex; align-items: center; min-height: 33px; color: var(--text-primary); }
 .hop-card-header strong { color: var(--text-primary); }
 .hop-card-fields { display: grid; grid-template-columns: minmax(180px, 1.5fr) minmax(110px, .6fr) minmax(160px, 1fr) repeat(2, minmax(110px, .7fr)); gap: 12px; align-items: start; }
-.hop-action-group, .recipe-field-group { margin-top: 24px; padding-top: var(--spacing-md); border-top: 1px solid var(--border-default); }
-.hop-action-group h4, .recipe-field-group h4 { margin: 0 0 12px; color: var(--text-secondary); font-size: var(--font-size-small); }
-.hop-action-group .fermentation-action-fields, .recipe-field-group .fermentation-action-fields { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px 16px; }
-.recipe-form-card label, .recipe-item-card label, .mash-step-card label, .hop-card label { color: var(--text-secondary); font-size: var(--font-size-small); }
+.hop-action-group { margin-top: var(--spacing-md); padding-top: var(--spacing-md); border-top: 1px solid var(--border-default); }
+.hop-action-group h4 { margin: 0 0 12px; color: var(--text-primary); font-size: var(--font-size-small); }
+.hop-action-group .fermentation-action-fields { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
 
 .containerBeerForm .add-button,
 .containerBeerForm .finish-btn {
@@ -344,7 +394,6 @@
 
     .recipe-editor-layout { grid-template-columns: minmax(210px, 230px) minmax(0, 1fr); }
     .hop-card-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .additional-ingredient-base { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 720px) {
@@ -373,10 +422,6 @@
     .recipe-editor-layout { grid-template-rows: auto minmax(0, 1fr); }
     .recipe-editor-navigation { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .recipe-editor-navigation h2 { grid-column: 1 / -1; }
-    .recipe-item-fields--quantity,
-    .recipe-item-fields--timing,
-    .additional-ingredient-base,
-    .hop-card-fields { grid-template-columns: 1fr; }
 
 }
 

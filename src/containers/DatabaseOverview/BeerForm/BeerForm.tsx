@@ -941,14 +941,14 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             </>
         );
 
-        const sections: Array<{id: BeerFormSection; label: string; icon: React.ReactNode; count?: number; content: React.ReactNode; action?: React.ReactNode}> = [
+        const sections: Array<{id: BeerFormSection; label: string; icon: React.ReactNode; count?: number; content: React.ReactNode}> = [
             {id: 'basic', label: 'Grunddaten', icon: <DescriptionOutlinedIcon />, content: basicContent},
             {id: 'brewing', label: 'Brauwasser', icon: <WaterDropOutlinedIcon />, content: brewingContent},
-            {id: 'mash', label: 'Brauprozess', icon: <TimelineOutlinedIcon />, count: fermentationSteps.length, content: mashContent, action: <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addFermentationStep}>+ Schritt hinzufügen</button>},
-            {id: 'malts', label: 'Malze', icon: <GrainIcon />, count: maltsDTO.length, content: maltsContent, action: <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addMalts}>+ Malz hinzufügen</button>},
-            {id: 'hops', label: 'Hopfen', icon: <LocalFloristOutlinedIcon />, count: hopsDTO.length, content: hopsContent, action: <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addHops}>+ Hopfen hinzufügen</button>},
-            {id: 'yeast', label: 'Hefe', icon: <ScienceOutlinedIcon />, count: yeastsDTO.length, content: yeastContent, action: <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addYeast}>+ Hefe hinzufügen</button>},
-            {id: 'additional', label: 'Weitere Zutaten', icon: <CategoryOutlinedIcon />, count: additionalIngredientsDTO.length, content: additionalContent, action: <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addAdditionalIngredient}>+ Zutat hinzufügen</button>},
+            {id: 'mash', label: 'Brauprozess', icon: <TimelineOutlinedIcon />, count: fermentationSteps.length, content: mashContent},
+            {id: 'malts', label: 'Malze', icon: <GrainIcon />, count: maltsDTO.length, content: maltsContent},
+            {id: 'hops', label: 'Hopfen', icon: <LocalFloristOutlinedIcon />, count: hopsDTO.length, content: hopsContent},
+            {id: 'yeast', label: 'Hefe', icon: <ScienceOutlinedIcon />, count: yeastsDTO.length, content: yeastContent},
+            {id: 'additional', label: 'Weitere Zutaten', icon: <CategoryOutlinedIcon />, count: additionalIngredientsDTO.length, content: additionalContent},
         ];
         const active = sections.find((section) => section.id === this.state.activeSection) ?? sections[0];
 
@@ -977,8 +977,12 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                     </nav>
                     <section className="recipe-editor-content brauhaus-card" aria-labelledby={`recipe-section-${active.id}`}>
                         <div className="recipe-editor-section-header">
-                            <div className="recipe-editor-section-title"><span className="recipe-section-icon" aria-hidden="true">{active.icon}</span><h2 id={`recipe-section-${active.id}`}>{active.label}</h2></div>
-                            {active.action}
+                            <h2 id={`recipe-section-${active.id}`}>{active.label}</h2>
+                            {active.id === 'mash' && <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addFermentationStep}>+ Schritt hinzufügen</button>}
+                            {active.id === 'malts' && <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addMalts}>+ Malz hinzufügen</button>}
+                            {active.id === 'hops' && <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addHops}>+ Hopfen hinzufügen</button>}
+                            {active.id === 'yeast' && <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addYeast}>+ Hefe hinzufügen</button>}
+                            {active.id === 'additional' && <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addAdditionalIngredient}>+ Zutat hinzufügen</button>}
                         </div>
                         <div className="recipe-editor-section-body">{active.content}</div>
                     </section>
