@@ -1,5 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {connect} from 'react-redux';
+import AddIcon from '@mui/icons-material/Add';
 import CheckIcon from '@mui/icons-material/Check';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CloseIcon from '@mui/icons-material/Close';
@@ -59,6 +60,17 @@ interface Props {
 
 const number = (value?: number | null, unit = '') => typeof value === 'number' && Number.isFinite(value) ? `${value.toLocaleString('de-DE', {maximumFractionDigits: 1})}${unit}` : '–';
 const date = (value?: string) => value && Number.isFinite(Date.parse(value)) ? new Intl.DateTimeFormat('de-DE', {dateStyle: 'short', timeStyle: 'short'}).format(new Date(value)) : '–';
+const measurementAge = (value?: string): string => {
+  if (!value || !Number.isFinite(Date.parse(value))) return '–';
+  const elapsedMs = Math.max(0, Date.now() - Date.parse(value));
+  const formatter = new Intl.RelativeTimeFormat('de-DE', {numeric: 'always'});
+  const minutes = Math.round(elapsedMs / 60_000);
+  if (minutes < 60) return formatter.format(-minutes, 'minute');
+  const hours = Math.round(elapsedMs / 3_600_000);
+  if (hours < 24) return formatter.format(-hours, 'hour');
+  const days = Math.max(1, Math.round(elapsedMs / 86_400_000));
+  return formatter.format(-days, 'day');
+};
 const actionText = (action: FermentationAction) => [action.name, actionAmountLabel(action.amount, action.unit)].filter(Boolean).join(' · ');
 export const initialFermentationChartRange = (state: eBrewState): FermentationChartRange => state === eBrewState.FERMENTATION
   ? '6h'
@@ -181,9 +193,11 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
   let groupedData: any; try { groupedData = props.brew.brewValues && JSON.parse(props.brew.brewValues as string).groupedData; } catch (_) { groupedData = undefined; }
   const completeErrorDialogs = Object.entries(props.completeActionErrors ?? {}).map(([requestId, message]) => requestId.startsWith(`${props.brew.id}/`) && <ModalDialog key={requestId} type={DialogType.ERROR} open header="Zugabe konnte nicht bestätigt werden" content={message || 'Bitte erneut versuchen.'} onConfirm={() => props.dismissCompleteError(props.brew.id, requestId.slice(props.brew.id.length + 1))} />);
 
-  const relativeMeasurement = latestMeasurement && Number.isFinite(Date.parse(latestMeasurement.measuredAt))
-      ? new Intl.RelativeTimeFormat('de-DE', {numeric: 'auto'}).format(-Math.max(0, Math.round((Date.now() - Date.parse(latestMeasurement.measuredAt)) / 60_000)), 'minute')
-      : '–';
+  const latestMeasurementDate = date(latestMeasurement?.measuredAt);
+  const latestMeasurementPrimary = props.brew.state === eBrewState.FERMENTATION
+    ? measurementAge(latestMeasurement?.measuredAt)
+    : latestMeasurementDate;
+  const showLatestMeasurementDate = props.brew.state === eBrewState.FERMENTATION && latestMeasurementDate !== '–';
   const actionItems = (actions: FermentationAction[]) => <ul className="fermentation-action-list">{actions.map(action => <ActionItem key={action.actionId} action={action} requestId={fermentationActionRequestId(props.brew.id, action.actionId)} completing={props.completing} skipping={props.skipping} complete={() => props.complete(props.brew.id, action.actionId)} skip={() => props.skip(props.brew.id, action.actionId)} />)}</ul>;
   const actionGroup = (title: string, actions: FermentationAction[]) => actions.length > 0 && <section className="fermentation-plan-group"><h5>{title}</h5>{actionItems(actions)}</section>;
   const completedActionGroup = completedActions.length > 0 && <section className="fermentation-plan-group fermentation-plan-group-completed"><button type="button" className="fermentation-completed-toggle" aria-expanded={completedActionsOpen} aria-label={`Bereits durchgeführt (${completedActions.length})`} onClick={() => setCompletedActionsOpen(open => !open)}><span className="fermentation-completed-chevron" aria-hidden="true">{completedActionsOpen ? '▾' : '▸'}</span><span>Bereits durchgeführt</span><span className="fermentation-completed-count">{completedActions.length}</span></button>{completedActionsOpen && actionItems(completedActions)}</section>;
@@ -193,7 +207,7 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
         <div className="fermentation-page-actions">
           {canStartMaturation && <button type="button" className="fermentation-lifecycle-button" disabled={props.savingLifecycle} onClick={() => setLifecycleTarget(eBrewState.MATURATION)}><HourglassBottomOutlinedIcon fontSize="small" />Reifung starten</button>}
           {canFinishBrew && <button type="button" className="fermentation-lifecycle-button is-finish" disabled={props.savingLifecycle} onClick={() => setLifecycleTarget(eBrewState.FINISHED)}><CheckCircleOutlineIcon fontSize="small" />Bier fertig</button>}
-          <button type="button" className="fermentation-new-measurement-button" disabled={!canCreateMeasurement || props.savingLifecycle} title={canCreateMeasurement ? undefined : 'Messungen können nur während der Gärung erfasst werden.'} onClick={() => setFormOpen(true)}>Neue Messung</button>
+          <button type="button" className={canCreateMeasurement ? 'fermentation-new-measurement-button' : 'fermentation-lifecycle-button'} disabled={!canCreateMeasurement || props.savingLifecycle} title={canCreateMeasurement ? undefined : 'Messungen können nur während der Gärung erfasst werden.'} onClick={() => setFormOpen(true)}><AddIcon fontSize="small" />Neue Messung</button>
         </div>
       </header>
       {props.lifecycleError && <p className="fermentation-lifecycle-error" role="alert">{props.lifecycleError}</p>}
@@ -202,7 +216,7 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
       <ModalDialog type={DialogType.CONFIRM} open={lifecycleTarget !== null} header={lifecycleDialogTitle} content={lifecycleDialogContent} confirmLabel={lifecycleConfirmLabel} showCancelButton onConfirm={confirmLifecycleTransition} onCancel={() => setLifecycleTarget(null)} actionsDisabled={props.savingLifecycle} />
 
       <section aria-labelledby="current-state-title"><h4 id="current-state-title" className="fermentation-section-title">Aktueller Zustand</h4><div className="fermentation-current-grid">
-        <div><span>Biertemperatur</span><strong>{number(readings.beerTemperature, ' °C')}</strong></div><div><span>Außentemperatur</span><strong>{number(readings.ambientTemperature, ' °C')}</strong></div><div><span>Plato</span><strong>{number(readings.plato, ' °P')}</strong></div><div className="fermentation-measurement-runtime"><span>Messung</span><FermentationMeasurementRuntime state={measurementRuntimeState} /></div><div><span>Letzte Messung</span><strong>{relativeMeasurement}</strong><small>{date(latestMeasurement?.measuredAt)}</small></div>
+        <div><span>Biertemperatur</span><strong>{number(readings.beerTemperature, ' °C')}</strong></div><div><span>Außentemperatur</span><strong>{number(readings.ambientTemperature, ' °C')}</strong></div><div><span>Plato</span><strong>{number(readings.plato, ' °P')}</strong></div><div className="fermentation-measurement-runtime"><span>Messung</span><FermentationMeasurementRuntime state={measurementRuntimeState} /></div><div><span>Letzte Messung</span><strong>{latestMeasurementPrimary}</strong>{showLatestMeasurementDate && <small>{latestMeasurementDate}</small>}</div>
       </div></section>
 
       <ModalDialog type={DialogType.CONFIRM} open={unassignConfirmationOpen} header="Sensor trennen?" content={'Der Sensor wird von diesem Bier getrennt und die laufende Messsession beendet.\nBereits gespeicherte Messwerte bleiben erhalten.'} confirmLabel="Sensor trennen" showCancelButton onConfirm={() => { setUnassignConfirmationOpen(false); if (assignedDevice) props.unassign(assignedDevice.deviceUid, props.brew.id); }} onCancel={() => setUnassignConfirmationOpen(false)} actionsDisabled={isUnassigning} />
