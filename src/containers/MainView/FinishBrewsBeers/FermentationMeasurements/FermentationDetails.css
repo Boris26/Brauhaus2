@@ -47,6 +47,44 @@
   font-size: var(--font-size-section-title);
 }
 
+.fermentation-page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+}
+
+.fermentation-page-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  min-height: var(--control-height);
+  white-space: nowrap;
+}
+
+.fermentation-page-actions .fermentation-lifecycle-button {
+  color: var(--text-primary);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-default);
+}
+
+.fermentation-page-actions .fermentation-lifecycle-button:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--bg-elevated);
+}
+
+.fermentation-page-actions .fermentation-lifecycle-button.is-finish {
+  border-color: var(--accent-border);
+}
+
+.fermentation-lifecycle-error {
+  justify-self: end;
+  color: var(--color-error);
+  font-size: var(--font-size-small);
+}
+
 .fermentation-reading-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -377,6 +415,16 @@
   gap: .75rem;
 }
 
+@media (max-width: 900px) {
+  .fermentation-page-header {
+    align-items: flex-start;
+  }
+
+  .fermentation-page-actions {
+    justify-content: flex-start;
+  }
+}
+
 @media (max-width: 800px) {
   .fermentation-reading-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -392,8 +440,10 @@
 }
 
 @media (max-width: 520px) {
-  .fermentation-dashboard-header {
+  .fermentation-dashboard-header,
+  .fermentation-page-header {
     align-items: flex-start;
+    flex-direction: column;
   }
   .fermentation-reading-grid {
     grid-template-columns: 1fr;
