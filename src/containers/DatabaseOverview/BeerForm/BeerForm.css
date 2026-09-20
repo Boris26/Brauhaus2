@@ -41,13 +41,12 @@
 
 .beer-form-toolbar {
     display: grid;
-    grid-template-columns: auto minmax(14rem, 1fr) auto auto;
+    grid-template-columns: minmax(14rem, 1fr) auto auto;
     gap: 10px;
     align-items: end;
     padding: 10px 12px;
     border-radius: var(--border-radius-large);
-    background: var(--color-surface-strong);
-    border: 1px solid var(--border-strong);
+    background: var(--bg-panel);
     min-width: 0;
 }
 
@@ -67,6 +66,8 @@
     gap: 6px;
     min-width: 0;
 }
+
+.beer-select-label { color: var(--text-secondary); }
 
 .beer-form input,
 .beer-form select,
@@ -118,6 +119,61 @@
     min-width: 0;
 }
 
+.recipe-editor-layout {
+    display: grid;
+    grid-template-columns: 14rem minmax(0, 1fr);
+    gap: var(--spacing-md);
+    min-width: 0;
+    align-items: start;
+}
+
+.recipe-editor-navigation {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: var(--spacing-sm);
+}
+
+.recipe-editor-navigation h2,
+.recipe-editor-section-header h2 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: var(--font-size-section-title);
+}
+
+.recipe-editor-navigation h2 { padding: 8px 10px 12px; }
+
+.recipe-editor-navigation button {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 40px;
+    padding: 8px 10px 8px 14px;
+    border: 0;
+    border-radius: var(--border-radius-medium);
+    background: transparent;
+    color: var(--text-secondary);
+    font: inherit;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+}
+
+.recipe-editor-navigation button:hover { background: var(--color-surface-raised); color: var(--text-primary); }
+.recipe-editor-navigation button.is-active { background: var(--color-surface-strong); color: var(--color-white); }
+.recipe-editor-navigation button.is-active::before { content: ''; position: absolute; inset: 7px auto 7px 0; width: 3px; border-radius: 2px; background: var(--accent); }
+.recipe-section-count { margin-left: auto; color: inherit; opacity: .78; font-variant-numeric: tabular-nums; }
+.recipe-section-error { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: var(--color-error-highlight); color: var(--bg-app); }
+
+.recipe-editor-content { min-width: 0; padding: 0; overflow: hidden; }
+.recipe-editor-section-header { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-md); padding: var(--spacing-md); border-bottom: 1px solid var(--border-default); }
+.recipe-editor-section-body { min-width: 0; padding: var(--spacing-md); }
+.recipe-editor-section-body > .section-add-button { display: none; }
+
 .beer-form-accordion.has-error.MuiAccordion-root {
     border-color: var(--color-error-highlight);
 }
@@ -165,8 +221,8 @@
 }
 
 .ingredient-table th {
-    background-color: var(--accent);
-    color: var(--text-on-accent);
+    background-color: var(--color-surface-strong);
+    color: var(--text-primary);
     height: 34px;
     padding: 5px 8px;
     box-sizing: border-box;
@@ -208,8 +264,18 @@
 }
 
 .mash-plan-table {
+    display: block;
+    min-width: 0;
     table-layout: fixed;
+    counter-reset: mash-step;
 }
+
+.mash-plan-table colgroup,
+.mash-plan-table thead { display: none; }
+.mash-plan-table tbody { display: flex; flex-direction: column; gap: 8px; }
+.mash-plan-table tr { position: relative; display: grid; grid-template-columns: minmax(9rem, 1.1fr) minmax(11rem, 1.5fr) minmax(9rem, 1fr) minmax(7rem, .7fr) minmax(7rem, .7fr) 3.5rem; gap: 8px; align-items: start; padding: 10px 10px 10px 48px; border: 1px solid var(--border-default); border-radius: var(--border-radius-medium); background: var(--color-surface-raised); counter-increment: mash-step; }
+.mash-plan-table tr::before { content: counter(mash-step); position: absolute; left: 14px; top: 14px; display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--color-surface-strong); color: var(--accent); font-weight: 700; }
+.mash-plan-table td { display: block; height: auto; padding: 0; background: transparent !important; }
 
 .mash-plan-table .mash-column-type { width: 18%; }
 .mash-plan-table .mash-column-related { width: 25%; }
@@ -385,6 +451,9 @@
     .brewing-data-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+
+    .recipe-editor-layout { grid-template-columns: 11rem minmax(0, 1fr); }
+    .mash-plan-table tr { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 720px) {
@@ -408,6 +477,10 @@
     .containerBeerForm {
         padding: var(--space-4);
     }
+
+    .recipe-editor-layout { grid-template-columns: 1fr; }
+    .recipe-editor-navigation { position: static; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .recipe-editor-navigation h2 { grid-column: 1 / -1; }
 
 }
 
