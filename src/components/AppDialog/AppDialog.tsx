@@ -1,5 +1,6 @@
 import React from 'react';
-import {Dialog, DialogActions, DialogContent, DialogTitle} from '@mui/material';
+import {Button, Dialog, DialogActions, DialogContent, DialogTitle} from '@mui/material';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded';
@@ -25,11 +26,25 @@ export interface AppDialogProps {
     className?: string;
 }
 
+interface DialogCancelButtonProps {
+    onClick: () => void;
+    disabled?: boolean;
+    label?: string;
+    className?: string;
+}
+
 const icons: Record<AppDialogVariant, React.ReactNode> = {
     info: <InfoOutlinedIcon/>, warning: <WarningAmberRoundedIcon/>, error: <ErrorOutlineRoundedIcon/>,
     success: <CheckCircleOutlineRoundedIcon/>, progress: <AutorenewRoundedIcon className="app-dialog__spinning"/>,
     recovery: <HistoryRoundedIcon/>, confirm: <HelpOutlineRoundedIcon/>,
 };
+
+export const DialogCancelButton: React.FC<DialogCancelButtonProps> = ({onClick, disabled = false, label = 'Abbrechen', className = ''}) => (
+    <Button type="button" className={`app-dialog__cancel-action brauhaus-button brauhaus-button-secondary ${className}`.trim()}
+        aria-label={label} title={label} disabled={disabled} onClick={onClick}>
+        <CloseRoundedIcon fontSize="small"/>
+    </Button>
+);
 
 export const AppDialog: React.FC<AppDialogProps> = ({open, title, variant = 'info', description, children,
     actions, icon, onClose, disableClose = false, maxWidth = 'sm', className = ''}) => {
