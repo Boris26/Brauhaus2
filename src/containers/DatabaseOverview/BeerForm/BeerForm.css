@@ -48,9 +48,12 @@
 .recipe-field-group h4, .hop-action-group h4, .variable-step-heading h3 { margin: 0 0 12px; color: var(--text-primary); font-size: 1rem; }
 .fermentation-action-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; min-width: 0; }
 
-.fixed-step-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-.fixed-step-card { padding: 12px 14px; }
-.fixed-step-card header h3 { margin: 0 0 12px; color: var(--text-primary); font-size: 1rem; }
+.fixed-step-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; gap: 12px; }
+.fixed-step-card { padding: 10px 12px; }
+.fixed-step-card header h3 { margin: 0 0 10px; color: var(--text-primary); font-size: 1rem; }
+.fixed-step-fields { display: grid; align-items: start; gap: 12px; }
+.fixed-step-fields--mash { grid-template-columns: minmax(0, 1fr); }
+.fixed-step-fields--boil { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .variable-step-heading { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-default); }
 .mash-step-header h3 { margin: 0; font-size: 1rem; }
 .mash-step-number { display: inline-grid; place-items: center; flex: 0 0 26px; width: 26px; height: 26px; border-radius: 50%; background: var(--accent-subtle); color: var(--accent); font-weight: 700; }

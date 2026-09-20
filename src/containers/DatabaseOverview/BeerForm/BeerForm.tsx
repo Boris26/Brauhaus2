@@ -881,10 +881,9 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             <div className="mash-process-content">
                 <div className="fixed-step-grid">{fixedSteps.map(({step, index}) => <article key={step.stepId || step.type} className="fixed-step-card">
                     <header><h3>{step.type}</h3></header>
-                    <div className="mash-step-fields">
-                        {step.type !== 'Kochen' && <div className="mash-step-readonly"><span>Modus</span><strong>Bis Bestätigung</strong></div>}
-                        <label>Temperatur (°C){step.type === 'Kochen' ? <input type="number" value={cookingTemperatur} readOnly={true} className="readonly-cooking-temperature" title="Rezeptwert – die Kochphase wird nicht temperaturgeregelt." aria-label="Kochtemperatur im Brauprozess" /> : <input type="number" name="temperature" value={step.temperature ?? ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />}</label>
-                        {step.type === 'Kochen' && <label>Dauer (min)<input type="number" name="cookingTime" min={0} max={999} value={cookingTime} onChange={this.handleChange} required={true} aria-label="Kochzeit im Brauprozess" />{this.renderInputError('cookingTime')}</label>}
+                    <div className={`fixed-step-fields fixed-step-fields--${step.type === 'Kochen' ? 'boil' : 'mash'}`}>
+                        <label>Temperatur<span className="quantity-with-unit">{step.type === 'Kochen' ? <input type="number" value={cookingTemperatur} readOnly={true} className="readonly-cooking-temperature" title="Rezeptwert – die Kochphase wird nicht temperaturgeregelt." aria-label="Kochtemperatur im Brauprozess" /> : <input type="number" name="temperature" value={step.temperature ?? ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} aria-label={`${step.type} Temperatur`} />}<em>°C</em></span></label>
+                        {step.type === 'Kochen' && <label>Dauer<span className="quantity-with-unit"><input type="number" name="cookingTime" min={0} max={999} value={cookingTime} onChange={this.handleChange} required={true} aria-label="Kochzeit im Brauprozess" /><em>min</em></span>{this.renderInputError('cookingTime')}</label>}
                     </div>
                 </article>)}</div>
                 <div className="variable-step-heading"><h3>Rasten &amp; Dekoktionen</h3></div>
