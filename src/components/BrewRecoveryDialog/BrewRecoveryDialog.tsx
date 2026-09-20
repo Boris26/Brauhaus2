@@ -5,7 +5,7 @@ import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import {useDispatch, useSelector} from 'react-redux';
 import {BeerActions, ProductionActions} from '../../actions/actions';
 import type {RootState} from '../../reducers/rootReducer';
-import AppDialog from '../AppDialog/AppDialog';
+import AppDialog, {DialogCancelButton} from '../AppDialog/AppDialog';
 import './BrewRecoveryDialog.css';
 
 const minutes = (seconds?: number): number => Math.max(0, Math.round((Number.isFinite(seconds) ? seconds! : 0) / 60));
@@ -44,8 +44,9 @@ const BrewRecoveryDialog: React.FC = () => {
         <AppDialog open={recoveryState.available} variant={confirmDiscard ? 'confirm' : 'recovery'} disableClose
             title={confirmDiscard ? 'Brauvorgang wirklich verwerfen?' : 'Unterbrochener Brauvorgang gefunden'}
             description={!confirmDiscard ? 'Der letzte Brauvorgang wurde nicht regulär beendet.' : undefined}
+            icon={confirmDiscard ? <DeleteOutlineRoundedIcon/> : undefined}
             actions={confirmDiscard ? <>
-                <Button className="brauhaus-button brauhaus-button-secondary" disabled={pending} onClick={() => setConfirmDiscard(false)}>Abbrechen</Button>
+                <DialogCancelButton disabled={pending} onClick={() => setConfirmDiscard(false)}/>
                 <Button className="brauhaus-button brauhaus-button-danger" color="error" variant="outlined" disabled={pending} startIcon={<DeleteOutlineRoundedIcon/>}
                         onClick={() => dispatch(ProductionActions.discardBrewRecovery())}>
                     {recoveryState.discardPending ? 'Brauvorgang wird verworfen …' : 'Brauvorgang verwerfen'}
