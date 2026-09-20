@@ -142,8 +142,12 @@ describe('BeerForm section navigation', () => {
         }
         const mashInRow = screen.getByText('Einmaischen').closest('article')!;
         const mashOutRow = screen.getByText('Abmaischen').closest('article')!;
-        expect(within(mashInRow).getByText('Bis Bestätigung')).toBeInTheDocument();
-        expect(within(mashOutRow).getByText('Bis Bestätigung')).toBeInTheDocument();
+        expect(within(mashInRow).queryByText('Modus')).not.toBeInTheDocument();
+        expect(within(mashInRow).queryByText('Bis Bestätigung')).not.toBeInTheDocument();
+        expect(within(mashOutRow).queryByText('Modus')).not.toBeInTheDocument();
+        expect(within(mashOutRow).queryByText('Bis Bestätigung')).not.toBeInTheDocument();
+        expect(within(mashInRow).getByText('°C')).toBeInTheDocument();
+        expect(within(mashOutRow).getByText('°C')).toBeInTheDocument();
         expect(within(mashInRow).getAllByRole('spinbutton')).toHaveLength(1);
         expect(within(mashOutRow).getAllByRole('spinbutton')).toHaveLength(1);
     });
@@ -158,6 +162,8 @@ describe('BeerForm section navigation', () => {
         expect(within(cookingRow).getByLabelText('Kochtemperatur im Brauprozess')).toHaveValue(100);
         expect(within(cookingRow).getByLabelText('Kochtemperatur im Brauprozess')).toHaveAttribute('readonly');
         expect(within(cookingRow).getByLabelText('Kochzeit im Brauprozess')).not.toHaveAttribute('readonly');
+        expect(within(cookingRow).getByText('°C')).toBeInTheDocument();
+        expect(within(cookingRow).getByText('min')).toBeInTheDocument();
     });
 
     it('preserves an existing cooking temperature while showing it read-only in the mash plan', () => {
