@@ -181,8 +181,8 @@ describe('BeerForm section navigation', () => {
         renderBeerForm();
         fireEvent.click(screen.getByRole('button', {name: /Brauprozess/}));
         fireEvent.click(screen.getByRole('button', {name: /Schritt hinzufügen/}));
-        fireEvent.click(screen.getByRole('button', {name: /Abbrechen \/ Zurücksetzen/}));
-        fireEvent.click(screen.getByRole('button', {name: /Abbrechen \/ Zurücksetzen/}));
+        fireEvent.click(screen.getByRole('button', {name: /Zurücksetzen/}));
+        fireEvent.click(screen.getByRole('button', {name: /Zurücksetzen/}));
 
         expect(screen.getAllByText('Einmaischen')).toHaveLength(1);
         expect(screen.getAllByText('Abmaischen')).toHaveLength(1);
@@ -206,7 +206,7 @@ describe('BeerForm section navigation', () => {
 
     it('marks ingredient sections in the navigation when validation errors are found', () => {
         const {props} = renderBeerForm();
-        fireEvent.click(screen.getByRole('button', {name: /Rezept speichern/}));
+        fireEvent.click(screen.getByRole('button', {name: /^Speichern$/}));
         expect(screen.getByRole('button', {name: /Malze.*Fehler/i})).toBeInTheDocument();
         expect(screen.getByRole('button', {name: /Hopfen.*Fehler/i})).toBeInTheDocument();
         expect(screen.getByRole('button', {name: /Hefe.*Fehler/i})).toBeInTheDocument();
@@ -218,7 +218,7 @@ describe('BeerForm section navigation', () => {
         const {props} = renderBeerForm();
         fillValidRecipe();
 
-        fireEvent.click(screen.getByRole('button', {name: /Rezept speichern/}));
+        fireEvent.click(screen.getByRole('button', {name: /^Speichern$/}));
 
         expect(props.onSubmitBeer).toHaveBeenCalledTimes(1);
         expect(props.onSubmitBeer).toHaveBeenCalledWith(expect.objectContaining({
@@ -253,7 +253,7 @@ describe('BeerForm section navigation', () => {
 
         fireEvent.change(screen.getByLabelText(/Rezept auswählen/), {target: {value: 'beer-1'}});
         fireEvent.change(screen.getByLabelText(/Name:/), {target: {value: 'Altbier'}});
-        fireEvent.click(screen.getByRole('button', {name: /Rezept speichern/}));
+        fireEvent.click(screen.getByRole('button', {name: /^Speichern$/}));
 
         expect(props.onSubmitBeer).toHaveBeenCalledTimes(1);
         expect(props.onSubmitBeer).toHaveBeenCalledWith(expect.objectContaining({id: 'beer-1', name: 'Altbier'}));
@@ -271,7 +271,7 @@ describe('BeerForm section navigation', () => {
         };
         const {props} = renderBeerForm({beers: [existingBeer]});
         fireEvent.change(screen.getByLabelText(/Rezept auswählen/), {target: {value: existingBeer.id}});
-        fireEvent.click(screen.getByRole('button', {name: /Rezept speichern/}));
+        fireEvent.click(screen.getByRole('button', {name: /^Speichern$/}));
         const submittedHop = (props.onSubmitBeer as jest.Mock).mock.calls[0][0].wortBoiling.hops[0];
         expect(submittedHop).toMatchObject({id: 1, triggerType: TriggerType.PLATO_THRESHOLD, triggerValue: 5, triggerUnit: TriggerUnit.PLATO, contactTime: 3, contactTimeUnit: TimeUnit.DAYS});
         expect(submittedHop).not.toHaveProperty('actionId');
@@ -304,7 +304,7 @@ describe('BeerForm section navigation', () => {
         fireEvent.click(screen.getByRole('button', {name: /Brauprozess/}));
         fireEvent.change(within(screen.getByText('Einmaischen').closest('article')!).getByRole('spinbutton'), {target: {value: '65'}});
 
-        fireEvent.click(screen.getByRole('button', {name: /Abbrechen \/ Zurücksetzen/}));
+        fireEvent.click(screen.getByRole('button', {name: /Zurücksetzen/}));
 
         expect(within(screen.getByText('Einmaischen').closest('article')!).getByRole('spinbutton')).toHaveValue(57);
         expect(screen.getAllByText('Einmaischen')).toHaveLength(1);
@@ -358,7 +358,7 @@ describe('BeerForm section navigation', () => {
         ]}});
         fillValidRecipe();
 
-        fireEvent.click(screen.getByRole('button', {name: /Rezept speichern/}));
+        fireEvent.click(screen.getByRole('button', {name: /^Speichern$/}));
 
         expect(screen.getByText(/Bitte prüfe den Brauprozess: Bitte ordne der Dekoktion eine Rast zu/)).toBeInTheDocument();
         expect(props.onSubmitBeer).not.toHaveBeenCalled();

@@ -32,6 +32,9 @@ import GrainIcon from '@mui/icons-material/Grain';
 import LocalFloristOutlinedIcon from '@mui/icons-material/LocalFloristOutlined';
 import ScienceOutlinedIcon from '@mui/icons-material/ScienceOutlined';
 import CategoryOutlinedIcon from '@mui/icons-material/CategoryOutlined';
+import AddIcon from '@mui/icons-material/Add';
+import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined';
+import UndoIcon from '@mui/icons-material/Undo';
 import {PageHeader} from '../../../components/PageLayout/PageLayout';
 import {CONTACT_TIME_UNITS, TIME_TRIGGER_UNITS, clearRecipeAction, unitLabel, RecipeActionFields, TriggerType, TriggerUnit, TimeUnit, hasRecipeAction, normalizeRecipeAction} from '../../../model/FermentationRecipeAction';
 
@@ -60,6 +63,13 @@ interface BeerFormProps {
 }
 
 type BeerFormSection = 'basic' | 'brewing' | 'mash' | 'malts' | 'hops' | 'yeast' | 'additional';
+
+const RecipeEditorSectionHeader: React.FC<{icon: React.ReactNode; title: string; id: string; action?: React.ReactNode}> = ({icon, title, id, action}) => (
+    <div className="recipe-editor-section-header">
+        <div className="recipe-editor-section-title"><span className="recipe-section-icon" aria-hidden="true">{icon}</span><h2 id={id}>{title}</h2></div>
+        {action}
+    </div>
+);
 
 const DEFAULT_COOKING_TEMPERATURE = 100;
 const DEFAULT_REFERENCE_VOLUME = 10;
@@ -865,16 +875,28 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             </div></div>
         );
 
+        const fixedSteps = fermentationSteps.map((step, index) => ({step, index})).filter(({step}) => this.fixedTypes.includes(step.type));
+        const variableSteps = fermentationSteps.map((step, index) => ({step, index})).filter(({step}) => !this.fixedTypes.includes(step.type));
         const mashContent = (
-            <div className="mash-step-list">{fermentationSteps?.map((step, index) => {
-                            const isFixed = this.fixedTypes.includes(step.type);
+            <div className="mash-process-content">
+                <div className="fixed-step-grid">{fixedSteps.map(({step, index}) => <article key={step.stepId || step.type} className="fixed-step-card">
+                    <header><h3>{step.type}</h3></header>
+                    <div className="mash-step-fields">
+                        {step.type !== 'Kochen' && <div className="mash-step-readonly"><span>Modus</span><strong>Bis Bestätigung</strong></div>}
+                        <label>Temperatur (°C){step.type === 'Kochen' ? <input type="number" value={cookingTemperatur} readOnly={true} className="readonly-cooking-temperature" title="Rezeptwert – die Kochphase wird nicht temperaturgeregelt." aria-label="Kochtemperatur im Brauprozess" /> : <input type="number" name="temperature" value={step.temperature ?? ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)} required={true} />}</label>
+                        {step.type === 'Kochen' && <label>Dauer (min)<input type="number" name="cookingTime" min={0} max={999} value={cookingTime} onChange={this.handleChange} required={true} aria-label="Kochzeit im Brauprozess" />{this.renderInputError('cookingTime')}</label>}
+                    </div>
+                </article>)}</div>
+                <div className="variable-step-heading"><h3>Rasten &amp; Dekoktionen</h3></div>
+                <div className="mash-step-list">{variableSteps.map(({step, index}, variableIndex) => {
+                            const isFixed = false;
                             const executionMode = this.getExecutionMode(step);
                             const procedureType = normalizeFermentationStep(step).procedureType;
                             const procedureTypeErrorKey = `fermentationSteps.${index}.procedureType`;
                             const relatedRastErrorKey = `fermentationSteps.${index}.relatedRastId`;
                             const rastOptions = fermentationSteps.filter((candidate) => !this.fixedTypes.includes(candidate.type) && normalizeFermentationStep(candidate).procedureType === ProcedureType.RAST);
                             return <article key={step.stepId || step.type} className={`mash-step-card ${this.state.validationErrors[procedureTypeErrorKey] || this.state.validationErrors[relatedRastErrorKey] ? 'validation-error-row' : ''}`}>
-                                <header className="mash-step-header"><span className="mash-step-number">{index + 1}</span><h3>{procedureType === ProcedureType.DECOCTION ? 'Dekoktion' : step.type}</h3>{index > 0 && !isFixed && <button type="button" className="cancel-btn brauhaus-button brauhaus-button-danger brauhaus-icon-button" onClick={() => this.removeFermentationStep(index)} title="Rast löschen" aria-label="Rast löschen"><DeleteOutlineIcon fontSize="small" /></button>}</header>
+                                <header className="mash-step-header"><span className="mash-step-number">{variableIndex + 1}</span><h3>{procedureType === ProcedureType.DECOCTION ? 'Dekoktion' : step.type}</h3><button type="button" className="cancel-btn brauhaus-button brauhaus-button-danger brauhaus-icon-button" onClick={() => this.removeFermentationStep(index)} title="Rast löschen" aria-label="Rast löschen"><DeleteOutlineIcon fontSize="small" /></button></header>
                                 <div className="mash-step-fields">
                                     {!isFixed && <label>Typ<select aria-label={`Typ ${index + 1}`} aria-invalid={Boolean(this.state.validationErrors[procedureTypeErrorKey])} name="procedureType" value={procedureType} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value={ProcedureType.RAST}>{step.type}</option><option value={ProcedureType.DECOCTION}>Dekoktion</option></select>{this.renderFieldError(procedureTypeErrorKey)}</label>}
                                     {procedureType === ProcedureType.DECOCTION && <label>Zugehörige Rast<select aria-label={`Zugehörige Rast ${index + 1}`} aria-invalid={Boolean(this.state.validationErrors[relatedRastErrorKey])} name="relatedRastId" value={step.relatedRastId || ''} onChange={(e) => this.handleFermentationStepChange(e.target.value, e.target.name, index)}><option value="">Bitte Rast auswählen</option>{rastOptions.map((rast) => <option key={rast.stepId} value={rast.stepId}>{rast.type} – {rast.temperature} °C</option>)}</select>{this.renderFieldError(relatedRastErrorKey)}</label>}
@@ -886,6 +908,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                                 </div>
                             </article>;
                         })}</div>
+            </div>
         );
 
         const maltsContent = (
@@ -954,16 +977,16 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
 
         return (
             <form id="beer-recipe-form" className="beer-form" onSubmit={this.handleSubmit} noValidate>
-                <div className="beer-form-toolbar brauhaus-card">
+                <div className="recipe-action-bar brauhaus-card">
                     <label className="beer-select-label">Rezept auswählen<select onChange={this.handleBeerSelect} value={beers.find(b => b.name === name)?.id || ''}><option value="">Neues Rezept anlegen</option>{beers.map(beer => <option key={beer.id} value={beer.id}>{beer.name}</option>)}</select></label>
-                    <button type="button" className="add-button brauhaus-button brauhaus-button-secondary toolbar-button" onClick={this.resetForm}>Neu</button>
-                    <button type="button" className="add-button brauhaus-button brauhaus-button-secondary toolbar-button" onClick={() => this.setState({showImportDialog: true})}>Importieren</button>
-                </div>
-                <div className="beer-form-overview" aria-label="Rezeptübersicht">
-                    <div className="beer-form-overview-item"><span>Name</span><strong>{name || 'Neues Bier'}</strong></div>
-                    <div className="beer-form-overview-item"><span>Typ</span><strong>{type || '–'}</strong></div>
-                    <div className="beer-form-overview-item"><span>Brauwasser</span><strong>{mashVolume || 0} l / {spargeVolume || 0} l</strong></div>
-                    <div className="beer-form-overview-item"><span>Zutaten</span><strong>{maltsDTO.length + hopsDTO.length + yeastsDTO.length + additionalIngredientsDTO.length}</strong></div>
+                    <div className="recipe-action-group recipe-action-group--create">
+                        <button type="button" className="brauhaus-button brauhaus-button-secondary" onClick={this.resetForm}><AddIcon fontSize="small" />Neu</button>
+                        <button type="button" className="brauhaus-button brauhaus-button-secondary" onClick={() => this.setState({showImportDialog: true})}><UploadFileOutlinedIcon fontSize="small" />Importieren</button>
+                    </div>
+                    <div className="recipe-action-group recipe-action-group--save">
+                        <button type="button" className="brauhaus-button brauhaus-button-secondary" onClick={this.cancelOrResetForm}><UndoIcon fontSize="small" />Zurücksetzen</button>
+                        <button className="brauhaus-button brauhaus-button-primary" type="submit" disabled={this.props.isSavingBeer}>{this.props.isSavingBeer ? <><HourglassTopIcon fontSize="small" /> Speichern...</> : <><SaveIcon fontSize="small" /> Speichern</>}</button>
+                    </div>
                 </div>
                 {(missingMalts.length > 0 || missingHops.length > 0 || missingYeasts.length > 0) && <div className="missing-ingredients-warning">{missingMalts.length > 0 && <div>Fehlende Malze: {missingMalts.join(', ')}</div>}{missingHops.length > 0 && <div>Fehlende Hopfen: {missingHops.join(', ')}</div>}{missingYeasts.length > 0 && <div>Fehlende Hefen: {missingYeasts.join(', ')}</div>}</div>}
                 {info && <div className="beer-form-info">{info}</div>}
@@ -976,14 +999,13 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                         </button>)}
                     </nav>
                     <section className="recipe-editor-content brauhaus-card" aria-labelledby={`recipe-section-${active.id}`}>
-                        <div className="recipe-editor-section-header">
-                            <h2 id={`recipe-section-${active.id}`}>{active.label}</h2>
-                            {active.id === 'mash' && <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addFermentationStep}>+ Schritt hinzufügen</button>}
-                            {active.id === 'malts' && <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addMalts}>+ Malz hinzufügen</button>}
-                            {active.id === 'hops' && <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addHops}>+ Hopfen hinzufügen</button>}
-                            {active.id === 'yeast' && <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addYeast}>+ Hefe hinzufügen</button>}
-                            {active.id === 'additional' && <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addAdditionalIngredient}>+ Zutat hinzufügen</button>}
-                        </div>
+                        <RecipeEditorSectionHeader icon={active.icon} title={active.label} id={`recipe-section-${active.id}`} action={
+                            active.id === 'mash' ? <button type="button" className="section-add-button brauhaus-button brauhaus-button-secondary" onClick={this.addFermentationStep}><AddIcon fontSize="small" />Schritt hinzufügen</button> :
+                            active.id === 'malts' ? <button type="button" className="section-add-button brauhaus-button brauhaus-button-secondary" onClick={this.addMalts}><AddIcon fontSize="small" />Malz hinzufügen</button> :
+                            active.id === 'hops' ? <button type="button" className="section-add-button brauhaus-button brauhaus-button-secondary" onClick={this.addHops}><AddIcon fontSize="small" />Hopfen hinzufügen</button> :
+                            active.id === 'yeast' ? <button type="button" className="section-add-button brauhaus-button brauhaus-button-secondary" onClick={this.addYeast}><AddIcon fontSize="small" />Hefe hinzufügen</button> :
+                            active.id === 'additional' ? <button type="button" className="section-add-button brauhaus-button brauhaus-button-secondary" onClick={this.addAdditionalIngredient}><AddIcon fontSize="small" />Zutat hinzufügen</button> : undefined
+                        } />
                         <div className="recipe-editor-section-body">{active.content}</div>
                     </section>
                 </div>
@@ -1012,16 +1034,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                     masterData={{MALT: this.props.malts ?? [], HOP: this.props.hops ?? [], YEAST: this.props.yeasts ?? [], ADDITIONAL_INGREDIENT: this.props.additionalIngredients ?? []}}
                     onCreateMasterData={this.createImportMasterData}
                 />
-                <PageHeader title="Rezepteditor" subtitle="Rezeptdaten und Brauprozess bearbeiten." actions={
-                        <>
-                            <button type="button" className="add-button brauhaus-button brauhaus-button-secondary secondary-action" onClick={this.cancelOrResetForm}>Abbrechen / Zurücksetzen</button>
-                            <button className="finish-btn brauhaus-button brauhaus-button-primary submit-button primary-action" type="submit" form="beer-recipe-form" disabled={this.props.isSavingBeer}>
-                                {this.props.isSavingBeer
-                                    ? <><HourglassTopIcon fontSize="small" /> Speichern...</>
-                                    : <><SaveIcon fontSize="small" /> Rezept speichern</>}
-                            </button>
-                        </>
-                } />
+                <PageHeader title="Rezepteditor" subtitle="Rezeptdaten und Brauprozess bearbeiten." />
                 <div className="beer-form-panel">
                     <div className="beer-form-scroll">{this.renderCreateBeerForm()}</div>
                 </div>
