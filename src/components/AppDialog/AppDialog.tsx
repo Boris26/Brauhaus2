@@ -48,7 +48,8 @@ export const DialogCancelButton: React.FC<DialogCancelButtonProps> = ({onClick, 
 export const AppDialog: React.FC<AppDialogProps> = ({open, title, variant = 'info', description, children,
     actions, icon, onClose, disableClose = false, maxWidth = 'sm', className = ''}) => {
     const titleId = React.useId();
-    const resolvedIcon = icon === undefined ? icons[variant] : icon;
+    const semanticIcon = variant === 'warning' || variant === 'error' || variant === 'success' || variant === 'progress';
+    const resolvedIcon = semanticIcon ? icons[variant] : icon === undefined ? icons[variant] : icon;
     return <Dialog open={open} maxWidth={maxWidth} fullWidth disableEscapeKeyDown={disableClose}
         onClose={disableClose ? undefined : onClose}
         PaperProps={{className: `app-dialog app-dialog--${variant} ${className}`.trim()}}
