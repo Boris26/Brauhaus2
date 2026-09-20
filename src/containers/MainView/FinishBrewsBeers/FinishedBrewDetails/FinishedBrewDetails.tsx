@@ -1,14 +1,18 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {connect} from 'react-redux';
 import CheckIcon from '@mui/icons-material/Check';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
+import HourglassBottomOutlinedIcon from '@mui/icons-material/HourglassBottomOutlined';
 import SkipNextIcon from '@mui/icons-material/SkipNext';
+import {BeerActions} from '../../../../actions/actions';
 import {FinishedBrew} from '../../../../model/FinishedBrew';
 import {brewStateLabel, eBrewState} from '../../../../enums/eBrewState';
 import {FermentationActions} from '../../../../actions/fermentation.actions';
 import {BubbleActivity, BubbleActivityRange, CreateFermentationMeasurement, FermentationAction, FermentationDetails, FermentationGatewaySensorStatus, FermentationMeasurementRuntimeState} from '../../../../model/Fermentation';
 import {actionAmountLabel, actionDueLabel, actionTriggerLabel, actionTypeLabel, assignedDeviceForBeer, canCompleteAction, contactStatus, contactTimeLabel, fermentationDay, freeFermentationDevices, isActionDue, isFermentationDeviceOnline, latestByDate, latestFermentationReadings} from '../../../../utils/fermentation';
+import {canTransitionBrew, transitionFinishedBrew} from '../../../../utils/brewLifecycle';
 import {fermentationActionRequestId} from '../../../../reducers/fermentationReducer';
 import {TriggerType} from '../../../../model/FermentationRecipeAction';
 import BrewProcessChart from '../BrewProcessChart/BrewProcessChart';
@@ -18,7 +22,41 @@ import ModalDialog, {DialogType} from '../../../../components/ModalDialog/ModalD
 import {ManualMeasurementDialogView} from '../../../../components/ManualMeasurementDialog/ManualMeasurementDialog';
 import '../FermentationMeasurements/FermentationDetails.css';
 
-interface Props { brew: FinishedBrew; details?: FermentationDetails; bubbleActivity: BubbleActivity[]; bubbleActivityRange: BubbleActivityRange; bubbleActivityLoading: boolean; bubbleActivityError?: string; loading: boolean; saving: boolean; completing: string[]; completeActionErrors: Record<string, string>; skipping: string[]; assigning: string[]; unassigning: string[]; updatingDeviceDisplayNames: string[]; deviceDisplayNameErrors: Record<string, string>; sensorsByDeviceUid: Record<string, FermentationGatewaySensorStatus>; assignmentError?: string; unassignmentError?: string; error?: string; load: (id: string) => void; loadBubbleActivity: (id: string, range: BubbleActivityRange) => void; save: (value: CreateFermentationMeasurement) => void; complete: (brewId: string, actionId: string) => void; dismissCompleteError: (brewId: string, actionId: string) => void; skip: (brewId: string, actionId: string) => void; assign: (deviceId: string, brewId: string) => void; unassign: (deviceId: string, brewId: string) => void; updateDeviceDisplayName: (deviceUid: string, brewId: string, displayName: string | null) => void; closeMeasurements?: () => void; }
+interface Props {
+  brew: FinishedBrew;
+  details?: FermentationDetails;
+  bubbleActivity: BubbleActivity[];
+  bubbleActivityRange: BubbleActivityRange;
+  bubbleActivityLoading: boolean;
+  bubbleActivityError?: string;
+  loading: boolean;
+  saving: boolean;
+  savingLifecycle: boolean;
+  lifecycleError?: string;
+  completing: string[];
+  completeActionErrors: Record<string, string>;
+  skipping: string[];
+  assigning: string[];
+  unassigning: string[];
+  updatingDeviceDisplayNames: string[];
+  deviceDisplayNameErrors: Record<string, string>;
+  sensorsByDeviceUid: Record<string, FermentationGatewaySensorStatus>;
+  assignmentError?: string;
+  unassignmentError?: string;
+  error?: string;
+  load: (id: string) => void;
+  loadBubbleActivity: (id: string, range: BubbleActivityRange) => void;
+  save: (value: CreateFermentationMeasurement) => void;
+  transition: (brew: FinishedBrew) => void;
+  complete: (brewId: string, actionId: string) => void;
+  dismissCompleteError: (brewId: string, actionId: string) => void;
+  skip: (brewId: string, actionId: string) => void;
+  assign: (deviceId: string, brewId: string) => void;
+  unassign: (deviceId: string, brewId: string) => void;
+  updateDeviceDisplayName: (deviceUid: string, brewId: string, displayName: string | null) => void;
+  closeMeasurements?: () => void;
+}
+
 const number = (value?: number | null, unit = '') => typeof value === 'number' && Number.isFinite(value) ? `${value.toLocaleString('de-DE', {maximumFractionDigits: 1})}${unit}` : '–';
 const date = (value?: string) => value && Number.isFinite(Date.parse(value)) ? new Intl.DateTimeFormat('de-DE', {dateStyle: 'short', timeStyle: 'short'}).format(new Date(value)) : '–';
 const actionText = (action: FermentationAction) => [action.name, actionAmountLabel(action.amount, action.unit)].filter(Boolean).join(' · ');
@@ -46,6 +84,7 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
   const [formOpen, setFormOpen] = useState(false);
   const [completedActionsOpen, setCompletedActionsOpen] = useState(false);
   const [unassignConfirmationOpen, setUnassignConfirmationOpen] = useState(false);
+  const [lifecycleTarget, setLifecycleTarget] = useState<eBrewState | null>(null);
   const [selectedDeviceUid, setSelectedDeviceUid] = useState('');
   const [editingDeviceName, setEditingDeviceName] = useState(false);
   const [deviceNameDraft, setDeviceNameDraft] = useState('');
@@ -54,7 +93,7 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
   const assignmentWasPending = useRef(false);
   const displayNameWasPending = useRef(false);
   useEffect(() => { if (!props.details) props.load(props.brew.id); }, [props.brew.id]); // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => { setCompletedActionsOpen(false); }, [props.brew.id]);
+  useEffect(() => { setCompletedActionsOpen(false); setLifecycleTarget(null); }, [props.brew.id]);
   const initialChartRange = initialFermentationChartRange(props.brew.state);
   useEffect(() => { props.loadBubbleActivity(props.brew.id, initialChartRange); }, [props.brew.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const loadedDetails = props.details ?? {measurements: [], actions: [], devices: []};
@@ -78,6 +117,8 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
   const measurementRuntimeState = assignedOnline ? assignedGatewayStatus?.measurementState : undefined;
   const canCreateMeasurement = props.brew.state === eBrewState.FERMENTATION;
   const canManageAssignment = props.brew.state === eBrewState.WAITING_FOR_FERMENTATION || props.brew.state === eBrewState.FERMENTATION;
+  const canStartMaturation = canTransitionBrew(props.brew.state, eBrewState.MATURATION);
+  const canFinishBrew = canTransitionBrew(props.brew.state, eBrewState.FINISHED);
   const isAssigning = Boolean(selectedDeviceUid && props.assigning.includes(selectedDeviceUid));
   const isUnassigning = Boolean(assignedDevice && props.unassigning.includes(assignedDevice.deviceUid));
   const isUpdatingDisplayName = Boolean(assignedDevice && (props.updatingDeviceDisplayNames ?? []).includes(assignedDevice.deviceUid));
@@ -119,6 +160,19 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
     setDeviceNameError('');
     props.updateDeviceDisplayName(assignedDevice.deviceUid, props.brew.id, null);
   };
+  const confirmLifecycleTransition = () => {
+    if (!lifecycleTarget || props.savingLifecycle) return;
+    const nextBrew = transitionFinishedBrew(props.brew, lifecycleTarget);
+    setLifecycleTarget(null);
+    if (nextBrew.state !== props.brew.state) props.transition(nextBrew);
+  };
+  const lifecycleDialogTitle = lifecycleTarget === eBrewState.MATURATION ? 'Reifung starten?' : 'Bier als fertig markieren?';
+  const lifecycleDialogContent = lifecycleTarget === eBrewState.MATURATION
+    ? 'Der Sud wechselt von der Gärung in die Reifung. Danach können keine neuen manuellen Gärungsmessungen mehr erfasst werden.'
+    : props.brew.state === eBrewState.FERMENTATION
+      ? 'Das Bier wird direkt als fertig markiert und die Reifung übersprungen. Der Status „Fertig“ ist endgültig.'
+      : 'Das Bier wird als fertig markiert. Der Status „Fertig“ ist endgültig.';
+  const lifecycleConfirmLabel = lifecycleTarget === eBrewState.MATURATION ? 'Reifung starten' : 'Bier fertig';
   const deviceNameEditor = assignedDevice && (editingDeviceName ? <>
     <div className="fermentation-device-name-edit"><input ref={deviceNameInput} aria-label="Sensor-Alias" maxLength={255} disabled={isUpdatingDisplayName} value={deviceNameDraft} onChange={event => { setDeviceNameDraft(event.target.value); setDeviceNameError(''); }} onKeyDown={event => { if (event.key === 'Enter') saveDeviceName(); else if (event.key === 'Escape') cancelDeviceNameEdit(); }} /><button type="button" disabled={isUpdatingDisplayName} aria-label="Sensor-Alias speichern" title="Sensor-Alias speichern" onClick={saveDeviceName}><CheckIcon fontSize="small" /></button><button type="button" disabled={isUpdatingDisplayName} aria-label="Bearbeiten abbrechen" title="Bearbeiten abbrechen" onClick={cancelDeviceNameEdit}><CloseIcon fontSize="small" /></button></div>
     {assignedDevice.displayName && <button className="fermentation-display-name-reset" type="button" disabled={isUpdatingDisplayName} onClick={resetDeviceName}>Technischen Namen verwenden</button>}
@@ -134,9 +188,18 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
   const actionGroup = (title: string, actions: FermentationAction[]) => actions.length > 0 && <section className="fermentation-plan-group"><h5>{title}</h5>{actionItems(actions)}</section>;
   const completedActionGroup = completedActions.length > 0 && <section className="fermentation-plan-group fermentation-plan-group-completed"><button type="button" className="fermentation-completed-toggle" aria-expanded={completedActionsOpen} aria-label={`Bereits durchgeführt (${completedActions.length})`} onClick={() => setCompletedActionsOpen(open => !open)}><span className="fermentation-completed-chevron" aria-hidden="true">{completedActionsOpen ? '▾' : '▸'}</span><span>Bereits durchgeführt</span><span className="fermentation-completed-count">{completedActions.length}</span></button>{completedActionsOpen && actionItems(completedActions)}</section>;
   return <div className="finished-brew-details fermentation-details fermentation-measurements-page">
-      <header className="fermentation-page-header"><div><button className="fermentation-back-button" onClick={props.closeMeasurements}>← Fertige Biere</button><h3>Messdaten · {props.brew.name}</h3><p className="fermentation-phase">{brewStateLabel(props.brew.state)}{day ? ` · Gärtag ${day}` : ''}</p></div><button disabled={!canCreateMeasurement} title={canCreateMeasurement ? undefined : 'Messungen können nur während der Gärung erfasst werden.'} onClick={() => setFormOpen(true)}>Neue Messung</button></header>
+      <header className="fermentation-page-header">
+        <div><button className="fermentation-back-button" onClick={props.closeMeasurements}>← Fertige Biere</button><h3>Messdaten · {props.brew.name}</h3><p className="fermentation-phase">{brewStateLabel(props.brew.state)}{day ? ` · Gärtag ${day}` : ''}</p></div>
+        <div className="fermentation-page-actions">
+          {canStartMaturation && <button type="button" className="fermentation-lifecycle-button" disabled={props.savingLifecycle} onClick={() => setLifecycleTarget(eBrewState.MATURATION)}><HourglassBottomOutlinedIcon fontSize="small" />Reifung starten</button>}
+          {canFinishBrew && <button type="button" className="fermentation-lifecycle-button is-finish" disabled={props.savingLifecycle} onClick={() => setLifecycleTarget(eBrewState.FINISHED)}><CheckCircleOutlineIcon fontSize="small" />Bier fertig</button>}
+          <button type="button" className="fermentation-new-measurement-button" disabled={!canCreateMeasurement || props.savingLifecycle} title={canCreateMeasurement ? undefined : 'Messungen können nur während der Gärung erfasst werden.'} onClick={() => setFormOpen(true)}>Neue Messung</button>
+        </div>
+      </header>
+      {props.lifecycleError && <p className="fermentation-lifecycle-error" role="alert">{props.lifecycleError}</p>}
       {isInitialLoading && <p role="status">Messdaten werden geladen …</p>}{props.error && <p className="fermentation-error" role="alert">Die Messdaten konnten nicht geladen werden.</p>}
       <ManualMeasurementDialogView open={formOpen} beerId={props.brew.id} onClose={() => setFormOpen(false)} brewState={props.brew.state} saving={props.saving} error={props.error} saveMeasurement={props.save} />
+      <ModalDialog type={DialogType.CONFIRM} open={lifecycleTarget !== null} header={lifecycleDialogTitle} content={lifecycleDialogContent} confirmLabel={lifecycleConfirmLabel} showCancelButton onConfirm={confirmLifecycleTransition} onCancel={() => setLifecycleTarget(null)} actionsDisabled={props.savingLifecycle} />
 
       <section aria-labelledby="current-state-title"><h4 id="current-state-title" className="fermentation-section-title">Aktueller Zustand</h4><div className="fermentation-current-grid">
         <div><span>Biertemperatur</span><strong>{number(readings.beerTemperature, ' °C')}</strong></div><div><span>Außentemperatur</span><strong>{number(readings.ambientTemperature, ' °C')}</strong></div><div><span>Plato</span><strong>{number(readings.plato, ' °P')}</strong></div><div className="fermentation-measurement-runtime"><span>Messung</span><FermentationMeasurementRuntime state={measurementRuntimeState} /></div><div><span>Letzte Messung</span><strong>{relativeMeasurement}</strong><small>{date(latestMeasurement?.measuredAt)}</small></div>
@@ -171,6 +234,41 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
       {groupedData && <section className="fermentation-card fermentation-analysis"><h4>Analyse des Brauprozesses</h4><BrewProcessChart groupedData={groupedData} /></section>}
   </div>;
 };
-const mapState = (state: any, own: {brew: FinishedBrew}) => { const bubble = state.fermentationReducer.bubbleActivityByBrewId[own.brew.id]; return {details: state.fermentationReducer.byBrewId[own.brew.id], bubbleActivity: bubble?.activity ?? [], bubbleActivityRange: bubble?.selectedRange ?? '24h', bubbleActivityLoading: bubble?.loading ?? false, bubbleActivityError: bubble?.error, loading: state.fermentationReducer.loadingIds.includes(own.brew.id), saving: state.fermentationReducer.savingMeasurementIds.includes(own.brew.id), completing: state.fermentationReducer.completingActionIds, completeActionErrors: state.fermentationReducer.completeActionErrors, skipping: state.fermentationReducer.skippingActionIds, assigning: state.fermentationReducer.assigningDeviceIds, unassigning: state.fermentationReducer.unassigningDeviceIds, updatingDeviceDisplayNames: state.fermentationReducer.updatingDeviceDisplayNameIds, deviceDisplayNameErrors: state.fermentationReducer.deviceDisplayNameErrors, sensorsByDeviceUid: state.fermentationReducer.sensorsByDeviceUid, assignmentError: state.fermentationReducer.assignmentErrors[own.brew.id], unassignmentError: state.fermentationReducer.unassignmentErrors[own.brew.id], error: state.fermentationReducer.errors[own.brew.id]}; };
-const mapDispatch = (dispatch: any) => ({load: (id: string) => dispatch(FermentationActions.load(id)), loadBubbleActivity: (id: string, range: BubbleActivityRange) => dispatch(FermentationActions.loadBubbleActivity(id, range)), save: (value: CreateFermentationMeasurement) => dispatch(FermentationActions.createMeasurement(value)), complete: (brewId: string, actionId: string) => dispatch(FermentationActions.completeAction(brewId, actionId)), dismissCompleteError: (brewId: string, actionId: string) => dispatch(FermentationActions.dismissCompleteActionError(brewId, actionId)), skip: (brewId: string, actionId: string) => dispatch(FermentationActions.skipAction(brewId, actionId)), assign: (deviceId: string, brewId: string) => dispatch(FermentationActions.assignDevice(deviceId, brewId)), unassign: (deviceId: string, brewId: string) => dispatch(FermentationActions.unassignDevice(deviceId, brewId)), updateDeviceDisplayName: (deviceUid: string, brewId: string, displayName: string | null) => dispatch(FermentationActions.updateDeviceDisplayName(deviceUid, brewId, displayName))});
+const mapState = (state: any, own: {brew: FinishedBrew}) => {
+  const bubble = state.fermentationReducer.bubbleActivityByBrewId[own.brew.id];
+  return {
+    details: state.fermentationReducer.byBrewId[own.brew.id],
+    bubbleActivity: bubble?.activity ?? [],
+    bubbleActivityRange: bubble?.selectedRange ?? '24h',
+    bubbleActivityLoading: bubble?.loading ?? false,
+    bubbleActivityError: bubble?.error,
+    loading: state.fermentationReducer.loadingIds.includes(own.brew.id),
+    saving: state.fermentationReducer.savingMeasurementIds.includes(own.brew.id),
+    savingLifecycle: Boolean(state.beerDataReducer.savingFinishedBrewIds?.includes(own.brew.id)),
+    lifecycleError: state.beerDataReducer.finishedBrewUpdateErrors?.[own.brew.id],
+    completing: state.fermentationReducer.completingActionIds,
+    completeActionErrors: state.fermentationReducer.completeActionErrors,
+    skipping: state.fermentationReducer.skippingActionIds,
+    assigning: state.fermentationReducer.assigningDeviceIds,
+    unassigning: state.fermentationReducer.unassigningDeviceIds,
+    updatingDeviceDisplayNames: state.fermentationReducer.updatingDeviceDisplayNameIds,
+    deviceDisplayNameErrors: state.fermentationReducer.deviceDisplayNameErrors,
+    sensorsByDeviceUid: state.fermentationReducer.sensorsByDeviceUid,
+    assignmentError: state.fermentationReducer.assignmentErrors[own.brew.id],
+    unassignmentError: state.fermentationReducer.unassignmentErrors[own.brew.id],
+    error: state.fermentationReducer.errors[own.brew.id]
+  };
+};
+const mapDispatch = (dispatch: any) => ({
+  load: (id: string) => dispatch(FermentationActions.load(id)),
+  loadBubbleActivity: (id: string, range: BubbleActivityRange) => dispatch(FermentationActions.loadBubbleActivity(id, range)),
+  save: (value: CreateFermentationMeasurement) => dispatch(FermentationActions.createMeasurement(value)),
+  transition: (brew: FinishedBrew) => dispatch(BeerActions.updateActiveBeer(brew)),
+  complete: (brewId: string, actionId: string) => dispatch(FermentationActions.completeAction(brewId, actionId)),
+  dismissCompleteError: (brewId: string, actionId: string) => dispatch(FermentationActions.dismissCompleteActionError(brewId, actionId)),
+  skip: (brewId: string, actionId: string) => dispatch(FermentationActions.skipAction(brewId, actionId)),
+  assign: (deviceId: string, brewId: string) => dispatch(FermentationActions.assignDevice(deviceId, brewId)),
+  unassign: (deviceId: string, brewId: string) => dispatch(FermentationActions.unassignDevice(deviceId, brewId)),
+  updateDeviceDisplayName: (deviceUid: string, brewId: string, displayName: string | null) => dispatch(FermentationActions.updateDeviceDisplayName(deviceUid, brewId, displayName))
+});
 export default connect(mapState, mapDispatch)(FinishedBrewDetailsView);
