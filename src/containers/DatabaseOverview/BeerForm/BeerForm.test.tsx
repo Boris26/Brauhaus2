@@ -93,7 +93,7 @@ const expectProcedureTypeOptions = (select: HTMLElement) => {
     ]);
 };
 
-describe('BeerForm accordions', () => {
+describe('BeerForm section navigation', () => {
     it('separates brew-day timing from DRY_HOP Recipe Actions on usage changes', () => {
         renderBeerForm({beerFormState: {hopsDTO: [{
             id: 1, quantity: 10, additionTime: 3,
@@ -174,37 +174,26 @@ describe('BeerForm accordions', () => {
         expect(screen.queryByLabelText(/Typ/)).not.toBeInTheDocument();
     });
 
-    it('opens basic and brewing data initially while keeping table sections collapsed', () => {
+    it('shows one active editor section and keeps values while navigating', () => {
         renderBeerForm();
+        expect(screen.getByRole('button', {name: /^Grunddaten$/})).toHaveAttribute('aria-current', 'page');
+        expect(screen.getByLabelText(/Name:/)).toBeInTheDocument();
+        expect(screen.queryByLabelText(/Hauptguss/)).not.toBeInTheDocument();
 
-        expect(screen.getByRole('button', {name: /Grunddaten/})).toHaveAttribute('aria-expanded', 'true');
-        expect(screen.getByRole('button', {name: /Brauwasser/})).toHaveAttribute('aria-expanded', 'true');
-        expect(screen.getByRole('button', {name: /Brauprozess/})).toHaveAttribute('aria-expanded', 'false');
-        expect(screen.getByRole('button', {name: /Malze/})).toHaveAttribute('aria-expanded', 'false');
-    });
-
-    it('toggles sections by keyboard and preserves entered form values', () => {
-        renderBeerForm();
-        const nameInput = screen.getByLabelText(/Name:/);
-        fireEvent.change(nameInput, {target: {value: 'Helles'}});
-
-        const basicHeader = screen.getByRole('button', {name: /Grunddaten/});
-        fireEvent.keyDown(basicHeader, {key: 'Enter'});
-        expect(basicHeader).toHaveAttribute('aria-expanded', 'false');
-
-        fireEvent.keyDown(basicHeader, {key: ' '});
-        expect(basicHeader).toHaveAttribute('aria-expanded', 'true');
+        fireEvent.change(screen.getByLabelText(/Name:/), {target: {value: 'Helles'}});
+        fireEvent.click(screen.getByRole('button', {name: /^Brauwasser$/}));
+        expect(screen.getByLabelText(/Hauptguss/)).toBeInTheDocument();
+        expect(screen.queryByLabelText(/Name:/)).not.toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', {name: /^Grunddaten$/}));
         expect(screen.getByLabelText(/Name:/)).toHaveValue('Helles');
     });
 
-    it('opens closed ingredient sections when validation errors are found', () => {
+    it('marks ingredient sections in the navigation when validation errors are found', () => {
         const {props} = renderBeerForm();
-
         fireEvent.click(screen.getByRole('button', {name: /Rezept speichern/}));
-
-        expect(screen.getByRole('button', {name: /Malze.*Fehler/i})).toHaveAttribute('aria-expanded', 'true');
-        expect(screen.getByRole('button', {name: /Hopfen.*Fehler/i})).toHaveAttribute('aria-expanded', 'true');
-        expect(screen.getByRole('button', {name: /Hefe.*Fehler/i})).toHaveAttribute('aria-expanded', 'true');
+        expect(screen.getByRole('button', {name: /Malze.*Fehler/i})).toBeInTheDocument();
+        expect(screen.getByRole('button', {name: /Hopfen.*Fehler/i})).toBeInTheDocument();
+        expect(screen.getByRole('button', {name: /Hefe.*Fehler/i})).toBeInTheDocument();
         expect(screen.getByText(/Bitte korrigiere die markierten Pflichtfelder/)).toBeInTheDocument();
         expect(props.onSubmitBeer).not.toHaveBeenCalled();
     });

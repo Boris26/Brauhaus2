@@ -25,9 +25,7 @@ import {AdditionalIngredientRepository} from '../../../repositorys/AdditionalIng
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import SaveIcon from '@mui/icons-material/Save';
 import HourglassTopIcon from '@mui/icons-material/HourglassTop';
-import {AppAccordion, AppAccordionHeader} from '../../../components/AppAccordion/AppAccordion';
 import {PageHeader} from '../../../components/PageLayout/PageLayout';
-import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
 import {CONTACT_TIME_UNITS, TIME_TRIGGER_UNITS, clearRecipeAction, unitLabel, RecipeActionFields, TriggerType, TriggerUnit, TimeUnit, hasRecipeAction, normalizeRecipeAction} from '../../../model/FermentationRecipeAction';
 
 interface BeerFormProps {
@@ -96,6 +94,7 @@ interface BeerFormState {
     validationDialogMessage: string;
     validationErrors: Record<string, string>;
     expandedSections: Record<BeerFormSection, boolean>;
+    activeSection: BeerFormSection;
     showImportDialog: boolean;
 }
 
@@ -132,6 +131,7 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             validationDialogMessage: '',
             validationErrors: {},
             showImportDialog: false,
+            activeSection: 'basic',
             expandedSections: {
                 basic: true,
                 brewing: true,
@@ -810,26 +810,6 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         }
     };
 
-    getSectionId = (section: BeerFormSection) => `beer-form-section-${section}`;
-
-    isSectionExpanded = (section: BeerFormSection): boolean => this.state.expandedSections?.[section] ?? false;
-
-    toggleSection = (section: BeerFormSection) => {
-        this.setState((prevState) => ({
-            expandedSections: {
-                ...prevState.expandedSections,
-                [section]: !(prevState.expandedSections?.[section] ?? false),
-            },
-        }));
-    };
-
-    handleSectionKeyDown = (event: React.KeyboardEvent<HTMLElement>, section: BeerFormSection) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            this.toggleSection(section);
-        }
-    };
-
     sectionHasError = (section: BeerFormSection): boolean => {
         const errorKeys = Object.keys(this.state.validationErrors);
         if (section === 'malts') return errorKeys.some((key) => key.startsWith('maltsDTO.'));
@@ -838,37 +818,6 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
         if (section === 'additional') return errorKeys.some((key) => key.startsWith('additionalIngredientsDTO.'));
         if (section === 'mash') return errorKeys.some((key) => key.startsWith('fermentationSteps.'));
         return false;
-    };
-
-    renderAccordionSection = (section: BeerFormSection, title: string, summary: string, content: React.ReactNode) => {
-        const expanded = this.isSectionExpanded(section);
-        const contentId = this.getSectionId(section);
-        const summaryId = `${contentId}-header`;
-        const hasError = this.sectionHasError(section);
-        const status = (hasError || summary) ? (
-            <span className="beer-accordion-meta">
-                {hasError && <span className="beer-accordion-error">Fehler</span>}
-                {summary && <span>{summary}</span>}
-            </span>
-        ) : undefined;
-
-        return (
-            <AppAccordion
-                component="section"
-                expanded={expanded}
-                onChange={() => this.toggleSection(section)}
-                className={`beer-form-accordion ${hasError ? 'has-error' : ''}`}
-                summary={<AppAccordionHeader title={title} status={status} />}
-                summaryProps={{
-                    id: summaryId,
-                    'aria-controls': contentId,
-                    onKeyDown: (event) => this.handleSectionKeyDown(event, section),
-                }}
-                detailsProps={{id: contentId, 'aria-labelledby': summaryId}}
-            >
-                {content}
-            </AppAccordion>
-        );
     };
 
     getImportInfo = (): string => {
@@ -977,12 +926,22 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
             </>
         );
 
+        const sections: Array<{id: BeerFormSection; label: string; count?: number; content: React.ReactNode}> = [
+            {id: 'basic', label: 'Grunddaten', content: basicContent},
+            {id: 'brewing', label: 'Brauwasser', content: brewingContent},
+            {id: 'mash', label: 'Brauprozess', count: fermentationSteps.length, content: mashContent},
+            {id: 'malts', label: 'Malze', count: maltsDTO.length, content: maltsContent},
+            {id: 'hops', label: 'Hopfen', count: hopsDTO.length, content: hopsContent},
+            {id: 'yeast', label: 'Hefe', count: yeastsDTO.length, content: yeastContent},
+            {id: 'additional', label: 'Weitere Zutaten', count: additionalIngredientsDTO.length, content: additionalContent},
+        ];
+        const active = sections.find((section) => section.id === this.state.activeSection) ?? sections[0];
+
         return (
             <form id="beer-recipe-form" className="beer-form" onSubmit={this.handleSubmit} noValidate>
-                <div className="beer-form-toolbar">
-                    <div className="beer-form-toolbar-title">Rezept</div>
-                    <label className="beer-select-label">Bier auswählen:<select onChange={this.handleBeerSelect} value={beers.find(b => b.name === name)?.id || ''}><option value="">Neues Bier anlegen</option>{beers.map(beer => <option key={beer.id} value={beer.id}>{beer.name}</option>)}</select></label>
-                    <button type="button" className="add-button brauhaus-button brauhaus-button-secondary toolbar-button" onClick={this.resetForm}>Neues Bier</button>
+                <div className="beer-form-toolbar brauhaus-card">
+                    <label className="beer-select-label">Rezept auswählen<select onChange={this.handleBeerSelect} value={beers.find(b => b.name === name)?.id || ''}><option value="">Neues Rezept anlegen</option>{beers.map(beer => <option key={beer.id} value={beer.id}>{beer.name}</option>)}</select></label>
+                    <button type="button" className="add-button brauhaus-button brauhaus-button-secondary toolbar-button" onClick={this.resetForm}>Neu</button>
                     <button type="button" className="add-button brauhaus-button brauhaus-button-secondary toolbar-button" onClick={() => this.setState({showImportDialog: true})}>Importieren</button>
                 </div>
                 <div className="beer-form-overview" aria-label="Rezeptübersicht">
@@ -993,14 +952,25 @@ export class BeerForm extends React.Component<BeerFormProps, BeerFormState> {
                 </div>
                 {(missingMalts.length > 0 || missingHops.length > 0 || missingYeasts.length > 0) && <div className="missing-ingredients-warning">{missingMalts.length > 0 && <div>Fehlende Malze: {missingMalts.join(', ')}</div>}{missingHops.length > 0 && <div>Fehlende Hopfen: {missingHops.join(', ')}</div>}{missingYeasts.length > 0 && <div>Fehlende Hefen: {missingYeasts.join(', ')}</div>}</div>}
                 {info && <div className="beer-form-info">{info}</div>}
-                <div className="beer-form-sections app-accordion-group">
-                    {this.renderAccordionSection('basic', 'Grunddaten', '', basicContent)}
-                    {this.renderAccordionSection('brewing', 'Brauwasser', '', brewingContent)}
-                    {this.renderAccordionSection('mash', 'Brauprozess', `${fermentationSteps.length} Rasten`, mashContent)}
-                    {this.renderAccordionSection('malts', 'Malze', `${maltsDTO.length} Einträge`, maltsContent)}
-                    {this.renderAccordionSection('hops', 'Hopfen', `${hopsDTO.length} Einträge`, hopsContent)}
-                    {this.renderAccordionSection('yeast', 'Hefe', `${yeastsDTO.length} Einträge`, yeastContent)}
-                    {this.renderAccordionSection('additional', 'Weitere Zutaten', `${additionalIngredientsDTO.length} Einträge`, additionalContent)}
+                <div className="recipe-editor-layout">
+                    <nav className="recipe-editor-navigation brauhaus-card" aria-label="Rezeptabschnitte">
+                        <h2>Rezept</h2>
+                        {sections.map((section) => <button key={section.id} type="button" className={section.id === active.id ? 'is-active' : ''} aria-current={section.id === active.id ? 'page' : undefined} onClick={() => this.setState({activeSection: section.id})}>
+                            <span>{section.label}</span>{section.count !== undefined && <span className="recipe-section-count">{section.count}</span>}
+                            {this.sectionHasError(section.id) && <span className="recipe-section-error" aria-label="Fehler">!</span>}
+                        </button>)}
+                    </nav>
+                    <section className="recipe-editor-content brauhaus-card" aria-labelledby={`recipe-section-${active.id}`}>
+                        <div className="recipe-editor-section-header">
+                            <h2 id={`recipe-section-${active.id}`}>{active.label}</h2>
+                            {active.id === 'mash' && <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addFermentationStep}>+ Schritt hinzufügen</button>}
+                            {active.id === 'malts' && <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addMalts}>+ Malz hinzufügen</button>}
+                            {active.id === 'hops' && <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addHops}>+ Hopfen hinzufügen</button>}
+                            {active.id === 'yeast' && <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addYeast}>+ Hefe hinzufügen</button>}
+                            {active.id === 'additional' && <button type="button" className="add-button brauhaus-button brauhaus-button-secondary" onClick={this.addAdditionalIngredient}>+ Zutat hinzufügen</button>}
+                        </div>
+                        <div className="recipe-editor-section-body">{active.content}</div>
+                    </section>
                 </div>
             </form>
         );
