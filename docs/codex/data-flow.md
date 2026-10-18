@@ -161,3 +161,13 @@ Manual assignment flows from UI → Redux → fermentation epic → `POST fermen
 ## Incremental fermentation updates
 
 The detail mount owns one initial aggregate load. Persisted measurement and bubble-window socket payloads are appended to the existing Redux arrays with stable deduplication; legacy invalidations do not cause aggregate or history reloads. A reconnect requests only `/measurements?afterId=<last-known-id>`. Manual measurement POST responses follow the same append path. See `fermentation-data-loading.md` for the request-by-request analysis and cross-repository prerequisites.
+
+
+## Coordinated process realtime migration
+
+The current implementation supersedes the earlier polling-only descriptions:
+Socket.IO supplies versioned process snapshots and throttled telemetry; HTTP status
+polling runs only while disconnected/unsynchronized. All process inputs share the
+reducer acceptance gate. See `docs/codex/interfaces.md`, “Process realtime
+communication migration”, for metadata, conditional confirmations, fallback,
+collector, flags and compatibility details. No BeerDataStore/gateway changes.

@@ -8,6 +8,8 @@ import { WaterStatus } from '../components/Controlls/WaterControll/WaterControl'
 import {AgitatorRealtimeState, AlarmRealtimeState, RealtimeControllerState, TemperatureSensorRealtimeState} from '../model/RealtimeControllerState';
 import {AgitatorSettings} from '../model/AgitatorSettings';
 import {BrewRecoveryState} from '../model/BrewRecovery';
+import {CommunicationPhase, ConfirmationPhase, PROCESS_REALTIME_ENABLED, validMetadata, validStatus} from '../utils/brewingStatus/snapshot';
+import {getStatusChangeKey} from '../utils/brewingStatus/selectors';
 
 const agitatorSnapshotsEqual = (left?: AgitatorRealtimeState, right?: AgitatorRealtimeState): boolean =>
     left === right || (!!left && !!right
@@ -39,6 +41,8 @@ export interface BackendAvailable {
 }
 
 export interface ProductionReducerState {
+    communication: {phase: CommunicationPhase; generation: number; lastMessageAt: number; retiredEpochs: string[]; socketEpoch?: string};
+    confirmation: {httpPending?: boolean; phase?: ConfirmationPhase; baselineKey?: string; baselineRevision?: number; baselineEpoch?: string; baselineProcess?: string; syncWaiting?: boolean};
     temperature: number;
     agitatorSpeed: number;
     currentAgitatorSpeed: number;
@@ -71,6 +75,8 @@ export interface ProductionReducerState {
 }
 
 export const initialProductionState: ProductionReducerState = {
+    communication: {phase: 'Disconnected', generation: 0, lastMessageAt: 0, retiredEpochs: []},
+    confirmation: {},
     temperature: 0,
     currentAgitatorSpeed: 5,
     currentAgitatorState: ToggleState.OFF,
@@ -143,24 +149,88 @@ const productionReducer = (
             return {...aState, isPollingRunning: false, brewingStartError: aAction.payload.error};
         }
         case ProductionActions.ActionTypes.SET_BREWING_STATUS: {
-            const aBrewingStatus = aAction.payload.brewingStatus;
-            const aIsTerminalOrIdle = isProcessIdle(aBrewingStatus) || isProcessFinished(aBrewingStatus) || isProcessAborted(aBrewingStatus) || isProcessInError(aBrewingStatus);
-            return { ...aState, brewingStatus: aBrewingStatus, isBrewingStatusStale: false, isPollingRunning: aIsTerminalOrIdle ? false : aState.isPollingRunning };
+            const status = aAction.payload.brewingStatus;
+            if (!status) return aState;
+            const {source = 'http', generation} = aAction.payload;
+            if (generation !== undefined && generation !== aState.communication.generation) return aState;
+            const incoming = status.snapshotMetadata;
+            const previous = aState.brewingStatus?.snapshotMetadata;
+            let communication = aState.communication;
+            if (incoming) {
+                if (!validMetadata(incoming) || !validStatus(status)) return aState;
+                if (source === 'socket') communication = {...communication, socketEpoch: incoming.controllerEpoch, lastMessageAt: Date.now()};
+                if (source === 'telemetry') communication = {...communication, lastMessageAt: Date.now()};
+                if (communication.retiredEpochs.includes(incoming.controllerEpoch)) return aState;
+                if (previous && incoming.controllerEpoch !== previous.controllerEpoch && source !== 'sync') {
+                    return {...aState, communication: {...communication, phase: 'Synchronizing'}};
+                }
+                if (previous && incoming.controllerEpoch === previous.controllerEpoch && incoming.revision < previous.revision) return aState;
+                const socketSynchronized = PROCESS_REALTIME_ENABLED && aState.socketConnection.connected
+                    && (source === 'socket' || (source === 'sync' && communication.socketEpoch === incoming.controllerEpoch));
+                if (socketSynchronized) communication = {...communication, phase: 'Synchronized', lastMessageAt: Date.now()};
+                if (previous && incoming.controllerEpoch === previous.controllerEpoch && incoming.revision === previous.revision) {
+                    return communication === aState.communication ? aState : {...aState, communication};
+                }
+                if (previous && incoming.controllerEpoch !== previous.controllerEpoch) {
+                    communication = {...communication, retiredEpochs: [...communication.retiredEpochs, previous.controllerEpoch]};
+                }
+            } else if (previous) return aState; // Unversioned responses cannot downgrade a versioned controller.
+            const terminal = isProcessIdle(status) || isProcessFinished(status) || isProcessAborted(status) || isProcessInError(status);
+            const processReplaced = aState.isConfirmPending && incoming && aState.confirmation.baselineEpoch
+                && (incoming.controllerEpoch !== aState.confirmation.baselineEpoch || incoming.processInstanceId !== aState.confirmation.baselineProcess);
+            const transitioned = aState.isConfirmPending && aState.confirmation.baselineKey !== undefined
+                && `${getStatusChangeKey(status)}|${status.waiting.canConfirm}` !== aState.confirmation.baselineKey;
+            return {...aState, brewingStatus: status, communication,
+                isBrewingStatusStale: false, isPollingRunning: terminal ? false : aState.isPollingRunning,
+                ...(processReplaced ? {isConfirmPending: !!aState.confirmation.httpPending,
+                    confirmError: 'Controller oder Brauprozess wurde geändert. Die Bestätigung wurde nicht erneut gesendet.',
+                    confirmation: {...aState.confirmation, phase: 'Failed', syncWaiting: false}} : transitioned ? {isConfirmPending: !!aState.confirmation.httpPending, confirmError: undefined, confirmation: {...aState.confirmation, phase: 'Completed', syncWaiting: false}} : {})};
         }
+        case ProductionActions.ActionTypes.COMMUNICATION_PHASE:
+            return {...aState, communication: {...aState.communication, phase: aAction.payload.phase, socketEpoch: undefined}};
+        case ProductionActions.ActionTypes.STATUS_STREAM_STALE:
+            return {...aState, isBrewingStatusStale: !!aState.brewingStatus,
+                communication: {...aState.communication, phase: 'Synchronizing', socketEpoch: undefined}};
+        case ProductionActions.ActionTypes.STATUS_HEARTBEAT: {
+            const heartbeat = aAction.payload;
+            if (!heartbeat || typeof heartbeat !== 'object') return aState;
+            const metadata = aState.brewingStatus?.snapshotMetadata;
+            if (!metadata || !aState.socketConnection.connected || heartbeat.controllerEpoch !== metadata.controllerEpoch
+                || heartbeat.processInstanceId !== metadata.processInstanceId || !Number.isSafeInteger(heartbeat.revision)) return aState;
+            return {...aState, communication: {...aState.communication, lastMessageAt: Date.now(),
+                phase: PROCESS_REALTIME_ENABLED && heartbeat.revision <= metadata.revision ? 'Synchronized' : aState.communication.phase}};
+        }
+        case ProductionActions.ActionTypes.CONFIRM_ACCEPTED:
+            if (aState.confirmation.phase === 'Completed' || aState.confirmation.phase === 'Failed') return aState;
+            return {...aState, confirmation: {...aState.confirmation, phase: 'CommandAccepted'}};
+        case ProductionActions.ActionTypes.CONFIRM_SYNC_WAIT:
+            if (!aState.isConfirmPending) return aState;
+            return {...aState, confirmation: {...aState.confirmation, syncWaiting: true}};
         case ProductionActions.ActionTypes.START_POLLING: {
+            if (PROCESS_REALTIME_ENABLED && aState.communication.phase === 'Synchronized') return aState;
             return { ...aState, isPollingRunning: true };
         }
         case ProductionActions.ActionTypes.STOP_POLLING: {
             return { ...aState, isPollingRunning: false };
         }
         case ProductionActions.ActionTypes.CONFIRM: {
-            return { ...aState, isConfirmPending: true, confirmError: undefined };
+            if (aState.isConfirmPending) return aState;
+            return {...aState, isConfirmPending: true, confirmError: undefined, confirmation: {
+                phase: 'CommandPending', httpPending: true, baselineKey: `${getStatusChangeKey(aState.brewingStatus)}|${aState.brewingStatus?.waiting.canConfirm}`,
+                baselineRevision: aState.brewingStatus?.snapshotMetadata?.revision,
+                baselineEpoch: aState.brewingStatus?.snapshotMetadata?.controllerEpoch,
+                baselineProcess: aState.brewingStatus?.snapshotMetadata?.processInstanceId,
+            }};
         }
         case ProductionActions.ActionTypes.CONFIRM_SUCCESS: {
-            return { ...aState, isConfirmPending: false, confirmError: undefined };
+            if (aState.confirmation.phase === 'Completed' || aState.confirmation.phase === 'Failed') return {...aState, isConfirmPending: false, confirmation: {...aState.confirmation, httpPending: false}};
+            return {...aState, isConfirmPending: true, confirmError: undefined,
+                confirmation: {...aState.confirmation, phase: 'AwaitingStateTransition', httpPending: false}};
         }
         case ProductionActions.ActionTypes.CONFIRM_FAILURE: {
-            return { ...aState, isConfirmPending: false, confirmError: aAction.payload.error };
+            if (aState.confirmation.phase === 'Completed') return aState;
+            return {...aState, isConfirmPending: false, confirmError: aAction.payload.error,
+                confirmation: {...aState.confirmation, phase: 'Failed', httpPending: false}};
         }
         case ProductionActions.ActionTypes.NEXT_PROCEDURE_STEP: {
             return {...aState, isNextProcedureStepPending: true, nextProcedureStepError: undefined};
@@ -195,6 +265,11 @@ const productionReducer = (
         case ProductionActions.ActionTypes.SOCKET_CONNECTION_CHANGED: {
             return {
                 ...aState,
+                isBrewingStatusStale: !aAction.payload.connected && !!aState.brewingStatus ? true : aState.isBrewingStatusStale,
+                communication: {...aState.communication,
+                    generation: aState.communication.generation + 1,
+                    phase: aAction.payload.connected ? 'Synchronizing' : 'Disconnected',
+                    socketEpoch: undefined, lastMessageAt: Date.now()},
                 socketConnection: {
                     connected: aAction.payload.connected,
                     socketId: aAction.payload.connected ? aAction.payload.socketId : undefined

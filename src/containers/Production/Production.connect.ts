@@ -56,6 +56,10 @@ const mapStateToProps = (state: RootState) => (
         isPollingRunning: state.productionReducer.isPollingRunning,
         isConfirmPending: state.productionReducer.isConfirmPending,
         confirmError: state.productionReducer.confirmError,
+    confirmStatusText: state.productionReducer.confirmation.syncWaiting
+        ? 'Controllerstatus wird synchronisiert. Bitte nicht erneut bestätigen.'
+        : state.productionReducer.confirmation.phase === 'AwaitingStateTransition'
+            ? 'Bestätigung angenommen. Warte auf den aktualisierten Controllerstatus …' : undefined,
         isAddingFinishedBrew: Boolean(state.beerDataReducer.isAddingFinishedBrew),
         addFinishedBrewError: state.beerDataReducer.addFinishedBrewError,
         pendingFinishedBrewPayload: state.beerDataReducer.pendingFinishedBrewPayload,

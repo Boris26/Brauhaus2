@@ -81,6 +81,7 @@ export interface ProductionProps {
     confirm: (confirmState: ConfirmStates) => void;
     isConfirmPending: boolean;
     confirmError?: string;
+    confirmStatusText?: string;
     debug: boolean;
     realtimeState?: RealtimeControllerState;
     socketConnected?: boolean;
@@ -187,6 +188,10 @@ export class Production extends React.Component<ProductionProps, ProductionState
         const {brewingStatus,isWaterFillingSuccessful, waterStatus} = this.props;
         const {waterSwitchState,showFinishDialog} = this.state;
         const selectedRecipeChanged = prevProps.selectedBeer?.id !== this.props.selectedBeer?.id;
+        const previousRun = prevProps.brewingStatus?.snapshotMetadata;
+        const currentRun = brewingStatus?.snapshotMetadata;
+        const processInstanceChanged = !!currentRun && (currentRun.controllerEpoch !== previousRun?.controllerEpoch
+            || currentRun.processInstanceId !== previousRun?.processInstanceId);
 
 
         if (prevProps.brewingStatus !== brewingStatus) {
@@ -212,8 +217,9 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
         if (selectedRecipeChanged) {
             this.resetRecipeWaterFillState({indexOfCurrentStep: 0});
-            this.calculateTheHopTimes();
         }
+        if (selectedRecipeChanged || processInstanceChanged) this.calculateTheHopTimes();
+        if (processInstanceChanged) this.setState({brewingFinished: false, showFinishDialog: false});
 
         const aBrewingProcessChangedToInactive = prevProps.brewingStatus?.process?.state !== brewingStatus?.process?.state && brewingStatus?.process?.state !== ProcessState.ACTIVE;
         if (aBrewingProcessChangedToInactive) {
@@ -995,7 +1001,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
         const startWarning = heaterSafetyAlarmActive
             ? 'Brauvorgang kann wegen eines aktiven Heizungs-Sicherheitsalarms nicht gestartet werden.'
             : !sensorReady ? `Brauvorgang kann nicht gestartet werden: ${getTemperatureSensorMessage(this.props.realtimeState?.temperatureSensor)}.` : undefined;
-        return <ProcessList displayMode="current" selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} remainingSeconds={this.state.displayedRemainingSeconds} confirmationPending={this.props.isConfirmPending} confirmationError={this.props.confirmError} onConfirmWaiting={this.confirmCurrentWaitingState} hopReminderName={this.state.showHopsDialog ? this.state.hopName : undefined} onCompleteHopReminder={this.confirmHopDialog} onStartBrewing={this.startBrewing} isStartBrewingDisabled={this.isStartButtonDisabled()} startBrewingWarning={startWarning} />;
+        return <ProcessList displayMode="current" selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} remainingSeconds={this.state.displayedRemainingSeconds} confirmationPending={this.props.isConfirmPending} confirmationError={this.props.confirmError} confirmationStatusText={this.props.confirmStatusText} onConfirmWaiting={this.confirmCurrentWaitingState} hopReminderName={this.state.showHopsDialog ? this.state.hopName : undefined} onCompleteHopReminder={this.confirmHopDialog} onStartBrewing={this.startBrewing} isStartBrewingDisabled={this.isStartButtonDisabled()} startBrewingWarning={startWarning} />;
     }
 
 

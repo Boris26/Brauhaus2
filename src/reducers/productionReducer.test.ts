@@ -138,12 +138,13 @@ describe('productionReducer agitator state', () => {
 });
 
 describe('productionReducer confirm lifecycle', () => {
-    it('sets pending for a request and clears it on success', () => {
+    it('keeps pending after HTTP acceptance until a controller transition', () => {
         const pending = productionReducer(initialProductionState, ProductionActions.confirm(ConfirmStates.IODINE));
         expect(pending.isConfirmPending).toBe(true);
 
         const succeeded = productionReducer(pending, ProductionActions.confirmSuccess());
-        expect(succeeded.isConfirmPending).toBe(false);
+        expect(succeeded.isConfirmPending).toBe(true);
+        expect(succeeded.confirmation.phase).toBe('AwaitingStateTransition');
         expect(succeeded.confirmError).toBeUndefined();
     });
 

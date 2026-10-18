@@ -128,7 +128,8 @@ describe('confirmEpic$', () => {
     await flushPromises();
 
     expect(emitted[0]).toEqual(ProductionActions.confirmFailure('HTTP 500'));
-    expect(emitted[1]).toMatchObject({type: 'ApplicationActions.OPEN_ERROR_DIALOG', payload: {open: true}});
+    expect(emitted[1]).toEqual(ProductionActions.requestStatusSync());
+    expect(emitted[2]).toMatchObject({type: 'ApplicationActions.OPEN_ERROR_DIALOG', payload: {open: true}});
     subscription.unsubscribe();
   });
 
@@ -342,6 +343,16 @@ describe('restoreBrewSessionEpic$', () => {
     expect(dataCollector.getMeasurementCount()).toBe(0);
     expect(emitted).not.toEqual(expect.arrayContaining([expect.objectContaining({type: ProductionActions.ActionTypes.SEND_BREWING_DATA})]));
     scale.mockRestore();
+  });
+
+  it('preserves versioned history when a running-session signal arrives after reconnect', async () => {
+    dataCollector.setBrewingStatus(createBrewingStatus(ProcessState.ACTIVE));
+    const state = restoreState([baseBeer()]);
+    state.productionReducer.brewingStatus = {...createBrewingStatus(ProcessState.ACTIVE), snapshotMetadata: {
+      schemaVersion: 1, controllerEpoch: 'epoch', processInstanceId: 'run', revision: 3, stateRevision: 1,
+    }};
+    await runRestore(state);
+    expect(dataCollector.getMeasurementCount()).toBe(1);
   });
 
   it('loads beers through BeerRepository when the beer is not in state', async () => {
@@ -719,7 +730,7 @@ describe('sendBrewingDataEpic$', (): void => {
     expect(mockedProductionRepository.sendBrewingData).toHaveBeenCalledTimes(1);
     expect(mockedProductionRepository.startBrewing).toHaveBeenCalledWith('socket-123');
     expect(emitted).toEqual([
-      ProductionActions.setBrewingStatus(createBrewingStatus(ProcessState.ACTIVE)),
+      ProductionActions.setBrewingStatus(createBrewingStatus(ProcessState.ACTIVE), 'http', 0),
       ProductionActions.startPolling(),
     ]);
     expect(mockedProductionRepository.getBrewingStatus).not.toHaveBeenCalled();

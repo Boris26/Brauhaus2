@@ -9,6 +9,10 @@ const mapStateToProps = (state: RootState) => ({
     brewingStatus: state.productionReducer.brewingStatus,
     isConfirmPending: state.productionReducer.isConfirmPending,
     confirmError: state.productionReducer.confirmError,
+    confirmStatusText: state.productionReducer.confirmation.syncWaiting
+        ? 'Controllerstatus wird synchronisiert. Bitte nicht erneut bestätigen.'
+        : state.productionReducer.confirmation.phase === 'AwaitingStateTransition'
+            ? 'Bestätigung angenommen. Warte auf den aktualisierten Controllerstatus …' : undefined,
     isBrewingStatusStale: state.productionReducer.isBrewingStatusStale,
     realtimeState: state.productionReducer.realtimeState,
     socketConnected: state.productionReducer.socketConnection.connected,
