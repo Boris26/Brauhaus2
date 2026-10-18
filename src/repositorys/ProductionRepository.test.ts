@@ -45,6 +45,20 @@ describe('ProductionRepository API method/path usage', () => {
     await expect(ProductionRepository.getWaterStatus()).resolves.toEqual(status);
   });
 
+  it('preserves the server rejection and still sends a queued water stop after it', async () => {
+    const failure = {response: {status: 500, data: {error: 'Failed to add edge detection'}}};
+    let rejectStart!: (reason: unknown) => void;
+    mockedAxios.post.mockImplementationOnce(() => new Promise((_resolve, reject) => {rejectStart = reject;}));
+    const starting = ProductionRepository.fillWaterAutomatic(19.18, 'SPARGE');
+    const rejected = expect(starting).rejects.toBe(failure);
+    const stopping = ProductionRepository.stopWaterFilling();
+    rejectStart(failure);
+    await rejected;
+    await expect(stopping).resolves.toBe(true);
+    expect(mockedAxios.post).toHaveBeenCalledTimes(2);
+    expect(mockedAxios.post).toHaveBeenLastCalledWith(expect.stringContaining('FillWaterStop:""'), undefined, expect.any(Object));
+  });
+
   it('uses the recovery command endpoints with the normal BrewingData', async () => {
     const brewingData = {beerId: 'beer-1', plannedVolume: 25, plannedBrewhouseEfficiency: 70,
       MashdownTemperature: 76, MashupTemperature: 52, CookingTemperature: 99, CookingTime: 60, Rasten: []};

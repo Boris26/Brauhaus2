@@ -45,3 +45,10 @@ flow calibration, integrated valve switching noise and mechanical after-run are
 Tests cover zero-Nachguss recipes, pending startup, immediate zero-liter failure,
 completion without an observed open phase, bounded manual filling, explicit stop,
 start/stop HTTP ordering, metadata normalization and timeout shutdown.
+
+Fill-start HTTP errors propagate with their response data instead of being
+collapsed to false. A server rejection is displayed using its `error` message
+and a diagnostic WaterStatus snapshot; a failed status read does not overwrite
+the original cause. Rejection does not automatically stop another client's
+operation or retry the start. A transport failure with uncertain acceptance
+still attempts a stop. Explicit OFF queued behind a rejected ON is still sent.

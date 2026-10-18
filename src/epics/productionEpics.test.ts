@@ -432,6 +432,48 @@ describe('startWaterFillingEpic$', () => {
     sub.unsubscribe();
   });
 
+  it('shows the HTTP 500 controller cause and snapshot without stopping another operation', async () => {
+    const message = 'Fehler beim automatischen Befüllen: Failed to add edge detection';
+    mockedProductionRepository.fillWaterAutomatic.mockRejectedValueOnce({response: {status: 500, data: {error: message}}});
+    const status: any = {filledLiters: 0, targetLiters: 19.18, openClose: false, state: 'ERROR', error: 'Failed to add edge detection'};
+    mockedProductionRepository.getWaterStatus.mockResolvedValueOnce(status);
+    const actions = new Subject<any>();
+    const emitted: any[] = [];
+    const sub = startWaterFillingEpic$(actions).subscribe((action: any) => emitted.push(action));
+    actions.next(ProductionActions.startWaterFilling(19.18, 'SPARGE'));
+    await flushPromises();
+    expect(emitted).toEqual([ProductionActions.waterFillingFailure(message, status)]);
+    expect(mockedProductionRepository.stopWaterFilling).not.toHaveBeenCalled();
+    sub.unsubscribe();
+  });
+
+  it('keeps the controller rejection when the diagnostic status read also fails', async () => {
+    const message = 'Wasserfüll-Thread läuft bereits';
+    mockedProductionRepository.fillWaterAutomatic.mockRejectedValueOnce({response: {status: 500, data: {error: message}}});
+    mockedProductionRepository.getWaterStatus.mockRejectedValueOnce(new Error('status unavailable'));
+    const actions = new Subject<any>();
+    const emitted: any[] = [];
+    const sub = startWaterFillingEpic$(actions).subscribe((action: any) => emitted.push(action));
+    actions.next(ProductionActions.startWaterFilling(19.18, 'SPARGE'));
+    await flushPromises();
+    expect(emitted).toEqual([ProductionActions.waterFillingFailure(message)]);
+    sub.unsubscribe();
+  });
+
+  it('attempts a stop when a lost start response leaves acceptance unknown', async () => {
+    mockedProductionRepository.fillWaterAutomatic.mockRejectedValueOnce(new Error('request timed out'));
+    const status: any = {filledLiters: 0, targetLiters: 19.18, openClose: false, state: 'STOPPED'};
+    mockedProductionRepository.getWaterStatus.mockResolvedValueOnce(status);
+    const actions = new Subject<any>();
+    const emitted: any[] = [];
+    const sub = startWaterFillingEpic$(actions).subscribe((action: any) => emitted.push(action));
+    actions.next(ProductionActions.startWaterFilling(19.18, 'SPARGE'));
+    await flushPromises();
+    expect(mockedProductionRepository.stopWaterFilling).toHaveBeenCalledTimes(1);
+    expect(emitted).toEqual([ProductionActions.waterFillingFailure('request timed out', status)]);
+    sub.unsubscribe();
+  });
+
   it('polls and dispatches every water status while water filling is still open', async (): Promise<void> => {
     mockedProductionRepository.fillWaterAutomatic.mockResolvedValue(true);
     mockedProductionRepository.getWaterStatus.mockResolvedValue({ filledLiters: 1, targetLiters: 24.8, openClose: true });

@@ -134,7 +134,7 @@ export class ProductionRepository {
 
     static async stopWaterFilling(): Promise<boolean> {
         // A rapid OFF must reach the controller after its in-flight ON command.
-        await this.pendingWaterStart;
+        await this.pendingWaterStart?.catch(() => undefined);
         const request = createRequestConfig();
         try {
             const response = await axios.post(CommandsURL + 'FillWaterStop:""', undefined, request.config);
@@ -290,7 +290,7 @@ export class ProductionRepository {
             return response.status === 200;
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);
-            return false;
+            throw error;
         } finally {
             clearRequestTimeout(request);
         }

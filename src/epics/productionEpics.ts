@@ -102,10 +102,21 @@ const stopAndFailWater$ = (error: unknown) =>
   from(ProductionRepository.stopWaterFilling()).pipe(
     switchMap((stopped) => stopped
       ? from(ProductionRepository.getWaterStatus(WATER_STATUS_REQUEST_TIMEOUT, true)).pipe(
-          map(status => ProductionActions.waterFillingFailure(error, status)))
+          map(status => ProductionActions.waterFillingFailure(errorMessage(error, 'Wasserfüllung fehlgeschlagen'), status)))
       : of(ProductionActions.waterFillingFailure('Wasser-Stop nicht bestätigt. Bitte erneut stoppen.'))),
     catchError(stopError => of(ProductionActions.waterFillingFailure(stopError)))
   );
+
+const failedWaterStart$ = (error: unknown) => {
+  // A server rejection must not stop an operation owned by another client.
+  // A lost response leaves acceptance uncertain and still requires a stop.
+  if (!(error as any)?.response) return stopAndFailWater$(error);
+  const message = errorMessage(error, 'Wasserfüllung konnte nicht gestartet werden');
+  return from(ProductionRepository.getWaterStatus(WATER_STATUS_REQUEST_TIMEOUT, true)).pipe(
+    map(status => ProductionActions.waterFillingFailure(message, status)),
+    catchError(() => of(ProductionActions.waterFillingFailure(message)))
+  );
+};
 
 export const startWaterFillingEpic$ = (action$: any, state$?: {value: RootState}) =>
   action$.pipe(
@@ -146,7 +157,7 @@ export const startWaterFillingEpic$ = (action$: any, state$?: {value: RootState}
             return status.openClose || (!observedOpen && status.filledLiters + 0.0001 < action.payload.liters);
           }, true)
         ) : of(ProductionActions.waterFillingFailure('Wasserfüllung konnte nicht gestartet werden'))),
-        catchError(error => stopAndFailWater$(error)),
+        catchError(error => failedWaterStart$(error)),
         takeUntil(action$.pipe(ofType(ProductionActions.ActionTypes.STOP_WATER_FILLING)))
       );
     }))

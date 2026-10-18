@@ -46,3 +46,8 @@ explicit OFF through FillWaterStop and WaterStatus. STARTING is pending, partial
 closure is not recipe completion, and zero required Nachguss allows Hauptguss.
 Existing endpoints, liter units and acknowledgement bodies remain compatible.
 Deployment and real-hardware calibration remain **Needs verification**.
+
+Fill-start rejections display the controller's string `error` and fetch a
+diagnostic WaterStatus snapshot. A rejected start is not retried and does not
+automatically stop another operation. Unknown transport outcomes still attempt
+a stop; explicit OFF remains ordered after a failed in-flight start.
