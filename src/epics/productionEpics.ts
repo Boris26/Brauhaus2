@@ -23,6 +23,7 @@ import {AgitatorSettings} from '../model/AgitatorSettings';
 import {WarningRealtimeState} from '../model/Warning';
 import {BrewRecoverySnapshot} from '../model/BrewRecovery';
 import {mapBeerToBrewingData} from '../utils/productionRecipe';
+import {monotonicNow} from '../utils/brewingStatus/streams';
 
 export const BREWING_STATUS_POLL_INTERVAL = 10_000;
 export const BREWING_STATUS_REQUEST_TIMEOUT = 8000;
@@ -33,6 +34,9 @@ let wsController: WebSocketController | null = null;
 
 export const mapControlSocketEvent = (event: {event: string; data?: unknown}) => {
   switch (event.event) {
+    case 'water-filling-state-changed': return {type: ProductionActions.ActionTypes.WATER_SNAPSHOT, payload: {data: event.data}};
+    case 'water-filling-heartbeat': return {type: ProductionActions.ActionTypes.WATER_HEARTBEAT, payload: event.data};
+    case 'resume': return {type: ProductionActions.ActionTypes.STATUS_STREAM_STALE};
     case 'connection-error': return ProductionActions.communicationPhase('Reconnecting');
     case 'brewing-status-changed': {
       if (!PROCESS_REALTIME_ENABLED) return undefined;
@@ -108,7 +112,7 @@ export const setAgitatorSpeedEpic$ = (action$: any) =>
 
 
 
-const stopAndFailWater$ = (error: unknown) =>
+export const stopAndFailWater$ = (error: unknown) =>
   from(ProductionRepository.stopWaterFilling()).pipe(
     switchMap((stopped) => stopped
       ? from(ProductionRepository.getWaterStatus(WATER_STATUS_REQUEST_TIMEOUT, true)).pipe(
@@ -117,50 +121,27 @@ const stopAndFailWater$ = (error: unknown) =>
     catchError(stopError => of(ProductionActions.waterFillingFailure(stopError)))
   );
 
-export const startWaterFillingEpic$ = (action$: any, state$?: {value: RootState}) =>
-  action$.pipe(
-    ofType(ProductionActions.ActionTypes.START_WATER_FILLING),
-    filter(() => !state$?.value.productionReducer.isWaterStopping),
-    exhaustMap((action: ProductionActions.StartWaterFilling) => defer(() => {
-      let observedOpen = false;
-      const startedAt = Date.now();
-      const start = action.payload.mode
-        ? ProductionRepository.fillWaterAutomatic(action.payload.liters, action.payload.mode)
-        : ProductionRepository.fillWaterAutomatic(action.payload.liters);
-      return from(start).pipe(
-        switchMap((result) => result ? interval(1000).pipe(
-          startWith(0),
-          exhaustMap(() => {
-            if (Date.now() - startedAt >= WATER_FILLING_MAX_DURATION) {
-              return stopAndFailWater$('Maximale Wasserfülldauer überschritten');
-            }
-            return from(ProductionRepository.getWaterStatus(WATER_STATUS_REQUEST_TIMEOUT, true)).pipe(
-              switchMap(status => {
-                observedOpen ||= status.openClose;
-                // Legacy controllers have no STARTING state. Give their worker
-                // time to publish open instead of completing on its idle value.
-                if (!status.state && !observedOpen && !status.openClose
-                    && status.filledLiters + 0.0001 < action.payload.liters
-                    && Date.now() - startedAt >= 10_000) {
-                  return stopAndFailWater$('Wasserfüllung wurde nicht gestartet');
-                }
-                return of(ProductionActions.setWaterStatus(status));
-              }),
-              catchError(error => stopAndFailWater$(error))
-            );
-          }),
-          takeWhile((result) => {
-            if (result.type === ProductionActions.ActionTypes.START_WATER_FILLING_SUCCESS) return false;
-            const status = result.payload.waterStatus;
-            if (status.state) return !['COMPLETED', 'STOPPED', 'ERROR'].includes(status.state);
-            return status.openClose || (!observedOpen && status.filledLiters + 0.0001 < action.payload.liters);
-          }, true)
-        ) : of(ProductionActions.waterFillingFailure('Wasserfüllung konnte nicht gestartet werden'))),
-        catchError(error => stopAndFailWater$(error)),
-        takeUntil(action$.pipe(ofType(ProductionActions.ActionTypes.STOP_WATER_FILLING)))
-      );
-    }))
-  );
+export const startWaterFillingEpic$ = (action$: any, state$?: {value: RootState}) => action$.pipe(
+  ofType(ProductionActions.ActionTypes.START_WATER_FILLING),
+  filter(() => !state$?.value.productionReducer.isWaterStopping && !state$?.value.productionReducer.waterCommand?.active),
+  exhaustMap((action: ProductionActions.StartWaterFilling) => defer(() => {
+    const previous = state$?.value.productionReducer.waterStatus;
+    const startedAt = monotonicNow();
+    const start = action.payload.mode
+      ? ProductionRepository.fillWaterAutomatic(action.payload.liters, action.payload.mode)
+      : ProductionRepository.fillWaterAutomatic(action.payload.liters);
+    return from(start).pipe(
+      mergeMap(result => result ? from([
+        {type: ProductionActions.ActionTypes.WATER_START_ACCEPTED, payload: {
+          startedAt,
+          baselineFillId: previous?.fillId, baselineRevision: previous?.snapshotMetadata?.waterFillingRevision,
+        }},
+        {type: ProductionActions.ActionTypes.WATER_RESYNC_REQUEST},
+      ]) : of(ProductionActions.waterFillingFailure('Wasserfüllung konnte nicht gestartet werden'))),
+      catchError(error => stopAndFailWater$(error)),
+    );
+  })),
+);
 
 export const stopWaterFillingEpic$ = (action$: any) => action$.pipe(
   ofType(ProductionActions.ActionTypes.STOP_WATER_FILLING),
@@ -203,7 +184,9 @@ const createBrewingStatusPolling$ = (action$: any, state$?: {value: RootState}) 
       return candidate.brewingStatus === brewingStatus || (!!brewingStatus.snapshotMetadata
         && generation === current.communication.generation
         && current.brewingStatus?.snapshotMetadata?.controllerEpoch === brewingStatus.snapshotMetadata.controllerEpoch
-        && current.brewingStatus?.snapshotMetadata?.revision === brewingStatus.snapshotMetadata.revision
+        && (brewingStatus.snapshotMetadata.telemetryRevision !== undefined
+          ? current.brewingStatus?.snapshotMetadata?.stateRevision === brewingStatus.snapshotMetadata.stateRevision
+          : current.brewingStatus?.snapshotMetadata?.revision === brewingStatus.snapshotMetadata.revision)
         && current.brewingStatus?.snapshotMetadata?.processInstanceId === brewingStatus.snapshotMetadata.processInstanceId);
     }),
     takeWhile(({ brewingStatus }) => !(brewingStatus && (isProcessFinished(brewingStatus) || isProcessAborted(brewingStatus) || isProcessInError(brewingStatus))), true),
@@ -453,6 +436,10 @@ export const productionWebSocketEpic$ = (action$: any, state$?: {value: RootStat
           wsController!.onMessage((event) => {
             const generation = state$?.value.productionReducer.communication.generation;
             if (event.event === 'brewing-telemetry' && PROCESS_REALTIME_ENABLED && state$) {
+              if ((event.data as any)?.telemetryRevision !== undefined) {
+                observer.next({type: ProductionActions.ActionTypes.TELEMETRY_RECEIVED, payload: {data: event.data, generation}});
+                return;
+              }
               const status = mergeTelemetry(event.data, state$.value.productionReducer.brewingStatus);
               if (status) observer.next(ProductionActions.setBrewingStatus(status, 'telemetry', generation));
               return;

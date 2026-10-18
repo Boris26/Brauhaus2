@@ -7,6 +7,7 @@ import type {RootState} from '../../../reducers/rootReducer';
 const mapStateToProps = (state: RootState) => ({
     temperature: state.productionReducer.temperature,
     brewingStatus: state.productionReducer.brewingStatus,
+    timeAnchor: state.productionReducer.timeAnchor,
     isConfirmPending: state.productionReducer.isConfirmPending,
     confirmError: state.productionReducer.confirmError,
     confirmStatusText: state.productionReducer.confirmation.syncWaiting

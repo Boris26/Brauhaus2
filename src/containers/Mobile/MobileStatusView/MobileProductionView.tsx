@@ -1,4 +1,6 @@
 import React from 'react';
+import {TimeAnchorState} from '../../../utils/brewingStatus/streams';
+import {ProcessElapsedTime} from '../../Production/components/ProcessElapsedTime';
 import './MobileProductionView.css';
 import { BrewingStatus } from '../../../model/brewingStatus.types';
 import { TimeFormatter } from "../../../utils/TimeFormatter";
@@ -16,6 +18,7 @@ import {getWarningHeaderText} from '../../../utils/warningDisplay';
 interface MobileProductionViewProps {
     temperature: number;
     brewingStatus?: BrewingStatus;
+    timeAnchor?: TimeAnchorState;
     confirm: (confirmState: ConfirmStates) => void;
     isConfirmPending: boolean;
     confirmError?: string;
@@ -151,7 +154,7 @@ export class MobileProductionView extends React.Component<MobileProductionViewPr
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Laufzeit:</span>
-                                <span className="mobile-value">{brewingStatus?.elapsedTime != null ? TimeFormatter.formatSecondsToHMS(brewingStatus.elapsedTime) : '-'}</span>
+                                <span className="mobile-value"><ProcessElapsedTime status={brewingStatus} anchor={this.props.timeAnchor} stale={this.props.isBrewingStatusStale} /></span>
                             </div>
                             <div className="mobile-info-block">
                                 <span className="mobile-label">Zielzeit:</span>

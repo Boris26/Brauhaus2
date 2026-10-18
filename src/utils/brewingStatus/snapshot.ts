@@ -7,6 +7,23 @@ export interface SnapshotMetadata {
   processInstanceId: string;
   revision: number;
   stateRevision: number;
+  telemetryRevision?: number;
+  timeAnchorSequence?: number;
+  timeAnchor?: ControllerTimeAnchor;
+}
+export interface ControllerTimeAnchor {
+  sequence: number;
+  stepId?: string | null;
+  stepIndex?: number;
+  phase: string;
+  mode: string;
+  elapsedTime: number;
+  stepElapsedTime: number;
+  remainingTime?: number | null;
+  duration?: number | null;
+  running: boolean;
+  stepRunning: boolean;
+  sampleAgeSeconds: number;
 }
 export type StatusSource = 'http' | 'socket' | 'sync' | 'telemetry';
 export type CommunicationPhase = 'Connected' | 'Disconnected' | 'Reconnecting' | 'Synchronizing' | 'Synchronized';
@@ -21,7 +38,9 @@ export const validMetadata = (value: any): value is SnapshotMetadata & Record<st
   && typeof value.controllerEpoch === 'string' && value.controllerEpoch.length > 0
   && typeof value.processInstanceId === 'string' && value.processInstanceId.length > 0
   && Number.isSafeInteger(value.revision) && value.revision >= 0
-  && Number.isSafeInteger(value.stateRevision) && value.stateRevision >= 0 && value.stateRevision <= value.revision;
+  && Number.isSafeInteger(value.stateRevision) && value.stateRevision >= 0 && value.stateRevision <= value.revision
+  && (value.telemetryRevision === undefined || (Number.isSafeInteger(value.telemetryRevision) && value.telemetryRevision >= 0))
+  && (value.timeAnchorSequence === undefined || (Number.isSafeInteger(value.timeAnchorSequence) && value.timeAnchorSequence >= 0));
 
 export const validStatus = (value: any): boolean => object(value)
   && finite(value.elapsedTime) && value.elapsedTime >= 0
@@ -37,7 +56,10 @@ export const parseSnapshot = (value: unknown): BrewingStatus | undefined => {
   if (!validMetadata(value) || !validStatus((value as any).status)) return undefined;
   const {schemaVersion, controllerEpoch, processInstanceId, revision, stateRevision} = value;
   return {...normalizeBrewingStatus((value as any).status),
-    snapshotMetadata: {schemaVersion, controllerEpoch, processInstanceId, revision, stateRevision}};
+    snapshotMetadata: {schemaVersion, controllerEpoch, processInstanceId, revision, stateRevision,
+      ...((value as any).telemetryRevision !== undefined ? {telemetryRevision: (value as any).telemetryRevision} : {}),
+      ...((value as any).timeAnchorSequence !== undefined ? {timeAnchorSequence: (value as any).timeAnchorSequence} : {}),
+      ...((value as any).timeAnchor ? {timeAnchor: (value as any).timeAnchor} : {})}};
 };
 
 export const statusFromResponse = (response: {data: unknown; headers?: any}): BrewingStatus => {
@@ -49,6 +71,9 @@ export const statusFromResponse = (response: {data: unknown; headers?: any}): Br
     processInstanceId: headers['x-process-instance'],
     revision: /^\d+$/.test(headers['x-status-revision']) ? Number(headers['x-status-revision']) : NaN,
     stateRevision: /^\d+$/.test(headers['x-state-revision']) ? Number(headers['x-state-revision']) : NaN,
+    ...(headers['x-telemetry-revision'] !== undefined ? {telemetryRevision: Number(headers['x-telemetry-revision'])} : {}),
+    ...(headers['x-time-anchor-sequence'] !== undefined ? {timeAnchorSequence: Number(headers['x-time-anchor-sequence'])} : {}),
+    ...(headers['x-time-anchor'] ? {timeAnchor: JSON.parse(headers['x-time-anchor'])} : {}),
     status: response.data});
   if (!result) throw new Error('Ungültiger versionierter Controllerstatus');
   return result;

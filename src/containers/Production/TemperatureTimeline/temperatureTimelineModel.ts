@@ -39,7 +39,7 @@ const MIN_LABEL_SECONDS = 3 * 60;
 const AXIS_TICK_INTERVALS_SECONDS = [5, 10, 15, 30, 60].map(minutes => minutes * 60);
 const TARGET_AXIS_INTERVAL_COUNT = 4;
 
-const buildStableTimeAxis = (contentEndSeconds: number): {axisEndSeconds: number; axisTicks: number[]} => {
+export const buildStableTimeAxis = (contentEndSeconds: number): {axisEndSeconds: number; axisTicks: number[]} => {
     const requiredInterval = contentEndSeconds / TARGET_AXIS_INTERVAL_COUNT;
     const tickInterval = AXIS_TICK_INTERVALS_SECONDS.find(interval => interval >= requiredInterval)
         ?? AXIS_TICK_INTERVALS_SECONDS.at(-1)!;
@@ -49,6 +49,7 @@ const buildStableTimeAxis = (contentEndSeconds: number): {axisEndSeconds: number
 };
 
 const safeNumber = (value: unknown): number | undefined => {
+    if (value === null || value === undefined || value === '') return undefined;
     const numberValue = Number(value);
     return Number.isFinite(numberValue) ? numberValue : undefined;
 };
@@ -174,7 +175,7 @@ export const buildTemperatureTimelineModel = (
         cursor = endSeconds;
     });
 
-    const currentActual = safeNumber(brewingStatus?.temperature.current) ?? safeNumber(fallbackTemperature);
+    const currentActual = safeNumber(brewingStatus?.temperature.current) ?? (brewingStatus ? undefined : safeNumber(fallbackTemperature));
     const currentTarget = safeNumber(brewingStatus?.temperature.target);
     const pointsBySecond = new Map<number, TimelinePoint>();
     normalized.forEach(measurement => {
@@ -187,8 +188,9 @@ export const buildTemperatureTimelineModel = (
     });
     // Keep the current temperature point at the last authoritative status time;
     // only the separate "now" marker is allowed to advance locally.
-    pointsBySecond.set(Math.floor(authoritativeStatusElapsed), {
-        ...(pointsBySecond.get(Math.floor(authoritativeStatusElapsed)) ?? {elapsedSeconds: Math.floor(authoritativeStatusElapsed)}),
+    const authoritativePointSeconds = Math.floor(Math.max(0, nowSeconds - Math.max(0, (options.displayNowSeconds ?? authoritativeStatusElapsed) - authoritativeStatusElapsed)));
+    pointsBySecond.set(authoritativePointSeconds, {
+        ...(pointsBySecond.get(authoritativePointSeconds) ?? {elapsedSeconds: authoritativePointSeconds}),
         actualTemperature: currentActual,
         targetTemperature: currentTarget
     });

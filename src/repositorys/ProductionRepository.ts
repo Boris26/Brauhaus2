@@ -14,6 +14,7 @@ import {IDiagnosticResponse, normalizeDiagnosticVersion} from "../model/Diagnost
 import {AgitatorConfig, AgitatorDetailStatus} from "../model/Agitator";
 import {BrewSession} from "../model/BrewSession";
 import {WaterFillMode} from '../model/WaterStatus';
+import {parseWaterSnapshot} from '../utils/brewingStatus/waterSnapshot';
 
 const DEFAULT_WATER_STATUS: WaterStatus = { filledLiters: 0, targetLiters: 0, openClose: false };
 const DEFAULT_CONTROL_REQUEST_TIMEOUT = 8000;
@@ -158,8 +159,8 @@ export class ProductionRepository {
         }
     }
 
-    static async getWaterStatus(aTimeoutMs?: number, aFailOnError: boolean = false): Promise<WaterStatus> {
-         return await this._doGetWaterFillStatus(aTimeoutMs, aFailOnError);
+    static async getWaterStatus(aTimeoutMs?: number, aFailOnError: boolean = false, signal?: AbortSignal): Promise<WaterStatus> {
+         return await this._doGetWaterFillStatus(aTimeoutMs, aFailOnError, signal);
     }
 
     static async confirm(aConfirmState: ConfirmStates, expected?: SnapshotMetadata): Promise<BrewingStatus> {
@@ -221,14 +222,29 @@ export class ProductionRepository {
 
     }
 
-    private static async _doGetWaterFillStatus(aTimeoutMs?: number, aFailOnError: boolean = false): Promise<WaterStatus> {
-        const aConfig = createRequestConfig(aTimeoutMs);
+    private static async _doGetWaterFillStatus(aTimeoutMs?: number, aFailOnError: boolean = false, signal?: AbortSignal): Promise<WaterStatus> {
+        const aConfig = createRequestConfig(aTimeoutMs, signal);
         try {
             const response = await axios.get(`${BaseURL}/WaterStatus`, aConfig.config);
             if (response.status === 200) {
+                const revision = response.headers?.['x-water-filling-revision'];
+                if (revision !== undefined) {
+                    const snapshot = parseWaterSnapshot({...response.data, schemaVersion: 1,
+                        controllerEpoch: response.headers?.['x-controller-epoch'],
+                        waterFillingRevision: /^\d+$/.test(revision) ? Number(revision) : NaN});
+                    if (!snapshot) throw new Error('Ungültiger versionierter Wasserstatus');
+                    return snapshot;
+                }
+                if (aFailOnError && (!response.data || typeof response.data !== 'object'
+                    || typeof response.data.openClose !== 'boolean'
+                    || !['filledLiters', 'targetLiters'].every(key => response.data[key] !== null && response.data[key] !== ''
+                        && response.data[key] !== undefined && Number.isFinite(Number(response.data[key])) && Number(response.data[key]) >= 0))) {
+                    throw new Error('Ungültiger Wasserstatus');
+                }
                 return normalizeWaterStatus(response.data);
 
             } else {
+                if (aFailOnError) throw new Error('Wasserstatus konnte nicht gelesen werden');
                 return DEFAULT_WATER_STATUS;
             }
         } catch (error) {

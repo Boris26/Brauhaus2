@@ -21,17 +21,18 @@ import Switch from "react-switch";
 import {FinishedBrewCreatePayload} from "../../model/FinishedBrew";
 import {eBrewState} from "../../enums/eBrewState";
 import {BackendAvailable} from "../../reducers/productionReducer";
-import {ProcessList} from "./ProcessList/ProcessList";
+import {TimedProcessList as ProcessList} from "./ProcessList/TimedProcessList";
 import { dataCollector } from '../../utils/DataCollector/dataCollector';
-import {isBrewingProcessActive, isProcessActive} from "../../utils/brewingStatus/selectors";
+import {isBrewingProcessActive, isProcessActive, getTargetTemperature} from "../../utils/brewingStatus/selectors";
 import {getVesselContentType} from "../../utils/brewingStatus/vesselContent";
 import {calculateHopSchedule, getDueHopAddition, HopAddition} from "./utils/hopSchedule";
-import {BrewingDisplayTimeAnchor, createBrewingDisplayTimeAnchor, projectBrewingDisplayTime, shouldCountdownLocally} from "./utils/productionCountdown";
+import {shouldCountdownLocally} from "./utils/productionCountdown";
+import {TimeAnchorState} from '../../utils/brewingStatus/streams';
 import {getAlarmSnapshot, getAgitatorActive, getHeatingActive, isControllerAvailable as getIsControllerAvailable} from "./utils/productionStatus";
 import {RecipeWaterFill, RecipeWaterFillStatus} from "./waterFill/recipeWaterFill.types";
 import {completeWaterFill, createInitialRecipeWaterFillStatus, failWaterFill, includePreparedSpargeAfterMashingOut, markValveOpened, resetWaterFill, startManualWaterFill, startWaterFill} from "./waterFill/recipeWaterFillState";
 import {ProductionDialogs} from "./components/ProductionDialogs/ProductionDialogs";
-import {ProductionTemperatureTimeline} from "./TemperatureTimeline/ProductionTemperatureTimeline";
+import {LiveProductionTemperatureTimeline as ProductionTemperatureTimeline} from "./TemperatureTimeline/ProductionTemperatureTimeline";
 import {getDisplayedWaterLiters as selectDisplayedWaterLiters, getWaterLabel, getWaterTargetLiters, isRecipeWaterButtonDisabled as selectRecipeWaterButtonDisabled, isWaterFillingActive as selectWaterFillingActive, shouldIncludeSpargeAfterMashingOut as selectShouldIncludeSpargeAfterMashingOut, sanitizeLiters} from "./waterFill/recipeWaterFillSelectors";
 import {equipmentAlarmDisplay, heaterStuckOnAlarmDisplay, isEquipmentAlarmActive, isHeaterStuckOnAlarmActive} from '../../utils/brewingStatus/alarmDisplay';
 import {getConfirmationRequestViewModel} from '../../utils/brewingStatus/selectors';
@@ -66,8 +67,11 @@ export interface ProductionProps {
     isToggleAgitatorSuccess: boolean;
     sendBrewingData: (brewingData: BrewingData) => void;
     brewingStatus?: BrewingStatus;
+    timeAnchor?: TimeAnchorState;
+    historyVersion?: number;
     isBackenAvailable: BackendAvailable | boolean;
     waterStatus: WaterStatus;
+    waterStatusStale?: boolean;
     addFinishedBrew: (finishedBrew: FinishedBrewCreatePayload) => void;
     isAddingFinishedBrew: boolean;
     addFinishedBrewError?: string;
@@ -110,9 +114,6 @@ interface ProductionState {
     brewingIsRunning: boolean;
     announcedHopTimes: number[];
     recipeWaterFill: RecipeWaterFillStatus;
-    displayedRemainingSeconds: number | undefined;
-    displayedStepElapsedSeconds: number | undefined;
-    displayedProcessElapsedSeconds: number | undefined;
     equipmentAlarmDismissed: boolean;
 }
 
@@ -120,8 +121,6 @@ export class Production extends React.Component<ProductionProps, ProductionState
     private isBrewingStartRequestPending = false;
     private isFinishedBrewSaveRequestPending = false;
     private readonly MAX_WATER_LEVEL = 70;
-    private remainingTimeInterval: NodeJS.Timeout | null = null;
-    private brewingDisplayTimeAnchor: BrewingDisplayTimeAnchor | undefined;
     private agitatorSpeedDebounceTimeout: NodeJS.Timeout | null = null;
     private isMountedComponent = false;
     private agitatorFreshnessGeneration = 0;
@@ -155,9 +154,6 @@ export class Production extends React.Component<ProductionProps, ProductionState
             brewingIsRunning: false,
             announcedHopTimes: [],
             recipeWaterFill: createInitialRecipeWaterFillStatus(),
-            displayedRemainingSeconds: undefined,
-            displayedStepElapsedSeconds: undefined,
-            displayedProcessElapsedSeconds: undefined,
             equipmentAlarmDismissed: false
         }
     }
@@ -169,18 +165,13 @@ export class Production extends React.Component<ProductionProps, ProductionState
             this.calculateTheHopTimes();
         }
         this.loadAgitatorStatus();
-        this.syncRemainingTimeFromStatus();
-        this.remainingTimeInterval = setInterval(this.tickRemainingTime, 1000);
     }
 
     componentWillUnmount() {
         this.isMountedComponent = false;
         this.queuedAgitatorConfig = undefined;
         this.clearAgitatorSpeedDebounce();
-        if (this.remainingTimeInterval !== null) {
-            clearInterval(this.remainingTimeInterval);
-            this.remainingTimeInterval = null;
-        }
+
     }
 
 
@@ -194,9 +185,6 @@ export class Production extends React.Component<ProductionProps, ProductionState
             || currentRun.processInstanceId !== previousRun?.processInstanceId);
 
 
-        if (prevProps.brewingStatus !== brewingStatus) {
-            this.syncRemainingTimeFromStatus();
-        }
         if (prevProps.realtimeState?.agitator !== this.props.realtimeState?.agitator && this.props.socketConnected && this.props.realtimeState?.agitator) {
             this.mergeAgitatorPoll(this.props.realtimeState.agitator);
         }
@@ -464,29 +452,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
         }
     }
 
-    syncRemainingTimeFromStatus = (): void => {
-        const nowMs = Date.now();
-        this.brewingDisplayTimeAnchor = createBrewingDisplayTimeAnchor(this.props.brewingStatus, nowMs);
-        const displayTime = projectBrewingDisplayTime(this.props.brewingStatus, this.brewingDisplayTimeAnchor, nowMs);
-        this.setState({
-            displayedRemainingSeconds: displayTime.remainingSeconds,
-            displayedStepElapsedSeconds: displayTime.stepElapsedSeconds,
-            displayedProcessElapsedSeconds: displayTime.processElapsedSeconds,
-        }, () => this.checkForHopAddition(displayTime.stepElapsedSeconds));
-    }
-
-    tickRemainingTime = (): void => {
-        const {brewingStatus} = this.props;
-        if (!this.shouldCountdownLocally(brewingStatus)) {
-            return;
-        }
-        const displayTime = projectBrewingDisplayTime(brewingStatus, this.brewingDisplayTimeAnchor, Date.now());
-        this.setState({
-            displayedRemainingSeconds: displayTime.remainingSeconds,
-            displayedStepElapsedSeconds: displayTime.stepElapsedSeconds,
-            displayedProcessElapsedSeconds: displayTime.processElapsedSeconds,
-        }, () => this.checkForHopAddition(displayTime.stepElapsedSeconds));
-    }
+    onDisplayedStepElapsed = (elapsed?: number): void => this.checkForHopAddition(elapsed);
 
     shouldCountdownLocally = (aBrewingStatus?: BrewingStatus): boolean => {
         return shouldCountdownLocally(aBrewingStatus);
@@ -760,8 +726,8 @@ export class Production extends React.Component<ProductionProps, ProductionState
                     brewingStatus={this.props.brewingStatus}
                     measurements={dataCollector.getTimelineSnapshot().measurements}
                     fallbackTemperature={this.props.temperature}
-                    displayNowSeconds={this.state.displayedProcessElapsedSeconds}
-                    displayCurrentStepElapsedSeconds={this.state.displayedStepElapsedSeconds}
+                    timeAnchor={this.props.timeAnchor}
+                    stale={this.props.isBrewingStatusStale}
                 />
             </div>
         );
@@ -908,6 +874,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
                                 </div>
                             </div>
                         </div>
+                        {this.props.waterStatusStale && <p role="status">Wasserfüllstand nicht aktuell bestätigt. Letzten Messwert prüfen.</p>}
                         {(this.state.waterFillingError || this.props.waterFillingError || this.props.waterStatus?.state === 'ERROR') && <p role="alert">{this.props.waterFillingError || this.props.waterStatus?.error || 'Wasserfüllung wurde nicht abgeschlossen. Bitte Menge prüfen und erneut starten.'}</p>}
                         <div className="recipeWaterGroup" aria-label="Rezeptmengen">
                             <span className="recipeWaterGroupLabel">Rezeptmengen</span>
@@ -987,7 +954,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
         }
         const isNextStepDisabled = !this.isNextProcedureStepAvailable();
         return (
-            <ProcessList displayMode="overview" selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} remainingSeconds={this.state.displayedRemainingSeconds} onNextStep={this.props.debug ? this.handleNextProcedureStep : undefined} isNextStepDisabled={isNextStepDisabled} />
+            <ProcessList displayMode="overview" selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} timeAnchor={this.props.timeAnchor} stale={this.props.isBrewingStatusStale} onElapsed={this.onDisplayedStepElapsed} onNextStep={this.props.debug ? this.handleNextProcedureStep : undefined} isNextStepDisabled={isNextStepDisabled} />
         );
     }
 
@@ -1001,7 +968,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
         const startWarning = heaterSafetyAlarmActive
             ? 'Brauvorgang kann wegen eines aktiven Heizungs-Sicherheitsalarms nicht gestartet werden.'
             : !sensorReady ? `Brauvorgang kann nicht gestartet werden: ${getTemperatureSensorMessage(this.props.realtimeState?.temperatureSensor)}.` : undefined;
-        return <ProcessList displayMode="current" selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} remainingSeconds={this.state.displayedRemainingSeconds} confirmationPending={this.props.isConfirmPending} confirmationError={this.props.confirmError} confirmationStatusText={this.props.confirmStatusText} onConfirmWaiting={this.confirmCurrentWaitingState} hopReminderName={this.state.showHopsDialog ? this.state.hopName : undefined} onCompleteHopReminder={this.confirmHopDialog} onStartBrewing={this.startBrewing} isStartBrewingDisabled={this.isStartButtonDisabled()} startBrewingWarning={startWarning} />;
+        return <ProcessList displayMode="current" selectedBeer={selectedBeer} currentStepIndex={brewingStatus?.currentStep?.index ?? 0} currentStep={brewingStatus?.currentStep} brewingStatus={brewingStatus} timeAnchor={this.props.timeAnchor} stale={this.props.isBrewingStatusStale} onElapsed={this.onDisplayedStepElapsed} confirmationPending={this.props.isConfirmPending} confirmationError={this.props.confirmError} confirmationStatusText={this.props.confirmStatusText} onConfirmWaiting={this.confirmCurrentWaitingState} hopReminderName={this.state.showHopsDialog ? this.state.hopName : undefined} onCompleteHopReminder={this.confirmHopDialog} onStartBrewing={this.startBrewing} isStartBrewingDisabled={this.isStartButtonDisabled()} startBrewingWarning={startWarning} />;
     }
 
 

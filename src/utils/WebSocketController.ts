@@ -6,15 +6,19 @@ export interface SocketConnectionStatus {
 }
 
 export type MessageHandler = (event: { event: string; data?: any }) => void;
-const realtimeEvents = ['heating-running-changed', 'agitator-state-changed', 'alarm-state-changed', 'warning-state-changed', 'temperature-sensor-state-changed', 'agitator-defaults-changed', 'brew-recovery-state-changed', 'brewing-status-changed', 'brewing-telemetry', 'brewing-status-heartbeat'] as const;
+const realtimeEvents = ['heating-running-changed', 'agitator-state-changed', 'alarm-state-changed', 'warning-state-changed', 'temperature-sensor-state-changed', 'agitator-defaults-changed', 'brew-recovery-state-changed', 'brewing-status-changed', 'brewing-telemetry', 'brewing-status-heartbeat', 'water-filling-state-changed', 'water-filling-heartbeat'] as const;
 
 export class WebSocketController {
   private socket: Socket | null = null;
   private messageHandler: MessageHandler | null = null;
   private serverUrl?: string;
+  private clockMonitor?: ReturnType<typeof setInterval>;
   private reconnectListener = () => this.messageHandler?.({event: 'connection-error'});
   private offlineListener = () => this.socket?.disconnect();
   private onlineListener = () => this.socket?.connect();
+  private resumeListener = () => {
+    if (document.visibilityState !== 'hidden') this.messageHandler?.({event: 'resume'});
+  };
 
   constructor(url?: string) {
     // Relative values such as /api/controller are REST prefixes, not Socket.IO
@@ -35,6 +39,18 @@ export class WebSocketController {
     const socket = this.socket;
     window.addEventListener('offline', this.offlineListener);
     window.addEventListener('online', this.onlineListener);
+    window.addEventListener('pageshow', this.resumeListener);
+    document.addEventListener('visibilitychange', this.resumeListener);
+    let wallAt = Date.now();
+    let performanceAt = performance.now();
+    this.clockMonitor = setInterval(() => {
+      const wallNow = Date.now();
+      const performanceNow = performance.now();
+      // Diagnostic only: detect suspended callbacks/OS clocks; never project time from wallclock.
+      if (Math.abs((wallNow - wallAt) - (performanceNow - performanceAt)) > 2000 || performanceNow - performanceAt > 10000) this.resumeListener();
+      wallAt = wallNow;
+      performanceAt = performanceNow;
+    }, 2000);
     socket.io?.on('reconnect_attempt', this.reconnectListener);
     socket.on('connect_error', this.reconnectListener);
     this.socket.on('connect', () => {
@@ -78,6 +94,10 @@ export class WebSocketController {
       this.socket = null;
       window.removeEventListener('offline', this.offlineListener);
       window.removeEventListener('online', this.onlineListener);
+      window.removeEventListener('pageshow', this.resumeListener);
+      document.removeEventListener('visibilitychange', this.resumeListener);
+      clearInterval(this.clockMonitor);
+      this.clockMonitor = undefined;
       socket.io?.off('reconnect_attempt', this.reconnectListener);
       socket.removeAllListeners?.();
       socket.disconnect();

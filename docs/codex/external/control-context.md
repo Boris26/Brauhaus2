@@ -269,3 +269,15 @@ polling runs only while disconnected/unsynchronized. All process inputs share th
 reducer acceptance gate. See `docs/codex/interfaces.md`, “Process realtime
 communication migration”, for metadata, conditional confirmations, fallback,
 collector, flags and compatibility details. No BeerDataStore/gateway changes.
+
+
+## Current realtime optimization contract
+
+The coordinated implementation supersedes older polling/time/revision descriptions.
+See [Realtime communication optimization](../realtime-optimization.md) for
+independent process/telemetry/water/time streams, exact water values with a 0.1 L
+publication threshold, 15 s general and active 2 s water heartbeats, HTTP fallback,
+retained local HTTP-failure stopping, shared performance.now() display projection,
+and monotonic controller duration timing. No hardware regulation, pulse/cutoff,
+database or fermentation contract is changed. Target-Pi validation remains
+**Needs verification**.

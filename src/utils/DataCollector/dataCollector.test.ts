@@ -26,6 +26,17 @@ describe('dataCollector', (): void => {
     dataCollector.reset();
   });
 
+  it('does not collect time-only updates and retains null as a measurement gap', () => {
+    const status = createStatus(40);
+    dataCollector.setBrewingStatus(status);
+    dataCollector.setBrewingStatus({...status, elapsedTime: 100});
+    expect(dataCollector.getMeasurementCount()).toBe(1);
+    dataCollector.setBrewingStatus({...status, temperature: {current: undefined, target: 65}});
+    expect(dataCollector.getTimelineMeasurements().at(-1)?.Temperature).toBeNull();
+    dataCollector.setBrewingStatus({...status, currentStep: {...status.currentStep, index: 2}});
+    expect(dataCollector.getMeasurementCount()).toBe(3);
+  });
+
   it('clears collected measurements on reset', (): void => {
     dataCollector.setBrewingStatus(createStatus(40));
 

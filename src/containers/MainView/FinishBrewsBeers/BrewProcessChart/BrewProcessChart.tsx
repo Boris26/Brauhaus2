@@ -76,8 +76,10 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
                     step,
                     state,
                     elapsedTime: baseElapsed + t,
-                    Temperature: point.Temperature + (next.Temperature - point.Temperature) * ratio,
-                    TargetTemperature: point.TargetTemperature + (next.TargetTemperature - point.TargetTemperature) * ratio,
+                    Temperature: typeof point.Temperature === 'number' && typeof next.Temperature === 'number'
+                      ? point.Temperature + (next.Temperature - point.Temperature) * ratio : null,
+                    TargetTemperature: typeof point.TargetTemperature === 'number' && typeof next.TargetTemperature === 'number'
+                      ? point.TargetTemperature + (next.TargetTemperature - point.TargetTemperature) * ratio : null,
                   });
                   interpolatedPoints++;
                 }

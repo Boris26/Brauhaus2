@@ -297,6 +297,11 @@ describe('ProductionRepository API method/path usage', () => {
     await expect(ProductionRepository.getWaterStatus(1234, true)).rejects.toThrow('timeout');
   });
 
+  it('never turns a malformed successful HTTP observation into zero liters or a closed valve', async () => {
+    mockedAxios.get.mockResolvedValueOnce({status: 200, data: null} as any);
+    await expect(ProductionRepository.getWaterStatus(1234, true)).rejects.toThrow('Ungültiger Wasserstatus');
+  });
+
   it('passes timeout and abort signal to long-running status reads', async () => {
     mockedAxios.get.mockResolvedValueOnce({ status: 200, data: {}, statusText: 'OK' } as any);
 

@@ -198,40 +198,14 @@ The UI no longer calls `/sensor-measurements`. Temperature, ambient temperature,
 WaterStatus additionally supports fillId/mode/state/reason/error; see [water-filling-lifecycle.md](water-filling-lifecycle.md). The original three fields and both controller GET aliases remain valid.
 
 
-## Process realtime communication migration
+## Optimized process and water realtime contract
 
-Implemented with Braumeister: full `brewing-status-changed` snapshots carry
-`schemaVersion:1`, `controllerEpoch`, `processInstanceId`, `revision`,
-`stateRevision`, and the existing status. REST uses unchanged status bodies plus
-`X-Controller-Epoch`, `X-Process-Instance`, `X-Status-Revision`, `X-State-Revision`.
-A complete structured startup IDLE replaces the former empty status.
+The versioned process migration is implemented and optimized. The binding current
+contract, additive REST headers, independent stream revisions, time anchors,
+event-driven telemetry, water snapshots/fallback, retained local stop policy,
+15-second/active-water heartbeats and monotonic process clock are documented in
+[Realtime communication optimization](realtime-optimization.md).
 
-Brauhaus2 validates and centrally accepts all process state in productionReducer;
-older/duplicate revisions and previous-connection HTTP responses cannot regress
-state. Epoch changes require explicit resynchronization. Telemetry is capped at
-1 Hz, matched to stateRevision and limited to current temperature and timing;
-existing heater/agitator/alarms/warnings/sensor-health/default events stay separate.
-The single socket handles connect_error, bounded backoff, offline/online and cleanup.
-A socket connection is not synchronized until valid controller state is available.
-Five-second heartbeats and a 15-second stream watchdog detect stale publication.
-
-Normal synchronized operation sends no regular `/Status/` requests. Missing
-initial state after 2 seconds and socket/stream failure activate the ten-second
-HTTP fallback. exhaustMap, eight-second timeouts, AbortController, terminal states
-and collector limits (1000/group, 5000 total) are retained. Unsubscription aborts
-in-flight status reads. Accepted state alone feeds the collector; duplicate
-responses do not add samples and a new process resets history.
-
-Confirm success is only command acceptance; both desktop/mobile wait for observed
-controller transition, show a synchronization notice after 5 seconds, and never
-resend automatically. Optional expected epoch/process/state-revision headers let
-the controller reject stale/duplicate confirmations with 409 without changing its
-process predicates. Old-controller responses without metadata retain HTTP fallback
-until a versioned controller has been accepted.
-
-Rollback uses frontend build flag `REACT_APP_PROCESS_REALTIME=false` or controller
-flag `BREWMASTER_PROCESS_REALTIME=false`. Safety/hardware events remain enabled.
-CORS exposes response metadata and proxies must preserve it and `/socket.io`
-upgrades. BeerDataStore and FermentationSensorGateway are unchanged. Target-Pi
-performance, deployed proxy headers, multiple real clients and physical timing
-remain Needs verification. No deployment or hardware access was performed.
+Earlier polling-only descriptions are historical. Existing methods, command paths,
+confirmation preconditions, units, temperature rounding and water cutoff remain
+unchanged. No database or fermentation-gateway contract changed.
