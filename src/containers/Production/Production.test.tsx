@@ -12,9 +12,6 @@ import {HopUsage} from '../../enums/eHopUsage';
 import {eBrewState} from '../../enums/eBrewState';
 import {ProcedureType} from '../../enums/eProcedureType';
 
-const mockGoogleChart = jest.fn((_props: any) => <div />);
-jest.mock('react-google-charts', () => ({Chart: (props: any) => mockGoogleChart(props)}));
-jest.mock('../../store', () => ({__esModule: true, default: {dispatch: jest.fn()}}));
 jest.mock('axios', () => jest.requireActual('axios/dist/node/axios.cjs'));
 
 // Rendering Production must not start the application-lifetime socket/poll epics.
@@ -126,21 +123,22 @@ describe('Production shared target temperature', () => {
         currentStep: {index: 2, phase: ProcessPhase.RAST, mode: ProcessMode.HEATING, name: 'Rast 1'},
         temperature: {current: 65},
     });
-    const temperatureChart = () => mockGoogleChart.mock.calls.filter(([props]) => props.data[1][0] === '°C').at(-1)![0];
+    const temperatureDial = () => within(screen.getByRole('region', {name: 'Temperatur'})).getByRole('img');
     const expectTarget = (target: number) => {
         expect(screen.getByLabelText('Aktueller Prozessschritt').querySelector('.current-step-temperature')).toHaveTextContent(`${target} °C`);
-        expect(temperatureChart().options).toMatchObject({
-            yellowFrom: 0, yellowTo: target - 1, greenFrom: target - 1,
-            greenTo: target + 1, redFrom: target + 1, redTo: 100,
-        });
+        expect(within(screen.getByRole('region', {name: 'Temperatur'})).getByRole('definition')).toHaveTextContent(`${target} °C`);
+        const bands = temperatureDial().querySelectorAll('.gauge__areas path');
+        expect(bands).toHaveLength(3);
+        expect(Array.from(bands, band => band.getAttribute('stroke'))).toEqual([
+            'var(--color-warning)', 'var(--color-success)', 'var(--color-error)',
+        ]);
     };
     const expectNoTarget = () => {
         expect(screen.getByLabelText('Aktueller Prozessschritt').querySelector('.current-step-temperature')).toBeNull();
-        expect(temperatureChart().options).toMatchObject({yellowFrom: 0, yellowTo: 0, greenFrom: 0, greenTo: 0, redFrom: 0, redTo: 0});
+        expect(temperatureDial().querySelectorAll('.gauge__areas path')).toHaveLength(0);
     };
 
     beforeEach(() => {
-        mockGoogleChart.mockClear();
         jest.spyOn(AgitatorSettingsRepository, 'get').mockResolvedValue({speed: 26, intervalOnMinutes: 2, intervalOffMinutes: 2});
         jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockResolvedValue({
             config: {mode: 'OFF', speedPercent: 26, runningMinutes: 2, breakMinutes: 2},
@@ -154,7 +152,18 @@ describe('Production shared target temperature', () => {
         renderProduction({selectedBeer: beer, brewingStatus: restStatus()});
         expectTarget(65);
         expect(screen.getByText('65 °C von 65 °C')).toBeInTheDocument();
-        expect(temperatureChart().data[1]).toEqual(['°C', 55.4]);
+        expect(temperatureDial()).toHaveAccessibleName('Temperatur: 55,4 °C');
+    });
+
+    it('draws temperature bands for the reported 13 °C reading and 52 °C target while the water dial starts empty', () => {
+        const status = restStatus();
+        status.temperature = {current: 13, target: 52};
+        renderProduction({selectedBeer: beer, brewingStatus: status,
+            realtimeState: {alarms: [], alarmsReceived: true, temperatureSensor: {current: 13, health: 'OK', sensorId: '28-1'}},
+        });
+        expectTarget(52);
+        expect(temperatureDial()).toHaveAccessibleName('Temperatur: 13,0 °C');
+        expect(within(screen.getByRole('region', {name: 'Wassermenge'})).getByRole('img').querySelectorAll('.gauge__areas path')).toHaveLength(0);
     });
 
     it('updates the gauge and step together when controller targets arrive, including explicit zero', () => {
@@ -190,6 +199,19 @@ describe('Production shared target temperature', () => {
     it('does not infer recipe bands from a sensor snapshot before any process status is loaded', () => {
         renderProduction({selectedBeer: beer, brewingStatus: undefined});
         expectNoTarget();
+    });
+
+    it('clears stale target bands and restores them with fresh status without replacing the dial', () => {
+        const {props, rerender} = renderProduction({selectedBeer: beer, brewingStatus: restStatus()});
+        const dial = temperatureDial();
+        expectTarget(65);
+        rerender(<Production {...props} isBrewingStatusStale />);
+        expect(temperatureDial()).toBe(dial);
+        expect(dial.querySelectorAll('.gauge__areas path')).toHaveLength(0);
+        expect(within(screen.getByRole('region', {name: 'Temperatur'})).getByRole('definition')).toHaveTextContent('-- °C');
+        rerender(<Production {...props} />);
+        expect(temperatureDial()).toBe(dial);
+        expectTarget(65);
     });
 });
 

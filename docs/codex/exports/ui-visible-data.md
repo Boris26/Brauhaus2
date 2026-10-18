@@ -56,5 +56,8 @@ left tank retains its separate recipe-water accumulation. No additional read or
 controller contract change is introduced.
 
 The round temperature dial uses the connected healthy realtime sensor reading;
-its target field uses the existing brewing-status target. Missing measurements
-and missing/stale targets are displayed neutrally rather than synthesized.
+its target field and colored SVG bands use the same resolved target as the step
+details. Controller targets have priority; missing/invalid targets can fall back
+only to an ACTIVE, matched recipe step (or a decoction's uniquely linked RAST).
+Missing measurements and unavailable/stale targets remain neutral. Explicit target
+zero remains visible but does not draw target bands. The green tolerance is ±1 °C.
