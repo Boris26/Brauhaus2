@@ -13,41 +13,36 @@
 }
 
 .gauge__scale {
-    stroke: #505752;
+    stroke: var(--text-muted);
 }
 
 .gauge__scale text {
-    fill: #333a36;
+    fill: var(--text-secondary);
     stroke: none;
     font-size: 10px;
 }
 
 .gauge__unit {
-    fill: #151a17;
-    font-size: 18px;
-    font-weight: 700;
+    fill: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 600;
 }
 
 .gauge__value {
-    fill: #080b09;
+    fill: var(--text-primary);
     font-size: 23px;
     font-weight: 750;
     font-variant-numeric: tabular-nums;
 }
 
 .gauge__needle {
-    fill: #ee5737;
-    stroke: #ce442b;
+    fill: var(--accent-hover);
+    stroke: var(--accent-border);
     stroke-width: 0.7px;
 }
 
-.gauge--water .gauge__needle {
-    fill: #96bafa;
-    stroke: #5288d7;
-}
-
 .gauge__hub {
-    fill: #548bfa;
-    stroke: #3c73dc;
+    fill: var(--accent);
+    stroke: var(--accent-border);
     stroke-width: 1px;
 }
