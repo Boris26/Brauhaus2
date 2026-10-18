@@ -46,6 +46,8 @@ export interface ProductionReducerState {
     agitatorIsRunning: ToggleState;
     liters: number;
     isWaterFillingSuccessful: boolean;
+    isWaterStopping: boolean;
+    waterFillingError?: string;
     isToggleAgitatorSuccess: boolean;
     brewingStatus: BrewingStatus | undefined;
     confirmState: ConfirmStates | undefined;
@@ -76,6 +78,7 @@ export const initialProductionState: ProductionReducerState = {
     agitatorIsRunning: ToggleState.OFF,
     liters: 0,
     isWaterFillingSuccessful: true,
+    isWaterStopping: false,
     isToggleAgitatorSuccess: true,
     brewingStatus: undefined,
     confirmState: undefined,
@@ -118,11 +121,20 @@ const productionReducer = (
             return { ...aState, agitatorIsRunning: aAction.payload.agitatorIsRunning };
         }
         case ProductionActions.ActionTypes.START_WATER_FILLING: {
-            return { ...aState, liters: aAction.payload.liters, isWaterFillingSuccessful: true };
+            return { ...aState, liters: aAction.payload.liters, isWaterFillingSuccessful: true, waterFillingError: undefined };
         }
         case ProductionActions.ActionTypes.START_WATER_FILLING_SUCCESS: {
-            return { ...aState, isWaterFillingSuccessful: aAction.payload.isWaterFillingSuccessful };
+            return { ...aState, isWaterFillingSuccessful: aAction.payload.isWaterFillingSuccessful,
+                waterFillingError: aAction.payload.error,
+                waterStatus: aAction.payload.waterStatus ?? aState.waterStatus };
         }
+        case ProductionActions.ActionTypes.STOP_WATER_FILLING:
+            return {...aState, isWaterStopping: true};
+        case ProductionActions.ActionTypes.STOP_WATER_FILLING_FINISHED:
+            return {...aState, isWaterStopping: false,
+                waterStatus: aAction.payload.waterStatus ?? aState.waterStatus,
+                isWaterFillingSuccessful: aAction.payload.success,
+                waterFillingError: aAction.payload.error};
 
         case ProductionActions.ActionTypes.SEND_BREWING_DATA: {
             return { ...aState, brewingStartError: undefined };

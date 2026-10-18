@@ -44,3 +44,7 @@ Resolved items that should not be reopened without new evidence: `/Available/`, 
 - `TIME_OFFSET` uses `FinishedBrew.fermentationStartedAt` as its only fermentation epoch; `startDate` is never a fallback. The browser sets a timezone-bearing ISO instant only when the production workflow first creates the concrete brew. BeerDataStore persistence and calculation remain **Needs verification**.
 - This repository keys aggregate runtime state and measurements by `FinishedBrew.id`. The BeerDataStore `RecipeActionRuntime` foreign key and unique constraint could not be inspected here; it must be verified as semantically `(finished_beer_id, recipe_action_id)`, never `(recipe beer_id, recipe_action_id)`.
 - Fermentation due/contact-ended messages are in-app. Reusing the installed push architecture for those BeerDataStore-owned events is **Needs verification**; no second push subsystem was introduced.
+
+## Water lifecycle verification
+
+The coordinated source fixes and tests are described in [water-filling-lifecycle.md](water-filling-lifecycle.md). Integrated valve/flow electrical behavior and deployment still require target-Pi verification. The UI manual quantity control remains bounded; the independent unbounded manual API is unchanged.

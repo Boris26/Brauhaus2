@@ -42,7 +42,7 @@ export const startManualWaterFill = (aStatus: RecipeWaterFillStatus): RecipeWate
 
 export const markValveOpened = (aStatus: RecipeWaterFillStatus): RecipeWaterFillStatus => ({...aStatus, activeFillWasOpened: true});
 
-export const completeWaterFill = (aStatus: RecipeWaterFillStatus, aCompletedLiters: number): RecipeWaterFillStatus => {
+export const completeWaterFill = (aStatus: RecipeWaterFillStatus, aCompletedLiters: number, aSuccessful = true): RecipeWaterFillStatus => {
     const completedLiters = Math.max(0, Number.isFinite(aCompletedLiters) ? aCompletedLiters : 0);
     const activeFillType = aStatus.activeFillType;
     if (!aStatus.isFillActive) {
@@ -58,12 +58,12 @@ export const completeWaterFill = (aStatus: RecipeWaterFillStatus, aCompletedLite
         activeFillWasOpened: false,
         currentFillLiters: completedLiters,
         currentWaterLiters: aStatus.currentWaterLiters + completedLiters,
-        completedMashLiters: activeFillType === 'MASH' ? completedLiters : aStatus.completedMashLiters,
-        completedSpargeLiters: activeFillType === 'SPARGE'
+        completedMashLiters: activeFillType === 'MASH' && aSuccessful ? completedLiters : aStatus.completedMashLiters,
+        completedSpargeLiters: activeFillType === 'SPARGE' && aSuccessful
             ? completedLiters
             : aStatus.completedSpargeLiters + (isManualSpargeAddition ? completedLiters : 0),
-        mashState: activeFillType === 'MASH' ? 'COMPLETED' : aStatus.mashState,
-        spargeState: activeFillType === 'SPARGE' ? 'COMPLETED' : aStatus.spargeState
+        mashState: activeFillType === 'MASH' ? (aSuccessful ? 'COMPLETED' : 'ERROR') : aStatus.mashState,
+        spargeState: activeFillType === 'SPARGE' ? (aSuccessful ? 'COMPLETED' : 'ERROR') : aStatus.spargeState
     };
 };
 

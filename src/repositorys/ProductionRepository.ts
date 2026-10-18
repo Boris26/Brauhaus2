@@ -13,6 +13,7 @@ import {BackendAvailable} from "../reducers/productionReducer";
 import {IDiagnosticResponse, normalizeDiagnosticVersion} from "../model/DiagnosticResponse";
 import {AgitatorConfig, AgitatorDetailStatus} from "../model/Agitator";
 import {BrewSession} from "../model/BrewSession";
+import {WaterFillMode} from '../model/WaterStatus';
 
 const DEFAULT_WATER_STATUS: WaterStatus = { filledLiters: 0, targetLiters: 0, openClose: false };
 const DEFAULT_CONTROL_REQUEST_TIMEOUT = 8000;
@@ -51,16 +52,23 @@ const normalizeWaterStatus = (aValue: unknown): WaterStatus => {
         const rawTargetLiters = Number(raw.targetLiters);
         const filledLiters = Number.isFinite(rawFilledLiters) ? Math.max(0, rawFilledLiters) : DEFAULT_WATER_STATUS.filledLiters;
         const targetLiters = Number.isFinite(rawTargetLiters) ? Math.max(0, rawTargetLiters) : DEFAULT_WATER_STATUS.targetLiters;
+        const lifecycle = ['IDLE', 'STARTING', 'RUNNING', 'COMPLETED', 'STOPPED', 'ERROR'];
         return {
             filledLiters,
             targetLiters,
             openClose: raw.openClose === true,
+            ...(raw.state && lifecycle.includes(raw.state) ? {state: raw.state} : {}),
+            ...(typeof raw.fillId === 'string' ? {fillId: raw.fillId} : {}),
+            ...(raw.mode && ['AUTO', 'MANUAL', 'MASH', 'SPARGE'].includes(raw.mode) ? {mode: raw.mode} : {}),
+            ...(raw.reason === null || typeof raw.reason === 'string' ? {reason: raw.reason} : {}),
+            ...(raw.error === null || typeof raw.error === 'string' ? {error: raw.error} : {}),
         };
     }
     return DEFAULT_WATER_STATUS;
 };
 
 export class ProductionRepository {
+    private static pendingWaterStart?: Promise<boolean>;
 
     static async getBrewSession(): Promise<BrewSession> {
         const response = await axios.get<BrewSession>(`${BaseURL}/BrewSession`);
@@ -114,8 +122,29 @@ export class ProductionRepository {
         return await this._doToggleAgitator(aMashAgitatorStates);
     }
 
-    static async fillWaterAutomatic(aLiters: number) {
-        return await  this._doFillWaterAutomatic(aLiters);
+    static async fillWaterAutomatic(aLiters: number, mode?: WaterFillMode) {
+        const pending = this._doFillWaterAutomatic(aLiters, mode);
+        this.pendingWaterStart = pending;
+        try {
+            return await pending;
+        } finally {
+            if (this.pendingWaterStart === pending) this.pendingWaterStart = undefined;
+        }
+    }
+
+    static async stopWaterFilling(): Promise<boolean> {
+        // A rapid OFF must reach the controller after its in-flight ON command.
+        await this.pendingWaterStart;
+        const request = createRequestConfig();
+        try {
+            const response = await axios.post(CommandsURL + 'FillWaterStop:""', undefined, request.config);
+            return response.status === 200;
+        } catch (error) {
+            console.error('Wasserzufuhr konnte nicht gestoppt werden', error);
+            return false;
+        } finally {
+            clearRequestTimeout(request);
+        }
     }
 
     static async getWaterStatus(aTimeoutMs?: number, aFailOnError: boolean = false): Promise<WaterStatus> {
@@ -254,13 +283,16 @@ export class ProductionRepository {
 
     }
 
-    private static async _doFillWaterAutomatic(aLiters: number): Promise<boolean> {
+    private static async _doFillWaterAutomatic(aLiters: number, mode?: WaterFillMode): Promise<boolean> {
+        const request = createRequestConfig();
         try {
-            const response = await axios.post(CommandsURL + 'FillWaterAutomatic:' + aLiters.toString());
+            const response = await axios.post(CommandsURL + 'FillWaterAutomatic:' + aLiters.toString(), mode ? {mode} : undefined, request.config);
             return response.status === 200;
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);
             return false;
+        } finally {
+            clearRequestTimeout(request);
         }
     }
 

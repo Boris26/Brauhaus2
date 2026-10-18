@@ -1,5 +1,5 @@
 import { ofType } from 'redux-observable';
-import {from, of, interval, EMPTY, filter, takeWhile, startWith, Observable} from 'rxjs';
+import {from, of, interval, EMPTY, filter, takeWhile, startWith, Observable, defer} from 'rxjs';
 import { catchError, exhaustMap, map, mergeMap, switchMap, takeUntil } from 'rxjs/operators';
 import { ApplicationActions, BeerActions, ProductionActions } from '../actions/actions';
 import {WarningActions} from '../actions/warningActions';
@@ -98,38 +98,71 @@ export const setAgitatorSpeedEpic$ = (action$: any) =>
 
 
 
-export const startWaterFillingEpic$ = (action$: any) =>
+const stopAndFailWater$ = (error: unknown) =>
+  from(ProductionRepository.stopWaterFilling()).pipe(
+    switchMap((stopped) => stopped
+      ? from(ProductionRepository.getWaterStatus(WATER_STATUS_REQUEST_TIMEOUT, true)).pipe(
+          map(status => ProductionActions.waterFillingFailure(error, status)))
+      : of(ProductionActions.waterFillingFailure('Wasser-Stop nicht bestätigt. Bitte erneut stoppen.'))),
+    catchError(stopError => of(ProductionActions.waterFillingFailure(stopError)))
+  );
+
+export const startWaterFillingEpic$ = (action$: any, state$?: {value: RootState}) =>
   action$.pipe(
     ofType(ProductionActions.ActionTypes.START_WATER_FILLING),
-    // Filling is a non-idempotent controller command. Ignore duplicate UI
-    // dispatches until the command and its status lifecycle have completed.
-    exhaustMap((action: any) =>
-      from(ProductionRepository.fillWaterAutomatic(action.payload.liters)).pipe(
-        switchMap((result) => {
-          if (result) {
-            const startedAt = Date.now();
-            return interval(1000).pipe(
-              startWith(0),
-              exhaustMap(() => {
-                if (Date.now() - startedAt >= WATER_FILLING_MAX_DURATION) {
-                  return of(ProductionActions.waterFillingFailure('Water filling timed out'));
+    filter(() => !state$?.value.productionReducer.isWaterStopping),
+    exhaustMap((action: ProductionActions.StartWaterFilling) => defer(() => {
+      let observedOpen = false;
+      const startedAt = Date.now();
+      const start = action.payload.mode
+        ? ProductionRepository.fillWaterAutomatic(action.payload.liters, action.payload.mode)
+        : ProductionRepository.fillWaterAutomatic(action.payload.liters);
+      return from(start).pipe(
+        switchMap((result) => result ? interval(1000).pipe(
+          startWith(0),
+          exhaustMap(() => {
+            if (Date.now() - startedAt >= WATER_FILLING_MAX_DURATION) {
+              return stopAndFailWater$('Maximale Wasserfülldauer überschritten');
+            }
+            return from(ProductionRepository.getWaterStatus(WATER_STATUS_REQUEST_TIMEOUT, true)).pipe(
+              switchMap(status => {
+                observedOpen ||= status.openClose;
+                // Legacy controllers have no STARTING state. Give their worker
+                // time to publish open instead of completing on its idle value.
+                if (!status.state && !observedOpen && !status.openClose
+                    && status.filledLiters + 0.0001 < action.payload.liters
+                    && Date.now() - startedAt >= 10_000) {
+                  return stopAndFailWater$('Wasserfüllung wurde nicht gestartet');
                 }
-                return from(ProductionRepository.getWaterStatus(WATER_STATUS_REQUEST_TIMEOUT, true)).pipe(
-                  map((status) => ProductionActions.setWaterStatus(status)),
-                  catchError((error) => of(ProductionActions.waterFillingFailure(error)))
-                );
+                return of(ProductionActions.setWaterStatus(status));
               }),
-              takeWhile((actionResult) => actionResult.type !== ProductionActions.ActionTypes.START_WATER_FILLING_SUCCESS, true),
-              takeWhile((actionResult) => actionResult.type !== ProductionActions.ActionTypes.SET_WATER_STATUS || actionResult.payload.waterStatus.openClose === true, true)
+              catchError(error => stopAndFailWater$(error))
             );
-          } else {
-            return of(ProductionActions.waterFillingFailure('fillWaterAutomatic failed'));
-          }
-        }),
-        catchError((error) => of(ProductionActions.waterFillingFailure(error)))
-      )
-    )
+          }),
+          takeWhile((result) => {
+            if (result.type === ProductionActions.ActionTypes.START_WATER_FILLING_SUCCESS) return false;
+            const status = result.payload.waterStatus;
+            if (status.state) return !['COMPLETED', 'STOPPED', 'ERROR'].includes(status.state);
+            return status.openClose || (!observedOpen && status.filledLiters + 0.0001 < action.payload.liters);
+          }, true)
+        ) : of(ProductionActions.waterFillingFailure('Wasserfüllung konnte nicht gestartet werden'))),
+        catchError(error => stopAndFailWater$(error)),
+        takeUntil(action$.pipe(ofType(ProductionActions.ActionTypes.STOP_WATER_FILLING)))
+      );
+    }))
   );
+
+export const stopWaterFillingEpic$ = (action$: any) => action$.pipe(
+  ofType(ProductionActions.ActionTypes.STOP_WATER_FILLING),
+  exhaustMap(() => from(ProductionRepository.stopWaterFilling()).pipe(
+    switchMap(success => success
+      ? from(ProductionRepository.getWaterStatus(WATER_STATUS_REQUEST_TIMEOUT, true)).pipe(
+          map(status => ProductionActions.stopWaterFillingFinished(!status.openClose && status.state !== 'STARTING', status,
+            status.openClose ? 'Wasser-Stop nicht bestätigt' : undefined)))
+      : of(ProductionActions.stopWaterFillingFinished(false, undefined, 'Wasser-Stop nicht bestätigt. Bitte erneut stoppen.'))),
+    catchError(error => of(ProductionActions.stopWaterFillingFinished(false, undefined, String(error))))
+  ))
+);
 
 const createBrewingStatusPolling$ = (action$: any) =>
   interval(BREWING_STATUS_POLL_INTERVAL).pipe(
@@ -412,6 +445,7 @@ export const productionEpics = [
   discardBrewRecoveryEpic$,
   startPollingEpic$,
   startWaterFillingEpic$,
+  stopWaterFillingEpic$,
   confirmEpic$,
   checkIsBackendAvailableEpic$,
   nextProcedureStepEpic$,

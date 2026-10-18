@@ -109,3 +109,12 @@ Manual fermentation values are entered through one reusable dialog shared by the
 The eye action in the finished-brews table opens `/finished-brews/{encodedFinishedBeerId}/measurements` directly. This measurement page is the single finished-brew dashboard; no separate table-overlay detail view is maintained. The measurement page emphasizes current readings, the combined temperature/Plato chart, one compact latest measurement, and the BeerDataStore-provided fermentation plan. Raw history is collapsed by default. Only completed recipe actions with a concrete `completedAt` are marked on the chart; pending triggers are not projected onto the timeline.
 
 Production sends `FinishedBrew.fermentationStartedAt: null` when the completed brewing workflow creates the waiting record. The same request contains concrete, already scaled `fermentationActions`, and retries reuse the same payload. Detail displays never substitute `startDate`; records without the canonical timestamp show no inferred fermentation day.
+
+## Coordinated water lifecycle corrections
+
+See [Water filling lifecycle](water-filling-lifecycle.md). Brauhaus2 consumes additive controller
+state/reason/error/fillId/mode fields, sends optional mode metadata, and confirms
+explicit OFF through FillWaterStop and WaterStatus. STARTING is pending, partial
+closure is not recipe completion, and zero required Nachguss allows Hauptguss.
+Existing endpoints, liter units and acknowledgement bodies remain compatible.
+Deployment and real-hardware calibration remain **Needs verification**.

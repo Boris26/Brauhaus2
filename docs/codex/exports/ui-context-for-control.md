@@ -37,3 +37,12 @@ See `docs/codex/compatibility/final-ui-control-compatibility-report.md` for the 
 Remaining open items: exact operational meaning of `WaterStatus.filledLiters / WaterStatus.targetLiters`, long-term stability of `/temperatur/0`, socket.io `overheat` payload shape, and initial empty `Status` behavior.
 
 The shared Socket.IO connection also accepts `brew-session-running` with an optional payload. The UI currently maps it only to `ProductionActions.BREW_SESSION_RUNNING_RECEIVED`; it does not infer BrewSession fields or trigger REST synchronization, polling, or navigation.
+
+## Coordinated water lifecycle corrections
+
+See [Water filling lifecycle](../water-filling-lifecycle.md). Brauhaus2 consumes additive controller
+state/reason/error/fillId/mode fields, sends optional mode metadata, and confirms
+explicit OFF through FillWaterStop and WaterStatus. STARTING is pending, partial
+closure is not recipe completion, and zero required Nachguss allows Hauptguss.
+Existing endpoints, liter units and acknowledgement bodies remain compatible.
+Deployment and real-hardware calibration remain **Needs verification**.

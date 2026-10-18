@@ -64,7 +64,8 @@ Base URL: `BaseURL` (`/api/controller`), `CommandsURL` (`/api/controller/Command
 | POST | `Recipe/` | Send `BrewingData` | `201` |
 | GET | `BrewSession` | Restore the currently running brew after the payload-free Socket.IO signal | `{ beerId, plannedVolume, plannedBrewhouseEfficiency }`; errors including `404` are propagated and do not start polling |
 | POST | `Command/StartBrewing:""` | Start brew | `200`, complete canonical brewing status (same contract as `GET Status/`) |
-| POST | `Command/FillWaterAutomatic:{liters}` | Water fill | `200` |
+| POST | `Command/FillWaterAutomatic:{liters}` | Bounded water fill; optional JSON `{mode}` | `200`, hardware OK acknowledgement; poll lifecycle |
+| POST | `Command/FillWaterStop:""` | Stop manual or automatic water | `200`, hardware OK acknowledgement; confirm closed through WaterStatus |
 | POST | `Command/TurnOn` | Heater on using no-value command alias | `200` |
 | POST | `Command/TurnOff` | Heater off using no-value command alias | `200` |
 | POST | `Command/Speed:{speed}` | Set agitator speed | `200` |
@@ -193,3 +194,5 @@ This additive live-status contract does not change BeerDataStore REST DTOs or co
 `GET fermentation/beers/{finishedBeerId}/measurements?afterId={measurementId}` returns the chronologically ordered suffix strictly after the identified measurement. It has the same DTO as the initial unfiltered read. The fermentation gateway additively publishes `FERMENTATION_MEASUREMENT_RECORDED` with `{beerId, measurement}` and `FERMENTATION_BUBBLE_ACTIVITY_RECORDED` with `{beerId, activity}` after persistence. The UI deduplicates measurements by `measurement.id` and bubble windows by `(deviceId, sequence)`. Deployment and exact not-found behavior for an obsolete cursor are **Needs verification** in BeerDataStore/FermentationSensorGateway.
 
 The UI no longer calls `/sensor-measurements`. Temperature, ambient temperature, and Plato come exclusively from `/measurements`; pressure and bubble windows come from `/bubble-activity`.
+
+WaterStatus additionally supports fillId/mode/state/reason/error; see [water-filling-lifecycle.md](water-filling-lifecycle.md). The original three fields and both controller GET aliases remain valid.

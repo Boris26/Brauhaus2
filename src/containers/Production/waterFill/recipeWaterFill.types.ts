@@ -19,4 +19,5 @@ export interface WaterStatusSnapshot {
     filledLiters?: number;
     targetLiters?: number;
     openClose?: boolean;
+    state?: import('../../../model/WaterStatus').WaterFillLifecycle;
 }

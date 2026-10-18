@@ -16,6 +16,7 @@ import { setStoredDebugMode } from "../utils/debugMode";
 import {AgitatorRealtimeState, AlarmRealtimeState, HeatingRunningState, TemperatureSensorRealtimeState} from '../model/RealtimeControllerState';
 import {AgitatorSettings} from '../model/AgitatorSettings';
 import {BrewRecoverySnapshot} from '../model/BrewRecovery';
+import {WaterFillMode} from '../model/WaterStatus';
 
 export namespace BeerActions {
 
@@ -654,6 +655,8 @@ export namespace ProductionActions {
         TOGGLE_AGITATOR_SUCCESS = 'ProductionActions.TOGGLE_AGITATOR_SUCCESS',
         START_WATER_FILLING = 'ProductionActions.START_WATER_FILLING',
         START_WATER_FILLING_SUCCESS = 'ProductionActions.START_WATER_FILLING_SUCCESS',
+        STOP_WATER_FILLING = 'ProductionActions.STOP_WATER_FILLING',
+        STOP_WATER_FILLING_FINISHED = 'ProductionActions.STOP_WATER_FILLING_FINISHED',
         SEND_BREWING_DATA = 'ProductionActions.SEND_BREWING_DATA',
         BREWING_START_FAILURE = 'ProductionActions.BREWING_START_FAILURE',
         SET_BREWING_STATUS = 'ProductionActions.SET_BREWING_STATUS',
@@ -742,12 +745,21 @@ export namespace ProductionActions {
 
     export interface StartWaterFillingSuccess {
         readonly type: ActionTypes.START_WATER_FILLING_SUCCESS
-        payload: { isWaterFillingSuccessful: boolean }
+        payload: { isWaterFillingSuccessful: boolean; error?: string; waterStatus?: WaterStatus }
     }
 
     export interface StartWaterFilling {
         readonly type: ActionTypes.START_WATER_FILLING
-        payload: { liters: number }
+        payload: { liters: number; mode?: WaterFillMode }
+    }
+
+    export interface StopWaterFilling {
+        readonly type: ActionTypes.STOP_WATER_FILLING;
+    }
+
+    export interface StopWaterFillingFinished {
+        readonly type: ActionTypes.STOP_WATER_FILLING_FINISHED;
+        payload: {success: boolean; waterStatus?: WaterStatus; error?: string};
     }
 
     export interface SetAgitatorIsRunning {
@@ -827,6 +839,8 @@ export namespace ProductionActions {
         SetAgitatorIsRunning |
         StartWaterFillingSuccess |
         StartWaterFilling |
+        StopWaterFilling |
+        StopWaterFillingFinished |
         ToggleAgitatorSuccess |
         ToggleAgitator |
         SetBrewingStatus |
@@ -922,11 +936,19 @@ export namespace ProductionActions {
         }
     }
 
-    export function startWaterFilling(aLiters: number): StartWaterFilling {
+    export function startWaterFilling(aLiters: number, mode?: WaterFillMode): StartWaterFilling {
         return {
             type: ActionTypes.START_WATER_FILLING,
-            payload: {liters: aLiters}
+            payload: {liters: aLiters, ...(mode ? {mode} : {})}
         }
+    }
+
+    export function stopWaterFilling(): StopWaterFilling {
+        return {type: ActionTypes.STOP_WATER_FILLING};
+    }
+
+    export function stopWaterFillingFinished(success: boolean, waterStatus?: WaterStatus, error?: string): StopWaterFillingFinished {
+        return {type: ActionTypes.STOP_WATER_FILLING_FINISHED, payload: {success, waterStatus, error}};
     }
 
     export function startWaterFillingSuccess(aIsSuccessful: boolean): StartWaterFillingSuccess {
@@ -989,9 +1011,12 @@ export namespace ProductionActions {
         };
     }
 
-    export function waterFillingFailure(_error: any): StartWaterFillingSuccess {
-        void _error;
-        return startWaterFillingSuccess(false);
+    export function waterFillingFailure(error: unknown, waterStatus?: WaterStatus): StartWaterFillingSuccess {
+        return {type: ActionTypes.START_WATER_FILLING_SUCCESS, payload: {
+            isWaterFillingSuccessful: false,
+            error: error instanceof Error ? error.message : String(error),
+            ...(waterStatus ? {waterStatus} : {})
+        }};
     }
 
     export function webSocketConnect(): WebSocketConnect {

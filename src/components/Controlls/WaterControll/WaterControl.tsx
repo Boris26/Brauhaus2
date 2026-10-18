@@ -3,11 +3,7 @@ import './WaterControll.css';
 import { VesselContentType } from '../../../model/VesselContentType';
 import { formatLiters } from '../../../utils/format/liters';
 
-export interface WaterStatus {
-    filledLiters: number;
-    targetLiters: number;
-    openClose: boolean;
-}
+export type {WaterStatus} from '../../../model/WaterStatus';
 
 interface WaterControlProps {
     filledLiters: number;

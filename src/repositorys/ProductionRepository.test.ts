@@ -26,6 +26,25 @@ describe('ProductionRepository API method/path usage', () => {
     mockedAxios.delete.mockResolvedValue({ status: 200, data: {}, statusText: 'OK' } as any);
   });
 
+  it('serializes a rapid stop after an in-flight fill start and sends its mode', async () => {
+    let completeStart!: (value: any) => void;
+    mockedAxios.post.mockImplementationOnce(() => new Promise(resolve => {completeStart = resolve;}));
+    const starting = ProductionRepository.fillWaterAutomatic(9, 'SPARGE');
+    const stopping = ProductionRepository.stopWaterFilling();
+    expect(mockedAxios.post).toHaveBeenCalledTimes(1);
+    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('FillWaterAutomatic:9'), {mode: 'SPARGE'}, expect.objectContaining({timeout: 8000}));
+    completeStart({status: 200});
+    await starting;
+    await stopping;
+    expect(mockedAxios.post).toHaveBeenLastCalledWith(expect.stringContaining('FillWaterStop:""'), undefined, expect.objectContaining({timeout: 8000}));
+  });
+
+  it('preserves lifecycle and error metadata in normalized water status', async () => {
+    const status = {filledLiters: 0, targetLiters: 9, openClose: false, fillId: 'fill-1', mode: 'SPARGE', state: 'ERROR', reason: 'START_FAILED', error: 'flow interrupt failed'};
+    mockedAxios.get.mockResolvedValueOnce({status: 200, data: status});
+    await expect(ProductionRepository.getWaterStatus()).resolves.toEqual(status);
+  });
+
   it('uses the recovery command endpoints with the normal BrewingData', async () => {
     const brewingData = {beerId: 'beer-1', plannedVolume: 25, plannedBrewhouseEfficiency: 70,
       MashdownTemperature: 76, MashupTemperature: 52, CookingTemperature: 99, CookingTime: 60, Rasten: []};
@@ -90,7 +109,7 @@ describe('ProductionRepository API method/path usage', () => {
     await ProductionRepository.setAgitatorSpeed(22);
 
     expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Command/StartBrewing:""'));
-    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Command/FillWaterAutomatic:15'));
+    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Command/FillWaterAutomatic:15'), undefined, expect.objectContaining({timeout: 8000}));
     expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Command/Speed:22'));
   });
 
