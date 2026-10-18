@@ -11,6 +11,14 @@ import {AgitatorSettingsRepository} from '../../repositorys/AgitatorSettingsRepo
 import {HopUsage} from '../../enums/eHopUsage';
 import {eBrewState} from '../../enums/eBrewState';
 
+beforeAll(() => {
+    global.ResizeObserver = class {
+        observe() {}
+        unobserve() {}
+        disconnect() {}
+    };
+});
+
 const createBeer = (aMashVolume: number | undefined = 18, aSpargeVolume: number | undefined = 12, aId: string = '1'): Beer => ({
     id: aId,
     name: aId,
@@ -64,6 +72,7 @@ const renderProduction = (aOverrides: Partial<React.ComponentProps<typeof Produc
         toggleAgitator: jest.fn(),
         setAgitatorSpeed: jest.fn(),
         startWaterFilling: jest.fn(),
+        stopWaterFilling: jest.fn(),
         isWaterFillingSuccessful: true,
         isToggleAgitatorSuccess: true,
         sendBrewingData: jest.fn(),
@@ -1042,7 +1051,7 @@ describe('Production recipe water filling', () => {
         fireEvent.click(getSpargeButton());
         fireEvent.click(getSpargeButton());
         expect(props.startWaterFilling).toHaveBeenCalledTimes(1);
-        expect(props.startWaterFilling).toHaveBeenCalledWith(9);
+        expect(props.startWaterFilling).toHaveBeenCalledWith(9, 'SPARGE');
         expect(getSpargeButton()).toBeDisabled();
         expect(getMashButton()).toBeDisabled();
         expect(screen.getAllByText('Nachguss').length).toBeGreaterThan(0);
@@ -1106,7 +1115,7 @@ describe('Production recipe water filling', () => {
         rerender(<Production {...props} waterStatus={{filledLiters: 9, targetLiters: 9, openClose: true}} />);
         rerender(<Production {...props} waterStatus={{filledLiters: 9, targetLiters: 9, openClose: false}} />);
         fireEvent.click(getMashButton());
-        expect(props.startWaterFilling).toHaveBeenLastCalledWith(21);
+        expect(props.startWaterFilling).toHaveBeenLastCalledWith(21, 'MASH');
         expect(screen.getAllByText('Hauptguss').length).toBeGreaterThan(0);
         expect(screen.getByText('0,0 l')).toBeInTheDocument();
         expect(screen.queryByText('9,0 l')).not.toBeInTheDocument();
@@ -1128,7 +1137,7 @@ describe('Production recipe water filling', () => {
         expect(screen.queryByText('30,0 l')).not.toBeInTheDocument();
     });
 
-    it('does not add transferred Nachguss back to the current vessel after mashing out', () => {
+    it('includes prepared Nachguss once after the mashing-out confirmation', () => {
         const waitingForMashingOut = createBrewingStatus(ProcessState.ACTIVE);
         waitingForMashingOut.currentStep.phase = ProcessPhase.MASHING_OUT;
         waitingForMashingOut.currentStep.mode = ProcessMode.WAITING;
@@ -1146,9 +1155,9 @@ describe('Production recipe water filling', () => {
         expect(screen.queryByText('30,0 l')).not.toBeInTheDocument();
         rerender(<Production {...props} brewingStatus={cooking} waterStatus={{filledLiters: 21, targetLiters: 21, openClose: false}} />);
         expect(screen.getAllByText('Hauptguss').length).toBeGreaterThan(0);
-        expect(screen.getByText('21,0 l')).toBeInTheDocument();
+        expect(screen.getByText('30,0 l')).toBeInTheDocument();
         rerender(<Production {...props} brewingStatus={cooking} waterStatus={{filledLiters: 21, targetLiters: 21, openClose: false}} />);
-        expect(screen.getByText('21,0 l')).toBeInTheDocument();
+        expect(screen.getByText('30,0 l')).toBeInTheDocument();
         expect(screen.queryByText('39,0 l')).not.toBeInTheDocument();
     });
 
@@ -1167,27 +1176,14 @@ describe('Production recipe water filling', () => {
         expect(screen.queryByRole('button', {name: '✓ Nachguss fertig'})).not.toBeInTheDocument();
     });
 
-    it('keeps only one water failure timeout across repeated updates and clears it after execution', () => {
-        jest.useFakeTimers();
-        const failure = jest.spyOn(Production.prototype, 'failActiveRecipeWaterFill');
-        const {container, rerender, props, unmount} = renderProduction();
+    it('releases a failed request immediately and remains retryable across repeated updates', () => {
+        const {container, rerender, props} = renderProduction();
         fireEvent.click(container.querySelector('.settingsRowWater input') as HTMLInputElement);
-
         rerender(<Production {...props} isWaterFillingSuccessful={false} />);
         rerender(<Production {...props} isWaterFillingSuccessful={false} brewingStatus={{...props.brewingStatus!, elapsedTime: 1}} />);
-        rerender(<Production {...props} isWaterFillingSuccessful={false} brewingStatus={{...props.brewingStatus!, elapsedTime: 2}}
-                             realtimeState={{...props.realtimeState!, agitator: {
-                                 mode: 'CONTINUOUS', paused: false, operation: 'CONTINUOUS', actualOutputOn: true,
-                                 speedPercent: 40, runningMinutes: 3, breakMinutes: 8,
-                             }}} />);
-        act(() => jest.advanceTimersByTime(300));
-        expect(failure).toHaveBeenCalledTimes(1);
-
-        act(() => jest.advanceTimersByTime(300));
-        expect(failure).toHaveBeenCalledTimes(1);
-        unmount();
-        failure.mockRestore();
-        jest.useRealTimers();
+        expect(container.querySelector('.settingsRowWater input')).not.toBeChecked();
+        fireEvent.click(container.querySelector('.settingsRowWater input') as HTMLInputElement);
+        expect(props.startWaterFilling).toHaveBeenCalledTimes(2);
     });
 
     it('keeps Nachguss completed and allows Hauptguss retry after a Hauptguss failure', async () => {
@@ -1258,7 +1254,7 @@ describe('Production recipe water filling', () => {
         const {props, container} = renderProduction({selectedBeer: createBeer(21, 9)});
         const manualWaterSwitch = container.querySelector('.settingsRowWater input') as HTMLInputElement;
         fireEvent.click(manualWaterSwitch);
-        expect(props.startWaterFilling).toHaveBeenCalledWith(0);
+        expect(props.startWaterFilling).toHaveBeenCalledWith(1, 'MANUAL');
     });
 
     it('disables production settings controls while the controller is offline', () => {
@@ -1267,11 +1263,11 @@ describe('Production recipe water filling', () => {
             isBackenAvailable: {isBackenAvailable: false, statusText: 'Offline'}
         });
 
-        expect(container.querySelector('.Settings')).toHaveClass('Settings--disabled');
+        expect(container.querySelector('.settingsRowWater input')).toBeDisabled();
         expect(screen.getByRole('button', {name: 'Brauvorgang starten'})).toBeDisabled();
         expect(screen.getByRole('button', {name: /Nachguss/})).toBeDisabled();
         expect(screen.getByRole('button', {name: /Hauptguss/})).toBeDisabled();
-        expect(container.querySelectorAll('.Settings .quantity-picker-content button:not(:disabled)')).toHaveLength(0);
+        expect(container.querySelectorAll('.settings .quantity-picker-content button:not(:disabled)')).toHaveLength(0);
     });
 });
 
@@ -1482,5 +1478,66 @@ describe('Production process overview countdown', () => {
         expect(container.querySelector('.Info--empty')).toBeInTheDocument();
         expect(screen.queryByText('Laufzeit')).not.toBeInTheDocument();
         expect(screen.queryByText('Zielzeit')).not.toBeInTheDocument();
+    });
+});
+
+describe('Production water lifecycle regression', () => {
+    beforeEach(() => {
+        jest.spyOn(AgitatorSettingsRepository, 'get').mockResolvedValue({speed: 20, intervalOnMinutes: 1, intervalOffMinutes: 5});
+        jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockRejectedValue(new Error('offline test hardware'));
+    });
+    afterEach(() => jest.restoreAllMocks());
+
+    it('allows Hauptguss immediately when the recipe requires zero Nachguss', () => {
+        const {props} = renderProduction({selectedBeer: createBeer(21, 0)});
+        expect(screen.getByRole('button', {name: 'Nachguss einfüllen'})).toBeDisabled();
+        fireEvent.click(screen.getByRole('button', {name: 'Hauptguss einfüllen'}));
+        expect(props.startWaterFilling).toHaveBeenCalledWith(21, 'MASH');
+    });
+
+    it('keeps STARTING pending and releases a failed zero-liter Nachguss for retry', () => {
+        const {props, rerender} = renderProduction({selectedBeer: createBeer(21, 9)});
+        fireEvent.click(screen.getByRole('button', {name: 'Nachguss einfüllen'}));
+        rerender(<Production {...props} waterStatus={{filledLiters: 0, targetLiters: 9, openClose: false, state: 'STARTING'}} />);
+        expect(screen.getByRole('button', {name: 'Nachguss einfüllen'})).toBeDisabled();
+        rerender(<Production {...props} waterStatus={{filledLiters: 0, targetLiters: 9, openClose: false, state: 'ERROR', reason: 'START_FAILED', error: 'Flow-Sensor nicht verfügbar'}} />);
+        expect(screen.getByRole('button', {name: 'Nachguss einfüllen'})).toBeEnabled();
+        expect(screen.queryByRole('button', {name: '✓ Nachguss fertig'})).not.toBeInTheDocument();
+        expect(screen.getByRole('alert')).toHaveTextContent('Flow-Sensor nicht verfügbar');
+    });
+
+    it('accepts an explicit measured completion without requiring an observed open transition', () => {
+        const {props, rerender} = renderProduction({selectedBeer: createBeer(21, 9)});
+        fireEvent.click(screen.getByRole('button', {name: 'Nachguss einfüllen'}));
+        rerender(<Production {...props} waterStatus={{filledLiters: 9, targetLiters: 9, openClose: false, state: 'COMPLETED', reason: 'TARGET_REACHED'}} />);
+        expect(screen.getByRole('button', {name: '✓ Nachguss fertig'})).toBeDisabled();
+        expect(screen.getByRole('button', {name: 'Hauptguss einfüllen'})).toBeEnabled();
+    });
+
+    it('sends OFF to the controller and waits for the confirmed partial stop', () => {
+        const {props, rerender, container} = renderProduction({selectedBeer: createBeer(21, 9)});
+        const waterSwitch = () => container.querySelector('.settingsRowWater input') as HTMLInputElement;
+        fireEvent.click(screen.getByRole('button', {name: 'Nachguss einfüllen'}));
+        rerender(<Production {...props} waterStatus={{filledLiters: 2, targetLiters: 9, openClose: true, state: 'RUNNING'}} />);
+        fireEvent.click(waterSwitch());
+        expect(props.stopWaterFilling).toHaveBeenCalledTimes(1);
+        expect(waterSwitch()).toBeChecked();
+        rerender(<Production {...props} isWaterStopping waterStatus={{filledLiters: 2, targetLiters: 9, openClose: true, state: 'RUNNING'}} />);
+        expect(waterSwitch()).toBeDisabled();
+        rerender(<Production {...props} waterStatus={{filledLiters: 2, targetLiters: 9, openClose: false, state: 'STOPPED', reason: 'USER_STOP'}} />);
+        expect(waterSwitch()).not.toBeChecked();
+        expect(screen.getByRole('button', {name: 'Nachguss einfüllen'})).toBeEnabled();
+        expect(screen.queryByRole('button', {name: '✓ Nachguss fertig'})).not.toBeInTheDocument();
+    });
+
+    it('keeps manual quantity filling active through its startup status', () => {
+        const {props, rerender, container} = renderProduction();
+        const waterSwitch = () => container.querySelector('.settingsRowWater input') as HTMLInputElement;
+        fireEvent.click(waterSwitch());
+        expect(props.startWaterFilling).toHaveBeenCalledWith(1, 'MANUAL');
+        rerender(<Production {...props} waterStatus={{filledLiters: 0, targetLiters: 1, openClose: false, state: 'STARTING'}} />);
+        expect(waterSwitch()).toBeChecked();
+        rerender(<Production {...props} waterStatus={{filledLiters: 0.1, targetLiters: 1, openClose: true, state: 'RUNNING'}} />);
+        expect(waterSwitch()).toBeChecked();
     });
 });

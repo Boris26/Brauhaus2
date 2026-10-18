@@ -43,6 +43,7 @@ import {RealtimeControllerState} from '../../model/RealtimeControllerState';
 import {formatTemperature, getTemperatureSensorMessage, isTemperatureSensorReady} from '../../utils/temperatureSensor';
 import {AgitatorIntervalProgress} from './components/AgitatorIntervalProgress/AgitatorIntervalProgress';
 import {createFinishedBeerFermentationActions} from '../../utils/finishedBeerFermentationActions';
+import {WaterFillMode} from '../../model/WaterStatus';
 
 export const AGITATOR_SPEED_DEBOUNCE_MS = 300;
 
@@ -57,7 +58,10 @@ export interface ProductionProps {
     agitatorIsRunning: ToggleState;
     toggleAgitator: (agitatorState: MashAgitatorStates) => void; // legacy Redux connection
     setAgitatorSpeed: (agitatorSpeed: number) => void;
-    startWaterFilling: (liters: number) => void;
+    startWaterFilling: (liters: number, mode?: WaterFillMode) => void;
+    stopWaterFilling: () => void;
+    isWaterStopping?: boolean;
+    waterFillingError?: string;
     isWaterFillingSuccessful: boolean;
     isToggleAgitatorSuccess: boolean;
     sendBrewingData: (brewingData: BrewingData) => void;
@@ -118,7 +122,6 @@ export class Production extends React.Component<ProductionProps, ProductionState
     private remainingTimeInterval: NodeJS.Timeout | null = null;
     private brewingDisplayTimeAnchor: BrewingDisplayTimeAnchor | undefined;
     private agitatorSpeedDebounceTimeout: NodeJS.Timeout | null = null;
-    private waterErrorTimeout: NodeJS.Timeout | null = null;
     private isMountedComponent = false;
     private agitatorFreshnessGeneration = 0;
     private agitatorLoadGeneration = 0;
@@ -177,7 +180,6 @@ export class Production extends React.Component<ProductionProps, ProductionState
             clearInterval(this.remainingTimeInterval);
             this.remainingTimeInterval = null;
         }
-        this.clearWaterErrorTimeout();
     }
 
 
@@ -228,11 +230,13 @@ export class Production extends React.Component<ProductionProps, ProductionState
             this.setState({brewingIsRunning: false});
         }
 
-        if (this.state.recipeWaterFill.isFillActive && waterStatus?.openClose === true && !prevProps.waterStatus?.openClose) {
+        const waterStatusChanged = prevProps.waterStatus !== waterStatus;
+        if (waterStatusChanged && this.state.recipeWaterFill.isFillActive && waterStatus?.openClose === true) {
             this.setState((prevState) => ({recipeWaterFill: markValveOpened(prevState.recipeWaterFill)}));
         }
 
-        if (prevProps.waterStatus?.openClose === true && waterStatus?.openClose === false) {
+        const terminalFill = waterStatus?.state && ['COMPLETED', 'STOPPED', 'ERROR'].includes(waterStatus.state);
+        if (waterStatusChanged && (terminalFill || (prevProps.waterStatus?.openClose === true && waterStatus?.openClose === false))) {
             this.completePendingRecipeWaterFill(prevProps.waterStatus?.filledLiters);
         }
 
@@ -242,14 +246,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
 
         if (!isWaterFillingSuccessful && waterSwitchState) {
-            if (this.waterErrorTimeout === null) this.waterErrorTimeout = setTimeout(() => {
-                this.waterErrorTimeout = null;
-                if (this.isMountedComponent) {
-                    this.failActiveRecipeWaterFill();
-                }
-            }, 300);
-        } else {
-            this.clearWaterErrorTimeout();
+            this.failActiveRecipeWaterFill();
         }
         if (typeof brewingStatus?.currentStep?.index === "number" && brewingStatus.currentStep.index !== prevProps?.brewingStatus?.currentStep?.index) {
             this.setState({indexOfCurrentStep: brewingStatus.currentStep.index});
@@ -274,12 +271,6 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     }
 
-    private clearWaterErrorTimeout = (): void => {
-        if (this.waterErrorTimeout !== null) {
-            clearTimeout(this.waterErrorTimeout);
-            this.waterErrorTimeout = null;
-        }
-    };
 
     loadAgitatorStatus = async (): Promise<void> => {
         const loadGeneration = ++this.agitatorLoadGeneration;
@@ -578,16 +569,21 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     completePendingRecipeWaterFill = (aPreviousFilledLiters?: number): void => {
         const {recipeWaterFill} = this.state;
-        if ((!recipeWaterFill.activeFillWasOpened && aPreviousFilledLiters === undefined) || !recipeWaterFill.isFillActive) {
+        if (!recipeWaterFill.isFillActive) {
             this.setState((prevState) => ({waterSwitchState: false, recipeWaterFill: {...prevState.recipeWaterFill, activeFillWasOpened: false}}));
             return;
         }
         const currentFilledLiters = this.getSafeWaterStatusFilledLiters();
         const previousFilledLiters = Number(aPreviousFilledLiters);
-        const completedLiters = currentFilledLiters > 0 || !Number.isFinite(previousFilledLiters) ? currentFilledLiters : previousFilledLiters;
+        const status = this.props.waterStatus;
+        const completedLiters = !status.state && currentFilledLiters === 0 && Number.isFinite(previousFilledLiters)
+            ? previousFilledLiters : currentFilledLiters;
+        const successful = status.state ? status.state === 'COMPLETED' && status.reason === 'TARGET_REACHED' && completedLiters + 0.0001 >= this.state.liters
+            : completedLiters + 0.0001 >= this.state.liters;
         this.setState((prevState) => ({
             waterSwitchState: false,
-            recipeWaterFill: completeWaterFill(prevState.recipeWaterFill, completedLiters)
+            waterFillingError: status.state === 'ERROR',
+            recipeWaterFill: completeWaterFill(prevState.recipeWaterFill, completedLiters, successful)
         }));
     }
 
@@ -627,7 +623,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
             waterFillingError: false,
             recipeWaterFill: startWaterFill(prevState.recipeWaterFill, aRecipeWaterFill)
         }));
-        this.props.startWaterFilling(volume);
+        this.props.startWaterFilling(volume, aRecipeWaterFill === 'mash' ? 'MASH' : 'SPARGE');
     }
 
     getSafeWaterStatusFilledLiters = (): number => {
@@ -652,7 +648,8 @@ export class Production extends React.Component<ProductionProps, ProductionState
 
     isRecipeWaterButtonDisabled = (aRecipeWaterFill: RecipeWaterFill): boolean => {
         const volume = this.getRecipeWaterVolume(aRecipeWaterFill);
-        return selectRecipeWaterButtonDisabled(aRecipeWaterFill, this.state.recipeWaterFill, volume, this.isControllerAvailable(), this.isWaterFillingActive());
+        const noSparge = this.props.selectedBeer?.spargeVolume === 0;
+        return Boolean(this.props.isWaterStopping) || selectRecipeWaterButtonDisabled(aRecipeWaterFill, this.state.recipeWaterFill, volume, this.isControllerAvailable(), this.isWaterFillingActive(), noSparge);
     }
 
     getRecipeWaterButtonLabel = (aRecipeWaterFill: RecipeWaterFill): string => {
@@ -674,20 +671,22 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     toggleWaterSwitchState = () => {
+        if (this.props.isWaterStopping) return;
+        if (this.isWaterFillingActive()) {
+            // Keep the switch active until the controller confirms the close.
+            this.props.stopWaterFilling();
+            return;
+        }
         if (!this.isControllerAvailable()) {
             return;
         }
-        const {waterSwitchState, liters,} = this.state;
+        const {liters} = this.state;
         const {startWaterFilling} = this.props;
-        if (!waterSwitchState) {
-            this.setState((prevState) => ({
-                waterSwitchState: true,
-                waterFillingError: false,
-                recipeWaterFill: startManualWaterFill(prevState.recipeWaterFill)
-            }), () => startWaterFilling(liters));
-        } else {
-            this.setState({waterSwitchState: false});
-        }
+        this.setState((prevState) => ({
+            waterSwitchState: true,
+            waterFillingError: false,
+            recipeWaterFill: startManualWaterFill(prevState.recipeWaterFill)
+        }), () => startWaterFilling(liters, 'MANUAL'));
     }
     isControlBrewingStartAvailable = (): boolean => {
         const {brewingStatus, isPollingRunning} = this.props;
@@ -775,7 +774,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
     }
 
     renderSettings() {
-        const {waterSwitchState, agitatorConfig, agitatorRuntime, agitatorSpeedDraft, agitatorIntervalDraft, agitatorModeDraft, agitatorRequestPending, agitatorStatusLoadFailed} = this.state;
+        const {agitatorConfig, agitatorRuntime, agitatorSpeedDraft, agitatorIntervalDraft, agitatorModeDraft, agitatorRequestPending, agitatorStatusLoadFailed} = this.state;
         const displayedAgitatorMode = agitatorModeDraft ?? agitatorConfig?.mode;
         const settingsDisabled = !this.isControllerAvailable();
         const mashWaterDisabled = settingsDisabled || this.isRecipeWaterButtonDisabled('mash');
@@ -862,16 +861,18 @@ export class Production extends React.Component<ProductionProps, ProductionState
                         <h4 id="water-settings-title">Wasser</h4>
                         <div className="intervalSettings manualWaterSettings" aria-labelledby="manual-water-settings-title">
                             <h5 id="manual-water-settings-title">Manuelle Wasserzufuhr</h5>
+                            <p>Füllt bis zur eingestellten Literzahl. Ausschalten beendet die Wasserzufuhr vorzeitig.</p>
                             <div className="settingsRowWater manualWaterControls">
                                 <div className="leftAligned">
-                                    {renderSwitch('Wasser aktivieren', waterSwitchState, this.toggleWaterSwitchState)}
+                                    {renderSwitch('Wasser aktivieren', this.isWaterFillingActive(), this.toggleWaterSwitchState, Boolean(this.props.isWaterStopping) || (settingsDisabled && !this.isWaterFillingActive()))}
                                 </div>
                                 <div className="rightAligned">
                                     <QuantityPicker value={this.state.liters} min={1} max={this.MAX_WATER_LEVEL} onChange={this.onSetWaterChangeQuantity}
-                                                    isDisabled={settingsDisabled || waterSwitchState} label="Liter" labelPosition="above"/>
+                                                    isDisabled={settingsDisabled || this.isWaterFillingActive() || Boolean(this.props.isWaterStopping)} label="Liter" labelPosition="above"/>
                                 </div>
                             </div>
                         </div>
+                        {(this.state.waterFillingError || this.props.waterFillingError || this.props.waterStatus?.state === 'ERROR') && <p role="alert">{this.props.waterFillingError || this.props.waterStatus?.error || 'Wasserfüllung wurde nicht abgeschlossen. Bitte Menge prüfen und erneut starten.'}</p>}
                         <div className="recipeWaterGroup" aria-label="Rezeptmengen">
                             <span className="recipeWaterGroupLabel">Rezeptmengen</span>
                             <div className="recipeWaterButtons">

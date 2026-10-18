@@ -39,12 +39,12 @@ export const getWaterLabel = (aStatus: RecipeWaterFillStatus): string => {
 };
 
 export const isWaterFillingActive = (aStatus: RecipeWaterFillStatus, aWaterSwitchState: boolean, aWaterStatus?: WaterStatusSnapshot): boolean =>
-    aWaterSwitchState || aStatus.isFillActive || aWaterStatus?.openClose === true;
+    aWaterSwitchState || aStatus.isFillActive || aWaterStatus?.openClose === true || aWaterStatus?.state === 'STARTING';
 
-export const isRecipeWaterButtonDisabled = (aFill: RecipeWaterFill, aStatus: RecipeWaterFillStatus, aVolume: number | undefined, aControllerAvailable: boolean, aIsActive: boolean): boolean => {
+export const isRecipeWaterButtonDisabled = (aFill: RecipeWaterFill, aStatus: RecipeWaterFillStatus, aVolume: number | undefined, aControllerAvailable: boolean, aIsActive: boolean, aSpargeNotRequired = false): boolean => {
     if (aVolume === undefined || !aControllerAvailable || aIsActive) return true;
     if (aFill === 'sparge') return aStatus.spargeState === 'COMPLETED' || aStatus.mashState !== 'IDLE';
-    return aStatus.spargeState !== 'COMPLETED' || aStatus.mashState === 'COMPLETED';
+    return (!aSpargeNotRequired && aStatus.spargeState !== 'COMPLETED') || aStatus.mashState === 'COMPLETED';
 };
 
 export const shouldIncludeSpargeAfterMashingOut = (aStatus: RecipeWaterFillStatus, aPreviousStatus?: BrewingStatusTransitionSnapshot, aCurrentStatus?: BrewingStatusTransitionSnapshot): boolean => {

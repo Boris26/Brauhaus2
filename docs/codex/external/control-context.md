@@ -250,3 +250,12 @@ Braumeister publishes `brew-recovery-state-changed` on the already shared defaul
 ## Fermentation lifecycle/action boundary
 
 The three-state finished-brew lifecycle and fermentation recipe-action evaluation belong to BeerDataStore, not PI control. Temperature remains a measurement and `TEMPERATURE_THRESHOLD` is not part of action v1. Existing controller Web Push must not be duplicated; cross-service delivery of BeerDataStore-owned `recipe action due` and `contact time ended` notifications is **Needs verification**.
+
+## Coordinated water lifecycle corrections
+
+See [Water filling lifecycle](../water-filling-lifecycle.md). Brauhaus2 consumes additive controller
+state/reason/error/fillId/mode fields, sends optional mode metadata, and confirms
+explicit OFF through FillWaterStop and WaterStatus. STARTING is pending, partial
+closure is not recipe completion, and zero required Nachguss allows Hauptguss.
+Existing endpoints, liter units and acknowledgement bodies remain compatible.
+Deployment and real-hardware calibration remain **Needs verification**.

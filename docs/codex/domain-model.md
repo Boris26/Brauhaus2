@@ -82,3 +82,12 @@ Needs verification: backend/database canonical casing for malt `ebc` vs recipe m
 Fermentation presentation labels are UI-only projections: `DRY_HOP` is shown as `Hopfen`, `ADDITIONAL_INGREDIENT` as `Zutat`, and technical amount/time units are localized. Trigger/status enums and timestamps remain unchanged. No additional persisted presentation model or fermentation state is introduced.
 
 Recipe actions have identity independent of ingredient master data: `actionId` is preserved when editing, while `Hop.id` and `AdditionalIngredient.id` remain master-data IDs. The canonical trigger fields are `triggerType`, `triggerValue`, and `triggerUnit`; optional contact fields are `contactTime` and `contactTimeUnit`. Leaving a recipe-action-capable usage/phase removes all six fields, so returning creates a new action identity when a trigger is selected.
+
+## Coordinated water lifecycle corrections
+
+See [Water filling lifecycle](water-filling-lifecycle.md). Brauhaus2 consumes additive controller
+state/reason/error/fillId/mode fields, sends optional mode metadata, and confirms
+explicit OFF through FillWaterStop and WaterStatus. STARTING is pending, partial
+closure is not recipe completion, and zero required Nachguss allows Hauptguss.
+Existing endpoints, liter units and acknowledgement bodies remain compatible.
+Deployment and real-hardware calibration remain **Needs verification**.

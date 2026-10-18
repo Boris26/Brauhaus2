@@ -8,14 +8,16 @@ import {RootState} from "../../reducers/rootReducer";
 import {Production} from './Production';
 import {ConfirmStates} from '../../enums/eConfirmStates';
 import {withFinishedBrewCreateId} from '../../utils/finishedBrewCreateId';
+import {WaterFillMode} from '../../model/WaterStatus';
 
 const mapDispatchToProps = (dispatch: Dispatch) => ({
     toggleAgitator: (agitatorState: MashAgitatorStates) => {
         dispatch(ProductionActions.toggleAgitator(agitatorState))
     },
-    startWaterFilling: (liters: number) => {
-        dispatch(ProductionActions.startWaterFilling(liters))
+    startWaterFilling: (liters: number, mode?: WaterFillMode) => {
+        dispatch(ProductionActions.startWaterFilling(liters, mode))
     },
+    stopWaterFilling: () => dispatch(ProductionActions.stopWaterFilling()),
     setAgitatorSpeed: (agitatorSpeed: number) => {
         dispatch(ProductionActions.setAgitatorSpeed(agitatorSpeed))
     },
@@ -43,6 +45,8 @@ const mapStateToProps = (state: RootState) => (
         agitatorIsRunning: state.productionReducer.agitatorIsRunning,
         agitatorSpeed: state.productionReducer.agitatorSpeed,
         isWaterFillingSuccessful: state.productionReducer.isWaterFillingSuccessful,
+        isWaterStopping: state.productionReducer.isWaterStopping,
+        waterFillingError: state.productionReducer.waterFillingError,
         isToggleAgitatorSuccess: state.productionReducer.isToggleAgitatorSuccess,
         brewingStatus: state.productionReducer.brewingStatus,
         realtimeState: state.productionReducer.realtimeState,

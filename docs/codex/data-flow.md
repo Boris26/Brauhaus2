@@ -70,15 +70,15 @@ Automatic water filling follows the same at-most-once-while-pending rule: anothe
 - It calls `GET Available/` on the PI/control base URL, not the database URL.
 - Result is displayed in the header as `Backend: Online/Offline`.
 
-## Water-fill flow
+## Water filling flow
 
-- User selects liters and toggles water switch.
-- UI posts `Command/FillWaterAutomatic:{liters}`.
-- On success, an RxJS interval polls `GET WaterStatus` every 1000 ms and stores normalized `{ filledLiters, targetLiters, openClose }`; the confirmed control API also supports `GET WaterStatus/` and always returns an object shape.
-- Needs verification: current `takeUntil` code uses a one-shot `from(ProductionRepository.getWaterStatus())`; confirm intended continuous stop behavior.
-- The production UI keeps `recipeWaterFill.currentWaterLiters` as the committed vessel-water snapshot for the complete lifetime of a fill operation. Poll values are displayed as that stable base plus `WaterStatus.filledLiters`; they are not committed into the base while the valve is open.
-- A newly dispatched fill does not immediately make the prior, closed `WaterStatus` current. The UI displays only the committed base until it observes `openClose: true` for the new operation. The first such status is displayed immediately, including a legitimate partial value such as `0.3` liters.
-- On the first transition from `openClose: true` to `false`, the final measured `filledLiters` is committed exactly once. A final value above `targetLiters` remains visible and is not clamped because the controller contract defines `filledLiters` as the measured operation amount.
+See [Water filling lifecycle](water-filling-lifecycle.md). Main/sparge/manual
+quantity controls share the bounded controller command, with explicit mode
+metadata. The water epic continues through STARTING, processes terminal
+state/reason and measured liters, and attempts a physical stop on read failure
+or maximum duration. Explicit OFF is ordered after an in-flight start and waits
+for controller confirmation. Partial/error fills do not complete recipe gates.
+
 
 ## Confirm/waiting flow
 

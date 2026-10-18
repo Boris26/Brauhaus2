@@ -286,3 +286,12 @@ The gateway snapshot may additively include `measurementState: IDLE | RUNNING | 
 ## Incremental fermentation history (Brauhaus2)
 
 Brauhaus2 now requires the additive exclusive cursor read `GET fermentation/beers/{finishedBeerId}/measurements?afterId={measurementId}` and persisted-record gateway messages `FERMENTATION_MEASUREMENT_RECORDED {beerId, measurement}` and `FERMENTATION_BUBBLE_ACTIVITY_RECORDED {beerId, activity}`. Unfiltered `/measurements` remains the initial-load contract. `/sensor-measurements` is no longer consumed: normal temperatures and Plato belong to canonical `FermentationMeasurements`, while `/bubble-activity` retains sensor-specific count/window/pressure data. BeerDataStore and gateway deployment are **Needs verification**.
+
+## Coordinated water lifecycle corrections
+
+See [Water filling lifecycle](../water-filling-lifecycle.md). Brauhaus2 consumes additive controller
+state/reason/error/fillId/mode fields, sends optional mode metadata, and confirms
+explicit OFF through FillWaterStop and WaterStatus. STARTING is pending, partial
+closure is not recipe completion, and zero required Nachguss allows Hauptguss.
+Existing endpoints, liter units and acknowledgement bodies remain compatible.
+Deployment and real-hardware calibration remain **Needs verification**.
