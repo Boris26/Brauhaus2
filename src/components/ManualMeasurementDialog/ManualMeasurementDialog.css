@@ -4,3 +4,4 @@
 .manual-measurement-dialog__form .brauhaus-form-field:first-child,
 .manual-measurement-dialog__note { grid-column: 1 / -1; }
 @media (max-width: 520px) { .manual-measurement-dialog__form { grid-template-columns: 1fr; } .manual-measurement-dialog__form .brauhaus-form-field { grid-column: 1; } }
+
