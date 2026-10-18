@@ -118,3 +118,11 @@ explicit OFF through FillWaterStop and WaterStatus. STARTING is pending, partial
 closure is not recipe completion, and zero required Nachguss allows Hauptguss.
 Existing endpoints, liter units and acknowledgement bodies remain compatible.
 Deployment and real-hardware calibration remain **Needs verification**.
+
+Production's water and temperature cards share the existing `Gauge` component,
+now rendered as a memoized responsive SVG. Water displays the current fill's
+`WaterStatus.filledLiters` and `targetLiters`, independently of the left tank's
+recipe accumulation. The existing one-second water poll and realtime temperature
+sensor updates remain the sole measurement sources. See
+[Water filling lifecycle](water-filling-lifecycle.md#production-measurement-cards)
+for the display semantics and the constant-zero investigation.

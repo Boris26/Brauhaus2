@@ -765,12 +765,43 @@ export class Production extends React.Component<ProductionProps, ProductionState
         const {brewingStatus} = this.props;
         const sensor = this.props.realtimeState?.temperatureSensor;
         const value = isTemperatureSensorReady(sensor, this.props.socketConnected) ? sensor.current : null;
-        const targetValue = getTargetTemperature(brewingStatus, this.props.selectedBeer) ?? 0;
-        return (<div className="Temp" aria-label={`Aktuelle Temperatur: ${formatTemperature(value)}`}>
-            {value === null ? <div className="temperatureUnavailable" role="status">{formatTemperature(value)}</div> : <Gauge showAreas={true} value={value} targetValue={targetValue}
-                   height={220}
-                   offset={1} minValue={0} maxValue={100} label={"°C"}/>}
-        </div>);
+        const target = brewingStatus?.temperature?.target;
+        const targetValue = !this.props.isBrewingStatusStale && typeof target === 'number' && Number.isFinite(target) ? target : null;
+        return <section className="production-gauge-card" aria-labelledby="temperature-gauge-title">
+            <h3 id="temperature-gauge-title">Temperatur</h3>
+            <div className="production-gauge-dial Temp" aria-label={`Aktuelle Temperatur: ${formatTemperature(value)}`}>
+                <Gauge showAreas={false} value={value} targetValue={targetValue} height={260}
+                       offset={1} minValue={0} maxValue={100} label="°C" />
+            </div>
+            <dl className="production-gauge-details">
+                <div><dt>Solltemperatur</dt><dd>{formatTemperature(targetValue)}</dd></div>
+            </dl>
+        </section>;
+    }
+
+    renderWaterGauge() {
+        // Controller liters describe this fill only, independently of the
+        // cumulative recipe-water quantities used by the left-hand tank.
+        const {waterStatus} = this.props;
+        const filled = waterStatus?.filledLiters;
+        const target = waterStatus?.targetLiters;
+        const value = typeof filled === 'number' && Number.isFinite(filled) && filled >= 0 ? filled : null;
+        const targetValue = typeof target === 'number' && Number.isFinite(target) && target > 0 ? target : null;
+        const remaining = targetValue !== null && value !== null ? Math.max(0, targetValue - value) : null;
+        const formatLiters = (liters: number | null) => liters === null ? '-- L'
+            : `${liters.toLocaleString('de-DE', {minimumFractionDigits: 1, maximumFractionDigits: 1})} L`;
+
+        return <section className="production-gauge-card" aria-labelledby="water-gauge-title">
+            <h3 id="water-gauge-title">Wassermenge</h3>
+            <div className="production-gauge-dial">
+                <Gauge showAreas={false} value={value} targetValue={targetValue} height={260}
+                       offset={0} minValue={0} maxValue={70} label="Liter" />
+            </div>
+            <dl className="production-gauge-details production-gauge-details--water">
+                <div><dt>Zielmenge</dt><dd>{formatLiters(targetValue)}</dd></div>
+                <div><dt>Restmenge</dt><dd>{formatLiters(remaining)}</dd></div>
+            </dl>
+        </section>;
     }
 
     renderSettings() {
@@ -1000,7 +1031,10 @@ export class Production extends React.Component<ProductionProps, ProductionState
                 </div>
                 <div className="meters">
                     {this.renderCurrentStep()}
-                    {this.renderTemperature()}
+                    <div className="production-gauges">
+                        {this.renderWaterGauge()}
+                        {this.renderTemperature()}
+                    </div>
                 </div>
                 {this.renderSettings()}
                 {this.renderInfo()}

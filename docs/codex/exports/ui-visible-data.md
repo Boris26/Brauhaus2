@@ -45,3 +45,16 @@ Visible runtime status fields:
 - Availability display is based on `GET /Available/`.
 - Water UI consumes object-shaped `WaterStatus`; failures fall back to `0` liters and `openClose: false`.
 - Confirmation UI can display waiting status text, but concrete confirm actions exist only for `Iodine`, `Mashup`, `Boiling`, `Cooking`, and `Decoction`.
+
+## Production measurement cards
+
+The round water dial shows `WaterStatus.filledLiters` for the current/latest
+available individual fill, with `targetLiters` and remaining liters
+`max(0, targetLiters - filledLiters)`. An inactive state does not discard an
+available measurement. This dial does not represent kettle contents; the existing
+left tank retains its separate recipe-water accumulation. No additional read or
+controller contract change is introduced.
+
+The round temperature dial uses the connected healthy realtime sensor reading;
+its target field uses the existing brewing-status target. Missing measurements
+and missing/stale targets are displayed neutrally rather than synthesized.
