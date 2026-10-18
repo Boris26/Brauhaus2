@@ -55,11 +55,13 @@ export interface Alarm {
 }
 
 export interface BrewingStatus {
+    snapshotMetadata?: import('../utils/brewingStatus/snapshot').SnapshotMetadata;
     elapsedTime: number;
     process: {
         state: ProcessState;
     };
     currentStep: {
+        stepId?: string | null;
         index?: number;
         count?: number;
         phase: ProcessPhase;

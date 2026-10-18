@@ -8,7 +8,9 @@ import { dataCollector } from '../utils/DataCollector/dataCollector';
 import { WebSocketController } from '../utils/WebSocketController';
 import {BaseURL} from "../global";
 import {isProcessAborted, isProcessFinished, isProcessInError} from "../utils/brewingStatus/selectors";
-import {BackendAvailable} from "../reducers/productionReducer";
+import productionReducer, {BackendAvailable} from "../reducers/productionReducer";
+import {mergeTelemetry, parseSnapshot, PROCESS_REALTIME_ENABLED} from "../utils/brewingStatus/snapshot";
+import {requestBrewingStatus$} from '../utils/brewingStatus/request';
 import {BrewingStatus} from "../model/brewingStatus.types";
 import {debugMetrics} from "../utils/debugMetrics";
 import {BeerRepository} from "../repositorys/BeerRepository";
@@ -31,6 +33,14 @@ let wsController: WebSocketController | null = null;
 
 export const mapControlSocketEvent = (event: {event: string; data?: unknown}) => {
   switch (event.event) {
+    case 'connection-error': return ProductionActions.communicationPhase('Reconnecting');
+    case 'brewing-status-changed': {
+      if (!PROCESS_REALTIME_ENABLED) return undefined;
+      const status = parseSnapshot(event.data);
+      return status ? ProductionActions.setBrewingStatus(status, 'socket') : {type: ProductionActions.ActionTypes.STATUS_STREAM_STALE};
+    }
+    case 'brewing-status-heartbeat':
+      return PROCESS_REALTIME_ENABLED ? {type: ProductionActions.ActionTypes.STATUS_HEARTBEAT, payload: event.data} : undefined;
     case 'overheat':
       return ProductionActions.overheatReceived(event.data);
     case 'brew-session-running':
@@ -164,15 +174,17 @@ export const stopWaterFillingEpic$ = (action$: any) => action$.pipe(
   ))
 );
 
-const createBrewingStatusPolling$ = (action$: any) =>
+const createBrewingStatusPolling$ = (action$: any, state$?: {value: RootState}) =>
   interval(BREWING_STATUS_POLL_INTERVAL).pipe(
     startWith(0),
     exhaustMap(() => {
       debugMetrics.statusRequestStarted();
-      return from(ProductionRepository.getBrewingStatus(BREWING_STATUS_REQUEST_TIMEOUT)).pipe(
+      const generation = state$?.value.productionReducer.communication.generation;
+      return (state$ ? requestBrewingStatus$(BREWING_STATUS_REQUEST_TIMEOUT)
+        : from(ProductionRepository.getBrewingStatus(BREWING_STATUS_REQUEST_TIMEOUT))).pipe(
         map((aStatusResult) => {
           debugMetrics.statusRequestCompleted();
-          return aStatusResult;
+          return {...aStatusResult, generation};
         }),
         catchError(() => {
           debugMetrics.statusRequestFailed();
@@ -180,14 +192,27 @@ const createBrewingStatusPolling$ = (action$: any) =>
         })
       );
     }),
-    filter((status): status is { available: BackendAvailable; brewingStatus: BrewingStatus | undefined } => status !== null),
+    filter((status): status is { available: BackendAvailable; brewingStatus: BrewingStatus | undefined; generation: number | undefined } => status !== null),
+    filter(({brewingStatus, generation}) => {
+      if (!state$) return true;
+      const current = state$.value.productionReducer;
+      if (generation !== current.communication.generation) return false;
+      if (!brewingStatus) return true;
+      const candidate = productionReducer(current, ProductionActions.setBrewingStatus(brewingStatus, 'sync', generation));
+      // Duplicates remain observable for terminal shutdown, but never overwrite.
+      return candidate.brewingStatus === brewingStatus || (!!brewingStatus.snapshotMetadata
+        && generation === current.communication.generation
+        && current.brewingStatus?.snapshotMetadata?.controllerEpoch === brewingStatus.snapshotMetadata.controllerEpoch
+        && current.brewingStatus?.snapshotMetadata?.revision === brewingStatus.snapshotMetadata.revision
+        && current.brewingStatus?.snapshotMetadata?.processInstanceId === brewingStatus.snapshotMetadata.processInstanceId);
+    }),
     takeWhile(({ brewingStatus }) => !(brewingStatus && (isProcessFinished(brewingStatus) || isProcessAborted(brewingStatus) || isProcessInError(brewingStatus))), true),
-    switchMap(({ available, brewingStatus }) => {
+    switchMap(({ available, brewingStatus, generation }) => {
       if (available?.isBackenAvailable && brewingStatus !== undefined) {
         // Store BrewingStatus in the data collector
-        dataCollector.setBrewingStatus(brewingStatus);
+        if (!state$) dataCollector.setBrewingStatus(brewingStatus);
         return [
-          ProductionActions.setBrewingStatus(brewingStatus),
+          ProductionActions.setBrewingStatus(brewingStatus, state$ ? 'sync' : 'http', generation),
         ];
       } else {
         return [ProductionActions.isBackenAvailable(available)];
@@ -197,12 +222,13 @@ const createBrewingStatusPolling$ = (action$: any) =>
     catchError((error) => of({ type: 'NO_OP' }))
   );
 
-export const startPollingEpic$ = (action$: any) =>
+export const startPollingEpic$ = (action$: any, state$?: {value: RootState}) =>
   action$.pipe(
     ofType(ProductionActions.ActionTypes.START_POLLING),
     // START_POLLING is a process lifecycle signal. Ignore repeats while the
     // current process poll is active instead of restarting or duplicating it.
-    exhaustMap(() => createBrewingStatusPolling$(action$))
+    filter(() => !state$ || !PROCESS_REALTIME_ENABLED || state$.value.productionReducer.communication.phase !== 'Synchronized'),
+    exhaustMap(() => createBrewingStatusPolling$(action$, state$))
   );
 
 const isValidBrewSession = (session: unknown): session is BrewSession =>
@@ -256,9 +282,9 @@ export const restoreBrewSessionEpic$ = (action$: any, state$: {value: RootState}
           actions.push(BeerActions.setSelectedBeer(reconstructedBeer));
           actions.push(BeerActions.setBeerToBrew(reconstructedBeer));
           if (!state$.value.productionReducer.isPollingRunning) {
-            // A newly observed controller session must not inherit retained
-            // measurements from an earlier session whose save may have failed.
-            dataCollector.reset();
+            // Versioned process identity owns history reset centrally. A normal
+            // socket session has no polling flag, including after reconnect.
+            if (!state$.value.productionReducer.brewingStatus?.snapshotMetadata) dataCollector.reset();
             actions.push(ProductionActions.startPolling());
           }
           return from(actions);
@@ -324,8 +350,9 @@ export const sendBrewingDataEpic$ = (action$: any, state$: {value: RootState}) =
     ofType(ProductionActions.ActionTypes.SEND_BREWING_DATA),
     // Recipe transfer plus StartBrewing form one non-idempotent command
     // lifecycle; a repeated dispatch must not start a second backend request.
-    exhaustMap((action: any) =>
-      from(ProductionRepository.sendBrewingData(action.payload.brewingData)).pipe(
+    exhaustMap((action: any) => defer(() => {
+      const generation = state$.value.productionReducer.communication.generation;
+      return from(ProductionRepository.sendBrewingData(action.payload.brewingData)).pipe(
         switchMap((sendResult) => {
           if (sendResult) {
             // Start the brewing process
@@ -335,7 +362,7 @@ export const sendBrewingDataEpic$ = (action$: any, state$: {value: RootState}) =
             return from(ProductionRepository.startBrewing(socketId)).pipe(
               mergeMap((brewingStatus) => brewingStatus
                 ? from([
-                    ProductionActions.setBrewingStatus(brewingStatus),
+                    ProductionActions.setBrewingStatus(brewingStatus, 'http', generation),
                     ProductionActions.startPolling(),
                   ])
                 : of(ProductionActions.brewingStartFailure('Der Controller konnte den Brauvorgang nicht starten.')))
@@ -345,28 +372,36 @@ export const sendBrewingDataEpic$ = (action$: any, state$: {value: RootState}) =
           }
         }),
         catchError((error) => of(ProductionActions.brewingStartFailure(error instanceof Error ? error.message : 'Braustart fehlgeschlagen.')))
-      )
-    )
+      );
+    }))
   );
 
-export const confirmEpic$ = (action$: any) =>
+export const confirmEpic$ = (action$: any, state$?: {value: RootState}) =>
   action$.pipe(
     ofType(ProductionActions.ActionTypes.CONFIRM),
-    exhaustMap((action: any) =>
-      from(ProductionRepository.confirm(action.payload.confirmState)).pipe(
+    filter(() => !state$ || state$.value.productionReducer.confirmation.phase === 'CommandPending'),
+    exhaustMap((action: any) => defer(() => {
+      const generation = state$?.value.productionReducer.communication.generation;
+      const expected = state$?.value.productionReducer.brewingStatus?.snapshotMetadata;
+      return from(expected
+        ? ProductionRepository.confirm(action.payload.confirmState, expected)
+        : ProductionRepository.confirm(action.payload.confirmState)).pipe(
         mergeMap((brewingStatus) => from([
-          ProductionActions.setBrewingStatus(brewingStatus),
+          ProductionActions.setBrewingStatus(brewingStatus, 'http', generation),
+          ...(state$ ? [{type: ProductionActions.ActionTypes.CONFIRM_ACCEPTED}] : []),
           ProductionActions.confirmSuccess(),
         ])),
         catchError((error) => {
-          const message = error instanceof Error ? error.message : 'Bestätigung fehlgeschlagen';
+          if (state$?.value.productionReducer.confirmation.phase === 'Completed') return of(ProductionActions.confirmSuccess());
+          const message = errorMessage(error, 'Bestätigung fehlgeschlagen');
           return from([
             ProductionActions.confirmFailure(message),
+            ProductionActions.requestStatusSync(),
             ApplicationActions.openErrorDialog(true, 'Bestätigung fehlgeschlagen', message),
           ]);
         })
-      )
-    )
+      );
+    }))
   );
 
 export const checkIsBackendAvailableEpic$ = (action$: any) =>
@@ -385,24 +420,25 @@ export const checkIsBackendAvailableEpic$ = (action$: any) =>
     )
   );
 
-export const nextProcedureStepEpic$ = (action$: any) =>
+export const nextProcedureStepEpic$ = (action$: any, state$?: {value: RootState}) =>
   action$.pipe(
     ofType(ProductionActions.ActionTypes.NEXT_PROCEDURE_STEP),
-    exhaustMap(() =>
-      from(ProductionRepository.nextProcedureStep()).pipe(
+    exhaustMap(() => defer(() => {
+      const generation = state$?.value.productionReducer.communication.generation;
+      return from(ProductionRepository.nextProcedureStep()).pipe(
         mergeMap((brewingStatus) => brewingStatus
           ? from([
-              ProductionActions.setBrewingStatus(brewingStatus),
+              ProductionActions.setBrewingStatus(brewingStatus, 'http', generation),
               ProductionActions.nextProcedureStepSuccess(),
             ])
           : of(ProductionActions.nextProcedureStepFailure('Fehler beim nächsten Schritt'))
         ),
         catchError((error) => of(ProductionActions.nextProcedureStepFailure(error)))
-      )
-    )
+      );
+    }))
   );
 
-export const productionWebSocketEpic$ = (action$: any) =>
+export const productionWebSocketEpic$ = (action$: any, state$?: {value: RootState}) =>
   action$.pipe(
     ofType(
       ProductionActions.ActionTypes.WEBSOCKET_CONNECT,
@@ -415,9 +451,18 @@ export const productionWebSocketEpic$ = (action$: any) =>
         }
         return new Observable((observer) => {
           wsController!.onMessage((event) => {
-            const action = mapControlSocketEvent(event);
-            if (action) {
-              observer.next(action);
+            const generation = state$?.value.productionReducer.communication.generation;
+            if (event.event === 'brewing-telemetry' && PROCESS_REALTIME_ENABLED && state$) {
+              const status = mergeTelemetry(event.data, state$.value.productionReducer.brewingStatus);
+              if (status) observer.next(ProductionActions.setBrewingStatus(status, 'telemetry', generation));
+              return;
+            }
+            const mapped = mapControlSocketEvent(event);
+            if (mapped) {
+              if (mapped.type === ProductionActions.ActionTypes.SET_BREWING_STATUS) {
+                const statusAction = mapped as ProductionActions.SetBrewingStatus;
+                observer.next(ProductionActions.setBrewingStatus(statusAction.payload.brewingStatus, statusAction.payload.source, generation));
+              } else observer.next(mapped);
             }
           });
           wsController!.connect();

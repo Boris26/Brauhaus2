@@ -660,6 +660,13 @@ export namespace ProductionActions {
         SEND_BREWING_DATA = 'ProductionActions.SEND_BREWING_DATA',
         BREWING_START_FAILURE = 'ProductionActions.BREWING_START_FAILURE',
         SET_BREWING_STATUS = 'ProductionActions.SET_BREWING_STATUS',
+        STATUS_RESYNC_REQUEST = 'ProductionActions.STATUS_RESYNC_REQUEST',
+        STATUS_STREAM_STALE = 'ProductionActions.STATUS_STREAM_STALE',
+        STATUS_HEARTBEAT = 'ProductionActions.STATUS_HEARTBEAT',
+        COMMUNICATION_PHASE = 'ProductionActions.COMMUNICATION_PHASE',
+        CONFIRM_ACCEPTED = 'ProductionActions.CONFIRM_ACCEPTED',
+        CONFIRM_SYNC_WAIT = 'ProductionActions.CONFIRM_SYNC_WAIT',
+
         START_POLLING = 'ProductionActions.START_POLLING',
         STOP_POLLING = 'ProductionActions.STOP_POLLING',
         CONFIRM = 'ProductionActions.CONFIRM',
@@ -729,7 +736,7 @@ export namespace ProductionActions {
 
     export interface SetBrewingStatus {
         readonly type: ActionTypes.SET_BREWING_STATUS
-        payload: { brewingStatus: BrewingStatus | undefined }
+        payload: { brewingStatus: BrewingStatus | undefined; source?: import("../utils/brewingStatus/snapshot").StatusSource; generation?: number }
     }
 
     export interface SendBrewingData {
@@ -832,7 +839,20 @@ export namespace ProductionActions {
     export interface DiscardBrewRecoverySuccess { readonly type: ActionTypes.DISCARD_BREW_RECOVERY_SUCCESS; payload: {requestGeneration: number}; }
     export interface DiscardBrewRecoveryFailure { readonly type: ActionTypes.DISCARD_BREW_RECOVERY_FAILURE; payload: {error: string; requestGeneration: number}; }
 
+    export interface CommunicationAction {
+        readonly type: ActionTypes.STATUS_RESYNC_REQUEST | ActionTypes.STATUS_STREAM_STALE |
+            ActionTypes.STATUS_HEARTBEAT | ActionTypes.COMMUNICATION_PHASE |
+            ActionTypes.CONFIRM_ACCEPTED | ActionTypes.CONFIRM_SYNC_WAIT;
+        payload?: any;
+    }
+
+    export function requestStatusSync(): CommunicationAction { return {type: ActionTypes.STATUS_RESYNC_REQUEST}; }
+    export function communicationPhase(phase: import('../utils/brewingStatus/snapshot').CommunicationPhase): CommunicationAction {
+        return {type: ActionTypes.COMMUNICATION_PHASE, payload: {phase}};
+    }
+
     export type AllProductionActions =
+        CommunicationAction |
         GetTemperatures |
         SetTemperatures |
         SetAgitatorSpeed |
@@ -914,10 +934,10 @@ export namespace ProductionActions {
         }
     }
 
-    export function setBrewingStatus(aBrewingStatus: BrewingStatus | undefined): SetBrewingStatus {
+    export function setBrewingStatus(aBrewingStatus: BrewingStatus | undefined, source: import("../utils/brewingStatus/snapshot").StatusSource = "http", generation?: number): SetBrewingStatus {
         return {
             type: ActionTypes.SET_BREWING_STATUS,
-            payload: {brewingStatus: aBrewingStatus}
+            payload: {brewingStatus: aBrewingStatus, source, generation}
         }
     }
 

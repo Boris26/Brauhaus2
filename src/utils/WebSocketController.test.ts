@@ -8,6 +8,13 @@ jest.mock('socket.io-client', () => ({
 type SocketListener = (data?: any) => void;
 
 describe('WebSocketController', () => {
+  let controllers: WebSocketController[] = [];
+  const createController = (url: string) => {
+    const controller = new WebSocketController(url);
+    controllers.push(controller);
+    return controller;
+  };
+  afterEach(() => {controllers.forEach(controller => controller.disconnect()); controllers = [];});
   const listeners: Record<string, SocketListener> = {};
   const socket = {
     id: undefined as string | undefined,
@@ -15,33 +22,37 @@ describe('WebSocketController', () => {
       listeners[event] = listener;
     }),
     disconnect: jest.fn(),
+    connect: jest.fn(),
+    removeAllListeners: jest.fn(),
+    io: {on: jest.fn(), off: jest.fn()},
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
     Object.keys(listeners).forEach((event) => delete listeners[event]);
+    socket.on.mockImplementation((event: string, listener: SocketListener) => {listeners[event] = listener;});
     (io as jest.Mock).mockReturnValue(socket);
     socket.id = undefined;
   });
 
   it('uses the current origin and default namespace for a relative REST prefix', () => {
-    const controller = new WebSocketController('/api/controller');
+    const controller = createController('/api/controller');
 
     controller.connect();
 
-    expect(io).toHaveBeenCalledWith({path: '/socket.io'});
+    expect(io).toHaveBeenCalledWith(expect.objectContaining({path: '/socket.io', reconnectionDelayMax: 30000}));
   });
 
   it('keeps an explicit absolute socket server URL while using the standard transport path', () => {
-    const controller = new WebSocketController('ws://controller');
+    const controller = createController('ws://controller');
 
     controller.connect();
 
-    expect(io).toHaveBeenCalledWith('ws://controller', {path: '/socket.io'});
+    expect(io).toHaveBeenCalledWith('ws://controller', expect.objectContaining({path: '/socket.io'}));
   });
 
   it('registers overheat and brew-session-running on the existing socket connection', () => {
-    const controller = new WebSocketController('ws://controller');
+    const controller = createController('ws://controller');
 
     controller.connect();
     controller.connect();
@@ -60,7 +71,7 @@ describe('WebSocketController', () => {
 
   it('forwards recovery true and false snapshots on the same connection', () => {
     const handler = jest.fn();
-    const controller = new WebSocketController('/api/controller');
+    const controller = createController('/api/controller');
     controller.onMessage(handler);
     controller.connect();
     const active = {available: true, recovery: {version: 1}};
@@ -73,7 +84,7 @@ describe('WebSocketController', () => {
 
   it('forwards brew-session-running with its payload to the message handler', () => {
     const handler = jest.fn();
-    const controller = new WebSocketController('ws://controller');
+    const controller = createController('ws://controller');
     controller.onMessage(handler);
     controller.connect();
 
@@ -84,7 +95,7 @@ describe('WebSocketController', () => {
 
   it('forwards brew-session-running when the server sends no payload', () => {
     const handler = jest.fn();
-    const controller = new WebSocketController('ws://controller');
+    const controller = createController('ws://controller');
     controller.onMessage(handler);
     controller.connect();
 
@@ -95,7 +106,7 @@ describe('WebSocketController', () => {
 
   it('forwards complete warning snapshots on the shared connection', () => {
     const handler = jest.fn();
-    const controller = new WebSocketController('ws://controller');
+    const controller = createController('ws://controller');
     controller.onMessage(handler);
     controller.connect();
     const snapshot = {warnings: [{type: 'TEMPERATURE_SENSOR', active: true, details: {health: 'MISSING'}}]};
@@ -107,7 +118,7 @@ describe('WebSocketController', () => {
 
   it('forwards complete temperature snapshots on the shared connection', () => {
     const handler = jest.fn();
-    const controller = new WebSocketController('ws://controller');
+    const controller = createController('ws://controller');
     controller.onMessage(handler);
     controller.connect();
     const snapshot = {current: null, health: 'MISSING', sensorId: '28-1'};
@@ -120,7 +131,7 @@ describe('WebSocketController', () => {
 
   it('forwards complete agitator defaults snapshots on the shared connection', () => {
     const handler = jest.fn();
-    const controller = new WebSocketController('/api/controller');
+    const controller = createController('/api/controller');
     controller.onMessage(handler);
     controller.connect();
     const snapshot = {speed: 75, intervalOnMinutes: 5, intervalOffMinutes: 2};
@@ -133,7 +144,7 @@ describe('WebSocketController', () => {
 
   it('forwards connect and disconnect with the current technical socket id', () => {
     const handler = jest.fn();
-    const controller = new WebSocketController('ws://controller');
+    const controller = createController('ws://controller');
     controller.onMessage(handler);
     controller.connect();
     socket.id = 'abc123';
@@ -146,7 +157,7 @@ describe('WebSocketController', () => {
 
   it('uses only the new socket id after a reconnect', () => {
     const handler = jest.fn();
-    const controller = new WebSocketController('ws://controller');
+    const controller = createController('ws://controller');
     controller.onMessage(handler);
     controller.connect();
     socket.id = 'abc123';
@@ -157,4 +168,33 @@ describe('WebSocketController', () => {
 
     expect(handler).toHaveBeenLastCalledWith({event: 'connection-status', data: {connected: true, socketId: 'xyz789'}});
   });
+  it('reports connect_error and cleans up listeners and stale callbacks', () => {
+    const handler = jest.fn();
+    const controller = createController('/api/controller');
+    controller.onMessage(handler);
+    controller.connect();
+    listeners.connect_error();
+    expect(handler).toHaveBeenLastCalledWith({event: 'connection-error'});
+    const oldSnapshot = listeners['brewing-status-changed'];
+    controller.disconnect();
+    handler.mockClear();
+    oldSnapshot({revision: 1});
+    expect(handler).not.toHaveBeenCalled();
+    expect(socket.removeAllListeners).toHaveBeenCalledTimes(1);
+    expect(socket.io.off).toHaveBeenCalledWith('reconnect_attempt', expect.any(Function));
+  });
+
+  it('handles browser offline/online without creating a second connection', () => {
+    const controller = createController('/api/controller');
+    controller.connect();
+    window.dispatchEvent(new Event('offline'));
+    window.dispatchEvent(new Event('online'));
+    expect(socket.disconnect).toHaveBeenCalledTimes(1);
+    expect(socket.connect).toHaveBeenCalledTimes(1);
+    expect(io).toHaveBeenCalledTimes(1);
+    controller.disconnect();
+    window.dispatchEvent(new Event('online'));
+    expect(socket.connect).toHaveBeenCalledTimes(1);
+  });
+
 });

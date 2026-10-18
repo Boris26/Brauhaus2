@@ -305,3 +305,13 @@ explicit OFF through FillWaterStop and WaterStatus. STARTING is pending, partial
 closure is not recipe completion, and zero required Nachguss allows Hauptguss.
 Existing endpoints, liter units and acknowledgement bodies remain compatible.
 Deployment and real-hardware calibration remain **Needs verification**.
+
+
+## Coordinated process realtime migration
+
+The current implementation supersedes the earlier polling-only descriptions:
+Socket.IO supplies versioned process snapshots and throttled telemetry; HTTP status
+polling runs only while disconnected/unsynchronized. All process inputs share the
+reducer acceptance gate. See `docs/codex/interfaces.md`, “Process realtime
+communication migration”, for metadata, conditional confirmations, fallback,
+collector, flags and compatibility details. No BeerDataStore/gateway changes.

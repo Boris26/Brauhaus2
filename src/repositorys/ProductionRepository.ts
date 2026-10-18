@@ -6,7 +6,7 @@ import store from "../store";
 import {MashAgitatorStates} from "../model/MashAgitator";
 import {BrewingData} from "../model/BrewingData";
 import {BrewingStatus} from "../model/brewingStatus.types";
-import {normalizeBrewingStatus} from "../utils/brewingStatus/normalizeBrewingStatus";
+import {SnapshotMetadata, statusFromResponse} from "../utils/brewingStatus/snapshot";
 import {ConfirmStates} from "../enums/eConfirmStates";
 import {WaterStatus} from "../components/Controlls/WaterControll/WaterControl";
 import {BackendAvailable} from "../reducers/productionReducer";
@@ -24,10 +24,14 @@ interface ControlRequestConfig {
         timeout: number;
     };
     timeoutHandle: ReturnType<typeof setTimeout>;
+    cleanup: () => void;
 }
 
-const createRequestConfig = (aTimeoutMs: number = DEFAULT_CONTROL_REQUEST_TIMEOUT): ControlRequestConfig => {
+const createRequestConfig = (aTimeoutMs: number = DEFAULT_CONTROL_REQUEST_TIMEOUT, signal?: AbortSignal): ControlRequestConfig => {
     const aController = new AbortController();
+    const abort = () => aController.abort();
+    signal?.addEventListener('abort', abort, {once: true});
+    if (signal?.aborted) abort();
     const aTimeoutHandle = setTimeout((): void => {
         aController.abort();
     }, aTimeoutMs);
@@ -38,11 +42,13 @@ const createRequestConfig = (aTimeoutMs: number = DEFAULT_CONTROL_REQUEST_TIMEOU
             timeout: aTimeoutMs,
         },
         timeoutHandle: aTimeoutHandle,
+        cleanup: () => signal?.removeEventListener('abort', abort),
     };
 };
 
 const clearRequestTimeout = (aRequestConfig: ControlRequestConfig): void => {
     clearTimeout(aRequestConfig.timeoutHandle);
+    aRequestConfig.cleanup();
 };
 
 const normalizeWaterStatus = (aValue: unknown): WaterStatus => {
@@ -71,8 +77,13 @@ export class ProductionRepository {
     private static pendingWaterStart?: Promise<boolean>;
 
     static async getBrewSession(): Promise<BrewSession> {
-        const response = await axios.get<BrewSession>(`${BaseURL}/BrewSession`);
-        return response.data;
+        const request = createRequestConfig();
+        try {
+            const response = await axios.get<BrewSession>(`${BaseURL}/BrewSession`, request.config);
+            return response.data;
+        } finally {
+            clearRequestTimeout(request);
+        }
     }
 
     static async resumeBrewRecovery(aBrewingData: BrewingData): Promise<void> {
@@ -151,16 +162,16 @@ export class ProductionRepository {
          return await this._doGetWaterFillStatus(aTimeoutMs, aFailOnError);
     }
 
-    static async confirm(aConfirmState: ConfirmStates): Promise<BrewingStatus> {
-        return await ProductionRepository._doConfirm(aConfirmState);
+    static async confirm(aConfirmState: ConfirmStates, expected?: SnapshotMetadata): Promise<BrewingStatus> {
+        return await ProductionRepository._doConfirm(aConfirmState, expected);
     }
 
     static async sendBrewingData(aBrewingData: BrewingData) {
         return await ProductionRepository._doSendBrewingData(aBrewingData);
     }
 
-    static async getBrewingStatus(aTimeoutMs?: number): Promise<{ available: BackendAvailable, brewingStatus: BrewingStatus | undefined }> {
-       return await this._doGetBrewingStatus(aTimeoutMs);
+    static async getBrewingStatus(aTimeoutMs?: number, signal?: AbortSignal): Promise<{ available: BackendAvailable, brewingStatus: BrewingStatus | undefined }> {
+       return await this._doGetBrewingStatus(aTimeoutMs, signal);
     }
 
     static async getDiagnosticVersion(): Promise<string> {
@@ -180,9 +191,19 @@ export class ProductionRepository {
     }
 
 
-    private static async _doConfirm(aConfirmState: ConfirmStates): Promise<BrewingStatus> {
-        const response = await axios.post(ConfirmURL + aConfirmState);
-        return normalizeBrewingStatus(response.data);
+    private static async _doConfirm(aConfirmState: ConfirmStates, expected?: SnapshotMetadata): Promise<BrewingStatus> {
+        const request = createRequestConfig();
+        try {
+            const config = expected ? {...request.config, headers: {
+                'X-Controller-Epoch': expected.controllerEpoch,
+                'X-Process-Instance': expected.processInstanceId,
+                'X-Expected-State-Revision': String(expected.stateRevision),
+            }} : request.config;
+            const response = await axios.post(ConfirmURL + aConfirmState, undefined, config);
+            return statusFromResponse(response);
+        } finally {
+            clearRequestTimeout(request);
+        }
     }
 
     private static async _doGetTemperature(): Promise<number> {
@@ -222,26 +243,27 @@ export class ProductionRepository {
     }
 
     private static async _doStartBrewing(aSocketId?: string): Promise<BrewingStatus | undefined> {
+        const request = createRequestConfig();
         try {
-            const config = aSocketId ? {headers: {'X-Socket-ID': aSocketId}} : undefined;
-            const response = config
-                ? await axios.post(CommandsURL + `StartBrewing:""`, undefined, config)
-                : await axios.post(CommandsURL + `StartBrewing:""`);
-            return response.status === 200 ? normalizeBrewingStatus(response.data) : undefined;
+            const config = aSocketId ? {...request.config, headers: {'X-Socket-ID': aSocketId}} : request.config;
+            const response = await axios.post(CommandsURL + `StartBrewing:""`, undefined, config);
+            return response.status === 200 ? statusFromResponse(response) : undefined;
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);
+        } finally {
+            clearRequestTimeout(request);
         }
     }
 
-    private static async _doGetBrewingStatus(aTimeoutMs?: number): Promise<{ available: BackendAvailable, brewingStatus: BrewingStatus | undefined }> {
-        const aConfig = createRequestConfig(aTimeoutMs);
+    private static async _doGetBrewingStatus(aTimeoutMs?: number, signal?: AbortSignal): Promise<{ available: BackendAvailable, brewingStatus: BrewingStatus | undefined }> {
+        const aConfig = createRequestConfig(aTimeoutMs, signal);
         try {
             const response = await axios.get(`${BaseURL}/Status/`, aConfig.config);
             if (response.status === 200) {
                 const available: BackendAvailable = {
                     isBackenAvailable: true, statusText: response.statusText
                 };
-                const parsedBrewingStatus: BrewingStatus = normalizeBrewingStatus(response.data);
+                const parsedBrewingStatus: BrewingStatus = statusFromResponse(response);
                 return { available, brewingStatus: parsedBrewingStatus };
             } else {
                 const available: BackendAvailable = {
@@ -272,13 +294,16 @@ export class ProductionRepository {
     }
 
     private static async _doSendBrewingData(aBrewingData: BrewingData) {
+        const request = createRequestConfig();
         try {
-            const response = await axios.post(`${BaseURL}/Recipe/`, aBrewingData);
+            const response = await axios.post(`${BaseURL}/Recipe/`, aBrewingData, request.config);
 
             return response.status === 201;
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);
             return false;
+        } finally {
+            clearRequestTimeout(request);
         }
 
     }
@@ -343,21 +368,27 @@ export class ProductionRepository {
     }
 
     private static async _doCheckIsBackendAvailable(): Promise<boolean> {
+        const request = createRequestConfig();
         try {
-            const response = await axios.get(`${BaseURL}/Available/`);
+            const response = await axios.get(`${BaseURL}/Available/`, request.config);
             return response.status === 200;
         } catch (error) {
             return false;
+        } finally {
+            clearRequestTimeout(request);
         }
     }
 
     private static async _doNextProcedureStep(): Promise<BrewingStatus | undefined> {
+        const request = createRequestConfig();
         try {
-            const response = await axios.post(`${BaseURL}/next`);
-            return response.status === 200 ? normalizeBrewingStatus(response.data) : undefined;
+            const response = await axios.post(`${BaseURL}/next`, undefined, request.config);
+            return response.status === 200 ? statusFromResponse(response) : undefined;
         } catch (error) {
             console.error('Fehler beim API-Aufruf', error);
             return undefined;
+        } finally {
+            clearRequestTimeout(request);
         }
     }
 

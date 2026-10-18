@@ -26,6 +26,19 @@ describe('ProductionRepository API method/path usage', () => {
     mockedAxios.delete.mockResolvedValue({ status: 200, data: {}, statusText: 'OK' } as any);
   });
 
+  it('aborts a status request when its observing fallback is stopped', async () => {
+    const controller = new AbortController();
+    let signal!: AbortSignal;
+    mockedAxios.get.mockImplementationOnce((_url: any, config: any) => {
+      signal = config.signal;
+      return new Promise((_resolve, reject) => signal.addEventListener('abort', () => reject(new Error('aborted'))));
+    });
+    const result = ProductionRepository.getBrewingStatus(8000, controller.signal);
+    controller.abort();
+    expect(signal.aborted).toBe(true);
+    expect((await result).available.isBackenAvailable).toBe(false);
+  });
+
   it('serializes a rapid stop after an in-flight fill start and sends its mode', async () => {
     let completeStart!: (value: any) => void;
     mockedAxios.post.mockImplementationOnce(() => new Promise(resolve => {completeStart = resolve;}));
@@ -73,7 +86,7 @@ describe('ProductionRepository API method/path usage', () => {
     mockedAxios.post.mockResolvedValueOnce({status: 200, data: canonicalStatus} as any);
     await ProductionRepository.confirm(ConfirmStates.IODINE);
 
-    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Confirm/Iodine'));
+    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Confirm/Iodine'), undefined, expect.objectContaining({timeout: 8000}));
     expect(mockedAxios.post).not.toHaveBeenCalledWith(expect.stringContaining('/Confirm/Wait'));
     expect(mockedAxios.get).not.toHaveBeenCalledWith(expect.stringContaining('/Confirm/'));
   });
@@ -88,12 +101,12 @@ describe('ProductionRepository API method/path usage', () => {
 
   it('uses POST for decoction confirm action', async () => {
     await ProductionRepository.confirm(ConfirmStates.DECOCTION);
-    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Confirm/Decoction'));
+    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Confirm/Decoction'), undefined, expect.objectContaining({timeout: 8000}));
   });
 
   it('uses POST /Confirm/DecoctionReturned for the decoction return confirmation', async () => {
     await ProductionRepository.confirm(ConfirmStates.DECOCTION_RETURNED);
-    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Confirm/DecoctionReturned'));
+    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Confirm/DecoctionReturned'), undefined, expect.objectContaining({timeout: 8000}));
   });
 
   it('rejects when the confirm request fails', async () => {
@@ -108,7 +121,7 @@ describe('ProductionRepository API method/path usage', () => {
     await ProductionRepository.fillWaterAutomatic(15);
     await ProductionRepository.setAgitatorSpeed(22);
 
-    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Command/StartBrewing:""'));
+    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Command/StartBrewing:""'), undefined, expect.objectContaining({timeout: 8000}));
     expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Command/FillWaterAutomatic:15'), undefined, expect.objectContaining({timeout: 8000}));
     expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/Command/Speed:22'));
   });
@@ -119,7 +132,7 @@ describe('ProductionRepository API method/path usage', () => {
     expect(mockedAxios.post).toHaveBeenCalledWith(
       expect.stringContaining('/Command/StartBrewing:""'),
       undefined,
-      {headers: {'X-Socket-ID': 'socket-123'}}
+      expect.objectContaining({headers: {'X-Socket-ID': 'socket-123'}, timeout: 8000})
     );
   });
 
@@ -136,7 +149,7 @@ describe('ProductionRepository API method/path usage', () => {
   it('uses POST /next for next procedure step', async () => {
     await ProductionRepository.nextProcedureStep();
 
-    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/next'));
+    expect(mockedAxios.post).toHaveBeenCalledWith(expect.stringContaining('/next'), undefined, expect.objectContaining({timeout: 8000}));
     expect(mockedAxios.get).not.toHaveBeenCalledWith(expect.stringContaining('/Command/next'));
   });
 
@@ -159,14 +172,14 @@ describe('ProductionRepository API method/path usage', () => {
 
     expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining('/WaterStatus'), expect.objectContaining({timeout: expect.any(Number)}));
     expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining('/Status/'), expect.objectContaining({timeout: expect.any(Number)}));
-    expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining('/Available/'));
+    expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining('/Available/'), expect.objectContaining({timeout: 8000}));
   });
 
   it('loads the typed BrewSession from GET /BrewSession and propagates failures', async () => {
     const session = {beerId: 'beer-1', plannedVolume: 25, plannedBrewhouseEfficiency: 61};
     mockedAxios.get.mockResolvedValueOnce({status: 200, data: session} as any);
     await expect(ProductionRepository.getBrewSession()).resolves.toEqual(session);
-    expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining('/BrewSession'));
+    expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining('/BrewSession'), expect.objectContaining({timeout: 8000}));
 
     const error = new Error('HTTP 404');
     mockedAxios.get.mockRejectedValueOnce(error);
@@ -206,7 +219,8 @@ describe('ProductionRepository API method/path usage', () => {
 
     expect(mockedAxios.post).toHaveBeenCalledWith(
       expect.stringContaining('/Recipe/'),
-      expect.objectContaining({ CookingTime: 60 })
+      expect.objectContaining({ CookingTime: 60 }),
+      expect.objectContaining({timeout: 8000})
     );
     expect(result).toBe(true);
   });
@@ -227,7 +241,8 @@ describe('ProductionRepository API method/path usage', () => {
         Rasten: expect.arrayContaining([
           expect.objectContaining({ executionMode: 'CONFIRMATION_HOLD' })
         ])
-      })
+      }),
+      expect.objectContaining({timeout: 8000})
     );
   });
 

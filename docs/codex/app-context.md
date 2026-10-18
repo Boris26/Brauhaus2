@@ -126,3 +126,13 @@ recipe accumulation. The existing one-second water poll and realtime temperature
 sensor updates remain the sole measurement sources. See
 [Water filling lifecycle](water-filling-lifecycle.md#production-measurement-cards)
 for the display semantics and the constant-zero investigation.
+
+
+## Coordinated process realtime migration
+
+The current implementation supersedes the earlier polling-only descriptions:
+Socket.IO supplies versioned process snapshots and throttled telemetry; HTTP status
+polling runs only while disconnected/unsynchronized. All process inputs share the
+reducer acceptance gate. See `docs/codex/interfaces.md`, “Process realtime
+communication migration”, for metadata, conditional confirmations, fallback,
+collector, flags and compatibility details. No BeerDataStore/gateway changes.

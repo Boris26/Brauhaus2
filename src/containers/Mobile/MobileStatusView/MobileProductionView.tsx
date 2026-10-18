@@ -19,6 +19,7 @@ interface MobileProductionViewProps {
     confirm: (confirmState: ConfirmStates) => void;
     isConfirmPending: boolean;
     confirmError?: string;
+    confirmStatusText?: string;
     isBrewingStatusStale: boolean;
     realtimeState?: RealtimeControllerState;
     socketConnected?: boolean;
@@ -163,7 +164,7 @@ export class MobileProductionView extends React.Component<MobileProductionViewPr
                         </div>
                         {confirmationRequest && (
                             <div className="mobile-confirmation-wrapper">
-                                <ControlConfirmationNotice request={confirmationRequest} pending={this.props.isConfirmPending} errorMessage={this.props.confirmError} onConfirm={this.confirmCurrentWaitingState} />
+                                <ControlConfirmationNotice request={confirmationRequest} pending={this.props.isConfirmPending} errorMessage={this.props.confirmError} statusText={this.props.confirmStatusText} onConfirm={this.confirmCurrentWaitingState} />
                             </div>
                         )}
                     </>
