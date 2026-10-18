@@ -63,23 +63,23 @@ const Gauge = memo(function Gauge({value, targetValue, minValue, maxValue, offse
         <svg viewBox="0 0 220 220" role="img" aria-label={`${isWater ? 'Wassermenge' : 'Temperatur'}: ${formattedValue} ${unit}`}>
             <defs>
                 <linearGradient id={`${id}-rim`} x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0" stopColor="#f7f7f5" />
-                    <stop offset="0.5" stopColor="#c8cccb" />
-                    <stop offset="1" stopColor="#f0f1ed" />
+                    <stop offset="0" stopColor="var(--border-strong)" />
+                    <stop offset="0.5" stopColor="var(--border-subtle)" />
+                    <stop offset="1" stopColor="var(--border-default)" />
                 </linearGradient>
                 <radialGradient id={`${id}-face`} cx="45%" cy="35%" r="70%">
-                    <stop offset="0" stopColor="#ffffff" />
-                    <stop offset="1" stopColor="#e9ebe8" />
+                    <stop offset="0" stopColor="var(--bg-card)" />
+                    <stop offset="1" stopColor="var(--bg-panel)" />
                 </radialGradient>
             </defs>
             <circle cx="110" cy="110" r="105" fill={`url(#${id}-rim)`} />
-            <circle cx="110" cy="110" r="97" fill={`url(#${id}-face)`} stroke="#fdfdfb" strokeWidth="2" />
+            <circle cx="110" cy="110" r="97" fill={`url(#${id}-face)`} stroke="var(--border-default)" strokeWidth="1" />
             <g className="gauge__areas" fill="none" strokeWidth="9">
-                {isWater && hasValue && renderArea(minValue, value, '#76b5fa')}
+                {isWater && hasValue && renderArea(minValue, value, 'var(--accent)')}
                 {!isWater && showAreas && targetValue !== null && Number.isFinite(targetValue) && targetValue !== 0 && <>
-                    {renderArea(minValue, targetValue - offset, '#f3cf65')}
-                    {renderArea(targetValue - 1, targetValue + 1, '#7ab78a')}
-                    {renderArea(targetValue + offset, maxValue, '#ec9a89')}
+                    {renderArea(minValue, targetValue - offset, 'var(--color-warning)')}
+                    {renderArea(targetValue - 1, targetValue + 1, 'var(--color-success)')}
+                    {renderArea(targetValue + offset, maxValue, 'var(--color-error)')}
                 </>}
             </g>
             <g className="gauge__scale">{ticks}</g>
