@@ -1,0 +1,53 @@
+.gauge {
+    width: 100%;
+    min-width: 0;
+    aspect-ratio: 1;
+}
+
+.gauge svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    font-family: inherit;
+}
+
+.gauge__scale {
+    stroke: #505752;
+}
+
+.gauge__scale text {
+    fill: #333a36;
+    stroke: none;
+    font-size: 10px;
+}
+
+.gauge__unit {
+    fill: #151a17;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.gauge__value {
+    fill: #080b09;
+    font-size: 23px;
+    font-weight: 750;
+    font-variant-numeric: tabular-nums;
+}
+
+.gauge__needle {
+    fill: #ee5737;
+    stroke: #ce442b;
+    stroke-width: 0.7px;
+}
+
+.gauge--water .gauge__needle {
+    fill: #96bafa;
+    stroke: #5288d7;
+}
+
+.gauge__hub {
+    fill: #548bfa;
+    stroke: #3c73dc;
+    stroke-width: 1px;
+}
