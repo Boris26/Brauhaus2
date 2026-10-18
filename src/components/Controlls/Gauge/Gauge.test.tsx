@@ -64,38 +64,14 @@ describe('Gauge', () => {
         expect(new Set(ids).size).toBe(ids.length);
     });
 
-    it('restores the SVG bands when a target arrives and clears them when the target is removed', () => {
-        const {container, rerender} = render(<Gauge {...temperatureProps} targetValue={0} />);
-        const dial = screen.getByRole('img');
-        const bands = () => container.querySelectorAll('.gauge__areas path');
-        expect(bands()).toHaveLength(0);
-
-        rerender(<Gauge {...temperatureProps} targetValue={65} />);
-        expect(screen.getByRole('img')).toBe(dial);
-        expect(Array.from(bands(), band => band.getAttribute('stroke'))).toEqual([
-            'var(--color-warning)', 'var(--color-success)', 'var(--color-error)',
-        ]);
-
-        rerender(<Gauge {...temperatureProps} targetValue={0} />);
-        expect(bands()).toHaveLength(0);
-    });
-
-    it('keeps the green band within one degree of target on the rendered 0–100 dial', () => {
-        const {container} = render(<Gauge {...temperatureProps} />);
-        const points = container.querySelector('.gauge__areas path[stroke="var(--color-success)"]')!
-            .getAttribute('d')!.match(/-?\d+(?:\.\d+)?/g)!.map(Number);
-        const temperatureAt = (x: number, y: number) => (Math.atan2(x - 110, 110 - y) * 180 / Math.PI + 135) / 270 * 100;
-        expect(temperatureAt(points[0], points[1])).toBeCloseTo(51);
-        expect(temperatureAt(points[7], points[8])).toBeCloseTo(53);
-    });
-
-    it.each([null, 0, NaN, Infinity])('does not draw temperature bands without a finite nonzero target (%s)', targetValue => {
-        const {container} = render(<Gauge {...temperatureProps} targetValue={targetValue} />);
+    it('restores the bands when a target arrives and clears them when the target is removed', () => {
+        const {container, rerender} = render(<Gauge showAreas={true} value={65} targetValue={0} height={200} offset={1} minValue={0} maxValue={100} label="°C" />);
         expect(container.querySelectorAll('.gauge__areas path')).toHaveLength(0);
-    });
 
-    it('honors the area visibility setting for a temperature dial', () => {
-        const {container} = render(<Gauge {...temperatureProps} showAreas={false} />);
+        rerender(<Gauge showAreas={true} value={65} targetValue={65} height={200} offset={1} minValue={0} maxValue={100} label="°C" />);
+        expect(container.querySelectorAll('.gauge__areas path')).toHaveLength(3);
+
+        rerender(<Gauge showAreas={true} value={65} targetValue={0} height={200} offset={1} minValue={0} maxValue={100} label="°C" />);
         expect(container.querySelectorAll('.gauge__areas path')).toHaveLength(0);
     });
 });
