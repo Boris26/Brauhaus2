@@ -23,7 +23,7 @@ import {eBrewState} from "../../enums/eBrewState";
 import {BackendAvailable} from "../../reducers/productionReducer";
 import {ProcessList} from "./ProcessList/ProcessList";
 import { dataCollector } from '../../utils/DataCollector/dataCollector';
-import {isBrewingProcessActive, isProcessActive} from "../../utils/brewingStatus/selectors";
+import {getTargetTemperature, isBrewingProcessActive, isProcessActive} from "../../utils/brewingStatus/selectors";
 import {getVesselContentType} from "../../utils/brewingStatus/vesselContent";
 import {calculateHopSchedule, getDueHopAddition, HopAddition} from "./utils/hopSchedule";
 import {BrewingDisplayTimeAnchor, createBrewingDisplayTimeAnchor, projectBrewingDisplayTime, shouldCountdownLocally} from "./utils/productionCountdown";
@@ -765,7 +765,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
         const {brewingStatus} = this.props;
         const sensor = this.props.realtimeState?.temperatureSensor;
         const value = isTemperatureSensorReady(sensor, this.props.socketConnected) ? sensor.current : null;
-        const targetValue = isNaN(Number(brewingStatus?.temperature?.target)) ? 0 : Number(brewingStatus?.temperature?.target);
+        const targetValue = getTargetTemperature(brewingStatus, this.props.selectedBeer) ?? 0;
         return (<div className="Temp" aria-label={`Aktuelle Temperatur: ${formatTemperature(value)}`}>
             {value === null ? <div className="temperatureUnavailable" role="status">{formatTemperature(value)}</div> : <Gauge showAreas={true} value={value} targetValue={targetValue}
                    height={220}

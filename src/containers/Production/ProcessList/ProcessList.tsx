@@ -1,51 +1,14 @@
 import React from "react";
 import './ProcessList.css';
-import {Beer, FermentationSteps} from "../../../model/Beer";
-import {RestExecutionMode} from "../../../enums/eRestExecutionMode";
+import {Beer} from "../../../model/Beer";
 import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from "../../../model/brewingStatus.types";
-import {ProcedureType} from "../../../enums/eProcedureType";
 import {TimeFormatter} from "../../../utils/TimeFormatter";
-import {getConfirmationRequestViewModel} from "../../../utils/brewingStatus/selectors";
+import {getConfirmationRequestViewModel, getTargetTemperature} from "../../../utils/brewingStatus/selectors";
 import {ControlConfirmationNotice, HopReminderNotice} from "../components/InlineProcessNotice/InlineProcessNotice";
+import {createProcessSteps, getActiveProcessStepIndex, ProcessListCurrentStep, ProcessListDurationUnit, ProcessListStep} from '../../../utils/brewingStatus/processSteps';
 
-export enum ProcessListEntryType {
-    HEATING = "HEATING",
-    PROCESS = "PROCESS",
-    DISPLAY = "DISPLAY"
-}
-
-export enum ProcessListDurationUnit {
-    MINUTES = "MINUTES",
-    SECONDS = "SECONDS"
-}
-
-export interface ProcessStepDetail {
-    temperature?: number;
-    duration?: number;
-    durationUnit?: ProcessListDurationUnit;
-    confirmationRequired?: boolean;
-}
-
-
-export interface ProcessListCurrentStep {
-    index?: number;
-    phase?: ProcessPhase;
-    mode?: ProcessMode;
-    name?: string;
-}
-
-export interface ProcessListStep {
-    name: string;
-    entryType?: ProcessListEntryType;
-    /**
-     * 1-based index reported by the PI control in brewingStatus.currentStep.index.
-     * Heating and execution rows can share the same control step index; the
-     * currentStep.mode decides which visible row is active.
-     */
-    controlStepIndex?: number;
-    phase?: ProcessPhase;
-    detail?: ProcessStepDetail;
-}
+export {createProcessSteps, getActiveProcessStepIndex, ProcessListDurationUnit, ProcessListEntryType} from '../../../utils/brewingStatus/processSteps';
+export type {ProcessListCurrentStep, ProcessListStep, ProcessStepDetail} from '../../../utils/brewingStatus/processSteps';
 
 export interface ProcessListProps {
     selectedBeer: Beer;
@@ -150,9 +113,9 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
         return activeStep?.name ?? this.props.currentStep?.name ?? 'Kein aktiver Prozessschritt';
     }
 
-    getCurrentStepMeta(activeStep: ProcessListStep | undefined, isProcessStarted: boolean): React.ReactNode {
+    getCurrentStepMeta(isProcessStarted: boolean): React.ReactNode {
         const {brewingStatus} = this.props;
-        const targetTemperature = brewingStatus?.temperature?.target ?? this.getRelatedRastTemperature(activeStep) ?? activeStep?.detail?.temperature;
+        const targetTemperature = getTargetTemperature(brewingStatus, this.props.selectedBeer);
         const metaItems: React.ReactNode[] = [];
 
         if (!isProcessStarted) {
@@ -171,14 +134,6 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
         }
 
         return <div className="current-step-meta">{metaItems}</div>;
-    }
-
-    getRelatedRastTemperature(activeStep: ProcessListStep | undefined): number | undefined {
-        if (this.props.brewingStatus?.currentStep?.phase !== ProcessPhase.DECOCTION) return undefined;
-        const decoctionName = this.props.brewingStatus.currentStep.name ?? activeStep?.name;
-        const decoction = this.props.selectedBeer.fermentation.find((step) => step.procedureType === ProcedureType.DECOCTION && step.type === decoctionName);
-        if (!decoction?.relatedRastId) return undefined;
-        return this.props.selectedBeer.fermentation.find((step) => step.stepId === decoction.relatedRastId && step.procedureType !== ProcedureType.DECOCTION)?.temperature;
     }
 
     isHeatingStatus(): boolean {
@@ -204,8 +159,8 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
 
     renderTemperatureProgress(): React.ReactNode {
         const currentTemperature = Number(this.props.brewingStatus?.temperature?.current);
-        const targetTemperature = Number(this.props.brewingStatus?.temperature?.target);
-        if (!Number.isFinite(currentTemperature) || currentTemperature <= 0 || !Number.isFinite(targetTemperature) || targetTemperature <= 0) {
+        const targetTemperature = getTargetTemperature(this.props.brewingStatus, this.props.selectedBeer);
+        if (!Number.isFinite(currentTemperature) || currentTemperature <= 0 || typeof targetTemperature !== 'number' || !Number.isFinite(targetTemperature) || targetTemperature <= 0) {
             return null;
         }
 
@@ -295,7 +250,7 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
         const confirmationRequest = getConfirmationRequestViewModel(this.props.brewingStatus);
         if (confirmationRequest) {
             const heldMashTemperature = this.props.brewingStatus?.currentStep?.phase === ProcessPhase.DECOCTION
-                ? this.props.brewingStatus?.temperature?.target ?? this.getRelatedRastTemperature(undefined)
+                ? getTargetTemperature(this.props.brewingStatus, this.props.selectedBeer)
                 : undefined;
             return <ControlConfirmationNotice request={confirmationRequest} pending={this.props.confirmationPending === true} onConfirm={this.props.onConfirmWaiting} heldMashTemperature={heldMashTemperature} errorMessage={this.props.confirmationError} />;
         }
@@ -348,7 +303,7 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
                         <>
                             <div className="current-step-heading">
                                 <div><h4>{this.getCurrentStepTitle(activeStep)}</h4></div>
-                                {this.getCurrentStepMeta(activeStep, true)}
+                                {this.getCurrentStepMeta(true)}
                             </div>
                             {!confirmationRequest && this.renderStatusSection(true)}
                             {this.renderInlineNotice()}
@@ -429,83 +384,4 @@ export class ProcessList extends React.Component<ProcessListProps, ProcessListSt
             </div>
         );
     }
-}
-
-
-// -------------------------------------------------------
-// PROCESS STEPS GENERATION
-// -------------------------------------------------------
-
-export function createProcessSteps(selectedBeer: Beer): ProcessListStep[] {
-    let processSteps: ProcessListStep[] = [];
-    if (!selectedBeer || !Array.isArray(selectedBeer.fermentation)) {
-        return processSteps;
-    }
-
-    const fermentation = selectedBeer.fermentation;
-    let controlStepIndex = 1;
-
-    // Einmaischen
-    const einmaischen = fermentation.find(step => step.type === 'Einmaischen');
-    if (einmaischen) {
-        processSteps.push({ name: `Aufheizen für Einmaischen`, entryType: ProcessListEntryType.HEATING, controlStepIndex, phase: ProcessPhase.MASHING_IN, detail: {temperature: einmaischen.temperature} });
-        processSteps.push({ name: 'Einmaischen', entryType: ProcessListEntryType.PROCESS, controlStepIndex, phase: ProcessPhase.MASHING_IN, detail: {temperature: einmaischen.temperature, confirmationRequired: true} });
-        controlStepIndex++;
-    }
-
-    let lastMashStepIndex = -1;
-
-    // Sequenzielle Maischeschritte (Rasten und Dekoktionen)
-    fermentation.forEach((step: FermentationSteps) => {
-        const isConfirmationHold = (step.executionMode ?? RestExecutionMode.TIMED) === RestExecutionMode.CONFIRMATION_HOLD;
-        const procedureType = step.procedureType ?? (isConfirmationHold ? ProcedureType.DECOCTION : ProcedureType.RAST);
-        const isFixedStep = ['Einmaischen', 'Abmaischen', 'Kochen'].includes(step.type);
-        if (!isFixedStep) {
-            const phase = procedureType === ProcedureType.DECOCTION ? ProcessPhase.DECOCTION : ProcessPhase.RAST;
-            if (procedureType === ProcedureType.RAST) processSteps.push({ name: `Aufheizen für ${step.type}`, entryType: ProcessListEntryType.HEATING, controlStepIndex, phase, detail: {temperature: step.temperature} });
-            processSteps.push({ name: step.type || (phase === ProcessPhase.DECOCTION ? 'Dekoktion' : 'Rast'), entryType: ProcessListEntryType.PROCESS, controlStepIndex, phase, detail: {temperature: step.temperature, duration: step.time, durationUnit: ProcessListDurationUnit.MINUTES, confirmationRequired: procedureType === ProcedureType.DECOCTION} });
-            controlStepIndex++;
-            lastMashStepIndex = processSteps.length - 1;
-        }
-    });
-
-    // Jod-Probe nach letztem Maischeschritt (Rast oder Dekoktion)
-    if (lastMashStepIndex !== -1) {
-        processSteps.splice(lastMashStepIndex + 1, 0, { name: 'Jod Probe', entryType: ProcessListEntryType.DISPLAY, detail: {confirmationRequired: true} });
-    }
-
-    // Abmaischen
-    const abmaischen = fermentation.find(step => step.type === 'Abmaischen');
-    if (abmaischen) {
-        processSteps.push({ name: `Aufheizen für Abmaischen`, entryType: ProcessListEntryType.HEATING, controlStepIndex, phase: ProcessPhase.MASHING_OUT, detail: {temperature: abmaischen.temperature} });
-        processSteps.push({ name: 'Abmaischen', entryType: ProcessListEntryType.PROCESS, controlStepIndex, phase: ProcessPhase.MASHING_OUT, detail: {temperature: abmaischen.temperature, confirmationRequired: true} });
-        controlStepIndex++;
-    }
-
-    // Kochen
-    processSteps.push({ name: 'Aufheizen auf Kochen', entryType: ProcessListEntryType.HEATING, controlStepIndex, phase: ProcessPhase.COOKING, detail: {temperature: selectedBeer.cookingTemperatur} });
-    processSteps.push({ name: 'Kochen', entryType: ProcessListEntryType.PROCESS, controlStepIndex, phase: ProcessPhase.COOKING, detail: {temperature: selectedBeer.cookingTemperatur, duration: selectedBeer.cookingTime * 60, durationUnit: ProcessListDurationUnit.SECONDS} });
-    controlStepIndex++;
-
-    return processSteps;
-}
-
-export function getActiveProcessStepIndex(processSteps: ProcessListStep[], currentControlStepIndex: number, currentStep?: ProcessListCurrentStep): number {
-    const controlStepIndex = currentStep?.index ?? currentControlStepIndex;
-    const requestedEntryType = currentStep?.mode === ProcessMode.HEATING
-        ? ProcessListEntryType.HEATING
-        : ProcessListEntryType.PROCESS;
-
-    const activeIndex = processSteps.findIndex(step =>
-        step.controlStepIndex === controlStepIndex &&
-        step.entryType === requestedEntryType &&
-        (currentStep?.phase === undefined || step.phase === undefined || step.phase === currentStep.phase)
-    );
-
-    if (activeIndex >= 0) {
-        return activeIndex;
-    }
-
-    const fallbackIndex = processSteps.findIndex(step => step.controlStepIndex === controlStepIndex);
-    return fallbackIndex >= 0 ? fallbackIndex : 0;
 }
