@@ -771,12 +771,11 @@ export class Production extends React.Component<ProductionProps, ProductionState
         const {brewingStatus} = this.props;
         const sensor = this.props.realtimeState?.temperatureSensor;
         const value = isTemperatureSensorReady(sensor, this.props.socketConnected) ? sensor.current : null;
-        const target = brewingStatus?.temperature?.target;
-        const targetValue = !this.props.isBrewingStatusStale && typeof target === 'number' && Number.isFinite(target) ? target : null;
+        const targetValue = this.props.isBrewingStatusStale ? null : getTargetTemperature(brewingStatus, this.props.selectedBeer) ?? null;
         return <section className="production-gauge-card" aria-labelledby="temperature-gauge-title">
             <h3 id="temperature-gauge-title">Temperatur</h3>
             <div className="production-gauge-dial Temp" aria-label={`Aktuelle Temperatur: ${formatTemperature(value)}`}>
-                <Gauge showAreas={false} value={value} targetValue={targetValue} height={260}
+                <Gauge showAreas={true} value={value} targetValue={targetValue} height={260}
                        offset={1} minValue={0} maxValue={100} label="°C" />
             </div>
             <dl className="production-gauge-details">
