@@ -82,6 +82,11 @@ reproduced without live controller responses; pulse measurement and deployment
 remain **Needs verification** on the Pi.
 
 Current temperature still comes exclusively from a connected, healthy realtime
-temperature-sensor snapshot; zero is valid. The target comes from the existing
-brewing status and is neutral when absent, non-finite, or stale. The tank,
+temperature-sensor snapshot; zero is valid. The temperature card and process
+details use the shared `getTargetTemperature` selector: finite controller targets
+have priority, while an ACTIVE, uniquely matched recipe step can supply a missing
+or invalid target. Decoctions use their linked RAST. Stale status keeps the
+temperature card's target neutral and hides its bands; explicit zero remains
+visible as a target but draws no temperature bands. The card enables the SVG's
+yellow/green/red target bands with the existing ±1 °C green tolerance. The tank,
 heater, process controls, water controls, and temperature timeline are unchanged.

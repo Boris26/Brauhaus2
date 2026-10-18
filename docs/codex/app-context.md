@@ -126,3 +126,9 @@ recipe accumulation. The existing one-second water poll and realtime temperature
 sensor updates remain the sole measurement sources. See
 [Water filling lifecycle](water-filling-lifecycle.md#production-measurement-cards)
 for the display semantics and the constant-zero investigation.
+
+The temperature card enables the SVG target bands and uses the shared
+`getTargetTemperature` selector for both its dial and target label. Yellow ends
+at target − 1 °C, green spans target ± 1 °C, and red begins at target + 1 °C.
+Stale status suppresses the card's target and bands. The water arc represents
+measured liters, so a zero-liter measurement draws no filled arc.

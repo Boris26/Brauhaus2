@@ -107,7 +107,7 @@ the planned temperature, or the uniquely referenced RAST for DECOCTION. No API,
 recipe DTO, Celsius unit, polling, or control-command contract changes. The fallback
 does not replace controller status or measurements. Whether a deployed controller
 actually omits its target during an active step remains **Needs verification**
-against its real `/Status/` response; Google Charts rendering on that installation
+against its real `/Status/` response; SVG gauge rendering on that installation
 also remains **Needs verification**.
 
 The Settings UI also consumes the existing `POST /api/audio/test` contract. Its `sound` request field is restricted to the logical values `ALARM`, `WARNING`, `CONFIRMATION`, `REST_FINISHED`, `BREW_FINISHED`, and `SUCCESS`; UI labels do not alter these values and the UI never sends WAV filenames. The routed `/api/audio` ownership and deployment mapping are **Needs verification** outside this repository.
