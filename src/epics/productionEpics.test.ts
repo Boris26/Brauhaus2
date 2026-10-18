@@ -411,144 +411,19 @@ describe('startWaterFillingEpic$', () => {
     subscription.unsubscribe();
   });
 
-  it('keeps polling through a closed STARTING state and receives a completion even without observing open', async () => {
+  it('acknowledges startup and delegates observation without owning a polling loop', async () => {
     mockedProductionRepository.fillWaterAutomatic.mockResolvedValue(true);
-    mockedProductionRepository.getWaterStatus
-      .mockResolvedValueOnce({filledLiters: 0, targetLiters: 9, openClose: false, state: 'STARTING'})
-      .mockResolvedValueOnce({filledLiters: 9, targetLiters: 9, openClose: false, state: 'COMPLETED', reason: 'TARGET_REACHED'});
     const action$ = new Subject<ProductionActions.StartWaterFilling>();
     const emitted: any[] = [];
     const sub = startWaterFillingEpic$(action$).subscribe((action: any) => emitted.push(action));
     action$.next(ProductionActions.startWaterFilling(9));
-    await flushPromises();
-    jest.advanceTimersByTime(1000);
-    await flushPromises();
-    expect(emitted.map(action => action.payload.waterStatus.state)).toEqual(['STARTING', 'COMPLETED']);
-    jest.advanceTimersByTime(2000);
-    expect(mockedProductionRepository.getWaterStatus).toHaveBeenCalledTimes(2);
-    sub.unsubscribe();
-  });
-
-  it('publishes an immediate startup error instead of treating a closed valve as success', async () => {
-    mockedProductionRepository.fillWaterAutomatic.mockResolvedValue(true);
-    mockedProductionRepository.getWaterStatus.mockResolvedValue({filledLiters: 0, targetLiters: 9, openClose: false, state: 'ERROR', reason: 'START_FAILED', error: 'GPIO failed'});
-    const action$ = new Subject<ProductionActions.StartWaterFilling>();
-    const emitted: any[] = [];
-    const sub = startWaterFillingEpic$(action$).subscribe((action: any) => emitted.push(action));
-    action$.next(ProductionActions.startWaterFilling(9));
-    await flushPromises();
-    jest.advanceTimersByTime(3000);
-    expect(emitted).toHaveLength(1);
-    expect(emitted[0].payload.waterStatus.state).toBe('ERROR');
-    sub.unsubscribe();
-  });
-
-  it('polls and dispatches every water status while water filling is still open', async (): Promise<void> => {
-    mockedProductionRepository.fillWaterAutomatic.mockResolvedValue(true);
-    mockedProductionRepository.getWaterStatus.mockResolvedValue({ filledLiters: 1, targetLiters: 24.8, openClose: true });
-
-    const action$ = new Subject<ProductionActions.StartWaterFilling>();
-    const emittedActions: ProductionActions.AllProductionActions[] = [];
-    const subscription = startWaterFillingEpic$(action$).subscribe((aAction: ProductionActions.AllProductionActions): void => {
-      emittedActions.push(aAction);
-    });
-
-    action$.next(ProductionActions.startWaterFilling(24.8));
-    await flushPromises();
-    jest.advanceTimersByTime(1000);
-    await flushPromises();
-    jest.advanceTimersByTime(1000);
-    await flushPromises();
-
-    expect(mockedProductionRepository.getWaterStatus).toHaveBeenCalledTimes(3);
-    expect(emittedActions).toEqual([
-      ProductionActions.setWaterStatus({ filledLiters: 1, targetLiters: 24.8, openClose: true }),
-      ProductionActions.setWaterStatus({ filledLiters: 1, targetLiters: 24.8, openClose: true }),
-      ProductionActions.setWaterStatus({ filledLiters: 1, targetLiters: 24.8, openClose: true }),
-    ]);
-
-    subscription.unsubscribe();
-  });
-
-  it('does not start another water status request while the previous one is still running', async (): Promise<void> => {
-    mockedProductionRepository.fillWaterAutomatic.mockResolvedValue(true);
-    const aDeferredStatus = createDeferred<{ filledLiters: number; targetLiters: number; openClose: boolean }>();
-    mockedProductionRepository.getWaterStatus.mockReturnValue(aDeferredStatus.promise);
-
-    const action$ = new Subject<ProductionActions.StartWaterFilling>();
-    const subscription = startWaterFillingEpic$(action$).subscribe();
-
-    action$.next(ProductionActions.startWaterFilling(24.8));
     await flushPromises();
     jest.advanceTimersByTime(5000);
-    await flushPromises();
-
-    expect(mockedProductionRepository.getWaterStatus).toHaveBeenCalledTimes(1);
-    expect(mockedProductionRepository.getWaterStatus).toHaveBeenCalledWith(WATER_STATUS_REQUEST_TIMEOUT, true);
-
-    aDeferredStatus.resolve({filledLiters: 1, targetLiters: 24.8, openClose: true});
-    await flushPromises();
-    jest.advanceTimersByTime(1000);
-    await flushPromises();
-
-    expect(mockedProductionRepository.getWaterStatus).toHaveBeenCalledTimes(2);
-    subscription.unsubscribe();
-  });
-
-  it('dispatches the final closed water status before stopping polling', async (): Promise<void> => {
-    mockedProductionRepository.fillWaterAutomatic.mockResolvedValue(true);
-    mockedProductionRepository.getWaterStatus
-      .mockResolvedValueOnce({ filledLiters: 1, targetLiters: 24.8, openClose: true })
-      .mockResolvedValueOnce({ filledLiters: 10, targetLiters: 24.8, openClose: true })
-      .mockResolvedValueOnce({ filledLiters: 24.8, targetLiters: 24.8, openClose: false });
-
-    const action$ = new Subject<ProductionActions.StartWaterFilling>();
-    const emittedActions: ProductionActions.AllProductionActions[] = [];
-    const subscription = startWaterFillingEpic$(action$).subscribe((aAction: ProductionActions.AllProductionActions): void => {
-      emittedActions.push(aAction);
-    });
-
-    action$.next(ProductionActions.startWaterFilling(24.8));
-    await flushPromises();
-    jest.advanceTimersByTime(1000);
-    await flushPromises();
-    jest.advanceTimersByTime(1000);
-    await flushPromises();
-    jest.advanceTimersByTime(3000);
-    await flushPromises();
-
-    expect(mockedProductionRepository.getWaterStatus).toHaveBeenCalledTimes(3);
-    expect(emittedActions).toEqual([
-      ProductionActions.setWaterStatus({ filledLiters: 1, targetLiters: 24.8, openClose: true }),
-      ProductionActions.setWaterStatus({ filledLiters: 10, targetLiters: 24.8, openClose: true }),
-      ProductionActions.setWaterStatus({ filledLiters: 24.8, targetLiters: 24.8, openClose: false }),
+    expect(emitted.map(action => action.type)).toEqual([
+      ProductionActions.ActionTypes.WATER_START_ACCEPTED, ProductionActions.ActionTypes.WATER_RESYNC_REQUEST,
     ]);
-
-    subscription.unsubscribe();
-  });
-
-  it('dispatches a water filling failure when the maximum filling duration is exceeded', async (): Promise<void> => {
-    mockedProductionRepository.fillWaterAutomatic.mockResolvedValue(true);
-    mockedProductionRepository.getWaterStatus.mockResolvedValue({ filledLiters: 1, targetLiters: 24.8, openClose: true });
-
-    const action$ = new Subject<ProductionActions.StartWaterFilling>();
-    const emittedActions: ProductionActions.AllProductionActions[] = [];
-    const subscription = startWaterFillingEpic$(action$).subscribe((aAction: ProductionActions.AllProductionActions): void => {
-      emittedActions.push(aAction);
-    });
-
-    action$.next(ProductionActions.startWaterFilling(24.8));
-    await flushPromises();
-    jest.advanceTimersByTime(WATER_FILLING_MAX_DURATION);
-    mockedProductionRepository.getWaterStatus.mockResolvedValue({filledLiters: 1, targetLiters: 24.8, openClose: false, state: 'STOPPED'});
-    await flushPromises();
-    jest.advanceTimersByTime(1000);
-    await flushPromises();
-    await flushPromises();
-
-    expect(mockedProductionRepository.stopWaterFilling).toHaveBeenCalled();
-    expect(emittedActions.at(-1)).toMatchObject({payload: {isWaterFillingSuccessful: false}});
-    subscription.unsubscribe();
+    expect(mockedProductionRepository.getWaterStatus).not.toHaveBeenCalled();
+    sub.unsubscribe();
   });
 });
 

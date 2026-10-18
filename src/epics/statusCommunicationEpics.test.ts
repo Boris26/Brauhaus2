@@ -55,6 +55,44 @@ describe('process communication integration', () => {
     expect(store.getState().productionReducer.isPollingRunning).toBe(false);
   });
 
+  it('uses independent heartbeat watermarks and time anchors without history samples or HTTP for raw revision growth', async () => {
+    store.dispatch(Actions.socketConnectionChanged(true));
+    const initial = snapshot(1, 'TIMER_RUNNING');
+    const modern = {...initial, snapshotMetadata: {...initial.snapshotMetadata!, telemetryRevision: 1}};
+    store.dispatch(Actions.setBrewingStatus(modern, 'socket', store.getState().productionReducer.communication.generation));
+    const semantic = store.getState().productionReducer.brewingStatus;
+    const historyCount = dataCollector.getMeasurementCount();
+    for (let sequence = 2; sequence <= 4; sequence++) {
+      jest.advanceTimersByTime(15000);
+      store.dispatch({type: Actions.ActionTypes.STATUS_HEARTBEAT, payload: {schemaVersion: 1,
+        controllerEpoch: 'epoch-1', processInstanceId: 'run-1', revision: 1000 * sequence, stateRevision: 1,
+        telemetryRevision: 1, timeAnchorSequence: sequence,
+        timeAnchor: {sequence, stepId: null, stepIndex: 1, phase: 'RAST', mode: 'TIMER_RUNNING',
+          elapsedTime: sequence * 15, stepElapsedTime: sequence * 15, running: true, stepRunning: true, sampleAgeSeconds: 0}}});
+    }
+    await flush();
+    expect(mock.getBrewingStatus).not.toHaveBeenCalled();
+    expect(store.getState().productionReducer.brewingStatus).toBe(semantic);
+    expect(store.getState().productionReducer.timeAnchor.sequence).toBe(4);
+    expect(dataCollector.getMeasurementCount()).toBe(historyCount);
+  });
+
+  it('accepts HTTP-only telemetry updates without replacing semantic state and collects the changed temperature once', async () => {
+    const initial = snapshot(1);
+    store.dispatch(Actions.setBrewingStatus({...initial, snapshotMetadata: {...initial.snapshotMetadata!, telemetryRevision: 1}}, 'sync'));
+    await flush();
+    const semantic = store.getState().productionReducer.brewingStatus;
+    mock.getBrewingStatus.mockResolvedValue({available: {isBackenAvailable: true, statusText: ''},
+      brewingStatus: {...initial, elapsedTime: 10, temperature: {current: 61, target: 65},
+        snapshotMetadata: {...initial.snapshotMetadata!, revision: 10, telemetryRevision: 2}}});
+    jest.advanceTimersByTime(10000); await flush();
+    expect(store.getState().productionReducer.brewingStatus).toBe(semantic);
+    expect(store.getState().productionReducer.telemetry.temperature.current).toBe(61);
+    expect(dataCollector.getMeasurementCount()).toBe(2);
+    jest.advanceTimersByTime(10000); await flush();
+    expect(dataCollector.getMeasurementCount()).toBe(2);
+  });
+
   it('a transport connection without a valid snapshot keeps HTTP fallback active', async () => {
     store.dispatch(Actions.socketConnectionChanged(true, 'sid'));
     expect(store.getState().productionReducer.communication.phase).toBe('Synchronizing');
@@ -138,7 +176,7 @@ describe('process communication integration', () => {
     expect(dataCollector.getMeasurementCount()).toBe(1);
     store.dispatch(Actions.setBrewingStatus(snapshot(2), 'socket'));
     store.dispatch(Actions.setBrewingStatus(snapshot(1), 'http'));
-    expect(dataCollector.getMeasurementCount()).toBe(2);
+    expect(dataCollector.getMeasurementCount()).toBe(1); // Only elapsedTime changed.
   });
 
   it('resynchronizes an epoch change and cannot return to the retired epoch', async () => {

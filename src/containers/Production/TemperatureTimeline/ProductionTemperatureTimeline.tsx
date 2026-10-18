@@ -13,9 +13,11 @@ import {
 import {Beer} from '../../../model/Beer';
 import {BrewingStatus} from '../../../model/brewingStatus.types';
 import {TimeFormatter} from '../../../utils/TimeFormatter';
-import {buildTemperatureTimelineModel} from './temperatureTimelineModel';
+import {buildTemperatureTimelineModel, buildStableTimeAxis, TemperatureTimelineModel} from './temperatureTimelineModel';
 import {TimelineMeasurement} from '../../../utils/DataCollector/dataCollector';
 import './ProductionTemperatureTimeline.css';
+import {TimeAnchorState} from '../../../utils/brewingStatus/streams';
+import {useProcessDisplayTime} from '../../../utils/brewingStatus/useProcessDisplayTime';
 
 interface ProductionTemperatureTimelineProps {
     selectedBeer?: Beer;
@@ -26,7 +28,13 @@ interface ProductionTemperatureTimelineProps {
     displayCurrentStepElapsedSeconds?: number;
 }
 
+export const LiveProductionTemperatureTimeline = ({timeAnchor, stale, ...props}: ProductionTemperatureTimelineProps & {timeAnchor?: TimeAnchorState; stale?: boolean}) => {
+    const time = useProcessDisplayTime(props.brewingStatus, timeAnchor, stale);
+    return <ProductionTemperatureTimeline {...props} displayNowSeconds={time.processElapsedSeconds} displayCurrentStepElapsedSeconds={time.stepElapsedSeconds} />;
+};
+
 export class ProductionTemperatureTimeline extends React.Component<ProductionTemperatureTimelineProps> {
+    private cached?: {beer?: Beer; status?: BrewingStatus; measurements: readonly TimelineMeasurement[]; fallback: number; model: TemperatureTimelineModel};
     formatAxisTime = (elapsedSeconds: number): string => {
         return TimeFormatter.formatSecondsToHMS(Math.max(0, elapsedSeconds));
     }
@@ -36,12 +44,20 @@ export class ProductionTemperatureTimeline extends React.Component<ProductionTem
     }
 
     render() {
-        const model = buildTemperatureTimelineModel(this.props.selectedBeer, this.props.brewingStatus, this.props.measurements, this.props.fallbackTemperature, {
-            measurementsOrderedByCollection: true,
-            displayNowSeconds: this.props.displayNowSeconds,
-            displayCurrentStepElapsedSeconds: this.props.displayCurrentStepElapsedSeconds,
-        });
-        const {steps, points, nowSeconds, axisEndSeconds, axisTicks, progressPercent} = model;
+        if (!this.cached || this.cached.beer !== this.props.selectedBeer || this.cached.status !== this.props.brewingStatus
+            || this.cached.measurements !== this.props.measurements || this.cached.fallback !== this.props.fallbackTemperature) {
+            this.cached = {beer: this.props.selectedBeer, status: this.props.brewingStatus, measurements: this.props.measurements,
+                fallback: this.props.fallbackTemperature,
+                model: buildTemperatureTimelineModel(this.props.selectedBeer, this.props.brewingStatus, this.props.measurements, this.props.fallbackTemperature, {
+                    measurementsOrderedByCollection: true,
+                })};
+        }
+        const model = this.cached.model;
+        const {steps, points} = model;
+        const delta = this.props.displayNowSeconds === undefined ? 0 : this.props.displayNowSeconds - (this.props.brewingStatus?.elapsedTime ?? 0);
+        const nowSeconds = Math.max(0, model.nowSeconds + delta);
+        const {axisEndSeconds, axisTicks} = nowSeconds > model.axisEndSeconds ? buildStableTimeAxis(nowSeconds) : model;
+        const progressPercent = this.props.brewingStatus?.process.state === 'FINISHED' ? 100 : Math.min(100, nowSeconds * 100 / Math.max(model.endSeconds, nowSeconds, 1));
         const hasChartData = steps.length > 0 || points.some((point) => point.actualTemperature !== undefined || point.targetTemperature !== undefined);
 
         return (
@@ -87,7 +103,7 @@ export class ProductionTemperatureTimeline extends React.Component<ProductionTem
                                     <ReferenceLine key={`${step.name}-end`} x={step.endSeconds} stroke="rgba(255,255,255,0.24)" strokeDasharray="4 4" />
                                 ))}
                                 <ReferenceLine x={nowSeconds} stroke="var(--accent)" strokeWidth={2} label={{value: 'Jetzt', position: 'top', fill: 'var(--accent)', fontSize: 12}} />
-                                <Line type="linear" dataKey="actualTemperature" name="Isttemperatur" stroke="var(--color-warning)" strokeWidth={2} dot={false} isAnimationActive={false} connectNulls />
+                                <Line type="linear" dataKey="actualTemperature" name="Isttemperatur" stroke="var(--color-warning)" strokeWidth={2} dot={false} isAnimationActive={false} connectNulls={false} />
                                 <Line type="stepAfter" dataKey="targetTemperature" name="Zieltemperatur" stroke="var(--color-success)" strokeWidth={1.5} strokeOpacity={0.8} dot={false} isAnimationActive={false} connectNulls />
                             </LineChart>
                         </ResponsiveContainer>

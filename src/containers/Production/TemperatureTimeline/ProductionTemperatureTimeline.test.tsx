@@ -1,6 +1,9 @@
 import React from 'react';
 import {render, screen} from '@testing-library/react';
 import {ProductionTemperatureTimeline} from './ProductionTemperatureTimeline';
+import * as timelineModel from './temperatureTimelineModel';
+
+const mockChartMount = jest.fn();
 
 jest.mock('recharts', () => {
     const React = require('react');
@@ -8,7 +11,10 @@ jest.mock('recharts', () => {
 
     return {
         ResponsiveContainer: Container,
-        LineChart: Container,
+        LineChart: ({children}: {children?: React.ReactNode}) => {
+            React.useEffect(() => {mockChartMount();}, []);
+            return <div>{children}</div>;
+        },
         CartesianGrid: () => null,
         XAxis: () => null,
         YAxis: () => null,
@@ -36,6 +42,17 @@ jest.mock('recharts', () => {
 });
 
 describe('ProductionTemperatureTimeline', () => {
+    it('reuses the history model and chart mount while only the local time cursor moves', () => {
+        mockChartMount.mockClear();
+        const build = jest.spyOn(timelineModel, 'buildTemperatureTimelineModel');
+        const measurements = [{elapsedTime: 1, Temperature: 62, TargetTemperature: 63}];
+        const {rerender} = render(<ProductionTemperatureTimeline measurements={measurements} fallbackTemperature={0} displayNowSeconds={1} />);
+        rerender(<ProductionTemperatureTimeline measurements={measurements} fallbackTemperature={0} displayNowSeconds={2} />);
+        rerender(<ProductionTemperatureTimeline measurements={measurements} fallbackTemperature={0} displayNowSeconds={3} />);
+        expect(build).toHaveBeenCalledTimes(1);
+        expect(mockChartMount).toHaveBeenCalledTimes(1);
+        build.mockRestore();
+    });
     it('renders distinct measurement and target curves without permanent dots', () => {
         render(
             <ProductionTemperatureTimeline

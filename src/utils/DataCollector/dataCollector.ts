@@ -3,8 +3,8 @@ import { getStatusChangeKey } from '../brewingStatus/selectors';
 
 export interface TimelineMeasurement {
   elapsedTime: number;
-  Temperature: number;
-  TargetTemperature: number;
+  Temperature: number | null;
+  TargetTemperature: number | null;
   stepIndex?: number;
   stepPhase?: ProcessPhase;
   stepMode?: ProcessMode;
@@ -39,8 +39,8 @@ class DataCollector {
     const aCurrentMeasurement: TimelineMeasurement = Object.freeze({
       elapsedTime: aStatus.elapsedTime,
       // Compatibility output for existing charts and exports.
-      Temperature: Number(aStatus.temperature.current ?? 0),
-      TargetTemperature: Number(aStatus.temperature.target ?? 0),
+      Temperature: typeof aStatus.temperature.current === 'number' && Number.isFinite(aStatus.temperature.current) ? aStatus.temperature.current : null,
+      TargetTemperature: typeof aStatus.temperature.target === 'number' && Number.isFinite(aStatus.temperature.target) ? aStatus.temperature.target : null,
       stepIndex: aStatus.currentStep.index,
       stepPhase: aStatus.currentStep.phase,
       stepMode: aStatus.currentStep.mode,
@@ -53,7 +53,7 @@ class DataCollector {
     }
 
     const aLastStored = this.groupedData[aStatusKey].at(-1);
-    if (!aLastStored || aLastStored.Temperature !== aCurrentMeasurement.Temperature || aLastStored.TargetTemperature !== aCurrentMeasurement.TargetTemperature || aLastStored.elapsedTime !== aCurrentMeasurement.elapsedTime) {
+    if (!aLastStored || this.lastStatusKey !== aStatusKey || aLastStored.Temperature !== aCurrentMeasurement.Temperature || aLastStored.TargetTemperature !== aCurrentMeasurement.TargetTemperature) {
       this.groupedData[aStatusKey].push(aCurrentMeasurement);
       this.timelineMeasurements.push(aCurrentMeasurement);
       this.collectionSequence += 1;

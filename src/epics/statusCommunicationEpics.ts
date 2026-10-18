@@ -7,6 +7,7 @@ import {PROCESS_REALTIME_ENABLED} from '../utils/brewingStatus/snapshot';
 import {isProcessAborted, isProcessFinished, isProcessInError} from '../utils/brewingStatus/selectors';
 import type {RootState} from '../reducers/rootReducer';
 import {requestBrewingStatus$} from '../utils/brewingStatus/request';
+import {monotonicNow, revisionValid, sameProcess} from '../utils/brewingStatus/streams';
 
 type State = {value: RootState};
 const terminal = (state: State) => {
@@ -61,7 +62,7 @@ export const statusWatchdogEpic$ = (action$: any, state$: State) => action$.pipe
   switchMap(() => interval(5000).pipe(
     filter(() => PROCESS_REALTIME_ENABLED && state$.value.productionReducer.socketConnection.connected
       && state$.value.productionReducer.communication.phase === 'Synchronized'
-      && Date.now() - state$.value.productionReducer.communication.lastMessageAt > 15000),
+      && monotonicNow() - state$.value.productionReducer.communication.lastMessageAt > 40000),
     map(() => ({type: Actions.ActionTypes.STATUS_STREAM_STALE})),
   )),
 );
@@ -75,6 +76,17 @@ export const statusHeartbeatEpic$ = (action$: any, state$: State) => action$.pip
     const heartbeat = action.payload;
     if (!current || typeof heartbeat?.controllerEpoch !== 'string' || !Number.isSafeInteger(heartbeat.revision)
       || state.communication.retiredEpochs.includes(heartbeat.controllerEpoch)) return EMPTY;
+    if (heartbeat.schemaVersion === 1 && heartbeat.telemetryRevision !== undefined) {
+      if (!revisionValid(heartbeat.stateRevision) || !revisionValid(heartbeat.telemetryRevision)) return EMPTY;
+      const actions: any[] = [];
+      if (!sameProcess(current, heartbeat) || heartbeat.stateRevision !== current.stateRevision
+        || heartbeat.telemetryRevision > (state.telemetry?.telemetryRevision ?? -1)) actions.push(Actions.requestStatusSync());
+      const water = state.waterStatus.snapshotMetadata;
+      if (revisionValid(heartbeat.waterFillingRevision) && (!water || heartbeat.controllerEpoch !== water.controllerEpoch
+        || heartbeat.waterFillingRevision > water.waterFillingRevision)) actions.push({type: Actions.ActionTypes.WATER_STREAM_STALE});
+      if (state.communication.phase === 'Synchronized') actions.push(Actions.stopPolling());
+      return from(actions);
+    }
     if (heartbeat.controllerEpoch !== current.controllerEpoch || heartbeat.revision > current.revision) {
       return of(Actions.requestStatusSync());
     }
@@ -86,26 +98,45 @@ export const statusHeartbeatEpic$ = (action$: any, state$: State) => action$.pip
 export const acceptedStatusEffectsEpic$ = (action$: any, state$: State) => {
   let collectedProcess: string | undefined;
   let collectedStatus: unknown;
+  let collectedTelemetry: unknown;
   return action$.pipe(
-    ofType(Actions.ActionTypes.SET_BREWING_STATUS),
-    mergeMap((action: Actions.SetBrewingStatus) => {
+    ofType(Actions.ActionTypes.SET_BREWING_STATUS, Actions.ActionTypes.TELEMETRY_RECEIVED),
+    mergeMap((action: any) => {
       const state = state$.value.productionReducer;
-      const status = action.payload.brewingStatus;
-      if (status && state.brewingStatus === status && status !== collectedStatus) {
+      const inputStatus = action.type === Actions.ActionTypes.SET_BREWING_STATUS ? action.payload.brewingStatus : undefined;
+      const status = state.brewingStatus;
+      const telemetry = state.telemetry;
+      const versionBefore = dataCollector.getTimelineSnapshot().version;
+      const acceptedTelemetry = action.type === Actions.ActionTypes.TELEMETRY_RECEIVED && telemetry
+        && action.payload.generation === state.communication.generation
+        && sameProcess(telemetry, action.payload.data)
+        && telemetry.telemetryRevision === action.payload.data.telemetryRevision
+        && telemetry !== collectedTelemetry;
+      const acceptedSnapshot = inputStatus && (inputStatus === status || (telemetry !== collectedTelemetry
+        && (action.payload.generation === undefined || action.payload.generation === state.communication.generation)
+        && sameProcess(inputStatus.snapshotMetadata, status?.snapshotMetadata)
+        && inputStatus.snapshotMetadata?.stateRevision === status?.snapshotMetadata?.stateRevision
+        && inputStatus.snapshotMetadata?.telemetryRevision === telemetry?.telemetryRevision));
+      if (status && (acceptedSnapshot || acceptedTelemetry) && (status !== collectedStatus || telemetry !== collectedTelemetry)) {
         const metadata = status.snapshotMetadata;
         const process = metadata ? `${metadata.controllerEpoch}/${metadata.processInstanceId}` : undefined;
         if (collectedProcess && process && process !== collectedProcess) dataCollector.reset();
         collectedProcess = process;
         collectedStatus = status;
-        dataCollector.setBrewingStatus(status);
+        collectedTelemetry = telemetry;
+        dataCollector.setBrewingStatus(telemetry && sameProcess(telemetry, metadata) && telemetry.stateRevision === metadata?.stateRevision
+          ? {...status, temperature: telemetry.temperature, elapsedTime: telemetry.elapsedTime} : status);
       }
-      const incoming = status?.snapshotMetadata;
+      const sideEffects: any[] = [];
+      if (dataCollector.getTimelineSnapshot().version !== versionBefore) sideEffects.push({type: Actions.ActionTypes.HISTORY_UPDATED,
+        payload: {version: dataCollector.getTimelineSnapshot().version}});
+      const incoming = inputStatus?.snapshotMetadata;
       const current = state.brewingStatus?.snapshotMetadata;
       if (incoming && current && incoming.controllerEpoch !== current.controllerEpoch
         && !state.communication.retiredEpochs.includes(incoming.controllerEpoch)) return of(Actions.requestStatusSync());
-      if (state.communication.phase === 'Synchronized' || terminal(state$)) return of(Actions.stopPolling());
-      if (status === state.brewingStatus && status?.process.state === 'ACTIVE' && !state.isPollingRunning) return of(Actions.startPolling());
-      return EMPTY;
+      if (state.communication.phase === 'Synchronized' || terminal(state$)) return from([...sideEffects, Actions.stopPolling()]);
+      if (status === state.brewingStatus && status?.process.state === 'ACTIVE' && !state.isPollingRunning) return from([...sideEffects, Actions.startPolling()]);
+      return from(sideEffects);
     }),
   );
 };

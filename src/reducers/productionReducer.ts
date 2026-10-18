@@ -10,6 +10,9 @@ import {AgitatorSettings} from '../model/AgitatorSettings';
 import {BrewRecoveryState} from '../model/BrewRecovery';
 import {CommunicationPhase, ConfirmationPhase, PROCESS_REALTIME_ENABLED, validMetadata, validStatus} from '../utils/brewingStatus/snapshot';
 import {getStatusChangeKey} from '../utils/brewingStatus/selectors';
+import {acceptTelemetry, acceptTimeAnchor, monotonicNow, revisionValid, sameProcess, TelemetryState, TimeAnchorState} from '../utils/brewingStatus/streams';
+import {acceptWater, initialWaterCommunication, WaterCommunication} from './waterObservation';
+import {parseWaterSnapshot, waterActive} from '../utils/brewingStatus/waterSnapshot';
 
 const agitatorSnapshotsEqual = (left?: AgitatorRealtimeState, right?: AgitatorRealtimeState): boolean =>
     left === right || (!!left && !!right
@@ -41,6 +44,11 @@ export interface BackendAvailable {
 }
 
 export interface ProductionReducerState {
+    historyVersion: number;
+    telemetry?: TelemetryState;
+    timeAnchor?: TimeAnchorState;
+    waterCommunication: WaterCommunication;
+    waterCommand?: {active: boolean; startedAt: number; baselineFillId?: string; baselineRevision?: number; fillId?: string; observedOpen?: boolean};
     communication: {phase: CommunicationPhase; generation: number; lastMessageAt: number; retiredEpochs: string[]; socketEpoch?: string};
     confirmation: {httpPending?: boolean; phase?: ConfirmationPhase; baselineKey?: string; baselineRevision?: number; baselineEpoch?: string; baselineProcess?: string; syncWaiting?: boolean};
     temperature: number;
@@ -75,6 +83,8 @@ export interface ProductionReducerState {
 }
 
 export const initialProductionState: ProductionReducerState = {
+    historyVersion: 0,
+    waterCommunication: initialWaterCommunication,
     communication: {phase: 'Disconnected', generation: 0, lastMessageAt: 0, retiredEpochs: []},
     confirmation: {},
     temperature: 0,
@@ -102,11 +112,33 @@ export const initialProductionState: ProductionReducerState = {
     brewRecovery: {available: false, recovery: null, resumePending: false, discardPending: false, requestGeneration: 0}
 };
 
+const updateWater = (state: ProductionReducerState, status: WaterStatus, source: 'socket' | 'sync' | 'http') => {
+    const accepted = acceptWater(state.waterStatus, state.waterCommunication, status, source, state.socketConnection.connected);
+    const current = accepted.waterStatus;
+    let command = state.waterCommand;
+    const sameSnapshot = status.snapshotMetadata && current.snapshotMetadata
+        && status.snapshotMetadata.controllerEpoch === current.snapshotMetadata.controllerEpoch
+        && status.snapshotMetadata.waterFillingRevision === current.snapshotMetadata.waterFillingRevision
+        && status.fillId === current.fillId;
+    if (command?.active && (current === status || sameSnapshot)) {
+        const newOperation = current.fillId !== command.baselineFillId;
+        const replaced = command.fillId && current.fillId !== command.fillId;
+        const terminal = ['COMPLETED', 'STOPPED', 'ERROR'].includes(current.state ?? '');
+        command = {...command, observedOpen: command.observedOpen || current.openClose,
+            fillId: command.fillId ?? (newOperation ? current.fillId : undefined),
+            active: !replaced && !(terminal && newOperation)
+                && !(!current.state && command.observedOpen && !current.openClose)};
+    }
+    return {...state, ...accepted, waterCommand: command};
+};
+
 const productionReducer = (
     aState: ProductionReducerState = initialProductionState,
     aAction: AllProductionActions
 ): ProductionReducerState => {
     switch (aAction.type) {
+        case ProductionActions.ActionTypes.HISTORY_UPDATED:
+            return aState.historyVersion === aAction.payload.version ? aState : {...aState, historyVersion: aAction.payload.version};
 
         case ProductionActions.ActionTypes.SET_TEMPERATURE: {
             return { ...aState, temperature: aAction.payload.temperature };
@@ -130,17 +162,20 @@ const productionReducer = (
             return { ...aState, liters: aAction.payload.liters, isWaterFillingSuccessful: true, waterFillingError: undefined };
         }
         case ProductionActions.ActionTypes.START_WATER_FILLING_SUCCESS: {
-            return { ...aState, isWaterFillingSuccessful: aAction.payload.isWaterFillingSuccessful,
+            const base = aAction.payload.waterStatus ? updateWater(aState, aAction.payload.waterStatus, 'http') : aState;
+            return { ...base, waterCommand: base.waterCommand ? {...base.waterCommand, active: false} : undefined,
+                isWaterFillingSuccessful: aAction.payload.isWaterFillingSuccessful,
                 waterFillingError: aAction.payload.error,
-                waterStatus: aAction.payload.waterStatus ?? aState.waterStatus };
+            };
         }
         case ProductionActions.ActionTypes.STOP_WATER_FILLING:
-            return {...aState, isWaterStopping: true};
-        case ProductionActions.ActionTypes.STOP_WATER_FILLING_FINISHED:
-            return {...aState, isWaterStopping: false,
-                waterStatus: aAction.payload.waterStatus ?? aState.waterStatus,
+            return {...aState, isWaterStopping: true, waterCommand: aState.waterCommand ? {...aState.waterCommand, active: false} : undefined};
+        case ProductionActions.ActionTypes.STOP_WATER_FILLING_FINISHED: {
+            const base = aAction.payload.waterStatus ? updateWater(aState, aAction.payload.waterStatus, 'http') : aState;
+            return {...base, isWaterStopping: false,
                 isWaterFillingSuccessful: aAction.payload.success,
                 waterFillingError: aAction.payload.error};
+        }
 
         case ProductionActions.ActionTypes.SEND_BREWING_DATA: {
             return { ...aState, brewingStartError: undefined };
@@ -156,20 +191,32 @@ const productionReducer = (
             const incoming = status.snapshotMetadata;
             const previous = aState.brewingStatus?.snapshotMetadata;
             let communication = aState.communication;
+            let streams = {telemetry: aState.telemetry, timeAnchor: aState.timeAnchor};
             if (incoming) {
                 if (!validMetadata(incoming) || !validStatus(status)) return aState;
-                if (source === 'socket') communication = {...communication, socketEpoch: incoming.controllerEpoch, lastMessageAt: Date.now()};
-                if (source === 'telemetry') communication = {...communication, lastMessageAt: Date.now()};
+                if (incoming.telemetryRevision !== undefined && !revisionValid(incoming.telemetryRevision)) return aState;
+                if (source === 'socket') communication = {...communication, socketEpoch: incoming.controllerEpoch, lastMessageAt: monotonicNow()};
+                if (source === 'telemetry') communication = {...communication, lastMessageAt: monotonicNow()};
                 if (communication.retiredEpochs.includes(incoming.controllerEpoch)) return aState;
                 if (previous && incoming.controllerEpoch !== previous.controllerEpoch && source !== 'sync') {
                     return {...aState, communication: {...communication, phase: 'Synchronizing'}};
                 }
-                if (previous && incoming.controllerEpoch === previous.controllerEpoch && incoming.revision < previous.revision) return aState;
+                const optimized = incoming.telemetryRevision !== undefined;
+                if (previous && incoming.controllerEpoch === previous.controllerEpoch
+                    && (optimized ? incoming.stateRevision < previous.stateRevision : incoming.revision < previous.revision)) return aState;
+                if (optimized && previous && incoming.controllerEpoch === previous.controllerEpoch && !sameProcess(incoming, previous)
+                    && incoming.stateRevision <= previous.stateRevision) return aState;
                 const socketSynchronized = PROCESS_REALTIME_ENABLED && aState.socketConnection.connected
                     && (source === 'socket' || (source === 'sync' && communication.socketEpoch === incoming.controllerEpoch));
-                if (socketSynchronized) communication = {...communication, phase: 'Synchronized', lastMessageAt: Date.now()};
-                if (previous && incoming.controllerEpoch === previous.controllerEpoch && incoming.revision === previous.revision) {
-                    return communication === aState.communication ? aState : {...aState, communication};
+                if (socketSynchronized) communication = {...communication, phase: 'Synchronized', lastMessageAt: monotonicNow()};
+                if (optimized) streams = {
+                    telemetry: acceptTelemetry(incoming, status.temperature, status.elapsedTime, aState.telemetry),
+                    timeAnchor: acceptTimeAnchor(incoming, aState.timeAnchor, status),
+                };
+                if (previous && incoming.controllerEpoch === previous.controllerEpoch
+                    && (optimized ? sameProcess(incoming, previous) && incoming.stateRevision === previous.stateRevision : incoming.revision === previous.revision)) {
+                    return communication === aState.communication && streams.telemetry === aState.telemetry && streams.timeAnchor === aState.timeAnchor
+                        ? aState : {...aState, ...streams, communication, isBrewingStatusStale: false};
                 }
                 if (previous && incoming.controllerEpoch !== previous.controllerEpoch) {
                     communication = {...communication, retiredEpochs: [...communication.retiredEpochs, previous.controllerEpoch]};
@@ -180,24 +227,48 @@ const productionReducer = (
                 && (incoming.controllerEpoch !== aState.confirmation.baselineEpoch || incoming.processInstanceId !== aState.confirmation.baselineProcess);
             const transitioned = aState.isConfirmPending && aState.confirmation.baselineKey !== undefined
                 && `${getStatusChangeKey(status)}|${status.waiting.canConfirm}` !== aState.confirmation.baselineKey;
-            return {...aState, brewingStatus: status, communication,
+            return {...aState, ...streams, brewingStatus: status, communication,
                 isBrewingStatusStale: false, isPollingRunning: terminal ? false : aState.isPollingRunning,
                 ...(processReplaced ? {isConfirmPending: !!aState.confirmation.httpPending,
                     confirmError: 'Controller oder Brauprozess wurde geändert. Die Bestätigung wurde nicht erneut gesendet.',
                     confirmation: {...aState.confirmation, phase: 'Failed', syncWaiting: false}} : transitioned ? {isConfirmPending: !!aState.confirmation.httpPending, confirmError: undefined, confirmation: {...aState.confirmation, phase: 'Completed', syncWaiting: false}} : {})};
         }
+        case ProductionActions.ActionTypes.TELEMETRY_RECEIVED: {
+            const {data, generation} = aAction.payload;
+            const metadata = aState.brewingStatus?.snapshotMetadata;
+            if (generation !== aState.communication.generation || !validMetadata(data) || !sameProcess(data, metadata)
+                || data.stateRevision !== metadata?.stateRevision || data.temperature?.target !== aState.brewingStatus?.temperature.target) return aState;
+            const telemetry = acceptTelemetry(data, data.temperature, data.elapsedTime, aState.telemetry);
+            if (telemetry === aState.telemetry) return aState;
+            return {...aState, telemetry, communication: {...aState.communication, lastMessageAt: monotonicNow()}};
+        }
         case ProductionActions.ActionTypes.COMMUNICATION_PHASE:
             return {...aState, communication: {...aState.communication, phase: aAction.payload.phase, socketEpoch: undefined}};
         case ProductionActions.ActionTypes.STATUS_STREAM_STALE:
             return {...aState, isBrewingStatusStale: !!aState.brewingStatus,
+                waterCommunication: waterActive(aState.waterStatus)
+                    ? {...aState.waterCommunication, stale: true, synchronized: false} : aState.waterCommunication,
                 communication: {...aState.communication, phase: 'Synchronizing', socketEpoch: undefined}};
         case ProductionActions.ActionTypes.STATUS_HEARTBEAT: {
             const heartbeat = aAction.payload;
             if (!heartbeat || typeof heartbeat !== 'object') return aState;
             const metadata = aState.brewingStatus?.snapshotMetadata;
+            if (heartbeat.schemaVersion === 1 && heartbeat.telemetryRevision !== undefined) {
+                if (!metadata || !aState.socketConnection.connected || aState.communication.retiredEpochs.includes(heartbeat.controllerEpoch)
+                    || !revisionValid(heartbeat.stateRevision) || !revisionValid(heartbeat.telemetryRevision)) return aState;
+                const matches = sameProcess(metadata, heartbeat) && heartbeat.stateRevision === metadata.stateRevision;
+                if (!matches) return {...aState, isBrewingStatusStale: true,
+                    communication: {...aState.communication, phase: 'Synchronizing'}};
+                const timeAnchor = acceptTimeAnchor({...metadata, ...heartbeat}, aState.timeAnchor, aState.brewingStatus);
+                const synchronized = heartbeat.telemetryRevision <= (aState.telemetry?.telemetryRevision ?? -1);
+                return {...aState, timeAnchor, isBrewingStatusStale: synchronized ? false : aState.isBrewingStatusStale,
+                    communication: {...aState.communication, lastMessageAt: monotonicNow(),
+                    phase: synchronized && PROCESS_REALTIME_ENABLED ? 'Synchronized' : aState.communication.phase}};
+            }
             if (!metadata || !aState.socketConnection.connected || heartbeat.controllerEpoch !== metadata.controllerEpoch
                 || heartbeat.processInstanceId !== metadata.processInstanceId || !Number.isSafeInteger(heartbeat.revision)) return aState;
-            return {...aState, communication: {...aState.communication, lastMessageAt: Date.now(),
+            return {...aState, isBrewingStatusStale: heartbeat.revision <= metadata.revision ? false : aState.isBrewingStatusStale,
+                communication: {...aState.communication, lastMessageAt: monotonicNow(),
                 phase: PROCESS_REALTIME_ENABLED && heartbeat.revision <= metadata.revision ? 'Synchronized' : aState.communication.phase}};
         }
         case ProductionActions.ActionTypes.CONFIRM_ACCEPTED:
@@ -256,7 +327,32 @@ const productionReducer = (
             return { ...aState, isBackenAvailable: aIsBackenAvailable, isBrewingStatusStale };
         }
         case ProductionActions.ActionTypes.SET_WATER_STATUS: {
-            return { ...aState, waterStatus: aAction.payload.waterStatus };
+            return updateWater(aState, aAction.payload.waterStatus, 'sync');
+        }
+        case ProductionActions.ActionTypes.WATER_SNAPSHOT: {
+            const {data, generation, source = 'socket'} = aAction.payload;
+            if (generation !== undefined && generation !== aState.communication.generation) return aState;
+            const status = parseWaterSnapshot(data);
+            if (!status) return {...aState, waterCommunication: {...aState.waterCommunication, needsSync: true, stale: true, synchronized: false}};
+            return updateWater(aState, status, source);
+        }
+        case ProductionActions.ActionTypes.WATER_START_ACCEPTED: {
+            const newOperation = aState.waterStatus.fillId && aState.waterStatus.fillId !== aAction.payload.baselineFillId;
+            return {...aState, waterCommand: {active: !(newOperation && ['COMPLETED', 'STOPPED', 'ERROR'].includes(aState.waterStatus.state ?? '')),
+                startedAt: monotonicNow(), ...aAction.payload, fillId: newOperation ? aState.waterStatus.fillId : undefined,
+                observedOpen: !!newOperation && aState.waterStatus.openClose}};
+        }
+        case ProductionActions.ActionTypes.WATER_STREAM_STALE:
+        case ProductionActions.ActionTypes.WATER_READ_FAILED:
+            return {...aState, waterCommunication: {...aState.waterCommunication, stale: true, synchronized: false}};
+        case ProductionActions.ActionTypes.WATER_HEARTBEAT: {
+            const data = aAction.payload;
+            const metadata = aState.waterStatus.snapshotMetadata;
+            if (!aState.socketConnection.connected || !metadata || data?.schemaVersion !== 1
+              || data.controllerEpoch !== metadata.controllerEpoch || data.fillId !== (aState.waterStatus.fillId ?? null)
+              || !revisionValid(data.waterFillingRevision) || data.waterFillingRevision > metadata.waterFillingRevision
+              || typeof data.sourceAgeSeconds !== 'number' || !Number.isFinite(data.sourceAgeSeconds) || data.sourceAgeSeconds < 0 || data.sourceAgeSeconds > 4) return aState;
+            return {...aState, waterCommunication: {...aState.waterCommunication, synchronized: true, stale: false, lastMessageAt: monotonicNow()}};
         }
         case ProductionActions.ActionTypes.OVERHEAT_RECEIVED: {
             console.warn('Overheat received, setting overHeat to true');
@@ -265,11 +361,12 @@ const productionReducer = (
         case ProductionActions.ActionTypes.SOCKET_CONNECTION_CHANGED: {
             return {
                 ...aState,
+                waterCommunication: {...aState.waterCommunication, synchronized: false, stale: waterActive(aState.waterStatus) || aState.waterCommunication.stale},
                 isBrewingStatusStale: !aAction.payload.connected && !!aState.brewingStatus ? true : aState.isBrewingStatusStale,
                 communication: {...aState.communication,
                     generation: aState.communication.generation + 1,
                     phase: aAction.payload.connected ? 'Synchronizing' : 'Disconnected',
-                    socketEpoch: undefined, lastMessageAt: Date.now()},
+                    socketEpoch: undefined, lastMessageAt: monotonicNow()},
                 socketConnection: {
                     connected: aAction.payload.connected,
                     socketId: aAction.payload.connected ? aAction.payload.socketId : undefined
@@ -330,7 +427,9 @@ const productionReducer = (
             return {...aState, brewRecovery: {available: false, recovery: null, resumePending: false, discardPending: false,
                     requestGeneration: aState.brewRecovery.requestGeneration + 1}};
         case ProductionActions.ActionTypes.WEBSOCKET_DISCONNECT: {
-            return {...aState, socketConnection: {connected: false}, realtimeState: {...aState.realtimeState, temperatureSensor: undefined}};
+            return {...aState, socketConnection: {connected: false}, realtimeState: {...aState.realtimeState, temperatureSensor: undefined},
+                communication: {...aState.communication, phase: 'Disconnected', generation: aState.communication.generation + 1},
+                waterCommunication: {...aState.waterCommunication, synchronized: false, stale: true}};
         }
 
         default:

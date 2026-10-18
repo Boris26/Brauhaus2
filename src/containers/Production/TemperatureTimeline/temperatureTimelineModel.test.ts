@@ -165,7 +165,7 @@ describe('temperature timeline model', () => {
             0
         ));
 
-        expect(new Set(models.map(model => model.axisEndSeconds))).toHaveSize(1);
+        expect(new Set(models.map(model => model.axisEndSeconds)).size).toBe(1);
         models.slice(1).forEach(model => expect(model.axisTicks).toEqual(models[0].axisTicks));
     });
 

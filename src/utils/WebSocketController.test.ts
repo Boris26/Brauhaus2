@@ -27,6 +27,20 @@ describe('WebSocketController', () => {
     io: {on: jest.fn(), off: jest.fn()},
   };
 
+  it('requests read synchronization after an OS-clock gap and cleans up its local monitor', () => {
+    jest.useFakeTimers();
+    const controller = createController('/api/controller');
+    const messages = jest.fn();
+    controller.onMessage(messages);
+    controller.connect();
+    jest.setSystemTime(Date.now() + 60_000);
+    jest.advanceTimersByTime(2000);
+    expect(messages).toHaveBeenCalledWith({event: 'resume'});
+    controller.disconnect();
+    expect(jest.getTimerCount()).toBe(0);
+    jest.useRealTimers();
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     Object.keys(listeners).forEach((event) => delete listeners[event]);

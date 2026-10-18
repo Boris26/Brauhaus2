@@ -91,3 +91,15 @@ explicit OFF through FillWaterStop and WaterStatus. STARTING is pending, partial
 closure is not recipe completion, and zero required Nachguss allows Hauptguss.
 Existing endpoints, liter units and acknowledgement bodies remain compatible.
 Deployment and real-hardware calibration remain **Needs verification**.
+
+
+## Current realtime optimization contract
+
+The coordinated implementation supersedes older polling/time/revision descriptions.
+See [Realtime communication optimization](realtime-optimization.md) for
+independent process/telemetry/water/time streams, exact water values with a 0.1 L
+publication threshold, 15 s general and active 2 s water heartbeats, HTTP fallback,
+retained local HTTP-failure stopping, shared performance.now() display projection,
+and monotonic controller duration timing. No hardware regulation, pulse/cutoff,
+database or fermentation contract is changed. Target-Pi validation remains
+**Needs verification**.
