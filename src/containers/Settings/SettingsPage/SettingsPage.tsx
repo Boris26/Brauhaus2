@@ -6,14 +6,13 @@ import { SOUND_LABELS, SOUND_TYPES, SoundType } from '../../../enums/eSoundType'
 import { UiMode } from '../../../enums/eUiMode';
 import { getUiMode, setUiMode } from '../../../utils/uiMode';
 import PaletteOutlinedIcon from '@mui/icons-material/PaletteOutlined';
-import PrecisionManufacturingOutlinedIcon from '@mui/icons-material/PrecisionManufacturingOutlined';
 import NotificationsNoneOutlinedIcon from '@mui/icons-material/NotificationsNoneOutlined';
 import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
 import WaterDropOutlinedIcon from '@mui/icons-material/WaterDropOutlined';
 import VolumeUpOutlinedIcon from '@mui/icons-material/VolumeUpOutlined';
 import HealthAndSafetyOutlinedIcon from '@mui/icons-material/HealthAndSafetyOutlined';
+import PrecisionManufacturingOutlinedIcon from '@mui/icons-material/PrecisionManufacturingOutlined';
 import SensorsOutlinedIcon from '@mui/icons-material/SensorsOutlined';
-import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import {AgitatorSettings} from '../../../model/AgitatorSettings';
 import {AgitatorSettingsRepository} from '../../../repositorys/AgitatorSettingsRepository';
 import {OperationalSettings, OperationalSettingsSection} from '../../../model/OperationalSettings';

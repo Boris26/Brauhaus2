@@ -224,7 +224,7 @@
 .fermentation-assignment-controls {
   display: flex;
   flex-wrap: wrap;
-  align-items: end;
+  align-items: flex-end;
   gap: var(--spacing-sm);
 }
 

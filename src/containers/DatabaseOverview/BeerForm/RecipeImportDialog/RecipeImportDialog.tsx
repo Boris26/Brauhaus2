@@ -97,7 +97,7 @@ export const RecipeImportDialog: React.FC<RecipeImportDialogProps> = ({open, loa
         setActiveResolution(result);
         setSubmitted(false);
         setCreating(undefined);
-    }, [result]); // A new backend response starts a new resolution; ordinary renders retain user choices.
+    }, [result, recipe, idempotencyKey, masterData]); // A new backend response starts a new resolution; ordinary renders retain user choices.
 
     React.useEffect(() => { if (backendError) setSubmitted(false); }, [backendError]);
 

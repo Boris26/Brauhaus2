@@ -12,7 +12,7 @@ import {FinishedBrew} from '../../../../model/FinishedBrew';
 import {brewStateLabel, eBrewState} from '../../../../enums/eBrewState';
 import {FermentationActions} from '../../../../actions/fermentation.actions';
 import {BubbleActivity, BubbleActivityRange, CreateFermentationMeasurement, FermentationAction, FermentationDetails, FermentationGatewaySensorStatus, FermentationMeasurementRuntimeState} from '../../../../model/Fermentation';
-import {actionAmountLabel, actionDueLabel, actionTriggerLabel, actionTypeLabel, assignedDeviceForBeer, canCompleteAction, contactStatus, contactTimeLabel, fermentationDay, freeFermentationDevices, isActionDue, isFermentationDeviceOnline, latestByDate, latestFermentationReadings} from '../../../../utils/fermentation';
+import {actionAmountLabel, actionTriggerLabel, actionTypeLabel, assignedDeviceForBeer, canCompleteAction, contactStatus, contactTimeLabel, fermentationDay, freeFermentationDevices, isActionDue, isFermentationDeviceOnline, latestByDate, latestFermentationReadings} from '../../../../utils/fermentation';
 import {canTransitionBrew, transitionFinishedBrew} from '../../../../utils/brewLifecycle';
 import {fermentationActionRequestId} from '../../../../reducers/fermentationReducer';
 import {TriggerType} from '../../../../model/FermentationRecipeAction';
