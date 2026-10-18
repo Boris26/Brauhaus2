@@ -11,6 +11,9 @@ import {AgitatorSettingsRepository} from '../../repositorys/AgitatorSettingsRepo
 import {HopUsage} from '../../enums/eHopUsage';
 import {eBrewState} from '../../enums/eBrewState';
 
+// Rendering Production must not start the application-lifetime socket/poll epics.
+jest.mock('../../store', () => ({__esModule: true, default: {dispatch: jest.fn()}}));
+
 beforeAll(() => {
     global.ResizeObserver = class {
         observe() {}
@@ -632,6 +635,121 @@ describe('Production finished-brew persistence', () => {
     });
 });
 
+describe('Production gauge cards', () => {
+    beforeEach(() => {
+        jest.spyOn(AgitatorSettingsRepository, 'get').mockResolvedValue({speed: 26, intervalOnMinutes: 2, intervalOffMinutes: 2});
+        jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockResolvedValue({
+            config: {mode: 'OFF', speedPercent: 26, runningMinutes: 2, breakMinutes: 2},
+            inputs: {heatingActive: false},
+            runtime: {paused: false, desiredOperation: 'STOPPED', actualOutputOn: false},
+        });
+        jest.spyOn(ProductionRepository, 'getWaterStatus');
+    });
+
+    afterEach(() => jest.restoreAllMocks());
+
+    const renderGauges = async (overrides: Partial<React.ComponentProps<typeof Production>> = {}) => {
+        const view = renderProduction(overrides);
+        await screen.findByText('26 %');
+        return view;
+    };
+
+    it('displays controller measurements and targets inside two cards', async () => {
+        const status = createBrewingStatus(ProcessState.ACTIVE);
+        status.temperature.target = 52;
+        await renderGauges({
+            waterStatus: {filledLiters: 25.4, targetLiters: 30, openClose: true, state: 'RUNNING', mode: 'MASH'},
+            brewingStatus: status,
+            realtimeState: {alarms: [], alarmsReceived: true, temperatureSensor: {current: 52.3, health: 'OK', sensorId: '28-1'}},
+        });
+        const water = screen.getByRole('region', {name: 'Wassermenge'});
+        const temperature = screen.getByRole('region', {name: 'Temperatur'});
+        expect(within(water).getByRole('img', {name: 'Wassermenge: 25,4 L'})).toBeInTheDocument();
+        expect(within(water).getAllByRole('definition')[0]).toHaveTextContent('30,0 L');
+        expect(within(water).getAllByRole('definition')[1]).toHaveTextContent('4,6 L');
+        expect(within(temperature).getByRole('img', {name: 'Temperatur: 52,3 °C'})).toBeInTheDocument();
+        expect(within(temperature).getByRole('definition')).toHaveTextContent('52 °C');
+        expect(ProductionRepository.getWaterStatus).not.toHaveBeenCalled();
+    });
+
+    it('updates measured liters and remaining quantity from successive statuses without replacing either dial', async () => {
+        const {props, rerender} = await renderGauges({waterStatus: {filledLiters: 0, targetLiters: 30, openClose: false, state: 'STARTING'}});
+        const waterDial = screen.getByRole('img', {name: 'Wassermenge: 0,0 L'});
+        const temperatureDial = screen.getByRole('img', {name: 'Temperatur: 55,4 °C'});
+
+        [0.3, 8.44, 25.4, 30.2].forEach(filledLiters => {
+            rerender(<Production {...props} waterStatus={{filledLiters, targetLiters: 30, openClose: true, state: 'RUNNING'}} />);
+            expect(screen.getByRole('img', {name: `Wassermenge: ${filledLiters.toLocaleString('de-DE', {minimumFractionDigits: 1, maximumFractionDigits: 1})} L`})).toBe(waterDial);
+            expect(within(screen.getByRole('region', {name: 'Wassermenge'})).getAllByRole('definition')[1]).toHaveTextContent(`${Math.max(0, 30 - filledLiters).toLocaleString('de-DE', {minimumFractionDigits: 1, maximumFractionDigits: 1})} L`);
+        });
+        expect(screen.getByRole('img', {name: 'Temperatur: 55,4 °C'})).toBe(temperatureDial);
+        expect(ProductionRepository.getWaterStatus).not.toHaveBeenCalled();
+    });
+
+    it.each(['COMPLETED', 'STOPPED', 'ERROR', 'IDLE'] as const)('keeps the measurement available in an inactive %s status', async state => {
+        const {props, rerender} = await renderGauges({waterStatus: {filledLiters: 25.4, targetLiters: 30, openClose: true, state: 'RUNNING'}});
+        const dial = screen.getByRole('img', {name: 'Wassermenge: 25,4 L'});
+        rerender(<Production {...props} waterStatus={{filledLiters: 25.4, targetLiters: 30, openClose: false, state}} />);
+        expect(screen.getByRole('img', {name: 'Wassermenge: 25,4 L'})).toBe(dial);
+        expect(within(screen.getByRole('region', {name: 'Wassermenge'})).getAllByRole('definition')[1]).toHaveTextContent('4,6 L');
+    });
+
+    it('uses the current fill rather than the tank sum and resets to a new controller-reported zero', async () => {
+        const {props, rerender} = await renderGauges({selectedBeer: createBeer(21, 9)});
+        fireEvent.click(screen.getByRole('button', {name: 'Nachguss einfüllen'}));
+        rerender(<Production {...props} waterStatus={{filledLiters: 9, targetLiters: 9, openClose: true}} />);
+        rerender(<Production {...props} waterStatus={{filledLiters: 9, targetLiters: 9, openClose: false}} />);
+        rerender(<Production {...props} waterStatus={{filledLiters: 0, targetLiters: 2, openClose: false, state: 'STARTING', fillId: 'new-fill'}} />);
+        expect(screen.getByRole('img', {name: 'Wassermenge: 0,0 L'})).toBeInTheDocument();
+        rerender(<Production {...props} waterStatus={{filledLiters: 2, targetLiters: 2, openClose: true, state: 'RUNNING', fillId: 'new-fill'}} />);
+        expect(screen.getByText('11,0 l')).toBeInTheDocument();
+        expect(screen.getByRole('img', {name: 'Wassermenge: 2,0 L'})).toBeInTheDocument();
+        expect(within(screen.getByRole('region', {name: 'Wassermenge'})).getAllByRole('definition')[0]).toHaveTextContent('2,0 L');
+        expect(within(screen.getByRole('region', {name: 'Wassermenge'})).getAllByRole('definition')[1]).toHaveTextContent('0,0 L');
+    });
+
+    it('does not display an editable manual quantity as the target of a fill that has not started', async () => {
+        await renderGauges();
+        const water = screen.getByRole('region', {name: 'Wassermenge'});
+        expect(within(water).getByRole('img', {name: 'Wassermenge: 0,0 L'})).toBeInTheDocument();
+        expect(within(water).getAllByRole('definition')[0]).toHaveTextContent('-- L');
+        expect(within(water).getAllByRole('definition')[1]).toHaveTextContent('-- L');
+    });
+
+    it('shows unknown water values neutrally without making up a measurement', async () => {
+        await renderGauges({waterStatus: {filledLiters: NaN, targetLiters: Infinity, openClose: false}});
+        const water = screen.getByRole('region', {name: 'Wassermenge'});
+        expect(within(water).getByRole('img', {name: 'Wassermenge: -- L'})).toBeInTheDocument();
+        expect(within(water).getAllByRole('definition')[0]).toHaveTextContent('-- L');
+        expect(within(water).getAllByRole('definition')[1]).toHaveTextContent('-- L');
+    });
+
+    it('preserves both cards during sensor disconnect and reconnect without using a stale process temperature', async () => {
+        const {props, rerender} = await renderGauges();
+        const dial = screen.getByRole('img', {name: 'Temperatur: 55,4 °C'});
+        rerender(<Production {...props} socketConnected={false} />);
+        expect(screen.getByRole('img', {name: 'Temperatur: -- °C'})).toBe(dial);
+        rerender(<Production {...props} realtimeState={{alarms: [], alarmsReceived: true, temperatureSensor: {current: 0, health: 'OK', sensorId: '28-1'}}} />);
+        expect(screen.getByRole('img', {name: 'Temperatur: 0,0 °C'})).toBe(dial);
+    });
+
+    it.each([undefined, NaN, Infinity])('shows an unavailable target temperature (%s) neutrally', async target => {
+        const brewingStatus = createBrewingStatus();
+        brewingStatus.temperature.target = target;
+        await renderGauges({brewingStatus});
+        expect(within(screen.getByRole('region', {name: 'Temperatur'})).getByRole('definition')).toHaveTextContent('-- °C');
+    });
+
+    it('shows zero as a valid target and clears a target that has become stale', async () => {
+        const brewingStatus = createBrewingStatus();
+        brewingStatus.temperature.target = 0;
+        const {props, rerender} = await renderGauges({brewingStatus});
+        expect(within(screen.getByRole('region', {name: 'Temperatur'})).getByRole('definition')).toHaveTextContent('0 °C');
+        rerender(<Production {...props} isBrewingStatusStale />);
+        expect(within(screen.getByRole('region', {name: 'Temperatur'})).getByRole('definition')).toHaveTextContent('-- °C');
+    });
+});
+
 describe('Production start button', () => {
 
     it('blocks startup safely until the first sensor snapshot arrives', () => {
@@ -678,20 +796,18 @@ describe('Production start button', () => {
         expect(container.querySelector('.flame-strip')).not.toBeNull();
     });
 
-    it('places the current step above the sole temperature gauge and keeps the process column focused on the upcoming flow', () => {
-        const {container} = renderProduction({brewingStatus: createBrewingStatus(ProcessState.IDLE)});
-        const meters = container.querySelector('.meters') as HTMLElement;
-        const processColumn = container.querySelector('.list') as HTMLElement;
-
-        expect(meters.querySelector('.current-step-panel')).toBeInTheDocument();
-        expect(meters.querySelector('.Temp')).toBeInTheDocument();
-        expect(meters.querySelectorAll('.GaugeContainer')).toHaveLength(1);
-        expect(meters.querySelector('[aria-label="Aktueller Prozessschritt"]')).toHaveTextContent('Brauprozess');
-        expect(meters).toContainElement(screen.getByRole('button', {name: 'Brauvorgang starten'}));
-        expect(container.querySelector('.settings')).not.toContainElement(screen.getByRole('button', {name: 'Brauvorgang starten'}));
-        expect(processColumn).toHaveTextContent('Ablauf');
-        expect(processColumn.querySelector('.current-process-step')).not.toBeInTheDocument();
-        expect(container.querySelector('.Water')).toHaveTextContent('0,0 l');
+    it('places the current step above both gauge cards and keeps the process column focused on the upcoming flow', () => {
+        renderProduction({brewingStatus: createBrewingStatus(ProcessState.IDLE)});
+        const currentStep = screen.getByRole('region', {name: 'Aktueller Prozessschritt'});
+        const water = screen.getByRole('region', {name: 'Wassermenge'});
+        const temperature = screen.getByRole('region', {name: 'Temperatur'});
+        expect(within(water).getByRole('img')).toBeInTheDocument();
+        expect(within(temperature).getByRole('img')).toBeInTheDocument();
+        // eslint-disable-next-line testing-library/no-node-access -- Verify document order relative to the existing process controls.
+        expect(currentStep.compareDocumentPosition(water) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+        expect(within(currentStep).getByRole('button', {name: 'Brauvorgang starten'})).toBeInTheDocument();
+        expect(within(screen.getByRole('region', {name: 'Ablauf'})).queryByRole('button', {name: 'Brauvorgang starten'})).not.toBeInTheDocument();
+        expect(screen.getByText('0,0 l')).toBeInTheDocument();
     });
 
     it('keeps the start button enabled when no brew is running', () => {
@@ -824,7 +940,7 @@ describe('Production inline confirmations', () => {
     it('labels the decoction target as the held main-mash rest temperature', () => {
         renderProduction({brewingStatus: waitingStatus(WaitingFor.DECOCTION_CONFIRMATION, ProcessPhase.DECOCTION)});
         expect(screen.getByText('Hauptmaische · gehaltene Rasttemperatur')).toBeInTheDocument();
-        expect(screen.getByText('66 °C')).toBeInTheDocument();
+        expect(within(screen.getByRole('region', {name: 'Aktueller Prozessschritt'})).getByText('66 °C')).toBeInTheDocument();
         expect(screen.getByText('Hauptmaische wird weiterhin auf 66 °C gehalten.')).toBeInTheDocument();
     });
 
