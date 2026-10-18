@@ -23,7 +23,7 @@ import {eBrewState} from "../../enums/eBrewState";
 import {BackendAvailable} from "../../reducers/productionReducer";
 import {ProcessList} from "./ProcessList/ProcessList";
 import { dataCollector } from '../../utils/DataCollector/dataCollector';
-import {isBrewingProcessActive, isProcessActive} from "../../utils/brewingStatus/selectors";
+import {getTargetTemperature, isBrewingProcessActive, isProcessActive} from "../../utils/brewingStatus/selectors";
 import {getVesselContentType} from "../../utils/brewingStatus/vesselContent";
 import {calculateHopSchedule, getDueHopAddition, HopAddition} from "./utils/hopSchedule";
 import {BrewingDisplayTimeAnchor, createBrewingDisplayTimeAnchor, projectBrewingDisplayTime, shouldCountdownLocally} from "./utils/productionCountdown";

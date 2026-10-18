@@ -1,5 +1,9 @@
 import {ConfirmStates} from '../../enums/eConfirmStates';
 import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor, WaitingState} from '../../model/brewingStatus.types';
+import {Beer} from '../../model/Beer';
+import {createProcessSteps, ProcessListEntryType} from './processSteps';
+import {ProcedureType} from '../../enums/eProcedureType';
+import {RestExecutionMode} from '../../enums/eRestExecutionMode';
 
 /**
  * Diese Selektoren kapseln alle UI-Entscheidungen.
@@ -13,6 +17,45 @@ export const isProcessFinished = (aStatus?: BrewingStatus) => aStatus?.process.s
 export const isProcessAborted = (aStatus?: BrewingStatus) => aStatus?.process.state === ProcessState.ABORTED;
 export const isProcessInError = (aStatus?: BrewingStatus) => aStatus?.process.state === ProcessState.ERROR;
 export const isStepWaiting = (aStatus?: BrewingStatus) => aStatus?.currentStep.mode === ProcessMode.WAITING;
+
+const finiteTemperature = (value: unknown): number | undefined => {
+    if (typeof value !== 'number' && (typeof value !== 'string' || value.trim() === '')) return undefined;
+    const temperature = Number(value);
+    return Number.isFinite(temperature) ? temperature : undefined;
+};
+
+/** Display fallback only: never infer a target from the list's first-row fallback. */
+export const getTargetTemperature = (aStatus?: BrewingStatus, selectedBeer?: Beer): number | undefined => {
+    const controllerTarget = finiteTemperature(aStatus?.temperature?.target);
+    // Explicit zero is authoritative and keeps the gauge's existing no-target behavior.
+    if (controllerTarget !== undefined) return controllerTarget;
+    if (!isProcessActive(aStatus) || !selectedBeer || !aStatus) return undefined;
+
+    const {index, phase, mode} = aStatus.currentStep;
+    if (!Number.isInteger(index) || index === undefined || index <= 0 ||
+        ![ProcessMode.HEATING, ProcessMode.HOLDING, ProcessMode.TIMER_RUNNING, ProcessMode.WAITING].includes(mode)) return undefined;
+
+    const matchingSteps = createProcessSteps(selectedBeer).filter(step =>
+        step.entryType === ProcessListEntryType.PROCESS && step.controlStepIndex === index && step.phase === phase
+    );
+    if (matchingSteps.length !== 1) return undefined;
+
+    const activeStep = matchingSteps[0];
+    let recipeTarget = activeStep.detail?.temperature;
+    if (phase === ProcessPhase.DECOCTION) {
+        if (!activeStep.relatedRastId) return undefined;
+        const relatedSteps = selectedBeer.fermentation.filter(step => step.stepId === activeStep.relatedRastId);
+        if (relatedSteps.length !== 1) return undefined;
+        const relatedStep = relatedSteps[0];
+        const procedureType = relatedStep.procedureType ??
+            (relatedStep.executionMode === RestExecutionMode.CONFIRMATION_HOLD ? ProcedureType.DECOCTION : ProcedureType.RAST);
+        if (procedureType !== ProcedureType.RAST || ['Einmaischen', 'Abmaischen', 'Kochen'].includes(relatedStep.type)) return undefined;
+        recipeTarget = relatedStep.temperature;
+    }
+
+    const temperature = finiteTemperature(recipeTarget);
+    return temperature !== undefined && temperature > 0 ? temperature : undefined;
+};
 
 export const confirmationTypeByWaitingState: Partial<Record<WaitingState, ConfirmStates>> = {
     [WaitingFor.IODINE_TEST]: ConfirmStates.IODINE,

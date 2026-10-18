@@ -1,4 +1,7 @@
-import {getBrewingStatusLabel, getConfirmButtonLabel, getConfirmationRequestViewModel, getConfirmationType, getCountdownValue, isBrewingProcessActive, shouldShowConfirmButton, shouldShowCountdown, shouldShowWaitingDialog} from './selectors';
+import {getBrewingStatusLabel, getConfirmButtonLabel, getConfirmationRequestViewModel, getConfirmationType, getCountdownValue, getTargetTemperature, isBrewingProcessActive, shouldShowConfirmButton, shouldShowCountdown, shouldShowWaitingDialog} from './selectors';
+import {Beer} from '../../model/Beer';
+import {ProcedureType} from '../../enums/eProcedureType';
+import {RestExecutionMode} from '../../enums/eRestExecutionMode';
 import {AlarmType, BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
 import {ConfirmStates} from '../../enums/eConfirmStates';
 import {isEquipmentAlarmActive, isHeaterStuckOnAlarmActive} from './alarmDisplay';
@@ -9,6 +12,78 @@ const makeStatus = (aPart: Partial<BrewingStatus>): BrewingStatus => ({
   currentStep: {phase: ProcessPhase.NONE, mode: ProcessMode.NONE},
   temperature: {}, waiting: {waitingFor: WaitingFor.NONE, canConfirm: false}, error: {},
   ...aPart
+});
+
+describe('shared target temperature', () => {
+  const beer = {
+    cookingTemperatur: 100,
+    fermentation: [
+      {type: 'Einmaischen', temperature: 57},
+      {type: 'Rast 1', stepId: 'rest-1', temperature: 65, procedureType: ProcedureType.RAST},
+      {type: 'Dekoktion', stepId: 'decoction-1', relatedRastId: 'rest-1', temperature: 95, procedureType: ProcedureType.DECOCTION},
+      {type: 'Rast 2', stepId: 'rest-2', temperature: 72},
+      {type: 'Dekoktion', stepId: 'decoction-2', relatedRastId: 'rest-2', executionMode: RestExecutionMode.CONFIRMATION_HOLD},
+      {type: 'Abmaischen', temperature: 78},
+    ],
+  } as Beer;
+  const status = (index = 2, phase = ProcessPhase.RAST, mode = ProcessMode.HEATING) =>
+    makeStatus({currentStep: {index, phase, mode}, temperature: {current: 65}});
+
+  it.each([66, 0, '66', '0'])('keeps controller target %p ahead of recipe values', target => {
+    const controllerStatus = {...status(), temperature: {target}} as BrewingStatus;
+    expect(getTargetTemperature(controllerStatus, beer)).toBe(Number(target));
+    expect(getTargetTemperature(controllerStatus)).toBe(Number(target));
+  });
+
+  it.each([undefined, null, NaN, Infinity, -Infinity, '', ' ', 'invalid', false])('falls back for missing or invalid controller target %p', target => {
+    expect(getTargetTemperature({...status(), temperature: {target}} as BrewingStatus, beer)).toBe(65);
+  });
+
+  it.each([
+    [1, ProcessPhase.MASHING_IN, 57],
+    [2, ProcessPhase.RAST, 65],
+    [3, ProcessPhase.DECOCTION, 65],
+    [4, ProcessPhase.RAST, 72],
+    [5, ProcessPhase.DECOCTION, 72],
+    [6, ProcessPhase.MASHING_OUT, 78],
+    [7, ProcessPhase.COOKING, 100],
+  ])('resolves control step %i in phase %s to %i °C', (index, phase, expected) => {
+    expect(getTargetTemperature(status(index, phase), beer)).toBe(expected);
+  });
+
+  it.each([ProcessMode.HEATING, ProcessMode.HOLDING, ProcessMode.TIMER_RUNNING, ProcessMode.WAITING])('resolves an active step in %s mode', mode => {
+    expect(getTargetTemperature(status(2, ProcessPhase.RAST, mode), beer)).toBe(65);
+  });
+
+  it.each([ProcessState.IDLE, ProcessState.FINISHED, ProcessState.ABORTED, ProcessState.ERROR])('does not infer a recipe target for process state %s', state => {
+    expect(getTargetTemperature({...status(), process: {state}}, beer)).toBeUndefined();
+  });
+
+  it.each([undefined, 0, -1, 999, 1.5])('does not fall back to the first row for index %p', index => {
+    expect(getTargetTemperature({...status(), currentStep: {...status().currentStep, index}}, beer)).toBeUndefined();
+  });
+
+  it('requires matching phase, active mode, status, and recipe', () => {
+    expect(getTargetTemperature(status(2, ProcessPhase.MASHING_IN), beer)).toBeUndefined();
+    expect(getTargetTemperature(status(2, ProcessPhase.NONE), beer)).toBeUndefined();
+    expect(getTargetTemperature(status(2, ProcessPhase.RAST, ProcessMode.NONE), beer)).toBeUndefined();
+    expect(getTargetTemperature(status(2, ProcessPhase.RAST, ProcessMode.FINISHED), beer)).toBeUndefined();
+    expect(getTargetTemperature(undefined, beer)).toBeUndefined();
+    expect(getTargetTemperature(status())).toBeUndefined();
+  });
+
+  it.each([undefined, NaN, Infinity, 0, -1])('does not invent a target for invalid recipe temperature %p', temperature => {
+    const recipe = {...beer, fermentation: beer.fermentation.map(step => step.stepId === 'rest-1' ? {...step, temperature} : step)};
+    expect(getTargetTemperature(status(), recipe)).toBeUndefined();
+  });
+
+  it('does not use a decoction temperature when the related rest is missing or ambiguous', () => {
+    const recipe = {...beer, fermentation: beer.fermentation.filter(step => step.stepId !== 'rest-1')};
+    expect(getTargetTemperature(status(2, ProcessPhase.DECOCTION), recipe)).toBeUndefined();
+    expect(getTargetTemperature(status(3, ProcessPhase.DECOCTION), {...beer, fermentation: [...beer.fermentation, beer.fermentation[1]]})).toBeUndefined();
+    const invalidRelation = {...beer, fermentation: beer.fermentation.map(step => step.stepId === 'rest-1' ? {...step, procedureType: ProcedureType.DECOCTION} : step)};
+    expect(getTargetTemperature(status(3, ProcessPhase.DECOCTION), invalidRelation)).toBeUndefined();
+  });
 });
 
 describe('brewing selectors', () => {

@@ -100,6 +100,16 @@ The desktop UI invokes the Caddy-routed system shutdown contract with `POST /api
 
 The PI control app produces runtime/control data that the UI displays and uses for workflow behavior.
 
+The desktop Production gauge and step details share a UI-only target-temperature
+fallback. Finite `temperature.target` values (including zero) remain authoritative;
+only missing/invalid values during an explicitly ACTIVE, matched recipe step use
+the planned temperature, or the uniquely referenced RAST for DECOCTION. No API,
+recipe DTO, Celsius unit, polling, or control-command contract changes. The fallback
+does not replace controller status or measurements. Whether a deployed controller
+actually omits its target during an active step remains **Needs verification**
+against its real `/Status/` response; Google Charts rendering on that installation
+also remains **Needs verification**.
+
 The Settings UI also consumes the existing `POST /api/audio/test` contract. Its `sound` request field is restricted to the logical values `ALARM`, `WARNING`, `CONFIRMATION`, `REST_FINISHED`, `BREW_FINISHED`, and `SUCCESS`; UI labels do not alter these values and the UI never sends WAV filenames. The routed `/api/audio` ownership and deployment mapping are **Needs verification** outside this repository.
 
 The UI accepts `currentStep.phase: DECOCTION` as a public sequential mash phase and sends new decoction recipe steps with `procedureType: DECOCTION` plus `executionMode: CONFIRMATION_HOLD`. Database persistence of the new optional field is **Needs verification** in the database/backend repository.

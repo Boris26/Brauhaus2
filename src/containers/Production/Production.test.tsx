@@ -10,6 +10,12 @@ import {ProductionRepository} from '../../repositorys/ProductionRepository';
 import {AgitatorSettingsRepository} from '../../repositorys/AgitatorSettingsRepository';
 import {HopUsage} from '../../enums/eHopUsage';
 import {eBrewState} from '../../enums/eBrewState';
+import {ProcedureType} from '../../enums/eProcedureType';
+
+const mockGoogleChart = jest.fn((_props: any) => <div />);
+jest.mock('react-google-charts', () => ({Chart: (props: any) => mockGoogleChart(props)}));
+jest.mock('../../store', () => ({__esModule: true, default: {dispatch: jest.fn()}}));
+jest.mock('axios', () => jest.requireActual('axios/dist/node/axios.cjs'));
 
 // Rendering Production must not start the application-lifetime socket/poll epics.
 jest.mock('../../store', () => ({__esModule: true, default: {dispatch: jest.fn()}}));
@@ -106,6 +112,86 @@ const deferred = <T,>() => {
     const promise = new Promise<T>((res, rej) => { resolve = res; reject = rej; });
     return {promise, resolve, reject};
 };
+
+describe('Production shared target temperature', () => {
+    const beer = {...createBeer(), fermentation: [
+        {type: 'Einmaischen', temperature: 60},
+        {type: 'Rast 1', stepId: 'rest-1', temperature: 65, time: 20},
+        {type: 'Rast 2', stepId: 'rest-2', temperature: 72, time: 10},
+        {type: 'Dekoktion', relatedRastId: 'rest-2', temperature: 95, procedureType: ProcedureType.DECOCTION},
+        {type: 'Abmaischen', temperature: 78},
+    ]};
+    const restStatus = (): BrewingStatus => ({
+        ...createBrewingStatus(ProcessState.ACTIVE),
+        currentStep: {index: 2, phase: ProcessPhase.RAST, mode: ProcessMode.HEATING, name: 'Rast 1'},
+        temperature: {current: 65},
+    });
+    const temperatureChart = () => mockGoogleChart.mock.calls.filter(([props]) => props.data[1][0] === '°C').at(-1)![0];
+    const expectTarget = (target: number) => {
+        expect(screen.getByLabelText('Aktueller Prozessschritt').querySelector('.current-step-temperature')).toHaveTextContent(`${target} °C`);
+        expect(temperatureChart().options).toMatchObject({
+            yellowFrom: 0, yellowTo: target - 1, greenFrom: target - 1,
+            greenTo: target + 1, redFrom: target + 1, redTo: 100,
+        });
+    };
+    const expectNoTarget = () => {
+        expect(screen.getByLabelText('Aktueller Prozessschritt').querySelector('.current-step-temperature')).toBeNull();
+        expect(temperatureChart().options).toMatchObject({yellowFrom: 0, yellowTo: 0, greenFrom: 0, greenTo: 0, redFrom: 0, redTo: 0});
+    };
+
+    beforeEach(() => {
+        mockGoogleChart.mockClear();
+        jest.spyOn(AgitatorSettingsRepository, 'get').mockResolvedValue({speed: 26, intervalOnMinutes: 2, intervalOffMinutes: 2});
+        jest.spyOn(ProductionRepository, 'getAgitatorStatus').mockResolvedValue({
+            config: {mode: 'OFF', speedPercent: 26, runningMinutes: 2, breakMinutes: 2},
+            inputs: {heatingActive: false},
+            runtime: {paused: false, desiredOperation: 'STOPPED', actualOutputOn: false},
+        });
+    });
+    afterEach(() => jest.restoreAllMocks());
+
+    it('uses the active recipe target for both the step and gauge when only a current temperature is reported', () => {
+        renderProduction({selectedBeer: beer, brewingStatus: restStatus()});
+        expectTarget(65);
+        expect(screen.getByText('65 °C von 65 °C')).toBeInTheDocument();
+        expect(temperatureChart().data[1]).toEqual(['°C', 55.4]);
+    });
+
+    it('updates the gauge and step together when controller targets arrive, including explicit zero', () => {
+        const status = restStatus();
+        const {props, rerender} = renderProduction({selectedBeer: beer, brewingStatus: status});
+        expectTarget(65);
+        rerender(<Production {...props} brewingStatus={{...status, temperature: {current: 65, target: 67}}} />);
+        expectTarget(67);
+        rerender(<Production {...props} brewingStatus={{...status, temperature: {current: 65, target: 0}}} />);
+        expectNoTarget();
+    });
+
+    it('follows the next recipe step and clears the bands for an unknown control step', () => {
+        const status = restStatus();
+        const {props, rerender} = renderProduction({selectedBeer: beer, brewingStatus: status});
+        expectTarget(65);
+        rerender(<Production {...props} brewingStatus={{...status, currentStep: {...status.currentStep, index: 3, name: 'Rast 2'}}} />);
+        expectTarget(72);
+        rerender(<Production {...props} brewingStatus={{...status, currentStep: {...status.currentStep, index: 999}}} />);
+        expectNoTarget();
+    });
+
+    it('uses the related rest temperature throughout a decoction confirmation', () => {
+        const status: BrewingStatus = {...restStatus(),
+            currentStep: {index: 4, phase: ProcessPhase.DECOCTION, mode: ProcessMode.WAITING, name: 'Dekoktion'},
+            waiting: {waitingFor: WaitingFor.DECOCTION_CONFIRMATION, canConfirm: true},
+        };
+        renderProduction({selectedBeer: beer, brewingStatus: status});
+        expectTarget(72);
+        expect(screen.getByLabelText('Aktion erforderlich')).toHaveTextContent('Hauptmaische wird weiterhin auf 72 °C gehalten.');
+    });
+
+    it('does not infer recipe bands from a sensor snapshot before any process status is loaded', () => {
+        renderProduction({selectedBeer: beer, brewingStatus: undefined});
+        expectNoTarget();
+    });
+});
 
 describe('Production agitator controller integration', () => {
     const detail = {
@@ -955,12 +1041,13 @@ describe('Production inline confirmations', () => {
             ],
         } as Beer;
         const status = waitingStatus(WaitingFor.DECOCTION_CONFIRMATION, ProcessPhase.DECOCTION);
+        status.currentStep.index = 3;
         status.currentStep.name = 'Dekoktion 1';
         status.temperature = {current: 64};
         renderProduction({selectedBeer: beer, brewingStatus: status});
 
         expect(screen.getByText('Hauptmaische · gehaltene Rasttemperatur')).toBeInTheDocument();
-        expect(screen.getByText('67 °C')).toBeInTheDocument();
+        expect(within(screen.getByLabelText('Aktueller Prozessschritt')).getByText('67 °C')).toBeInTheDocument();
     });
 
     it('renders hop additions as a non-blocking reminder and dismisses only the reminder', () => {

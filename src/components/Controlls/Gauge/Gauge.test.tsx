@@ -63,4 +63,17 @@ describe('Gauge', () => {
         const ids = Array.from(container.querySelectorAll('defs [id]'), element => element.id);
         expect(new Set(ids).size).toBe(ids.length);
     });
+
+    it('restores the bands when a target arrives and clears them when the target is removed', () => {
+        const {rerender} = render(<Gauge showAreas={true} value={65} targetValue={0} height={200} offset={1} minValue={0} maxValue={100} label="°C" />);
+        const options = () => mockChart.mock.calls[mockChart.mock.calls.length - 1][0].options;
+        const noAreas = {yellowFrom: 0, yellowTo: 0, greenFrom: 0, greenTo: 0, redFrom: 0, redTo: 0};
+        expect(options()).toEqual(expect.objectContaining(noAreas));
+
+        rerender(<Gauge showAreas={true} value={65} targetValue={65} height={200} offset={1} minValue={0} maxValue={100} label="°C" />);
+        expect(options()).toEqual(expect.objectContaining({yellowFrom: 0, yellowTo: 64, greenFrom: 64, greenTo: 66, redFrom: 66, redTo: 100}));
+
+        rerender(<Gauge showAreas={true} value={65} targetValue={0} height={200} offset={1} minValue={0} maxValue={100} label="°C" />);
+        expect(options()).toEqual(expect.objectContaining(noAreas));
+    });
 });

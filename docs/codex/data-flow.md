@@ -56,6 +56,17 @@ Needs verification: backend ordering of `GET beers`, because the UI treats the l
 - Normalized status is stored in `productionReducer.brewingStatus` and in `dataCollector`.
 - Polling stops when normalized process state is `FINISHED`, `ABORTED`, or `ERROR`.
 
+Production's temperature gauge, current-step heading, heat-up detail, and decoction
+notice share `getTargetTemperature` in `utils/brewingStatus/selectors.ts`. A finite
+controller target has priority, including explicit zero. Missing/invalid targets
+use recipe data only for an ACTIVE process with a matching positive control step
+index, phase, and active mode. Decoctions use the uniquely linked RAST temperature
+through `relatedRastId`; they never use their own stale temperature. Recipe-step
+generation is shared in `utils/brewingStatus/processSteps.ts`. The list's visual
+first-row fallback cannot supply a target. This is a display projection only;
+it does not change normalized controller status, collected measurements, commands,
+polling, Celsius units, or the gauge's existing colors and ±1 °C green band.
+
 Automatic water filling follows the same at-most-once-while-pending rule: another `START_WATER_FILLING` is ignored until the active controller command and its water-status polling lifecycle finish.
 
 ## Production agitator configuration flow
