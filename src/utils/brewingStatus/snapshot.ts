@@ -1,5 +1,6 @@
 import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState} from '../../model/brewingStatus.types';
 import {normalizeBrewingStatus} from './normalizeBrewingStatus';
+import {validTimelineClock} from '../../model/ProcessTimeline';
 
 export interface SnapshotMetadata {
   schemaVersion: 1;
@@ -12,6 +13,9 @@ export interface SnapshotMetadata {
   timeAnchor?: ControllerTimeAnchor;
 }
 export interface ControllerTimeAnchor {
+  timelineId?: string;
+  processElapsedSeconds?: number;
+  processRunning?: boolean;
   sequence: number;
   stepId?: string | null;
   stepIndex?: number;
@@ -43,6 +47,7 @@ export const validMetadata = (value: any): value is SnapshotMetadata & Record<st
   && (value.timeAnchorSequence === undefined || (Number.isSafeInteger(value.timeAnchorSequence) && value.timeAnchorSequence >= 0));
 
 export const validStatus = (value: any): boolean => object(value)
+  && (value.timeline === undefined || validTimelineClock(value.timeline))
   && finite(value.elapsedTime) && value.elapsedTime >= 0
   && object(value.process) && Object.values(ProcessState).includes(value.process.state)
   && object(value.currentStep) && Object.values(ProcessPhase).includes(value.currentStep.phase)

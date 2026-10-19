@@ -327,3 +327,15 @@ retained local HTTP-failure stopping, shared performance.now() display projectio
 and monotonic controller duration timing. No hardware regulation, pulse/cutoff,
 database or fermentation contract is changed. Target-Pi validation remains
 **Needs verification**.
+
+
+## Cumulative production temperature timeline
+
+Brauhaus2 and Braumeister jointly implement the additive contract in
+[temperature-timeline.md](../temperature-timeline.md): status/time-anchor clock
+metadata, GET /ProcessTimeline cursor replay and compact retention ranges,
+optional recovery clock identity, and schemaVersion 2 finished-brew archives.
+Legacy elapsedTime and local countdown/recovery semantics are unchanged. The
+existing BeerDataStore generic recovery JSON envelope preserves the optional
+clock fields; no database schema or BeerDataStore code changes are required.
+Coordinated deployment and real-Pi verification remain **Needs verification**.

@@ -120,7 +120,7 @@ export const acceptedStatusEffectsEpic$ = (action$: any, state$: State) => {
       if (status && (acceptedSnapshot || acceptedTelemetry) && (status !== collectedStatus || telemetry !== collectedTelemetry)) {
         const metadata = status.snapshotMetadata;
         const process = metadata ? `${metadata.controllerEpoch}/${metadata.processInstanceId}` : undefined;
-        if (collectedProcess && process && process !== collectedProcess) dataCollector.reset();
+        if (collectedProcess && process && process !== collectedProcess && !status.timeline) dataCollector.reset();
         collectedProcess = process;
         collectedStatus = status;
         collectedTelemetry = telemetry;

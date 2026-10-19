@@ -75,6 +75,14 @@ const normalizeWaterStatus = (aValue: unknown): WaterStatus => {
 };
 
 export class ProductionRepository {
+    static async getProcessTimeline(timelineId: string, cursor: {afterSequence: number; retentionVersion?: number}, signal?: AbortSignal): Promise<unknown> {
+        const request = createRequestConfig(8000, signal);
+        try {
+            return (await axios.get(`${BaseURL}/ProcessTimeline`, {...request.config, params: {timelineId, ...cursor}})).data;
+        } finally {
+            clearRequestTimeout(request);
+        }
+    }
     private static pendingWaterStart?: Promise<boolean>;
 
     static async getBrewSession(): Promise<BrewSession> {

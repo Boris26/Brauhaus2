@@ -1,5 +1,7 @@
 import {dataCollector, MAX_MEASUREMENTS_PER_STATUS_GROUP, MAX_TOTAL_MEASUREMENTS} from './dataCollector';
 import {BrewingStatus, ProcessMode, ProcessPhase, ProcessState, WaitingFor} from '../../model/brewingStatus.types';
+import {clock, history, modernStatus, phase, reading} from '../../testUtils/processTimeline';
+import {parseRecordedTimelineExport} from '../../model/ProcessTimeline';
 
 const createStatus = (aTemperature: number): BrewingStatus => ({
   elapsedTime: aTemperature,
@@ -87,6 +89,74 @@ describe('dataCollector', (): void => {
     expect(dataCollector.getTimelineMeasurements()).toHaveLength(MAX_TOTAL_MEASUREMENTS);
     expect(Object.keys(parsed.groupedData)).toHaveLength(MAX_TOTAL_MEASUREMENTS);
     expect(dataCollector.getTimelineMeasurements().at(-1)?.Temperature).toBe(MAX_TOTAL_MEASUREMENTS + 24);
+  });
+});
+
+describe('physical acquisition history', () => {
+  beforeEach(() => dataCollector.reset());
+
+  it('collects identical acquisitions and null gaps once, without status-generated samples', () => {
+    dataCollector.setBrewingStatus(modernStatus());
+    dataCollector.setBrewingStatus(modernStatus({elapsedTime: 100}));
+    expect(dataCollector.getMeasurementCount()).toBe(0);
+    const page = history([reading(1, 60), reading(2, 60), reading(3, 61), reading(4, null), reading(5, 0)]);
+    dataCollector.applyTimelineHistory(page);
+    const snapshot = dataCollector.getTimelineSnapshot();
+    expect(snapshot.measurements.map(p => p.Temperature)).toEqual([60, 60, 61, null, 0]);
+    expect(dataCollector.applyTimelineHistory(page)).toBe(false);
+    expect(dataCollector.getTimelineSnapshot()).toBe(snapshot);
+  });
+
+  it('repairs browser reloads and reconnect gaps through exclusive sequence reads', () => {
+    const all = [reading(1), reading(2), reading(3), reading(4)];
+    dataCollector.applyTimelineHistory(history(all.slice(0, 2)));
+    const old = dataCollector.getTimelineSnapshot().measurements[0];
+    expect(dataCollector.getHistoryCursor().afterSequence).toBe(2);
+    dataCollector.applyTimelineHistory(history(all.slice(1), {reset: false}));
+    expect(dataCollector.getTimelineSnapshot().measurements).toHaveLength(4);
+    expect(dataCollector.getTimelineSnapshot().measurements[0]).toBe(old);
+    dataCollector.reset();
+    dataCollector.applyTimelineHistory(history(all));
+    expect(dataCollector.getTimelineSnapshot().measurements.map(p => p.measurementSequence)).toEqual([1, 2, 3, 4]);
+  });
+
+  it('replaces bounded retained history, rejects stale pages, and keeps unchanged point identities', () => {
+    dataCollector.applyTimelineHistory(history([reading(1), reading(2), reading(3)]));
+    const first = dataCollector.getTimelineSnapshot().measurements[0];
+    dataCollector.applyTimelineHistory(history([reading(1), reading(3), reading(4)], {
+      timeline: clock({historyCursor: 4, retentionVersion: 1})}));
+    expect(dataCollector.getTimelineSnapshot().measurements.map(p => p.measurementSequence)).toEqual([1, 3, 4]);
+    expect(dataCollector.getTimelineSnapshot().measurements[0]).toBe(first);
+    expect(dataCollector.applyTimelineHistory(history([reading(1)]))).toBe(false);
+  });
+
+  it('applies compact retention changes without replaying or rebuilding the retained measurements', () => {
+    dataCollector.applyTimelineHistory(history([reading(1), reading(2), reading(3)]));
+    const first = dataCollector.getTimelineSnapshot().measurements[0];
+    dataCollector.applyTimelineHistory(history([reading(4)], {reset: false, retainedRanges: [[1, 1], [3, 4]],
+      timeline: clock({historyCursor: 4, retentionVersion: 1})}));
+    expect(dataCollector.getTimelineSnapshot().measurements.map(p => p.measurementSequence)).toEqual([1, 3, 4]);
+    expect(dataCollector.getTimelineSnapshot().measurements[0]).toBe(first);
+  });
+
+  it('preserves recovery identity and exports explicit cumulative coordinates without changing local elapsedTime', () => {
+    dataCollector.applyTimelineHistory(history([{...reading(1, 60, 600), elapsedTime: 0}]));
+    dataCollector.setBrewingStatus(modernStatus({snapshotMetadata: {...modernStatus().snapshotMetadata!, controllerEpoch: 'restart'}}));
+    expect(dataCollector.getMeasurementCount()).toBe(1);
+    dataCollector.setBrewingStatus({...modernStatus(), timeline: undefined, process: {state: ProcessState.IDLE}});
+    expect(dataCollector.getMeasurementCount()).toBe(1);
+    const archive = parseRecordedTimelineExport(JSON.parse(dataCollector.getAllDataAsJSONString()))!;
+    expect(archive.schemaVersion).toBe(2);
+    expect(archive.measurements[0]).toMatchObject({elapsedTime: 0, processElapsedSeconds: 600});
+    dataCollector.beginTimeline(clock({timelineId: 'different-brew'}));
+    expect(dataCollector.getMeasurementCount()).toBe(0);
+  });
+
+  it('updates phase boundaries without synthesizing a temperature measurement', () => {
+    dataCollector.applyTimelineHistory(history());
+    dataCollector.applyTimelineHistory(history([], {phases: [phase({endSeconds: 10}), phase({sequence: 2, startSeconds: 10, stepMode: ProcessMode.TIMER_RUNNING})]}));
+    expect(dataCollector.getMeasurementCount()).toBe(0);
+    expect(dataCollector.getTimelineSnapshot().phases).toHaveLength(2);
   });
 });
 

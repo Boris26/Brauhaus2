@@ -68,3 +68,14 @@ When a compatibility-relevant change is requested, Codex must:
 - [x] Deduplicates at-least-once socket delivery without replacing history arrays.
 - [x] Keeps pressure/bubble data separate from canonical temperature/Plato history.
 - [ ] Verify BeerDataStore cursor ordering/error behavior and gateway post-persistence delivery.
+
+
+## Cumulative production temperature timeline
+
+- [x] Existing local elapsedTime, duration, remaining time and control commands preserved.
+- [x] Additive controller/frontend clock, acquisition IDs and cursor DTOs coordinated.
+- [x] Read-only cursor route represented in OpenAPI; no GPIO initialization.
+- [x] Replay, null gaps, duplicates, retention, recovery identity and phase overrun tested.
+- [x] Existing recovery JSON supports optional clock fields without a database migration.
+- [x] New archives explicitly versioned; unknown versions are not reinterpreted.
+- [ ] Target-Pi disk/sensor timing and browser resize/standby validation (**Needs verification**).

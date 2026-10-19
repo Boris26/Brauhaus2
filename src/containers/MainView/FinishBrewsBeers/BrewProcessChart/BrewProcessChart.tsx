@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, ReferenceArea } from 'recharts';
 import './BrewProcessChart.css';
+import {RecordedTimelineExport} from '../../../../model/ProcessTimeline';
 import {
   COLOR_ACCENT,
   COLOR_BREW_FINISHED,
@@ -21,6 +22,7 @@ import {
 } from '../../../../colors';
 
 interface BrewProcessChartProps {
+  recordedTimeline?: RecordedTimelineExport;
   groupedData: any;
   selectedProcess?: string; // Optionaler Parameter für den ausgewählten Prozess
 }
@@ -38,6 +40,18 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
 
   // Hilfsfunktion: Daten für das Diagramm aufbereiten
   prepareChartData(groupedData: any, selectedProcess?: string) {
+    if (this.props.recordedTimeline) {
+      const samples = this.props.recordedTimeline.measurements.filter(p => !selectedProcess || (p.stepName ?? p.stepPhase) === selectedProcess);
+      const data: any[] = [];
+      samples.forEach((p, index) => {
+        const previous = samples[index - 1];
+        if (previous && p.measurementSequence! > previous.measurementSequence! + 1) {
+          data.push({elapsedTime: previous.processElapsedSeconds, Temperature: null, TargetTemperature: null, gap: true});
+        }
+        data.push({...p, elapsedTime: p.processElapsedSeconds, step: p.stepName ?? p.stepPhase, state: p.stepMode});
+      });
+      return data;
+    }
     const chartData: any[] = [];
     let globalElapsed = 0;
     let interpolatedPoints = 0;
@@ -145,7 +159,9 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
     if (!groupedData) return <div>Keine Diagrammdaten vorhanden.</div>;
 
     // Alle verfügbaren Prozessschritte extrahieren
-    const availableProcesses = Object.keys(groupedData);
+    const archive = this.props.recordedTimeline;
+    const archivePhases = archive?.phases.filter(p => !selectedProcess || (p.stepName ?? p.stepPhase) === selectedProcess);
+    const availableProcesses = archive ? Array.from(new Set(archive.phases.map(p => p.stepName ?? p.stepPhase))) : Object.keys(groupedData);
 
     const data = this.prepareChartData(groupedData, selectedProcess);
 
@@ -159,7 +175,8 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
       }
     });
     // Bereiche für ReferenceArea berechnen
-    const processAreas = processChanges.map((pc, idx) => {
+    const processAreas = archivePhases ? archivePhases.map(p => ({step: p.stepName ?? p.stepPhase, start: p.startSeconds,
+      end: p.endSeconds ?? archive!.timeline.processElapsedSeconds})) : processChanges.map((pc, idx) => {
       const start = pc.elapsedTime;
       const end = processChanges[idx + 1] ? processChanges[idx + 1].elapsedTime : data[data.length - 1]?.elapsedTime;
       return { step: pc.step, start, end };
@@ -181,7 +198,9 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
       ? { [selectedProcess]: groupedData[selectedProcess] }
       : groupedData;
 
-    Object.entries(filteredGroupedData).forEach(([step, states]: [string, any]) => {
+    if (archivePhases) archivePhases.forEach(p => stateAreas.push({key: `phase-${p.sequence}`, step: p.stepName ?? p.stepPhase,
+      state: p.stepMode, start: p.startSeconds, end: p.endSeconds ?? archive!.timeline.processElapsedSeconds}));
+    else Object.entries(filteredGroupedData).forEach(([step, states]: [string, any]) => {
       let stepElapsed = lastEnd;
       Object.entries(states).forEach(([state, points]) => {
         if (Array.isArray(points) && points.length > 0) {
@@ -228,7 +247,7 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
         </div>
 
         <div className="brew-chart-container">
-          <ResponsiveContainer>
+          <ResponsiveContainer debounce={100}>
             <LineChart data={data} margin={{ top: 50, right: 30, left: 0, bottom: 40 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
@@ -280,7 +299,7 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
               {/* Prozessbereiche als farbige Flächen mit Dauer in einem Label */}
               {processAreas.map((area, idx) => (
                 <ReferenceArea
-                  key={area.step}
+                  key={`${area.step}-${area.start}`}
                   x1={area.start}
                   x2={area.end}
                   strokeOpacity={0}
@@ -298,7 +317,7 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
               {/* Prozesswechsel nur als vertikale Linien markieren, ohne Label */}
               {processChanges.map(pc => (
                 <ReferenceLine
-                  key={pc.step}
+                  key={`${pc.step}-${pc.elapsedTime}`}
                   x={pc.elapsedTime}
                   stroke={COLOR_ACCENT}
                   strokeWidth={1}
@@ -342,8 +361,8 @@ class BrewProcessChart extends Component<BrewProcessChartProps> {
                   />
                 );
               })}
-              <Line type="monotone" dataKey="Temperature" stroke={COLOR_CHART_RED} name="Ist-Temperatur" dot={false} />
-              <Line type="monotone" dataKey="TargetTemperature" stroke={COLOR_CHART_YELLOW_STRONG} name="Soll-Temperatur" dot={false} />
+              <Line type={archive ? 'linear' : 'monotone'} dataKey="Temperature" stroke={COLOR_CHART_RED} name="Ist-Temperatur" dot={false} connectNulls={false} isAnimationActive={false} />
+              <Line type={archive ? 'stepAfter' : 'monotone'} dataKey="TargetTemperature" stroke={COLOR_CHART_YELLOW_STRONG} name="Soll-Temperatur" dot={false} isAnimationActive={false} />
 
               {/* Brush auskommentiert für mehr Diagrammhöhe
               <Brush

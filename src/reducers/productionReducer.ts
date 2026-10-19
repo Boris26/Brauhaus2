@@ -44,6 +44,7 @@ export interface BackendAvailable {
 }
 
 export interface ProductionReducerState {
+    historyError?: string;
     historyVersion: number;
     telemetry?: TelemetryState;
     timeAnchor?: TimeAnchorState;
@@ -138,7 +139,11 @@ const productionReducer = (
 ): ProductionReducerState => {
     switch (aAction.type) {
         case ProductionActions.ActionTypes.HISTORY_UPDATED:
-            return aState.historyVersion === aAction.payload.version ? aState : {...aState, historyVersion: aAction.payload.version};
+            return aState.historyVersion === aAction.payload.version && !(aAction.payload.source === 'timeline' && aState.historyError)
+                ? aState : {...aState, historyVersion: aAction.payload.version,
+                    historyError: aAction.payload.source === 'timeline' ? undefined : aState.historyError};
+        case ProductionActions.ActionTypes.HISTORY_READ_FAILED:
+            return {...aState, historyError: 'Messhistorie konnte nicht aktualisiert werden. Der Abruf wird wiederholt.'};
 
         case ProductionActions.ActionTypes.SET_TEMPERATURE: {
             return { ...aState, temperature: aAction.payload.temperature };

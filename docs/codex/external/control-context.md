@@ -281,3 +281,14 @@ retained local HTTP-failure stopping, shared performance.now() display projectio
 and monotonic controller duration timing. No hardware regulation, pulse/cutoff,
 database or fermentation contract is changed. Target-Pi validation remains
 **Needs verification**.
+
+
+## Coordinated cumulative temperature timeline
+
+The counterpart implementation has been checked in the adjacent repository.
+See [temperature-timeline.md](../temperature-timeline.md) for additive cumulative
+clock fields, physical observation identity, bounded cursor replay and retention
+ranges, recovery identity, and versioned exports. This supersedes older
+assumptions that process elapsed time can be inferred from local timers or
+temperature-change-only status history. Legacy fields are not reinterpreted.
+Deployment and real-hardware/browser validation remain **Needs verification**.

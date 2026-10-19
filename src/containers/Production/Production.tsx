@@ -1,3 +1,4 @@
+import {parseProcessTimelineHistory} from '../../model/ProcessTimeline';
 import React from 'react';
 import {isUndefined} from 'lodash';
 import {Beer} from "../../model/Beer";
@@ -69,6 +70,7 @@ export interface ProductionProps {
     brewingStatus?: BrewingStatus;
     timeAnchor?: TimeAnchorState;
     historyVersion?: number;
+    historyError?: string;
     isBackenAvailable: BackendAvailable | boolean;
     waterStatus: WaterStatus;
     waterStatusStale?: boolean;
@@ -92,6 +94,7 @@ export interface ProductionProps {
 }
 
 interface ProductionState {
+    finishHistoryError?: string;
     agitatorConfig?: AgitatorConfig;
     agitatorRuntime?: AgitatorRuntimeStatus;
     agitatorSpeedDraft?: number;
@@ -725,6 +728,9 @@ export class Production extends React.Component<ProductionProps, ProductionState
                     selectedBeer={this.props.selectedBeer}
                     brewingStatus={this.props.brewingStatus}
                     measurements={dataCollector.getTimelineSnapshot().measurements}
+                    phases={dataCollector.getTimelineSnapshot().phases}
+                    history={dataCollector.getTimelineSnapshot().timeline}
+                    historyError={this.props.historyError}
                     fallbackTemperature={this.props.temperature}
                     timeAnchor={this.props.timeAnchor}
                     stale={this.props.isBrewingStatusStale}
@@ -930,6 +936,22 @@ export class Production extends React.Component<ProductionProps, ProductionState
         }
 
         this.isFinishedBrewSaveRequestPending = true;
+        if (this.props.brewingStatus?.timeline && !pendingFinishedBrewPayload) {
+            const status = this.props.brewingStatus;
+            try {
+                const history = parseProcessTimelineHistory(await ProductionRepository.getProcessTimeline(status.timeline!.timelineId, dataCollector.getHistoryCursor()));
+                if (!history || history.timeline.timelineId !== status.timeline!.timelineId
+                    || history.controllerEpoch !== status.snapshotMetadata?.controllerEpoch
+                    || history.processInstanceId !== status.snapshotMetadata?.processInstanceId
+                    || this.props.brewingStatus?.timeline?.timelineId !== history.timeline.timelineId) throw new Error('Invalid final timeline');
+                dataCollector.applyTimelineHistory(history);
+                this.setState({finishHistoryError: undefined});
+            } catch (_) {
+                this.isFinishedBrewSaveRequestPending = false;
+                this.setState({finishHistoryError: 'Die letzten Messdaten konnten nicht geladen werden. Bitte das Speichern erneut versuchen.', showFinishDialog: true});
+                return;
+            }
+        }
         const createdAt = new Date().toISOString();
         const finishedBrew = pendingFinishedBrewPayload ?? {
                 name: selectedBeer.name || 'Unknown Beer',
@@ -982,6 +1004,7 @@ export class Production extends React.Component<ProductionProps, ProductionState
             <div className="containerProduction ">
                 {this.props.isBrewingStatusStale && <div role="alert" className="production-stale-status">Controller nicht erreichbar – angezeigter Braustatus ist veraltet.</div>}
                 {this.props.brewingStartError && <div role="alert">Braustart fehlgeschlagen: {this.props.brewingStartError}</div>}
+                {this.state.finishHistoryError && <div role="alert">{this.state.finishHistoryError}</div>}
                 <ProductionDialogs
                     showFinishDialog={showFinishDialog}
                     onConfirmFinish={this.confirmFinishDialog}

@@ -2,8 +2,11 @@ import React from 'react';
 import {render, screen} from '@testing-library/react';
 import {ProductionTemperatureTimeline} from './ProductionTemperatureTimeline';
 import * as timelineModel from './temperatureTimelineModel';
+import {clock, modernStatus, phase} from '../../../testUtils/processTimeline';
+import {Beer} from '../../../model/Beer';
 
 const mockChartMount = jest.fn();
+const mockChartData = jest.fn();
 
 jest.mock('recharts', () => {
     const React = require('react');
@@ -11,7 +14,8 @@ jest.mock('recharts', () => {
 
     return {
         ResponsiveContainer: Container,
-        LineChart: ({children}: {children?: React.ReactNode}) => {
+        LineChart: ({children, data}: {children?: React.ReactNode; data?: unknown}) => {
+            mockChartData(data);
             React.useEffect(() => {mockChartMount();}, []);
             return <div>{children}</div>;
         },
@@ -19,13 +23,14 @@ jest.mock('recharts', () => {
         XAxis: () => null,
         YAxis: () => null,
         Tooltip: () => null,
-        ReferenceArea: () => null,
+        ReferenceArea: (props: any) => <div data-testid="phase-area" data-x1={props.x1} data-x2={props.x2} />,
         ReferenceLine: (props: Record<string, unknown>) => (
             <div
                 data-testid="reference-line"
                 data-stroke={String(props.stroke)}
                 data-stroke-width={String(props.strokeWidth)}
                 data-label={JSON.stringify(props.label)}
+                data-x={String(props.x)}
             />
         ),
         Line: (props: Record<string, unknown>) => (
@@ -42,6 +47,33 @@ jest.mock('recharts', () => {
 });
 
 describe('ProductionTemperatureTimeline', () => {
+    it('places now on the process clock and keeps the latest real measurement unchanged', () => {
+        const status = modernStatus({timeline: clock({processElapsedSeconds: 600})});
+        const readings = [{elapsedTime: 120, processElapsedSeconds: 720, measurementSequence: 1, Temperature: 65, TargetTemperature: 65}];
+        render(<ProductionTemperatureTimeline brewingStatus={status} measurements={readings} fallbackTemperature={0} displayNowSeconds={725} />);
+        const marker = screen.getAllByTestId('reference-line').find(node => node.getAttribute('data-label')?.includes('Jetzt'));
+        expect(marker).toHaveAttribute('data-x', '725');
+        expect(mockChartData.mock.calls.at(-1)?.[0].at(-1)).toMatchObject({elapsedSeconds: 720, actualTemperature: 65});
+    });
+
+    it('updates overdue bands without rebuilding history, replacing points or remounting the chart', () => {
+        mockChartMount.mockClear();
+        const build = jest.spyOn(timelineModel, 'buildTemperatureTimelineModel');
+        const status = modernStatus({timeline: clock({processElapsedSeconds: 0})});
+        const measurements = [{elapsedTime: 0, processElapsedSeconds: 0, measurementSequence: 1, Temperature: 60, TargetTemperature: 65}];
+        const beer = {fermentation: [{type: 'Rast 1', time: 20, temperature: 65}], cookingTime: 60} as Beer;
+        const phases = [phase()];
+        const props = {selectedBeer: beer, brewingStatus: status, measurements, phases, fallbackTemperature: 0};
+        const {rerender} = render(<ProductionTemperatureTimeline {...props} displayNowSeconds={0} />);
+        const initialData = mockChartData.mock.calls.at(-1)?.[0];
+        rerender(<ProductionTemperatureTimeline {...props} displayNowSeconds={400} />);
+        expect(Number(screen.getAllByTestId('phase-area')[0].getAttribute('data-x2'))).toBeGreaterThan(400);
+        expect(Number(screen.getAllByTestId('phase-area')[1].getAttribute('data-x1'))).toBeGreaterThan(400);
+        expect(mockChartData.mock.calls.at(-1)?.[0]).toBe(initialData);
+        expect(build).toHaveBeenCalledTimes(1);
+        expect(mockChartMount).toHaveBeenCalledTimes(1);
+        build.mockRestore();
+    });
     it('reuses the history model and chart mount while only the local time cursor moves', () => {
         mockChartMount.mockClear();
         const build = jest.spyOn(timelineModel, 'buildTemperatureTimelineModel');

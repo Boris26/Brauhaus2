@@ -671,6 +671,7 @@ export namespace ProductionActions {
         WATER_READ_FAILED = 'ProductionActions.WATER_READ_FAILED',
         WATER_START_ACCEPTED = 'ProductionActions.WATER_START_ACCEPTED',
         HISTORY_UPDATED = 'ProductionActions.HISTORY_UPDATED',
+        HISTORY_READ_FAILED = 'ProductionActions.HISTORY_READ_FAILED',
         COMMUNICATION_PHASE = 'ProductionActions.COMMUNICATION_PHASE',
         CONFIRM_ACCEPTED = 'ProductionActions.CONFIRM_ACCEPTED',
         CONFIRM_SYNC_WAIT = 'ProductionActions.CONFIRM_SYNC_WAIT',
@@ -851,7 +852,7 @@ export namespace ProductionActions {
         readonly type: ActionTypes.STATUS_RESYNC_REQUEST | ActionTypes.STATUS_STREAM_STALE |
             ActionTypes.STATUS_HEARTBEAT | ActionTypes.TELEMETRY_RECEIVED | ActionTypes.COMMUNICATION_PHASE |
             ActionTypes.WATER_SNAPSHOT | ActionTypes.WATER_HEARTBEAT | ActionTypes.WATER_STREAM_STALE |
-            ActionTypes.WATER_RESYNC_REQUEST | ActionTypes.WATER_READ_FAILED | ActionTypes.WATER_START_ACCEPTED | ActionTypes.HISTORY_UPDATED |
+            ActionTypes.WATER_RESYNC_REQUEST | ActionTypes.WATER_READ_FAILED | ActionTypes.WATER_START_ACCEPTED | ActionTypes.HISTORY_UPDATED | ActionTypes.HISTORY_READ_FAILED |
             ActionTypes.CONFIRM_ACCEPTED | ActionTypes.CONFIRM_SYNC_WAIT;
         payload?: any;
     }

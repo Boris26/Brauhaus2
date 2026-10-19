@@ -55,6 +55,7 @@ export interface Alarm {
 }
 
 export interface BrewingStatus {
+    timeline?: import('./ProcessTimeline').TimelineClock;
     snapshotMetadata?: import('../utils/brewingStatus/snapshot').SnapshotMetadata;
     elapsedTime: number;
     process: {
@@ -73,8 +74,8 @@ export interface BrewingStatus {
         type?: string;
     };
     temperature: {
-        current?: number;
-        target?: number;
+        current?: number | null;
+        target?: number | null;
     };
     heating?: {
         followsDecoction?: boolean;
