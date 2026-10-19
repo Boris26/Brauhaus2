@@ -34,13 +34,25 @@ export const acceptTelemetry = (metadata: SnapshotMetadata, temperature: Brewing
 export const acceptTimeAnchor = (metadata: SnapshotMetadata, previous?: TimeAnchorState, status?: BrewingStatus): TimeAnchorState | undefined => {
   const anchor = metadata.timeAnchor;
   if (!anchor || !revisionValid(anchor.sequence) || anchor.sequence !== metadata.timeAnchorSequence
+    || (anchor.processElapsedSeconds !== undefined && (!Number.isFinite(anchor.processElapsedSeconds)
+      || anchor.processElapsedSeconds < 0 || typeof anchor.processRunning !== 'boolean'
+      || anchor.timelineId !== status?.timeline?.timelineId))
     || ![anchor.elapsedTime, anchor.stepElapsedTime, anchor.sampleAgeSeconds].every(v => typeof v === 'number' && Number.isFinite(v) && v >= 0)
     || ![anchor.duration, anchor.remainingTime].every(v => v === null || v === undefined || (typeof v === 'number' && Number.isFinite(v) && v >= 0))
     || typeof anchor.running !== 'boolean' || typeof anchor.stepRunning !== 'boolean') return previous;
   if (status && (anchor.phase !== status.currentStep.phase || anchor.mode !== status.currentStep.mode
     || anchor.stepIndex !== status.currentStep.index || (anchor.stepId ?? null) !== (status.currentStep.stepId ?? null)
     || (anchor.duration ?? null) !== (status.currentStep.duration ?? null))) return previous;
-  if (sameProcess(previous, metadata) && previous!.sequence >= anchor.sequence) return previous;
+  if (sameProcess(previous, metadata)) {
+    if (previous!.sequence > anchor.sequence) return previous;
+    if (previous!.sequence === anchor.sequence) {
+      // WAITING may keep the same capture for hours. A fresh observation of
+      // its age must repair OS standby even if performance.now() paused there.
+      // Normal heartbeats need no new anchor; delayed replies must not rewind it.
+      const projectedAge = previous!.sampleAgeSeconds + Math.max(0, (monotonicNow() - previous!.receivedAtMs) / 1000);
+      if (anchor.sampleAgeSeconds <= projectedAge + 0.25) return previous;
+    }
+  }
   return {...anchor, controllerEpoch: metadata.controllerEpoch, processInstanceId: metadata.processInstanceId,
     stateRevision: metadata.stateRevision, receivedAtMs: monotonicNow()};
 };

@@ -61,3 +61,14 @@ details. Controller targets have priority; missing/invalid targets can fall back
 only to an ACTIVE, matched recipe step (or a decoction's uniquely linked RAST).
 Missing measurements and unavailable/stale targets remain neutral. Explicit target
 zero remains visible but does not draw target bands. The green tolerance is ±1 °C.
+
+
+## Coordinated cumulative temperature timeline
+
+The counterpart implementation has been checked in the adjacent repository.
+See [temperature-timeline.md](../temperature-timeline.md) for additive cumulative
+clock fields, physical observation identity, bounded cursor replay and retention
+ranges, recovery identity, and versioned exports. This supersedes older
+assumptions that process elapsed time can be inferred from local timers or
+temperature-change-only status history. Legacy fields are not reinterpreted.
+Deployment and real-hardware/browser validation remain **Needs verification**.

@@ -209,3 +209,13 @@ event-driven telemetry, water snapshots/fallback, retained local stop policy,
 Earlier polling-only descriptions are historical. Existing methods, command paths,
 confirmation preconditions, units, temperature rounding and water cutoff remain
 unchanged. No database or fermentation-gateway contract changed.
+
+
+## Cumulative production temperature timeline
+
+See [Consistent production temperature timeline](temperature-timeline.md) for the
+coordinated additive clock, physical acquisition history, cursor replay, local
+persistence, recovery identity and versioned archive contract. Existing local
+`elapsedTime` fields retain their meaning. No deployment or product database
+migration is performed. Target-Pi rendering, disk latency and real sensor behavior
+remain **Needs verification**.

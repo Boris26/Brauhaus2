@@ -14,10 +14,11 @@ import {applicationEpics} from './epics/applicationEpics';
 import {statusCommunicationEpics} from './epics/statusCommunicationEpics';
 import {waterCommunicationEpics} from './epics/waterCommunicationEpics';
 import {ApplicationActions} from './actions/actions';
+import {timelineHistoryEpic$} from './epics/timelineHistoryEpic';
 
 const epicMiddleware = createEpicMiddleware<any, any, RootState>();
 
-const rootEpic = combineEpics(...statusCommunicationEpics, ...waterCommunicationEpics, ...applicationEpics, ...beerEpics, ...productionEpics, ...hopsEpic, ...maltsEpic, ...yeastEpic, ...additionalIngredientsEpic, ...fermentationEpics);
+const rootEpic = combineEpics(timelineHistoryEpic$, ...statusCommunicationEpics, ...waterCommunicationEpics, ...applicationEpics, ...beerEpics, ...productionEpics, ...hopsEpic, ...maltsEpic, ...yeastEpic, ...additionalIngredientsEpic, ...fermentationEpics);
 
 // Erstellen Sie den Store mit der Middleware
 const store = configureStore({

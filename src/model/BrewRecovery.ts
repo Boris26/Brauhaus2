@@ -13,6 +13,7 @@ export interface BrewRecoveryCurrentStep {
 }
 
 export interface BrewRecoveryProcessStatus {
+    timeline?: {timelineId: string; processElapsedSeconds: number; startedAt: string};
     process?: Record<string, unknown>;
     currentStep?: BrewRecoveryCurrentStep;
     waiting?: {waitingFor?: string; canConfirm?: boolean};

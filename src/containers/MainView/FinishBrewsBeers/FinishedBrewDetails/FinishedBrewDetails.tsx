@@ -1,4 +1,5 @@
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useMemo, useRef, useState} from 'react';
+import {parseRecordedTimelineExport} from '../../../../model/ProcessTimeline';
 import {connect} from 'react-redux';
 import AddIcon from '@mui/icons-material/Add';
 import CheckIcon from '@mui/icons-material/Check';
@@ -190,7 +191,11 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
     {assignedDevice.displayName && <button className="fermentation-display-name-reset" type="button" disabled={isUpdatingDisplayName} onClick={resetDeviceName}>Technischen Namen verwenden</button>}
     {(deviceNameError || displayNameRequestError) && <small className="fermentation-error" role="alert">{deviceNameError || displayNameRequestError}</small>}
   </> : <div className="fermentation-device-name"><strong>{sensorDisplayName}</strong><button type="button" aria-label="Sensor-Alias bearbeiten" title="Sensor-Alias bearbeiten" onClick={() => { setDeviceNameDraft(assignedDevice.displayName ?? assignedDevice.deviceName ?? ''); setDeviceNameError(''); setEditingDeviceName(true); }}><EditIcon fontSize="small" /></button></div>);
-  let groupedData: any; try { groupedData = props.brew.brewValues && JSON.parse(props.brew.brewValues as string).groupedData; } catch (_) { groupedData = undefined; }
+  const brewProcessData = useMemo(() => {
+    try { return props.brew.brewValues ? JSON.parse(props.brew.brewValues) : undefined; } catch (_) { return undefined; }
+  }, [props.brew.brewValues]);
+  const groupedData = brewProcessData?.groupedData;
+  const recordedTimeline = useMemo(() => parseRecordedTimelineExport(brewProcessData), [brewProcessData]);
   const completeErrorDialogs = Object.entries(props.completeActionErrors ?? {}).map(([requestId, message]) => requestId.startsWith(`${props.brew.id}/`) && <ModalDialog key={requestId} type={DialogType.ERROR} open header="Zugabe konnte nicht bestätigt werden" content={message || 'Bitte erneut versuchen.'} onConfirm={() => props.dismissCompleteError(props.brew.id, requestId.slice(props.brew.id.length + 1))} />);
 
   const latestMeasurementDate = date(latestMeasurement?.measuredAt);
@@ -245,7 +250,9 @@ export const FinishedBrewDetailsView: React.FC<Props> = props => {
         </aside>
       </div>
       {completeErrorDialogs}
-      {groupedData && <section className="fermentation-card fermentation-analysis"><h4>Analyse des Brauprozesses</h4><BrewProcessChart groupedData={groupedData} /></section>}
+      {groupedData && <section className="fermentation-card fermentation-analysis"><h4>Analyse des Brauprozesses</h4>{brewProcessData?.schemaVersion !== undefined && !recordedTimeline
+        ? <p>Dieses Messdatenformat kann nicht dargestellt werden.</p>
+        : <BrewProcessChart groupedData={groupedData} recordedTimeline={recordedTimeline} />}</section>}
   </div>;
 };
 const mapState = (state: any, own: {brew: FinishedBrew}) => {

@@ -60,3 +60,13 @@ retained local HTTP-failure stopping, shared performance.now() display projectio
 and monotonic controller duration timing. No hardware regulation, pulse/cutoff,
 database or fermentation contract is changed. Target-Pi validation remains
 **Needs verification**.
+
+
+## Cumulative production temperature timeline
+
+See [Consistent production temperature timeline](temperature-timeline.md) for the
+coordinated additive clock, physical acquisition history, cursor replay, local
+persistence, recovery identity and versioned archive contract. Existing local
+`elapsedTime` fields retain their meaning. No deployment or product database
+migration is performed. Target-Pi rendering, disk latency and real sensor behavior
+remain **Needs verification**.

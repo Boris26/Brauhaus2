@@ -50,6 +50,7 @@ const mapStateToProps = (state: RootState) => (
         isToggleAgitatorSuccess: state.productionReducer.isToggleAgitatorSuccess,
         brewingStatus: state.productionReducer.brewingStatus,
         historyVersion: state.productionReducer.historyVersion,
+        historyError: state.productionReducer.historyError,
         timeAnchor: state.productionReducer.timeAnchor,
         realtimeState: state.productionReducer.realtimeState,
         socketConnected: state.productionReducer.socketConnection.connected,
